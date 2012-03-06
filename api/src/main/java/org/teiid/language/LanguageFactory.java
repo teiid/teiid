@@ -22,6 +22,7 @@
 
 package org.teiid.language;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class LanguageFactory {
     public static final LanguageFactory INSTANCE = new LanguageFactory();
 
     public AggregateFunction createAggregate(String name, boolean isDistinct, Expression expression, Class<?> type) {
-        return new AggregateFunction(name, isDistinct, expression, type);
+        return new AggregateFunction(name, isDistinct, new ArrayList<Expression>(Arrays.asList(expression)), type);
     }
 
     public Comparison createCompareCriteria(

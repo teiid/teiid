@@ -187,7 +187,7 @@ public class TestCapabilitiesUtil {
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -199,7 +199,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -211,7 +211,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -223,7 +223,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -235,7 +235,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -247,7 +247,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.COUNT, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -258,7 +258,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -269,7 +269,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.SUM, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -280,7 +280,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -291,7 +291,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_AVG, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.AVG, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -302,7 +302,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -313,7 +313,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MIN, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MIN, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -324,7 +324,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -335,7 +335,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MAX, false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    
@@ -347,7 +347,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, false);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
@@ -359,7 +359,7 @@ public class TestCapabilitiesUtil {
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, true);
         
-        AggregateSymbol aggregate = new AggregateSymbol("expr", NonReserved.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
+        AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
     }    

@@ -210,7 +210,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
             	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
             		update = true;
             		GroupingNode groupNode = new GroupingNode(getID());                    
-            		AggregateSymbol sumCount = new AggregateSymbol("SumCount", NonReserved.SUM, false, accessNode.getElements().get(0)); //$NON-NLS-1$          		
+            		AggregateSymbol sumCount = new AggregateSymbol(NonReserved.SUM, false, accessNode.getElements().get(0)); //$NON-NLS-1$          		
             		List<Expression> outputElements = new ArrayList<Expression>(1);            		
             		outputElements.add(sumCount); 
             		groupNode.setElements(outputElements);

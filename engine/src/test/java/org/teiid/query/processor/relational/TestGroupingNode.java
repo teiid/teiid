@@ -139,17 +139,17 @@ public class TestGroupingNode {
 		ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
 		col2.setType(Integer.class);
 		outputElements.add(col1);
-		outputElements.add(new AggregateSymbol("countAll", "COUNT", false, null)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("count", "COUNT", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("countDist", "COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("sum", "SUM", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("sumDist", "SUM", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("avg", "AVG", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("avgDist", "AVG", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("min", "MIN", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("minDist", "MIN", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("max", "MAX", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
-		outputElements.add(new AggregateSymbol("maxDist", "MAX", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("COUNT", false, null)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("COUNT", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("SUM", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("SUM", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("AVG", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("AVG", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("MIN", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("MIN", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("MAX", false, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+		outputElements.add(new AggregateSymbol("MAX", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
 		node.setElements(outputElements);
 		
 		List groupingElements = new ArrayList();
@@ -228,8 +228,8 @@ public class TestGroupingNode {
         // Set up
         GroupingNode node = new GroupingNode(1);        
         List outputElements = new ArrayList();
-        outputElements.add(new AggregateSymbol("bigSum", "SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
-        outputElements.add(new AggregateSymbol("bigAvg", "AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
         node.setElements(outputElements);
         
         CommandContext context = new CommandContext("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
@@ -264,8 +264,8 @@ public class TestGroupingNode {
         GroupingNode node = new GroupingNode(1);        
         List outputElements = new ArrayList();
         outputElements.add(col1);
-        outputElements.add(new AggregateSymbol("bigSum", "SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
-        outputElements.add(new AggregateSymbol("bigAvg", "AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
         node.setElements(outputElements);
         
         // Set grouping elements to null 
@@ -312,9 +312,9 @@ public class TestGroupingNode {
         func.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
         outputElements.add(col1);
-        outputElements.add(new AggregateSymbol("count", "COUNT", false, func)); //$NON-NLS-1$ //$NON-NLS-2$
-        outputElements.add(new AggregateSymbol("sum", "SUM", false, func)); //$NON-NLS-1$ //$NON-NLS-2$
-        outputElements.add(new AggregateSymbol("sumDist", "SUM", true, func)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("COUNT", false, func)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", false, func)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", true, func)); //$NON-NLS-1$ //$NON-NLS-2$
         node.setElements(outputElements);
         
         List groupingElements = new ArrayList();
@@ -357,8 +357,8 @@ public class TestGroupingNode {
         // Set up
         GroupingNode node = new GroupingNode(1);        
         List outputElements = new ArrayList();
-        outputElements.add(new AggregateSymbol("bigSum", "SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
-        outputElements.add(new AggregateSymbol("bigAvg", "AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("SUM", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("AVG", false, bigDecimal)); //$NON-NLS-1$ //$NON-NLS-2$
         node.setElements(outputElements);
         
         // Set grouping elements to null 
@@ -428,7 +428,7 @@ public class TestGroupingNode {
         ElementSymbol col2 = new ElementSymbol("col2"); //$NON-NLS-1$
         col2.setType(Integer.class);
         outputElements.add(col1);
-        outputElements.add(new AggregateSymbol("countDist", "COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
+        outputElements.add(new AggregateSymbol("COUNT", true, col2)); //$NON-NLS-1$ //$NON-NLS-2$
         node.setElements(outputElements);
         
         List groupingElements = new ArrayList();

@@ -454,6 +454,6 @@ public class Query extends QueryCommand {
     public boolean hasAggregates() {
     	return getGroupBy() != null 
     	|| getHaving() != null 
-    	|| !AggregateSymbolCollectorVisitor.getAggregates(getSelect(), false).isEmpty();
+    	|| !AggregateSymbolCollectorVisitor.getAllAggregates(getSelect()).isEmpty();
     }
 }  // END CLASS

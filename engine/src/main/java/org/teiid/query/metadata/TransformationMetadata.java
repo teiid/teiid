@@ -23,7 +23,6 @@
 package org.teiid.query.metadata;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;

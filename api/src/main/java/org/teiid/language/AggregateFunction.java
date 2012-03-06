@@ -22,12 +22,14 @@
 
 package org.teiid.language;
 
+import java.util.List;
+
 import org.teiid.language.visitor.LanguageObjectVisitor;
 
 /**
  * Represents an aggregate function.
  */
-public class AggregateFunction extends BaseLanguageObject implements Expression {
+public class AggregateFunction extends Function {
     
     public static final String COUNT = "COUNT"; //$NON-NLS-1$
     public static final String AVG = "AVG"; //$NON-NLS-1$
@@ -39,17 +41,14 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
 	public static final String VAR_SAMP = "VAR_SAMP"; //$NON-NLS-1$
 	public static final String VAR_POP = "VAR_POP"; //$NON-NLS-1$
 	
-    private Expression expression;
     private String aggName;
     private boolean isDistinct;
-    private Class<?> type;
     private Expression condition;
     
-    public AggregateFunction(String aggName, boolean isDistinct, Expression exp, Class<?> type) {
-        this.expression = exp;
+    public AggregateFunction(String aggName, boolean isDistinct, List<? extends Expression> params, Class<?> type) {
+    	super(aggName, params, type);
         this.aggName = aggName;
         this.isDistinct = isDistinct;
-        this.type = type;
     }
 
     /** 
@@ -74,10 +73,15 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
      * Get the expression within the aggregate function.  The expression will be 
      * null for the special case COUNT(*).  This is the only case where the 
      * expression will be null
+     * Only valid for 0/1 ary aggregates
      * @return The expression or null for COUNT(*)
+     * @deprecated
      */
     public Expression getExpression() {
-        return this.expression;
+    	if (this.getParameters().isEmpty()) {
+    		return null;
+    	}
+        return this.getParameters().get(0);
     }
     
     public void acceptVisitor(LanguageObjectVisitor visitor) {
@@ -103,23 +107,6 @@ public class AggregateFunction extends BaseLanguageObject implements Expression 
         this.isDistinct = isDistinct;
     }
 
-    /**
-     * Set the expression within the aggregate function.  The expression will be
-     * null for the special case COUNT(*). 
-     * @param expression The new expression
-     */
-    public void setExpression(Expression expression) {
-        this.expression = expression;
-    }
-
-    public Class<?> getType() {
-        return this.type;
-    }
-
-    public void setType(Class<?> type) {
-        this.type = type;
-    }
-    
     /**
      * 
      * @return the filter clause condition

@@ -242,6 +242,10 @@ public class Function implements Expression {
 		return copy;	
 	}
 	
+	public boolean isAggregate() {
+		return getFunctionDescriptor().getMethod().getAggregateAttributes() != null;
+	}
+	
 	/**
 	 * Return string representation of the function.
 	 * @return String representation

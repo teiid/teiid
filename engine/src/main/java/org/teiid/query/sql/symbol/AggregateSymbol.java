@@ -40,11 +40,7 @@ import org.teiid.query.sql.lang.OrderBy;
  *
  * <p>The type of an aggregate symbol depends on the function and the type of the underlying
  * expression.  The type of a COUNT function is ALWAYS integer.  MIN and MAX functions take the
- * type of their contained expression.  AVG and SUM vary depending on the type of the expression.
- * If the expression is of a type other than biginteger, the aggregate function returns type long.
- * For the case of biginteger, the aggregate function returns type biginteger.  Similarly, all
- * floating point expressions not of type bigdecimal return type double and bigdecimal maps to
- * bigdecimal.</p>
+ * type of their contained expression.</p>
  */
 public class AggregateSymbol extends Function implements DerivedExpression {
 	
@@ -66,7 +62,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		VAR_SAMP,
 		RANK,
 		DENSE_RANK,
-		ROW_NUMBER;
+		ROW_NUMBER,
+		USER_DEFINED;
 	}
 
 	private Type aggregate;
@@ -115,14 +112,17 @@ public class AggregateSymbol extends Function implements DerivedExpression {
     
 	/**
 	 * Construct an aggregate symbol with all given data.
-	 * @param name Name of the function
 	 * @param aggregateFunction Aggregate function type ({@link org.teiid.language.SQLConstants.NonReserved#COUNT}, etc)
 	 * @param isDistinct True if DISTINCT flag is set
 	 * @param expression Contained expression
 	 */
-	public AggregateSymbol(String name, String aggregateFunction, boolean isDistinct, Expression expression) {
-		super(name, expression == null?new Expression[0]:new Expression[] {expression});
-		this.aggregate = Type.valueOf(aggregateFunction);
+	public AggregateSymbol(String aggregateFunction, boolean isDistinct, Expression expression) {
+		super(aggregateFunction, expression == null?new Expression[0]:new Expression[] {expression});
+		try {
+			this.aggregate = Type.valueOf(aggregateFunction.toUpperCase());
+		} catch (IllegalArgumentException e) {
+			this.aggregate = Type.USER_DEFINED;
+		}
 		this.distinct = isDistinct;
 	}
 	
@@ -335,12 +335,13 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		this.isWindowed = isWindowed;
 	}
 	
+	@Deprecated
 	public Expression getExpression() {
 		if (this.getArgs().length == 0) {
 			return null;
 		}
 		if (this.getArgs().length > 1) {
-			throw new AssertionError("getExpression should not be used with a non-unary aggregate");
+			throw new AssertionError("getExpression should not be used with a non-unary aggregate"); //$NON-NLS-1$
 		}
 		return this.getArg(0);
 	}

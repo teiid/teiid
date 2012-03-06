@@ -104,6 +104,7 @@ public class FunctionMethod extends AbstractMetadataRecord {
     private String invocationClass;
     private String invocationMethod;
     private boolean nullOnNull;
+    private AggregateAttributes aggregateAttributes;
     
     private Determinism determinism = Determinism.DETERMINISTIC;
     
@@ -479,4 +480,12 @@ public class FunctionMethod extends AbstractMetadataRecord {
     public void setClassloader(ClassLoader classloader) {
     	this.classLoader = classloader;
     }
+    
+    public AggregateAttributes getAggregateAttributes() {
+		return aggregateAttributes;
+	}
+    
+    public void setAggregateAttributes(AggregateAttributes aggregateAttributes) {
+		this.aggregateAttributes = aggregateAttributes;
+	}
 }

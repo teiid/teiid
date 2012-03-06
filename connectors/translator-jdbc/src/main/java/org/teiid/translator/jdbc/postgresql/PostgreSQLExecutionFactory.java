@@ -227,7 +227,7 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (obj instanceof AggregateFunction) {
     		AggregateFunction agg = (AggregateFunction)obj;
-    		if (agg.getExpression() != null && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getExpression().getType())) {
+    		if (agg.getParameters().size() == 1 && TypeFacility.RUNTIME_TYPES.BOOLEAN.equals(agg.getParameters().get(0).getType())) {
             	if (agg.getName().equalsIgnoreCase(NonReserved.MIN)) {
             		agg.setName("bool_and"); //$NON-NLS-1$
             	} else if (agg.getName().equalsIgnoreCase(NonReserved.MAX)) {

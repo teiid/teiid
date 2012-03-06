@@ -1082,12 +1082,12 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(" "); //$NON-NLS-1$
         }
 
-        if (obj.getExpression() == null) {
+        if (obj.getArgs().length == 0) {
         	if (obj.getAggregateFunction() == Type.COUNT) {
         		append(Tokens.ALL_COLS);
         	}
         } else {
-            visitNode(obj.getExpression());
+            registerNodes(obj.getArgs(), 0);
         }
 
         if (obj.getOrderBy() != null) {

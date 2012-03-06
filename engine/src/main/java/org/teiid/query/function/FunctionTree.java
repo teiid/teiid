@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.teiid.UserDefinedAggregate;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
@@ -338,7 +339,15 @@ public class FunctionTree {
 
         		// Check that method is static
         		if(! Modifier.isStatic(modifiers)) {
-        			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30392, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30392, method.getName(), invocationMethod));
+        			if (method.getAggregateAttributes() == null) {
+        				throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30392, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30392, method.getName(), invocationMethod));
+        			}
+        		} else if (method.getAggregateAttributes() != null) {
+        			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30600, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30600, method.getName(), invocationMethod));
+        		}
+        		
+        		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(method.getClass()))) {
+        			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
             }
         }

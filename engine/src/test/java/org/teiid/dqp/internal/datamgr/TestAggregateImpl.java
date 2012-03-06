@@ -43,10 +43,9 @@ public class TestAggregateImpl extends TestCase {
     }
 
     public static AggregateFunction example(String name, String functionName, boolean distinct, int value) throws Exception {
-        AggregateSymbol symbol = new AggregateSymbol(name,
-                                                     functionName,
+        AggregateSymbol symbol = new AggregateSymbol(functionName,
                                                      distinct,
-                                                      new Constant(new Integer(value)));
+                                                     new Constant(new Integer(value)));
         return TstLanguageBridgeFactory.factory.translate(symbol);
         
     }

@@ -76,105 +76,105 @@ public class TestAggregateSymbol extends TestCase {
 	// ################################## ACTUAL TESTS ################################
 	
 	public void testParser1() {
-		AggregateSymbol as = new AggregateSymbol("count", NonReserved.COUNT, false, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol(NonReserved.COUNT, false, sampleElement()); //$NON-NLS-1$
 		helpParser(as, "COUNT(m.g.c)"); //$NON-NLS-1$
 	}
 
 	public void testParser2() {
-		AggregateSymbol as = new AggregateSymbol("count", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		helpParser(as, "COUNT(DISTINCT m.g.c)"); //$NON-NLS-1$
 	}
 
 	public void testParser3() {
-		AggregateSymbol as = new AggregateSymbol("x", NonReserved.MIN, false, sampleConstant()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol(NonReserved.MIN, false, sampleConstant()); //$NON-NLS-1$
 		helpParser(as, "MIN(5)"); //$NON-NLS-1$
 	}
 
 	public void testParser4() {
-		AggregateSymbol as = new AggregateSymbol("x", NonReserved.MAX, false, sampleFunction()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol(NonReserved.MAX, false, sampleFunction()); //$NON-NLS-1$
 		helpParser(as, "MAX((m.g.c + 5))"); //$NON-NLS-1$
 	}
 
 	public void testParser5() {
-		AggregateSymbol as = new AggregateSymbol("x", NonReserved.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
 		helpParser(as, "COUNT(*)"); //$NON-NLS-1$
 	}
 		
 	public void testEquals1() { 
-		AggregateSymbol as = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		helpEquals(as, as, true);		
 	}
 
 	public void testEquals2() { 
-		AggregateSymbol as1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		AggregateSymbol as2 = (AggregateSymbol) as1.clone();
 		helpEquals(as1, as2, true);		
 	}
 
     //just changing the name of an aggregatesymbol doesn't matter
 	public void testEquals3() { 
-		AggregateSymbol as1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol as2 = new AggregateSymbol("y", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol as2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		helpEquals(as1, as2, true);		
 	}
 	
 	public void testEquals4() { 
-		AggregateSymbol as1 = new AggregateSymbol("count", NonReserved.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol as1 = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
 		AggregateSymbol as2 = (AggregateSymbol) as1.clone();
 		helpEquals(as1, as2, true);		
 	}
 
 	public void testSelfEquivalence(){
-		AggregateSymbol test = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, test, test);
 	}
 
 	public void testEquivalence(){
-		AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol test2 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, test1, test2);
 	}
     
     public void testEquivalenceCountStar(){
-        AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.COUNT, false, null); //$NON-NLS-1$
-        AggregateSymbol test2 = new AggregateSymbol("x", NonReserved.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol test1 = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
+        AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
         int equals = 0;
         UnitTestUtil.helpTestEquivalence(equals, test1, test2);
     }
 
 	public void testEquivalenceCaseInsens(){
-		AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol test2 = new AggregateSymbol("X", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, test1, test2);
 	}
     
     public void testNonEquivalenceUsingDiffElements(){ 
-        AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$ 
-        AggregateSymbol test2 = new AggregateSymbol("X", NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$ 
+        AggregateSymbol test1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$ 
+        AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$ 
         int equals = -1; 
         UnitTestUtil.helpTestEquivalence(equals, test1, test2); 
     } 
 	
 	public void testNonEquivalence(){
-		AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
-		AggregateSymbol test2 = new AggregateSymbol("y", NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$
+		AggregateSymbol test1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+		AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$
 		int equals = -1;
 		UnitTestUtil.helpTestEquivalence(equals, test1, test2);
 	}
     
     public void testNonEquivalence1(){
-        AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
-        AggregateSymbol test2 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$
+        AggregateSymbol test1 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement()); //$NON-NLS-1$
+        AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, test1, test2);
     }
     
     public void testNonEquivalence2(){
-        AggregateSymbol test1 = new AggregateSymbol("x", NonReserved.MAX, true, sampleElement()); //$NON-NLS-1$
-        AggregateSymbol test2 = new AggregateSymbol("x", NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$
+        AggregateSymbol test1 = new AggregateSymbol(NonReserved.MAX, true, sampleElement()); //$NON-NLS-1$
+        AggregateSymbol test2 = new AggregateSymbol(NonReserved.COUNT, true, sampleElement2()); //$NON-NLS-1$
         int equals = -1;
         UnitTestUtil.helpTestEquivalence(equals, test1, test2);
     }

@@ -1224,7 +1224,7 @@ public class QueryRewriter {
 	    		if (criteria.getOperator() == CompareCriteria.GT || criteria.getOperator() == CompareCriteria.GE) {
 	    			type = Type.MIN;
 	    		}
-	    		q.getSelect().addSymbol(new AggregateSymbol(type.name(), type.name(), false, expr));
+	    		q.getSelect().addSymbol(new AggregateSymbol(type.name(), false, expr));
 	    		cc.setRightExpression(new ScalarSubquery(q));
 				cc.setOperator(criteria.getOperator());
 	    		return rewriteCriteria(cc);
@@ -2026,6 +2026,9 @@ public class QueryRewriter {
     }
     
 	private Expression rewriteFunction(Function function) throws TeiidComponentException, TeiidProcessingException{
+		if (function.isAggregate()) {
+			//AggregateSymbol as = new AggregateSymbol(function.getName(), aggregateFunction, isDistinct, expression)
+		}
 		//rewrite alias functions
 		String functionLowerName = function.getName().toLowerCase();
 		String actualName =ALIASED_FUNCTIONS.get(functionLowerName);

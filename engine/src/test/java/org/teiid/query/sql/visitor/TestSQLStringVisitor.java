@@ -945,37 +945,37 @@ public class TestSQLStringVisitor {
 	}
 	
 	@Test public void testAggregateSymbol1() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.COUNT, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.COUNT, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "COUNT('abc')"); //$NON-NLS-1$
 	}
 	
 	@Test public void testAggregateSymbol2() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.COUNT, true, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.COUNT, true, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "COUNT(DISTINCT 'abc')"); //$NON-NLS-1$
 	}
 	
 	@Test public void testAggregateSymbol3() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.COUNT, false, null); //$NON-NLS-1$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
 		helpTest(agg, "COUNT(*)"); //$NON-NLS-1$
 	}
 	
 	@Test public void testAggregateSymbol4() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.AVG, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.AVG, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "AVG('abc')"); //$NON-NLS-1$
 	}
 	
 	@Test public void testAggregateSymbol5() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.SUM, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.SUM, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "SUM('abc')"); //$NON-NLS-1$
 	}
 	
 	@Test public void testAggregateSymbol6() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.MIN, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.MIN, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "MIN('abc')"); //$NON-NLS-1$
 	}
 	
 	@Test public void testAggregateSymbol7() {
-		AggregateSymbol agg = new AggregateSymbol("abc", NonReserved.MAX, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
+		AggregateSymbol agg = new AggregateSymbol(NonReserved.MAX, false, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 		helpTest(agg, "MAX('abc')"); //$NON-NLS-1$
 	}
 	

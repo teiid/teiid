@@ -669,7 +669,7 @@ public class RulePushAggregates implements
 		if (stagedGroupingSymbols.isEmpty()) {
 		    // if the source has no rows we need to insert a select node with criteria count(*)>0
 		    PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		    AggregateSymbol count = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, null); //$NON-NLS-1$
+		    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
 		    aggregates.add(count); //consider the count aggregate for the push down call below
 		    selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompareCriteria(count, CompareCriteria.GT,
 		                                                                                   new Constant(new Integer(0))));
@@ -862,7 +862,7 @@ public class RulePushAggregates implements
             Type aggFunction = partitionAgg.getAggregateFunction();
             if (aggFunction == Type.COUNT) {
                 //COUNT(x) -> CONVERT(SUM(COUNT(x)), INTEGER)
-                AggregateSymbol newAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg); //$NON-NLS-1$
+                AggregateSymbol newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg); //$NON-NLS-1$
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
                 Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
@@ -871,11 +871,11 @@ public class RulePushAggregates implements
                 nestedAggregates.add(partitionAgg);
             } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
-                AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
                 
-                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
-                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, countAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
+                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); //$NON-NLS-1$
 
                 Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 Expression convertCount = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCountAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
@@ -888,13 +888,13 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumAgg);
             } else if (partitionAgg.isEnhancedNumeric()) {
             	//e.g. STDDEV_SAMP := CASE WHEN COUNT(X) > 1 THEN SQRT((SUM(X^2) - SUM(X)^2/COUNT(X))/(COUNT(X) - 1))
-            	AggregateSymbol countAgg = new AggregateSymbol("stagedAgg", NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumSqAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getExpression(), new Constant(2)})); //$NON-NLS-1$
+            	AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol sumSqAgg = new AggregateSymbol(NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getExpression(), new Constant(2)})); //$NON-NLS-1$
                 
-                AggregateSymbol sumSumAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
-                AggregateSymbol sumCountAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, countAgg); //$NON-NLS-1$
-                AggregateSymbol sumSumSqAgg = new AggregateSymbol("stagedAgg", NonReserved.SUM, false, sumSqAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
+                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumSqAgg = new AggregateSymbol(NonReserved.SUM, false, sumSqAgg); //$NON-NLS-1$
                 
                 Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.DefaultDataTypes.DOUBLE)});
 
@@ -926,7 +926,7 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumSqAgg);
             } else {
                 //AGG(X) -> AGG(AGG(X))
-                newExpression = new AggregateSymbol("stagedAgg", aggFunction.name(), false, partitionAgg); //$NON-NLS-1$
+                newExpression = new AggregateSymbol(aggFunction.name(), false, partitionAgg); //$NON-NLS-1$
                 nestedAggregates.add(partitionAgg);
             }
 

@@ -1189,7 +1189,7 @@ public class TestParser {
 
 		Select select = new Select();
 		select.addSymbol(new AliasSymbol("c",  //$NON-NLS-1$
-			new AggregateSymbol("c", "COUNT", false, new ElementSymbol("a", false)))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new AggregateSymbol("COUNT", false, new ElementSymbol("a", false)))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		
 				
 		Query query = new Query();
@@ -1208,7 +1208,7 @@ public class TestParser {
 
         Select select = new Select();
         select.addSymbol(new AliasSymbol("c",  //$NON-NLS-1$
-            new AggregateSymbol("c", "COUNT", false, new ElementSymbol("a", false)))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+            new AggregateSymbol("COUNT", false, new ElementSymbol("a", false)))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         
                 
         Query query = new Query();
@@ -1232,7 +1232,7 @@ public class TestParser {
 		groupBy.addSymbol(new ElementSymbol("a")); //$NON-NLS-1$
 		
 		Criteria having = new CompareCriteria(
-			new AggregateSymbol("count", "COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new AggregateSymbol("COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			CompareCriteria.GT,
 			new Constant(new Integer(0)) );
 				
@@ -1263,7 +1263,7 @@ public class TestParser {
 		CompoundCriteria having = new CompoundCriteria();
 		having.setOperator(CompoundCriteria.AND);
 		having.addCriteria(new CompareCriteria(
-			new AggregateSymbol("count", "COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			new AggregateSymbol("COUNT", false, new ElementSymbol("b", false)), //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			CompareCriteria.GT,
 			new Constant(new Integer(0)) ));
 		having.addCriteria(new CompareCriteria(
@@ -1303,8 +1303,8 @@ public class TestParser {
         from.addGroup(g);
 
         Select select = new Select();
-        AggregateSymbol agg1 = new AggregateSymbol("count", "COUNT", false, new ElementSymbol("a", false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        AggregateSymbol agg2 = new AggregateSymbol("sum", "SUM", false, new ElementSymbol("a", false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        AggregateSymbol agg1 = new AggregateSymbol("COUNT", false, new ElementSymbol("a", false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        AggregateSymbol agg2 = new AggregateSymbol("SUM", false, new ElementSymbol("a", false)); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Function f = new Function("*", new Expression[] { agg1, agg2 }); //$NON-NLS-1$
         AliasSymbol alias = new AliasSymbol("c", f); //$NON-NLS-1$
         select.addSymbol(alias);        
@@ -4981,7 +4981,7 @@ public class TestParser {
     
     @Test public void testXmlAggWithOrderBy() throws Exception {
         String sql = "SELECT xmlAgg(1 order by e2)"; //$NON-NLS-1$
-        AggregateSymbol as = new AggregateSymbol("foo", Reserved.XMLAGG, false, new Constant(1));
+        AggregateSymbol as = new AggregateSymbol(Reserved.XMLAGG, false, new Constant(1));
         as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(as)));
@@ -4998,7 +4998,7 @@ public class TestParser {
         tf.setDelimiter(new Character(','));
         tf.setIncludeHeader(true);
         
-        AggregateSymbol as = new AggregateSymbol("foo", NonReserved.TEXTAGG, false, tf);
+        AggregateSymbol as = new AggregateSymbol(NonReserved.TEXTAGG, false, tf);
         as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
         
         Query query = new Query();
@@ -5010,7 +5010,7 @@ public class TestParser {
     
     @Test public void testArrayAggWithOrderBy() throws Exception {
         String sql = "SELECT array_agg(1 order by e2)"; //$NON-NLS-1$
-        AggregateSymbol as = new AggregateSymbol("foo", Reserved.ARRAY_AGG, false, new Constant(1));
+        AggregateSymbol as = new AggregateSymbol(Reserved.ARRAY_AGG, false, new Constant(1));
         as.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("e2"))));
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(as)));
@@ -5019,7 +5019,7 @@ public class TestParser {
     
     @Test public void testArrayAggWithIndexing() throws Exception {
         String sql = "SELECT (array_agg(1))[1]"; //$NON-NLS-1$
-        AggregateSymbol as = new AggregateSymbol("foo", Reserved.ARRAY_AGG, false, new Constant(1));
+        AggregateSymbol as = new AggregateSymbol(Reserved.ARRAY_AGG, false, new Constant(1));
         Query query = new Query();
         query.setSelect(new Select(Arrays.asList(new Function("array_get", new Expression[] {as, new Constant(1)}))));
         helpTest(sql, "SELECT array_get(ARRAY_AGG(1), 1)", query);
@@ -5172,7 +5172,7 @@ public class TestParser {
     @Test public void testAggFilter() throws Exception {
     	String sql = "select count(*) filter (where x = 1) from g";
     	Query query = new Query();
-    	AggregateSymbol aggregateSymbol = new AggregateSymbol("count", AggregateSymbol.Type.COUNT.name(), false, null);
+    	AggregateSymbol aggregateSymbol = new AggregateSymbol(AggregateSymbol.Type.COUNT.name(), false, null);
     	aggregateSymbol.setCondition(new CompareCriteria(new ElementSymbol("x"), CompareCriteria.EQ, new Constant(1)));
     	query.setSelect(new Select(Arrays.asList(aggregateSymbol)));
     	query.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("g")))));
@@ -5183,7 +5183,7 @@ public class TestParser {
     	String sql = "select row_number() over (partition by x order by y) from g";
     	Query query = new Query();
     	WindowFunction wf = new WindowFunction();
-    	wf.setFunction(new AggregateSymbol("expr", "ROW_NUMBER", false, null));
+    	wf.setFunction(new AggregateSymbol("ROW_NUMBER", false, null));
     	WindowSpecification ws = new WindowSpecification();
     	ws.setPartition(new ArrayList<Expression>(Arrays.asList(new ElementSymbol("x"))));
     	ws.setOrderBy(new OrderBy(Arrays.asList(new ElementSymbol("y"))));

@@ -122,6 +122,9 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
     
     public void visit(AggregateSymbol obj) {
+    	if (obj.getFunctionDescriptor() != null) {
+    		this.setDeterminismLevel(obj.getFunctionDescriptor().getDeterministic());
+    	}
 		evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
     }
     
