@@ -71,6 +71,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -6570,6 +6571,41 @@ public class TestOptimizer {
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
                                           "SELECT pm1.g1.e1, pm1.g1.e3 FROM pm1.g1 WHERE pm1.g1.e1 = convert(pm1.g1.e2, string)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });                                    
+    }
+    
+    @Test public void testParseFormat() throws Exception {
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, true);
+    	caps.setFunctionSupport(SourceSystemFunctions.FORMATTIMESTAMP, true);
+    	caps.setFunctionSupport(SourceSystemFunctions.PARSEBIGDECIMAL, true);
+    	caps.setTranslator(new ExecutionFactory<Object, Object> () {
+    		@Override
+    		public boolean supportsFormatLiteral(String literal,
+    				org.teiid.translator.ExecutionFactory.Format format) {
+    			return (format == Format.DATE && literal.equals("yyyy")) || (format == Format.NUMBER && literal.equals("$"));
+    		}
+    	});
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT stringkey from bqt1.smalla where formattimestamp(timestampvalue, 'yyyy') = '1921' and parsebigdecimal(stringkey, '$') = 1 and formattimestamp(timestampvalue, 'yy') = '19'", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
+                                      new String[] {
+                                          "SELECT g_0.timestampvalue, g_0.stringkey FROM BQT1.SmallA AS g_0 WHERE (formattimestamp(g_0.timestampvalue, 'yyyy') = '1921') AND (parsebigdecimal(g_0.stringkey, '$') = 1)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
         checkNodeTypes(plan, new int[] {
                 1,      // Access

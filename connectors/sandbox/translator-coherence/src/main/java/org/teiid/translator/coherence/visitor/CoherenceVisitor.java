@@ -45,6 +45,7 @@ import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.resource.adapter.coherence.CoherenceFilterUtil;
@@ -110,15 +111,12 @@ public class CoherenceVisitor extends HierarchyVisitor {
 		int i=0;
 		while(selectSymbolItr.hasNext()) {
 			Column e = getElementFromSymbol(selectSymbolItr.next());
-			String attributeName = this.getNameFromElement(e);
-			Class attributeClass = e.getJavaType();
 			
-			attributeNames[i] = attributeName;
-			attributeTypes[i] = attributeClass;
+			attributeNames[i] = this.getNameFromElement(e);
+			attributeTypes[i] = e.getJavaType();
 
 			i++;
 		}
-
 		
 		List<TableReference> tables = query.getFrom();
 		TableReference t = tables.get(0);
@@ -244,7 +242,19 @@ public class CoherenceVisitor extends HierarchyVisitor {
 	// was null wasn't working properly, so replaced with tried and true
 	// code from another custom connector.
 	public String getNameFromElement(Column e) {
-		String attributeName = e.getNameInSource();
+		String attributeName = null;
+		Object p = e.getParent();
+		if (p instanceof Table) {
+			Table t = (Table)p;
+			if (t.getForeignKeys() != null && !t.getForeignKeys().isEmpty()) {
+				ForeignKey fk = (ForeignKey)  t.getForeignKeys().get(0);
+				String fk_nis = fk.getNameInSource();
+				attributeName = fk_nis + "." + e.getNameInSource();
+			}
+		}
+		if (attributeName == null) {
+			attributeName = e.getNameInSource();
+		}
 		if (attributeName == null || attributeName.equals("")) { //$NON-NLS-1$
 			attributeName = e.getName();
 			// If name in source is not set, then fall back to the column name.

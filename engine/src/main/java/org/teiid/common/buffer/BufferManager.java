@@ -25,6 +25,7 @@ package org.teiid.common.buffer;
 import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.Streamable;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -136,5 +137,8 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 	 * @param additional
 	 * @return
 	 */
-	int reserveAdditionalBuffers(int additional);		
+	int reserveAdditionalBuffers(int additional);
+	
+	Streamable<?> persistLob(final Streamable<?> lob,
+			final FileStore store, byte[] bytes) throws TeiidComponentException;
 }

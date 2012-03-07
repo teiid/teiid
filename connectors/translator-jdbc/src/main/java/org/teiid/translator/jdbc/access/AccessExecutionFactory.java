@@ -24,23 +24,51 @@
  */
 package org.teiid.translator.jdbc.access;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.language.AggregateFunction;
+import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.AliasModifier;
+import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
-import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
+import org.teiid.translator.jdbc.sybase.BaseSybaseExecutionFactory;
 
 @Translator(name="access", description="A translator for Microsoft Access Database")
-public class AccessExecutionFactory extends SybaseExecutionFactory {
+public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	public AccessExecutionFactory() {
 		setSupportsOrderBy(false);
 		setDatabaseVersion("2003"); //$NON-NLS-1$
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(10); //sql length length is 64k
+	}
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		registerFunctionModifier(SourceSystemFunctions.ASCII, new AliasModifier("Asc")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.CHAR, new AliasModifier("Chr")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.CONCAT, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				List<Object> result = new ArrayList<Object>(function.getParameters().size()*2 - 1);
+				for (int i = 0; i < function.getParameters().size(); i++) {
+					if (i > 0) {
+						result.add(" & "); //$NON-NLS-1$
+					}
+					result.add(function.getParameters().get(i));
+				}
+				return result;
+			}
+		});
+		registerFunctionModifier(SourceSystemFunctions.LENGTH, new AliasModifier("Len")); //$NON-NLS-1$
 	}
 	
     @Override
@@ -79,28 +107,24 @@ public class AccessExecutionFactory extends SybaseExecutionFactory {
     }
     
     @Override
-    public boolean supportsInsertWithQueryExpression() {
-    	return false;
-    }
-    
-    @Override
-    public boolean supportsInlineViews() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsFunctionsInGroupBy() {
-        return false;
-    }
-    
-    @Override
-    public int getMaxFromGroups() {
-        return DEFAULT_MAX_FROM_GROUPS;
-    } 
-    
-    @Override
     public List<String> getSupportedFunctions() {
-    	return getDefaultSupportedFunctions();
+        List<String> supportedFunctions = new ArrayList<String>();
+        supportedFunctions.addAll(super.getSupportedFunctions());
+        supportedFunctions.add(SourceSystemFunctions.ABS); 
+        supportedFunctions.add(SourceSystemFunctions.EXP); 
+        supportedFunctions.add(SourceSystemFunctions.ASCII); 
+        supportedFunctions.add(SourceSystemFunctions.CHAR); 
+        supportedFunctions.add(SourceSystemFunctions.CONCAT); 
+        supportedFunctions.add(SourceSystemFunctions.LCASE); 
+        supportedFunctions.add(SourceSystemFunctions.LEFT); 
+        supportedFunctions.add(SourceSystemFunctions.LENGTH); 
+        supportedFunctions.add(SourceSystemFunctions.LTRIM); 
+        supportedFunctions.add(SourceSystemFunctions.RIGHT);
+        supportedFunctions.add(SourceSystemFunctions.RTRIM); 
+        supportedFunctions.add(SourceSystemFunctions.TRIM);
+        supportedFunctions.add(SourceSystemFunctions.UCASE);
+        //TODO add support for formatting and use datepart for date methods
+        return supportedFunctions;
     }
     
     @Override

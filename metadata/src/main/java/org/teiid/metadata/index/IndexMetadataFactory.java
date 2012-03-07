@@ -379,7 +379,11 @@ public class IndexMetadataFactory {
 				}
 		        tableRecord.setForiegnKeys(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.FOREIGN_KEY, ForeignKey.class, false));
 		        for (ForeignKey foreignKeyRecord : tableRecord.getForeignKeys()) {
-		        	foreignKeyRecord.setPrimaryKey(getPrimaryKey(foreignKeyRecord.getUniqueKeyID()));
+		        	KeyRecord pk = (KeyRecord) getRecordByType(foreignKeyRecord.getUniqueKeyID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY, false);
+		        	if (pk == null) {
+		        		pk = (KeyRecord) getRecordByType(foreignKeyRecord.getUniqueKeyID(), MetadataConstants.RECORD_TYPE.UNIQUE_KEY);
+		        	}
+		        	foreignKeyRecord.setPrimaryKey(pk);
 		        	loadColumnSetRecords(foreignKeyRecord, uuidColumnMap);
 		        	foreignKeyRecord.setParent(tableRecord);
 				}
@@ -388,13 +392,16 @@ public class IndexMetadataFactory {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
 				}
-		        tableRecord.setIndexes(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.INDEX, KeyRecord.class, false));
-		        for (KeyRecord columnSetRecordImpl : tableRecord.getIndexes()) {
+		        List<KeyRecord> indexRecords = tableRecord.getIndexes();
+				for (int i = 0; i < indexRecords.size(); i++) {
+		        	indexRecords.set(i, (KeyRecord) getRecordByType(indexRecords.get(i).getUUID(), MetadataConstants.RECORD_TYPE.INDEX));
+		        }
+		        for (KeyRecord columnSetRecordImpl : indexRecords) {
 					loadColumnSetRecords(columnSetRecordImpl, uuidColumnMap);
 					columnSetRecordImpl.setParent(tableRecord);
 				}
 		        if (tableRecord.getPrimaryKey() != null) {
-		        	KeyRecord primaryKey = getPrimaryKey(tableRecord.getPrimaryKey().getUUID());
+		        	KeyRecord primaryKey = (KeyRecord) getRecordByType(tableRecord.getPrimaryKey().getUUID(), MetadataConstants.RECORD_TYPE.PRIMARY_KEY);
 		        	loadColumnSetRecords(primaryKey, uuidColumnMap);
 		        	primaryKey.setParent(tableRecord);
 		        	tableRecord.setPrimaryKey(primaryKey);
@@ -433,14 +440,6 @@ public class IndexMetadataFactory {
 			}
     	}
     }
-
-	private KeyRecord getPrimaryKey(String uuid) {
-		KeyRecord key = (KeyRecord)this.getByType(MetadataConstants.RECORD_TYPE.PRIMARY_KEY).get(uuid);
-		if (key == null) {
-             throw new TeiidRuntimeException(RuntimeMetadataPlugin.Event.TEIID80001, uuid+RuntimeMetadataPlugin.Event.TEIID80001+TransformationMetadata.NOT_EXISTS_MESSAGE);
-    	}
-		return key;
-	}
 	
 	private Column findElement(String fullName) {
 		Column columnRecord = (Column)getRecordByType(fullName, MetadataConstants.RECORD_TYPE.COLUMN);
@@ -509,6 +508,8 @@ public class IndexMetadataFactory {
 		    		}
 		        } else if (procedureRecord.isFunction()) {
 		        	boolean deterministic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true)); //$NON-NLS-1$
+		        	boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", false)); //$NON-NLS-1$
+		        	boolean varargs = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", false)); //$NON-NLS-1$
 		        	FunctionParameter outputParam = null;
 		        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
 		        	boolean valid = true;
@@ -532,8 +533,13 @@ public class IndexMetadataFactory {
 						}
 					}
 		        	if (valid && outputParam != null) {
-			        	model.addFunction(new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
-			        			null, null, args, outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC));
+		        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
+			        			null, null, args, outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
+			        	function.setNullOnNull(nullOnNull);
+			        	if (varargs && !function.getInputParameters().isEmpty()) {
+			        		function.getInputParameters().get(args.size() - 1).setVarArg(varargs);
+			        	}
+						model.addFunction(function);
 			        	continue;
 		        	}
 		        }

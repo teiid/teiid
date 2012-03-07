@@ -22,12 +22,7 @@
 
 package org.teiid.query.processor.xml;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_DATA_COL;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_DEFAULT;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_NAMESPACE;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_NAMESPACE_DECL;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_OPTIONAL;
-import static org.teiid.query.analysis.AnalysisRecord.PROP_TAG;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -115,7 +110,7 @@ public class AddNodeInstruction extends ProcessorInstruction {
             } 
         } else {
             Object value = context.getVariableContext().getValue(symbol);
-            String valueStr = XMLValueTranslator.translateToXMLValue(value, descriptor.getRuntimeType(), descriptor.getDocBuiltInType());
+            String valueStr = XMLValueTranslator.translateToXMLValue(value, descriptor.getRuntimeType(), descriptor.getDocBuiltInType(), env.getProcessorContext());
 
             if (valueStr != null){
                 if(isElement) {

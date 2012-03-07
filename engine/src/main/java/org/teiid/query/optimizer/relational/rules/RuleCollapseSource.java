@@ -244,6 +244,13 @@ public final class RuleCollapseSource implements OptimizerRule {
         }
 		PlanNode groupNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE);
 		if (groupNode != null) {
+			if (query.getOrderBy() != null) {
+				query.setOrderBy(query.getOrderBy().clone());
+			}
+			if (query.getHaving() != null) {
+				query.setHaving((Criteria) query.getHaving().clone());
+			}
+			query.setSelect(query.getSelect().clone());
 	        SymbolMap symbolMap = (SymbolMap) groupNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
 	      
 	        //map back to expression form

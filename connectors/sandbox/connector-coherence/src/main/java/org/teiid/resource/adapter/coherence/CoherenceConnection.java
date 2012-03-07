@@ -67,4 +67,13 @@ public interface CoherenceConnection {
 	 */
 	public void remove(Object key) throws ResourceException;
 	
+	
+	/**
+	 * Call to update the root object in the cache.
+	 * @param key is the key to the object in the cache
+	 * @param object is the root object to be updated
+	 * @throws ResourceException
+	 */
+	public void update(Object key, Object object) throws ResourceException;
+	
 }

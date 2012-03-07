@@ -26,21 +26,9 @@
 package org.teiid.query.optimizer.capabilities;
 
 
-public class AllCapabilities implements SourceCapabilities {
+public class AllCapabilities extends BasicSourceCapabilities {
     public boolean supportsCapability(Capability capability) {
         return true;
-    }
-
-    public boolean supportsFunction(String functionName) {
-        return false;
-    }
-
-    /** 
-     * @see org.teiid.query.optimizer.capabilities.SourceCapabilities#getSourceProperty(java.lang.String)
-     * @since 4.4
-     */
-    public Object getSourceProperty(Capability propertyName) {
-        return null;
     }
 
 	@Override

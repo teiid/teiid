@@ -47,10 +47,17 @@ public class ForeignKey extends KeyRecord {
         uniqueKeyID = keyID;
     }    
     
+    /**
+     * @return the primary key or unique key referenced by this foreign key
+     */
     public KeyRecord getPrimaryKey() {
     	return this.primaryKey;
     }
     
+    /**
+     * 
+     * @param primaryKey,  the primary key or unique key referenced by this foreign key
+     */
     public void setPrimaryKey(KeyRecord primaryKey) {
 		this.primaryKey = primaryKey;
 	}

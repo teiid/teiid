@@ -137,6 +137,36 @@ public class CoherenceConnectionImpl extends BasicConnection implements Coherenc
 		
 	}
 	
+	public void update(Object key, Object object) throws ResourceException {
+		NamedCache sourceCache =  getCache();
+		if (!sourceCache.containsKey(key)) {
+			throw new ResourceException("Unable to update object for key: " + key + " to cache " + this.cacheName + ", because it already exist");
+		}
+		
+		TransactionMap tmap = CacheFactory.getLocalTransaction(sourceCache);
+
+		tmap.setTransactionIsolation(TransactionMap.TRANSACTION_REPEATABLE_GET);
+		tmap.setConcurrency(TransactionMap.CONCUR_PESSIMISTIC);
+		
+		tmap.begin();
+		try
+		    {
+		    tmap.put(key, object);
+		    tmap.prepare();
+		    tmap.commit();
+		    }
+		catch (Exception e) {
+			throw new ResourceException(e);
+		}
+		
+		sourceCache = getCache();
+		if (!sourceCache.containsKey(key)) {
+			throw new ResourceException("Problem updating object for key: " + key + " to the cache " + this.cacheName +", object not found after add");
+		}
+
+		
+	}
+	
 	public void remove(Object key) throws ResourceException {
 		System.out.println("Remove: " + key);
 		NamedCache sourceCache =  getCache();

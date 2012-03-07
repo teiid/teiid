@@ -23,6 +23,8 @@
 package org.teiid.query.util;
 
 import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -46,6 +48,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
+import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -143,6 +146,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private Executor executor = ExecutorUtils.getDirectExecutor();
 		Map<String, ReusableExecution<?>> reusableExecutions;
 	    Set<CommandListener> commandListeners = null;
+	    private LRUCache<String, DecimalFormat> decimalFormatCache;
+		private LRUCache<String, SimpleDateFormat> dateFormatCache;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -702,6 +707,43 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				}
 			}
 		}
+	}
+	
+		public static DecimalFormat getDecimalFormat(CommandContext context, String format) {
+		DecimalFormat result = null;
+		if (context != null) {
+			if (context.globalState.decimalFormatCache == null) {
+				context.globalState.decimalFormatCache = new LRUCache<String, DecimalFormat>(32);
+			} else {
+				result = context.globalState.decimalFormatCache.get(format);
+			}
+		}
+		if (result == null) {
+			result = new DecimalFormat(format); //TODO: could be locale sensitive
+			result.setParseBigDecimal(true);
+			if (context != null) {
+				context.globalState.decimalFormatCache.put(format, result);
+			}
+		}
+		return result;
+	}
+	
+	public static SimpleDateFormat getDateFormat(CommandContext context, String format) {
+		SimpleDateFormat result = null;
+		if (context != null) {
+			if (context.globalState.dateFormatCache == null) {
+				context.globalState.dateFormatCache = new LRUCache<String, SimpleDateFormat>(32);
+			} else {
+				result = context.globalState.dateFormatCache.get(format);
+			}
+		}
+		if (result == null) {
+			result = new SimpleDateFormat(format); //TODO: could be locale sensitive
+			if (context != null) {
+				context.globalState.dateFormatCache.put(format, result);
+			}
+		}
+		return result;
 	}
 	
 }

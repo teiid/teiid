@@ -59,7 +59,7 @@ public class CoherenceExecutionFactory extends ExecutionFactory<ConnectionFactor
 		this.setSourceRequired(false);
 		this.setSupportsOrderBy(false);
 		this.setSupportsSelectDistinct(false);
-		this.setSupportsInnerJoins(false);
+		this.setSupportsInnerJoins(true);
 		this.setSupportsFullOuterJoins(false);
 		this.setSupportsOuterJoins(false);
 
@@ -88,6 +88,10 @@ public class CoherenceExecutionFactory extends ExecutionFactory<ConnectionFactor
     
     public List getSupportedFunctions() {
         return Collections.EMPTY_LIST;
+    }
+    
+    public boolean supportsCompareCriteriaEquals() {
+    	return true;
     }
 
     

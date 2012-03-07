@@ -45,4 +45,6 @@ public interface ConnectorWork {
 	
 	boolean isDataAvailable();
 	
+	boolean copyLobs();
+	
 }

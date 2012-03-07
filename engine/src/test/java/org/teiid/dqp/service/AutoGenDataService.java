@@ -22,8 +22,12 @@
 
 package org.teiid.dqp.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -31,7 +35,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
@@ -50,6 +57,7 @@ import org.teiid.translator.TranslatorException;
  * This data service will automatically generate results when called with a query - basically
  * the same as the old loopback connector.
  */
+@SuppressWarnings("nls")
 public class AutoGenDataService extends ConnectorManager{
 
     // Number of rows that will be generated for each query
@@ -62,6 +70,7 @@ public class AutoGenDataService extends ConnectorManager{
     private final AtomicInteger closeCount = new AtomicInteger();
     private boolean useIntCounter;
 	public boolean addWarning;
+	public boolean copyLobs;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -166,6 +175,11 @@ public class AutoGenDataService extends ConnectorManager{
 				
 			}
 			
+			@Override
+			public boolean copyLobs() {
+				return copyLobs;
+			}
+			
 		};
     }
     
@@ -202,6 +216,12 @@ public class AutoGenDataService extends ConnectorManager{
     private static final Double DOUBLE_VAL = new Double(0.0);
     private static final Character CHAR_VAL = new Character('c');
     private static final Byte BYTE_VAL = new Byte((byte)0);
+    private static final Clob CLOB_VAL = new ClobImpl(new InputStreamFactory() {
+    	@Override
+    	public InputStream getInputStream() throws IOException {
+    		return new ByteArrayInputStream("hello world".getBytes(Streamable.CHARSET));
+    	}
+    }, -1);
     private static final Boolean BOOLEAN_VAL = Boolean.FALSE;
     private static final BigInteger BIG_INTEGER_VAL = new BigInteger("0"); //$NON-NLS-1$
     private static final BigDecimal BIG_DECIMAL_VAL = new BigDecimal("0"); //$NON-NLS-1$
@@ -238,6 +258,8 @@ public class AutoGenDataService extends ConnectorManager{
             return TIME_VAL;
         } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
             return TIMESTAMP_VAL;
+        } else if(type.equals(DataTypeManager.DefaultDataClasses.CLOB)) {
+            return CLOB_VAL;
         } else {
             return null;
         }

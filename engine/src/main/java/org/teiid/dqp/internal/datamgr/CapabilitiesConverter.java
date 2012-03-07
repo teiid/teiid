@@ -111,6 +111,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, srcCaps.supportsSimilarTo());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, srcCaps.supportsLikeRegex());
         setSupports(connectorID, tgtCaps, Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES, srcCaps.supportsWindowDistinctAggregates(), Capability.ELEMENTARY_OLAP, Capability.QUERY_AGGREGATES_DISTINCT);
+        tgtCaps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, srcCaps.supportsOnlyFormatLiterals());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, srcCaps.supportsOnlyLiteralComparison());
         tgtCaps.setCapabilitySupport(Capability.DEPENDENT_JOIN, srcCaps.supportsDependentJoins());
         

@@ -2,6 +2,7 @@ package org.teiid.translator.coherence;
 
 import java.io.Serializable;
 
+import java.util.HashMap;
 import java.util.Map;
 
 
@@ -42,6 +43,9 @@ private String name;
    }
 
    public Map getLegs() {
+	   if (legs == null) {
+		   legs = new HashMap();
+	   }
        return legs;
    }
    

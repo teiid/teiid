@@ -22,12 +22,11 @@
 
 package org.teiid.translator.coherence;
 
-import java.lang.reflect.InvocationTargetException;
+
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,8 +35,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.ReflectionHelper;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.StringUtil;
+import org.teiid.language.ColumnReference;
+import org.teiid.language.Expression;
+import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -46,6 +48,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.coherence.util.ObjectSourceMethodManager;
 import org.teiid.translator.coherence.visitor.CoherenceVisitor;
 
 
@@ -93,15 +96,7 @@ public abstract class SourceCacheAdapter {
   public void addMetadata() throws TranslatorException {
 	  
   }
-  
-  /**
-   * Called to request the class name for the specified <code>objectName</code>
-   * @param objectName is the name of the object for which the class name is being requested
-   * @return String class name for the specified objectName
-   * @throws TranslatorException
-   */
-//  public abstract String getMappedClass(String objectName) throws TranslatorException;
-  
+   
   /**
    * Called to translate the list of <code>objects</code> returned from the Coherence cache.
    * The implementor will use the <code>visitor</code> to obtain sql parsed information 
@@ -169,7 +164,7 @@ public abstract class SourceCacheAdapter {
 						 String a = attributeTokensForCollection.get(collectionNodeDepth);
 						 String b = tokens.get(holder.collectionNodeDepth);
 						 if (!b.equals(a)) {
-							 throw new TranslatorException("Query Error: multiple collections found between " + a + " and " + b +", only 1 is supported per query" );
+							 throw new TranslatorException("Query Error: multiple collections found between " + attributeTokensForCollection.toString() + " and " + holder.nameNodes.toString() +" (table: " + holder.tableName + " at node depth " + collectionNodeDepth + ", only 1 is supported per query" );
 					  
 						 }
 						 collectionNames.add(n);
@@ -260,11 +255,10 @@ public abstract class SourceCacheAdapter {
     	addMetadata();
     }
 
-  public Object getValue(String tableName, List<String> nameTokens, Class type, Object cachedObject, int level ) throws TranslatorException {
+  public Object getValue(String tableName, List<String> nameTokens, Class<?> type, Object cachedObject, int level ) throws TranslatorException {
 		final ParmHolder holder = ParmHolder.createParmHolder(tableName, nameTokens, type);
 		Object value =  retrieveValue(holder, cachedObject, level);
 		return value;
-
   }
 
 		
@@ -274,87 +268,131 @@ private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) 
 		 return cachedObject;
 	 }
 
-	 final Class objectClass = cachedObject.getClass();
-	 
 	 final String columnName = holder.nameNodes.get(level);
 
 	 boolean atTheBottom = false;
 	 
 	 if (holder.nodeSize == (level + 1)) atTheBottom = true;
 	 
-	 try {
-		 String methodName = null;
-		 // only the last parsed name can be where the boolean call can be made
-		 // example:  x.y.z     z will be where "is" is called
-		 //			  or x	    x could be where "is" is called 
-		 if (atTheBottom && holder.attributeType == Boolean.class) {
-			 methodName = "is" + columnName;
-		 } else {
-			 methodName = "get" + columnName;
-		 }
-
-		 final Method m = findBestMethod(objectClass, methodName, null);
-		 
-		 final Object value = m.invoke(cachedObject, null);
-		 
-		 // if an array or collection, return, this will be processed after all objects are obtained
-		 // in order the number of rows can be created
-		 if (value == null) {
-			 return null;
-		 }
-		  if (value.getClass().isArray() || value instanceof Collection || value instanceof Map) {
-			  holder.setCollection(level);  
-//			  System.out.println("Found Collection: " + methodName);
-			  return value;
-		  }
-			 
-			 if (atTheBottom) {
-				 return value;
-			 }
-
-		  return retrieveValue(holder, value, ++level);
-
-		  
-//		 	LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Got value " + value); //$NON-NLS-1$
-		 	
-			 
-	 } catch (InvocationTargetException x) {
-		 Throwable cause = x.getCause();
-		 System.err.format("invocation of %s failed: %s%n",
-				 "get" + columnName, cause.getMessage());
-		 LogManager.logError(LogConstants.CTX_CONNECTOR, "Error calling get" + columnName + ":" + cause.getMessage());
-		 return null;
-	 } catch (Exception e) {
-		 e.printStackTrace();
-		 throw new TranslatorException(e.getMessage());
+	 String methodName = null;
+	 // only the last parsed name can be where the boolean call can be made
+	 // example:  x.y.z     z will be where "is" is called
+	 //			  or x	    x could be where "is" is called 
+	 if (atTheBottom && holder.attributeType != null && holder.attributeType == Boolean.class) {
+		 methodName = "is" + columnName;
+	 } else {
+		 methodName = "get" + columnName;
 	 }
+	 
+	 final Object value = ObjectSourceMethodManager.getValue(methodName, cachedObject);
+	 
+	 // if an array or collection, return, this will be processed after all objects are obtained
+	 // in order the number of rows can be created
+	 if (value == null) {
+		 return null;
+	 }
+	  if (value.getClass().isArray() || value instanceof Collection || value instanceof Map) {
+		  holder.setCollection(level);  
+		  return value;
+	  }
+		 
+	 if (atTheBottom) {
+		 return value;
+	 }
+
+	 return retrieveValue(holder, value, ++level);
+		 	
   }
 
   public Object createObjectFromMetadata(String metadataName) throws TranslatorException {
-//	  String mappedClass = getMappedClass(metadataName);
-	  return createObject(metadataName);
-	  
-  }
-
-  private Object createObject(String objectClassName) throws TranslatorException {
-		try {
-			
-			return  ReflectionHelper
-					.create(objectClassName,
-							null, null);
-		} catch (Exception e1) {
-			throw new TranslatorException(e1);
-		}
+	  return ObjectSourceMethodManager.createObject(metadataName);
 	  
   }
   
+  public Object createObject(List<ColumnReference> columnList, List<Expression> valueList, CoherenceVisitor visitor, Table t  ) throws TranslatorException {
+		if(columnList.size() != valueList.size()) {
+			throw new TranslatorException("Error:  columns.size and values.size are not the same.");
+		}
+
+		// create the new object that will either be added as a top level object or added to the parent container
+		String tableName =  visitor.getNameFromTable(t);
+		Object newObject = createObjectFromMetadata(tableName);		
+
+		for (int i=0; i < columnList.size(); i++) {
+			final ColumnReference insertElement = columnList.get(i);
+			if (!insertElement.getMetadataObject().isUpdatable()) continue;
+			
+			final String elementName = visitor.getNameFromElement(insertElement.getMetadataObject());
+			
+			final Object value = valueList.get(i);
+			Object val;
+			if(value instanceof Literal) {
+				Literal literalValue = (Literal)value;
+				val = literalValue.getValue();
+				//.toString();
+				if(null != val && val instanceof String) {
+					//!val.isEmpty()) {
+					val = stripQutes((String) val);
+				}
+			} else {
+				val = value;
+				//.toString();
+			}
+			
+		    setValue(tableName, elementName, newObject, val, insertElement.getType()); 
+		}
+
+		return newObject;
+  }
+  
+	private String stripQutes(String id) {
+		if((id.startsWith("'") && id.endsWith("'"))) {
+			id = id.substring(1,id.length()-1);
+		} else if ((id.startsWith("\"") && id.endsWith("\""))) {
+			id = id.substring(1,id.length()-1);
+		}
+		return id;
+	}
+  
   public Object setValue(String tableName, String columnName, Object cachedObject, Object value, Class classtype) throws TranslatorException {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Adding value to attribute: " + columnName); //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting value to attribute: " + columnName); //$NON-NLS-1$
 		
-	 try {
+		List<String> tokens = StringUtil.getTokens(columnName, ".");
+		
+		final ParmHolder holder = ParmHolder.createParmHolder(tableName, tokens, classtype);
+		
+		return setValue(holder, cachedObject, value, 0);
+  }
+  
+  private Object setValue(ParmHolder holder, Object cachedObject, Object value, int level) throws TranslatorException {
+		// if there are muliple nameNodes, 
+	    //			then do "get" for all but the last node, then set
+	    // 			if a "container" type object is encountered, then create the object type for the table and add it to the container
+	  //				if a map, do a put
+	  //				if a collection, do an add 
+		 
+		 final String columnName = holder.nameNodes.get(level);
+
+		 boolean atTheBottom = false;
+		 
+		 if (holder.nodeSize == (level + 1)) atTheBottom = true;
+ 
+		  if (!atTheBottom) {
+
+				final Object containerObject = ObjectSourceMethodManager.getValue("get" + columnName, cachedObject);
+				 
+				if (containerObject.getClass().isArray() || containerObject instanceof Collection || containerObject instanceof Map) {
+					 					 
+				return cachedObject;
+			}
+
+
+			  
+		  }
 		 ArrayList argTypes = new ArrayList(1);
-		 argTypes.add(classtype);
-		 Method m = findBestMethod(cachedObject.getClass(), "set" + columnName, argTypes);
+		 argTypes.add(holder.attributeType);
+		 
+		 Method m = ObjectSourceMethodManager.getMethod(cachedObject.getClass(), "set" + columnName, argTypes);
 		 
 		 Class[] setTypes = m.getParameterTypes();
 		 
@@ -363,56 +401,21 @@ private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) 
 		 if (value instanceof Collection || value instanceof Map || value.getClass().isArray() ) {
 			 newValue = value;
 		 } else {
-			 newValue = DataTypeManager.transformValue(value, setTypes[0]);
+			 try {
+				newValue = DataTypeManager.transformValue(value, setTypes[0]);
+			} catch (TransformationException e) {
+				// TODO Auto-generated catch block
+				throw new TranslatorException(e);
+			}
 		 }
-	//	 Object newValue = getArg(m, value);
-			 m.invoke(cachedObject, new Object[] {newValue});
+		 ObjectSourceMethodManager.executeMethod(m, cachedObject, new Object[] {newValue});
 		 	
-		 	LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Set value " + value); //$NON-NLS-1$
+		 LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Set value " + newValue); //$NON-NLS-1$
 		 return newValue;
-	 } catch (InvocationTargetException x) {
-		 x.printStackTrace();
-		 Throwable cause = x.getCause();
-		 System.err.format("invocation of %s failed: %s%n",
-				 "set" + columnName, cause.getMessage());
-		 LogManager.logError(LogConstants.CTX_CONNECTOR, "Error calling set" + columnName + ":" + cause.getMessage());
-		 return null;
-	 } catch (Exception e) {
-		 e.printStackTrace();
-		 throw new TranslatorException(e.getMessage());
-	 }
+
 
 }  
   
-
-  private  Object getArg(Method m, int value) {
-	  return Integer.valueOf(value);
-  }
-  private  Object getArg(Method m, double value) {
-	  return Double.valueOf(value);
-  }
-  private  Object getArg(Method m, long value) {
-	  return Long.valueOf(value);
-  }
-  private  Object getArg(Method m, float value) {
-	  return Float.valueOf(value);
-  }
-  private  Object getArg(Method m, short value) {
-	  return Short.valueOf(value);
-  }
-  private  Object getArg(Method m, boolean value) {
-	  return Boolean.valueOf(value);
-  }
-  
-  private  Object getArg(Method m, Long value) {
-	  return value.longValue();
-  }
-
-  private  Object getArg(Method m, Object value) throws Exception {
-	  return value;
-  }
-
-	
   
 //  private static Object retrieveValue(Integer code, Object value) throws Exception {
 //      if(code != null) {
@@ -463,20 +466,6 @@ private Object retrieveValue(ParmHolder holder, Object cachedObject, int level) 
 //
 //      return value;
 //  }
-  
-  
-  private  Method findBestMethod(Class objectClass, String methodName, List argumentsClasses) throws SecurityException, NoSuchMethodException {
-      ReflectionHelper rh = new ReflectionHelper(objectClass);
-      
-      if (argumentsClasses == null) {
-          argumentsClasses = Collections.EMPTY_LIST;
-      }
-      Method m = rh.findBestMethodWithSignature(methodName, argumentsClasses);
-      return m;
-     
-  }
-
-
 }
 
 final class ParmHolder {

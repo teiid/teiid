@@ -24,53 +24,78 @@
  */
 package org.teiid.translator.jdbc.sybase;
 
-import java.sql.CallableStatement;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
-import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
 import org.teiid.language.Literal;
-import org.teiid.language.OrderBy;
 import org.teiid.language.SQLConstants;
-import org.teiid.language.SetQuery;
-import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
-import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
-import org.teiid.translator.jdbc.db2.DB2ExecutionFactory;
+import org.teiid.translator.jdbc.ParseFormatFunctionModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 
 @Translator(name="sybase", description="A translator for Sybase Database")
-public class SybaseExecutionFactory extends JDBCExecutionFactory {
+public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$
 	public static final String FIFTEEN_0_2 = "15.0.2"; //$NON-NLS-1$
 	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
+	
+	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
 	
 	public SybaseExecutionFactory() {
 		setDatabaseVersion(TWELVE_5);
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
 		setMaxDependentInPredicates(10);
+		populateDateFormats();
+	}
+	
+	protected void populateDateFormats() {
+		formatMap.put("MM/dd/yy", 1); //$NON-NLS-1$
+		formatMap.put("yy.MM.dd", 2); //$NON-NLS-1$
+		formatMap.put("dd/MM/yy", 3); //$NON-NLS-1$
+		formatMap.put("dd.MM.yy", 4); //$NON-NLS-1$
+		formatMap.put("dd-MM-yy", 5); //$NON-NLS-1$
+		formatMap.put("dd MMM yy", 6); //$NON-NLS-1$
+		formatMap.put("MMM dd, yy", 7); //$NON-NLS-1$
+		formatMap.put("MM-dd-yy", 10); //$NON-NLS-1$
+		formatMap.put("yy/MM/dd", 11); //$NON-NLS-1$
+		formatMap.put("yyMMdd", 12); //$NON-NLS-1$
+		formatMap.put("yyddMM", 13); //$NON-NLS-1$
+		formatMap.put("MM/yy/dd", 14); //$NON-NLS-1$
+		formatMap.put("dd/yy/MM", 15); //$NON-NLS-1$
+		formatMap.put("MMM dd yy HH:mm:ss", 16); //$NON-NLS-1$
+		for (Map.Entry<String, Integer> entry : new HashSet<Map.Entry<String, Integer>>(formatMap.entrySet())) {
+			formatMap.put(entry.getKey().replace("yy", "yyyy"), entry.getValue() + 100); //$NON-NLS-1$ //$NON-NLS-2$
+		}
+
+		formatMap.put("MMM d yyyy hh:mma", 100); //$NON-NLS-1$
+		formatMap.put("HH:mm:ss", 8); //$NON-NLS-1$
+		formatMap.put("MMM d yyyy hh:mm:ss:SSSa", 109); //$NON-NLS-1$
+		formatMap.put("hh:mma", 17); //$NON-NLS-1$
+		formatMap.put("HH:mm", 18); //$NON-NLS-1$
+		formatMap.put("hh:mm:ss:SSSa", 19); //$NON-NLS-1$
+		formatMap.put("HH:mm:ss:SSS", 20); //$NON-NLS-1$
+		formatMap.put("yy/MM/dd HH:mm:ss", 21); //$NON-NLS-1$
+		formatMap.put("yy/MM/dd hh:mm:ssa", 22); //$NON-NLS-1$
+		formatMap.put("yyyy-MM-dd'T'HH:mm:ss", 23); //$NON-NLS-1$
 	}
     
     public void start() throws TranslatorException {
@@ -194,6 +219,18 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 		});
     	convertModifier.addNumericBooleanConversions();
     	registerFunctionModifier(SourceSystemFunctions.CONVERT, convertModifier);
+		registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new ParseFormatFunctionModifier("CONVERT(DATETIME, ") { //$NON-NLS-1$
+			@Override
+			protected Object translateFormat(String format) {
+				return formatMap.get(format);
+			}
+		}); 
+		registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new ParseFormatFunctionModifier("CONVERT(VARCHAR, ")  { //$NON-NLS-1$
+			@Override
+			protected Object translateFormat(String format) {
+				return formatMap.get(format);
+			}
+		}); 
     }
     
 	private List<Object> convertTimeToString(Function function) {
@@ -212,69 +249,6 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
 		result.addAll(convertTimeToString(function));
 		return result;
 	}
-    
-    @Override
-    public boolean useAsInGroupAlias() {
-    	return false;
-    }
-    
-    @Override
-    public boolean hasTimeType() {
-    	return false;
-    }
-    
-    @Override
-    public int getTimestampNanoPrecision() {
-    	return 3;
-    }
-    
-    /**
-     * SetQueries don't have a concept of TOP, an inline view is needed.
-     */
-    @Override
-    public List<?> translateCommand(Command command, ExecutionContext context) {
-    	if (!(command instanceof SetQuery)) {
-    		return null;
-    	}
-    	SetQuery queryCommand = (SetQuery)command;
-		if (queryCommand.getLimit() == null) {
-			return null;
-    	}
-		Limit limit = queryCommand.getLimit();
-		OrderBy orderBy = queryCommand.getOrderBy();
-		queryCommand.setLimit(null);
-		queryCommand.setOrderBy(null);
-		List<Object> parts = new ArrayList<Object>(6);
-		parts.add("SELECT "); //$NON-NLS-1$
-		parts.addAll(translateLimit(limit, context));
-		parts.add(" * FROM ("); //$NON-NLS-1$
-		parts.add(queryCommand);
-		parts.add(") AS X"); //$NON-NLS-1$
-		if (orderBy != null) {
-			parts.add(" "); //$NON-NLS-1$
-			parts.add(orderBy);
-		}
-		return parts;
-    }
-    
-    @Override
-    public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (!supportsCrossJoin()) {
-    		DB2ExecutionFactory.convertCrossJoinToInner(obj, getLanguageFactory());
-    	}
-    	return super.translate(obj, context);
-    }
-    
-    @SuppressWarnings("unchecked")
-	@Override
-    public List<?> translateLimit(Limit limit, ExecutionContext context) {
-    	return Arrays.asList("TOP ", limit.getRowLimit()); //$NON-NLS-1$
-    }
-    
-    @Override
-    public boolean useSelectLimit() {
-    	return true;
-    }
     
     @Override
     public List<String> getSupportedFunctions() {
@@ -373,34 +347,6 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public Object retrieveValue(ResultSet results, int columnIndex,
-    		Class<?> expectedType) throws SQLException {
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
-    		expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
-    	}
-    	return super.retrieveValue(results, columnIndex, expectedType);
-    }
-    
-    @Override
-    public Object retrieveValue(CallableStatement results, int parameterIndex,
-    		Class<?> expectedType) throws SQLException {
-    	if (expectedType == TypeFacility.RUNTIME_TYPES.BYTE) {
-    		expectedType = TypeFacility.RUNTIME_TYPES.SHORT;
-    	}
-    	return super.retrieveValue(results, parameterIndex, expectedType);
-    }
-    
-    @Override
-    public void bindValue(PreparedStatement stmt, Object param,
-    		Class<?> paramType, int i) throws SQLException {
-    	if (paramType == TypeFacility.RUNTIME_TYPES.BYTE) {
-    		paramType = TypeFacility.RUNTIME_TYPES.SHORT;
-    		param = ((Byte)param).shortValue();
-    	}
-    	super.bindValue(stmt, param, paramType, i);
-    }
-    
-    @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
     	return "CAST('" + formatDateValue(timestampValue) +"' AS DATETIME)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -410,13 +356,14 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     	return "CAST('" + formatDateValue(dateValue) +"' AS DATE)"; //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    protected boolean supportsCrossJoin() {
-    	return false;
-    }
-
 	private boolean isFracSeconds(Function function) {
 		Expression e = function.getParameters().get(0);
 		return (e instanceof Literal && SQLConstants.NonReserved.SQL_TSI_FRAC_SECOND.equalsIgnoreCase((String)((Literal)e).getValue()));
+	}
+	
+	@Override
+	public boolean supportsRowLimit() {
+		return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
 	}
     
 }

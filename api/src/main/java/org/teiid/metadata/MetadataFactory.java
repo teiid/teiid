@@ -185,7 +185,7 @@ public class MetadataFactory {
 	}
 		
 	/**
-	 * Adds a foreign key to the given table.  The column names should be in key order.
+	 * Adds a foreign key to the given table.  The referenced primary key must already exist.  The column names should be in key order.
 	 * @param name
 	 * @param columnNames
 	 * @param pkTable
@@ -194,19 +194,64 @@ public class MetadataFactory {
 	 * @throws TranslatorException
 	 */
 	public ForeignKey addForiegnKey(String name, List<String> columnNames, Table pkTable, Table table) throws TranslatorException {
+		return addForiegnKey(name, columnNames, null, pkTable, table, false);
+	}
+
+	/**
+	 * Adds a foreign key to the given table.  The referenced key may be automatically created if addUniqueConstraint is true. The column names should be in key order.
+	 * @param name
+	 * @param columnNames
+	 * @param referencedColumnNames, may be null to indicate that the primary key should be used.
+	 * @param pkTable
+	 * @param table
+	 * @param addUniqueConstraint
+	 * @return
+	 * @throws TranslatorException
+	 */	
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, Table pkTable, Table table, boolean addUniqueConstraint) throws TranslatorException {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setParent(table);
+		KeyRecord uniqueKey = null;
 		foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
+		assignColumns(columnNames, table, foreignKey);
+		if (referencedColumnNames == null) {
+			uniqueKey = pkTable.getPrimaryKey();
+		} else {
+			for (KeyRecord record : pkTable.getUniqueKeys()) {
+				if (keyMatches(referencedColumnNames, record)) {
+					uniqueKey = record;
+					break;
+				}
+			}
+			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(referencedColumnNames, pkTable.getPrimaryKey())) {
+				uniqueKey = pkTable.getPrimaryKey();
+			}
+		}
+		if (uniqueKey == null) {
+			if (!addUniqueConstraint) {
+				throw new TranslatorException(DataPlugin.Event.TEIID60010, DataPlugin.Util.gs(DataPlugin.Event.TEIID60010, pkTable, referencedColumnNames));
+			}
+			uniqueKey = addIndex(name + "_unique", false, referencedColumnNames, pkTable); //$NON-NLS-1$
+		}
 		foreignKey.setName(name);
 		setUUID(foreignKey);
-		if (pkTable.getPrimaryKey() == null) {
-			 throw new TranslatorException(DataPlugin.Event.TEIID60010, DataPlugin.Util.gs(DataPlugin.Event.TEIID60010, pkTable));
-		}
-		foreignKey.setPrimaryKey(pkTable.getPrimaryKey());
-		foreignKey.setUniqueKeyID(pkTable.getPrimaryKey().getUUID());
-		assignColumns(columnNames, table, foreignKey);
+		foreignKey.setPrimaryKey(uniqueKey);
+		foreignKey.setUniqueKeyID(uniqueKey.getUUID());
 		table.getForeignKeys().add(foreignKey);
 		return foreignKey;
+	}
+
+	private boolean keyMatches(List<String> names,
+			KeyRecord record) {
+		if (names.size() != record.getColumns().size()) {
+			return false;
+		}
+		for (int i = 0; i < names.size(); i++) {
+			if (!names.get(i).equals(record.getColumns().get(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 	
 	/**
@@ -305,5 +350,10 @@ public class MetadataFactory {
 	
 	public void setMetadataStore(MetadataStore metadataStore) {
 		this.store = metadataStore;
+		if (this.store.getSchemas().isEmpty()) {
+			this.store.addSchema(schema);
+		} else {
+			this.schema = this.store.getSchemas().values().iterator().next();
+		}
 	}
 }

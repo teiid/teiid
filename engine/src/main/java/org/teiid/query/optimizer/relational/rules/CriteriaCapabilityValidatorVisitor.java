@@ -24,9 +24,11 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -48,6 +50,8 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.ExecutionFactory.Format;
 
 
 /**
@@ -249,6 +253,15 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 markInvalid(crit, "OR criteria not supported by source"); //$NON-NLS-1$
         }
     }
+    
+    static HashSet<String> parseFormat = new HashSet<String>();
+    
+    static {
+    	parseFormat.add(SourceSystemFunctions.PARSEBIGDECIMAL);
+    	parseFormat.add(SourceSystemFunctions.FORMATBIGDECIMAL);
+    	parseFormat.add(SourceSystemFunctions.PARSETIMESTAMP);
+    	parseFormat.add(SourceSystemFunctions.FORMATTIMESTAMP);
+    }
 
     public void visit(Function obj) {
         try {
@@ -262,6 +275,24 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
             }
             if (! CapabilitiesUtil.supportsScalarFunction(modelID, obj, metadata, capFinder)) {
                 markInvalid(obj, (obj.isImplicit()?"(implicit) ":"") + obj.getName() + " function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                return;
+            }
+            String name = obj.getFunctionDescriptor().getName();
+            if (CapabilitiesUtil.supports(Capability.ONLY_FORMAT_LITERALS, modelID, metadata, capFinder) && parseFormat.contains(name)) {
+            	if (!(obj.getArg(1) instanceof Constant)) {
+            		markInvalid(obj, obj.getName() + " non-literal parse format function not supported by source"); //$NON-NLS-1$
+                    return;
+            	}
+            	Constant c = (Constant)obj.getArg(1);
+            	if (c.isMultiValued()) {
+            		markInvalid(obj, obj.getName() + " non-literal parse format function not supported by source"); //$NON-NLS-1$
+                    return;
+            	}
+            	if (!CapabilitiesUtil.getCapabilities(modelID, metadata, capFinder).supportsFormatLiteral((String)c.getValue(), name.endsWith(DataTypeManager.DefaultDataTypes.TIMESTAMP)?Format.DATE:Format.NUMBER)) {
+            		markInvalid(obj, obj.getName() + " literal parse " + c + " not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$
+                    return;
+            	}
+            	c.setBindEligible(false);
             }
         } catch(QueryMetadataException e) {
             handleException(new TeiidComponentException(e));

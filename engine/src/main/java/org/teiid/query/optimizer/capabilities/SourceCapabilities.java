@@ -22,6 +22,8 @@
 
 package org.teiid.query.optimizer.capabilities;
 
+import org.teiid.translator.ExecutionFactory.Format;
+
 public interface SourceCapabilities {
 
     public enum Capability {
@@ -332,7 +334,8 @@ public interface SourceCapabilities {
         CRITERIA_LIKE_REGEX,
         DEPENDENT_JOIN,
         WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"), //$NON-NLS-1$
-        QUERY_ONLY_SINGLE_TABLE_GROUP_BY;
+        QUERY_ONLY_SINGLE_TABLE_GROUP_BY,
+        ONLY_FORMAT_LITERALS;
         
         private final String toString;
         
@@ -384,4 +387,7 @@ public interface SourceCapabilities {
      * @return
      */
     public boolean supportsConvert(int sourceType, int targetType);
+    
+    public boolean supportsFormatLiteral(String literal, Format format);
+    
 }

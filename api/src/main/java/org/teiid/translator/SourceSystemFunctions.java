@@ -77,20 +77,25 @@ public class SourceSystemFunctions {
 	public static final String DEGREES = "degrees"; //$NON-NLS-1$
 	public static final String EXP = "exp"; //$NON-NLS-1$
 	public static final String FLOOR = "floor"; //$NON-NLS-1$
-	public static final String FORMATINTEGER = "formatinteger"; //$NON-NLS-1$
-	public static final String FORMATLONG = "formatlong"; //$NON-NLS-1$
-	public static final String FORMATDOUBLE = "formatdouble"; //$NON-NLS-1$
-	public static final String FORMATFLOAT = "formatfloat"; //$NON-NLS-1$
-	public static final String FORMATBIGINTEGER = "formatbiginteger"; //$NON-NLS-1$
+	
+	@Deprecated public static final String FORMATINTEGER = "formatinteger"; //$NON-NLS-1$
+	@Deprecated public static final String FORMATLONG = "formatlong"; //$NON-NLS-1$
+	@Deprecated public static final String FORMATDOUBLE = "formatdouble"; //$NON-NLS-1$
+	@Deprecated public static final String FORMATFLOAT = "formatfloat"; //$NON-NLS-1$
+	@Deprecated public static final String FORMATBIGINTEGER = "formatbiginteger"; //$NON-NLS-1$
+	
 	public static final String FORMATBIGDECIMAL = "formatbigdecimal"; //$NON-NLS-1$
+	
 	public static final String LOG = "log"; //$NON-NLS-1$
 	public static final String LOG10 = "log10"; //$NON-NLS-1$
 	public static final String MOD = "mod"; //$NON-NLS-1$
-	public static final String PARSEINTEGER = "parseinteger"; //$NON-NLS-1$
-	public static final String PARSELONG = "parselong"; //$NON-NLS-1$
-	public static final String PARSEDOUBLE = "parsedouble"; //$NON-NLS-1$
-	public static final String PARSEFLOAT = "parsefloat"; //$NON-NLS-1$
-	public static final String PARSEBIGINTEGER = "parsebiginteger"; //$NON-NLS-1$
+	
+	@Deprecated public static final String PARSEINTEGER = "parseinteger"; //$NON-NLS-1$
+	@Deprecated public static final String PARSELONG = "parselong"; //$NON-NLS-1$
+	@Deprecated public static final String PARSEDOUBLE = "parsedouble"; //$NON-NLS-1$
+	@Deprecated public static final String PARSEFLOAT = "parsefloat"; //$NON-NLS-1$
+	@Deprecated public static final String PARSEBIGINTEGER = "parsebiginteger"; //$NON-NLS-1$
+	
 	public static final String PARSEBIGDECIMAL = "parsebigdecimal"; //$NON-NLS-1$
 	public static final String PI = "pi"; //$NON-NLS-1$
 	public static final String POWER = "power"; //$NON-NLS-1$

@@ -277,4 +277,9 @@ public class ProjectIntoNode extends RelationalNode {
     public void closeDirect() {
         closeRequest();
 	}
+    
+    public String getModelName() {
+		return modelName;
+	}
+    
 }

@@ -123,7 +123,7 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 			connenv.put(Context.SECURITY_AUTHENTICATION, "none"); //$NON-NLS-1$
 		}
 		
-		if(this.config.getLdapTxnTimeoutInMillis() != -1) { 
+		if(this.config.getLdapTxnTimeoutInMillis() != null && this.config.getLdapTxnTimeoutInMillis() != -1) { 
 			connenv.put("com.sun.jndi.ldap.connect.timeout", this.config.getLdapTxnTimeoutInMillis()); //$NON-NLS-1$
 		}
 		

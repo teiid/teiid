@@ -542,9 +542,9 @@ public class TestQueryRewriter {
                                 "pm1.g1.e2 = 1234" );         //$NON-NLS-1$
     }
     
-    @Test public void testRewriteCrit_formatInteger1() {
+    @Test public void testRewriteCrit_formatInteger1() throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         helpTestRewriteCriteria("formatInteger(pm1.g1.e2, '#5') = '105'", //$NON-NLS-1$
-                                "formatInteger(pm1.g1.e2, '#5') = '105'" );         //$NON-NLS-1$
+                                "formatbigdecimal(convert(pm1.g1.e2, bigdecimal), '#5') = '105'", true );         //$NON-NLS-1$
     }
 
     @Ignore(value="Cannot deterime if the format is narrowing")

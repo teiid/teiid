@@ -215,7 +215,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
      * Reset all per-execution state - this should be done before executing
      * a new command.
      */
-    protected void resetExecutionState() throws SQLException {
+    protected synchronized void resetExecutionState() throws SQLException {
         this.currentRequestID = -1;
 
         this.currentPlanDescription = null;
@@ -245,7 +245,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         batchedUpdates.add(sql);
     }
 
-    public void cancel() throws SQLException {
+    public synchronized void cancel() throws SQLException {
         /* Defect 19848 - Mark the statement cancelled before sending the CANCEL request.
          * Otherwise, it's possible get into a race where the server response is quicker
          * than the exception in the exception in the conditionalWait(), which results in
@@ -623,7 +623,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		return rs;
 	}
 	
-	private void postReceiveResults(RequestMessage reqMessage,
+	private synchronized void postReceiveResults(RequestMessage reqMessage,
 			ResultsMessage resultsMsg) throws TeiidSQLException, SQLException {
 		commandStatus = State.DONE;
 		// warnings thrown
@@ -873,7 +873,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     /**
      * Ends the command and sets the status to TIMED_OUT.
      */
-    protected void timeoutOccurred() {
+    protected synchronized void timeoutOccurred() {
     	if (this.commandStatus != State.RUNNING) {
     		return;
     	}

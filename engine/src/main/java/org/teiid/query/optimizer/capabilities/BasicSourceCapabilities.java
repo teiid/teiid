@@ -29,7 +29,9 @@ import java.util.TreeMap;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultTypeCodes;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.ExecutionFactory.Format;
 
 /**
  */
@@ -41,6 +43,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
     private Map<Capability, Object> propertyMap = new HashMap<Capability, Object>();
     private boolean[][] converts = new boolean[DataTypeManager.MAX_TYPE_CODE + 1][DataTypeManager.MAX_TYPE_CODE + 1];
+    private ExecutionFactory<?, ?> translator;
 
     /**
      * Construct a basic capabilities object.
@@ -111,5 +114,16 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     public void setSupportsConvert(int sourceType, int targetType, boolean value) {
     	this.converts[sourceType][targetType] = value;
     }
+    
+    public void setTranslator(ExecutionFactory<?, ?> translator) {
+		this.translator = translator;
+	}
+    
+    public boolean supportsFormatLiteral(String literal, Format format) {
+    	if (this.translator == null) {
+    		return false;
+    	}
+		return this.translator.supportsFormatLiteral(literal, format);
+	}
     
 }

@@ -20,8 +20,6 @@
  * 02110-1301 USA.
  */
 
-/*
- */
 package org.teiid.translator.jdbc.oracle;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
@@ -132,6 +130,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(OracleExecutionFactory.NEAREST_NEIGHBOR, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.FILTER, new OracleSpatialFunctionModifier());
         registerFunctionModifier(OracleExecutionFactory.WITHIN_DISTANCE, new OracleSpatialFunctionModifier());
+        
+        registerFunctionModifier(SourceSystemFunctions.PARSETIMESTAMP, new OracleFormatFunctionModifier("TO_TIMESTAMP(")); //$NON-NLS-1$
+        registerFunctionModifier(SourceSystemFunctions.FORMATTIMESTAMP, new OracleFormatFunctionModifier("TO_CHAR(")); //$NON-NLS-1$
         
         //add in type conversion
         ConvertModifier convertModifier = new ConvertModifier();
@@ -504,12 +505,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("QUARTER"); //$NON-NLS-1$
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
-        //supportedFunctions.add("FORMATDATE"); //$NON-NLS-1$
-        //supportedFunctions.add("FORMATTIME"); //$NON-NLS-1$
-        //supportedFunctions.add("FORMATTIMESTAMP"); //$NON-NLS-1$ 
-        //supportedFunctions.add("PARSEDATE"); //$NON-NLS-1$
-        //supportedFunctions.add("PARSETIME"); //$NON-NLS-1$
-        //supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$          
+        supportedFunctions.add(SourceSystemFunctions.FORMATTIMESTAMP); 
+        supportedFunctions.add(SourceSystemFunctions.PARSETIMESTAMP);
         supportedFunctions.add("CAST"); //$NON-NLS-1$
         supportedFunctions.add("CONVERT"); //$NON-NLS-1$
         supportedFunctions.add("IFNULL"); //$NON-NLS-1$
@@ -621,6 +618,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		return rs;
     	}
     	return (ResultSet)statement.getObject(1);
+    }
+    
+    @Override
+    public boolean supportsOnlyFormatLiterals() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsFormatLiteral(String literal,
+    		org.teiid.translator.ExecutionFactory.Format format) {
+    	if (format == Format.NUMBER) {
+    		return false;
+    	}
+    	return OracleFormatFunctionModifier.supportsLiteral(literal);
     }
     
 }

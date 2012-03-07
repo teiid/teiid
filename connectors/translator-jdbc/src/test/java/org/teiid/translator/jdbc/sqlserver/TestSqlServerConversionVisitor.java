@@ -209,5 +209,14 @@ public class TestSqlServerConversionVisitor {
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
     }
+    
+    @Test public void testParseFormat() throws Exception {
+        String input = "select parsetimestamp(smalla.timestampvalue, 'yyyy.MM.dd'), formattimestamp(smalla.timestampvalue, 'yy.MM.dd') from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT CONVERT(DATETIME, convert(varchar, g_0.TimestampValue, 21), 102), CONVERT(VARCHAR, g_0.TimestampValue, 2) FROM SmallA g_0"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
        
 }

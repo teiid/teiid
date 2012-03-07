@@ -90,6 +90,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
             this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
+            this.bufferMgr.setInlineLobs(inlineLobs);
             this.bufferMgr.initialize();
             
             // If necessary, add disk storage manager

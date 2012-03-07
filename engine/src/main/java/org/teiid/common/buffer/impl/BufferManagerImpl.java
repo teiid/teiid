@@ -51,6 +51,7 @@ import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Streamable;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.SerializableTupleBatch;
@@ -272,7 +273,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 				}
 				long count = readCount.incrementAndGet();
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
+					LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, id, "reading batch", batch, "from storage, total reads:", count); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 				ce = cache.get(o, batch, this.ref);
 				if (ce == null) {
@@ -1077,6 +1078,12 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	@Override
 	public boolean hasState(String stateId) {
 		return this.getTupleBuffer(stateId) != null;
+	}
+	
+	@Override
+	public Streamable<?> persistLob(Streamable<?> lob, FileStore store,
+			byte[] bytes) throws TeiidComponentException {
+		return LobManager.persistLob(lob, store, bytes, inlineLobs, DataTypeManager.MAX_LOB_MEMORY_BYTES);
 	}
 	
 }
