@@ -346,6 +346,7 @@ public class DQPCore implements DQP {
         long timeout = workContext.getVDB().getQueryTimeout();
         timeout = Math.min(timeout>0?timeout:Long.MAX_VALUE, config.getQueryTimeout()>0?config.getQueryTimeout():Long.MAX_VALUE);
         if (timeout < Long.MAX_VALUE) {
+        	final long finalTimeout = timeout;
         	workItem.setCancelTask(this.cancellationTimer.add(new Runnable() {
 				WeakReference<RequestWorkItem> workItemRef = new WeakReference<RequestWorkItem>(workItem);
 				@Override
@@ -353,6 +354,7 @@ public class DQPCore implements DQP {
 					try {
 						RequestWorkItem wi = workItemRef.get();
 						if (wi != null) {
+							LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.getString("query_timeout", wi.requestID, finalTimeout)); //$NON-NLS-1$
 							wi.requestCancel();
 						}
 					} catch (TeiidComponentException e) {
