@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 import java.util.Arrays;
@@ -41,6 +42,9 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.Command;
+import org.teiid.language.Comparison;
+import org.teiid.language.Literal;
+import org.teiid.language.Select;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
@@ -56,6 +60,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.JDBCProcedureExecution;
+import org.teiid.translator.jdbc.JDBCQueryExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
@@ -757,17 +762,20 @@ public class TestOracleTranslator {
             "DoubleNum",  //$NON-NLS-1$ 
             "ID", //$NON-NLS-1$
             "timestampvalue", //$NON-NLS-1$
+            "description"
         };
         String[] elemTypes = new String[] {  
             DataTypeManager.DefaultDataTypes.DOUBLE,
             DataTypeManager.DefaultDataTypes.INTEGER,
             DataTypeManager.DefaultDataTypes.TIMESTAMP,
+            DataTypeManager.DefaultDataTypes.STRING,
         };
         RealMetadataFactory.createElements(x, elemNames, elemTypes);
         List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
         cols.get(1).setAutoIncremented(true);
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         cols.get(2).setNativeType("date"); //$NON-NLS-1$
+        cols.get(3).setNativeType("CHAR");
         RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         
         ProcedureParameter in1 = RealMetadataFactory.createParameter("in1", SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
@@ -900,6 +908,20 @@ public class TestOracleTranslator {
 		Mockito.verify(cs, Mockito.never()).registerOutParameter(1, OracleExecutionFactory.CURSOR_TYPE);
 		Mockito.verify(cs, Mockito.never()).getObject(1);
 		Mockito.verify(cs, Mockito.times(1)).setObject(1, 2, Types.INTEGER);
+	}
+	
+	@Test public void testCharType() throws Exception {
+		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+        Command command = commandBuilder.getCommand("select id from smalla where description = 'a'");
+        ((Literal)((Comparison)((Select)command).getWhere()).getRightExpression()).setBindEligible(true);
+		Connection connection = Mockito.mock(Connection.class);
+		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ?")).toReturn(ps); //$NON-NLS-1$
+		OracleExecutionFactory ef = new OracleExecutionFactory();
+		
+		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		e.execute();
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", 999);
 	}
 	
     @Test public void testParseFormat() throws Exception {
