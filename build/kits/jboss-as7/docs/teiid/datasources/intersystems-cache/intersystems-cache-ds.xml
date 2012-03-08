@@ -1,0 +1,17 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:/cacheDS" pool-name="cacheDS">
+        <driver-class>com.intersys.jdbc.CacheDriver</driver-class>
+        <connection-url>jdbc:Cache://{host}:1972/{database}</connection-url>
+        <driver>CacheDB.jar</driver>
+        <pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+        </pool>
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+        </security>
+    </datasource>                               
+</datasources>

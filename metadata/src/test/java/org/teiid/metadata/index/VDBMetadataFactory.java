@@ -40,6 +40,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
@@ -68,7 +69,7 @@ public class VDBMetadataFactory {
 	public static MetadataStore getSystem() {
 		try {
 			if (system == null) {
-				system = loadMetadata( CoreConstants.SYSTEM_VDB, Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB)).getMetadataStore(null);
+				system=  loadMetadata( CoreConstants.SYSTEM_VDB, Thread.currentThread().getContextClassLoader().getResource(CoreConstants.SYSTEM_VDB));
 			}
 			return system;
 		} catch (Exception e) {
@@ -83,7 +84,7 @@ public class VDBMetadataFactory {
 		}
 
 		try {
-			IndexMetadataFactory imf = loadMetadata(vdbName, vdbURL);
+			IndexMetadataStore imf = loadMetadata(vdbName, vdbURL, getSystem().getDatatypes());
 			
 			Collection <FunctionMethod> methods = null;
 			Collection<FunctionTree> trees = null;
@@ -93,7 +94,7 @@ public class VDBMetadataFactory {
 				trees = Arrays.asList(new FunctionTree(schema, new UDFSource(methods), true));
 			}
 			SystemFunctionManager sfm = new SystemFunctionManager();
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf.getMetadataStore(getSystem().getDatatypes()))), imf.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
+			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(getSystem(), imf)), imf.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (URISyntaxException e) {
@@ -103,14 +104,20 @@ public class VDBMetadataFactory {
 		}
     }
 
-	public static IndexMetadataFactory loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException, URISyntaxException {
+	public static IndexMetadataStore loadMetadata(String vdbName, URL url, Collection<Datatype> dataTypes) throws IOException, MalformedURLException, URISyntaxException {
     	VirtualFile root = VFS.getChild(vdbName);
     	if (!root.exists()) {
     		VFS.mountZip(url.openStream(), vdbName, root, TempFileProvider.create("vdbs", Executors.newScheduledThreadPool(2)));
     		// once done this mount should be closed, since this class is only used testing
     		// it is hard to event when the test is done, otherwise we need to elevate the VFS to top
     	}
-    	return new IndexMetadataFactory(root);
-	}
+    	IndexMetadataStore store =  new IndexMetadataStore(root);
+    	store.load(dataTypes);
+    	return store;
 
+	}	
+	
+	public static IndexMetadataStore loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException, URISyntaxException {
+		return loadMetadata(vdbName, url, null);
+	}
 }

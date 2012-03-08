@@ -45,6 +45,7 @@ import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 import org.jboss.vfs.VisitorAttributes;
 import org.jboss.vfs.util.SuffixMatchFilter;
+import org.teiid.adminapi.impl.VDBMetaData;
 
 class VDBDependencyDeployer implements DeploymentUnitProcessor {
 	public static final String LIB = "/lib"; //$NON-NLS-1$
@@ -57,15 +58,27 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 			return;
 		}
 		
-		if (!TeiidAttachments.isDynamicVDB(deploymentUnit)) {
-			final ResourceRoot deploymentResourceRoot = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT);
-			final VirtualFile deploymentRoot = deploymentResourceRoot.getRoot();
-	        if(deploymentRoot == null) {
-	            return;
-	        }
-			
+		String moduleName = null;
+		if (TeiidAttachments.isDynamicVDB(deploymentUnit)) {
+			final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+			ModuleLoader ml = Module.getCallerModuleLoader();
+			moduleName = deployment.getPropertyValue("lib"); //$NON-NLS-1$
+	        if (moduleName != null && ml != null) {
+		        try {
+	            	ml.loadModule(ModuleIdentifier.create(moduleName));
+		        } catch (ModuleLoadException e) {
+		        	throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50088, moduleName, deployment.getName(), deployment.getVersion(), e));
+		        }
+	        }	
+		}
+		else {
 			try {
-				final VirtualFile libDir = deploymentRoot.getChild(LIB);
+				final ResourceRoot deploymentResourceRoot = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT);
+				final VirtualFile deploymentRoot = deploymentResourceRoot.getRoot();
+		        if(deploymentRoot == null) {
+		            return;
+		        }
+		        final VirtualFile libDir = deploymentRoot.getChild(LIB);
 				if (libDir.exists()) {
 					final List<VirtualFile> archives = libDir.getChildren(DEFAULT_JAR_LIB_FILTER);
 					for (final VirtualFile archive : archives) {
@@ -78,11 +91,12 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 							throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name()+IntegrationPlugin.Util.getString("failed_to_process_vdb_archive", archive), e); //$NON-NLS-1$
 						}
 					}
-				}	
+				}
 			} catch(IOException e) {
 				throw new DeploymentUnitProcessingException(e);
-			}
+			}				
 		}
+
 		
 		// add translators as dependent modules to this VDB.
         try {
@@ -91,6 +105,9 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.api"), false, false, false, false)); //$NON-NLS-1$
 			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("org.jboss.teiid.common-core"), false, false, false, false)); //$NON-NLS-1$
 			moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create("javax.api"), false, false, false, false)); //$NON-NLS-1$
+			if (moduleName != null) {
+				moduleSpecification.addLocalDependency(new ModuleDependency(moduleLoader, ModuleIdentifier.create(moduleName), false, false, false, false));
+			}
 		} catch (ModuleLoadException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name(), e);
 		}

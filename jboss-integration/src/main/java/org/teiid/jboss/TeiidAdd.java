@@ -83,7 +83,6 @@ import org.teiid.dqp.service.BufferService;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
@@ -108,7 +107,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.WORKMANAGER,
 		Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT,
 		Element.POLICY_DECIDER_MODULE_ELEMENT,
-		Element.METADATA_REPO_MODULE_ELEMENT,
 		
 		// object replicator
 		Element.DC_STACK_ATTRIBUTE,
@@ -218,10 +216,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	// VDB repository
     	final VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemFunctionManager(systemFunctionManager);
-    	if (Element.METADATA_REPO_MODULE_ELEMENT.isDefined(operation)) {
-    		MetadataRepository repo = buildService(MetadataRepository.class, Element.METADATA_REPO_MODULE_ELEMENT.asString(operation));
-    		vdbRepository.setMetadataRepository(repo);
-    	}
     	
     	VDBRepositoryService vdbRepositoryService = new VDBRepositoryService(vdbRepository);
     	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());

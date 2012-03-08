@@ -22,9 +22,11 @@
 
 package org.teiid.query.parser;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,10 +34,19 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.sql.lang.AlterTrigger;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.FromClause;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.Limit;
@@ -43,9 +54,10 @@ import org.teiid.query.sql.lang.Option;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SourceHint;
-import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.translator.TranslatorException;
 
 public class SQLParserUtil {
 	
@@ -349,4 +361,282 @@ public class SQLParserUtil {
     	return new Block(stmt);
     }
     
+    void setColumnOption(Column c, String k, String v){
+    	int index = k.indexOf(':');
+    	if ( index != -1) {
+    		k = k.substring(index+1);
+    	}
+    	if(k.equalsIgnoreCase("UUID")) {  //$NON-NLS-1$
+    		c.setUUID(v);
+    	}
+        else if(k.equalsIgnoreCase("NAMEINSOURCE")) { //$NON-NLS-1$
+        	c.setNameInSource(v);
+        }
+        else if(k.equalsIgnoreCase("CASE_SENSITIVE")) { //$NON-NLS-1$
+        	c.setCaseSensitive(isTrue(v));
+        }
+        else if(k.equalsIgnoreCase("SELECTABLE")) { //$NON-NLS-1$
+        	c.setSelectable(isTrue(v));
+        }
+        else if(k.equalsIgnoreCase("UPDATABLE")) { //$NON-NLS-1$
+        	c.setUpdatable(isTrue(v));
+        }
+        else if(k.equalsIgnoreCase("SIGNED")) { //$NON-NLS-1$
+        	c.setSigned(isTrue(v));
+        }
+        else if(k.equalsIgnoreCase("CURRENCY")) { //$NON-NLS-1$
+        	c.setSigned(isTrue(v));
+        }
+        else if(k.equalsIgnoreCase("FIXED_LENGTH")) { //$NON-NLS-1$
+        	c.setFixedLength(isTrue(v));
+        }
+        else if(k.equalsIgnoreCase("SEARCHABLE"))  { //$NON-NLS-1$
+        	//'YES|NO|LIKE_ONLY|ALL_EXCEPT_LIKE'
+        	if (v.equalsIgnoreCase("YES")){//$NON-NLS-1$
+        		c.setSearchType(Column.SearchType.Searchable);
+        	}
+        	else if (v.equalsIgnoreCase("NO")){//$NON-NLS-1$
+        		c.setSearchType(Column.SearchType.Unsearchable);
+        	}
+        	else if (v.equalsIgnoreCase("LIKE_ONLY")){ //$NON-NLS-1$
+        		c.setSearchType(Column.SearchType.Like_Only);
+        	}	
+        	else if (v.equalsIgnoreCase("ALL_EXCEPT_LIKE")){ //$NON-NLS-1$
+        		c.setSearchType(Column.SearchType.All_Except_Like);
+        	}			    		    	
+        }
+        else if(k.equalsIgnoreCase("MIN_VALUE")) { //$NON-NLS-1$
+        	c.setMinimumValue(v);
+        }
+        else if(k.equalsIgnoreCase("MAX_VALUE")) { //$NON-NLS-1$
+        	c.setMaximumValue(v);
+        }
+        else if(k.equalsIgnoreCase("CHAR_OCTET_LENGTH")) { //$NON-NLS-1$
+        	c.setCharOctetLength(Integer.parseInt(v));
+        }
+        else if(k.equalsIgnoreCase("ANNOTATION")) { //$NON-NLS-1$
+        	c.setAnnotation(v);
+        }
+        else if(k.equalsIgnoreCase("NATIVE_TYPE")) { //$NON-NLS-1$
+        	c.setNativeType(v);
+        }
+        else if(k.equalsIgnoreCase("RADIX")) { //$NON-NLS-1$
+        	c.setRadix(Integer.parseInt(v));
+        }
+        else if(k.equalsIgnoreCase("NULL_VALUE_COUNT")) { //$NON-NLS-1$
+        	c.setNullValues(Integer.parseInt(v));
+        }   
+        else if(k.equalsIgnoreCase("DISTINCT_VALUES")) { //$NON-NLS-1$
+        	c.setDistinctValues(Integer.parseInt(v));
+        }  
+        else {
+        	c.setProperty(k, v);
+        }
+    }
+    
+    void setTableOption(Table table, String k, String value) {
+    	int index = k.indexOf(':');
+    	if ( index != -1) {
+    		k = k.substring(index+1);
+    	}
+    	if(k.equalsIgnoreCase("UUID")) { //$NON-NLS-1$
+    		table.setUUID(value);
+    	}
+    	else if(k.equalsIgnoreCase("NAMEINSOURCE")) { //$NON-NLS-1$
+    		table.setNameInSource(value);
+    	}
+    	else if(k.equalsIgnoreCase("MATERIALIZED")) { //$NON-NLS-1$
+    		table.setMaterialized(isTrue(value));
+    	}
+    	else if(k.equalsIgnoreCase("MATERIALIZED_TABLE")) { //$NON-NLS-1$
+    		Table mattable = new Table();
+    		mattable.setName(value);
+    		table.setMaterializedTable(mattable);
+    	}
+    	else if(k.equalsIgnoreCase("UPDATABLE")) { //$NON-NLS-1$
+    		table.setSupportsUpdate(isTrue(value));
+    	}
+    	else if(k.equalsIgnoreCase("ANNOTATION")) { //$NON-NLS-1$
+    		table.setAnnotation(value);
+    	}
+    	else if(k.equalsIgnoreCase("CARDINALITY")) { //$NON-NLS-1$
+    		table.setCardinality(Integer.parseInt(value));
+    	}
+    	else {
+    		table.setProperty(k, value);
+    	}
+    }     
+    
+    static void replaceProceduresWithFunctions(MetadataFactory factory) throws ParseException {
+    	ArrayList<String> procs = new ArrayList<String>();
+    	
+    	for (Procedure proc: factory.getProcedures().values()) {
+    		if (!proc.isFunction()) {
+    			continue;
+    		}
+    		
+    		procs.add(proc.getName());
+    		
+    		FunctionMethod method = new FunctionMethod();
+    		method.setName(proc.getName());
+    		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
+    		
+    		ArrayList<FunctionParameter> ins = new ArrayList<FunctionParameter>();
+    		for (ProcedureParameter pp:proc.getParameters()) {
+    			if (pp.getType() != ProcedureParameter.Type.In) {
+    				throw new ParseException("Functions can only support 'In' parameters"); //$NON-NLS-1$
+    			}
+    			
+    			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getDatatype().getName());
+    			fp.setVarArg(pp.isVarArg());
+    			ins.add(fp);
+    		}
+    		method.setInputParameters(ins);
+    		
+    		List<Column> returnCols = proc.getResultSet().getColumns();
+    		if (returnCols != null && !returnCols.isEmpty()) {
+    			if (returnCols.size() > 1) {
+    				throw new ParseException("Functions can only return single parameter"); //$NON-NLS-1$
+    			}
+    			Column c = returnCols.get(0);
+    			FunctionParameter fp = new FunctionParameter(c.getName(), c.getDatatype().getName());
+    			method.setOutputParameter(fp);
+    		}
+    		
+    		method.setAnnotation(proc.getAnnotation());
+    		method.setNameInSource(proc.getNameInSource());
+    		method.setUUID(proc.getUUID());
+    		
+    		Map<String, String> props = proc.getProperties();
+    		for (String key:props.keySet()) {
+    			String value = props.get(key);
+    			if(key.equalsIgnoreCase("CATEGORY")) { //$NON-NLS-1$
+    				method.setCategory(value);
+    			}
+    			else if(key.equalsIgnoreCase("DETERMINISTIC")) { //$NON-NLS-1$
+    				method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
+    			}
+    			else if(key.equalsIgnoreCase("NULLONNULL")) { //$NON-NLS-1$
+    				method.setNullOnNull(isTrue(value));
+    			}
+    			else if(key.equalsIgnoreCase("JAVA_CLASS")) { //$NON-NLS-1$
+    				method.setInvocationClass(value);
+    			}
+    			else if(key.equalsIgnoreCase("JAVA_METHOD")) { //$NON-NLS-1$
+    				method.setInvocationMethod(value);
+    			}      
+    			else {
+    				method.setProperty(key, value);
+    			}     			
+    		}
+    		
+    		factory.addFunction(method);
+    	}
+    	
+    	// remove the old procs
+    	for (String name:procs) {
+    		factory.getProcedures().remove(name);
+    	}
+    }
+    
+
+    void setProcedureOption(Procedure proc, String k, String value) {
+    	int index = k.indexOf(':');
+    	if ( index != -1) {
+    		k = k.substring(index+1);
+    	}
+    	if(k.equalsIgnoreCase("UUID")) { //$NON-NLS-1$
+    		proc.setUUID(value);
+    	}
+    	else if(k.equalsIgnoreCase("NAMEINSOURCE")) { //$NON-NLS-1$
+    		proc.setNameInSource(value);
+    	}
+    	else if(k.equalsIgnoreCase("ANNOTATION")) { //$NON-NLS-1$
+    		proc.setAnnotation(value);
+    	}
+    	else if(k.equalsIgnoreCase("UPDATECOUNT")) { //$NON-NLS-1$
+    		proc.setUpdateCount(Integer.parseInt(value));
+    	}        	
+    	else {
+    		proc.setProperty(k, value);
+    	}      	
+    }
+
+    public static boolean isTrue(final String text) {
+        return ("YES".equalsIgnoreCase(text)); //$NON-NLS-1$
+    }    
+	
+	Column getColumn(String columnName, Table table) {
+		for (Column col:table.getColumns()) {
+			if (col.getName().equalsIgnoreCase(columnName)) {
+				return col;
+			}
+		}
+		return null;
+	}
+	
+	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {
+		GroupSymbol group = trigger.getTarget();
+		
+		Table table = schema.getTable(group.getName());
+		if (trigger.getEvent().equals(Table.TriggerEvent.INSERT)) {
+			table.setInsertPlan(trigger.getDefinition().toString());
+		}
+		else if (trigger.getEvent().equals(Table.TriggerEvent.UPDATE)) {
+			table.setUpdatePlan(trigger.getDefinition().toString());
+		}
+		else if (trigger.getEvent().equals(Table.TriggerEvent.DELETE)) {
+			table.setDeletePlan(trigger.getDefinition().toString());
+		}
+	}
+	
+	void addProcReturnColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type) throws ParseException{
+		try {
+			Column column = factory.addProcedureResultSetColumn(name, type.type, proc);
+			if (type.length != null){
+				column.setLength(type.length);
+			}
+			if (type.scale != null){
+				column.setScale(type.scale);
+			}	
+			if (type.precision != null){
+				column.setPrecision(type.precision);
+			}							
+		} catch (TranslatorException e){
+			throw new ParseException(e.getMessage());
+		}	
+	}	
+	
+	static class  ParsedDataType{
+		String type;
+		Integer length;
+		Integer scale;
+		Integer precision;
+		
+		public ParsedDataType(String type) {
+			this.type = type;
+		}
+		
+		public ParsedDataType(String type, int length, boolean precision) {
+			this.type = type;
+			
+			if (precision) {
+				this.precision = length;
+			}
+			else {
+				this.length = length;
+			}
+		}
+		
+		public ParsedDataType(String type, int length, int scale, boolean precision) {
+			this.type = type;
+			this.scale = scale;
+			if (precision) {
+				this.precision = length;
+			}
+			else {
+				this.length = length;
+			}			
+		}	
+	}
 }

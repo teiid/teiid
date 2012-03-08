@@ -1,0 +1,16 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:/postgres-ds" pool-name="PostgreDS">
+        <connection-url>jdbc:postgresql://{host}:5432/{database}</connection-url>
+        <driver>postgresql-8.3-603.jdbc3.jar</driver>
+        <pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+        </pool>
+        <security>
+            <user-name>user</user-name>
+            <password>pass</password>
+        </security>
+    </datasource>
+</datasources>

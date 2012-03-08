@@ -42,40 +42,29 @@ import org.teiid.query.QueryPlugin;
  * Aggregates the metadata from multiple stores.  
  */
 public class CompositeMetadataStore extends MetadataStore {
-	
+	private static final long serialVersionUID = 6868525815774998010L;
+
 	public CompositeMetadataStore(MetadataStore metadataStore) {
-		addMetadataStore(metadataStore);
+		merge(metadataStore);
 	}
 	
 	public CompositeMetadataStore(List<MetadataStore> metadataStores) {
 		for (MetadataStore metadataStore : metadataStores) {
-			addMetadataStore(metadataStore);
+			merge(metadataStore);
 		}
 	}
 	
-	public void addMetadataStore(MetadataStore metadataStore) {
-		this.schemas.putAll(metadataStore.getSchemas());
-		this.schemaList.addAll(metadataStore.getSchemaList());
-		this.datatypes.addAll(metadataStore.getDatatypes());
-	}
-	
-	public Schema getSchema(String fullName)
-			throws QueryMetadataException {
-		Schema result = getSchemas().get(fullName);
-		if (result == null) {
-	         throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
-		}
-		return result;
-	}
-	
-	public Table findGroup(String fullName)
-			throws QueryMetadataException {
+	public Table findGroup(String fullName)	throws QueryMetadataException {
 		int index = fullName.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index == -1) {
 		     throw new QueryMetadataException(QueryPlugin.Event.TEIID30353, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}			
-		String schema = fullName.substring(0, index);
-		Table result = getSchema(schema).getTables().get(fullName.substring(index + 1));
+		String schemaName = fullName.substring(0, index);
+		Schema schema = getSchema(schemaName);
+		if (schema == null ) {
+	         throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);			
+		}
+		Table result = schema.getTables().get(fullName.substring(index + 1));
 		if (result == null) {
 	         throw new QueryMetadataException(QueryPlugin.Event.TEIID30354, fullName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
@@ -117,13 +106,16 @@ public class CompositeMetadataStore extends MetadataStore {
 		return true;
 	}
 	
-	public Collection<Procedure> getStoredProcedure(String name)
-			throws TeiidComponentException, QueryMetadataException {
+	public Collection<Procedure> getStoredProcedure(String name) throws TeiidComponentException, QueryMetadataException {
 		List<Procedure> result = new LinkedList<Procedure>();
 		int index = name.indexOf(TransformationMetadata.DELIMITER_STRING);
 		if (index > -1) {
-			String schema = name.substring(0, index);
-			Procedure proc = getSchema(schema).getProcedures().get(name.substring(index + 1));
+			String schemaName = name.substring(0, index);
+			Schema schema = getSchema(schemaName);
+			if (schema == null ) {
+		         throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, name+TransformationMetadata.NOT_EXISTS_MESSAGE);			
+			}			
+			Procedure proc = schema.getProcedures().get(name.substring(index + 1));
 			if (proc != null) {
 				result.add(proc);
 		        return result;

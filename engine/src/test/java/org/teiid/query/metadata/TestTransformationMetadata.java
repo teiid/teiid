@@ -22,7 +22,8 @@
 
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,13 +73,13 @@ public class TestTransformationMetadata {
 			throws TranslatorException {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
         datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
-		MetadataFactory mf = new MetadataFactory("x", datatypes, new Properties()); //$NON-NLS-1$
+		MetadataFactory mf = new MetadataFactory(null, 1, "x", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf.addProcedure("y"); //$NON-NLS-1$
 		
 		Table t = mf.addTable("foo");
 		mf.addColumn("col", DataTypeManager.DefaultDataTypes.STRING, t);
 		
-		MetadataFactory mf1 = new MetadataFactory("x1", datatypes, new Properties()); //$NON-NLS-1$
+		MetadataFactory mf1 = new MetadataFactory(null, 1, "x1", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf1.addProcedure("y"); //$NON-NLS-1$
 		
 		Table table = mf1.addTable("doc");
@@ -88,7 +89,7 @@ public class TestTransformationMetadata {
 		HashMap<String, Resource> resources = new HashMap<String, Resource>();
 		resources.put("/x.xsd", new Resource(VFS.getRootVirtualFile(), true));
 		
-		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
+		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.asMetadataStore(), mf1.asMetadataStore()));
 		
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("vdb");
@@ -112,11 +113,11 @@ public class TestTransformationMetadata {
 	@Test public void testAmbiguousTableWithPrivateModel() throws Exception {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
         datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
-		MetadataFactory mf = new MetadataFactory("x", datatypes, new Properties()); //$NON-NLS-1$
+		MetadataFactory mf = new MetadataFactory(null, 1, "x", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf.addTable("y"); //$NON-NLS-1$
-		MetadataFactory mf1 = new MetadataFactory("x1", datatypes, new Properties()); //$NON-NLS-1$
+		MetadataFactory mf1 = new MetadataFactory(null, 1, "x1", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf1.addTable("y"); //$NON-NLS-1$
-		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.getMetadataStore(), mf1.getMetadataStore()));
+		CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(mf.asMetadataStore(), mf1.asMetadataStore()));
 		
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("foo");

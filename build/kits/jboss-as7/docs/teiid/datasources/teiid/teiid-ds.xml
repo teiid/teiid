@@ -1,0 +1,16 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:/teiidDS" pool-name="teiidDS">
+        <connection-url>jdbc:teiid:{vdb}@mm://{host}:31000</connection-url>
+        <driver>teiid</driver>
+        <pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+        </pool>
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+        </security>
+    </datasource>                               
+</datasources>

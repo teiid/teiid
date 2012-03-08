@@ -180,11 +180,6 @@ public class ProcedurePlan extends ProcessorPlan {
 			}
 			
 			@Override
-			public MetadataRepository getMetadataRepository() {
-				return parentDataMrg.getMetadataRepository();
-			}
-			
-			@Override
 			public EventDistributor getEventDistributor() {
 				return parentDataMrg.getEventDistributor();
 			}

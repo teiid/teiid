@@ -32,7 +32,7 @@ import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.metadata.index.RuntimeMetadataPlugin;
 import org.teiid.runtime.RuntimePlugin;
 
@@ -62,8 +62,11 @@ public class SystemVDBDeployer {
 				this.file = VFS.mountZip(contents, CoreConstants.SYSTEM_VDB, mountPoint, PROVIDER);
 			}
 			
+			IndexMetadataStore idxStore = new IndexMetadataStore(mountPoint);
+			idxStore.load(null);
+			
 			// uri conversion is only to remove the spaces in URL, note this only with above kind situation  
-			this.vdbRepository.setSystemStore(new IndexMetadataFactory(mountPoint).getMetadataStore(null));
+			this.vdbRepository.setSystemStore(idxStore);
 		} catch (URISyntaxException e) {
 			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40022, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
 		} catch (IOException e) {

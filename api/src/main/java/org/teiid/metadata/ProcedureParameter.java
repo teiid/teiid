@@ -41,6 +41,7 @@ public class ProcedureParameter extends BaseColumn {
 	private Type type;
 	private boolean optional;
 	private Procedure procedure;
+	private boolean isVarArg;
 	
 	public void setType(Type type) {
 		this.type = type;
@@ -66,5 +67,16 @@ public class ProcedureParameter extends BaseColumn {
 	public Procedure getParent() {
 		return this.procedure;
 	}
+	
+	public void setVarArg(boolean isVarArg) {
+		this.isVarArg = isVarArg;
+	}
 
+	public boolean isVarArg() {
+		return isVarArg;
+	}
+	
+    public String toString() { 
+        return getName()+(isVarArg?"... ":" ")+" "+getType(); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    }	
 }

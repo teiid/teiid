@@ -47,5 +47,6 @@ public class RuntimeMetadataPlugin {
 		TEIID80001,
 		TEIID80002,
 		TEIID80003,
+		TEIID80004
 	}
 }

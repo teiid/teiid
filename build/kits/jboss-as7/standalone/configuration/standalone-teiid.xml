@@ -106,6 +106,14 @@
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
                     </driver>
+                    <driver name="teiid-local" module="org.jboss.teiid">
+                        <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
+                        <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
+                    </driver>
+                    <driver name="teiid" module="org.jboss.teiid.client">
+                        <driver-class>org.teiid.jdbc.TeiidDriver</driver-class>
+                        <xa-datasource-class>org.teiid.jdbc.TeiidDataSource</xa-datasource-class>
+                    </driver> 
                 </drivers>
             </datasources>
         </subsystem>
@@ -309,9 +317,10 @@
             
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
-            <queueless-thread-pool name="teiid-async">
-                <max-threads count="2"/>
-            </queueless-thread-pool>
+            <bounded-queue-thread-pool name="teiid-async">
+                <max-threads count="4"/>
+                <queue-length count="100"/>
+            </bounded-queue-thread-pool>
         </subsystem>        
         <subsystem xmlns="urn:jboss:domain:transactions:1.1">
             <core-environment>

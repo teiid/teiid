@@ -124,7 +124,7 @@ public class TestExecutionReuse {
 				}
 				
 				@Override
-				protected Object getConnectionFactory()
+				public Object getConnectionFactory()
 						throws TranslatorException {
 					return null;
 				}

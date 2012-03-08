@@ -21,11 +21,9 @@
  */
 package org.teiid.jboss;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
-
-import javax.naming.InitialContext;
 
 import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.server.deployment.Attachments;
@@ -34,17 +32,20 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
+import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceController.State;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -56,8 +57,13 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.metadata.MetadataRepository;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.index.IndexMetadataRepository;
+import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
+import org.teiid.query.metadata.DDLMetadataRepository;
+import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.services.BufferServiceImpl;
 
@@ -103,13 +109,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			
 			String type = data.getType();
 			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
-			if ( parent == null) {
+			if ( parent == null) {				
 				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", IntegrationPlugin.Event.TEIID50021, type, deploymentName)); //$NON-NLS-1$
 			}
 		}
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
-		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
+		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
 		if (udf != null) {
 			final Module module = deploymentUnit.getAttachment(Attachments.MODULE);
 			if (module != null) {
@@ -117,27 +123,28 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}
 			deployment.addAttchment(UDFMetaData.class, udf);
 		}
-
-		IndexMetadataFactory indexFactory = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
+		
+		// set up the metadata repositories for each models
+		IndexMetadataRepository indexRepo = null;
+		IndexMetadataStore indexFactory = deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
 		if (indexFactory != null) {
-			deployment.addAttchment(IndexMetadataFactory.class, indexFactory);
+			indexRepo = new IndexMetadataRepository(indexFactory);
 		}
 
-		// remove the metadata objects as attachments
-		deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
-		deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
+		MetadataStore store = new MetadataStore();	
+		deployment.addAttchment(MetadataStore.class, store);
 		
+		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			if (model.isSource() && model.getSourceNames().isEmpty()) {
+	    		throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50087, model.getName(), deployment.getName(), deployment.getVersion()));
+	    	}
+			MetadataRepository repo = getMetadataRepository(deployment, model.getName(), indexRepo);
+			model.addAttchment(MetadataRepository.class, repo);
+		}
+
 		// build a VDB service
-		ArrayList<String> unAvailableDS = new ArrayList<String>();
 		VDBService vdb = new VDBService(deployment);
 		final ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
-		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-			for (String sourceName:model.getSourceNames()) {
-				if (!isSourceAvailable(model.getSourceConnectionJndiName(sourceName))) { 
-					unAvailableDS.add(model.getSourceConnectionJndiName(sourceName));
-				}
-			}
-		}
 		
 		// add dependencies to data-sources
 		dataSourceDependencies(deployment, new DependentServices() {
@@ -175,10 +182,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, vdb.getBufferServiceInjector());
 		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.getObjectReplicatorInjector());
 		vdbService.setInitialMode(Mode.PASSIVE).install();
-		
-		if (!unAvailableDS.isEmpty()) {
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50021, deployment.getName(), deployment.getVersion(), unAvailableDS));
-		}
 		
 		ServiceController<?> scMain = deploymentUnit.getServiceRegistry().getService(deploymentUnit.getServiceName().append("contents")); //$NON-NLS-1$
 		scMain.addListener(new AbstractServiceListener<Object>() {
@@ -250,23 +253,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}		
 	}
 
-	private boolean isSourceAvailable(String name) {
-    	String jndiName = getJndiName(name);
-		try {
-			InitialContext ic = new InitialContext();    		
-			try {
-				ic.lookup(jndiName);
-			} catch (Exception e) {
-				if (!jndiName.equals(name)) {
-					ic.lookup(name);
-				}
-			}
-		} catch (Exception e) {
-			return false;
-		}   			
-    	return true;
-	}
-
 	private String getJndiName(String name) {
 		String jndiName = name;
 		if (!name.startsWith(JAVA_CONTEXT)) {
@@ -281,5 +267,52 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			return;
 		}	
 	}
-
+	
+	private MetadataRepository getMetadataRepository(VDBMetaData vdb, String modelName, IndexMetadataRepository indexRepo) throws DeploymentUnitProcessingException {
+		final ModelMetaData model = vdb.getModel(modelName);
+				
+		if (model.getSchemaSourceType() == null) {
+			if (!vdb.isDynamic()) {
+				return indexRepo;
+			}
+			
+			if (vdb.isDynamic() && model.isSource()) {
+				return new NativeMetadataRepository();
+			}
+			return null;
+		}
+		
+		if (model.getSchemaSourceType().equalsIgnoreCase("DDL")) { //$NON-NLS-1$
+			return new DDLMetadataRepository();
+		}
+		
+		if (model.getSchemaSourceType().equalsIgnoreCase("INDEX")) { //$NON-NLS-1$
+			return indexRepo;
+		}
+		
+		if (model.getSchemaSourceType().equalsIgnoreCase("NATIVE")) { //$NON-NLS-1$
+			return new NativeMetadataRepository();
+		}		
+		
+		// if the schema type is a module based
+        final Module module;
+        ClassLoader moduleLoader = this.getClass().getClassLoader();
+        ModuleLoader ml = Module.getCallerModuleLoader();
+        if (model.getSchemaSourceType() != null && ml != null) {
+	        try {
+            	module = ml.loadModule(ModuleIdentifier.create(model.getSchemaSourceType()));
+            	moduleLoader = module.getClassLoader();
+	        } catch (ModuleLoadException e) {
+	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.getString("failed_load_module", IntegrationPlugin.Event.TEIID50068, model.getSchemaSourceType(), model.getName())); //$NON-NLS-1$
+	        }
+        }
+        
+        final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
+        if (serviceLoader != null) {
+        	for (MetadataRepository loader:serviceLoader) {
+        		return loader;
+        	}
+        }
+		return null;
+	}	
 }

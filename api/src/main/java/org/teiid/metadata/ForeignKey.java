@@ -22,6 +22,8 @@
 
 package org.teiid.metadata;
 
+import java.util.List;
+
 /**
  * ForeignKeyRecordImpl
  */
@@ -31,6 +33,8 @@ public class ForeignKey extends KeyRecord {
 	
 	private String uniqueKeyID;
     private KeyRecord primaryKey;
+    private String referenceTableName;
+    private List<String> referenceColumns;
     
     public ForeignKey() {
 		super(Type.Foreign);
@@ -60,5 +64,21 @@ public class ForeignKey extends KeyRecord {
      */
     public void setPrimaryKey(KeyRecord primaryKey) {
 		this.primaryKey = primaryKey;
+	}
+
+	public String getReferenceTableName() {
+		return referenceTableName;
+	}
+
+	public void setReferenceTableName(String tableName) {
+		this.referenceTableName = tableName;
+	}
+
+	public List<String> getReferenceColumns() {
+		return referenceColumns;
+	}
+
+	public void setReferenceColumns(List<String> referenceColumns) {
+		this.referenceColumns = referenceColumns;
 	}
 }

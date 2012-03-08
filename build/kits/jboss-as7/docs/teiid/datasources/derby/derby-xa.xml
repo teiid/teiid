@@ -1,4 +1,4 @@
-<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
 <subsystem xmlns="urn:jboss:domain:datasources:1.0">
     <datasources>
         <xa-datasource jndi-name="java:/derbyDS" pool-name="derbyDS" enabled="true" use-java-context="true" use-ccm="true">

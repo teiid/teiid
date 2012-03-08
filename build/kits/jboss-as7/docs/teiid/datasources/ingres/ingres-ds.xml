@@ -1,0 +1,23 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:/ingresDS" pool-name="ingresDS">
+        <driver-class>com.ingres.jdbc.IngresDriver</driver-class>
+        <connection-url>jdbc:ingres://{host}:{port:21071}/{database_name}</connection-url>
+        <driver>iijdbc.jar</driver>
+        <pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+        </pool>
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+        </security>
+    </datasource>                               
+    <drivers>
+        <driver name="iijdbc.jar" module="com.ingres">
+            
+            <xa-datasource-class>com.ingres.jdbc.IngresXADataSource</xa-datasource-class>
+        </driver>    
+    </drivers>
+</datasources>

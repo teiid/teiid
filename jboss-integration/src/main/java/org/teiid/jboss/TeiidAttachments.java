@@ -26,7 +26,7 @@ import org.jboss.as.server.deployment.AttachmentKey;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.UDFMetaData;
-import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.metadata.index.IndexMetadataStore;
 
 public final class TeiidAttachments {
 	
@@ -34,7 +34,7 @@ public final class TeiidAttachments {
 	
     public static final AttachmentKey<VDBMetaData> VDB_METADATA = AttachmentKey.create(VDBMetaData.class);
     public static final AttachmentKey<UDFMetaData> UDF_METADATA = AttachmentKey.create(UDFMetaData.class);
-    public static final AttachmentKey<IndexMetadataFactory> INDEX_METADATA = AttachmentKey.create(IndexMetadataFactory.class);
+    public static final AttachmentKey<IndexMetadataStore> INDEX_METADATA = AttachmentKey.create(IndexMetadataStore.class);
     
     public static final AttachmentKey<DeploymentType> DEPLOYMENT_TYPE = AttachmentKey.create(DeploymentType.class);
     

@@ -88,7 +88,12 @@
         <groupId>org.jboss.as</groupId>
         <artifactId>jboss-as-subsystem-test</artifactId>
         <scope>test</scope>
-    </dependency>    
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.as</groupId>
+        <artifactId>jboss-as-cli</artifactId>
+        <scope>test</scope>
+    </dependency> 
        
     <dependency>
       <groupId>org.jboss.teiid</groupId>

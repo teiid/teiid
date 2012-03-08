@@ -112,7 +112,7 @@ public class MetadataProcessor {
 			String columnName = "FK_" + parent.getName() + "_" + col.getName();//$NON-NLS-1$ //$NON-NLS-2$
 			ArrayList<String> columnNames2 = new ArrayList<String>();
 			columnNames2.add(col.getName());	
-			metadataFactory.addForiegnKey(columnName, columnNames2, parent, child);
+			metadataFactory.addForiegnKey(columnName, columnNames2, parent.getName(), child);
 	        
 			}
 			

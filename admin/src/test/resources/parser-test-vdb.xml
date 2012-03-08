@@ -12,6 +12,7 @@
         <property name="model-prop" value="model-value"></property>
         <source name="s1" translator-name="translator" connection-jndi-name="java:binding-one"></source>
         <source name="s2" translator-name="translator" connection-jndi-name="java:binding-two"></source>
+        <metadata type="DDL"><![CDATA[DDL Here]]></metadata>
     </model>
     <translator name="oracleOverride" type="oracle" description="hello world">
         <property name="my-property" value="my-value"></property>

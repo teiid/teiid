@@ -515,9 +515,4 @@ public class TempTableDataManager implements ProcessorDataManager {
 	public EventDistributor getEventDistributor() {
 		return this.eventDistributor;
 	}
-
-	@Override
-	public MetadataRepository getMetadataRepository() {
-		return this.processorDataManager.getMetadataRepository();
-	}
 }

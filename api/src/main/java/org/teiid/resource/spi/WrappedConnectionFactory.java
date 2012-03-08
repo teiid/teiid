@@ -42,6 +42,11 @@ public class WrappedConnectionFactory implements ConnectionFactory, Referenceabl
 	private BasicManagedConnectionFactory mcf;
 	private Reference reference;
 	
+	public WrappedConnectionFactory() {
+		// need by spec 17.5.1.1, not sure how this will effect as the this 
+		// connection factory is always built by ManagedConnectionfactory
+	}
+	
 	public WrappedConnectionFactory(BasicConnectionFactory delegate, ConnectionManager cm, BasicManagedConnectionFactory mcf) {
 		this.delegate = delegate;
 		this.cm = cm;

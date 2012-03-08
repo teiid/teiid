@@ -49,7 +49,7 @@ public final class TestConnectorManager extends TestCase {
 			public ExecutionFactory getExecutionFactory() {
 				return c;
 			}
-			protected Object getConnectionFactory(){
+			public Object getConnectionFactory(){
 				return c;
 			}
 		};

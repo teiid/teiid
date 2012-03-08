@@ -37,7 +37,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.metadata.MetadataRepository;
+import org.teiid.metadata.DefaultMetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 
@@ -49,9 +49,13 @@ public class TestMetadataUpdates {
     static final String VDB = "metadata";
     
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer();
-    	MetadataRepository repo = Mockito.mock(MetadataRepository.class);
-    	server.setMetadataRepository(repo);
+    	FakeServer server = new FakeServer();    	
+    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", getMetadataRepo());
+    	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
+    }
+
+	private static DefaultMetadataRepository getMetadataRepo() {
+		DefaultMetadataRepository repo = Mockito.mock(DefaultMetadataRepository.class);
     	Mockito.stub(repo.getViewDefinition(Mockito.anyString(), Mockito.anyInt(), (Table)Mockito.anyObject())).toAnswer(new Answer<String>() {
     		@Override
     		public String answer(InvocationOnMock invocation) throws Throwable {
@@ -84,9 +88,8 @@ public class TestMetadataUpdates {
 				return Boolean.TRUE;
     		}
 		});
-    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb");
-    	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
-    }
+    	return repo;
+	}
     
     @AfterClass public static void tearDown() throws SQLException {
     	connection.close();

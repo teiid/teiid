@@ -249,11 +249,19 @@ public class VDBMetadataParser {
 				ve.setPath(path);
 				model.addError(ve);
 				break;
+			case METADATA:
+				Properties metdataProps = getAttributes(reader);
+				String type = metdataProps.getProperty(Element.TYPE.getLocalName(), "DDL");
+				String schema = reader.getElementText();
+				model.setSchemaSourceType(type);
+				model.setSchemaText(schema);
+				break;
              default: 
-            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element4",reader.getName(), 
+            	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element5",reader.getName(), 
             			 Element.DESCRIPTION.getLocalName(),
             			 Element.PROPERTY.getLocalName(),
             			 Element.SOURCE.getLocalName(),
+            			 Element.METADATA.getLocalName(),
             			 Element.VALIDATION_ERROR.getLocalName()), reader.getLocation()); 
             }
         }		
@@ -303,7 +311,8 @@ public class VDBMetadataParser {
 	    ALLOW_EXECUTE("allow-execute"),
 	    ALLOW_ALTER("allow-alter"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
-	    ENTRY("entry");
+	    ENTRY("entry"),
+	    METADATA("metadata");
 	    
 	    private final String name;
 
@@ -450,6 +459,13 @@ public class VDBMetadataParser {
 			writer.writeAttribute(Element.NAME.getLocalName(), source.getName());
 			writer.writeAttribute(Element.SOURCE_TRANSLATOR_NAME_ATTR.getLocalName(), source.getTranslatorName());
 			writer.writeAttribute(Element.SOURCE_CONNECTION_JNDI_NAME_ATTR.getLocalName(), source.getConnectionJndiName());
+			writer.writeEndElement();
+		}
+		
+		if (model.getSchemaSourceType() != null) {
+			writer.writeStartElement(Element.METADATA.getLocalName());
+			writer.writeAttribute(Element.TYPE.getLocalName(), model.getSchemaSourceType());
+			writer.writeCData(model.getSchemaText());
 			writer.writeEndElement();
 		}
 		

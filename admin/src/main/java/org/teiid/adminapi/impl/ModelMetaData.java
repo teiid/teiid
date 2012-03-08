@@ -72,6 +72,10 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     @XmlElement(name = "validation-error")
     protected List<ValidationError> errors;    
     
+    protected String schemaSourceType;
+        
+	protected String schemaText;
+    
 	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();
@@ -321,5 +325,22 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 				return false;
 			return true;
 		}		
-    }    
+    }
+
+    public String getSchemaSourceType() {
+		return schemaSourceType;
+	}
+
+	public void setSchemaSourceType(String schemaSourceType) {
+		this.schemaSourceType = schemaSourceType;
+	}
+
+	public String getSchemaText() {
+		return schemaText;
+	}
+
+	public void setSchemaText(String schemaText) {
+		this.schemaText = schemaText;
+	}
+	
 }

@@ -236,6 +236,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String PROPERTIES = "properties"; //$NON-NLS-1$
 		private static final String SOURCE_MAPPINGS = "source-mappings"; //$NON-NLS-1$
 		private static final String VALIDITY_ERRORS = "validity-errors"; //$NON-NLS-1$
+		private static final String METADATA= "metadata"; //$NON-NLS-1$
+		private static final String METADATA_TYPE = "metadata-type"; //$NON-NLS-1$
+		
 		
 		public static ModelMetadataMapper INSTANCE = new ModelMetadataMapper();
 		
@@ -276,6 +279,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				for (ValidationError error:errors) {
 					errorsNode.add(ValidationErrorMapper.INSTANCE.wrap(error, new ModelNode()));
 				}
+			}
+			if (model.getSchemaText() != null) {
+				node.get(METADATA).set(model.getSchemaText());
+			}
+			if (model.getSchemaSourceType() != null) {
+				node.get(METADATA_TYPE).set(model.getSchemaSourceType());
 			}
 			return node;
 		}
@@ -330,6 +339,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 						model.addError(error);
 					}
 				}
+			}
+			if (node.get(METADATA).isDefined()) {
+				model.setSchemaText(node.get(METADATA).asString());
+			}
+			if (node.get(METADATA_TYPE).isDefined()) {
+				model.setSchemaSourceType(node.get(METADATA_TYPE).asString());
 			}
 			return model;
 		}

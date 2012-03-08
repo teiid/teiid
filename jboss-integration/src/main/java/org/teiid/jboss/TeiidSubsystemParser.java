@@ -77,7 +77,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 
     	writeElement(writer, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT, node);
     	writeElement(writer, Element.POLICY_DECIDER_MODULE_ELEMENT, node);
-    	writeElement(writer, Element.METADATA_REPO_MODULE_ELEMENT, node);
     	
     	if (like(node, Element.RESULTSET_CACHE_ELEMENT)){
     		writer.writeStartElement(Element.RESULTSET_CACHE_ELEMENT.getLocalName());
@@ -278,7 +277,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 
     				case POLICY_DECIDER_MODULE_ELEMENT:
     				case AUTHORIZATION_VALIDATOR_MODULE_ELEMENT:
-    				case METADATA_REPO_MODULE_ELEMENT:
     				case WORKMANAGER:    					
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;

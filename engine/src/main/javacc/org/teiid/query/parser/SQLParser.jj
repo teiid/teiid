@@ -24,6 +24,7 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.translator.*;
 
 /** 
  * <p>The SQLParser is a JavaCC-generated parser that reads a SQL string and produces a 
@@ -176,7 +177,7 @@ TOKEN : /* Reserved words */
 |   <FETCH: "fetch">
 |   <FILTER: "filter">
 |   <FOR: "for">
-|   <FORIEGN: "foriegn">
+|   <FOREIGN: "foreign">
 |   <FROM: "from">
 |   <FULL: "full">
 |   <FUNCTION: "function">
@@ -237,8 +238,10 @@ TOKEN : /* Reserved words */
 |   <ONLY: "only">
 |   <OPEN: "open">
 |   <OPTION: "option">
+|   <OPTIONS: "options">
 |   <OR: "or">
 |   <ORDER: "order">
+|   <OUT: "out">
 |   <OUTER: "outer">
 |   <OUTPUT: "output">
 |   <OVER: "over">
@@ -717,18 +720,18 @@ Command createTempTable(ParseInfo info) :
 Column tableElement(ParseInfo info) :
 {
 	String element = null;
-	String type = null;
+	ParsedDataType type = null;
 	boolean autoIncrement = false;
 	boolean notNull = false;
 }
 {
 	 element = id()
 	 (
-	  type = dataTypeString()
+	  type = parseDataType()
 	  |
 	  nonReserved("SERIAL")
 	  {
-	    type = "INTEGER";
+	    type = new ParsedDataType("INTEGER");
 	    autoIncrement = true;
 	    notNull = true;
 	  }
@@ -737,7 +740,7 @@ Column tableElement(ParseInfo info) :
 	 {
 	    Column c = new Column();
 	    c.setName(validateElementName(element));
-	    c.setRuntimeType(type);
+	    c.setRuntimeType(type.type);
 	    c.setAutoIncremented(autoIncrement);
 	    c.setNullType(notNull?NullType.No_Nulls:NullType.Nullable);
 	    return c;
@@ -1176,21 +1179,21 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo info) :
 {
 	String element = null;
-	String type = null;
+	ParsedDataType type = null;
 	List<TableFunctionReference.ProjectedColumn> elements = new ArrayList<TableFunctionReference.ProjectedColumn>();
 }
 {
 	 element = id()
-	 type = dataTypeString()
+	 type = parseDataType()
 	 {
-	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type);
+	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type.type);
 		elements.add(symbol);
 	 }
 	 (LOOKAHEAD(2) <COMMA>
 		element = id()
-		type = dataTypeString()
+		type = parseDataType()
 		{
-	      symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type);
+	      symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type.type);
 		  elements.add(symbol);
 		}
 	 )*
@@ -3889,54 +3892,63 @@ Constant idExpression() :
 	}
 }
 
-String dataTypeString() : 
+ParsedDataType parseDataType() :
 {
 	Token typeToken = null;
+	Token lengthToken = null;
+	Token scaleToken = null; 
+	boolean precision = true;
 }
 {
 	(
-		typeToken = <STRING> |
-		typeToken = <VARCHAR> | 
+		(typeToken = <STRING> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) |
+		(typeToken = <VARCHAR> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
 		typeToken = <BOOLEAN> | 
-		typeToken = <BYTE> | 
-		typeToken = <TINYINT> |
-		typeToken = <SHORT> | 
-		typeToken = <SMALLINT> |
-		typeToken = <CHAR> | 
-		typeToken = <INTEGER> | 
-		typeToken = <LONG> | 
-		typeToken = <BIGINT> |
-		typeToken = <BIGINTEGER> | 
-		typeToken = <FLOAT> |
-		typeToken = <REAL> | 
-		typeToken = <DOUBLE> | 
-		typeToken = <BIGDECIMAL> |
-		typeToken = <DECIMAL> | 
+		(typeToken = <BYTE> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
+		(typeToken = <TINYINT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) |
+		(typeToken = <SHORT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) | 
+		(typeToken = <SMALLINT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) |
+		(typeToken = <CHAR> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
+		(typeToken = <INTEGER> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) | 
+		(typeToken = <LONG> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) | 
+		(typeToken = <BIGINT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) |
+		(typeToken = <BIGINTEGER> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) | 
+		(typeToken = <FLOAT> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>]) |
+		(typeToken = <REAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
+		(typeToken = <DOUBLE> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
+		(typeToken = <BIGDECIMAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])|
+		(typeToken = <DECIMAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
 		typeToken = <TIMESTAMP> |
 		typeToken = <OBJECT> |
 		typeToken = <BLOB> |
 		typeToken = <CLOB> |
-		typeToken = <VARBINARY> |
+		(typeToken = <VARBINARY> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) |
 		typeToken = <XML>
 		
 	)
 	
 	{
-		return typeToken.image;
+		if (scaleToken != null){
+			return new ParsedDataType(typeToken.image, Integer.parseInt(lengthToken.image), Integer.parseInt(scaleToken.image), precision);
+		}
+		else if (scaleToken == null && lengthToken != null){
+			return new ParsedDataType(typeToken.image, Integer.parseInt(lengthToken.image), precision);
+		}
+		return new ParsedDataType(typeToken.image);
 	}
 }
 
 
 Constant dataType() : 
 {
-	String type = null;
+	ParsedDataType type = null;
 }
 {
-	type = dataTypeString()	
+	type = parseDataType()	
 	{
-		return new Constant(type);
+		return new Constant(type.type);
 	}
 }
 
@@ -4037,4 +4049,476 @@ Constant literal() :
 	{
 		return constant;
 	}
+}
+
+
+
+/*   
+ * DDL specific parser
+ */
+
+ void parseMetadata(MetadataFactory factory) :
+{
+}
+{
+    ddlStmts(factory) [<SEMICOLON>] (ddlStmts(factory) [<SEMICOLON>])*     
+}
+
+void ddlStmts(MetadataFactory factory) :
+{
+	Command command = null; 
+}
+{
+	(LOOKAHEAD(3) 	createTable(factory) | 
+	 LOOKAHEAD(4)	createDDLProcedure(factory, new ParseInfo()) |
+	 LOOKAHEAD(2)	createNameSpace(factory) |
+	 LOOKAHEAD(4) 	command=createTrigger(new ParseInfo())
+	 {
+	 	createDDLTrigger(factory, (AlterTrigger)command);
+	 }
+	)
+}
+
+void createNameSpace(MetadataFactory factory) :
+{
+	String uri = null;
+	String prefix = null; 
+}
+{ 
+	<SET> nonReserved ("NAMESPACE") uri = stringVal() <AS> prefix = stringVal()
+	{
+		factory.addNamespace(prefix, uri);
+	}
+}
+
+/**
+ * Parse create update procedure command
+ * @throws ParseException if parsing failed
+ */
+CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo info) :
+{
+	boolean virtual = false;
+	boolean function = false;
+	Procedure proc = null;
+	String procName = null;
+    CreateProcedureCommand procCmd = new CreateProcedureCommand();
+    Statement stmt = null; 	
+    ParsedDataType returnDataType = null;    
+}
+{
+	<CREATE> [<VIRTUAL> {virtual = true;}] (<PROCEDURE> | <FUNCTION> {function = true;})
+	//the below is optional beacuse to allow the designer based metadata
+	(	procName = id()
+		{
+			try {
+				proc = factory.addProcedure(procName);
+			} catch(TranslatorException e){
+				throw new ParseException(e.getMessage());
+			}		
+		}
+	
+		<LPAREN>
+		[readProcedureParameter(factory, proc)]
+		(<COMMA> readProcedureParameter(factory, proc))*	
+		<RPAREN>
+		
+		<RETURNS> (readProcedureReturn(factory, proc) | returnDataType = parseDataType())
+		
+	    [<OPTIONS> <LPAREN>
+		   readProcedureOption(proc)
+		   (<COMMA>
+			readProcedureOption(proc)
+		   )*	   
+		   <RPAREN>
+		]
+		[<AS>
+		stmt = statement(info)])
+		{
+			proc.setVirtual(virtual);
+			proc.setFunction(function);
+			if (stmt != null){
+				proc.setQueryPlan("CREATE VIRTUAL PROCEDURE "+asBlock(stmt).toString());
+			}
+			
+			if (virtual && !function && stmt == null){
+				throw new ParseException("Virtual procedure " + procName + " must define the procedure block after 'AS' keyword");
+			}
+			
+	        if (returnDataType != null){
+				addProcReturnColumn(factory, proc, "return", returnDataType);
+	        }
+	        return procCmd; 		
+		}
+}
+
+void readProcedureParameter(MetadataFactory factory, Procedure proc) :
+{
+	String name = null;
+	ParsedDataType type = null;
+	Token direction = null;
+	ProcedureParameter param = null;
+}
+{
+	[((direction = <IN>)|(direction=<OUT>)|(direction=<INOUT>))]
+	name = id()
+	type = parseDataType()
+	{
+		ProcedureParameter.Type ppType = ProcedureParameter.Type.In;
+		
+		if (direction == null){
+			ppType = ProcedureParameter.Type.In;
+		}
+		else if (direction.image.equalsIgnoreCase("in")){
+			ppType = ProcedureParameter.Type.In ;
+		}
+		else if (direction.image.equalsIgnoreCase("out")){
+			ppType = ProcedureParameter.Type.Out;
+		}
+		else if (direction.image.equalsIgnoreCase("inout")){
+			ppType = ProcedureParameter.Type.InOut;
+		}
+		else {
+			throw new ParseException("Unknown type of parameter on procedure "+ proc.getName());
+		}
+		try {
+			param = factory.addProcedureParameter(name, type.type, ppType, proc);
+			if (type.length != null){
+			   param.setLength(type.length);
+			}
+			if (type.scale != null){
+			   param.setScale(type.scale);
+			}
+			if (type.precision != null){
+				param.setPrecision(type.precision);
+			}			
+		} catch (TranslatorException e){
+			throw new ParseException(e.getMessage());
+		}
+	}
+	[nonReserved("VARARG") {param.setVarArg(true);}]
+	
+}
+
+void readProcedureReturn(MetadataFactory factory, Procedure proc) :
+{
+	String name = null;
+	ParsedDataType type = null;
+}
+{
+	<LPAREN>
+	  name = id()
+	  type = parseDataType()
+	  {
+		addProcReturnColumn(factory, proc, name, type);	  	
+	  }
+	  (<COMMA> 
+	  	name = id()
+	    type = parseDataType()
+		{
+			addProcReturnColumn(factory, proc, name, type);		
+		}
+	  )*
+	 <RPAREN> 
+}
+
+void createTable(MetadataFactory factory) :
+{
+	Table table = null;
+	String tableName = null;
+	boolean view = false;
+	Command query = null;
+}
+{
+	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] nonReserved("VIEW") {view = true;}) 
+	tableName = id()
+	{
+		try{
+		    table = factory.addTable(tableName);
+		    table.setVirtual(view);
+	    } catch(TranslatorException e){
+	    	throw new ParseException(e.getMessage());
+	    }
+	}
+	[<LPAREN>
+    createColumn(factory, table)
+    (LOOKAHEAD(2) <COMMA>
+      createColumn(factory, table)
+    )*	
+    [<CONSTRAINT> (readPrimaryKeys(factory, table) | readConstraints(factory, table) | readForeignKeys(factory, table))
+        (<COMMA>
+         (readConstraints(factory, table)|readForeignKeys(factory, table))
+        )*
+    ]    
+    <RPAREN>]    
+    [<OPTIONS> <LPAREN>
+	   readTableOption(table)
+	   (<COMMA>
+		readTableOption(table)
+	   )*	   
+	   <RPAREN>
+	]
+	[<AS> query = queryExpression(new ParseInfo())]
+	{
+		if (view && query == null){
+			throw new ParseException("View definition must have query plan defined");
+		}
+		
+		if (view){
+			table.setSelectTransformation(query.toString());
+		}
+	}
+}
+
+void readForeignKeys(MetadataFactory factory, Table table) :
+{
+	List<String> columnNames = null;
+	String viewName = null;
+	Table reference = null;
+	KeyRecord pk = null;
+	Column column = null;
+	List<String> pkColumnNames = null;
+}
+{
+	<FOREIGN> nonReserved("KEY")
+	columnNames = getColumnNames()
+    {
+	    for (String col: columnNames) {
+	    	column = getColumn(col, table);
+	    	if (column == null) {
+	    		throw new ParseException("Column name "+ col + " not found in table "+ table.getName());
+	    	}
+	    }  
+    }
+    <REFERENCES>
+    viewName = id()
+    [pkColumnNames = getColumnNames()]
+    {
+	    try{
+		    factory.addForiegnKey("FK"+table.getForeignKeys().size(), columnNames, pkColumnNames, viewName, table);   
+	    } catch (TranslatorException e){
+	    	throw new ParseException(e.getMessage());
+	    }
+    }
+}
+
+void readPrimaryKeys(MetadataFactory factory, Table table) :
+{
+	List<String> columnNames = null;
+	Column column = null;
+}
+{
+	<PRIMARY> nonReserved("KEY")
+    {
+    	columnNames = getColumnNames();
+	    for (String col: columnNames) {
+	    	column = getColumn(col, table);
+	    	if (column == null) {
+	    		throw new ParseException("Column name "+ col + " not found in table "+ table.getName());
+	    	}
+	    }
+	    if (table.getPrimaryKey() != null){
+	    	throw new ParseException("Primary Key is already defined on "+ table.getName());
+	 	}
+	 	try{
+	 		factory.addPrimaryKey("PK", columnNames, table);
+	 	} catch(TranslatorException e){
+	 		throw new ParseException(e.getMessage());
+	 	}
+    }
+}
+
+void readConstraints(MetadataFactory factory, Table table) :
+{
+	KeyRecord keyrecord = null;
+	Column column = null;
+	List<String> columnNames = null;
+	String type = null;
+}
+{
+	( <UNIQUE> { type = "UNIQUE"; } | type = nonReserved("INDEX","ACCESSPATTERN"))
+    {
+	    columnNames = getColumnNames();	    
+	    for (String col: columnNames) {
+	    	column = getColumn(col, table);
+	    	if (column == null) {
+	    		throw new ParseException("Column name "+ col + " not found in table "+ table.getName());
+	    	}
+	    }
+	    try{
+	    	if (type.equalsIgnoreCase("INDEX")) { 
+	    		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnNames, table);
+	    	}
+	    	if (type.equalsIgnoreCase("UNIQUE")) { 
+	    		factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnNames, table);
+	    	}	    
+	    	if (type.equalsIgnoreCase("ACCESSPATTERN")) { 
+	    		factory.addAccessPattern("AP"+table.getAccessPatterns().size(), columnNames, table);
+	    	}
+    	}catch(TranslatorException e){
+    		throw new ParseException(e.getMessage());
+    	}	    
+    }
+}
+
+ArrayList<String> getColumnNames() :
+{
+	ArrayList list = new ArrayList<String>();
+	String id = null;
+}
+{
+	<LPAREN>
+	  id = id()
+	  {
+	  	list.add(id);
+	  }
+	  (<COMMA> id = id()
+	   {
+		list.add(id);
+	   }
+	  )*
+	 <RPAREN> 
+	 {
+	 	return list;
+	 }
+}
+
+void createColumn(MetadataFactory factory, Table table) :
+{
+	String element = null;
+	ParsedDataType type = null;
+	boolean autoIncrement = false;
+	boolean notNull = false;
+	String defalt = null;
+	Column column = null;
+	List<String> columnName = new ArrayList<String>();
+	boolean index = false;
+	boolean unique = false;
+	boolean pk = false;
+	String word = null;
+}
+{
+	 element = id()
+	 (
+	  type = parseDataType()
+	  {
+	  	try{
+    		column = factory.addColumn(validateElementName(element), type.type, table);
+		    if (type.length != null){
+		    	column.setLength(type.length);
+		    }
+		    if (type.scale != null){
+		    	column.setScale(type.scale);
+		    }    	
+			if (type.precision != null){
+				column.setPrecision(type.precision);
+			}		    	
+    		columnName.add(element);
+    	}catch(TranslatorException e){
+    		throw new ParseException(e.getMessage());
+    	}
+	  }
+	 )
+	 [<NOT> <NULL> { notNull = true; }]
+	 ([(<UNIQUE> { unique = true;  })
+	  |(word=nonReserved("INDEX", "AUTO_INCREMENT")  
+	    { if (word.equalsIgnoreCase("INDEX")) index = true;
+	      else if (word.equalsIgnoreCase("AUTO_INCREMENT")) autoIncrement = true; 
+	    })+	 
+	  |(<PRIMARY> nonReserved("KEY") { pk = true; })	 
+	  ])
+	 [<DEFAULT_KEYWORD> defalt = stringVal()]
+	 [<OPTIONS> <LPAREN>
+	   readColumnOption(column) (<COMMA> readColumnOption(column))*	   
+	   <RPAREN>
+	 ]
+	 {
+	 	try{
+		    if (index){
+		 		factory.addIndex(element, true, columnName, table);
+		 	}
+		 	
+		    if (unique){
+		 		factory.addIndex(element, false, columnName, table);
+		 	}	 	
+		 	
+		    if (pk) {
+		    	if (table.getPrimaryKey() != null) {
+		    		throw new ParseException("Primary Key is already defined on "+ table.getName());
+		    	}
+		 		factory.addPrimaryKey(element, columnName, table);
+		 	}
+    	}catch(TranslatorException e){
+    		throw new ParseException(e.getMessage());
+    	}	 	
+	     	 	
+	    column.setAutoIncremented(autoIncrement);
+	    column.setNullType(notNull?Column.NullType.No_Nulls:Column.NullType.Nullable);
+	    if (defalt != null){
+	    	column.setDefaultValue(defalt);
+	    }	    
+	 }
+}
+
+void readColumnOption(Column column) :
+{
+	Token value = null;
+	String key = null;
+}
+{
+	 key = id()
+	 ((value = <STRINGVAL>)
+	 { 
+	 	setColumnOption(column, key, normalizeStringLiteral(value.image)); 
+	 } 
+	 | (value = <INTEGERVAL>) 
+	 { 
+	 	setColumnOption(column, key, value.image); 
+	 }
+	 | (value = <DECIMALVAL>)
+	 { 
+	 	setColumnOption(column, key, value.image); 
+	 })
+}
+
+void readProcedureOption(Procedure proc) :
+{
+	Token value = null;
+	String key = null;
+	Token tk = null;
+}
+{
+	 (key=id()|tk=<DETERMINISTIC>{ key = tk.image;})
+	 ((value = <STRINGVAL>)
+	 { 
+	 	setProcedureOption(proc, key, normalizeStringLiteral(value.image)); 
+	 } 
+	 | (value = <INTEGERVAL>) 
+	 { 
+	 	setProcedureOption(proc, key, value.image); 
+	 }
+	 | (value = <DECIMALVAL>)
+	 { 
+	 	setProcedureOption(proc, key, value.image); 
+	 })
+}
+
+void readTableOption(Table table) :
+{
+	Token value = null;
+	String key = null;
+}
+{
+	 key = id()
+	 ((value = <STRINGVAL>)
+	 { 
+	 	setTableOption(table, key, normalizeStringLiteral(value.image)); 
+	 } 
+	 | (value = <INTEGERVAL>) 
+	 { 
+	 	setTableOption(table, key, value.image); 
+	 }
+	 | (value = <DECIMALVAL>)
+	 { 
+	 	setTableOption(table, key, value.image); 
+	 })
 }

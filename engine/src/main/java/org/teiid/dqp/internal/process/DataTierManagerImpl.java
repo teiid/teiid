@@ -61,7 +61,19 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.*;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataRepository;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
@@ -144,7 +156,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     private BufferManager bufferManager;
     private EventDistributor eventDistributor;
     private boolean detectChangeEvents;
-    private MetadataRepository metadataRepository;
 
     public DataTierManagerImpl(DQPCore requestMgr, BufferManager bufferMgr, boolean detectChangeEvents) {
 		this.requestMgr = requestMgr;
@@ -162,14 +173,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     
     public EventDistributor getEventDistributor() {
 		return eventDistributor;
-	}
-    
-    public MetadataRepository getMetadataRepository() {
-		return metadataRepository;
-	}
-    
-    public void setMetadataRepository(MetadataRepository metadataRepository) {
-		this.metadataRepository = metadataRepository;
 	}
     
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {
@@ -413,8 +416,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						if (target == null) {
 							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30549, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30549, uuid));
 						}
-						if (this.metadataRepository != null) {
-							this.metadataRepository.setProperty(vdbName, vdbVersion, target, key, strVal);
+						if (getMetadataRepository(target, vdb) != null) {
+							getMetadataRepository(target, vdb).setProperty(vdbName, vdbVersion, target, key, strVal);
 						}
 						result = target.setProperty(key, strVal);
 						if (eventDistributor != null) {
@@ -457,8 +460,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					columnStats.setNullValues(nullVals);
 					columnStats.setMaximumValue(max);
 					columnStats.setMinimumValue(min);
-					if (this.metadataRepository != null) {
-						this.metadataRepository.setColumnStats(vdbName, vdbVersion, c, columnStats);
+					if (getMetadataRepository(table, vdb) != null) {
+						getMetadataRepository(table, vdb).setColumnStats(vdbName, vdbVersion, c, columnStats);
 					}
 					c.setColumnStats(columnStats);
 					if (eventDistributor != null) {
@@ -470,8 +473,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					int cardinality = (Integer)val.getValue();
 					TableStats tableStats = new TableStats();
 					tableStats.setCardinality(cardinality);
-					if (this.metadataRepository != null) {
-						this.metadataRepository.setTableStats(vdbName, vdbVersion, table, tableStats);
+					if (getMetadataRepository(table, vdb) != null) {
+						getMetadataRepository(table, vdb).setTableStats(vdbName, vdbVersion, table, tableStats);
 					}
 					table.setCardinality(cardinality);
 					if (eventDistributor != null) {
@@ -498,6 +501,33 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			}
 		}
 		return new CollectionTupleSource(rows.iterator());
+	}
+	
+	public MetadataRepository getMetadataRepository(AbstractMetadataRecord target, VDBMetaData vdb) {
+		String modelName = null;
+		
+		if (target instanceof Schema) {
+			modelName = ((Schema)target).getName();
+		}
+		else if (target instanceof Table) {
+			modelName = ((Table)target).getParent().getName();
+		}
+		else if (target instanceof Procedure) {
+			modelName = ((Procedure)target).getParent().getName();
+		}
+		else if (target instanceof FunctionMethod) {
+			modelName = ((FunctionMethod)target).getParent().getName();
+		}
+		else if (target instanceof Column || target instanceof ProcedureParameter) {
+			AbstractMetadataRecord record = ((Column)target).getParent();
+			return getMetadataRepository(record, vdb);
+		}
+		
+		if (modelName != null) {
+			ModelMetaData model = vdb.getModel(modelName);
+			return model.getAttachment(MetadataRepository.class);
+		}
+		return null;
 	}
 
 	//TODO: do better than a linear search

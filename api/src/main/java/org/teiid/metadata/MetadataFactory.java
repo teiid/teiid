@@ -23,10 +23,13 @@
 package org.teiid.metadata;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 import java.util.UUID;
 
 import org.teiid.connector.DataPlugin;
@@ -40,31 +43,35 @@ import org.teiid.translator.TypeFacility;
  * TODO: add support for datatype import
  * TODO: add support for unique constraints
  */
-public class MetadataFactory {
+public class MetadataFactory extends Schema {
+	private static final long serialVersionUID = 8590341087771685630L;
 	
-	private Schema schema;
+	private String vdbName;
+	private int vdbVersion;
 	private Map<String, Datatype> dataTypes;
-	private Properties importProperties;
-	private MetadataStore store = new MetadataStore();
 	private boolean autoCorrectColumnNames = true;
+	private Map<String, String> namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+	private String rawMetadata;
+	private Properties importProperties;
 	
-	public MetadataFactory(String modelName, Map<String, Datatype> dataTypes, Properties importProperties) {
+	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> dataTypes, Properties importProperties, String rawMetadata) {
+		this.vdbName = vdbName;
+		this.vdbVersion = vdbVersion;
 		this.dataTypes = dataTypes;
-		schema = new Schema();
-		schema.setName(modelName);
-		setUUID(schema);	
-		store.addSchema(schema);
+		setName(schemaName);
+		setUUID(this);	
 		this.importProperties = importProperties;
+		this.rawMetadata = rawMetadata;
 	}
-	
-	public MetadataStore getMetadataStore() {
-		return store;
-	}
-	
+		
 	public Properties getImportProperties() {
 		return importProperties;
 	}
 	
+	public String getRawMetadata() {
+		return this.rawMetadata;
+	}
+		
 	protected void setUUID(AbstractMetadataRecord record) {
 		record.setUUID("mmuuid:" +UUID.randomUUID()); //$NON-NLS-1$
 	}
@@ -80,7 +87,7 @@ public class MetadataFactory {
 		table.setTableType(Table.Type.Table);
 		table.setName(name);
 		setUUID(table);
-		this.schema.addTable(table);
+		addTable(table);
 		return table;
 	}
 	
@@ -180,79 +187,53 @@ public class MetadataFactory {
 		index.setName(name);
 		setUUID(index);
 		assignColumns(columnNames, table, index);
-		table.getIndexes().add(index);
+		if (nonUnique) {
+			table.getIndexes().add(index);
+		}
+		else {
+			table.getUniqueKeys().add(index);
+		}
 		return index;
 	}
-		
+	
+	
 	/**
 	 * Adds a foreign key to the given table.  The referenced primary key must already exist.  The column names should be in key order.
 	 * @param name
 	 * @param columnNames
-	 * @param pkTable
+	 * @param referenceTable - schema qualified reference table name
 	 * @param table
 	 * @return
 	 * @throws TranslatorException
 	 */
-	public ForeignKey addForiegnKey(String name, List<String> columnNames, Table pkTable, Table table) throws TranslatorException {
-		return addForiegnKey(name, columnNames, null, pkTable, table, false);
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, String referenceTable, Table table) throws TranslatorException {
+		return addForiegnKey(name, columnNames, null, referenceTable, table);
 	}
 
 	/**
 	 * Adds a foreign key to the given table.  The referenced key may be automatically created if addUniqueConstraint is true. The column names should be in key order.
+	 * if reference table is is another schema, they will be resolved during validation.
 	 * @param name
 	 * @param columnNames
 	 * @param referencedColumnNames, may be null to indicate that the primary key should be used.
-	 * @param pkTable
+	 * @param referenceTable - schema qualified reference table name, can be from another schema
 	 * @param table
-	 * @param addUniqueConstraint
+	 * @param addUniqueConstraint - if true, if the referenced table columns do not match with either PK, or FK then a UNIQUE index on reference table is created.
 	 * @return
 	 * @throws TranslatorException
 	 */	
-	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, Table pkTable, Table table, boolean addUniqueConstraint) throws TranslatorException {
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) throws TranslatorException {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setParent(table);
-		KeyRecord uniqueKey = null;
 		foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
 		assignColumns(columnNames, table, foreignKey);
-		if (referencedColumnNames == null) {
-			uniqueKey = pkTable.getPrimaryKey();
-		} else {
-			for (KeyRecord record : pkTable.getUniqueKeys()) {
-				if (keyMatches(referencedColumnNames, record)) {
-					uniqueKey = record;
-					break;
-				}
-			}
-			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(referencedColumnNames, pkTable.getPrimaryKey())) {
-				uniqueKey = pkTable.getPrimaryKey();
-			}
-		}
-		if (uniqueKey == null) {
-			if (!addUniqueConstraint) {
-				throw new TranslatorException(DataPlugin.Event.TEIID60010, DataPlugin.Util.gs(DataPlugin.Event.TEIID60010, pkTable, referencedColumnNames));
-			}
-			uniqueKey = addIndex(name + "_unique", false, referencedColumnNames, pkTable); //$NON-NLS-1$
-		}
+		foreignKey.setReferenceTableName(referenceTable);
+		foreignKey.setReferenceColumns(referencedColumnNames);
 		foreignKey.setName(name);
 		setUUID(foreignKey);
-		foreignKey.setPrimaryKey(uniqueKey);
-		foreignKey.setUniqueKeyID(uniqueKey.getUUID());
 		table.getForeignKeys().add(foreignKey);
 		return foreignKey;
-	}
-
-	private boolean keyMatches(List<String> names,
-			KeyRecord record) {
-		if (names.size() != record.getColumns().size()) {
-			return false;
-		}
-		for (int i = 0; i < names.size(); i++) {
-			if (!names.get(i).equals(record.getColumns().get(i))) {
-				return false;
-			}
-		}
-		return true;
-	}
+	}	
 	
 	/**
 	 * Add a procedure with the given name to the model.  
@@ -265,7 +246,7 @@ public class MetadataFactory {
 		procedure.setName(name);
 		setUUID(procedure);
 		procedure.setParameters(new LinkedList<ProcedureParameter>());
-		this.schema.addProcedure(procedure);
+		addProcedure(procedure);
 		return procedure;
 	}
 	
@@ -336,7 +317,7 @@ public class MetadataFactory {
 		FunctionMethod function = new FunctionMethod();
 		function.setName(name);
 		setUUID(function);
-		this.schema.addFunction(function);
+		addFunction(function);
 		return function;
 	}
 	
@@ -348,12 +329,60 @@ public class MetadataFactory {
 		this.autoCorrectColumnNames = autoCorrectColumnNames;
 	}
 	
-	public void setMetadataStore(MetadataStore metadataStore) {
-		this.store = metadataStore;
-		if (this.store.getSchemas().isEmpty()) {
-			this.store.addSchema(schema);
-		} else {
-			this.schema = this.store.getSchemas().values().iterator().next();
+	public void addNamespace(String prefix, String uri) {
+		this.namespaces.put(prefix, uri);
+	}
+	
+	public void mergeInto (MetadataStore store) {
+		store.addSchema(this);
+		store.addDataTypes(this.dataTypes.values());
+		store.addNamespaces(this.namespaces);
+	}
+	
+	public MetadataStore asMetadataStore() {
+		MetadataStore store = new MetadataStore();
+		mergeInto(store);
+		return store;
+	}
+
+	public void mergeFrom(Schema schema) {
+		setName(schema.getName());
+		setUUID(schema.getUUID());
+		
+		for (Table t:schema.getTables().values()) {
+			addTable(t);
+		}
+		for (Procedure p: schema.getProcedures().values()) {
+			addProcedure(p);
+		}
+		for (FunctionMethod fm:schema.getFunctions().values()) {
+			addFunction(fm);
+		}
+		setProperties(new LinkedHashMap<String, String>(schema.getProperties()));
+	}
+
+	public Map<String, Datatype> getDataTypes() {
+		return dataTypes;
+	}
+	
+	void addDataTypes(Collection<Datatype> types) {
+		for (Datatype type: types) {
+			addDatatype(type);
 		}
 	}
+	
+	public void addDatatype(Datatype datatype) {
+		if (this.dataTypes == null) {
+			this.dataTypes = new TreeMap<String, Datatype>();
+		}
+		this.dataTypes.put(datatype.getName(), datatype);
+	}
+
+	public String getVdbName() {
+		return vdbName;
+	}
+
+	public int getVdbVersion() {
+		return vdbVersion;
+	}	
 }

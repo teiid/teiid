@@ -2178,7 +2178,12 @@ public class RealMetadataFactory {
 	    return createTransformationMetadata(metadataStore, "proc");
 	}
 
-	public static TransformationMetadata exampleBusObj() { 
+	public static TransformationMetadata exampleBusObj() {
+	    // Create the facade from the store
+	    return createTransformationMetadata(exampleBusObjStore(), "busObj");
+	}
+	
+	public static MetadataStore exampleBusObjStore() { 
 		MetadataStore metadataStore = new MetadataStore();
 	    // Create db2 tables
 	    Schema db2Model = createPhysicalModel("db2model", metadataStore); //$NON-NLS-1$
@@ -2254,9 +2259,8 @@ public class RealMetadataFactory {
 	    createElements(logicalTable2, 
 	        new String[] { "b0", "b1", "b2"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 	        new String[] { DataTypeManager.DefaultDataTypes.LONG, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER});
-	
-	    // Create the facade from the store
-	    return createTransformationMetadata(metadataStore, "busObj");
+	    
+	    return metadataStore;
 	}
 
 	public static TransformationMetadata exampleAggregates() { 

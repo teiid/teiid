@@ -44,21 +44,21 @@ public class Schema extends AbstractMetadataRecord {
 	public void addTable(Table table) {
 		table.setParent(this);
 		if (this.tables.put(table.getName(), table) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_table", table.getName())); //$NON-NLS-1$
+			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName())); 
 		}
 	}
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
 		if (this.procedures.put(procedure.getName(), procedure) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_procedure", procedure.getName())); //$NON-NLS-1$
+			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName())); 
 		}
 	}
 	
 	public void addFunction(FunctionMethod function) {
 		function.setParent(this);
 		if (this.functions.put(function.getName(), function) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.getString("Schema.duplicate_function", function.getName())); //$NON-NLS-1$
+			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getName()));
 		}
 	}	
 
@@ -70,12 +70,20 @@ public class Schema extends AbstractMetadataRecord {
 		return tables;
 	}
 	
+	public Table getTable(String tableName) {
+		return tables.get(tableName);
+	}
+	
 	/**
 	 * Get the procedures defined in this schema
 	 * @return
 	 */
 	public Map<String, Procedure> getProcedures() {
 		return procedures;
+	}
+	
+	public Procedure getProcedure(String procName) {
+		return procedures.get(procName);
 	}
 	
 	/**
@@ -85,6 +93,10 @@ public class Schema extends AbstractMetadataRecord {
 	public Map<String, FunctionMethod> getFunctions() {
 		return functions;
 	}
+	
+	public FunctionMethod getFunction(String funcName) {
+		return functions.get(funcName);
+	}	
 	
     public String getPrimaryMetamodelUri() {
         return primaryMetamodelUri;

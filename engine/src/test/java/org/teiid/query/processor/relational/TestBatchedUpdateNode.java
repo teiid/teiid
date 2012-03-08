@@ -226,11 +226,6 @@ public class TestBatchedUpdateNode {
 			// TODO Auto-generated method stub
 			return null;
 		}
-		@Override
-		public MetadataRepository getMetadataRepository() {
-			// TODO Auto-generated method stub
-			return null;
-		}
     }
     private static final class FakeTupleSource implements TupleSource {
         private int currentTuple = 0;

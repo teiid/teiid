@@ -42,17 +42,16 @@ import org.teiid.metadata.Table.Type;
 import org.teiid.translator.TranslatorException;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
-	
-    public static final int PG_TYPE_OIDVECTOR = 30;
+	private static final long serialVersionUID = 2158418324376966987L;
+	public static final int PG_TYPE_OIDVECTOR = 30;
     public static final int PG_TYPE_OIDARRAY = 1028;
     public static final int PG_TYPE_CHARARRAY = 1002;
     public static final int PG_TYPE_TEXTARRAY = 1009;
 
-	private static final long serialVersionUID = 5391872008395637166L;
 	private Random random;
 	
-	public PgCatalogMetadataStore(String modelName, Map<String, Datatype> dataTypes, Properties importProperties) throws TranslatorException {
-		super(modelName, dataTypes, importProperties);
+	public PgCatalogMetadataStore(String modelName, Map<String, Datatype> dataTypes) throws TranslatorException {
+		super(modelName, 1, modelName, dataTypes, new Properties(), null); 
 		
 		add_pg_namespace();			
 		add_pg_class();			

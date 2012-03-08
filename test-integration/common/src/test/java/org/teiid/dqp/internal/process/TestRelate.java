@@ -71,7 +71,7 @@ public class TestRelate {
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		ConnectorManager cm = new ConnectorManager("source", "bar") {
 			@Override
-			protected Object getConnectionFactory() throws TranslatorException {
+			public Object getConnectionFactory() throws TranslatorException {
 				return ds;
 			}
 		};

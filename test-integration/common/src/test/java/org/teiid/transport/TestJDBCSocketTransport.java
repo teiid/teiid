@@ -190,7 +190,7 @@ public class TestJDBCSocketTransport {
 		ConnectorManagerRepository cmr = server.getConnectorManagerRepository();
 		AutoGenDataService agds = new AutoGenDataService() {
 			@Override
-			protected Object getConnectionFactory()
+			public Object getConnectionFactory()
 					throws TranslatorException {
 				return null;
 			}

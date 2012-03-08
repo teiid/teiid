@@ -187,11 +187,6 @@ public class TestProjectIntoNode {
 			// TODO Auto-generated method stub
 			return null;
 		}
-		@Override
-		public MetadataRepository getMetadataRepository() {
-			// TODO Auto-generated method stub
-			return null;
-		}
     }
     
     private static final class FakeDataTupleSource implements TupleSource {

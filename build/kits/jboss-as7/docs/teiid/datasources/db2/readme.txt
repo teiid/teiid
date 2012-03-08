@@ -13,6 +13,7 @@ Step 1: Deploying the JDBC Driver
 
 		3) Then copy the db2 database JDBC driver jar file "db2jcc4.jar" into
 			"<jboss-as>/modules/com/ibm/db2/main" directory.
+		4) Add following to standalone[-teiid].xml file under "datasources" subsystem under <drivers> element 
 		4) start server
 
 Step 2: Creating the datasource 

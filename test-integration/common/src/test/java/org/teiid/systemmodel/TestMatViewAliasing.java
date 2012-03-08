@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import org.junit.After;
@@ -40,7 +39,6 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.index.VDBMetadataFactory;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
 
 @SuppressWarnings("nls")
 public class TestMatViewAliasing {
@@ -54,7 +52,7 @@ public class TestMatViewAliasing {
     	
     	VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemStore(VDBMetadataFactory.getSystem());
-    	MetadataFactory mf = new MetadataFactory("foo", vdbRepository.getBuiltinDatatypes(), new Properties());
+    	MetadataFactory mf = new MetadataFactory(null, 1, "foo", vdbRepository.getBuiltinDatatypes(), new Properties(), null);
     	
     	Table mat = mf.addTable("mat");
     	mat.setVirtual(true);
@@ -64,9 +62,9 @@ public class TestMatViewAliasing {
     	mf.addColumn("x", DataTypeManager.DefaultDataTypes.INTEGER, mat);
     	mf.addColumn("Name", DataTypeManager.DefaultDataTypes.STRING, mat);
     	
-    	MetadataStore ms = mf.getMetadataStore();
+    	MetadataStore ms = mf.asMetadataStore();
     	
-    	server.deployVDB(MATVIEWS, ms, new LinkedHashMap<String, Resource>());
+    	server.deployVDB(MATVIEWS, ms);
     	conn = server.createConnection("jdbc:teiid:"+MATVIEWS);
     }
 	

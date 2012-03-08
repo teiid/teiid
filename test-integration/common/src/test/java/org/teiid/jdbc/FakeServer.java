@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -56,7 +55,6 @@ import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.MetadataStoreGroup;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
@@ -75,7 +73,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
-import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -83,7 +81,6 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.tempdata.GlobalTableStore;
@@ -304,7 +301,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         		Cache<K, V> result = super.get(location, config);
         		if (replicator != null) {
         			try {
-						return (Cache<K, V>) replicator.replicate("$RS$", ReplicatedCache.class, new ReplicatedCacheImpl(result), 0);
+						return replicator.replicate("$RS$", ReplicatedCache.class, new ReplicatedCacheImpl(result), 0);
 					} catch (Exception e) {
 						throw new TeiidRuntimeException(e);
 					}
@@ -364,33 +361,30 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.dqp.stop();
 	}
 	
-	public void setMetadataRepository(MetadataRepository metadataRepository) {
-		this.repo.setMetadataRepository(metadataRepository);
-		this.dqp.setMetadataRepository(metadataRepository);
-	}
-	
 	public void setUseCallingThread(boolean useCallingThread) {
 		this.useCallingThread = useCallingThread;
 	}
-
+	
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
-		deployVDB(vdbName, vdbPath, null);
+		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
+        deployVDB(vdbName, imf, null, null);		
+	}	
+
+	public void deployVDB(String vdbName, String vdbPath, MetadataRepository metadataRepo) throws Exception {
+		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
+        deployVDB(vdbName, imf, null, metadataRepo);		
 	}
 	
 	public void deployVDB(String vdbName, String vdbPath, Map<String, Collection<FunctionMethod>> udfs) throws Exception {
-		IndexMetadataFactory imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
-		MetadataStore metadata = imf.getMetadataStore(repo.getSystemStore().getDatatypes());
-		LinkedHashMap<String, Resource> entries = imf.getEntriesPlusVisibilities();
-        deployVDB(vdbName, metadata, entries, udfs);		
+		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
+        deployVDB(vdbName, imf, udfs, null);		
 	}
 	
-	public void deployVDB(String vdbName, MetadataStore metadata,
-			LinkedHashMap<String, Resource> entries) {
-		deployVDB(vdbName, metadata, entries, null);
+	public void deployVDB(String vdbName, MetadataStore metadata) {
+		deployVDB(vdbName, metadata, null, null);
 	}
 
-	public void deployVDB(String vdbName, MetadataStore metadata,
-			LinkedHashMap<String, Resource> entries, Map<String, Collection<FunctionMethod>> udfs) {
+	public void deployVDB(String vdbName, MetadataStore metadata, Map<String, Collection<FunctionMethod>> udfs, MetadataRepository metadataRepo) {
 		VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
@@ -404,12 +398,13 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         }        
         
         for (Schema schema : metadata.getSchemas().values()) {
-        	addModel(vdbMetaData, schema); 
+        	ModelMetaData model = addModel(vdbMetaData, schema);
+        	if (metadataRepo != null) {
+        		model.addAttchment(MetadataRepository.class, metadataRepo);
+        	}
         }
                         
         try {
-        	MetadataStoreGroup stores = new MetadataStoreGroup();
-        	stores.addStore(metadata);
         	UDFMetaData udfMetaData = null;
         	if (udfs != null) {
         		udfMetaData = new UDFMetaData();
@@ -417,8 +412,9 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         			udfMetaData.addFunctions(entry.getKey(), entry.getValue());
         		}
         	}
-			this.repo.addVDB(vdbMetaData, stores, entries, udfMetaData, cmr);
-			this.repo.finishDeployment(vdbName, 1);
+			this.repo.addVDB(vdbMetaData, metadata, udfMetaData, cmr);
+			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
+			this.repo.getVDB(vdbMetaData.getName(), vdbMetaData.getVersion()).setStatus(VDB.Status.ACTIVE);
 		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);
 		}
@@ -428,11 +424,12 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		this.repo.removeVDB(vdbName, 1);
 	}
 
-	private void addModel(VDBMetaData vdbMetaData, Schema schema) {
+	private ModelMetaData addModel(VDBMetaData vdbMetaData, Schema schema) {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(schema.getName());
 		vdbMetaData.addModel(model);
 		model.addSourceMapping("source", "translator", "jndi:source");
+		return model;
 	}
 	
 	public VDBMetaData getVDB(String vdbName) {
@@ -445,6 +442,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	
 	public void mergeVDBS(String sourceVDB, String targetVDB) throws AdminException {
 		this.repo.mergeVDBs(sourceVDB, 1, targetVDB, 1);
+		this.repo.getVDB(targetVDB, 1).setStatus(VDB.Status.ACTIVE);
 	}
 	
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {

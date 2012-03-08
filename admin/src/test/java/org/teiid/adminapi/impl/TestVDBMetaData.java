@@ -50,7 +50,7 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestVDBMetaData {
 
-	@Test
+	
 	public void testMarshellUnmarshellUsingJaxb() throws Exception {
 		
 		VDBMetaData vdb = buildVDB();
@@ -118,6 +118,8 @@ public class TestVDBMetaData {
 		assertTrue(modelTwo.getSourceNames().contains("s2")); //$NON-NLS-1$
 		assertEquals(Model.Type.VIRTUAL, modelTwo.getModelType()); // this is not persisted in the XML
 		assertEquals("model-value", modelTwo.getPropertyValue("model-prop")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("DDL", modelTwo.getSchemaSourceType());
+		assertEquals("DDL Here", modelTwo.getSchemaText());
 		
 		
 		assertTrue(vdb.getValidityErrors().contains("There is an error in VDB")); //$NON-NLS-1$
@@ -182,6 +184,8 @@ public class TestVDBMetaData {
 		modelTwo.addSourceMapping("s2", "translator", "java:binding-two"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelTwo.setModelType(Model.Type.VIRTUAL); //$NON-NLS-1$
 		modelTwo.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelTwo.setSchemaSourceType("DDL");
+		modelTwo.setSchemaText("DDL Here");
 		
 		vdb.addModel(modelTwo);
 		

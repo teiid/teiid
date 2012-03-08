@@ -87,7 +87,6 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		setBufferService(bufferServiceInjector.getValue());
 		
 		this.dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
-		this.dqpCore.setMetadataRepository(getVdbRepository().getMetadataRepository());
 		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getEventDistributor());
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());

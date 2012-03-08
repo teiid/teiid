@@ -38,7 +38,7 @@ import org.teiid.deployers.UDFMetaData;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
-import org.teiid.metadata.index.IndexMetadataFactory;
+import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.runtime.RuntimePlugin;
 
 
@@ -84,9 +84,9 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 				parseVDBXML(file, deploymentUnit, phaseContext);
 			}
 			else if (file.getName().endsWith(VdbConstants.INDEX_EXT)) {
-				IndexMetadataFactory imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
+				IndexMetadataStore imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
 				if (imf == null) {
-					imf = new IndexMetadataFactory();
+					imf = new IndexMetadataStore();
 					deploymentUnit.putAttachment(TeiidAttachments.INDEX_METADATA, imf);
 				}
 				imf.addIndexFile(file);
@@ -126,7 +126,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
 		VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
-		IndexMetadataFactory imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
+		IndexMetadataStore imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
 		
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {

@@ -92,11 +92,6 @@
         "description" => "Policy Module; Implementation of org.teiid.PolicyDecider class ",
         "required" => false
     },
-    "metadata-repository-module" => {
-        "type" => STRING,
-        "description" => "Runtime Metadata repository module; Runtime Metadata Updates can be made persistent though by configuring a \"org.teiid.metadata.MetadataRepository\". See Developer's Guide.  ",
-        "required" => false
-    },
     "distributed-cache-jgroups-stack" => {
         "type" => STRING,
         "description" => "JGroups stack name for cache replication channel",

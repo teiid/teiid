@@ -1,7 +1,8 @@
-<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
 <subsystem xmlns="urn:jboss:domain:datasources:1.0">
     <datasources>
         <datasource jndi-name="java:/derbyDS" pool-name="derbyDS">
+            <driver-class>org.apache.derby.jdbc.ClientDriver</driver-class>
             <connection-url>jdbc:derby://{host}:1527/{db-name}</connection-url>
             <driver>derbyclient.jar</driver>
             <pool>
@@ -14,11 +15,5 @@
                 <password>{password}</password>
             </security>
         </datasource>                               
-        <drivers>
-            <driver name="derbyclient.jar" module="org.apache.derby">
-                <driver-class>org.apache.derby.jdbc.ClientDriver</driver-class>
-                <xa-datasource-class>org.apache.derby.jdbc.ClientXADataSource</xa-datasource-class>
-            </driver>    
-        </drivers>
     </datasources>
 </subsystem>            

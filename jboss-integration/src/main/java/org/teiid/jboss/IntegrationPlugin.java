@@ -69,13 +69,13 @@ public class IntegrationPlugin {
     	TEIID50027, // metadata in-process of loading
     	TEIID50028, // failed metadata loading
     	TEIID50029, // dynamic metadata loaded
-    	TEIID50030, // no sources to retrieve data
+    	TEIID50030,
     	TEIID50031, // failed to load cached index files
     	TEIID50032, // duplicate VDB
     	TEIID50033, // duplicate source name in vdb
     	TEIID50034, // Source name mismatch
     	TEIID50035, // translator not found
-    	TEIID50036, // failed to retrive metadata
+    	TEIID50036,
     	TEIID50037, // odbc enabled
     	TEIID50038, // embedded enabled
     	TEIID50039, // socket_disabled
@@ -106,6 +106,14 @@ public class IntegrationPlugin {
     	TEIID50064,
     	TEIID50065,
     	TEIID50066,    	
-    	TEIID50067
+    	TEIID50067,
+    	TEIID50068,
+
+    	
+    	
+    	
+    	TEIID50086,
+    	TEIID50087,
+    	TEIID50088
     }
 }

@@ -67,16 +67,15 @@ import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.EnhancedTimer;
 import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
@@ -187,7 +186,6 @@ public class DQPCore implements DQP {
     private SessionAwareCache<CachedResults> rsCache;
     private TransactionService transactionService;
     private EventDistributor eventDistributor;
-    private MetadataRepository metadataRepository;
     
     private DQPConfiguration config = new DQPConfiguration();
     
@@ -672,7 +670,6 @@ public class DQPCore implements DQP {
         
         DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this, this.bufferManager, this.config.isDetectingChangeEvents());
         processorDataManager.setEventDistributor(eventDistributor);
-        processorDataManager.setMetadataRepository(metadataRepository);
 		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache);
         dataTierMgr.setEventDistributor(eventDistributor);
                 
@@ -685,10 +682,6 @@ public class DQPCore implements DQP {
 	
 	public void setTransactionService(TransactionService service) {
 		this.transactionService = service;
-	}
-	
-	public void setMetadataRepository(MetadataRepository metadataRepository) {
-		this.metadataRepository = metadataRepository;
 	}
 	
 	public void setEventDistributor(EventDistributor eventDistributor) {

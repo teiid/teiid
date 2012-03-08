@@ -19,28 +19,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.deployers;
+package org.teiid.query.metadata;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.parser.ParseException;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorException;
 
-import org.teiid.metadata.MetadataStore;
-
-public class MetadataStoreGroup implements Serializable{
-	private static final long serialVersionUID = -3702321839716725121L;
+public class DDLMetadataRepository extends BaseMetadataRepository {
 	
-	List<MetadataStore> stores = new CopyOnWriteArrayList<MetadataStore>();
-	
-	public void addStores(List<MetadataStore> stores) {
-		this.stores.addAll(stores);
-	}
-	
-	public void addStore(MetadataStore store) {
-		this.stores.add(store);
-	}
-	
-	public List<MetadataStore> getStores(){
-		return this.stores;
-	}
+	@Override
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory exeuctionFactory, Object connectionFactory) throws TranslatorException {
+		try {
+			QueryParser.getQueryParser().parseDDL(factory, factory.getRawMetadata());
+		} catch (ParseException e) {
+			throw new TranslatorException(e.getMessage());
+		}
+	}	
 }

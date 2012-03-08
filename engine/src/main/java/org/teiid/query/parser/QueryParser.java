@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -342,6 +343,11 @@ public class QueryParser {
 
         }
         return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
+    }
+    
+    public void parseDDL(MetadataFactory factory, String ddl) throws ParseException {
+    	getSqlParser(ddl).parseMetadata(factory);
+    	SQLParserUtil.replaceProceduresWithFunctions(factory);
     }
 
 }

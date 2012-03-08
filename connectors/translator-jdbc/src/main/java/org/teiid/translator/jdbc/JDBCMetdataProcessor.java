@@ -32,6 +32,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -42,13 +43,15 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.DuplicateRecordException;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
@@ -358,7 +361,11 @@ public class JDBCMetdataProcessor {
 				
 				if (seqNum <= savedSeqNum) {
 					if (keyColumns != null) {
-						metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table, tableInfo.table, autoCreateUniqueConstraints);
+						KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, fkName, referencedKeyColumns, pkTable.table);						
+						ForeignKey fk = metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table.getName(), tableInfo.table);
+						if (record != null) {
+							fk.setPrimaryKey(record);
+						}
 					}
 					keyColumns = new TreeMap<Short, String>();
 					referencedKeyColumns = new TreeMap<Short, String>();
@@ -384,11 +391,52 @@ public class JDBCMetdataProcessor {
 				} 
 			}
 			if (keyColumns != null) {
-				metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table, tableInfo.table, autoCreateUniqueConstraints);
+				KeyRecord record = autoCreateUniqueKeys(autoCreateUniqueConstraints, metadataFactory, fkName, referencedKeyColumns, pkTable.table);
+				ForeignKey fk = metadataFactory.addForiegnKey(fkName, new ArrayList<String>(keyColumns.values()), new ArrayList<String>(referencedKeyColumns.values()), pkTable.table.getName(), tableInfo.table);
+				if (record != null) {
+					fk.setPrimaryKey(record);
+				}
 			}
 			fks.close();
 		}
 	}
+	
+	private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) throws TranslatorException {
+		if (referencedKeyColumns != null && pkTable.getPrimaryKey() == null && pkTable.getUniqueKeys().isEmpty()) {
+			factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
+		}
+		
+		KeyRecord uniqueKey = null;
+		if (referencedKeyColumns == null) {
+			uniqueKey = pkTable.getPrimaryKey();
+		} else {
+			for (KeyRecord record : pkTable.getUniqueKeys()) {
+				if (keyMatches(new ArrayList(referencedKeyColumns.values()), record)) {
+					uniqueKey = record;
+					break;
+				}
+			}
+			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(new ArrayList(referencedKeyColumns.values()), pkTable.getPrimaryKey())) {
+				uniqueKey = pkTable.getPrimaryKey();
+			}
+		}
+		if (uniqueKey == null && create) {
+			uniqueKey = factory.addIndex(name + "_unique", false, new ArrayList(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
+		}
+		return uniqueKey;
+	}
+	
+	private boolean keyMatches(List<String> names, KeyRecord record) {
+		if (names.size() != record.getColumns().size()) {
+			return false;
+		}
+		for (int i = 0; i < names.size(); i++) {
+			if (!names.get(i).equals(record.getColumns().get(i).getName())) {
+				return false;
+			}
+		}
+		return true;
+	}	
 
 	private void getIndexes(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException, TranslatorException {

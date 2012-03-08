@@ -1,0 +1,37 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <xa-datasource jndi-name="java:/OracleDS" pool-name="OracleDS" enabled="true" use-java-context="true" use-ccm="true">
+        <xa-datasource-class>oracle.jdbc.xa.client.OracleXADataSource</xa-datasource-class>
+        <xa-datasource-property name="URL">jdbc:oracle:thin:{host}:1521:orcl</xa-datasource-property>
+        <driver>ojdbc6.jar</driver>
+        
+        <!-- 
+        <new-connection-sql>select * from dual</new-connection-sql>
+        <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+         -->
+                 
+        <xa-pool>
+            <min-pool-size>10</min-pool-size>
+            <max-pool-size>20</max-pool-size>
+            <is-same-rm-override>true</is-same-rm-override>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+            <no-tx-separate-pools/>
+        </xa-pool>
+
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+            <!-- 
+            <security-domain>mysecurity-realm</security-domain>
+            -->
+        </security>
+         
+        <!-- 
+        <validation>
+            <check-valid-connection-sql>select * from dual</check-valid-connection-sql>
+        </validation>
+         -->
+    </xa-datasource>                
+</datasources>

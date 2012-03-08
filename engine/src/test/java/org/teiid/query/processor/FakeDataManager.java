@@ -403,11 +403,4 @@ public class FakeDataManager implements ProcessorDataManager {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
-	@Override
-	public MetadataRepository getMetadataRepository() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

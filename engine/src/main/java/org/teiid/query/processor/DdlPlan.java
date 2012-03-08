@@ -27,6 +27,7 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
@@ -37,6 +38,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -55,13 +57,18 @@ public class DdlPlan extends ProcessorPlan {
     class AlterProcessor extends LanguageVisitor {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
     	
+    	private MetadataRepository getMetadataRepository(VDBMetaData vdb, String schemaName) {
+    		ModelMetaData model = vdb.getModel(schemaName);
+    		return model.getAttachment(MetadataRepository.class);
+    	}
+    	
     	@Override
     	public void visit(AlterView obj) {
     		VDBMetaData vdb = workContext.getVDB();
     		Table t = (Table)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
-			if (pdm.getMetadataRepository() != null) {
-				pdm.getMetadataRepository().setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
+			if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
+				getMetadataRepository(vdb, t.getParent().getName()).setViewDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, sql);
 			}
     		alterView(vdb, t, sql);
     		if (pdm.getEventDistributor() != null) {
@@ -74,8 +81,8 @@ public class DdlPlan extends ProcessorPlan {
     		VDBMetaData vdb = workContext.getVDB();
     		Procedure p = (Procedure)obj.getTarget().getMetadataID();
     		String sql = obj.getDefinition().toString();
-			if (pdm.getMetadataRepository() != null) {
-				pdm.getMetadataRepository().setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
+			if (getMetadataRepository(vdb, p.getParent().getName()) != null) {
+				getMetadataRepository(vdb, p.getParent().getName()).setProcedureDefinition(workContext.getVdbName(), workContext.getVdbVersion(), p, sql);
 			}
     		alterProcedureDefinition(vdb, p, sql);
     		if (pdm.getEventDistributor() != null) {
@@ -101,11 +108,11 @@ public class DdlPlan extends ProcessorPlan {
     		} else if (getPlanForEvent(t, event) == null) {
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30158, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     		}
-			if (pdm.getMetadataRepository() != null) {
+			if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
 				if (sql != null) {
-					pdm.getMetadataRepository().setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
+					getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerDefinition(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), sql);
 				} else {
-					pdm.getMetadataRepository().setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
+					getMetadataRepository(vdb, t.getParent().getName()).setInsteadOfTriggerEnabled(workContext.getVdbName(), workContext.getVdbVersion(), t, obj.getEvent(), obj.getEnabled());
 				}
 			}
     		alterInsteadOfTrigger(vdb, t, sql, obj.getEnabled(), event);

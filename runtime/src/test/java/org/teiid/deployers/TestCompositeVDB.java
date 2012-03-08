@@ -53,22 +53,19 @@ public class TestCompositeVDB {
     	return vdb.getAttachment(TransformationMetadata.class);
 	}
 
-	private static CompositeVDB createCompositeVDB(MetadataStore metadataStore,
-			String vdbName) {
+	private static CompositeVDB createCompositeVDB(MetadataStore metadataStore,	String vdbName) {
 		VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
     	for (Schema schema : metadataStore.getSchemas().values()) {
 			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
 		}
-    	MetadataStoreGroup metaGroup = new MetadataStoreGroup();
-    	metaGroup.addStore(metadataStore);
     	
     	ConnectorManagerRepository cmr = new ConnectorManagerRepository();
     	cmr.addConnectorManager("source", getConnectorManager("FakeTranslator", "FakeConnection", getFuncsOne()));
     	cmr.addConnectorManager("source2", getConnectorManager("FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
-    	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metaGroup, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr);
+    	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metadataStore, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr);
 		return cvdb;
 	}
 	
@@ -152,7 +149,7 @@ public class TestCompositeVDB {
 		vdb.removeChild(child);
 		assertNotNull(vdb.getVDB());
 		assertFalse(vdb.hasChildVdb(child));
-		vdb.addChild(createCompositeVDB(RealMetadataFactory.example1Store(), "foo"));
+		vdb.addChild(createCompositeVDB(RealMetadataFactory.exampleBusObjStore(), "foo"));
 		assertTrue(vdb.hasChildVdb(child));
 		assertNotNull(vdb.getVDB());
 	}

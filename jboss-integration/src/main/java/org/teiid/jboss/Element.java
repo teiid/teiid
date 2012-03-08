@@ -60,7 +60,6 @@ enum Element {
     
     POLICY_DECIDER_MODULE_ELEMENT("policy-decider-module", "policy-decider-module", ModelType.STRING, false, null),
     AUTHORIZATION_VALIDATOR_MODULE_ELEMENT("authorization-validator-module", "authorization-validator-module", ModelType.STRING, false, null),
-    METADATA_REPO_MODULE_ELEMENT("metadata-repository-module", "metadata-repository-module", ModelType.STRING, false, null),
 	
 	// buffer manager
 	BUFFER_SERVICE_ELEMENT("buffer-service"),

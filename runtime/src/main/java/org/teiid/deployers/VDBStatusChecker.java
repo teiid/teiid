@@ -54,7 +54,7 @@ public abstract class VDBStatusChecker {
 	}
 	
 	public void translatorRemoved(String translatorName) {
-		resourceremoved(translatorName, true);
+		resourceRemoved(translatorName, true);
 	}
 	
 	public void dataSourceAdded(String dataSourceName) {
@@ -68,7 +68,7 @@ public abstract class VDBStatusChecker {
 		if (dataSourceName.startsWith(JAVA_CONTEXT)) {
 			dataSourceName = dataSourceName.substring(5);
 		}
-		resourceremoved(dataSourceName, false);
+		resourceRemoved(dataSourceName, false);
 	}	
 
 	public void dataSourceReplaced(String vdbName, int vdbVersion,
@@ -136,8 +136,7 @@ public abstract class VDBStatusChecker {
 			synchronized (vdb) {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 				
-				for (Model m:vdb.getModels()) {
-					ModelMetaData model = (ModelMetaData)m;
+				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 					if (model.getErrors().isEmpty()) {
 						continue;
 					}
@@ -146,6 +145,7 @@ public abstract class VDBStatusChecker {
 					if (sourceName == null) {
 						continue;
 					}
+
 					ConnectorManager cm = cmr.getConnectorManager(sourceName);
 					String status = cm.getStausMessage();
 					if (status != null && status.length() > 0) {
@@ -163,8 +163,7 @@ public abstract class VDBStatusChecker {
 				}
 	
 				boolean valid = true;
-				for (Model m:vdb.getModels()) {
-					ModelMetaData model = (ModelMetaData)m;
+				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 					if (!model.getErrors().isEmpty()) {
 						valid = false;
 						break;
@@ -177,7 +176,6 @@ public abstract class VDBStatusChecker {
 						getExecutor().execute(runnable);
 					}
 				} else if (valid) {
-					this.vdbRepository.finishDeployment(vdb.getName(), vdb.getVersion());
 					vdb.setStatus(VDB.Status.ACTIVE);
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
 				}
@@ -185,7 +183,7 @@ public abstract class VDBStatusChecker {
 		}
 	}
 	
-	public void resourceremoved(String resourceName, boolean translator) {
+	public void resourceRemoved(String resourceName, boolean translator) {
 		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
 			if (vdb.isPreview()) {
 				continue;

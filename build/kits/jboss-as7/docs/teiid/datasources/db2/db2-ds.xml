@@ -1,0 +1,17 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <datasource jndi-name="java:/db2DS" pool-name="db2DS">
+        <driver-class>com.ibm.db2.jcc.DB2Driver</driver-class>
+        <connection-url>jdbc:db2://{host}:50000/{database_name}</connection-url>
+        <driver>db2jcc4.jar</driver>
+        <pool>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+        </pool>
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+        </security>
+    </datasource>                               
+</datasources>

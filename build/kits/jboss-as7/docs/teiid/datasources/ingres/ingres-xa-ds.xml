@@ -1,0 +1,42 @@
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<datasources>
+    <xa-datasource jndi-name="java:/ingresDS" pool-name="ingresDS" enabled="true" use-java-context="true" use-ccm="true">
+        <xa-datasource-class>com.ingres.jdbc.IngresXADataSource</xa-datasource-class>
+        <xa-datasource-property name="DatabaseName">{database}</xa-datasource-property>
+        <xa-datasource-property name="PortNumber">21071</xa-datasource-property>
+        <xa-datasource-property name="ServerName">{host}</xa-datasource-property>
+        <xa-datasource-property name="timeZone">GMT</xa-datasource-property>
+                
+        
+        <driver>iijdbc.jar</driver>
+        
+        <!-- 
+        <new-connection-sql>select 1/new-connection-sql>
+        <transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
+         -->
+                 
+        <xa-pool>
+            <min-pool-size>10</min-pool-size>
+            <max-pool-size>20</max-pool-size>
+            <is-same-rm-override>true</is-same-rm-override>
+            <prefill>false</prefill>
+            <use-strict-min>false</use-strict-min>
+            <flush-strategy>FailingConnectionOnly</flush-strategy>
+            <no-tx-separate-pools/>
+        </xa-pool>
+
+        <security>
+            <user-name>{user}</user-name>
+            <password>{password}</password>
+            <!-- 
+            <security-domain>mysecurity-realm</security-domain>
+            -->
+        </security>
+         
+        <!-- 
+        <validation>
+            <check-valid-connection-sql>select 1</check-valid-connection-sql>
+        </validation>
+         -->
+    </xa-datasource>                
+</datasources>

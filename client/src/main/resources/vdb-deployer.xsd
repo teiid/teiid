@@ -32,6 +32,17 @@
 									<xs:attribute name="connection-jndi-name" type="xs:string"/>
 								</xs:complexType>
 							</xs:element>
+                            <xs:element name="metadata" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>Schema metadata (tables, views, stored procedures, functions)
+                                    definitions of the model. If this defined on source model, it becomes source metadata,
+                                    on virtual model it become view metadata where user can define the logical layer
+                                    </xs:documentation>
+                                </xs:annotation>
+                                <xs:complexType>
+                                    <xs:attribute name="type" type="xs:string" default="DDL"/>
+                                </xs:complexType>
+                            </xs:element>                            
 							<xs:element name="validation-error" minOccurs="0" maxOccurs="unbounded">
                                 <xs:annotation>
                                     <xs:documentation>When Schema files for model defined by Designer, the validation-errors define

@@ -613,6 +613,36 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30580,
 		TEIID30581,
 		TEIID30590,
-		TEIID30600, TEIID30601 //User defined aggregate errors
+		TEIID30591,
+		TEIID30600, TEIID30601, //User defined aggregate errors
+		
+    	TEIID31069,
+    	TEIID31070,
+    	TEIID31071,
+    	TEIID31072,
+    	TEIID31073,
+    	TEIID31074,
+    	TEIID31075,
+    	TEIID31076,
+    	TEIID31077,
+    	TEIID31078,
+    	TEIID31079,
+    	TEIID31080,
+    	TEIID31081,
+    	TEIID31082,
+    	TEIID31083,
+    	TEIID31084,
+    	TEIID31085,
+    	TEIID31086,
+    	TEIID31087,
+    	TEIID31088,
+    	TEIID31089,
+    	TEIID31090,
+    	TEIID31091,
+    	TEIID31092,
+    	TEIID31093,
+    	TEIID31094,
+    	TEIID31095,
+    	
 	}
 }

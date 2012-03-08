@@ -182,10 +182,4 @@ public class HardcodedDataManager implements
 	public EventDistributor getEventDistributor() {
 		return null;
 	}
-
-	@Override
-	public MetadataRepository getMetadataRepository() {
-		return null;
-	}
-
 }
