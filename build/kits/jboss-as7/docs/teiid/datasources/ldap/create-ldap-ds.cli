@@ -4,4 +4,4 @@
 /subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapAdminUserDN:add(value={cn=???,ou=???,dc=???})
 /subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapAdminUserPassword:add(value={pass})
 /subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS/config-properties=LdapTxnTimeoutInMillis:add(value=-1)
-/subsystem=resource-adapters/resource-adapter=ldapDS/connection-definitions=ldapDS:enable
+/subsystem=resource-adapters/resource-adapter=ldapDS:activate
