@@ -51,8 +51,8 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.report.ActivityReport;
 import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -158,7 +158,9 @@ public class MetadataValidator {
 						if (t.getSelectTransformation() == null) {
 							log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
 						}
-						validate(vdb, model, t, store, report);						
+						else {
+							validate(vdb, model, t, store, report);
+						}
 					}						
 				}
 				
@@ -167,7 +169,9 @@ public class MetadataValidator {
 						if (p.getQueryPlan() == null) {
 							log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
 						}
-						validate(vdb, model, p, store, report);
+						else {
+							validate(vdb, model, p, store, report);
+						}
 					}
 				}					
 			}
@@ -209,12 +213,11 @@ public class MetadataValidator {
     				}
     			}
     			
-    			Query command = (Query)QueryParser.getQueryParser().parseCommand("SELECT * FROM "+t.getFullName()); //$NON-NLS-1$
-    			QueryResolver.resolveCommand(command, metadata);
-    			GroupSymbol resolvedGroup = command.getFrom().getGroups().get(0);
+    			GroupSymbol symbol = new GroupSymbol(t.getName(), t.getFullName());
+    			ResolverUtil.resolveGroup(symbol, metadata);
 
     			// this seems to parse, resolve and validate.
-    			QueryResolver.resolveView(resolvedGroup, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
+    			QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
     		}
 			if(resolverReport != null && resolverReport.hasItems()) {
 				for (ValidatorFailure v:resolverReport.getItems()) {

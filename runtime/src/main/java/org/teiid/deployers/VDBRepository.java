@@ -246,6 +246,7 @@ public class VDBRepository implements Serializable{
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
 			boolean valid = false;
+			v.setMetaloadFinished(true);
 			VDBMetaData metdataAwareVDB = v.getVDB();			
 			ValidatorReport report = MetadataValidator.validate(metdataAwareVDB, metdataAwareVDB.removeAttachment(MetadataStore.class));
 			
@@ -258,7 +259,7 @@ public class VDBRepository implements Serializable{
 			
 			// check the data sources available
 			if (valid) {
-				valid = isValid(metdataAwareVDB);
+				valid = hasValidDataSources(metdataAwareVDB);
 			}
 			
 			if (valid) {
@@ -273,7 +274,7 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	boolean isValid(VDBMetaData vdb) {
+	boolean hasValidDataSources(VDBMetaData vdb) {
 		ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 		
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {

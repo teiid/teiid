@@ -58,7 +58,6 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
@@ -131,9 +130,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			indexRepo = new IndexMetadataRepository(indexFactory);
 		}
 
-		MetadataStore store = new MetadataStore();	
-		deployment.addAttchment(MetadataStore.class, store);
-		
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			if (model.isSource() && model.getSourceNames().isEmpty()) {
 	    		throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50087, model.getName(), deployment.getName(), deployment.getVersion()));

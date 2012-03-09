@@ -197,23 +197,21 @@ public class AdminFactory {
 			}
 		}
 		
-		private void createConnectionFactory(String deploymentName,	String templateName, Properties properties)	throws AdminException {
-			Set<String> resourceAdapters = getDeployedResourceAdapterNames();
-			if (!resourceAdapters.contains(templateName)) {
-				addResourceAdapter(templateName);
-			}
+		private void createConnectionFactory(String deploymentName,	String rarName, Properties properties)	throws AdminException {
+
+			///subsystem=resource-adapters/resource-adapter=fileDS:add
+			addResourceAdapter(deploymentName, rarName);
 			
-			///subsystem=resource-adapters/resource-adapter=teiid-connector-file.rar/connection-definitions=fooDS:add(class-name=org.teiid.resource.adapter.file.FileManagedConnectionFactory, jndi-name=java\:\/fooDS, pool-name=foo-pool)
+			///subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS:add(jndi-name=java\:\/fooDS)
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 
 	        try {
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("add"); 
 	            builder.addProperty("jndi-name", addJavaContext(deploymentName));
-	            builder.addProperty("pool-name", deploymentName);
 	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
@@ -225,17 +223,19 @@ public class AdminFactory {
             Enumeration keys = properties.propertyNames();
             while (keys.hasMoreElements()) {
             	String key = (String)keys.nextElement();
-            	addConfigProperty(templateName, deploymentName, key, properties.getProperty(key));
+            	addConfigProperty(deploymentName, key, properties.getProperty(key));
             }
+            
+            activateConnectionFactory(deploymentName);
 		}
 
-		// /subsystem=resource-adapters/resource-adapter=teiid-connector-file.rar/connection-definitions=fooDS/config-properties=ParentDirectory2:add(value=/home/rareddy/testing)
-		private void addConfigProperty(String templateName, String deploymentName, String key, String value) throws AdminProcessingException {
+		// /subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS/config-properties=ParentDirectory2:add(value=/home/rareddy/testing)
+		private void addConfigProperty(String deploymentName, String key, String value) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", templateName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("config-properties", key); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("add"); 
@@ -247,15 +247,31 @@ public class AdminFactory {
 			
 	        execute(request);
 		}
+		
+		// /subsystem=resource-adapters/resource-adapter=fileDS:activate
+		private void activateConnectionFactory(String deploymentName) throws AdminProcessingException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+	        try {
+	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.setOperationName("activate"); 
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+			
+	        execute(request);
+		}
 
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
-		private void addResourceAdapter(String rarName) throws AdminProcessingException {
+		private void addResourceAdapter(String deploymentName, String rarName) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 
 	        try {
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", rarName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("add"); 
 	            request = builder.buildRequest();
 	            request.get("archive").set(rarName);

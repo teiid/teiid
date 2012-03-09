@@ -127,6 +127,9 @@ public class ObjectSerializer {
 
 	public OutputStream getVdbXmlOutputStream(VDBMetaData vdb) throws IOException {
 		File f = buildVdbXml(vdb);
+		if (!f.exists()) {
+			f.getParentFile().mkdirs();
+		}
 		return new FileOutputStream(f);
 	}	
 }

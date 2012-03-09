@@ -32,13 +32,10 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
@@ -70,6 +67,7 @@ public class CompositeVDB {
 	private MetadataStore[] additionalStores;
 	private ConnectorManagerRepository cmr;
 	private FunctionTree systemFunctions;
+	private boolean metadataloadFinished = false;
 	
 	// used as cached item to avoid rebuilding
 	private VDBMetaData mergedVDB;
@@ -103,7 +101,7 @@ public class CompositeVDB {
 	}	
 	
 	private synchronized void update() {
-		if (this.mergedVDB == null) {
+		if (this.mergedVDB == null && this.metadataloadFinished) {
 			
 			this.mergedVDB = buildVDB();
 			
@@ -147,7 +145,7 @@ public class CompositeVDB {
 	}
 	
 	public synchronized VDBMetaData getVDB() {
-		if (this.mergedVDB == null) {			
+		if (this.mergedVDB == null && this.metadataloadFinished) {			
 			update();
 		}
 		return this.mergedVDB;
@@ -341,4 +339,8 @@ public class CompositeVDB {
 		}
 		metadataRepository.endLoadVdb(vdbName, vdbVersion);
 	}	
+	
+	public void setMetaloadFinished(boolean flag) {
+		this.metadataloadFinished = flag;
+	}
 }

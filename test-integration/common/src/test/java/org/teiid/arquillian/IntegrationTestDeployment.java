@@ -62,7 +62,6 @@ public class IntegrationTestDeployment {
 	
 	@Test
 	public void testVDBDeployment() throws Exception {
-		boolean deployed = false;
 		try {
 			Set<?> vdbs = admin.getVDBs();
 			assertTrue(vdbs.isEmpty());
@@ -73,7 +72,6 @@ public class IntegrationTestDeployment {
 			}
 			
 			admin.deploy("bqt.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
-			deployed = true;
 
 			vdbs = admin.getVDBs();
 			assertFalse(vdbs.isEmpty());
@@ -101,9 +99,7 @@ public class IntegrationTestDeployment {
 			assertFalse(vdb.isValid());
 			assertTrue(vdb.getStatus().equals(Status.INACTIVE));
 		} finally {
-			if (deployed) {
-				admin.undeploy("bqt.vdb");
-			}
+			undeploy();
 		}
 	}
 
@@ -111,7 +107,7 @@ public class IntegrationTestDeployment {
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
 		System.out.println(translators);
-		assertEquals(28, translators.size());
+		assertEquals(29, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -142,12 +138,9 @@ public class IntegrationTestDeployment {
 
 	@Test
 	public void testVDBConnectionType() throws Exception {
-		boolean vdbOneDeployed = false;
-		boolean vdbTwoDeployed = false;
 		try {
 			
 			admin.deploy("bqt.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));			
-			vdbOneDeployed = true;
 			
 			VDB vdb = admin.getVDB("bqt", 1);
 			Model model = vdb.getModels().get(0);
@@ -173,8 +166,6 @@ public class IntegrationTestDeployment {
 			admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));
 			admin.assignToModel("bqt", 2, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
 			
-			vdbTwoDeployed = true;
-			
 			try {
 				Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
 				conn.close();
@@ -197,10 +188,8 @@ public class IntegrationTestDeployment {
 			assertEquals(ConnectionType.ANY, vdb.getConnectionType());
 			
 		} finally {
-			if (vdbOneDeployed) {
-				admin.undeploy("bqt.vdb");
-			}
-			if (vdbTwoDeployed) {
+			undeploy();
+			if(admin.getVDB("bqt", 2) != null){
 				admin.undeploy("bqt2.vdb");
 			}
 		}
@@ -210,15 +199,13 @@ public class IntegrationTestDeployment {
 	public void testCacheTypes() throws Exception {
 		String[] array = {Admin.Cache.PREPARED_PLAN_CACHE.toString(), Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE.toString()};
 		Collection<String> types = admin.getCacheTypes();
-		System.out.println(types);
 		assertArrayEquals(array, types.toArray());
 	}
 	
 	@Test
 	public void testSessions() throws Exception {
-		boolean vdbOneDeployed = false;
 		try {
-			vdbOneDeployed = deployVdb();
+			deployVdb();
 
 			Collection<? extends Session> sessions = admin.getSessions();
 			assertEquals (0, sessions.size());
@@ -255,10 +242,7 @@ public class IntegrationTestDeployment {
 			}			
 			
 		} finally {
-			if (vdbOneDeployed) {
-				admin.undeploy("bqt.vdb");
-			}
-			
+			undeploy();
 		}
 	}
 
@@ -273,14 +257,20 @@ public class IntegrationTestDeployment {
 		return vdbOneDeployed;
 	}
 	
+	private void undeploy() throws Exception {
+		VDB vdb = admin.getVDB("bqt", 1);
+		if (vdb != null) {
+			admin.undeploy("bqt.vdb");
+		}
+	}
+	
 	@Test
 	public void testGetRequests() throws Exception {
-		boolean vdbOneDeployed = false;
 		JavaArchive jar = getLoopyArchive();
 
 		try {
 			admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
-			vdbOneDeployed = deployVdb();
+			deployVdb();
 			VDB vdb = admin.getVDB("bqt", 1);
 			Model model = vdb.getModels().get(0);
 			Translator t = admin.getTranslator("loopy");
@@ -324,33 +314,29 @@ public class IntegrationTestDeployment {
 
 		} finally {
 			admin.undeploy("loopy.jar");
-			if (vdbOneDeployed) {
-				admin.undeploy("bqt.vdb");
-			}			
+			undeploy();
 		}
 	}
 	
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
-		String[] array  = {"teiid-connector-file.rar", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"};
-		boolean vdbOneDeployed = false;
+		String[] array  = {"teiid-connector-file.rar", "teiid-local", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"};
 		try {
-			vdbOneDeployed = deployVdb();
+			deployVdb();
 			Set<String> templates = admin.getDataSourceTemplateNames();
-			assertArrayEquals(array, templates.toArray());
+			assertArrayEquals(array, templates.toArray(new String[templates.size()]));
 		} finally {
-			if (vdbOneDeployed) {
-				admin.undeploy("bqt.vdb");
-			}			
+			undeploy();
 		}
 	}
 	
 	@Test
 	public void getTemplatePropertyDefinitions() throws Exception{
-		boolean vdbOneDeployed = false;
 		try {
 			HashSet<String> props = new HashSet<String>();			
-			vdbOneDeployed = deployVdb();
+			
+			deployVdb();
+			
 			Collection<? extends PropertyDefinition> pds = admin.getTemplatePropertyDefinitions("h2");
 			for(PropertyDefinition pd:pds) {
 				props.add(pd.getName());
@@ -372,31 +358,24 @@ public class IntegrationTestDeployment {
 			assertTrue(rar_props.contains("AllowParentPaths"));
 			
 		} finally {
-			if (vdbOneDeployed) {
-				admin.undeploy("bqt.vdb");
-			}			
+			undeploy();
 		}		
 	}
 	
 	@Test
 	public void getWorkerPoolStats() throws Exception{
-		boolean vdbOneDeployed = false;
 		try {
-			vdbOneDeployed = deployVdb();
+			deployVdb();
 			assertNotNull(admin.getWorkerPoolStats());
 		} finally {
-			if (vdbOneDeployed) {
-				admin.undeploy("bqt.vdb");
-			}			
+			undeploy();
 		}		
 	}
 	
 	@Test
 	public void testDataRoleMapping() throws Exception{
-		boolean vdbOneDeployed = false;
 		try {
 			admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));			
-			vdbOneDeployed = true;
 			
 			VDB vdb = admin.getVDB("bqt", 2);
 			Model model = vdb.getModels().get(0);
@@ -442,11 +421,12 @@ public class IntegrationTestDeployment {
 			
 			assertFalse(dp.isAnyAuthenticated());
 		} finally {
-			if (vdbOneDeployed) {
+			if (admin.getVDB("bqt", 2) != null) {
 				admin.undeploy("bqt2.vdb");
-			}			
+			}
 		}		
 	}
+	
 	
 	
 }
