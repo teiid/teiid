@@ -226,14 +226,6 @@ public class CapabilitiesUtil {
 
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
         
-        if (FunctionLibrary.isConvert(function)) {
-            Class<?> fromType = function.getArg(0).getType();
-            Class<?> targetType = function.getType();
-            if (fromType == targetType) {
-            	return true; //this should be removed in rewrite
-            }
-            return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
-        }
         //capabilities check is only valid for non-schema scoped functions
         //technically the other functions are scoped to SYS or their function model, but that's 
         //not formally part of their metadata yet
@@ -242,6 +234,14 @@ public class CapabilitiesUtil {
             // Find capabilities
             if (!caps.supportsFunction(function.getFunctionDescriptor().getName())) {
                 return false;
+            }
+            if (FunctionLibrary.isConvert(function)) {
+                Class<?> fromType = function.getArg(0).getType();
+                Class<?> targetType = function.getType();
+                if (fromType == targetType) {
+                	return true; //this should be removed in rewrite
+                }
+                return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
             }
         } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
         	return false; //not the right schema

@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.datamgr;
 import java.util.Iterator;
 import java.util.List;
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod;
@@ -115,15 +114,6 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, srcCaps.supportsOnlyLiteralComparison());
         tgtCaps.setCapabilitySupport(Capability.DEPENDENT_JOIN, srcCaps.supportsDependentJoins());
         
-        //TODO: as more types are added it may make more sense to just delegate calls to the executionfactory
-		for (int i = 0; i <= DataTypeManager.MAX_TYPE_CODE; i++) {
-			for (int j = 0; j <= DataTypeManager.MAX_TYPE_CODE; j++) {
-				if (i != j) {
-					tgtCaps.setSupportsConvert(i, j, srcCaps.supportsConvert(i, j));
-				}
-			}
-		}
-        
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {
             Iterator<String> iter = functions.iterator();
@@ -132,6 +122,7 @@ public class CapabilitiesConverter {
                 tgtCaps.setFunctionSupport(func.toLowerCase(), true);
             }
         }
+        
         List<FunctionMethod> pushDowns = srcCaps.getPushDownFunctions();
         if(pushDowns != null && pushDowns.size() > 0) {
             for(FunctionMethod func:pushDowns) {

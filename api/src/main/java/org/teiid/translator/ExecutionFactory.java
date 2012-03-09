@@ -46,6 +46,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.TypeFacility.RUNTIME_CODES;
 
 
 
@@ -928,18 +929,23 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
-	 * Used for fine grained control of convert/cast pushdown.  If {@link #getSupportedFunctions()} contains
-	 * {@link SourceSystemFunctions#CONVERT}, then all of the default Teiid pushdown conversions are supported.
-	 * So typically this method will be implemented when {@link #getSupportedFunctions()} does not contain
-	 * {@link SourceSystemFunctions#CONVERT}. The engine will does not care about an unnecessary conversion 
+	 * Used for fine grained control of convert/cast pushdown.  The {@link #getSupportedFunctions()} should
+	 * contain {@link SourceSystemFunctions#CONVERT}.  This method can then return false to indicate
+	 * a lack of specific support.  The engine will does not care about an unnecessary conversion 
 	 * where fromType == toType.
+	 * 
+	 * By default lob conversion is disabled.
+	 * 
 	 * @param fromType @see RUNTIME_CODES
 	 * @param toType @see RUNTIME_CODES
 	 * @return true if the given conversion is supported.
 	 * @since 8.0
 	 */
 	public boolean supportsConvert(int fromType, int toType) {
-		return false;
+		if (fromType == RUNTIME_CODES.OBJECT || fromType == RUNTIME_CODES.CLOB || fromType == RUNTIME_CODES.XML || fromType == RUNTIME_CODES.BLOB || toType == RUNTIME_CODES.CLOB || toType == RUNTIME_CODES.XML || toType == RUNTIME_CODES.BLOB) {
+			return false;
+		}
+		return true;
 	}
 	
 	/**

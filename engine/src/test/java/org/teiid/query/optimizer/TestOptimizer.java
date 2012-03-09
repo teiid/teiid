@@ -6566,7 +6566,13 @@ public class TestOptimizer {
     @Test public void testConvertSignature() throws Exception {
     	BasicSourceCapabilities caps = new BasicSourceCapabilities();
     	caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-    	caps.setSupportsConvert(DefaultTypeCodes.INTEGER, DefaultTypeCodes.STRING, true);
+    	caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+    	caps.setTranslator(new ExecutionFactory<Object, Object>() {
+    		@Override
+    		public boolean supportsConvert(int fromType, int toType) {
+    			return (fromType == DefaultTypeCodes.INTEGER && toType == DefaultTypeCodes.STRING);
+    		}
+       	});
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT e1 from pm1.g1 where e1 = e2 and e1 = e3", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {

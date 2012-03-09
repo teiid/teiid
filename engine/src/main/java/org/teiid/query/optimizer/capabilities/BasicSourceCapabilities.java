@@ -27,10 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.DataTypeManager.DefaultTypeCodes;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.ExecutionFactory.Format;
 
 /**
@@ -42,7 +39,6 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     private Map<Capability, Boolean> capabilityMap = new HashMap<Capability, Boolean>();
     private Map<String, Boolean> functionMap = new TreeMap<String, Boolean>(String.CASE_INSENSITIVE_ORDER);
     private Map<Capability, Object> propertyMap = new HashMap<Capability, Object>();
-    private boolean[][] converts = new boolean[DataTypeManager.MAX_TYPE_CODE + 1][DataTypeManager.MAX_TYPE_CODE + 1];
     private ExecutionFactory<?, ?> translator;
 
     /**
@@ -71,16 +67,6 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     } 
 
     public void setFunctionSupport(String function, boolean supports) {  
-    	if (SourceSystemFunctions.CONVERT.equalsIgnoreCase(function)) {
-    		for (int i = 0; i < converts.length; i++) {
-    			if (i == DefaultTypeCodes.OBJECT || i == DefaultTypeCodes.CLOB || i == DefaultTypeCodes.XML) {
-    				continue;
-    			}
-    			for (int j = 0; j < converts.length; j++) {
-    				converts[i][j] = j != DefaultTypeCodes.CLOB && j != DefaultTypeCodes.XML;
-    			}
-    		}
-    	}
         functionMap.put(function, Boolean.valueOf(supports));
     }
 
@@ -108,11 +94,10 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     
     @Override
     public boolean supportsConvert(int sourceType, int targetType) {
-    	return converts[sourceType][targetType];
-    }
-    
-    public void setSupportsConvert(int sourceType, int targetType, boolean value) {
-    	this.converts[sourceType][targetType] = value;
+    	if (this.translator == null) {
+    		return true;
+    	}
+    	return this.translator.supportsConvert(sourceType, targetType);
     }
     
     public void setTranslator(ExecutionFactory<?, ?> translator) {
