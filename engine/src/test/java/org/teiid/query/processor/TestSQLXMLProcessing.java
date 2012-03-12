@@ -504,6 +504,15 @@ public class TestSQLXMLProcessing {
     
         process(sql, expected);
     }
-
+    
+    @Test public void testXmlAggNested() throws Exception {
+        String sql = "SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e1 = a.e1)) FROM pm1.g1 AS a where e1 = 'a' GROUP BY e1"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<metadata><gcol0>a</gcol0><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes><subTypes><e1>a</e1></subTypes></metadata>"),
+        };    
+    
+        process(sql, expected);
+    }
 
 }

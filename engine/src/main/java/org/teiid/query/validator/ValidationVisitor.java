@@ -57,83 +57,15 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
-import org.teiid.query.sql.lang.AlterProcedure;
-import org.teiid.query.sql.lang.AlterTrigger;
-import org.teiid.query.sql.lang.AlterView;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.BetweenCriteria;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Create;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.Drop;
-import org.teiid.query.sql.lang.DynamicCommand;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetClauseList;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.TextTable;
-import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
-import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BranchingStatement;
-import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
-import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.TranslateCriteria;
-import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.Statement.Labeled;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.TextLine;
-import org.teiid.query.sql.symbol.WindowFunction;
-import org.teiid.query.sql.symbol.XMLAttributes;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLForest;
-import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.sql.symbol.XMLParse;
-import org.teiid.query.sql.symbol.XMLQuery;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -761,12 +693,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         GroupBy groupBy = query.getGroupBy();
         Criteria having = query.getHaving();
         validateNoAggsInClause(groupBy);
+        List<GroupSymbol> correlationGroups = null;
         validateNoAggsInClause(query.getCriteria());
         if (query.getFrom() == null) {
         	validateNoAggsInClause(select);
         	validateNoAggsInClause(query.getOrderBy());
         } else {
         	validateNoAggsInClause(query.getFrom());
+        	correlationGroups = query.getFrom().getGroups();
         }
         
         Set<Expression> groupSymbols = null;
@@ -779,10 +713,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         LinkedHashSet<Expression> invalidWindowFunctions = new LinkedHashSet<Expression>();
         LinkedList<AggregateSymbol> aggs = new LinkedList<AggregateSymbol>();
         if (having != null) {
+            validateCorrelatedReferences(query, correlationGroups, groupSymbols, having, invalid);
         	AggregateSymbolCollectorVisitor.getAggregates(having, aggs, invalid, null, invalidWindowFunctions, groupSymbols);
         	hasAgg = true;
         }
         for (SingleElementSymbol symbol : select.getProjectedSymbols()) {
+        	if (hasAgg || !aggs.isEmpty()) {
+        		validateCorrelatedReferences(query, correlationGroups, groupSymbols, symbol, invalid);
+        	}
         	AggregateSymbolCollectorVisitor.getAggregates(symbol, aggs, invalid, null, null, groupSymbols);                                            
         }
         if ((!aggs.isEmpty() || hasAgg) && !invalid.isEmpty()) {
@@ -792,6 +730,26 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	handleValidationError(QueryPlugin.Util.getString("SQLParser.window_only_top_level", invalidWindowFunctions), invalidWindowFunctions); //$NON-NLS-1$
         }
     }
+
+    /**
+     * This validation is more convoluted than needed since it is being run before rewrite/planning.
+     * Ideally we would already have correlated references set on the subqueries.
+     */
+	private void validateCorrelatedReferences(Query query,
+			final List<GroupSymbol> correlationGroups, final Set<Expression> groupingSymbols, LanguageObject object, LinkedHashSet<Expression> invalid) {
+		if (query.getFrom() == null) {
+			return;
+		}
+		ElementCollectorVisitor ecv = new ElementCollectorVisitor(invalid) {
+			public void visit(ElementSymbol obj) {
+				if (obj.isExternalReference() && correlationGroups.contains(obj.getGroupSymbol())
+						 && (groupingSymbols == null || !groupingSymbols.contains(obj))) {
+					super.visit(obj);
+				}
+			}
+		};
+		PreOrPostOrderNavigator.doVisit(object, ecv, PreOrPostOrderNavigator.PRE_ORDER, true);
+	}
 
 	private void validateNoAggsInClause(LanguageObject clause) {
 		if (clause == null) {

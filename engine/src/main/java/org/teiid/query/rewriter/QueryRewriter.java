@@ -1485,7 +1485,7 @@ public class QueryRewriter {
      * @return CompareCriteria
      */
     private CompareCriteria simplifyMathematicalCriteria(CompareCriteria criteria)
-    throws TeiidComponentException, TeiidProcessingException{
+    throws TeiidProcessingException{
 
         Expression leftExpr = criteria.getLeftExpression();
         Expression rightExpr = criteria.getRightExpression();

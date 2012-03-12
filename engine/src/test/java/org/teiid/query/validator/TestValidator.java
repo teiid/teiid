@@ -1957,4 +1957,8 @@ public class TestValidator {
 		helpValidate("select count(distinct e1) over (order by e2) as y from pm1.g1", new String[] {"COUNT(DISTINCT e1) OVER (ORDER BY e2)"}, RealMetadataFactory.example1Cached());
 	}
 	
+	@Test public void testInvalidCorrelation() {
+		helpValidate("SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1 AS objectName), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e2 = a.e2)) FROM pm1.g1 AS a GROUP BY e1", new String[] {"a.e2"}, RealMetadataFactory.example1Cached());
+	}
+	
 }
