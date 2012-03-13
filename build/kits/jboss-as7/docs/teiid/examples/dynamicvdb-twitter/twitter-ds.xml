@@ -1,0 +1,14 @@
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.0">
+    <resource-adapters>
+        <resource-adapter>
+            <archive>teiid-connector-ws.rar</archive>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.ws.WSManagedConnectionFactory" jndi-name="java:/twitterDS" enabled="true" use-java-context="true" pool-name="twitter-ds">
+                      <config-property name="EndPoint">http://search.twitter.com/search.json</config-property>
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>
+
