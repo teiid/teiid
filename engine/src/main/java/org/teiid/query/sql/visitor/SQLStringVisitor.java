@@ -679,6 +679,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( DynamicCommand obj ) {
         append(EXECUTE);
         append(SPACE);
+        append(IMMEDIATE);
+        append(SPACE);
         visitNode(obj.getSql());
 
         if (obj.isAsClauseSet()) {
