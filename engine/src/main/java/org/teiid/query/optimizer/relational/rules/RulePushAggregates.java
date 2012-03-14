@@ -22,19 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -69,16 +57,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -795,11 +774,11 @@ public class RulePushAggregates implements
             return result;
         }
         for (T aggregateSymbol : expressions) {
-        	if (aggs && ((AggregateSymbol)aggregateSymbol).getExpression() == null) {
-        		return null; //count(*) is not yet handled.  a general approach would be count(*) => count(r.col) * count(l.col), but the logic here assumes a simpler initial mapping
-        	}
-        	if (aggs && !((AggregateSymbol)aggregateSymbol).canStage()) {
-        		continue;
+        	if (aggs) {
+        		AggregateSymbol as = (AggregateSymbol)aggregateSymbol;
+        		if ((!as.canStage() && as.isCardinalityDependent()) || (as.getAggregateFunction() == Type.COUNT && as.getExpression() == null)) {
+            		return null; //count(*) is not yet handled.  a general approach would be count(*) => count(r.col) * count(l.col), but the logic here assumes a simpler initial mapping
+        		}
         	}
             Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
             if (groups.isEmpty()) {
