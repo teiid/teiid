@@ -59,6 +59,8 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
 		validateMetadata(factory);
+		
+		super.loadMetadata(factory, executionFactory, connectionFactory);		
 	}
 	
     private void validateMetadata(MetadataFactory schema) throws TranslatorException {

@@ -23,6 +23,7 @@ package org.teiid.jboss;
 
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.StringTokenizer;
 import java.util.concurrent.Executor;
 
 import org.jboss.as.naming.deployment.ContextNames;
@@ -278,28 +279,51 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			return null;
 		}
 		
-		if (model.getSchemaSourceType().equalsIgnoreCase("DDL")) { //$NON-NLS-1$
-			return new DDLMetadataRepository();
+		MetadataRepository first = null;
+		MetadataRepository current = null;
+		MetadataRepository previous = null;
+		StringTokenizer st = new StringTokenizer(model.getSchemaSourceType(), ","); //$NON-NLS-1$
+		while (st.hasMoreTokens()) {
+			String repoType = st.nextToken().trim();
+			if (repoType.equalsIgnoreCase("DDL")) { //$NON-NLS-1$
+				current =  new DDLMetadataRepository();
+			}
+			else if (repoType.equalsIgnoreCase("INDEX")) { //$NON-NLS-1$
+				current = indexRepo;
+			}
+			else if (repoType.equalsIgnoreCase("NATIVE")) { //$NON-NLS-1$
+				current = new NativeMetadataRepository();
+			}
+			else {
+				// if the schema type is a module based
+				current = getModuleBasedMetadataRepository(model.getName(), repoType);
+			}			
+		
+			if (current != null) {
+				if (first == null) {
+					first = current;
+				}
+				
+				if (previous != null) {
+					previous.setNext(current);
+				}
+				previous = current;
+				current = null;
+			}
 		}
-		
-		if (model.getSchemaSourceType().equalsIgnoreCase("INDEX")) { //$NON-NLS-1$
-			return indexRepo;
-		}
-		
-		if (model.getSchemaSourceType().equalsIgnoreCase("NATIVE")) { //$NON-NLS-1$
-			return new NativeMetadataRepository();
-		}		
-		
-		// if the schema type is a module based
-        final Module module;
+		return first;
+	}
+
+	private MetadataRepository getModuleBasedMetadataRepository(final String modelName, final String moduleName) throws DeploymentUnitProcessingException {
+		final Module module;
         ClassLoader moduleLoader = this.getClass().getClassLoader();
         ModuleLoader ml = Module.getCallerModuleLoader();
-        if (model.getSchemaSourceType() != null && ml != null) {
+        if (moduleName != null && ml != null) {
 	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(model.getSchemaSourceType()));
+            	module = ml.loadModule(ModuleIdentifier.create(moduleName));
             	moduleLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
-	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.getString("failed_load_module", IntegrationPlugin.Event.TEIID50068, model.getSchemaSourceType(), model.getName())); //$NON-NLS-1$
+	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.getString("failed_load_module", IntegrationPlugin.Event.TEIID50068, moduleName, modelName)); //$NON-NLS-1$
 	        }
         }
         

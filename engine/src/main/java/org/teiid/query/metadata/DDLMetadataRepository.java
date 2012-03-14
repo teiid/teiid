@@ -29,12 +29,15 @@ import org.teiid.translator.TranslatorException;
 
 public class DDLMetadataRepository extends BaseMetadataRepository {
 	
+	
 	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory exeuctionFactory, Object connectionFactory) throws TranslatorException {
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 		try {
 			QueryParser.getQueryParser().parseDDL(factory, factory.getRawMetadata());
 		} catch (ParseException e) {
 			throw new TranslatorException(e.getMessage());
 		}
+		super.loadMetadata(factory, executionFactory, connectionFactory);
 	}	
+
 }

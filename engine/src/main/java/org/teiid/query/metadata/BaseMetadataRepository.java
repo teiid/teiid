@@ -24,47 +24,81 @@ package org.teiid.query.metadata;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnStats;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.TableStats;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorException;
 
-public abstract class BaseMetadataRepository<F, C> implements MetadataRepository {
-
+public class BaseMetadataRepository<F, C> implements MetadataRepository {
+	protected MetadataRepository nextRepository;
+	
 	@Override
-	public void setViewDefinition(String vdbName, int vdbVersion, Table table,
-			String viewDefinition) {
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
+		if (this.nextRepository != null) {
+			this.nextRepository.loadMetadata(factory, executionFactory, connectionFactory);
+		}		
+	}	
+	
+	@Override
+	public void setViewDefinition(String vdbName, int vdbVersion, Table table,String viewDefinition) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setViewDefinition(vdbName, vdbVersion, table, viewDefinition);
+		}
 	}
 
 	@Override
 	public void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion,
 			Table table, TriggerEvent triggerOperation, String triggerDefinition) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setInsteadOfTriggerDefinition(vdbName, vdbVersion, table, triggerOperation, triggerDefinition);
+		}		
 	}
 
 	@Override
 	public void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion,
 			Table table, TriggerEvent triggerOperation, boolean enabled) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setInsteadOfTriggerEnabled(vdbName, vdbVersion, table, triggerOperation, enabled);
+		}		
 	}
 
 	@Override
 	public void setProcedureDefinition(String vdbName, int vdbVersion,
 			Procedure procedure, String procedureDefinition) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setProcedureDefinition(vdbName, vdbVersion, procedure, procedureDefinition);
+		}		
 	}
 
 	@Override
 	public void setTableStats(String vdbName, int vdbVersion, Table table,
 			TableStats tableStats) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setTableStats(vdbName, vdbVersion, table, tableStats);
+		}		
 	}
 
 	@Override
 	public void setColumnStats(String vdbName, int vdbVersion, Column column,
 			ColumnStats columnStats) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setColumnStats(vdbName, vdbVersion, column, columnStats);
+		}		
 	}
 
 	@Override
 	public void setProperty(String vdbName, int vdbVersion,
 			AbstractMetadataRecord record, String name, String value) {
+		if (this.nextRepository != null) {
+			this.nextRepository.setProperty(vdbName, vdbVersion, record, name, value);
+		}		
 	}
 
+    public void setNext(MetadataRepository next) {
+        this.nextRepository = next;
+    }
 }

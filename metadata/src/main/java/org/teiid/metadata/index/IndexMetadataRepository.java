@@ -48,5 +48,7 @@ public class IndexMetadataRepository extends BaseMetadataRepository {
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
+		
+		super.loadMetadata(factory, executionFactory, connectionFactory);
 	}
 }
