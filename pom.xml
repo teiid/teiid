@@ -82,25 +82,18 @@
       </modules>
       <build>
         <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.8</version>
-            <configuration>
-              <maxmemory>512m</maxmemory>
-              <excludePackageNames>*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.resource.*,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>aggregate-jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>            
+       
         </plugins>
+        
       </build>
     </profile>
+    
+     <profile>
+      <id>docs</id>
+      <modules>
+        <module>documentation</module>
+      </modules>
+      </profile>     
     <profile>
       <!--
           This is to enable faster build for development time.
@@ -116,6 +109,22 @@
 		<pluginManagement>
 			<plugins>
 		<!-- Fixes how test resources of a project can be used in projects dependent on it  -->
+		        <plugin>
+		          <groupId>org.apache.maven.plugins</groupId>
+		          <artifactId>maven-javadoc-plugin</artifactId>
+		          <version>2.8.1</version>
+		          <configuration>
+		            <maxmemory>512m</maxmemory>
+		            <excludePackageNames>*.internal,com.*,net.*,org.teiid.cache,org.teiid.common.*,org.teiid.core,org.teiid.deployers,org.teiid.dqp.*,org.teiid.jboss,org.teiid.netty.*,org.teiid.odbc,org.teiid.query,org.teiid.resource.*,org.teiid.rhq.*,org.teiid.runtime,org.teiid.security,org.teiid.services,org.teiid.templates,org.teiid.test.*,org.teiid.transport,org.teiid.vdb.*</excludePackageNames>
+		          </configuration>
+		          <executions>
+		            <execution>
+		              <goals>
+		                <goal>aggregate-jar</goal>
+		              </goals>
+		            </execution>
+		          </executions>
+		       </plugin>   
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-jar-plugin</artifactId>
@@ -200,7 +209,7 @@
                     <execution>
                         <id>attach-sources</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
