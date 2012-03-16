@@ -264,10 +264,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	        		public void onCompletion(ResultsFuture<Boolean> future) {
 	        			executionFuture = null;
                         try {
-		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                            cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, stmt.getResultSet(), cols));
-        					client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
-    						completion.getResultsReceiver().receiveResults(0);
+                        	if (future.get()) {
+			                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
+	                            cursorMap.put(cursorName, new Cursor(cursorName, sql, stmt, null, stmt.getResultSet(), cols));
+	        					client.sendCommandComplete("DECLARE CURSOR", null); //$NON-NLS-1$		                            
+	    						completion.getResultsReceiver().receiveResults(0);
+                        	}
     					} catch (Throwable e) {
     						completion.getResultsReceiver().exceptionOccurred(e);
     					}
@@ -524,11 +526,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				try {
 					int rowsSent = future.get();
 					if (rowsSent < cursor.fetchSize) {
-						client.sendCommandComplete(cursor.sql, 0);
+						client.sendCommandComplete(cursor.sql, rowsSent);
 					}
 					else {
 						client.sendPortalSuspended();
 					}
+					doneExecuting();
 				} catch (InterruptedException e) {
 					throw new AssertionError(e);
 				} catch (ExecutionException e) {
@@ -785,10 +788,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			preparedName  = UNNAMED;
 		}		
 		Prepared query = this.preparedMap.remove(preparedName);
-		if (query == null) {
-			errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", preparedName)); //$NON-NLS-1$
-		}
-		else {
+		if (query != null) {
 			// Close all the bound messages off of this prepared
 			// TODO: can there be more than one?
 			this.portalMap.remove(preparedName);
