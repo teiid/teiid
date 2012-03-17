@@ -74,7 +74,6 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.CURTIME, new AliasModifier("current_time")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("current_date")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("lowercase")); //$NON-NLS-1$
-        registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("uppercase")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new AliasModifier("day")); //$NON-NLS-1$
         
@@ -144,7 +143,6 @@ public class IngresExecutionFactory extends JDBCExecutionFactory {
 		supportedFunctions.add(SourceSystemFunctions.MINUTE);
 		supportedFunctions.add(SourceSystemFunctions.MONTH);
 		supportedFunctions.add(SourceSystemFunctions.POWER);
-		supportedFunctions.add(SourceSystemFunctions.RAND);
 		supportedFunctions.add(SourceSystemFunctions.RIGHT);
 		supportedFunctions.add(SourceSystemFunctions.RPAD);
 		supportedFunctions.add(SourceSystemFunctions.SECOND);

@@ -21,12 +21,7 @@
  */
 package org.teiid.translator.hive;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -322,7 +317,6 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.POWER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
-        supportedFunctions.add(SourceSystemFunctions.RAND);
         supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.RPAD);
