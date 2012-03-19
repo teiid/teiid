@@ -86,7 +86,7 @@ public class SSLConfiguration {
         result.setUseClientMode(false);
         if (ANONYMOUS.equals(authenticationMode)) {
             if (!(Arrays.asList(result.getSupportedCipherSuites()).contains(SocketUtil.ANON_CIPHER_SUITE))) {
-            	throw new GeneralSecurityException(RuntimePlugin.Util.getString("SSLConfiguration.no_anonymous")); //$NON-NLS-1$
+            	throw new GeneralSecurityException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40082));
             }
             result.setEnabledCipherSuites(new String[] {SocketUtil.ANON_CIPHER_SUITE});
         } else {

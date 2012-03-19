@@ -58,7 +58,7 @@ public class UDFMetaData {
 		}
 		VirtualFile file =this.files.get(path);
 		if (file == null) {
-			throw new IOException(RuntimePlugin.Util.getString("udf_model_not_found", name)); //$NON-NLS-1$
+			throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40075, name));
 		}
 		List<FunctionMethod> udfMethods = FunctionMetadataReader.loadFunctionMethods(file.openStream());
 		ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("UDF load"); //$NON-NLS-1$

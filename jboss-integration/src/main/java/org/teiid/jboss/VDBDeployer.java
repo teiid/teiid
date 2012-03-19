@@ -64,7 +64,6 @@ import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
-import org.teiid.runtime.RuntimePlugin;
 import org.teiid.services.BufferServiceImpl;
 
 
@@ -99,7 +98,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!preview) {
 			List<String> errors = deployment.getValidityErrors();
 			if (errors != null && !errors.isEmpty()) {
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("validity_errors_in_vdb", RuntimePlugin.Event.TEIID40004, deployment)); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50074, deployment));
 			}
 		}
 				
@@ -110,7 +109,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			String type = data.getType();
 			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
 			if ( parent == null) {				
-				throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("translator_type_not_found", IntegrationPlugin.Event.TEIID50021, type, deploymentName)); //$NON-NLS-1$
+				throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, type, deploymentName));
 			}
 		}
 		
@@ -323,7 +322,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
             	module = ml.loadModule(ModuleIdentifier.create(moduleName));
             	moduleLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
-	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.getString("failed_load_module", IntegrationPlugin.Event.TEIID50068, moduleName, modelName)); //$NON-NLS-1$
+	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50068, moduleName, modelName));
 	        }
         }
         

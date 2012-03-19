@@ -421,7 +421,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
             moduleId = ModuleIdentifier.create(moduleName);
             module = Module.getCallerModuleLoader().loadModule(moduleId);
         } catch (ModuleLoadException e) {
-            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.getString("failed_load_module", moduleName))); //$NON-NLS-1$
+            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50069, moduleName))); //$NON-NLS-1$
         }
         ServiceLoader<T> services = module.loadService(type);
         return services.iterator().next();

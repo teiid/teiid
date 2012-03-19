@@ -282,7 +282,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	private void cursorFetch(String cursorName, int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		Cursor cursor = this.cursorMap.get(cursorName);
 		if (cursor == null) {
-			throw new SQLException(RuntimePlugin.Util.getString("not_bound", cursorName)); //$NON-NLS-1$
+			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, cursorName));
 		}
 		cursor.fetchSize = rows;
 		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
@@ -312,7 +312,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		Cursor cursor = this.cursorMap.get(prepareName);
 		if (cursor == null) {
-			throw new SQLException(RuntimePlugin.Util.getString("not_bound", prepareName)); //$NON-NLS-1$
+			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, prepareName));
 		}
 		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		this.client.sendMoveCursor(cursor.rs, rows, result);
@@ -415,7 +415,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		Prepared previous = this.preparedMap.get(prepareName);
 		if (previous == null) {
-			errorOccurred(RuntimePlugin.Util.getString("bad_binding", prepareName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40077, prepareName));
 			return;
 		}		
 		
@@ -459,7 +459,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		
 		final Portal query = this.portalMap.get(bindName);
 		if (query == null) {
-			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, bindName));
 			return;
 		}	
 		
@@ -672,7 +672,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Prepared query = this.preparedMap.get(prepareName);
 		if (query == null) {
-			errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", prepareName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40079, prepareName));
 		}
 		else {
 			try {
@@ -712,7 +712,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Portal query = this.portalMap.get(bindName);
 		if (query == null) {
-			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, bindName));
 		}
 		else {
 			try {
@@ -761,7 +761,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Portal query = this.portalMap.remove(bindName);
 		if (query == null) {
-			errorOccurred(RuntimePlugin.Util.getString("not_bound", bindName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, bindName));
 		}
 		else {
 			try {
@@ -786,7 +786,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}		
 		Prepared query = this.preparedMap.remove(preparedName);
 		if (query == null) {
-			errorOccurred(RuntimePlugin.Util.getString("no_stmt_found", preparedName)); //$NON-NLS-1$
+			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40079, preparedName));
 		}
 		else {
 			// Close all the bound messages off of this prepared
@@ -797,7 +797,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				query.stmt.close();
 				this.client.statementClosed();
 			} catch (SQLException e) {
-				errorOccurred(RuntimePlugin.Util.getString("error_closing_stmt", preparedName)); //$NON-NLS-1$
+				errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40080, preparedName));
 			}			
 		}	
 	}
@@ -841,7 +841,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	@Override
 	public void functionCall(int oid) {
-		errorOccurred(RuntimePlugin.Util.getString("lo_not_supported")); //$NON-NLS-1$
+		errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40081));
 	}
 	
 	@Override

@@ -151,7 +151,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 					if (model.getModelType().equals(Model.Type.FUNCTION)) {
 						String path = ((ModelMetaData)model).getPath();
 						if (path == null) {
-							throw new DeploymentUnitProcessingException(RuntimePlugin.Util.getString("invalid_udf_file", model.getName())); //$NON-NLS-1$
+							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50075, model.getName()));
 						}
 						udf.buildFunctionModelFile(model.getName(), path);
 					}

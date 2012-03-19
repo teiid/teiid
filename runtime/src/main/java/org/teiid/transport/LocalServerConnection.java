@@ -96,7 +96,7 @@ public class LocalServerConnection implements ServerConnection {
 
 			public Object invoke(Object arg0, final Method arg1, final Object[] arg2) throws Throwable {
 				if (shutdown) {
-					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.getString("LocalTransportHandler.Transport_shutdown"))); //$NON-NLS-1$
+					throw ExceptionUtil.convertException(arg1, new TeiidComponentException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40074)));
 				}
 				try {
 					if (passthrough && !arg1.getDeclaringClass().equals(ILogon.class)) {

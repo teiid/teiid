@@ -68,7 +68,7 @@ public class JBossSessionService extends SessionServiceImpl {
 					return new TeiidLoginContext(getUserName(existing)+AT+domain, existing, domain, this.securityHelper.getSecurityContext(domain));
 	        	}
             }
-            throw new LoginException(RuntimePlugin.Util.getString("no_passthrough_identity_found")); //$NON-NLS-1$
+            throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50073));
     	}
 
         
@@ -92,7 +92,7 @@ public class JBossSessionService extends SessionServiceImpl {
         		}
         	}
         }
-        throw new LoginException(RuntimePlugin.Util.getString("SessionServiceImpl.The_username_0_and/or_password_are_incorrect", username )); //$NON-NLS-1$       
+        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, username ));       
     }	
 	
 	private String getUserName(Subject subject) {

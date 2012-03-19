@@ -205,7 +205,7 @@ class VDBService implements Service<VDBMetaData> {
 		for (Model model:deployment.getModels()) {
 			List<String> sourceNames = model.getSourceNames();
 			if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
-				throw new StartException(IntegrationPlugin.Util.getString("duplicate_source_name", model.getName(), deployment.getName(), deployment.getVersion(), IntegrationPlugin.Event.TEIID50033)); //$NON-NLS-1$
+				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50033, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
 			for (String source:sourceNames) {
 				ConnectorManager cm = cmr.getConnectorManager(source);
@@ -214,7 +214,7 @@ class VDBService implements Service<VDBMetaData> {
 				if (cm != null) {
 					if (!cm.getTranslatorName().equals(name)
 							|| !cm.getConnectionName().equals(connection)) {
-						throw new StartException(IntegrationPlugin.Util.getString("source_name_mismatch", source, deployment.getName(), deployment.getVersion(),IntegrationPlugin.Event.TEIID50034)); //$NON-NLS-1$
+						throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50034, source, deployment.getName(), deployment.getVersion()));
 					}
 					continue;
 				}
@@ -236,7 +236,7 @@ class VDBService implements Service<VDBMetaData> {
 	
 	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws TranslatorNotFoundException {
 		if (!building.add(name)) {
-			throw new TranslatorNotFoundException(RuntimePlugin.Util.getString("recursive_delegation", deployment.getName(), deployment.getVersion(), building)); //$NON-NLS-1$
+			throw new TranslatorNotFoundException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50076, deployment.getName(), deployment.getVersion(), building));
 		}
 		VDBTranslatorMetaData translator = vdbRepo.getTranslatorMetaData(name);
 		if (translator == null) {

@@ -88,7 +88,7 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
 							ModuleRootMarker.mark(jarArchiveRoot);
 							deploymentUnit.addToAttachmentList(Attachments.RESOURCE_ROOTS, jarArchiveRoot);
 						} catch (IOException e) {
-							throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50018.name()+IntegrationPlugin.Util.getString("failed_to_process_vdb_archive", archive), e); //$NON-NLS-1$
+							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50018, archive), e); 
 						}
 					}
 				}

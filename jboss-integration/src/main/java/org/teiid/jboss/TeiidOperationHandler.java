@@ -421,7 +421,7 @@ class ClearCache extends BaseCachehandler {
 
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE).asString();
 		if (cache == null) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("cache_not_found", cacheType))); //$NON-NLS-1$
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType)));
 		}
 		
 		if (operation.hasDefined(OperationsConstants.VDB_NAME) && operation.hasDefined(OperationsConstants.VDB_VERSION)) {
@@ -465,7 +465,7 @@ class CacheStatistics extends BaseCachehandler {
 		}
 		String cacheType = operation.get(OperationsConstants.CACHE_TYPE).asString();
 		if (cache == null) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("cache_not_found", cacheType))); //$NON-NLS-1$
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50071, cacheType)));
 		}
 		
 		ModelNode result = context.getResult();
