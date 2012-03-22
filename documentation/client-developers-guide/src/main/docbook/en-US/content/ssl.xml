@@ -98,13 +98,13 @@
             certificate keystores is not allowed.</para>
             
             <para>In this scenario, a different set of Teiid-specific SSL properties can be set as system properties or defined inside 
-            the "teiid-client-settings.properties" file. The "teiid-client-settings.properties" file 
-            can be found inside the "teiid-&versionNumber;-client.jar" file at the root. 
+            a "teiid-client-settings.properties" file. A sample "teiid-client-settings.properties" file 
+            can be found inside the "teiid-&versionNumber;-client.jar" file at the root called "teiid-client-settings.orig.properties". 
             Extract this file, or make a copy, change the property values required for the chosen SSL mode, 
             and place this file in the client application's classpath before 
             the "teiid-&versionNumber;-client.jar" file.</para>
             
-            <para>SSL properties and definitions inside the "teiid-client-settings.properties" are shown below.</para>
+            <para>SSL properties and definitions that can be set in a "teiid-client-settings.properties" file are shown below.</para>
             
            <programlisting><![CDATA[########################################
 # SSL Settings
