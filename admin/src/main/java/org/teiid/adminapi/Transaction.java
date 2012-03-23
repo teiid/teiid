@@ -23,7 +23,7 @@
 package org.teiid.adminapi;
 
 
-public interface Transaction extends AdminObject {
+public interface Transaction extends AdminObject, DomainAware {
 
 	/**
 	 * Get the session associated with the this transaction.

@@ -63,7 +63,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testVDBDeployment() throws Exception {
 		try {
-			Set<?> vdbs = admin.getVDBs();
+			Collection<?> vdbs = admin.getVDBs();
 			assertTrue(vdbs.isEmpty());
 			
 			Collection<String> dsNames = admin.getDataSourceNames();

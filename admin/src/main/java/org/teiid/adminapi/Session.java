@@ -28,7 +28,7 @@ package org.teiid.adminapi;
  * 
  * A user is allowed to have multiple sessions active simultaneously.
  */
-public interface Session extends AdminObject {
+public interface Session extends AdminObject, DomainAware {
     
     /**
      * Get the Last time Client has check to see if the server is still available

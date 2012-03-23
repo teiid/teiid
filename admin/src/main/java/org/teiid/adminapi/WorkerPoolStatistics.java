@@ -21,7 +21,7 @@
  */
 package org.teiid.adminapi;
 
-public interface WorkerPoolStatistics extends AdminObject {
+public interface WorkerPoolStatistics extends AdminObject, DomainAware{
  
 	/**
 	 * Current active thread count

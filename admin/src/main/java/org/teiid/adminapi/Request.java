@@ -34,7 +34,7 @@ package org.teiid.adminapi;
  *  <p>A request is identified by a numbers separated by '|'. usually in they are arranged 
  *  in the pattern [session]|[request] or [session]|[request]|[source request] </p>
  */
-public interface Request extends AdminObject {
+public interface Request extends AdminObject, DomainAware {
 	
 	public enum ProcessingState {
 		PROCESSING,

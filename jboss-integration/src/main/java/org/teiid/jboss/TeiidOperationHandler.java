@@ -470,7 +470,7 @@ class CacheStatistics extends BaseCachehandler {
 		
 		ModelNode result = context.getResult();
 		CacheStatisticsMetadata stats = buildCacheStats(cacheType, cache);
-		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
+		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.wrap(stats, result.add());
 	}
 	
 	private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
@@ -488,7 +488,7 @@ class CacheStatistics extends BaseCachehandler {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CACHE_TYPE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.CACHE_TYPE));
 		
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
-		reply.get(TYPE).set(ModelType.OBJECT);		
+		reply.get(TYPE).set(ModelType.LIST);		
 		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
@@ -526,11 +526,11 @@ class WorkerPoolStatistics extends TeiidOperationHandler{
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
 		ModelNode result = context.getResult();
 		WorkerPoolStatisticsMetadata stats = engine.getWorkerPoolStatistics();
-		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
+		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.wrap(stats, result.add());
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
-		reply.get(TYPE).set(ModelType.OBJECT);		
+		reply.get(TYPE).set(ModelType.LIST);		
 		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}		
 }

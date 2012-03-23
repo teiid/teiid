@@ -218,18 +218,18 @@ public class AdminShell {
 	}
 
 	@Doc(text = "Get all VDB instances")
-	public static Set<? extends VDB> getVDBs() throws AdminException {
+	public static Collection<? extends VDB> getVDBs() throws AdminException {
 		return getAdmin().getVDBs();
 	}
 
 	@Doc(text = "Get thread pool statistics for Teiid")
-	public static WorkerPoolStatistics getWorkerPoolStats()
+	public static Collection<? extends WorkerPoolStatistics> getWorkerPoolStats()
 			throws AdminException {
 		return getAdmin().getWorkerPoolStats();
 	}
 	
 	@Doc(text = "Get cache statistics for given cache type")
-	public static CacheStatistics getCacheStats(@Doc(text = "cacheType") String identifier)
+	public static Collection<? extends CacheStatistics> getCacheStats(@Doc(text = "cacheType") String identifier)
 			throws AdminException {
 		return getAdmin().getCacheStats(identifier);
 	}

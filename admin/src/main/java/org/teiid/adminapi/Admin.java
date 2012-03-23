@@ -80,7 +80,7 @@ public interface Admin {
      * same name in the Collection but they will differ by VDB version.
      * @throws AdminException 
      */
-    Set<? extends VDB> getVDBs() throws AdminException;
+    Collection<? extends VDB> getVDBs() throws AdminException;
     
     /**
      * Get the VDB
@@ -110,10 +110,10 @@ public interface Admin {
     /**
      * Get the Worker Pool statistics in runtime engine.
      *
-     * @return {@link WorkerPoolStatistics}
+     * @return Collection of {@link WorkerPoolStatistics}
      * @throws AdminException 
      */
-    WorkerPoolStatistics getWorkerPoolStats() throws AdminException;
+    Collection<? extends WorkerPoolStatistics> getWorkerPoolStats() throws AdminException;
     
     /**
      * Get the Caches that correspond to the specified identifier pattern
@@ -182,10 +182,10 @@ public interface Admin {
     /**
      * Get the Cache Statistics for the given type
      * @param cacheType Cache Type
-     * @return {@link CacheStatistics} 
+     * @return Collection of {@link CacheStatistics} 
      * @throws AdminException  
      */
-    CacheStatistics getCacheStats(String cacheType) throws AdminException;
+    Collection<? extends CacheStatistics> getCacheStats(String cacheType) throws AdminException;
     
     /**
      * Terminate the Session

@@ -59,6 +59,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
+import org.teiid.adminapi.impl.AdminObjectImpl;
 import org.teiid.adminapi.impl.MetadataMapper;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.VDBMetadataMapper;
@@ -296,40 +297,41 @@ public class AdminFactory {
 			public ModelNode describe(ModelNode node) {
 				return null;
 			}
-		}
+		}		
 		
-		public List<String> getInstalledJDBCDrivers() throws AdminException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
+		public Set<String> getInstalledJDBCDrivers() throws AdminException {
+			HashSet<String> driverList = new HashSet<String>();
+			driverList.addAll(getChildNodeNames("datasources", "jdbc-driver"));
 
-	        try {
-	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("installed-drivers-list"); 
-	            request = builder.buildRequest();
-
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-			
+			final ModelNode request = buildRequest("datasources", "installed-drivers-list");
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70001, Util.getFailureDescription(outcome));
-	            }
-	            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
-					@Override
-					public String unwrap(ModelNode node) {
-						if (node.hasDefined("driver-name")) {
-							return node.get("driver-name").asString();
+	            if (Util.isSuccess(outcome)) {
+		            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
+						@Override
+						public String unwrap(ModelNode node) {
+							if (node.hasDefined("driver-name")) {
+								return node.get("driver-name").asString();
+							}
+							return null;
 						}
-						return null;
-					}
-				});
-	            return drivers;
-	        } catch (IOException e) {
-	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70002, e);
+					});
+		            driverList.addAll(drivers);
+	            }
+	        } catch (Exception e) {
+	        	// in domain mode this method does not exist; this is expected in some domain mode.
 	        }	
-		}
+	        return driverList;
+		}		
+		
+		
+		
+		public String getProfileName() throws AdminProcessingException {
+			if (!this.domainMode) {
+				return null;
+			}
+			return getChildNodeNames(null, "profile").get(0);
+		}		
 		
 		@Override
 		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
@@ -346,7 +348,7 @@ public class AdminFactory {
 	            return;
         	}
 			
-        	List<String> drivers = getInstalledJDBCDrivers();
+        	Set<String> drivers = getInstalledJDBCDrivers();
         	if (!drivers.contains(templateName)) {
         		 throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, templateName));
         	}
@@ -354,6 +356,14 @@ public class AdminFactory {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        ModelNode request;
 	        try {
+	        	
+	        	if (this.domainMode) {
+	        		String profile = getProfileName();
+	        		if (profile != null) {
+	        			builder.addNode("profile",profile);
+	        		}
+	        	}
+	        	
 	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$	        		
 	        	
@@ -461,6 +471,13 @@ public class AdminFactory {
 	        final ModelNode request;
 
 	        try {
+	        	if (this.domainMode) {
+	        		String profile = getProfileName();
+	        		if (profile != null) {
+	        			builder.addNode("profile",profile);
+	        		}
+	        	}
+	        	
 	            builder.addNode("subsystem", subsystem[0]); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode(subsystem[1], deployedName);
 	            if (connFactory) {
@@ -587,16 +604,12 @@ public class AdminFactory {
 		}
 
 		@Override
-		public CacheStatistics getCacheStats(String cacheType) throws AdminException {
+		public Collection<? extends CacheStatistics> getCacheStats(String cacheType) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "cache-statistics",	"cache-type", cacheType);//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	if (outcome.hasDefined("result")) {
-	            		ModelNode result = outcome.get("result");
-	            		return VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.unwrap(result);
-	            	}	            	
-	            	
+	            	return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE);	            	
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
@@ -622,7 +635,7 @@ public class AdminFactory {
 	        return Collections.emptyList();
 		}
 
-		private List<String> getChildNodeNames(String subsystem, String childNode) throws AdminException {
+		private List<String> getChildNodeNames(String subsystem, String childNode) throws AdminProcessingException {
 	        final ModelNode request = buildRequest(subsystem, "read-children-names", "child-type", childNode);//$NON-NLS-1$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
@@ -703,43 +716,19 @@ public class AdminFactory {
 		 */
 		private Set<String> getDeployedResourceAdapterNames() throws AdminException {
 			Set<String> templates = new HashSet<String>();
-	        final ModelNode request = buildRequest("resource-adapters", "read-children-names", "child-type", "resource-adapter");//$NON-NLS-1$
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-	                templates.addAll(Util.getList(outcome));
-	                return templates;
-	            }
-	        } catch (Exception e) {
-	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70018, e);
-	        }
-	        return Collections.emptySet();					
+			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
+	        return templates;					
 		}
 
 		// :read-children-names(child-type=deployment)
 		private Set<String> getAvailableResourceAdapterNames() throws AdminException {
+			List<String> deployments = getChildNodeNames(null, "deployment");
 			Set<String> templates = new HashSet<String>();
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-	        try {
-	            builder.setOperationName("read-children-names"); 
-	            builder.addProperty("child-type", "deployment");
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-			
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            List<String> deployments = Util.getList(outcome);
-	            for (String deployment:deployments) {
-	            	if (deployment.endsWith(".rar")) {
-	            		templates.add(deployment);
-	            	}
-	            }
-	        } catch (IOException e) {
-	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70019, e);
-	        }
+            for (String deployment:deployments) {
+            	if (deployment.endsWith(".rar")) {
+            		templates.add(deployment);
+            	}
+            }
 	        return templates;
 		}
 
@@ -752,16 +741,13 @@ public class AdminFactory {
 		}
 		
 		@Override
-		public WorkerPoolStatistics getWorkerPoolStats() throws AdminException {
+		public Collection<? extends WorkerPoolStatistics> getWorkerPoolStats() throws AdminException {
 			final ModelNode request = buildRequest("teiid", "workerpool-statistics");//$NON-NLS-1$
 			if (request != null) {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		            	if (outcome.hasDefined("result")) {
-		            		ModelNode result = outcome.get("result");
-		            		return VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.unwrap(result);
-		            	}	            	
+		            	return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE);
 		            }		            
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70020, e);
@@ -794,7 +780,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getList(outcome, RequestMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70023, e);
@@ -810,7 +796,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getList(outcome, RequestMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70024, e);
@@ -826,7 +812,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getList(outcome, SessionMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, SessionMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70025, e);
@@ -848,6 +834,12 @@ public class AdminFactory {
 				Set<String> resourceAdapters = getAvailableResourceAdapterNames();
 	        	if (resourceAdapters.contains(templateName)) {
 	        		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+		        	if (this.domainMode) {
+		        		String profile = getProfileName();
+		        		if (profile != null) {
+		        			builder.addNode("profile",profile);
+		        		}
+		        	}	        		
 		            builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
 		            builder.setOperationName("read-rar-description"); //$NON-NLS-1$
 		            builder.addProperty("rar-name", templateName);
@@ -987,7 +979,7 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		                return getList(outcome, TransactionMetadataMapper.INSTANCE);
+		                return getDomainAwareList(outcome, TransactionMetadataMapper.INSTANCE);
 		            }
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70028, e);
@@ -1055,7 +1047,7 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	                return getList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE);
+	                return getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE);
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70034, e);
@@ -1064,11 +1056,19 @@ public class AdminFactory {
 	        return Collections.emptyList();
 		}
 		
-		private ModelNode buildRequest(String subsystem, String operationName, String... params) {
+		private ModelNode buildRequest(String subsystem, String operationName, String... params) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
-	            builder.addNode("subsystem", subsystem); //$NON-NLS-1$ //$NON-NLS-2$
+	        	if (subsystem != null) {
+		        	if (this.domainMode) {
+		        		String profile = getProfileName();
+		        		if (profile != null) {
+		        			builder.addNode("profile",profile);
+		        		}
+		        	}	        		        	
+		            builder.addNode("subsystem", subsystem); //$NON-NLS-1$ //$NON-NLS-2$
+	        	}
 	            builder.setOperationName(operationName); 
 	            request = builder.buildRequest();
 	            if (params != null && params.length % 2 == 0) {
@@ -1080,6 +1080,41 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
 			return request;
+		}
+		
+		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper) {
+	    	if (this.domainMode) {
+	    		List<T> returnList = new ArrayList<T>();
+	    		
+	    		ModelNode serverGroups = operationResult.get("server-groups");
+	    		Set<String> serverGroupNames = serverGroups.keys();
+	    		for (String serverGroupName:serverGroupNames) {
+	    			ModelNode serverGroup = serverGroups.get(serverGroupName);
+	    			Set<String> serverNames = serverGroup.keys();
+	    			for (String serverName:serverNames) {
+	    				ModelNode server = serverGroup.get(serverName);
+	    				String hostName = server.get("host").asString();
+	    				if (server.get("response", "outcome").asString().equals(Util.SUCCESS)) {
+	    					ModelNode result = server.get("response", "result");
+	    					if (result.isDefined()) {
+	    				        List<ModelNode> nodeList = result.asList(); //$NON-NLS-1$
+	    				        for(ModelNode node : nodeList) {
+	    				        	T anObj = mapper.unwrap(node);
+	    				        	if (anObj instanceof DomainAware) {
+	    				        		((AdminObjectImpl)anObj).setServerGroup(serverGroupName);
+	    				        		((AdminObjectImpl)anObj).setServerName(serverName);
+	    				        		((AdminObjectImpl)anObj).setHostName(hostName);
+	    				        	}
+	    				        	returnList.add(anObj);
+	    				        }
+	    						
+	    					}
+	    				}
+	    			}
+	    		}
+	    		return returnList;
+	    	}			
+	    	return getList(operationResult, mapper);
 		}
 		
 	    private <T> List<T> getList(ModelNode operationResult,  MetadataMapper<T> mapper) {
@@ -1097,20 +1132,7 @@ public class AdminFactory {
 	        return list;
 	    }		
 	    
-	    private <T> Set<T> getSet(ModelNode operationResult,  MetadataMapper<T> mapper) {
-	        if(!operationResult.hasDefined("result")) //$NON-NLS-1$
-	            return Collections.emptySet();
-
-	        List<ModelNode> nodeList = operationResult.get("result").asList(); //$NON-NLS-1$
-	        if(nodeList.isEmpty())
-	            return Collections.emptySet();
-
-	        Set<T> list = new HashSet<T>(nodeList.size());
-	        for(ModelNode node : nodeList) {
-	            list.add(mapper.unwrap(node));
-	        }
-	        return list;
-	    }	    
+  
 
 		@Override
 		public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
@@ -1133,18 +1155,18 @@ public class AdminFactory {
 		}
 
 		@Override
-		public Set<? extends VDB> getVDBs() throws AdminException {
+		public List<? extends VDB> getVDBs() throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "list-vdbs");//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	                return getSet(outcome, VDBMetadataMapper.INSTANCE);
+	                return getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE);
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70036, e);
 	        }
 
-	        return Collections.emptySet();
+	        return Collections.emptyList();
 		}
 
 		@Override

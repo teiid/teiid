@@ -38,7 +38,7 @@ import java.util.List;
  * 
  * @since 4.3
  */
-public interface VDB extends AdminObject {
+public interface VDB extends AdminObject, DomainAware {
 
     public static enum Status{INACTIVE, ACTIVE};
 

@@ -39,6 +39,9 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	private static final long serialVersionUID = -6381303538713462682L;
 	
 	private String name;
+	private String serverGroup;
+	private String serverName;
+	private String hostName;
 		
 	private ListOverMap<PropertyMetadata> properties = new ListOverMap<PropertyMetadata>(new KeyBuilder<PropertyMetadata>() {
 		private static final long serialVersionUID = 3687928367250819142L;
@@ -58,6 +61,30 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	
 	public void setName(String name) {
 		this.name = name;
+	}	
+	
+	public String getServerGroup() {
+		return this.serverGroup;
+	}
+	
+	public String getServerName() {
+		return this.serverName;
+	}
+	
+	public String getHostName() {
+		return this.hostName;
+	}
+	
+	public void setServerGroup(String group) {
+		this.serverGroup = group;
+	}
+	
+	public void setServerName(String name) {
+		this.serverName = name;
+	}
+	
+	public void setHostName(String name) {
+		this.hostName = name;
 	}	
 
 	@Override
