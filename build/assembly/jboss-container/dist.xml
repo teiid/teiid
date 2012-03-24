@@ -53,6 +53,16 @@
         <directoryMode>0755</directoryMode>        
     </fileSet>
     
+    <!-- Include the JOPR plugin --> 
+    <fileSet>
+      <directory>target</directory>
+      <includes>
+        <include>teiid-${version}-console.jar</include>
+      </includes>
+      <outputDirectory>deploy/admin-console.war/plugins</outputDirectory>
+      <fileMode>0644</fileMode>
+    </fileSet>      
+    
 	<!-- We may want to do this if including multiple doc types or languages
 	     as the parent directory structure will be copied.  However the parent
 	     directory permissions still seem wrong.
@@ -206,7 +216,7 @@
     </moduleSet>
         
     <!-- Include the JOPR plugin -->    
-    <moduleSet>
+    <!--moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
 
@@ -221,6 +231,6 @@
           <fileMode>0644</fileMode>
         </binaries>
       
-    </moduleSet>        
+    </moduleSet-->        
     </moduleSets>  
 </assembly>

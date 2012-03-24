@@ -99,6 +99,7 @@
                   <descriptor>assembly/src.xml</descriptor>
                   <descriptor>assembly/docs.xml</descriptor>
                   <descriptor>assembly/client-jar.xml</descriptor>
+                  <descriptor>assembly/console-jar.xml</descriptor>    
                   <descriptor>assembly/jboss-container/dist.xml</descriptor>
                   <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
                 </descriptors>
