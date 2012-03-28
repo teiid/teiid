@@ -50,9 +50,6 @@ import org.teiid.translator.TranslatorException;
 
 public class GetDeletedExecutionImpl implements SalesforceProcedureExecution {
 
-	private static final int EARLIESTDATEAVAILABLE = 4;
-	private static final int RESULT = 5;
-	
 	private ProcedureExecutionParent parent;
 
 	private DeletedResult deletedResult;
@@ -108,23 +105,21 @@ public class GetDeletedExecutionImpl implements SalesforceProcedureExecution {
 		}	
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<?> getOutputParameterValues() {
-		List result = new ArrayList();
-		result.add(deletedResult.getLatestDateCovered());
-		result.add(deletedResult.getEarliestDateAvailable());
+		List<Timestamp> result = new ArrayList<Timestamp>();
+		result.add(new Timestamp(deletedResult.getLatestDateCovered().getTimeInMillis()));
+		result.add(new Timestamp(deletedResult.getEarliestDateAvailable().getTimeInMillis()));
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public List<?> next() {
-		List result = null;
+		List<Object> result = null;
 		if(deletedResult.getResultRecords() != null && resultIndex < deletedResult.getResultRecords().size()){
-			result = new ArrayList(2);
+			result = new ArrayList<Object>(2);
 			result.add(deletedResult.getResultRecords().get(resultIndex).getID());
-			result.add(deletedResult.getResultRecords().get(resultIndex).getDeletedDate());
+			result.add(new Timestamp(deletedResult.getResultRecords().get(resultIndex).getDeletedDate().getTimeInMillis()));
 			resultIndex++;
 		}
 		return result;
