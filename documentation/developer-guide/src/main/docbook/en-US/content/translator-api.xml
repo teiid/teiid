@@ -1570,7 +1570,7 @@ int count = visitor.getCount();]]></programlisting>
 		<title>Delegating Translator</title>
 		<para>In some instances you may wish to extend several differnt kinds of translators with the same functionality.  
 		Rather than create separate subclasses for each extension, you can use the delegating translator framework which provides you with a proxying mechanism to override translator behavior.
-		It implement a delegating translator, your common translator logic should be added to a subclass of BaseDelegatingExecutionFactory where you can override any of the delegation methods to perform whatever logic you want.
+		Your common translator logic can be added to a subclass of <code>BaseDelegatingExecutionFactory</code> where you can override any of the delegation methods to perform whatever logic you want.
         <example>
         	<title>Example BaseDelegatingExecutionFactory Subclass</title>
         	<programlisting language="JAVA"><![CDATA[@Translator(name="custom-delegator")
@@ -1605,7 +1605,8 @@ public class MyTranslator extends BaseDelegatingExecutionFactory<Object, Object>
 </translator>]]></programlisting>
 			<para>From the previous example the translator type is custom-delegator.  Now my-translator can be used as a translator-name on a source and will proxy all calls to whatever delegate instance you assign.</para>
 		</example>
-		<note><para>Note that the delegate instance can be any translator instance, whether configured by it's own translator entry or just the name of a standard translator type.</para></note>
+		<note><para>The delegate instance can be any translator instance whether configured by it's own translator entry or just the name of a standard translator type.  Using a <code>BaseDelegatingExecutionFactory</code> by default means that standard override translator property settings on your instance will have no effect, since the underlying delegate is called instead.</para></note>
+		<para>You may also wish to use a different class hierarchy and instead make your custom translator just implement <code>DelegatingExecutionFactory</code> instead.</para>
 		</para>
 	</section>
     

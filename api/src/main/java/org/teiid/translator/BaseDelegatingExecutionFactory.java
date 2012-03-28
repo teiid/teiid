@@ -59,6 +59,9 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return this.delegate;
 	}
 	
+	/**
+	 * Sets the delegate, will be called by Teiid after {@link #start()}
+	 */
 	public void setDelegate(ExecutionFactory<F, C> delegate) {
 		this.delegate = delegate;
 	}
@@ -343,5 +346,87 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	@Override
 	public int hashCode() {
 		return delegate.hashCode();
+	}
+	@Override
+	public boolean isCopyLobs() {
+		return delegate.isCopyLobs();
+	}
+	@Override
+	public boolean supportsArrayAgg() {
+		return delegate.supportsArrayAgg();
+	}
+	@Override
+	public boolean supportsElementaryOlapOperations() {
+		return delegate.supportsElementaryOlapOperations();
+	}
+	@Override
+	public boolean supportsFormatLiteral(String literal,
+			org.teiid.translator.ExecutionFactory.Format format) {
+		return delegate.supportsFormatLiteral(literal, format);
+	}
+	@Override
+	public boolean supportsLikeRegex() {
+		return delegate.supportsLikeRegex();
+	}
+	@Override
+	public boolean supportsOnlyFormatLiterals() {
+		return delegate.supportsOnlyFormatLiterals();
+	}
+	@Override
+	public boolean supportsOnlySingleTableGroupBy() {
+		return delegate.supportsOnlySingleTableGroupBy();
+	}
+	@Override
+	public boolean supportsSimilarTo() {
+		return delegate.supportsSimilarTo();
+	}
+	@Override
+	public boolean supportsWindowDistinctAggregates() {
+		return delegate.supportsWindowDistinctAggregates();
+	}
+	@Override
+	public boolean supportsWindowOrderByWithAggregates() {
+		return delegate.supportsWindowOrderByWithAggregates();
+	}
+	@Override
+	public int getMaxInCriteriaSize() {
+		return delegate.getMaxInCriteriaSize();
+	}
+	@Override
+	public org.teiid.translator.ExecutionFactory.SupportedJoinCriteria getSupportedJoinCriteria() {
+		return delegate.getSupportedJoinCriteria();
+	}
+	@Override
+	public boolean requiresCriteria() {
+		return delegate.requiresCriteria();
+	}
+	@Override
+	public boolean supportsFullOuterJoins() {
+		return delegate.supportsFullOuterJoins();
+	}
+	@Override
+	public boolean supportsInnerJoins() {
+		return delegate.supportsInnerJoins();
+	}
+	@Override
+	public boolean supportsOrderBy() {
+		return delegate.supportsOrderBy();
+	}
+	@Override
+	public boolean supportsOuterJoins() {
+		return delegate.supportsOuterJoins();
+	}
+	@Override
+	public boolean supportsSelectDistinct() {
+		return delegate.supportsSelectDistinct();
+	}
+	
+	@Override
+	public int getMaxDependentInPredicates() {
+		return delegate.getMaxDependentInPredicates();
+	}
+	@Override
+	public boolean supportsAdvancedOlapOperations() {
+		return delegate.supportsAdvancedOlapOperations();
 	}
 }

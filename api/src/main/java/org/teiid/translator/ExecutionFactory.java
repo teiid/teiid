@@ -276,7 +276,7 @@ public class ExecutionFactory<F, C> {
      * @since 3.1 SP2 
      */
 	@TranslatorProperty(display="Supports Select Distinct", description="True, if this connector supports SELECT DISTINCT", advanced=true)
-    public final boolean supportsSelectDistinct() {
+    public boolean supportsSelectDistinct() {
     	return supportsSelectDistinct;
     }
 	
@@ -308,7 +308,7 @@ public class ExecutionFactory<F, C> {
      * @since 6.1.0
      */
 	@TranslatorProperty(display="Supported Join Criteria", description="Returns one of any, theta, equi, or key", advanced=true)
-    public final SupportedJoinCriteria getSupportedJoinCriteria() {
+    public SupportedJoinCriteria getSupportedJoinCriteria() {
     	return supportedJoinCriteria;
     }
 	
@@ -322,7 +322,7 @@ public class ExecutionFactory<F, C> {
      * @since 6.1.0
      */
 	@TranslatorProperty(display="Supports Inner Joins", description="True, if this connector supports inner joins", advanced=true)
-    public final boolean supportsInnerJoins() {
+    public boolean supportsInnerJoins() {
     	return supportsInnerJoins;
     }
 	
@@ -345,7 +345,7 @@ public class ExecutionFactory<F, C> {
      * @since 3.1 SP2
      */
 	@TranslatorProperty(display="Supports Outer Joins", description="True, if this connector supports outer joins", advanced=true)
-    public final boolean supportsOuterJoins() {
+    public boolean supportsOuterJoins() {
     	return supportsOuterJoins;
     }
 	
@@ -358,7 +358,7 @@ public class ExecutionFactory<F, C> {
      * @since 3.1 SP2 
      */
 	@TranslatorProperty(display="Supports Full Outer Joins", description="True, if this connector supports full outer joins", advanced=true)
-    public final boolean supportsFullOuterJoins() {
+    public boolean supportsFullOuterJoins() {
     	return supportsFullOuterJoins;
     }
 	
@@ -490,7 +490,7 @@ public class ExecutionFactory<F, C> {
      * @since 3.1 SP2
      */
     @TranslatorProperty(display="Supports ORDER BY", description="True, if this connector supports ORDER BY", advanced=true)
-    public final boolean supportsOrderBy() {
+    public boolean supportsOrderBy() {
     	return supportsOrderBy;
     }
     
@@ -718,7 +718,7 @@ public class ExecutionFactory<F, C> {
      * @since 5.0
      */
 	@TranslatorProperty(display="Max number of IN predicate entries", advanced=true)
-    public final int getMaxInCriteriaSize() {
+    public int getMaxInCriteriaSize() {
         return maxInSize;
     }
 	
@@ -788,7 +788,7 @@ public class ExecutionFactory<F, C> {
      * @since 6.0
      */
 	@TranslatorProperty(display="Requries Criteria", description="True, if this connector requires criteria on source queries", advanced=true)
-    public final boolean requiresCriteria() {
+    public boolean requiresCriteria() {
     	return requiresCriteria;
     }
 	
