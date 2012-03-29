@@ -22,30 +22,24 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
+import org.junit.Test;
+import org.teiid.language.AndOr;
 import org.teiid.language.Expression;
 import org.teiid.language.In;
 import org.teiid.language.Literal;
+import org.teiid.language.AndOr.Operator;
 import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.unittest.RealMetadataFactory;
 
+public class TestInCriteriaImpl {
 
-import junit.framework.TestCase;
-
-public class TestInCriteriaImpl extends TestCase {
-
-    /**
-     * Constructor for TestInCriteriaImpl.
-     * @param name
-     */
-    public TestInCriteriaImpl(String name) {
-        super(name);
-    }
-    
     public static SetCriteria helpExample(boolean negated) {
-        ArrayList values = new ArrayList();
+        ArrayList<org.teiid.query.sql.symbol.Expression> values = new ArrayList<org.teiid.query.sql.symbol.Expression>();
         values.add(TestLiteralImpl.helpExample(100));
         values.add(TestLiteralImpl.helpExample(200));
         values.add(TestLiteralImpl.helpExample(300));
@@ -59,24 +53,31 @@ public class TestInCriteriaImpl extends TestCase {
         return (In)TstLanguageBridgeFactory.factory.translate(helpExample(negated));
     }
 
-    public void testGetLeftExpression() throws Exception {
+    @Test public void testGetLeftExpression() throws Exception {
         In inCriteria = example(false);
         assertNotNull(inCriteria.getLeftExpression());
         assertTrue(inCriteria.getLeftExpression() instanceof Literal);
         assertEquals(new Integer(300), ((Literal)inCriteria.getLeftExpression()).getValue());
     }
-
-    public void testGetRightExpressions() throws Exception {
-        List values = example(false).getRightExpressions();
-        assertNotNull(values);
-        assertEquals(4, values.size());
-        for (Iterator i = values.iterator(); i.hasNext();) {
-            assertTrue(i.next() instanceof Expression);
-        }
-        
+    
+    @Test public void testExpansion() throws Exception {
+    	SetCriteria inCriteria = helpExample(false);
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.example1Cached());
+        lbf.setConvertIn(true);
+        AndOr or = (AndOr) lbf.translate(inCriteria);
+        assertEquals(Operator.OR, or.getOperator());
+        inCriteria.setNegated(true);
+        AndOr and = (AndOr) lbf.translate(inCriteria);
+        assertEquals(Operator.AND, and.getOperator());
     }
 
-    public void testIsNegated() throws Exception {
+    @Test public void testGetRightExpressions() throws Exception {
+        List<Expression> values = example(false).getRightExpressions();
+        assertNotNull(values);
+        assertEquals(4, values.size());
+    }
+
+    @Test public void testIsNegated() throws Exception {
         assertTrue(example(true).isNegated());
         assertFalse(example(false).isNegated());
     }

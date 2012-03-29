@@ -219,6 +219,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        Command command = this.requestMsg.getCommand();
 	        this.expectedColumns = command.getProjectedSymbols().size();
 	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
+	        factory.setConvertIn(!this.connector.supportsInCriteria());
 	        this.translatedCommand = factory.translate(command);
 	
 	        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
