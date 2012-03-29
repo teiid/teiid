@@ -580,9 +580,9 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					Expression ex = symbolMap.getMappedExpression((ElementSymbol) outputSymbol);
 					if(ex instanceof AggregateSymbol) {
 					    AggregateSymbol agg = (AggregateSymbol)ex;
-	                    Expression aggExpr = agg.getExpression();
-	                    if(aggExpr != null) {
-	                    	ElementCollectorVisitor.getElements(aggExpr, requiredSymbols);
+	                    Expression[] aggExprs = agg.getArgs();
+	                    for (Expression expression : aggExprs) {
+	                    	ElementCollectorVisitor.getElements(expression, requiredSymbols);
 	                    }
 	                    OrderBy orderBy = agg.getOrderBy();
 	                    if(orderBy != null) {

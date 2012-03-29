@@ -30,7 +30,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.util.CommandContext;
 
-public class ArrayAgg extends AggregateFunction {
+public class ArrayAgg extends SingleArgumentAggregateFunction {
 	
     private ArrayList<Object> result;
     private CommandContext context;

@@ -24,42 +24,29 @@ package org.teiid.query.function.aggregate;
 
 import java.util.List;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 
+public abstract class SingleArgumentAggregateFunction extends AggregateFunction {
 
-/**
- */
-public class ConstantFunction extends SingleArgumentAggregateFunction {
-
-    private Object value;
-
-    public void reset() {
-        this.value = null;
-    }
-    
-    @Override
-    public boolean respectsNull() {
-    	return true;
-    }
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
-     */
-    public void addInputDirect(Object input, List<?> tuple)
-        throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-            
-        value = input;
-    }
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
-     */
-    public Object getResult()
-        throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
-            
-        return this.value;
-    }
-
+	@Override
+	public void addInputDirect(List<?> tuple)
+			throws TeiidComponentException, TeiidProcessingException {
+		addInputDirect(tuple.get(argIndexes[0]), tuple);
+	}
+	
+	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
+		initialize(dataType, inputTypes[0]);
+	}
+	
+	/**
+	 * @param dataType  
+	 * @param inputType 
+	 */
+	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?> inputType) {
+		
+	}
+	
+	public abstract void addInputDirect(Object input, List<?> tuple)
+    throws TeiidProcessingException, TeiidComponentException;
 }

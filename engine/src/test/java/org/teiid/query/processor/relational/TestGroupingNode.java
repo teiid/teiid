@@ -174,7 +174,7 @@ public class TestGroupingNode {
         AggregateFunction[] functions = node.getFunctions();
         AggregateFunction countDist = functions[5];
         SortingFilter dup = (SortingFilter)countDist;
-        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, ((ElementSymbol)dup.getElements().get(0)).getType());
+        assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, dup.getElements().get(0).getType());
 	}
 
     @Test public void test2() throws Exception {

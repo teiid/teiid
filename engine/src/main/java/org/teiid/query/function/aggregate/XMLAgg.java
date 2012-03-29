@@ -33,7 +33,7 @@ import org.teiid.query.util.CommandContext;
 /**
  * Aggregates XML entries
  */
-public class XMLAgg extends AggregateFunction {
+public class XMLAgg extends SingleArgumentAggregateFunction {
 
 	private XMLType result;
 	private XmlConcat concat;
@@ -51,7 +51,7 @@ public class XMLAgg extends AggregateFunction {
     /**
      * @throws TeiidProcessingException 
      * @throws TeiidComponentException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
      */
     public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
     	if (concat == null) {

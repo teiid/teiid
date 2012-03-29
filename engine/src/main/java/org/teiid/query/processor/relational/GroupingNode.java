@@ -26,6 +26,7 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -93,7 +94,7 @@ public class GroupingNode extends RelationalNode {
     // Collection phase
     private int phase = COLLECTION;
     private Map elementMap;                    // Map of incoming symbol to index in source elements
-    private List<Expression> collectedExpressions;         // Collected Expressions
+    private LinkedHashMap<Expression, Integer> collectedExpressions;         // Collected Expressions
     private int distinctCols = -1;
        
     // Sort phase
@@ -158,22 +159,19 @@ public class GroupingNode extends RelationalNode {
         // Incoming elements and lookup map for evaluating expressions
         List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
-
+        this.collectedExpressions = new LinkedHashMap<Expression, Integer>();
     	// List should contain all grouping columns / expressions as we need those for sorting
         if(this.orderBy != null) {
-            this.collectedExpressions = new ArrayList<Expression>(this.orderBy.size() + getElements().size());
             for (OrderByItem item : this.orderBy) {
             	Expression ex = SymbolMap.getExpression(item.getSymbol());
-                this.collectedExpressions.add(ex);
+            	getIndex(ex, this.collectedExpressions);
 			}
             if (removeDuplicates) {
             	for (Expression ses : sourceElements) {
-            		collectExpression(SymbolMap.getExpression(ses));
+            		getIndex(ses, collectedExpressions);
             	}
             	distinctCols = collectedExpressions.size();
             }
-        } else {
-            this.collectedExpressions = new ArrayList<Expression>(getElements().size());
         }
         
         // Construct aggregate function state accumulators
@@ -184,100 +182,117 @@ public class GroupingNode extends RelationalNode {
             	symbol = outputMapping.getMappedExpression((ElementSymbol)symbol);
             }
             Class<?> outputType = symbol.getType();
-            Class<?> inputType = symbol.getType();
             if(symbol instanceof AggregateSymbol) {
-                AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
-                if(aggSymbol.getExpression() == null) {
-                    functions[i] = new Count();
-                } else {
-                	Expression ex = aggSymbol.getExpression();
-                	inputType = ex.getType();
-                	int index = collectExpression(ex);
-                	Type function = aggSymbol.getAggregateFunction();
-                	switch (function) {
-                	case COUNT:
-                		functions[i] = new Count();
-                		break;
-                	case SUM:
-                		functions[i] = new Sum();
-                		break;
-                	case AVG:
-                		functions[i] = new Avg();
-                		break;
-                	case MIN:
-                		functions[i] = new Min();
-                		break;
-                	case MAX:
-                		functions[i] = new Max();
-                		break;
-                	case XMLAGG:
-                		functions[i] = new XMLAgg(context);
-                		break;
-                	case ARRAY_AGG:
-                		functions[i] = new ArrayAgg(context);
-                		break;                		
-                	case TEXTAGG:
-               			functions[i] = new TextAgg(context, (TextLine)ex);
-                		break;                		
-                	default:
-                		functions[i] = new StatsFunction(function);
-                	}
-
-                    if(aggSymbol.isDistinct()) {
-                    	functions[i] = handleDistinct(functions[i], inputType, getBufferManager(), getConnectionID());
-                    } else if (aggSymbol.getOrderBy() != null) { //handle the xmlagg case
-                		int[] orderIndecies = new int[aggSymbol.getOrderBy().getOrderByItems().size()];
-                		List<OrderByItem> orderByItems = new ArrayList<OrderByItem>(orderIndecies.length);
-                		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(orderIndecies.length + 1);
-                		ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
-                        element.setType(inputType);
-                        schema.add(element);
-                		for (ListIterator<OrderByItem> iterator = aggSymbol.getOrderBy().getOrderByItems().listIterator(); iterator.hasNext();) {
-                			OrderByItem item = iterator.next();
-                			orderIndecies[iterator.previousIndex()] = collectExpression(item.getSymbol());
-                			element = new ElementSymbol(String.valueOf(iterator.previousIndex()));
-                            element.setType(item.getSymbol().getType());
-                			schema.add(element);
-                			OrderByItem newItem = item.clone();
-                			newItem.setSymbol(element);
-                			orderByItems.add(newItem);
-						}
-                		SortingFilter filter = new SortingFilter(functions[i], getBufferManager(), getConnectionID(), false);
-                		filter.setIndecies(orderIndecies);
-                		filter.setElements(schema);
-                		filter.setSortItems(orderByItems);
-                        functions[i] = filter;
-                	}
-                    functions[i].setExpressionIndex(index);
-                }
-            	if (aggSymbol.getCondition() != null) {
-                	functions[i].setConditionIndex(collectExpression(aggSymbol.getCondition()));
-                }
+            	AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
+            	functions[i] = initAccumulator(context, aggSymbol, this, this.collectedExpressions);
             } else {
                 functions[i] = new ConstantFunction();
-                functions[i].setExpressionIndex(this.collectedExpressions.indexOf(symbol));
+                functions[i].setArgIndexes(new int[] {this.collectedExpressions.get(symbol)});
+                functions[i].initialize(outputType, new Class<?>[]{symbol.getType()});
             }
-            functions[i].initialize(outputType, inputType);
         }
     }
-
-	static SortingFilter handleDistinct(AggregateFunction af, Class<?> inputType, BufferManager bm, String cid) {
-		SortingFilter filter = new SortingFilter(af, bm, cid, true);
-		ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
-		element.setType(inputType);
-		filter.setElements(Arrays.asList(element));
-		return filter;
-	}
-
-	private int collectExpression(Expression ex) {
-		int index = this.collectedExpressions.indexOf(ex);
-		if(index == -1) {
-		    index = this.collectedExpressions.size();
-		    this.collectedExpressions.add(ex);
+	
+	static Integer getIndex(Expression ex, LinkedHashMap<Expression, Integer> expressionIndexes) {
+		Integer index = expressionIndexes.get(ex);
+		if (index == null) {
+			index = expressionIndexes.size();
+			expressionIndexes.put(ex, index);
 		}
 		return index;
-	} 
-    
+	}
+
+	static AggregateFunction initAccumulator(CommandContext context, 
+			AggregateSymbol aggSymbol, RelationalNode node, LinkedHashMap<Expression, Integer> expressionIndexes) {
+		int[] argIndexes = new int[aggSymbol.getArgs().length];
+		AggregateFunction result = null;
+		Expression[] args = aggSymbol.getArgs();
+		Class<?>[] inputTypes = new Class[args.length];
+		for (int j = 0; j < args.length; j++) {
+			inputTypes[j] = args[j].getType();
+			argIndexes[j] = getIndex(args[j], expressionIndexes);
+		}
+		Type function = aggSymbol.getAggregateFunction();
+		switch (function) {
+		case RANK:
+		case DENSE_RANK:
+			result = new RankingFunction(function);
+			break;
+		case ROW_NUMBER: //same as count(*)
+		case COUNT:
+			result = new Count();
+			break;
+		case SUM:
+			result = new Sum();
+			break;
+		case AVG:
+			result = new Avg();
+			break;
+		case MIN:
+			result = new Min();
+			break;
+		case MAX:
+			result = new Max();
+			break;
+		case XMLAGG:
+			result = new XMLAgg(context);
+			break;
+		case ARRAY_AGG:
+			result = new ArrayAgg(context);
+			break;                		
+		case TEXTAGG:
+			result = new TextAgg(context, (TextLine)args[0]);
+			break;                		
+		default:
+			result = new StatsFunction(function);
+		}
+	    if(aggSymbol.isDistinct()) {
+	    	SortingFilter filter = new SortingFilter(result, node.getBufferManager(), node.getConnectionID(), true);
+			List<ElementSymbol> elements = createSortSchema(result, inputTypes);
+			filter.setElements(elements);
+			result = filter;
+	    } else if (aggSymbol.getOrderBy() != null) {
+	    	int numOrderByItems = aggSymbol.getOrderBy().getOrderByItems().size();
+			List<OrderByItem> orderByItems = new ArrayList<OrderByItem>(numOrderByItems);
+			List<ElementSymbol> schema = createSortSchema(result, inputTypes);
+			argIndexes = Arrays.copyOf(argIndexes, argIndexes.length + numOrderByItems);
+			for (ListIterator<OrderByItem> iterator = aggSymbol.getOrderBy().getOrderByItems().listIterator(); iterator.hasNext();) {
+				OrderByItem item = iterator.next();
+				argIndexes[args.length + iterator.previousIndex()] = getIndex(item.getSymbol(), expressionIndexes);
+				ElementSymbol element = new ElementSymbol(String.valueOf(iterator.previousIndex()));
+	            element.setType(item.getSymbol().getType());
+				schema.add(element);
+				OrderByItem newItem = item.clone();
+				newItem.setSymbol(element);
+				orderByItems.add(newItem);
+			}
+			SortingFilter filter = new SortingFilter(result, node.getBufferManager(), node.getConnectionID(), false);
+			filter.setElements(schema);
+			filter.setSortItems(orderByItems);
+			result = filter;
+		}
+		result.setArgIndexes(argIndexes);
+		if (aggSymbol.getCondition() != null) {
+			result.setConditionIndex(getIndex(aggSymbol.getCondition(), expressionIndexes));
+		}
+		result.initialize(aggSymbol.getType(), inputTypes);
+		return result;
+	}
+
+	private static List<ElementSymbol> createSortSchema(AggregateFunction af,
+			Class<?>[] inputTypes) {
+		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(inputTypes.length);
+		int[] filteredArgIndexes = new int[inputTypes.length];
+		for (int i = 0; i < inputTypes.length; i++) {
+			ElementSymbol element = new ElementSymbol("val" + i); //$NON-NLS-1$
+			element.setType(inputTypes[i]);
+			elements.add(element);
+            filteredArgIndexes[i] = i;
+		}
+		af.setArgIndexes(filteredArgIndexes);
+		return elements;
+	}
+
     AggregateFunction[] getFunctions() {
 		return functions;
 	}
@@ -306,7 +321,7 @@ public class GroupingNode extends RelationalNode {
 	
 	public TupleSource getCollectionTupleSource() {
 		final RelationalNode sourceNode = this.getChildren()[0];
-		return new ProjectingTupleSource(sourceNode, eval, collectedExpressions);
+		return new ProjectingTupleSource(sourceNode, eval, new ArrayList<Expression>(collectedExpressions.keySet()));
 	}
 
     private void collectionPhase() {
@@ -337,7 +352,7 @@ public class GroupingNode extends RelationalNode {
         	}
         	this.indexes = Arrays.copyOf(sortIndexes, orderBy.size());
             this.sortUtility = new SortUtility(getCollectionTupleSource(), removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
-                    getConnectionID(), collectedExpressions, sortTypes, nullOrdering, sortIndexes);
+                    getConnectionID(), new ArrayList<Expression>(collectedExpressions.keySet()), sortTypes, nullOrdering, sortIndexes);
             this.phase = SORT;
         }
     }

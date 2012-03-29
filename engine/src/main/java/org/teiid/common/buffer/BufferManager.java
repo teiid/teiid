@@ -122,7 +122,7 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
      */
     int getSchemaSize(List<? extends Expression> elements);
     
-    STree createSTree(final List elements, String groupName, int keyLength);
+    STree createSTree(List<? extends Expression> elements, String groupName, int keyLength);
     
 	void addTupleBuffer(TupleBuffer tb);
 	

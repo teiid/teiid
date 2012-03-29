@@ -27,12 +27,12 @@ import java.util.List;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.symbol.Constant;
 
 
 /**
  */
-public class Max extends AggregateFunction {
+public class Max extends SingleArgumentAggregateFunction {
 
     private Object maxValue;
 
@@ -41,7 +41,7 @@ public class Max extends AggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
      */
     public void addInputDirect(Object value, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
@@ -49,14 +49,10 @@ public class Max extends AggregateFunction {
         if(maxValue == null) {
             maxValue = value;
         } else {
-            if(value instanceof Comparable) {
-                Comparable valueComp = (Comparable) value;
+            Comparable valueComp = (Comparable) value;
 
-                if(valueComp.compareTo(maxValue) > 0) {
-                    maxValue = valueComp;
-                }
-            } else {
-                 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30425, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30425, "MAX", value.getClass().getName()));//$NON-NLS-1$
+        	if (Constant.COMPARATOR.compare(valueComp, maxValue) > 0) {
+                maxValue = valueComp;
             }
         }
     }

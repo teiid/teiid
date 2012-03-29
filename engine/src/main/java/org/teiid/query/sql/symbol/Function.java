@@ -26,6 +26,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -224,13 +225,7 @@ public class Function implements Expression {
 	 * @return Deep copy of the object
 	 */
 	public Object clone() {	
-		Expression[] copyArgs = new Expression[args.length];
-		for(int i=0; i<args.length; i++) { 
-            if(args[i] != null) {
-    			copyArgs[i] = (Expression) args[i].clone();
-            }
-		}
-	
+		Expression[] copyArgs = LanguageObject.Util.deepClone(this.args);
 		Function copy = new Function(getName(), copyArgs);
 		copy.setType(getType());
 		copy.setFunctionDescriptor(getFunctionDescriptor());

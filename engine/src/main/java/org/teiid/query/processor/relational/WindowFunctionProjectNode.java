@@ -45,25 +45,13 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.AggregateFunction;
-import org.teiid.query.function.aggregate.ArrayAgg;
-import org.teiid.query.function.aggregate.Avg;
-import org.teiid.query.function.aggregate.Count;
-import org.teiid.query.function.aggregate.Max;
-import org.teiid.query.function.aggregate.Min;
-import org.teiid.query.function.aggregate.RankingFunction;
-import org.teiid.query.function.aggregate.StatsFunction;
-import org.teiid.query.function.aggregate.Sum;
-import org.teiid.query.function.aggregate.TextAgg;
-import org.teiid.query.function.aggregate.XMLAgg;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.GroupingNode.ProjectingTupleSource;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.TextLine;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
@@ -83,8 +71,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	
 	private static class WindowFunctionInfo {
 		WindowFunction function;
-		int expressionIndex = -1;
-		int conditionIndex = -1;
 		int outputIndex;
 	}
 	
@@ -99,9 +85,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	
 	private LinkedHashMap<WindowSpecification, WindowSpecificationInfo> windows = new LinkedHashMap<WindowSpecification, WindowSpecificationInfo>();
 	private LinkedHashMap<Expression, Integer> expressionIndexes;
-	private LinkedHashMap<Integer, Integer> passThrough = new LinkedHashMap<Integer, Integer>();
+	private List<int[]> passThrough = new ArrayList<int[]>();
 	
-	private Map elementMap;
+	private Map<Expression, Integer> elementMap;
 	
 	//processing state
 	private Phase phase = Phase.COLLECT;
@@ -171,7 +157,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	public void init() {
 		expressionIndexes = new LinkedHashMap<Expression, Integer>();
 		for (int i = 0; i < getElements().size(); i++) {
-			Expression ex = SymbolMap.getExpression((Expression) getElements().get(i));
+			Expression ex = SymbolMap.getExpression(getElements().get(i));
 			if (ex instanceof WindowFunction) {
 				WindowFunction wf = (WindowFunction)ex;
 				WindowSpecification ws = wf.getWindowSpecification();
@@ -181,7 +167,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					windows.put(wf.getWindowSpecification(), wsi);
 					if (ws.getPartition() != null) {
 						for (Expression ex1 : ws.getPartition()) {
-							Integer index = getIndex(ex1);
+							Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
 							wsi.groupIndexes.add(index);
 							wsi.orderType.add(OrderBy.ASC);
 							wsi.nullOrderings.add(null);
@@ -190,7 +176,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					if (ws.getOrderBy() != null) {
 						for (OrderByItem item : ws.getOrderBy().getOrderByItems()) {
 							Expression ex1 = SymbolMap.getExpression(item.getSymbol());
-							Integer index = getIndex(ex1);
+							Integer index = GroupingNode.getIndex(ex1, expressionIndexes);
 							wsi.sortIndexes.add(index);
 							wsi.orderType.add(item.isAscending());
 							wsi.nullOrderings.add(item.getNullOrdering());
@@ -199,13 +185,17 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				}
 				WindowFunctionInfo wfi = new WindowFunctionInfo();
 				wfi.function = wf;
-				ex = wf.getFunction().getExpression();
-				if (ex != null) {
-					wfi.expressionIndex = getIndex(ex);
+				//collect the agg expressions
+				for (Expression e : wf.getFunction().getArgs()) {
+					GroupingNode.getIndex(e, expressionIndexes);
+				}
+				if (wf.getFunction().getOrderBy() != null) {
+					for (OrderByItem item : wf.getFunction().getOrderBy().getOrderByItems()) {
+						GroupingNode.getIndex(item.getSymbol(), expressionIndexes);
+					}
 				}
 				if (wf.getFunction().getCondition() != null) {
-					ex = wf.getFunction().getCondition();
-					wfi.conditionIndex = getIndex(ex);
+					GroupingNode.getIndex(wf.getFunction().getCondition(), expressionIndexes);
 				}
 				wfi.outputIndex = i;
 				if (wf.getFunction().getAggregateFunction() == Type.ROW_NUMBER) {
@@ -214,8 +204,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					wsi.functions.add(wfi);
 				}
 			} else {
-				int index = getIndex(ex);
-				passThrough.put(i, index);
+				int index = GroupingNode.getIndex(ex, expressionIndexes);
+				passThrough.add(new int[] {i, index});
 			}
 		}
 	}
@@ -249,8 +239,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				for (int i = 0; i < size; i++) {
 					outputRow.add(null);
 				}
-				for (Map.Entry<Integer, Integer> entry : passThrough.entrySet()) {
-					outputRow.set(entry.getKey(), tuple.get(entry.getValue()));
+				for (int[] entry : passThrough) {
+					outputRow.set(entry[0], tuple.get(entry[1]));
 				}
 				List<Map.Entry<WindowSpecification, WindowSpecificationInfo>> specs = new ArrayList<Map.Entry<WindowSpecification,WindowSpecificationInfo>>(windows.entrySet());
 				for (int specIndex = 0; specIndex < specs.size(); specIndex++) {
@@ -398,7 +388,6 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	}
 
 	/**
-	 * TODO: consolidate with {@link GroupingNode}
 	 * @param functions
 	 * @param specIndex
 	 * @param rowValues
@@ -409,77 +398,19 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		if (functions.isEmpty()) {
 			return aggs;
 		}
-		//initialize the function accumulators
-		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size() + 1);
-		ElementSymbol key = new ElementSymbol("id"); //$NON-NLS-1$
-		key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-		elements.add(key);
-
-		CommandContext context = this.getContext();
+		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size());
 		for (WindowFunctionInfo wfi : functions) {
-			AggregateSymbol aggSymbol = wfi.function.getFunction();
-		    Class<?> outputType = aggSymbol.getType();
+			aggs.add(GroupingNode.initAccumulator(this.getContext(), wfi.function.getFunction(), this, expressionIndexes));
+			Class<?> outputType = wfi.function.getType();
 		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
 		    value.setType(outputType);
 		    elements.add(value);
-		    Class<?> inputType = aggSymbol.getType();
-		    if (aggSymbol.getExpression() != null) {
-		    	inputType = aggSymbol.getExpression().getType();
-		    }
-			Type function = aggSymbol.getAggregateFunction();
-			AggregateFunction af = null;
-			switch (function) {
-			case RANK:
-			case DENSE_RANK:
-				af = new RankingFunction(function);
-				break;
-			case ROW_NUMBER: //same as count(*)
-			case COUNT:
-				af = new Count();
-				break;
-			case SUM:
-				af = new Sum();
-				break;
-			case AVG:
-				af = new Avg();
-				break;
-			case MIN:
-				af = new Min();
-				break;
-			case MAX:
-				af = new Max();
-				break;
-			case XMLAGG:
-				af = new XMLAgg(context);
-				break;
-			case ARRAY_AGG:
-				af = new ArrayAgg(context);
-				break;                		
-			case TEXTAGG:
-				af = new TextAgg(context, (TextLine)aggSymbol.getExpression());
-				break;                		
-			default:
-				af = new StatsFunction(function);
-			}
-
-            if(aggSymbol.isDistinct()) {
-                af = GroupingNode.handleDistinct(af, inputType, getBufferManager(), getConnectionID());
-            }
-            
-			af.setExpressionIndex(wfi.expressionIndex);
-			af.setConditionIndex(wfi.conditionIndex);
-			af.initialize(outputType, inputType);
-			aggs.add(af);
 		}
-		
-		if (!aggs.isEmpty()) {
-			if (!rowValues) {
-				valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
-			} else {
-				rowValueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
-			}
+		if (!rowValues) {
+			valueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
+		} else {
+			rowValueMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
 		}
-
 		return aggs;
 	}
 
@@ -531,20 +462,11 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		inputTs = null;
 	}
 
-	private Integer getIndex(Expression ex) {
-		Integer index = expressionIndexes.get(ex);
-		if (index == null) {
-			index = expressionIndexes.size();
-			expressionIndexes.put(ex, index);
-		}
-		return index;
-	}
-	
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
 		super.initialize(context, bufferManager, dataMgr);
-		List sourceElements = this.getChildren()[0].getElements();
+		List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(sourceElements);
 	}
     

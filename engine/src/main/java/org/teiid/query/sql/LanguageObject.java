@@ -23,6 +23,7 @@
 package org.teiid.query.sql;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -56,6 +57,19 @@ public interface LanguageObject extends Cloneable {
 				result.add(type.cast(obj.clone()));
 			}
 			return result;
+		}
+		
+		@SuppressWarnings("unchecked")
+		public static <T extends LanguageObject> T[] deepClone(T[] collection) {
+			if (collection == null) {
+				return null;
+			}
+			T[] copy = Arrays.copyOf(collection, collection.length);
+			for (int i = 0; i < copy.length; i++) {
+				LanguageObject t = copy[i];
+				copy[i] = (T) t.clone();
+			}
+			return copy;
 		}
     	
     }

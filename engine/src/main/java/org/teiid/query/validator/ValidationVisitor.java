@@ -987,9 +987,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		Expression condition = obj.getCondition();
     		validateNoSubqueriesOrOuterReferences(condition);
     	}
-        Expression aggExp = obj.getExpression();
-
-        validateNoNestedAggs(aggExp);
+        Expression[] aggExps = obj.getArgs();
+        
+        for (Expression expression : aggExps) {
+            validateNoNestedAggs(expression);
+		}
         validateNoNestedAggs(obj.getOrderBy());
         validateNoNestedAggs(obj.getCondition());
         
@@ -998,17 +1000,17 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if((aggregateFunction == Type.SUM || aggregateFunction == Type.AVG) && obj.getType() == null) {
             handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0041", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         } else if (obj.getType() != DataTypeManager.DefaultDataClasses.NULL) {
-        	if (aggregateFunction == Type.XMLAGG && aggExp.getType() != DataTypeManager.DefaultDataClasses.XML) {
+        	if (aggregateFunction == Type.XMLAGG && aggExps[0].getType() != DataTypeManager.DefaultDataClasses.XML) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
-        	} else if (obj.isBoolean() && aggExp.getType() != DataTypeManager.DefaultDataClasses.BOOLEAN) {
+        	} else if (obj.isBoolean() && aggExps[0].getType() != DataTypeManager.DefaultDataClasses.BOOLEAN) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	}
         }
-        if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExp.getType()))) {
+        if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExps[0].getType()))) {
     		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_comparable", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         }
         if(obj.isEnhancedNumeric()) {
-        	if (!Number.class.isAssignableFrom(aggExp.getType())) {
+        	if (!Number.class.isAssignableFrom(aggExps[0].getType())) {
         		handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0041", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	}
         	if (obj.isDistinct()) {
@@ -1018,7 +1020,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (obj.getAggregateFunction() != Type.TEXTAGG) {
     		return;
     	}
-    	TextLine tl = (TextLine)obj.getExpression();
+    	TextLine tl = (TextLine)aggExps[0];
     	if (tl.isIncludeHeader()) {
     		validateDerivedColumnNames(obj, tl.getExpressions());
     	}

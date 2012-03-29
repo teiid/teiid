@@ -37,7 +37,7 @@ import org.teiid.core.types.DataTypeManager;
  * of a column.  The type of the result varies depending on the type
  * of the input {@see AggregateSymbol}
  */
-public class Sum extends AggregateFunction {
+public class Sum extends SingleArgumentAggregateFunction {
 
     // Various possible accumulators, depending on type
     protected static final int LONG = 0;
@@ -85,7 +85,7 @@ public class Sum extends AggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
      */
     public void addInputDirect(Object input, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {

@@ -25,11 +25,13 @@ package org.teiid.query.sql.symbol;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.parser.SQLParserUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.OrderBy;
 
@@ -44,6 +46,8 @@ import org.teiid.query.sql.lang.OrderBy;
  */
 public class AggregateSymbol extends Function implements DerivedExpression {
 	
+	private static final Expression[] EMPTY_ARGS = new Expression[0];
+
 	public enum Type {
 		COUNT,
 		SUM,
@@ -64,6 +68,17 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		DENSE_RANK,
 		ROW_NUMBER,
 		USER_DEFINED;
+	}
+	
+	private static final Map<String, Type> nameMap = new TreeMap<String, Type>(String.CASE_INSENSITIVE_ORDER);
+	
+	static {
+		for (Type t : Type.values()) {
+			if (t == Type.USER_DEFINED) {
+				continue;
+			}
+			nameMap.put(t.name(), t);
+		}
 	}
 
 	private Type aggregate;
@@ -104,8 +119,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
      * @param canonicalName
      * @since 4.3
      */
-    protected AggregateSymbol(String name, Type aggregateFunction, boolean isDistinct, Expression expression) {
-        super(name, expression == null?new Expression[0]:new Expression[] {expression});
+    protected AggregateSymbol(String name, Type aggregateFunction, boolean isDistinct, Expression[] args) {
+        super(name, args);
         this.aggregate = aggregateFunction;
         this.distinct = isDistinct;
     }
@@ -117,10 +132,9 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	 * @param expression Contained expression
 	 */
 	public AggregateSymbol(String aggregateFunction, boolean isDistinct, Expression expression) {
-		super(aggregateFunction, expression == null?new Expression[0]:new Expression[] {expression});
-		try {
-			this.aggregate = Type.valueOf(aggregateFunction.toUpperCase());
-		} catch (IllegalArgumentException e) {
+		super(aggregateFunction, expression == null?EMPTY_ARGS:new Expression[] {expression});
+		this.aggregate = nameMap.get(aggregateFunction);
+		if (this.aggregate == null) {
 			this.aggregate = Type.USER_DEFINED;
 		}
 		this.distinct = isDistinct;
@@ -172,10 +186,10 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case COUNT:
 			return COUNT_TYPE;
 		case SUM:
-			Class<?> expressionType = this.getExpression().getType();
+			Class<?> expressionType = this.getArg(0).getType();
 			return SUM_TYPES.get(expressionType);
 		case AVG:
-            expressionType = this.getExpression().getType();
+            expressionType = this.getArg(0).getType();
             return AVG_TYPES.get(expressionType);
 		case ARRAY_AGG:
 			return DataTypeManager.DefaultDataClasses.OBJECT;
@@ -191,7 +205,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		if (isAnalytical()) {
 			return DataTypeManager.DefaultDataClasses.INTEGER;
 		}
-		return this.getExpression().getType();
+		return this.getArg(0).getType();
 	}
 	
 	public boolean isAnalytical() {
@@ -233,12 +247,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	 * Return a deep copy of this object
 	 */
 	public Object clone() {
-		AggregateSymbol copy = null;
-		if(getExpression() != null) {
-			copy = new AggregateSymbol(getName(), getAggregateFunction(), isDistinct(), (Expression) getExpression().clone());
-		} else {
-			copy = new AggregateSymbol(getName(), getAggregateFunction(), isDistinct(), null);
-		}
+		AggregateSymbol copy = new AggregateSymbol(getName(), getAggregateFunction(), isDistinct(), LanguageObject.Util.deepClone(getArgs()));
 		if (orderBy != null) {
 			copy.setOrderBy(orderBy.clone());
 		}
@@ -246,6 +255,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			copy.setCondition((Expression) condition.clone());
 		}
 		copy.isWindowed = this.isWindowed;
+		copy.setType(getType());
+		copy.setFunctionDescriptor(getFunctionDescriptor());
 		return copy;
 	}
     
@@ -254,7 +265,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
      */
     public int hashCode() {
         int hasCode = HashCodeUtil.hashCode(aggregate.hashCode(), distinct);
-        return HashCodeUtil.hashCode(hasCode, this.getExpression());
+        return HashCodeUtil.hashCode(hasCode, super.hashCode());
     }
     
     /** 
@@ -267,10 +278,10 @@ public class AggregateSymbol extends Function implements DerivedExpression {
         
         AggregateSymbol other = (AggregateSymbol)obj;
         
-        return this.aggregate.equals(other.aggregate)
+        return super.equals(obj)
+               && this.aggregate.equals(other.aggregate)
                && this.distinct == other.distinct
                && this.isWindowed == other.isWindowed
-               && EquivalenceUtil.areEqual(this.getExpression(), other.getExpression())
                && EquivalenceUtil.areEqual(this.condition, other.condition)
         	   && EquivalenceUtil.areEqual(this.getOrderBy(), other.getOrderBy());
     }
@@ -286,6 +297,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case SOME:
 		case EVERY:
 			return false;
+		case USER_DEFINED:
+			return getFunctionDescriptor().getMethod().getAggregateAttributes().usesAllRows();
 		}
 		return true;
     }
@@ -323,6 +336,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			return false;
 		case XMLAGG:
 			return orderBy == null;
+		case USER_DEFINED:
+			return false;
 		}
 		return true;
 	}
@@ -335,15 +350,4 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		this.isWindowed = isWindowed;
 	}
 	
-	@Deprecated
-	public Expression getExpression() {
-		if (this.getArgs().length == 0) {
-			return null;
-		}
-		if (this.getArgs().length > 1) {
-			throw new AssertionError("getExpression should not be used with a non-unary aggregate"); //$NON-NLS-1$
-		}
-		return this.getArg(0);
-	}
-
 }

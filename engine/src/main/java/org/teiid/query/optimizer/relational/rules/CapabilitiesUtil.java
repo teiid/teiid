@@ -151,7 +151,7 @@ public class CapabilitiesUtil {
         Type func = aggregate.getAggregateFunction();
         switch (func) {
         case COUNT:
-            if(aggregate.getExpression() == null) {
+            if(aggregate.getArgs().length == 0) {
                 if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_COUNT_STAR)) {
                     return false;
                 }

@@ -22,19 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -55,10 +43,10 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -70,17 +58,8 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetQuery.Operation;
-import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -420,16 +399,17 @@ public class RulePushAggregates implements
 			for (AggregateSymbol agg : aggregates) {
 	        	agg = (AggregateSymbol)agg.clone();
 	    		if (agg.getAggregateFunction() == Type.COUNT) {
-	    			if (agg.getExpression() == null) {
+	    			if (agg.getArgs().length == 0) {
 	    				allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", new Constant(1))); //$NON-NLS-1$
 	    			} else { 
-	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getExpression())), Arrays.asList(new Constant(Integer.valueOf(0))));
+	        			SearchedCaseExpression count = new SearchedCaseExpression(Arrays.asList(new IsNullCriteria(agg.getArg(0))), Arrays.asList(new Constant(Integer.valueOf(0))));
 	        			count.setElseExpression(new Constant(Integer.valueOf(1)));
 	        			count.setType(DataTypeManager.DefaultDataClasses.INTEGER);
 	        			allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", count)); //$NON-NLS-1$
 	    			}
 	    		} else { //min, max, sum
-	    			Expression ex = agg.getExpression();
+	    			assert agg.getArgs().length == 1; //prior canStage should ensure this is true 
+	    			Expression ex = agg.getArg(0);
 	    			ex = ResolverUtil.convertExpression(ex, DataTypeManager.getDataTypeName(agg.getType()), metadata);
 	    			allSymbols.addSymbol(new ExpressionSymbol("stagedAgg", ex)); //$NON-NLS-1$
 	    		}
@@ -669,7 +649,7 @@ public class RulePushAggregates implements
 		if (stagedGroupingSymbols.isEmpty()) {
 		    // if the source has no rows we need to insert a select node with criteria count(*)>0
 		    PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); //$NON-NLS-1$
+		    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); 
 		    aggregates.add(count); //consider the count aggregate for the push down call below
 		    selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompareCriteria(count, CompareCriteria.GT,
 		                                                                                   new Constant(new Integer(0))));
@@ -702,10 +682,10 @@ public class RulePushAggregates implements
         //remove any aggregates that are computed over a group by column
         for (final Iterator<AggregateSymbol> iterator = aggregates.iterator(); iterator.hasNext();) {
             final AggregateSymbol symbol = iterator.next();
-            Expression expr = symbol.getExpression();
-            if (expr == null) {
-                continue;
+            if (symbol.getArgs().length != 1) {
+            	continue;
             }
+            Expression expr = symbol.getArg(0);
             if (stagedGroupingSymbols.contains(expr)) {
                 iterator.remove();
             }
@@ -796,11 +776,11 @@ public class RulePushAggregates implements
             return result;
         }
         for (T aggregateSymbol : expressions) {
-        	if (aggs && ((AggregateSymbol)aggregateSymbol).getExpression() == null) {
-        		return null; //count(*) is not yet handled.  a general approach would be count(*) => count(r.col) * count(l.col), but the logic here assumes a simpler initial mapping
-        	}
-        	if (aggs && !((AggregateSymbol)aggregateSymbol).canStage()) {
-        		continue;
+        	if (aggs) {
+        		AggregateSymbol as = (AggregateSymbol)aggregateSymbol;
+        		if ((!as.canStage() && as.isCardinalityDependent()) || (as.getAggregateFunction() == Type.COUNT && as.getArgs().length == 0)) {
+            		return null; //count(*) is not yet handled.  a general approach would be count(*) => count(r.col) * count(l.col), but the logic here assumes a simpler initial mapping
+        		}
         	}
             Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(aggregateSymbol);
             if (groups.isEmpty()) {
@@ -862,7 +842,7 @@ public class RulePushAggregates implements
             Type aggFunction = partitionAgg.getAggregateFunction();
             if (aggFunction == Type.COUNT) {
                 //COUNT(x) -> CONVERT(SUM(COUNT(x)), INTEGER)
-                AggregateSymbol newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg); //$NON-NLS-1$
+                AggregateSymbol newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg); 
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
                 Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
@@ -871,11 +851,11 @@ public class RulePushAggregates implements
                 nestedAggregates.add(partitionAgg);
             } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))
-                AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
+                AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getArg(0)); 
+                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getArg(0)); 
                 
-                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
-                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); 
+                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); 
 
                 Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
                 Expression convertCount = new Function(FunctionLibrary.CONVERT, new Expression[] {sumCountAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
@@ -888,13 +868,13 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumAgg);
             } else if (partitionAgg.isEnhancedNumeric()) {
             	//e.g. STDDEV_SAMP := CASE WHEN COUNT(X) > 1 THEN SQRT((SUM(X^2) - SUM(X)^2/COUNT(X))/(COUNT(X) - 1))
-            	AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getExpression()); //$NON-NLS-1$
-                AggregateSymbol sumSqAgg = new AggregateSymbol(NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getExpression(), new Constant(2)})); //$NON-NLS-1$
+            	AggregateSymbol countAgg = new AggregateSymbol(NonReserved.COUNT, false, partitionAgg.getArg(0)); 
+                AggregateSymbol sumAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg.getArg(0)); 
+                AggregateSymbol sumSqAgg = new AggregateSymbol(NonReserved.SUM, false, new Function(SourceSystemFunctions.POWER, new Expression[] {partitionAgg.getArg(0), new Constant(2)})); 
                 
-                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); //$NON-NLS-1$
-                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); //$NON-NLS-1$
-                AggregateSymbol sumSumSqAgg = new AggregateSymbol(NonReserved.SUM, false, sumSqAgg); //$NON-NLS-1$
+                AggregateSymbol sumSumAgg = new AggregateSymbol(NonReserved.SUM, false, sumAgg); 
+                AggregateSymbol sumCountAgg = new AggregateSymbol(NonReserved.SUM, false, countAgg); 
+                AggregateSymbol sumSumSqAgg = new AggregateSymbol(NonReserved.SUM, false, sumSqAgg); 
                 
                 Expression convertedSum = new Function(FunctionLibrary.CONVERT, new Expression[] {sumSumAgg, new Constant(DataTypeManager.DefaultDataTypes.DOUBLE)});
 
@@ -926,7 +906,7 @@ public class RulePushAggregates implements
                 nestedAggregates.add(sumSqAgg);
             } else {
                 //AGG(X) -> AGG(AGG(X))
-                newExpression = new AggregateSymbol(aggFunction.name(), false, partitionAgg); //$NON-NLS-1$
+                newExpression = new AggregateSymbol(aggFunction.name(), false, partitionAgg); 
                 nestedAggregates.add(partitionAgg);
             }
 

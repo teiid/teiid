@@ -31,8 +31,8 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.common.buffer.FileStore;
-import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
+import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
@@ -47,7 +47,7 @@ import org.teiid.query.util.CommandContext;
 /**
  * Aggregates Text entries
  */
-public class TextAgg extends AggregateFunction {
+public class TextAgg extends SingleArgumentAggregateFunction {
 
     private FileStoreInputStreamFactory result;
     private CommandContext context;
@@ -87,7 +87,7 @@ public class TextAgg extends AggregateFunction {
     /**
      * @throws TeiidProcessingException 
      * @throws TeiidComponentException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
      */
     public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
     	try {

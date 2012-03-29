@@ -482,7 +482,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
         return tupleBuffer;
     }
     
-    public STree createSTree(final List elements, String groupName, int keyLength) {
+    public STree createSTree(final List<? extends Expression> elements, String groupName, int keyLength) {
     	Long newID = this.tsId.getAndIncrement();
     	int[] lobIndexes = LobManager.getLobIndexes(elements);
     	Class<?>[] types = getTypeClasses(elements);
@@ -503,7 +503,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
     	return new STree(keyManager, bm, new ListNestedSortComparator(compareIndexes), getProcessorBatchSize(elements.subList(0, keyLength)), getProcessorBatchSize(elements), keyLength, lobManager);
     }
 
-	private static Class<?>[] getTypeClasses(final List elements) {
+	private static Class<?>[] getTypeClasses(final List<? extends Expression> elements) {
 		Class<?>[] types = new Class[elements.size()];
         for (ListIterator<? extends Expression> i = elements.listIterator(); i.hasNext();) {
             Expression expr = i.next();

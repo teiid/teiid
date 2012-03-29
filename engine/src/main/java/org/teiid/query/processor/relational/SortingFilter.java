@@ -25,8 +25,6 @@ package org.teiid.query.processor.relational;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
@@ -36,12 +34,12 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.symbol.ElementSymbol;
 
 /**
  */
 public class SortingFilter extends AggregateFunction {
 
-    private static final int[] NO_INDECIES = new int[0];
 	// Initial setup - can be reused
     private AggregateFunction proxy;
     private BufferManager mgr;
@@ -49,11 +47,9 @@ public class SortingFilter extends AggregateFunction {
     private boolean removeDuplicates;
 
     // Derived and static - can be reused
-    private List elements;
+    private List<ElementSymbol> elements;
     private List<OrderByItem> sortItems;
     
-    private int[] indecies = NO_INDECIES;
-
     // Temporary state - should be reset
     private TupleBuffer collectionBuffer;
     private SortUtility sortUtility;
@@ -70,27 +66,21 @@ public class SortingFilter extends AggregateFunction {
         this.removeDuplicates = removeDuplicates;
     }
     
-    public List getElements() {
+    public List<ElementSymbol> getElements() {
 		return elements;
 	}
     
-    public void setElements(List elements) {
+	public void setElements(List<ElementSymbol> elements) {
 		this.elements = elements;
-	}
-    
-    public void setIndecies(int[] indecies) {
-		this.indecies = indecies;
 	}
     
     public void setSortItems(List<OrderByItem> sortItems) {
 		this.sortItems = sortItems;
 	}
     
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#initialize(String, Class)
-     */
-    public void initialize(Class<?> dataType, Class<?> inputType) {
-    	this.proxy.initialize(dataType, inputType);
+    @Override
+    public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
+    	this.proxy.initialize(dataType, inputTypes);
     }
 
     public void reset() {
@@ -107,17 +97,16 @@ public class SortingFilter extends AggregateFunction {
 	}
 	
 	@Override
-	public void addInputDirect(Object input, List<?> tuple)
-			throws FunctionExecutionException, ExpressionEvaluationException,
-			TeiidComponentException, TeiidProcessingException {
+	public void addInputDirect(List<?> tuple)
+			throws TeiidComponentException, TeiidProcessingException {
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
             collectionBuffer.setForwardOnly(true);
         }
-        List<Object> row = new ArrayList<Object>(1 + indecies.length);
-        row.add(input);
-        for (int i = 0; i < indecies.length; i++) {
-			row.add(tuple.get(indecies[i]));
+        List<Object> row = new ArrayList<Object>(argIndexes.length);
+        //TODO remove overlap
+        for (int i = 0; i < argIndexes.length; i++) {
+			row.add(tuple.get(argIndexes[i]));
 		}
         this.collectionBuffer.addTuple(row);
 	}
@@ -142,11 +131,12 @@ public class SortingFilter extends AggregateFunction {
 	            // Add all input to proxy
 	            TupleSource sortedSource = sorted.createIndexedTupleSource();
 	            while(true) {
-	                List tuple = sortedSource.nextTuple();
+	                List<?> tuple = sortedSource.nextTuple();
 	                if(tuple == null) {
 	                    break;
 	                }
-	                this.proxy.addInputDirect(tuple.get(0), null);
+	                //TODO should possibly remove the order by columns from this tuple
+	                this.proxy.addInputDirect(tuple);
 	            }
             } finally {
             	sorted.remove();

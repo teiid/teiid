@@ -27,12 +27,12 @@ import java.util.List;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.symbol.Constant;
 
 
 /**
  */
-public class Min extends AggregateFunction {
+public class Min extends SingleArgumentAggregateFunction {
 
     private Object minValue;
 
@@ -41,7 +41,7 @@ public class Min extends AggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
      */
     public void addInputDirect(Object value, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
@@ -49,14 +49,10 @@ public class Min extends AggregateFunction {
         if(minValue == null) {
             minValue = value;
         } else {
-            if(value instanceof Comparable) {
-                Comparable valueComp = (Comparable) value;
+            Comparable valueComp = (Comparable) value;
 
-                if(valueComp.compareTo(minValue) < 0) {
-                    minValue = valueComp;
-                }
-            } else {
-                 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30426, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30426, "MIN", value.getClass().getName())); //$NON-NLS-1$
+            if(Constant.COMPARATOR.compare(valueComp, minValue) < 0) {
+                minValue = valueComp;
             }
         }
     }

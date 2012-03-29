@@ -38,11 +38,11 @@ import org.teiid.core.TeiidProcessingException;
  */
 public abstract class AggregateFunction {
 
-	private int expressionIndex = -1;
+	protected int[] argIndexes;
 	private int conditionIndex = -1;
 	
-	public void setExpressionIndex(int expressionIndex) {
-		this.expressionIndex = expressionIndex;
+	public void setArgIndexes(int[] argIndexes) {
+		this.argIndexes = argIndexes;
 	}
 	
 	public void setConditionIndex(int conditionIndex) {
@@ -53,9 +53,13 @@ public abstract class AggregateFunction {
      * Called to initialize the function.  In the future this may expand
      * with additional information.
      * @param dataType Data type of element begin aggregated
-     * @param inputType
+     * @param inputTypes
      */
-    public void initialize(Class<?> dataType, Class<?> inputType) {}
+    public void initialize(Class<?> dataType, Class<?>[] inputTypes) {}
+    
+    public int[] getArgIndexes() {
+		return argIndexes;
+	}
 
     /**
      * Called to reset the state of the function.
@@ -66,14 +70,14 @@ public abstract class AggregateFunction {
     	if (conditionIndex != -1 && !Boolean.TRUE.equals(tuple.get(conditionIndex))) {
 			return;
     	}
-    	if (expressionIndex == -1) {
-    		addInputDirect(null, tuple);
-    		return;
+    	if (!respectsNull()) {
+    		for (int i = 0; i < argIndexes.length; i++) {
+    			if (tuple.get(argIndexes[i]) == null) {
+    				return;
+    			}
+    		}
     	}
-    	Object input = tuple.get(expressionIndex);
-    	if (input != null || respectsNull()) {
-    		addInputDirect(input, tuple);
-    	}
+		addInputDirect(tuple);
     }
     
     public boolean respectsNull() {
@@ -82,11 +86,10 @@ public abstract class AggregateFunction {
     
     /**
      * Called for the element value in every row of a group.
-     * @param input Input value, may be null
      * @param tuple 
      * @throws TeiidProcessingException 
      */
-    public abstract void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException;
+    public abstract void addInputDirect(List<?> tuple) throws TeiidComponentException, TeiidProcessingException;
 
     /**
      * Called after all values have been processed to get the result.

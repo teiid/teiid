@@ -58,7 +58,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -67,6 +66,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.tempdata.TempTableStore;
@@ -341,9 +341,9 @@ public class MetaDataProcessor {
     private Map createAggregateMetadata(String shortColumnName,
                                         AggregateSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         
-        Expression expression = symbol.getExpression();
         Type function = symbol.getAggregateFunction();
         if(function == Type.MIN || function == Type.MAX){
+        	Expression expression = symbol.getArg(0);
             if(expression instanceof ElementSymbol) {
                 return createColumnMetadata(shortColumnName, expression);
             }

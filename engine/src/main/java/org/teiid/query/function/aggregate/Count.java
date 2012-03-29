@@ -24,6 +24,9 @@ package org.teiid.query.function.aggregate;
 
 import java.util.List;
 
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+
 /**
  * Just a simple COUNT() implementation that counts every non-null row it sees.
  */
@@ -34,11 +37,10 @@ public class Count extends AggregateFunction {
     public void reset() {
         count = 0;
     }
-
-    /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
-     */
-    public void addInputDirect(Object input, List<?> tuple) {
+    
+    @Override
+    public void addInputDirect(List<?> tuple)
+    		throws TeiidComponentException, TeiidProcessingException {
         count++;
     }
 

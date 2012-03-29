@@ -2002,13 +2002,13 @@ public class QueryRewriter {
     		if (expression.isDistinct()) {
     			expression.setDistinct(false);
     		}
-    		if (rewriteAggs && expression.getExpression() != null && EvaluatableVisitor.willBecomeConstant(expression.getExpression())) {
-        		return expression.getExpression();
+    		if (rewriteAggs && expression.getArg(0) != null && EvaluatableVisitor.willBecomeConstant(expression.getArg(0))) {
+        		return expression.getArg(0);
         	}
     	}
-    	if (expression.getExpression() != null && expression.getCondition() != null && !expression.respectsNulls()) {
+    	if (expression.getArgs().length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
     		Expression cond = expression.getCondition();
-    		Expression ex = expression.getExpression();
+    		Expression ex = expression.getArg(0);
     		if (!(cond instanceof Criteria)) {
     			cond = new ExpressionCriteria(cond);
     		}

@@ -49,7 +49,7 @@ public class RankingFunction extends AggregateFunction {
 	}
 	
 	@Override
-	public void addInputDirect(Object input, List<?> tuple)
+	public void addInputDirect(List<?> tuple)
 			throws FunctionExecutionException, ExpressionEvaluationException,
 			TeiidComponentException {
 		if (type == Type.RANK) {

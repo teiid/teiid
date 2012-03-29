@@ -33,8 +33,8 @@ public class AggregateAttributes implements Serializable {
 
 	private boolean allowsDistinct;
 	private boolean windowable;
-	private boolean decomposable;
-	private boolean respectsNulls;
+	private boolean usesAllRows = true;
+	private boolean respectsNulls = true;
 	private boolean allowsOrderBy;
 	
 	public boolean allowsOrderBy() {
@@ -61,20 +61,20 @@ public class AggregateAttributes implements Serializable {
 		this.windowable = windowable;
 	}
 	
-	public boolean isDecomposable() {
-		return decomposable;
-	}
-	
-	public void setDecomposable(boolean decomposable) {
-		this.decomposable = decomposable;
-	}
-	
 	public boolean respectsNulls() {
 		return respectsNulls;
 	}
 	
 	public void setRespectsNulls(boolean respectsNulls) {
 		this.respectsNulls = respectsNulls;
+	}
+	
+	public void setUsesAllRows(boolean usesAllRows) {
+		this.usesAllRows = usesAllRows;
+	}
+	
+	public boolean usesAllRows() {
+		return this.usesAllRows;
 	}
 	
 }

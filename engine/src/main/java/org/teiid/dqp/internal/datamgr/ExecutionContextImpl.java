@@ -259,8 +259,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 
 	@Override
 	public String getConnectionID() {
-		// TODO Auto-generated method stub
-		return null;
+		return getConnectionId();
 	}
 
 	@Override

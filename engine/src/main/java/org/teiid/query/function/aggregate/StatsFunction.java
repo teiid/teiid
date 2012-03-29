@@ -29,7 +29,7 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 
-public class StatsFunction extends AggregateFunction {
+public class StatsFunction extends SingleArgumentAggregateFunction {
 	
 	private double sum = 0;
 	private double sumSq = 0;

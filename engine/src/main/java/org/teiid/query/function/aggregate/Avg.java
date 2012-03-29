@@ -60,7 +60,7 @@ public class Avg extends Sum {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(Object, List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
      */
     public void addInputDirect(Object input, List<?> tuple)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
