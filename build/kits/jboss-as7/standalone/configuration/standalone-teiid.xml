@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
-<server xmlns="urn:jboss:domain:1.1">
-
+<server xmlns="urn:jboss:domain:1.2">
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
         <extension module="org.jboss.as.configadmin"/>
@@ -28,7 +27,6 @@
         <extension module="org.jboss.as.webservices"/>
         <extension module="org.jboss.as.weld"/>
     </extensions>
-
     <management>
         <security-realms>
             <security-realm name="ManagementRealm">
@@ -51,7 +49,6 @@
             </http-interface>
         </management-interfaces>
     </management>
-
     <profile>
         <subsystem xmlns="urn:jboss:domain:logging:1.1">
             <console-handler name="CONSOLE">
@@ -129,10 +126,6 @@
                 <stateful default-access-timeout="5000" cache-ref="simple"/>
                 <singleton default-access-timeout="5000"/>
             </session-bean>
-            <mdb>
-                <resource-adapter-ref resource-adapter-name="hornetq-ra"/>
-                <bean-instance-pool-ref pool-name="mdb-strict-max-pool"/>
-            </mdb>
             <pools>
                 <bean-instance-pools>
                     <strict-max-pool name="slsb-strict-max-pool" max-pool-size="20" instance-acquisition-timeout="5" instance-acquisition-timeout-unit="MINUTES"/>
@@ -158,7 +151,7 @@
                 </thread-pool>
             </thread-pools>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:infinispan:1.1" default-cache-container="hibernate">
+        <subsystem xmlns="urn:jboss:domain:infinispan:1.2" default-cache-container="hibernate">
             <cache-container name="hibernate" default-cache="local-query">
                 <local-cache name="entity">
                     <transaction mode="NON_XA"/>
@@ -177,7 +170,7 @@
             </cache-container>
             <cache-container name="teiid" default-cache="resultset">
                 <local-cache name="resultset">
-                    <expiration lifespan="7200" />
+                    <expiration lifespan="7200000" />
                     <eviction max-entries="1024" strategy="LRU"/>
                 </local-cache>
             </cache-container>            
@@ -185,7 +178,7 @@
         <subsystem xmlns="urn:jboss:domain:jaxrs:1.0"/>
         <subsystem xmlns="urn:jboss:domain:jca:1.1">
             <archive-validation enabled="true" fail-on-error="true" fail-on-warn="false"/>
-            <bean-validation enabled="false"/>
+            <bean-validation enabled="true"/>
             <default-workmanager>
                 <short-running-threads>
                     <core-threads count="50"/>
@@ -200,6 +193,7 @@
                     <keepalive-time time="10" unit="seconds"/>
                 </long-running-threads>
             </default-workmanager>
+            <cached-connection-manager/>
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jdr:1.0"/>
         <subsystem xmlns="urn:jboss:domain:jmx:1.1">
@@ -350,7 +344,6 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:weld:1.0"/>
     </profile>
-
     <interfaces>
         <interface name="management">
             <inet-address value="${jboss.bind.address.management:127.0.0.1}"/>
@@ -358,14 +351,22 @@
         <interface name="public">
             <inet-address value="${jboss.bind.address:127.0.0.1}"/>
         </interface>
+        <!-- TODO - only show this if the jacorb subsystem is added  -->
+        <interface name="unsecure">
+            <!--
+              ~  Used for IIOP sockets in the standard configuration.
+              ~                  To secure JacORB you need to setup SSL 
+              -->
+            <inet-address value="${jboss.bind.address.unsecure:127.0.0.1}"/>
+        </interface>
     </interfaces>
-
     <socket-binding-group name="standard-sockets" default-interface="public" port-offset="${jboss.socket.binding.port-offset:0}">
-        <socket-binding name="http" port="8080"/>
-        <socket-binding name="https" port="8443"/>
         <socket-binding name="management-native" interface="management" port="${jboss.management.native.port:9999}"/>
         <socket-binding name="management-http" interface="management" port="${jboss.management.http.port:9990}"/>
         <socket-binding name="management-https" interface="management" port="${jboss.management.https.port:9443}"/>
+        <socket-binding name="ajp" port="8009"/>
+        <socket-binding name="http" port="8080"/>
+        <socket-binding name="https" port="8443"/>
         <socket-binding name="osgi-http" interface="management" port="8090"/>
         <socket-binding name="remoting" port="4447"/>
         <socket-binding name="txn-recovery-environment" port="4712"/>

@@ -37,9 +37,8 @@ import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.transport.LocalServerConnection;
 
-public class EventDistributorFactoryService implements Service<EventDistributorFactory>, EventDistributorFactory {
+public class EventDistributorFactoryService implements Service<EventDistributorFactory> {
 	
 	InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
@@ -51,7 +50,7 @@ public class EventDistributorFactoryService implements Service<EventDistributorF
 		return new EventDistributorFactory() {
 			@Override
 			public EventDistributor getEventDistributor() {
-				return replicatableEventDistributor;
+				return eventDistributorProxy;
 			}
 		};
 	}
@@ -68,7 +67,7 @@ public class EventDistributorFactoryService implements Service<EventDistributorF
 		// this instance is by use of teiid internally; only invokes the remote instances
 		if (objectReplicatorInjector.getValue() != null) {
 			try {
-				this.replicatableEventDistributor = objectReplicatorInjector.getValue().replicate(LocalServerConnection.TEIID_RUNTIME_CONTEXT, EventDistributor.class, ed, 0);
+				this.replicatableEventDistributor = objectReplicatorInjector.getValue().replicate("$TEIID_ED$", EventDistributor.class, ed, 0); //$NON-NLS-1$
 			} catch (Exception e) {
 				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50004, this));
 			}
@@ -98,10 +97,5 @@ public class EventDistributorFactoryService implements Service<EventDistributorF
     		objectReplicatorInjector.getValue().stop(this.replicatableEventDistributor);
     		this.replicatableEventDistributor = null;
     	}
-	}
-
-	@Override
-	public org.teiid.events.EventDistributor getEventDistributor() {
-		return eventDistributorProxy;
 	}
 }

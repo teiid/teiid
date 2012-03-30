@@ -129,7 +129,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         }
         
         if (!added) {
-        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50009, translatorName, moduleName))); //$NON-NLS-1$
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50009, translatorName, moduleName)));
         }
     }    
 }

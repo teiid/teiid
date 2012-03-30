@@ -74,7 +74,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.services.BufferServiceImpl;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -85,7 +84,7 @@ class VDBService implements Service<VDBMetaData> {
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	private final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	private final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
-	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
+	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	private VDBLifeCycleListener vdbListener;
 	
@@ -133,17 +132,20 @@ class VDBService implements Service<VDBMetaData> {
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version,CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
+					return;
+				}
 				// add object replication to temp/matview tables
 				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
 				if (getObjectReplicatorInjector().getValue() != null) {
 					try {
 						gts = getObjectReplicatorInjector().getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
+						vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 					} catch (Exception e) {
 						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
 					}
 				}
-				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 			}
 		};
 		
@@ -432,12 +434,12 @@ class VDBService implements Service<VDBMetaData> {
 		return serializerInjector.getValue();
 	}
 	
-	public InjectedValue<BufferServiceImpl> getBufferServiceInjector() {
-		return bufferServiceInjector;
+	public InjectedValue<BufferManager> getBufferManagerInjector() {
+		return bufferManagerInjector;
 	}
 	
 	private BufferManager getBuffermanager() {
-		return getBufferServiceInjector().getValue().getBufferManager();
+		return getBufferManagerInjector().getValue();
 	}
 	
 	public InjectedValue<ObjectReplicator> getObjectReplicatorInjector() {

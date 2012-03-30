@@ -52,6 +52,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -64,7 +65,6 @@ import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
-import org.teiid.services.BufferServiceImpl;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
@@ -175,7 +175,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.getTranslatorRepositoryInjector());
 		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), Executor.class,  vdb.getExecutorInjector());
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.getSerializerInjector());
-		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferServiceImpl.class, vdb.getBufferServiceInjector());
+		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.getBufferManagerInjector());
 		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.getObjectReplicatorInjector());
 		vdbService.setInitialMode(Mode.PASSIVE).install();
 		

@@ -34,11 +34,6 @@ class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator>
 	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
 	private JGroupsObjectReplicator replicator; 
 	
-	/**
-	 * @param clusterName TODO see if this is still useful 
-	 */
-	public JGroupsObjectReplicatorService(String clusterName){
-	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {

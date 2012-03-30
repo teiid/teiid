@@ -62,10 +62,12 @@ import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.AdminObjectImpl;
 import org.teiid.adminapi.impl.MetadataMapper;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
@@ -299,32 +301,42 @@ public class AdminFactory {
 			}
 		}		
 		
-		public Set<String> getInstalledJDBCDrivers() throws AdminException {
+		public Set<String> getInstalledJDBCDrivers() throws AdminProcessingException {
 			HashSet<String> driverList = new HashSet<String>();
 			driverList.addAll(getChildNodeNames("datasources", "jdbc-driver"));
 
-			final ModelNode request = buildRequest("datasources", "installed-drivers-list");
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (Util.isSuccess(outcome)) {
-		            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
-						@Override
-						public String unwrap(ModelNode node) {
-							if (node.hasDefined("driver-name")) {
-								return node.get("driver-name").asString();
+			if (!this.domainMode) {
+				//'installed-driver-list' not available in the domain mode.
+				final ModelNode request = buildRequest("datasources", "installed-drivers-list");
+		        try {
+		            ModelNode outcome = this.connection.execute(request);
+		            if (Util.isSuccess(outcome)) {
+			            List<String> drivers = getList(outcome, new AbstractMetadatMapper() {
+							@Override
+							public String unwrap(ModelNode node) {
+								if (node.hasDefined("driver-name")) {
+									return node.get("driver-name").asString();
+								}
+								return null;
 							}
-							return null;
-						}
-					});
-		            driverList.addAll(drivers);
-	            }
-	        } catch (Exception e) {
-	        	// in domain mode this method does not exist; this is expected in some domain mode.
-	        }	
+						});
+			            driverList.addAll(drivers);
+		            }
+		        } catch (Exception e) {
+		        	throw new AdminProcessingException(e);
+		        }	
+			}
+			else {
+				// TODO: AS7 needs to provide better way to query the deployed JDBC drivers
+				List<String> deployments = getChildNodeNames(null, "deployment");
+	            for (String deployment:deployments) {
+	            	if (!deployment.contains("translator") && deployment.endsWith(".jar")) {
+	            		driverList.add(deployment);
+	            	}
+	            }				
+			}
 	        return driverList;
 		}		
-		
-		
 		
 		public String getProfileName() throws AdminProcessingException {
 			if (!this.domainMode) {
@@ -620,7 +632,7 @@ public class AdminFactory {
 		@Override
 		public Collection<String> getCacheTypes() throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "cache-types");//$NON-NLS-1$ //$NON-NLS-2$
-	        return executeList(request);
+	        return new HashSet<String>(executeList(request));
 		}
 
 		private Collection<String> executeList(final ModelNode request)	throws AdminProcessingException {
@@ -1030,8 +1042,10 @@ public class AdminFactory {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
 	            	if (outcome.hasDefined("result")) {
-	            		ModelNode result = outcome.get("result");
-	            		return VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.unwrap(result);
+	            		List<VDBTranslatorMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE);
+	            		if (list != null && !list.isEmpty()) {
+	            			return list.get(0);
+	            		}
 	            	}	            	
 	            }
 	            
@@ -1143,10 +1157,10 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	if (outcome.hasDefined("result")) {
-	            		ModelNode result = outcome.get("result");
-	            		return VDBMetadataMapper.INSTANCE.unwrap(result);
-	            	}	            	
+	            	List<VDBMetaData> list = getDomainAwareList(outcome, VDBMetadataMapper.INSTANCE);
+	            	if (list != null && !list.isEmpty()) {
+	            		return list.get(0);
+	            	}
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70035, e);

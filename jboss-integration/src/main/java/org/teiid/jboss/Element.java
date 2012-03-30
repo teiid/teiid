@@ -84,7 +84,6 @@ enum Element {
 	// Object Replicator
 	DISTRIBUTED_CACHE("distributed-cache"),
 	DC_STACK_ATTRIBUTE("jgroups-stack", "distributed-cache-jgroups-stack", ModelType.STRING, false, null),
-	DC_CHANNEL_NAME_ATTRIBUTE("channel", "distributed-cache-channel", ModelType.STRING, false, null),
 	
 	// Result set cache	
 	RESULTSET_CACHE_ELEMENT("resultset-cache"),

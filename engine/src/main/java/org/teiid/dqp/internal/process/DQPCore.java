@@ -65,7 +65,6 @@ import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
-import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.dqp.service.TransactionService;
@@ -676,8 +675,8 @@ public class DQPCore implements DQP {
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	
-	public void setBufferService(BufferService service) {
-		this.bufferManager = service.getBufferManager();
+	public void setBufferManager(BufferManager mgr) {
+		this.bufferManager = mgr;
 	}
 	
 	public void setTransactionService(TransactionService service) {

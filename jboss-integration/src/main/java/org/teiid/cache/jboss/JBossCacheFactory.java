@@ -36,15 +36,17 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	private static final long serialVersionUID = -2767452034178675653L;
 	private transient org.infinispan.Cache cacheStore;
 	private volatile boolean destroyed = false;
+	private ClassLoader classLoader;
 	
 
-	public JBossCacheFactory(String name, CacheContainer cm) {
+	public JBossCacheFactory(String name, CacheContainer cm, ClassLoader classLoader) {
 		if (name != null) {
 			this.cacheStore = cm.getCache(name);
 		}
 		else {
 			this.cacheStore = cm.getCache();
 		}
+		this.classLoader = classLoader;
 	}
 	
 	/**
@@ -52,7 +54,7 @@ public class JBossCacheFactory implements CacheFactory, Serializable{
 	 */
 	public Cache get(String location, CacheConfiguration config) {
 		if (!destroyed) {
-			return new JBossCache(this.cacheStore, config.getLocation());	
+			return new JBossCache(this.cacheStore, config.getLocation(), this.classLoader);	
 		}
 		 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50066, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50066));
 	}

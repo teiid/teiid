@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -506,17 +507,22 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	public <T, S> T replicate(String mux_id,
 			Class<T> iface, final S object, long startTimeout) throws Exception {
 		Channel channel = channelFactory.createChannel(mux_id);
-		Method[] methods = iface.getMethods();
+		
+		// To keep the order of methods same at all the nodes.
+		TreeMap<String, Method> methods = new TreeMap<String, Method>();
+		for (Method method : iface.getMethods()) {
+			if (method.getAnnotation(Replicated.class) == null) {
+				continue;
+			}
+			methods.put(method.toGenericString(), method);
+		}
 		
 		final HashMap<Method, Short> methodMap = new HashMap<Method, Short>();
 		final ArrayList<Method> methodList = new ArrayList<Method>();
 		
-		for (Method method : methods) {
-			if (method.getAnnotation(Replicated.class) == null) {
-				continue;
-			}
-			methodList.add(method);
-			methodMap.put(method, (short)(methodList.size() - 1));
+		for (String method : methods.keySet()) {
+			methodList.add(methods.get(method));
+			methodMap.put(methods.get(method), (short)(methodList.size() - 1));
 		}
 		
 		Method hasState = ReplicatedObject.class.getMethod(HAS_STATE, new Class<?>[] {Serializable.class});
@@ -543,8 +549,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
          * TODO: could have an object implement streaming
          * Override the normal handle method to support streaming
          */
-        ReplicatorRpcDispatcher disp = new ReplicatorRpcDispatcher<S>(channel, proxy, proxy, object,
-				object, methodMap, methodList);
+        ReplicatorRpcDispatcher disp = new ReplicatorRpcDispatcher<S>(channel, proxy, proxy, object, object, methodMap, methodList);
 		
 		proxy.setDisp(disp);
         disp.setMethodLookup(new MethodLookup() {

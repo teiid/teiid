@@ -239,7 +239,6 @@
                 </xs:annotation>
                 <xs:complexType>
                     <xs:attribute name="jgroups-stack" type="xs:string" use="required"/>
-                    <xs:attribute name="channel" type="xs:string" use="required"/>
                 </xs:complexType>
             </xs:element>            
         

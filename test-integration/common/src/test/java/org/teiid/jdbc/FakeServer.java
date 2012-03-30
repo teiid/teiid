@@ -287,7 +287,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 				throw new TeiidRuntimeException(e);
 			}
         }
-        this.dqp.setBufferService(bs);
+        this.dqp.setBufferManager(bs.getBufferManager());
     	
         //TODO: wire in an infinispan cluster rather than this dummy replicated cache
         DefaultCacheFactory dcf = new DefaultCacheFactory() {

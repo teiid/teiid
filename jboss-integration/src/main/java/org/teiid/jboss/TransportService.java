@@ -46,6 +46,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
@@ -56,7 +57,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
-import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -86,7 +86,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	private final InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();	
-	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
+	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	
 	@Override
 	public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
@@ -131,12 +131,12 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     			sslEnabled = this.socketConfig.getSSLConfiguration().isSslEnabled();
     		}
     		if (protocol == Protocol.teiid) {
-    	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager());
+    	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue());
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (protocol == Protocol.pg) {
         		getVdbRepository().odbcEnabled();
-        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferServiceInjector().getValue().getBufferManager(), getMaxODBCLobSizeAllowed(), this.logon);
+        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
     		}
@@ -277,8 +277,8 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		return dqpInjector;
 	}	
 	
-	public InjectedValue<BufferServiceImpl> getBufferServiceInjector() {
-		return bufferServiceInjector;
+	public InjectedValue<BufferManager> getBufferManagerInjector() {
+		return bufferManagerInjector;
 	}	
 	
 	private int getMaxODBCLobSizeAllowed() {

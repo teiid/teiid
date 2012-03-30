@@ -116,9 +116,9 @@ public class TestDQPCore {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(agds);
         BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
 		bm.setInlineLobs(false);
-        BufferService bs = new FakeBufferService(bm, bm);
+		FakeBufferService bs = new FakeBufferService(bm, bm);
         core = new DQPCore();
-        core.setBufferService(bs);
+        core.setBufferManager(bs.getBufferManager());
         core.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
         core.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
         core.setTransactionService(new FakeTransactionService());

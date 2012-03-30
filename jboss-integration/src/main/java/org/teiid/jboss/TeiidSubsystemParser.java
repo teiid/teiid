@@ -124,7 +124,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     
     private void writeObjectReplicatorConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
     	writeAttribute(writer, Element.DC_STACK_ATTRIBUTE, node);
-    	writeAttribute(writer, Element.DC_CHANNEL_NAME_ATTRIBUTE, node);
 	}
 
 	private void writeTranslator(XMLExtendedStreamWriter writer, ModelNode node, String translatorName) throws XMLStreamException {
@@ -372,9 +371,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			Element element = Element.forName(attrName, Element.DISTRIBUTED_CACHE);
     			switch(element) {
     			case DC_STACK_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
-    				break;
-    			case DC_CHANNEL_NAME_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
                 default: 

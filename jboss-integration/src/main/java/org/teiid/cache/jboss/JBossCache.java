@@ -31,50 +31,48 @@ import org.teiid.cache.Cache;
 /**
  * Implementation of Cache using Infinispan
  */
-public class JBossCache<K, V> implements Cache<String, V> {
+public class JBossCache<K, V> implements Cache<K, V> {
 
-	protected org.infinispan.Cache<String, V> cacheStore;
+	protected org.infinispan.AdvancedCache<K, V> cacheStore;
 	private final String name; 
+	private ClassLoader classloader;
 	
-	public JBossCache(org.infinispan.Cache<String, V> cacheStore, String cacheName) {
-		this.cacheStore = cacheStore;
+	public JBossCache(org.infinispan.Cache<K, V> cacheStore, String cacheName, ClassLoader classloader) {
+		this.cacheStore = cacheStore.getAdvancedCache();
 		this.name = cacheName;
-	}
-	
-	private String fqn(String key) {
-		return this.name+"."+key; //$NON-NLS-1$
+		this.classloader = classloader;
 	}
 	
 	@Override
-	public V get(String key) {
-		return this.cacheStore.get(fqn(key));
+	public V get(K key) {
+		return this.cacheStore.with(this.classloader).get(key);
 	}
 	
-	public V put(String key, V value) {
-		return this.cacheStore.put(fqn(key), value);
+	public V put(K key, V value) {
+		return this.cacheStore.with(this.classloader).put(key, value);
 	}
 	
 	@Override
-	public V put(String key, V value, Long ttl) {
+	public V put(K key, V value, Long ttl) {
 		if (ttl != null) {
-			return this.cacheStore.put(fqn(key), value, ttl, TimeUnit.MILLISECONDS);
+			return this.cacheStore.with(this.classloader).put(key, value, ttl, TimeUnit.MILLISECONDS);
 		}
-		return this.cacheStore.put(fqn(key), value);
+		return this.cacheStore.with(this.classloader).put(key, value);
 	}
 
 	@Override
-	public V remove(String key) {
-		return this.cacheStore.remove(fqn(key));
+	public V remove(K key) {
+		return this.cacheStore.with(this.classloader).remove(key);
 	}
 	
 	@Override
 	public int size() {
-		return this.cacheStore.size();
+		return this.cacheStore.with(this.classloader).size();
 	}
 	
 	@Override
 	public void clear() {
-		this.cacheStore.clear();
+		this.cacheStore.with(this.classloader).clear();
 	}
 	
 	@Override
@@ -83,7 +81,7 @@ public class JBossCache<K, V> implements Cache<String, V> {
 	}
 
 	@Override
-	public Set<String> keys() {
-		return this.cacheStore.keySet();
+	public Set<K> keys() {
+		return this.cacheStore.with(this.classloader).keySet();
 	}
 }

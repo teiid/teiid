@@ -35,7 +35,6 @@ import org.jboss.security.AuthenticationManager;
 import org.jboss.security.SimplePrincipal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.services.TeiidLoginContext;

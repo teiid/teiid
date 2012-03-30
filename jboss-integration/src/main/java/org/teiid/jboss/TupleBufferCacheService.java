@@ -26,38 +26,40 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheFactory;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.query.ObjectReplicator;
 
-class CacheService<T> implements Service<SessionAwareCache<T>> {
+class TupleBufferCacheService implements Service<TupleBufferCache>{
+	public final InjectedValue<ObjectReplicator> replicatorInjector = new InjectedValue<ObjectReplicator>();
+	protected InjectedValue<BufferManager> bufferMgrInjector = new InjectedValue<BufferManager>();
 	
-	private SessionAwareCache<T> cache;
-	protected InjectedValue<TupleBufferCache> tupleBufferCacheInjector = new InjectedValue<TupleBufferCache>();
-	protected InjectedValue<CacheFactory> cacheFactoryInjector = new InjectedValue<CacheFactory>();
-
-	private SessionAwareCache.Type type;
-	private CacheConfiguration config;
-	
-	public CacheService(SessionAwareCache.Type type, CacheConfiguration config){
-		this.type = type;
-		this.config = config;
-	}
+	private TupleBufferCache tupleBufferCache;
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.cache = new SessionAwareCache<T>(cacheFactoryInjector.getValue(), this.type, this.config);
-		this.cache.setTupleBufferCache(this.tupleBufferCacheInjector.getValue());
+		if (this.replicatorInjector.getValue() != null) {
+			try {
+				//use a mux name that will not conflict with any vdb
+				this.tupleBufferCache = this.replicatorInjector.getValue().replicate("$TEIID_BM$", TupleBufferCache.class, bufferMgrInjector.getValue(), 0); //$NON-NLS-1$
+			} catch (Exception e) {
+				throw new StartException(e);
+			}
+		}
 	}
 
 	@Override
 	public void stop(StopContext context) {
-		this.cache = null;
+		if (this.replicatorInjector.getValue() != null && this.tupleBufferCache != null) {
+			this.replicatorInjector.getValue().stop(this.tupleBufferCache);
+		}
 	}
 
 	@Override
-	public SessionAwareCache<T> getValue() throws IllegalStateException, IllegalArgumentException {
-		return this.cache;
+	public TupleBufferCache getValue() throws IllegalStateException, IllegalArgumentException {
+		if (this.tupleBufferCache!= null) {
+			return tupleBufferCache;
+		}
+		return bufferMgrInjector.getValue();
 	}
 }

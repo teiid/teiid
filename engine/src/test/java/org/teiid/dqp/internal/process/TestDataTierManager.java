@@ -85,7 +85,7 @@ public class TestDataTierManager {
         
         rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
-        rm.setBufferService(new FakeBufferService());
+        rm.setBufferManager(new FakeBufferService().getBufferManager());
         rm.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
         rm.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
         rm.start(new DQPConfiguration());

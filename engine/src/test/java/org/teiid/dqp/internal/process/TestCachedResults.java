@@ -21,7 +21,9 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,12 +32,11 @@ import org.junit.Test;
 import org.teiid.cache.Cache;
 import org.teiid.cache.DefaultCache;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.Table;
 import org.teiid.query.processor.FakeProcessorPlan;
@@ -50,7 +51,7 @@ public class TestCachedResults {
 	
 	@Test
 	public void testCaching() throws Exception {
-		BufferService fbs = new FakeBufferService(true);
+		FakeBufferService fbs = new FakeBufferService(true);
 		
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);

@@ -22,6 +22,7 @@
 package org.teiid.jboss;
 
 import org.infinispan.manager.CacheContainer;
+import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -44,7 +45,7 @@ class CacheFactoryService implements Service<CacheFactory> {
 	public void start(StartContext context) throws StartException {
 		CacheContainer cc = cacheContainerInjector.getValue();
 		if (cc != null) {
-			this.cacheFactory = new JBossCacheFactory(this.cacheName, cc);
+			this.cacheFactory = new JBossCacheFactory(this.cacheName, cc, Module.getCallerModule().getClassLoader());
 		}
 		else {
 			this.cacheFactory = new DefaultCacheFactory();

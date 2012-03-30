@@ -31,7 +31,6 @@ import javax.xml.validation.Validator;
 import junit.framework.Assert;
 
 import org.jboss.as.cli.Util;
-import org.jboss.as.controller.OperationContext.Type;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.subsystem.test.AbstractSubsystemTest;
@@ -54,14 +53,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     @Test
     public void testDescribeHandler() throws Exception {
     	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
-        KernelServices servicesA = super.installInController(
-                new AdditionalInitialization() {
-                    @Override
-                    protected Type getType() {
-                        return Type.MANAGEMENT;
-                    }
-                },
-                subsystemXml);
+        KernelServices servicesA = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
         
         
         //Get the model and the describe operations from the first controller
@@ -99,14 +91,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     	ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
-        KernelServices services = super.installInController(
-                new AdditionalInitialization() {
-                    @Override
-                    protected Type getType() {
-                        return Type.MANAGEMENT;
-                    }
-                },
-                subsystemXml);
+        KernelServices services = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
         //Get the model and the persisted xml from the controller
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();
@@ -125,14 +110,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     	ModelNode testModel = ModelNode.fromJSONString(json);
         String triggered = outputModel(testModel);
 
-        KernelServices services = super.installInController(
-                new AdditionalInitialization() {
-                    @Override
-                    protected Type getType() {
-                        return Type.MANAGEMENT;
-                    }
-                },
-                subsystemXml);
+        KernelServices services = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
         //Get the model and the persisted xml from the controller
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();
@@ -146,14 +124,8 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
     	String subsystemXml = ObjectConverterUtil.convertToString(new FileReader("src/test/resources/teiid-sample-config.xml"));
     	validate(subsystemXml);
     	
-        KernelServices services = super.installInController(
-                new AdditionalInitialization() {
-                    @Override
-                    protected Type getType() {
-                        return Type.MANAGEMENT;
-                    }
-                },
-                subsystemXml);
+        KernelServices services = super.installInController(AdditionalInitialization.MANAGEMENT,subsystemXml);
+        ;
         //Get the model and the persisted xml from the controller
         ModelNode model = services.readWholeModel();
         String marshalled = services.getPersistedSubsystemXml();

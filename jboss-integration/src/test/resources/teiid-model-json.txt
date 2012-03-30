@@ -22,7 +22,6 @@
     "max-row-fetch-size" : 20480,
     "max-source-rows-allowed" : -1,
     "max-threads" : 64,
-    "distributed-cache-channel" : "cluster",
     "distributed-cache-jgroups-stack" : "stack",
     "preparedplan-cache-max-age-in-seconds" : 28800,
     "preparedplan-cache-max-entries" : 512,

@@ -28,7 +28,7 @@
     
     <preparedplan-cache max-entries="512" max-age-in-seconds="28800"/>
     
-    <distributed-cache jgroups-stack="stack" channel="cluster"/>
+    <distributed-cache jgroups-stack="stack"/>
     
     <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc" max-socket-threads="1" input-buffer-size="2" output-buffer-size="3"/>
 

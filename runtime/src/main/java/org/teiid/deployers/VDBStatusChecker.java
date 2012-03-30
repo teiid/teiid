@@ -89,7 +89,7 @@ public abstract class VDBStatusChecker {
 			boolean dsReplaced = false;
 			if (!cm.getConnectionName().equals(dsName)){
 				vdb.setStatus(VDB.Status.INACTIVE);
-				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName); //$NON-NLS-1$
+				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName);
 				model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 				cm = new ConnectorManager(translatorName, dsName); 
 				cm.setExecutionFactory(ef);
@@ -172,7 +172,7 @@ public abstract class VDBStatusChecker {
 				
 				if (!runnables.isEmpty()) {
 					//the task themselves will set the status on completion/failure
-					for (Runnable runnable : runnables) {
+					for (Runnable runnable : runnables) {						
 						getExecutor().execute(runnable);
 					}
 				} else if (valid) {

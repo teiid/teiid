@@ -104,6 +104,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				dataPoliciesNodes.add(DataPolicyMetadataMapper.INSTANCE.wrap((DataPolicyMetadata)policy,  new ModelNode()));
 			}
 		}
+		
+		wrapDomain(vdb, node);
 		return node;
 	}
 
@@ -178,6 +180,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				
 			}
 		}
+		unwrapDomain(vdb, node);
 		return vdb;
 	}
 	
@@ -516,6 +519,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop, new ModelNode()));
 				}
 			}
+			wrapDomain(translator, node);
 			return node;
 		}
 		
@@ -546,6 +550,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					}
 				}
 			}
+			unwrapDomain(translator, node);
 			return translator;
 		}
 		
@@ -831,6 +836,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			node.get(HITRATIO).set(object.getHitRatio());
 			node.get(REQUEST_COUNT).set(object.getRequestCount());
 			
+			wrapDomain(object, node);
 			return node;
 		}
 
@@ -842,6 +848,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			cache.setTotalEntries(node.get(TOTAL_ENTRIES).asInt());
 			cache.setHitRatio(node.get(HITRATIO).asDouble());
 			cache.setRequestCount(node.get(REQUEST_COUNT).asInt());
+			
+			unwrapDomain(cache, node);
 			return cache;
 		}
 		
@@ -884,6 +892,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			node.get(STATE).set(request.getState().name());
 			node.get(THREAD_STATE).set(request.getThreadState().name());
+			
+			wrapDomain(request, node);
 			return node;
 		}
 
@@ -905,6 +915,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			request.setState(ProcessingState.valueOf(node.get(STATE).asString()));
 			request.setThreadState(ThreadState.valueOf(node.get(THREAD_STATE).asString()));
+			
+			unwrapDomain(request, node);
 			return request;
 		}
 		
@@ -959,6 +971,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (session.getClientHardwareAddress() != null) {
 				node.get(CLIENT_HARDWARE_ADRESS).set(session.getClientHardwareAddress());
 			}
+			wrapDomain(session, node);
 			return node;
 		}
 
@@ -984,6 +997,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.has(CLIENT_HARDWARE_ADRESS)) {
 				session.setClientHardwareAddress(node.get(CLIENT_HARDWARE_ADRESS).asString());
 			}
+			unwrapDomain(session, node);
 			return session;
 		}
 		
@@ -1018,7 +1032,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			transaction.get(CREATED_TIME).set(object.getCreatedTime());
 			transaction.get(SCOPE).set(object.getScope());
 			transaction.get(ID).set(object.getId());
-			
+			wrapDomain(object, transaction);
 			return transaction;
 		}
 
@@ -1031,6 +1045,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			transaction.setCreatedTime(node.get(CREATED_TIME).asLong());
 			transaction.setScope(node.get(SCOPE).asString());
 			transaction.setId(node.get(ID).asString());
+			unwrapDomain(transaction, node);
 			return transaction;
 		}
 		
@@ -1067,7 +1082,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			node.get(QUEUED).set(stats.getQueued());
 			node.get(HIGHEST_QUEUED).set(stats.getHighestQueued());
 			node.get(MAX_THREADS).set(stats.getMaxThreads());
-			
+			wrapDomain(stats, node);
 			return node;
 		}
 
@@ -1083,7 +1098,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			stats.setQueueName(node.get(QUEUE_NAME).asString());
 			stats.setQueued(node.get(QUEUED).asInt());
 			stats.setHighestQueued(node.get(HIGHEST_QUEUED).asInt());
-			stats.setMaxThreads(node.get(MAX_THREADS).asInt());			
+			stats.setMaxThreads(node.get(MAX_THREADS).asInt());
+			unwrapDomain(stats, node);
 			return stats;
 		}
 		
@@ -1098,8 +1114,35 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, MAX_THREADS, ModelType.INT, true);
 			return node;
 		}
+	}
+	
+	public static void wrapDomain(AdminObjectImpl anObj, ModelNode node) {
+		if (anObj.getServerGroup() != null) {
+			node.get(SERVER_GROUP).set(anObj.getServerGroup());
+		}
+		if (anObj.getHostName() != null) {
+			node.get(HOST_NAME).set(anObj.getHostName());
+		}
+		if (anObj.getServerName() != null) {
+			node.get(SERVER_NAME).set(anObj.getServerName());
+		}
+	}
+	
+	public static void unwrapDomain(AdminObjectImpl anObj, ModelNode node) {
+		if (node.get(SERVER_GROUP).isDefined()) {
+			anObj.setServerGroup(node.get(SERVER_GROUP).asString());
+		}
+		if (node.get(HOST_NAME).isDefined()) {
+			anObj.setHostName(node.get(HOST_NAME).asString());
+		}
+		if (node.get(SERVER_NAME).isDefined()) {
+			anObj.setServerName(node.get(SERVER_NAME).asString());
+		}
 	}	
 	
+	private static final String SERVER_GROUP = "server-group"; //$NON-NLS-1$
+	private static final String HOST_NAME = "host-name"; //$NON-NLS-1$
+	private static final String SERVER_NAME = "server-name"; //$NON-NLS-1$
 	private static final String DOT_DESC = ".describe"; //$NON-NLS-1$
 	private static final String TYPE = "type"; //$NON-NLS-1$
 	private static final String REQUIRED = "required"; //$NON-NLS-1$
@@ -1111,6 +1154,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
         node.get(name, REQUIRED).set(required);
         return node;
     }
+	
 }
 
 

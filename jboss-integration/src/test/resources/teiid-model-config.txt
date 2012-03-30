@@ -97,11 +97,6 @@
         "description" => "JGroups stack name for cache replication channel",
         "required" => false
     },
-    "distributed-cache-channel" => {
-        "type" => STRING,
-        "description" => "Cache channel name to use for cache entries replication",
-        "required" => false
-    },
     "buffer-service-use-disk" => {
         "type" => BOOLEAN,
         "description" => "Use disk for buffer management",

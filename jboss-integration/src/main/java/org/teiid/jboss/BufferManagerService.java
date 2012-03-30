@@ -27,60 +27,28 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.dqp.service.BufferService;
-import org.teiid.query.ObjectReplicator;
 import org.teiid.services.BufferServiceImpl;
 
-class BufferManagerService implements Service<BufferService>, BufferService {
-
-	private BufferServiceImpl bufferService;
-	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
-	public final InjectedValue<ObjectReplicator> replicatorInjector = new InjectedValue<ObjectReplicator>();
-	private BufferManager manager;
-	private TupleBufferCache tupleBufferCache;
+class BufferManagerService extends BufferServiceImpl implements Service<BufferManager> {
+	private static final long serialVersionUID = -6797455072198476318L;
 	
-	public BufferManagerService(BufferServiceImpl buffer) {
-		this.bufferService = buffer;
-	}
+	public final InjectedValue<String> pathInjector = new InjectedValue<String>();
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		bufferService.setDiskDirectory(pathInjector.getValue());
-		bufferService.start();
-		manager = bufferService.getBufferManager();
-		tupleBufferCache = manager;
-		if (replicatorInjector.getValue() != null) {
-			try {
-				//use a mux name that will not conflict with any vdb
-				tupleBufferCache = this.replicatorInjector.getValue().replicate("$BM$", TupleBufferCache.class, this.manager, 0); //$NON-NLS-1$
-			} catch (Exception e) {
-				throw new StartException(e);
-			}
-		}
+		setDiskDirectory(pathInjector.getValue());
+		start();
+
 	}
 
 	@Override
 	public void stop(StopContext context) {
-		bufferService.stop();
-		if (this.replicatorInjector.getValue() != null) {
-			this.replicatorInjector.getValue().stop(bufferService);
-		}
+		stop();
 	}
 	
 	@Override
-	public BufferManager getBufferManager() {
-		return manager;
-	}
-	
-	@Override
-	public TupleBufferCache getTupleBufferCache() {
-		return tupleBufferCache;
-	}
-
-	@Override
-	public BufferService getValue() throws IllegalStateException,IllegalArgumentException {
-		return this.bufferService;
+	public BufferManager getValue() throws IllegalStateException,IllegalArgumentException {
+		return getBufferManager();
 	}
 
 }

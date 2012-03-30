@@ -1,7 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 
-<domain xmlns="urn:jboss:domain:1.1">
-
+<domain xmlns="urn:jboss:domain:1.2">
     <extensions>
         <extension module="org.jboss.as.clustering.infinispan"/>
         <extension module="org.jboss.as.clustering.jgroups"/>
@@ -34,12 +33,10 @@
         <extension module="org.jboss.as.webservices"/>
         <extension module="org.jboss.as.weld"/>
     </extensions>
-
     <system-properties>
         <!-- IPv4 is not required, but setting this helps avoid unintended use of IPv6 -->
         <property name="java.net.preferIPv4Stack" value="true"/>
     </system-properties>
-
     <profiles>
         <profile name="ha">
             <subsystem xmlns="urn:jboss:domain:logging:1.1">
@@ -115,10 +112,6 @@
                     <stateful default-access-timeout="5000" cache-ref="simple" clustered-cache-ref="clustered"/>
                     <singleton default-access-timeout="5000"/>
                 </session-bean>
-                <mdb>
-                    <resource-adapter-ref resource-adapter-name="hornetq-ra"/>
-                    <bean-instance-pool-ref pool-name="mdb-strict-max-pool"/>
-                </mdb>
                 <pools>
                     <bean-instance-pools>
                         <strict-max-pool name="slsb-strict-max-pool" max-pool-size="20" instance-acquisition-timeout="5" instance-acquisition-timeout-unit="MINUTES"/>
@@ -146,7 +139,7 @@
                     </thread-pool>
                 </thread-pools>
             </subsystem>
-            <subsystem xmlns="urn:jboss:domain:infinispan:1.1" default-cache-container="cluster">
+            <subsystem xmlns="urn:jboss:domain:infinispan:1.2" default-cache-container="cluster">
                 <cache-container name="cluster" aliases="ha-partition" default-cache="default">
                     <transport lock-timeout="60000"/>
                     <replicated-cache name="default" mode="SYNC" batching="true">
@@ -169,8 +162,10 @@
                         <eviction strategy="LRU"/>
                         <file-store/>
                     </replicated-cache>
-                    <!-- Clustered cache used internally by EJB subsytem for managing the client-mapping(s) of
-                    the socketbinding referenced by the EJB remoting connector -->
+                    <!--
+                      ~  Clustered cache used internally by EJB subsytem for managing the client-mapping(s) of
+                      ~                 the socketbinding referenced by the EJB remoting connector 
+                      -->
                     <replicated-cache name="remote-connector-client-mappings" mode="SYNC" batching="true"/>
                     <distributed-cache name="dist" mode="ASYNC" batching="true">
                         <eviction strategy="LRU"/>
@@ -194,12 +189,11 @@
                         <eviction strategy="NONE"/>
                     </replicated-cache>
                 </cache-container>
-                <cache-container name="teiid" default-cache="resultset">
+                <cache-container name="teiid-cache" default-cache="resultset">
                     <transport lock-timeout="60000"/>
                     <replicated-cache name="resultset" mode="SYNC" batching="true">
                         <locking isolation="READ_COMMITTED"/>
-                        <transaction mode="FULL_XA"/>
-                        <expiration lifespan="7200" />
+                        <expiration lifespan="7200000" />
                         <eviction max-entries="1024" strategy="LRU"/>
                     </replicated-cache>
                 </cache-container>                
@@ -207,7 +201,7 @@
             <subsystem xmlns="urn:jboss:domain:jaxrs:1.0"/>
             <subsystem xmlns="urn:jboss:domain:jca:1.1">
                 <archive-validation enabled="true" fail-on-error="true" fail-on-warn="false"/>
-                <bean-validation enabled="false"/>
+                <bean-validation enabled="true"/>
                 <default-workmanager>
                     <short-running-threads>
                         <core-threads count="50"/>
@@ -222,6 +216,7 @@
                         <keepalive-time time="10" unit="seconds"/>
                     </long-running-threads>
                 </default-workmanager>
+                <cached-connection-manager/>
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:jdr:1.0"/>
             <subsystem xmlns="urn:jboss:domain:jgroups:1.1" default-stack="udp">
@@ -260,7 +255,7 @@
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:jmx:1.1">
                 <show-model value="true"/>
-                <remoting-connector/>
+                <!--<remoting-connector use-management-endpoint="false"/>-->
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:jpa:1.0">
                 <jpa default-datasource=""/>
@@ -271,7 +266,11 @@
                 </mail-session>
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:modcluster:1.0">
-                <mod-cluster-config advertise-socket="modcluster"/>
+                <mod-cluster-config advertise-socket="modcluster">
+                    <dynamic-load-provider>
+                        <load-metric type="busyness"/>
+                    </dynamic-load-provider>
+                </mod-cluster-config>
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:naming:1.1"/>
             <subsystem xmlns="urn:jboss:domain:osgi:1.2" activation="lazy">
@@ -333,8 +332,8 @@
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:teiid:1.0">
                 <async-thread-pool>teiid-async</async-thread-pool>
-                <distributed-cache jgroups-stack="udp" channel="teiid-channel"/>
-                <resultset-cache infinispan-container="teiid"/>
+                <distributed-cache jgroups-stack="udp"/>
+                <resultset-cache infinispan-container="teiid-cache"/>
                 
                 <transport name="embedded"/>
                 <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">
@@ -392,6 +391,7 @@
             </subsystem>
             <subsystem xmlns="urn:jboss:domain:web:1.1" default-virtual-server="default-host" native="false">
                 <connector name="http" protocol="HTTP/1.1" scheme="http" socket-binding="http"/>
+                <connector name="ajp" protocol="AJP/1.3" scheme="http" socket-binding="ajp"/>
                 <virtual-server name="default-host" enable-welcome-root="true">
                     <alias name="localhost"/>
                     <alias name="example.com"/>
@@ -410,34 +410,32 @@
             <subsystem xmlns="urn:jboss:domain:weld:1.0"/>
         </profile>
     </profiles>
-
     <!--
-         Named interfaces that can be referenced elsewhere in the configuration. The configuration
-         for how to associate these logical names with an actual network interface can either
-         be specified here or can be declared on a per-host basis in the equivalent element in host.xml.
-
-         These default configurations require the binding specification to be done in host.xml.
-    -->
+      ~ 
+      ~          Named interfaces that can be referenced elsewhere in the configuration. The configuration
+      ~          for how to associate these logical names with an actual network interface can either
+      ~          be specified here or can be declared on a per-host basis in the equivalent element in host.xml.
+      ~ 
+      ~          These default configurations require the binding specification to be done in host.xml.
+      ~     
+      -->
     <interfaces>
         <interface name="management"/>
         <interface name="public"/>
         <interface name="unsecure"/>
     </interfaces>
-
     <socket-binding-groups>
         <socket-binding-group name="ha-sockets" default-interface="public">
+            <!-- Needed for server groups using the 'ha' profile  -->
+            <socket-binding name="ajp" port="8009"/>
             <socket-binding name="http" port="8080"/>
             <socket-binding name="https" port="8443"/>
-            <socket-binding name="jacorb" interface="unsecure" port="3528"/>
-            <socket-binding name="jacorb-ssl" interface="unsecure" port="3529"/>
             <socket-binding name="jgroups-diagnostics" port="0" multicast-address="224.0.75.75" multicast-port="7500"/>
             <socket-binding name="jgroups-mping" port="0" multicast-address="${jboss.default.multicast.address:230.0.0.4}" multicast-port="45700"/>
             <socket-binding name="jgroups-tcp" port="7600"/>
             <socket-binding name="jgroups-tcp-fd" port="57600"/>
             <socket-binding name="jgroups-udp" port="55200" multicast-address="${jboss.default.multicast.address:230.0.0.4}" multicast-port="45688"/>
             <socket-binding name="jgroups-udp-fd" port="54200"/>
-            <socket-binding name="messaging" port="5445"/>
-            <socket-binding name="messaging-throughput" port="5455"/>
             <socket-binding name="modcluster" port="0" multicast-address="224.0.1.105" multicast-port="23364"/>
             <socket-binding name="osgi-http" interface="management" port="8090"/>
             <socket-binding name="remoting" port="4447"/>
@@ -450,7 +448,6 @@
             </outbound-socket-binding>
         </socket-binding-group>
     </socket-binding-groups>
-
     <server-groups>
         <server-group name="main-server-group" profile="ha">
             <jvm name="default">
@@ -459,5 +456,4 @@
             <socket-binding-group ref="ha-sockets"/>
         </server-group>
     </server-groups>
-
 </domain>

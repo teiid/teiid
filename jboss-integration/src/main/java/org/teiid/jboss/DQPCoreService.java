@@ -39,6 +39,7 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.LRUCache;
 import org.teiid.deployers.CompositeVDB;
@@ -50,13 +51,11 @@ import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
-import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.services.BufferServiceImpl;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -69,7 +68,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<WorkManager> workManagerInjector = new InjectedValue<WorkManager>();
 	private final InjectedValue<XATerminator> xaTerminatorInjector = new InjectedValue<XATerminator>();
 	private final InjectedValue<TransactionManager> txnManagerInjector = new InjectedValue<TransactionManager>();
-	private final InjectedValue<BufferServiceImpl> bufferServiceInjector = new InjectedValue<BufferServiceImpl>();
+	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
@@ -84,7 +83,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
 		
 		setAuthorizationValidator(authorizationValidatorInjector.getValue());
-		setBufferService(bufferServiceInjector.getValue());
+		this.dqpCore.setBufferManager(bufferManagerInjector.getValue());
 		
 		this.dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
 		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getEventDistributor());
@@ -158,10 +157,6 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50002, new Date(System.currentTimeMillis()).toString())); 
     }
     
-	public void setBufferService(BufferService service) {
-		this.dqpCore.setBufferService(service);
-	}
-		
 	public InjectedValue<SessionAwareCache> getResultSetCacheInjector() {
 		return resultSetCacheInjector;
 	}
@@ -186,8 +181,8 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		return authorizationValidatorInjector;
 	}
 
-	public InjectedValue<BufferServiceImpl> getBufferServiceInjector() {
-		return bufferServiceInjector;
+	public InjectedValue<BufferManager> getBufferManagerInjector() {
+		return bufferManagerInjector;
 	}
 
 	public InjectedValue<TransactionManager> getTxnManagerInjector() {

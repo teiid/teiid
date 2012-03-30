@@ -49,6 +49,9 @@ public class TeiidExtension implements Extension {
 	private static final String RUNTIME_VERSION = "runtime-version"; //$NON-NLS-1$
 	
 	public static final String TEIID_SUBSYSTEM = "teiid"; //$NON-NLS-1$
+	public static final int MAJOR_VERSION = 1;
+	public static final int MINOR_VERSION = 0;
+	
 	private static TeiidSubsystemParser parser = new TeiidSubsystemParser();
 	private static TransportAdd TRANSPORT_ADD = new TransportAdd();
 	private static TransportRemove TRANSPORT_REMOVE = new TransportRemove();
@@ -59,7 +62,7 @@ public class TeiidExtension implements Extension {
 	
 	@Override
 	public void initialize(ExtensionContext context) {
-		final SubsystemRegistration registration = context.registerSubsystem(TEIID_SUBSYSTEM);
+		final SubsystemRegistration registration = context.registerSubsystem(TEIID_SUBSYSTEM, MAJOR_VERSION, MINOR_VERSION);
 		
 		LogManager.setLogListener(new JBossLogger());
 		
@@ -150,6 +153,6 @@ public class TeiidExtension implements Extension {
 
 	@Override
 	public void initializeParsers(ExtensionParsingContext context) {
-		context.setSubsystemXmlMapping(Namespace.CURRENT.getUri(), parser);
+		context.setSubsystemXmlMapping(TEIID_SUBSYSTEM, Namespace.CURRENT.getUri(), parser);
 	}
 }

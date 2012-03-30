@@ -57,7 +57,7 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
 	}
 	
     public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
-        if (context.getType() == OperationContext.Type.SERVER) {
+        if (context.isNormalServer()) {
             context.addStep(new OperationStepHandler() {
                 public void execute(OperationContext context, ModelNode operation) throws OperationFailedException {
 
@@ -69,12 +69,9 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
                 	context.completeStep();
                 }
                 
-            }, OperationContext.Stage.RUNTIME);
+            }, OperationContext.Stage.RUNTIME);            
         }
-        else {
-            context.getResult().set("no metrics available"); //$NON-NLS-1$
-        }
-        context.completeStep();        
+        context.completeStep();
     }
 	
     @SuppressWarnings("unused")
