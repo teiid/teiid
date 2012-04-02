@@ -320,10 +320,11 @@ public class IntegrationTestDeployment {
 	
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
-		String[] array  = {"teiid-connector-file.rar", "teiid-local", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"};
+		String[] array  = {"teiid-connector-file.rar", "teiid-local", "teiid", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"};
 		try {
 			deployVdb();
 			Set<String> templates = admin.getDataSourceTemplateNames();
+			System.out.println(templates);
 			assertArrayEquals(array, templates.toArray(new String[templates.size()]));
 		} finally {
 			undeploy();

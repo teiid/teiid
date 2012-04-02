@@ -10,11 +10,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminFactory;
-import org.teiid.adminapi.VDB;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
-import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
@@ -40,20 +38,11 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		Properties props = new Properties();
 		props.setProperty("ParentDirectory", "../docs/teiid/examples/dynamicvdb-portfolio/data");
 		props.setProperty("AllowParentPaths", "true");
+		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
 		
 		admin.createDataSource("marketdata-file", "teiid-connector-file.rar", props);
 
-		int count = 0;
-		while (count < 10) {
-			VDB vdb = admin.getVDB("dynamic", 1);
-			if (vdb == null || vdb.getStatus() != VDB.Status.ACTIVE) {
-				Thread.sleep(500);
-				count++;
-			}
-			else {
-				break;
-			}
-		}
+		Thread.sleep(3000);
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		
@@ -61,6 +50,8 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		//TestMMDatabaseMetaData.compareResultSet("TestDymamicImportedMetaData/columns", this.internalResultSet); 
 	
 		admin.undeploy("dynamicview-vdb.xml");
+		
+		admin.deleteDataSource("marketdata-file");
     }
 
 }
