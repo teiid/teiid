@@ -35,7 +35,10 @@ import org.teiid.language.QueryExpression;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
@@ -43,6 +46,7 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.salesforce.execution.DeleteExecutionImpl;
 import org.teiid.translator.salesforce.execution.InsertExecutionImpl;
@@ -113,6 +117,34 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
 		MetadataProcessor processor = new MetadataProcessor(connection,metadataFactory, this);
 		processor.processMetadata();
+		
+		Procedure p1 = metadataFactory.addProcedure("GetUpdated"); //$NON-NLS-1$
+		p1.setAnnotation("Gets the updated objects"); //$NON-NLS-1$
+		ProcedureParameter param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p1); //$NON-NLS-1$
+		param.setAnnotation("ObjectName"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("StartDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
+		param.setAnnotation("Start Time"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("EndDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
+		param.setAnnotation("End Time"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p1); //$NON-NLS-1$
+		param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$
+		metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p1); //$NON-NLS-1$
+		
+		
+		Procedure p2 = metadataFactory.addProcedure("GetDeleted"); //$NON-NLS-1$
+		p2.setAnnotation("Gets the deleted objects"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("ObjectName", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p2); //$NON-NLS-1$
+		param.setAnnotation("ObjectName"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("StartDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+		param.setAnnotation("Start Time"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("EndDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+		param.setAnnotation("End Time"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("EarliestDateAvailable", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+		param.setAnnotation("Earliest Date Available"); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("LatestDateCovered", TypeFacility.RUNTIME_NAMES.TIMESTAMP, Type.In, p2); //$NON-NLS-1$
+		param.setAnnotation("Latest Date Covered"); //$NON-NLS-1$		
+		metadataFactory.addProcedureResultSetColumn("ID", TypeFacility.RUNTIME_NAMES.STRING, p2); //$NON-NLS-1$		
+		metadataFactory.addProcedureResultSetColumn("DeletedDate", TypeFacility.RUNTIME_NAMES.TIMESTAMP, p2); //$NON-NLS-1$
 	}	
 	
     @Override
