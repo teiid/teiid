@@ -37,6 +37,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -621,6 +622,20 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
      */
 	public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		return null;
+	}
+	
+	public static void unwrapException(TeiidRuntimeException e)
+	throws TeiidComponentException, TeiidProcessingException {
+		if (e == null) {
+			return;
+		}
+		if (e.getCause() instanceof TeiidComponentException) {
+			throw (TeiidComponentException)e.getCause();
+		}
+		if (e.getCause() instanceof TeiidProcessingException) {
+			throw (TeiidProcessingException)e.getCause();
+		}
+		throw e;
 	}
 	
 }

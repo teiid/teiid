@@ -46,12 +46,15 @@ import nu.xom.ParsingException;
 import nux.xom.xquery.StreamingPathFilter;
 import nux.xom.xquery.StreamingTransform;
 
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
 
@@ -69,7 +72,7 @@ public class XQueryEvaluator {
 		}
 	};
 
-	public static SaxonXQueryExpression.Result evaluateXQuery(final SaxonXQueryExpression xquery, Object context, Map<String, Object> parameterValues, final RowProcessor processor, CommandContext commandContext) throws TeiidProcessingException {
+	public static SaxonXQueryExpression.Result evaluateXQuery(final SaxonXQueryExpression xquery, Object context, Map<String, Object> parameterValues, final RowProcessor processor, CommandContext commandContext) throws TeiidProcessingException, TeiidComponentException {
 	    DynamicQueryContext dynamicContext = new DynamicQueryContext(xquery.config);
 	
 	    SaxonXQueryExpression.Result result = new SaxonXQueryExpression.Result();
@@ -121,6 +124,9 @@ public class XQueryEvaluator {
 							builder.build(FAKE_IS);
 							return result;
 						} catch (ParsingException e) {
+							if (e.getCause() instanceof TeiidRuntimeException) {
+								RelationalNode.unwrapException((TeiidRuntimeException)e.getCause());
+							}
 							throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
 						} catch (IOException e) {
 							throw new TeiidProcessingException(e, QueryPlugin.Util.getString("SaxonXQueryExpression.bad_context")); //$NON-NLS-1$
