@@ -30,6 +30,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -85,9 +86,9 @@ public class Sum extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
-    public void addInputDirect(Object input, List<?> tuple)
+    public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
         
     	isNull = false;
@@ -117,9 +118,9 @@ public class Sum extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult() 
+    public Object getResult(CommandContext commandContext) 
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
         
     	if (isNull){

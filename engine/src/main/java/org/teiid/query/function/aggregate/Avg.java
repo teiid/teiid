@@ -31,6 +31,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -60,22 +61,22 @@ public class Avg extends Sum {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
-    public void addInputDirect(Object input, List<?> tuple)
+    public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
-        super.addInputDirect(input, tuple);
+        super.addInputDirect(input, tuple, commandContext);
         count++;
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult()
+    public Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException {
 
-        Object sum = super.getResult();
+        Object sum = super.getResult(commandContext);
         if (count == 0 || sum == null) {
             return null;
         }

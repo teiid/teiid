@@ -51,6 +51,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 
@@ -394,6 +395,9 @@ public class ResolverVisitor extends LanguageVisitor {
 			} catch (QueryResolverException e) {
 				handleException(e);
 			}
+    	}
+    	if (obj.getAggregateFunction() == Type.USER_DEFINED) {
+    		visit((Function)obj);
     	}
     }
 

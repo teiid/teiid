@@ -52,10 +52,10 @@ public class TestDuplicateFilter {
         
         // Add inputs
         for(int i=0; i<input.length; i++) {
-            filter.addInputDirect(Arrays.asList(input[i]));    
+            filter.addInputDirect(Arrays.asList(input[i]), null);    
         }        
         
-        Integer actual = (Integer) filter.getResult();
+        Integer actual = (Integer) filter.getResult(null);
         assertEquals("Did not get expected number of results", expected, actual.intValue()); //$NON-NLS-1$
     }
 

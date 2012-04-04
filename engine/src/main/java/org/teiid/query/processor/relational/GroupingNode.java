@@ -184,7 +184,7 @@ public class GroupingNode extends RelationalNode {
             Class<?> outputType = symbol.getType();
             if(symbol instanceof AggregateSymbol) {
             	AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
-            	functions[i] = initAccumulator(context, aggSymbol, this, this.collectedExpressions);
+            	functions[i] = initAccumulator(aggSymbol, this, this.collectedExpressions);
             } else {
                 functions[i] = new ConstantFunction();
                 functions[i].setArgIndexes(new int[] {this.collectedExpressions.get(symbol)});
@@ -202,8 +202,8 @@ public class GroupingNode extends RelationalNode {
 		return index;
 	}
 
-	static AggregateFunction initAccumulator(CommandContext context, 
-			AggregateSymbol aggSymbol, RelationalNode node, LinkedHashMap<Expression, Integer> expressionIndexes) {
+	static AggregateFunction initAccumulator(AggregateSymbol aggSymbol, 
+			RelationalNode node, LinkedHashMap<Expression, Integer> expressionIndexes) {
 		int[] argIndexes = new int[aggSymbol.getArgs().length];
 		AggregateFunction result = null;
 		Expression[] args = aggSymbol.getArgs();
@@ -235,14 +235,16 @@ public class GroupingNode extends RelationalNode {
 			result = new Max();
 			break;
 		case XMLAGG:
-			result = new XMLAgg(context);
+			result = new XMLAgg();
 			break;
 		case ARRAY_AGG:
-			result = new ArrayAgg(context);
+			result = new ArrayAgg();
 			break;                		
 		case TEXTAGG:
-			result = new TextAgg(context, (TextLine)args[0]);
-			break;                		
+			result = new TextAgg((TextLine)args[0]);
+			break;     
+		case USER_DEFINED:
+			result = new UserDefined(aggSymbol.getFunctionDescriptor());
 		default:
 			result = new StatsFunction(function);
 		}
@@ -382,7 +384,7 @@ public class GroupingNode extends RelationalNode {
                 // Close old group
                 List<Object> row = new ArrayList<Object>(functions.length);
                 for(int i=0; i<functions.length; i++) {
-                    row.add( functions[i].getResult() );
+                    row.add( functions[i].getResult(getContext()) );
                     functions[i].reset();
                 }
 
@@ -404,7 +406,7 @@ public class GroupingNode extends RelationalNode {
             // Close last group
             List<Object> row = new ArrayList<Object>(functions.length);
             for(int i=0; i<functions.length; i++) {
-                row.add( functions[i].getResult() );
+                row.add( functions[i].getResult(getContext()) );
             }
             
             addBatchRow(row);
@@ -425,7 +427,7 @@ public class GroupingNode extends RelationalNode {
     throws TeiidComponentException, TeiidProcessingException {
 
         for(int i=0; i<functions.length; i++) {
-            functions[i].addInput(tuple);
+            functions[i].addInput(tuple, getContext());
         }
     }
 

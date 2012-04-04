@@ -37,10 +37,8 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
 
 	private XMLType result;
 	private XmlConcat concat;
-    private CommandContext context;
     
-    public XMLAgg(CommandContext context) {
-    	this.context = context;
+    public XMLAgg() {
 	}
 
     public void reset() {
@@ -51,11 +49,11 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
     /**
      * @throws TeiidProcessingException 
      * @throws TeiidComponentException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
-    public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
+    public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
     	if (concat == null) {
-    		concat = new XmlConcat(context.getBufferManager());
+    		concat = new XmlConcat(commandContext.getBufferManager());
     	}
     	concat.addValue(input);
     }
@@ -63,9 +61,9 @@ public class XMLAgg extends SingleArgumentAggregateFunction {
     /**
      * @throws TeiidProcessingException 
      * @throws TeiidComponentException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult() throws TeiidComponentException, TeiidProcessingException {
+    public Object getResult(CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
     	if (result == null) {
     		if (concat == null) {
         		return null;

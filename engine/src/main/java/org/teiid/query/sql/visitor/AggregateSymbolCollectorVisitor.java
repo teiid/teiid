@@ -33,7 +33,6 @@ import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.WindowFunction;
 
 
@@ -72,7 +71,6 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
     private Collection<? super AggregateSymbol> aggregates;
     private Collection<? super ElementSymbol> otherElements;
     private Collection<? super WindowFunction> windowFunctions;
-	private Collection<? super Function> aggregateFunctions;
     
 	public AggregateSymbolCollectorVisitor(Collection<? super AggregateSymbol> aggregates, Collection<? super ElementSymbol> elements) { 
         this.aggregates = aggregates;
@@ -82,13 +80,6 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
     public void visit(AggregateSymbol obj) {
         if (aggregates != null && !obj.isWindowed()) {
             this.aggregates.add(obj);
-        }
-    }
-    
-    @Override
-    public void visit(Function obj) {
-    	if (aggregateFunctions != null && obj.isAggregate()) {
-            this.aggregateFunctions.add(obj);
         }
     }
     
@@ -116,18 +107,6 @@ public class AggregateSymbolCollectorVisitor extends LanguageVisitor {
         asn.visitNode(obj);
     }
 
-    public static final Collection<Function> getAllAggregates(LanguageObject obj) {
-    	if (obj == null) {
-    		return Collections.emptyList();
-    	}
-        Collection<Function> aggregates = new ArrayList<Function>();    
-        AggregateSymbolCollectorVisitor visitor = new AggregateSymbolCollectorVisitor(aggregates, null);
-        visitor.aggregateFunctions = aggregates;
-        AggregateStopNavigator asn = new AggregateStopNavigator(visitor, null, null);
-        obj.acceptVisitor(asn);
-        return aggregates;
-    }
-    
     public static final Collection<AggregateSymbol> getAggregates(LanguageObject obj, boolean removeDuplicates) {
     	if (obj == null) {
     		return Collections.emptyList();

@@ -178,7 +178,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		int i = 0;
 		int j = 0;
 		for (Iterator<Expression> iter = symbols.iterator(); iter.hasNext(); ) {
-			Expression ss = (Expression) iter.next();
+			Expression ss = iter.next();
 			Expression ex = SymbolMap.getExpression(ss);
 			if (ex instanceof Constant) {
 				projection[i] = ex;
@@ -208,7 +208,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				Integer index = uniqueSymbols.get(SymbolMap.getExpression(item.getSymbol()));
 				if (index != null) {
 					item.setExpressionPosition(index);
-					item.setSymbol((Expression) select.getSymbols().get(index));
+					item.setSymbol(select.getSymbols().get(index));
 				}
 			}
 		}

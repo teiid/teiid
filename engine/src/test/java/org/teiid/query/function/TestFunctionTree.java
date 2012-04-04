@@ -162,7 +162,7 @@ public class TestFunctionTree {
     	FunctionLibrary fl = new FunctionLibrary(sys, new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
     	FunctionDescriptor fd = fl.findFunction("dummy", new Class<?>[] {DataTypeManager.DefaultDataClasses.VARBINARY});
     	String hello = "hello";
-    	assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}));
+    	assertEquals(hello, fd.invokeFunction(new Object[] {new BinaryType(hello.getBytes())}, null, null));
     }
 	
 /*

@@ -612,7 +612,7 @@ public class QueryPlugin { // extends Plugin {
 		TEIID30581,
 		TEIID30590,
 		TEIID30591,
-		TEIID30600, TEIID30601, //User defined aggregate errors
+		TEIID30600, TEIID30601, TEIID30602, //User defined aggregate errors
 		
     	TEIID31069,
     	TEIID31070,

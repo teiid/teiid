@@ -5213,5 +5213,19 @@ public class TestParser {
 		assertEquals(DataTypeManager.DefaultDataClasses.VARBINARY, actualCommand.getSelect().getSymbol(0).getType());
 		assertEquals("SELECT X'AABBCC0A'", actualCommand.toString());
     }
+    
+    @Test public void testUserDefinedAggregateParsing() throws QueryParserException {
+		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(ALL x, y)", new ParseInfo());
+		assertEquals("SELECT foo(ALL x, y)", actualCommand.toString());
+    }
+
+    @Test(expected=QueryParserException.class) public void testWindowedExpression() throws QueryParserException {
+		QueryParser.getQueryParser().parseCommand("SELECT foo(x, y) over ()", new ParseInfo());
+    }
+    
+    @Test public void testWindowedExpression1() throws QueryParserException {
+		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(distinct x, y) over ()", new ParseInfo());
+		assertEquals("SELECT foo(DISTINCT x, y) OVER ()", actualCommand.toString());
+    }
 
 }

@@ -227,11 +227,11 @@ public class TestFunctionLibrary {
             for (int i = 0; i < inputs.length; i++) {
                 in[i+1] = inputs[i];
             }
-            actualOutput = descriptor.invokeFunction(in);
+            actualOutput = descriptor.invokeFunction(in, null, null);
         }
         else {
             // Invoke function with inputs
-            actualOutput = descriptor.invokeFunction(inputs);                
+            actualOutput = descriptor.invokeFunction(inputs, null, null);                
         }
 		return actualOutput;
 	}

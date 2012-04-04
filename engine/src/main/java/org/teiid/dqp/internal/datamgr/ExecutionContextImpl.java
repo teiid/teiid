@@ -33,6 +33,7 @@ import javax.security.auth.Subject;
 
 import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
@@ -145,21 +146,8 @@ public class ExecutionContextImpl implements ExecutionContext {
             return false;
         } 
         ExecutionContext other = (ExecutionContext) obj;
-        return compareWithNull(this.getRequestId(), other.getRequestId()) && 
-                compareWithNull(this.getPartIdentifier(), other.getPartIdentifier());
-    }
-
-    private boolean compareWithNull(Object obj1, Object obj2) {
-        if(obj1 == null) { 
-            if(obj2 == null) {
-                return true;
-            }
-            return false;
-        }
-        if(obj2 == null) {
-            return false;
-        }
-        return obj1.equals(obj2);
+        return EquivalenceUtil.areEqual(this.getRequestId(), other.getRequestId()) && 
+        EquivalenceUtil.areEqual(this.getPartIdentifier(), other.getPartIdentifier());
     }
 
     public int hashCode() {

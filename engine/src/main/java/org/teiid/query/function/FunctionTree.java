@@ -327,7 +327,7 @@ public class FunctionTree {
             if (invocationMethod != null) {
             	// Check return type is non void
         		Class<?> methodReturn = invocationMethod.getReturnType();
-        		if(methodReturn.equals(Void.TYPE)) {
+        		if(method.getAggregateAttributes() == null && methodReturn.equals(Void.TYPE)) {
         			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30390, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30390, method.getName(), invocationMethod));
         		}
 
@@ -347,12 +347,15 @@ public class FunctionTree {
         		}
         		
         		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(method.getClass()))) {
-        			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
+    				throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
             }
         }
 
         FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
+        if (method.getAggregateAttributes() != null) {
+        	result.newInstance();
+        }
         result.setHasWrappedArgs(hasWrappedArg);
         return result;
 	}

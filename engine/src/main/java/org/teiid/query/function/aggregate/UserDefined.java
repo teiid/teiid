@@ -19,48 +19,55 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
 package org.teiid.query.function.aggregate;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.UserDefinedAggregate;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.util.CommandContext;
 
-public class ArrayAgg extends SingleArgumentAggregateFunction {
+public class UserDefined extends AggregateFunction {
 	
-    private ArrayList<Object> result;
-    
-	@Override
-	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
-		if (this.result == null) {
-			this.result = new ArrayList<Object>();
-		}
-		this.result.add(input);
-		if (this.result.size() > 1000) {
-			throw new AssertionError("Exceeded the max allowable array size of 1000."); //$NON-NLS-1$
-		}
+	private FunctionDescriptor fd;
+	private UserDefinedAggregate<?> instance;
+	private Object[] values;
+	
+	public UserDefined(FunctionDescriptor functionDescriptor) {
+		this.fd = functionDescriptor;
+		this.instance = (UserDefinedAggregate<?>) fd.newInstance();
 	}
 
 	@Override
-	public Object getResult(CommandContext commandContext) throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException,TeiidProcessingException {
-		if (this.result == null) {
-			return null;
+	public void addInputDirect(List<?> tuple, CommandContext commandContext) throws TeiidComponentException,
+			TeiidProcessingException {
+		if (values == null) {
+			values = new Object[argIndexes.length + (fd.requiresContext()?1:0)];
 		}
-		return this.result.toArray();
+		if (fd.requiresContext()) {
+			values[0] = commandContext;
+		}
+		for (int i = 0; i < argIndexes.length; i++) {
+			values[i + (fd.requiresContext()?1:0)] = tuple.get(argIndexes[i]);
+		}
+		fd.invokeFunction(values, commandContext, instance);
 	}
-
+	
 	@Override
 	public void reset() {
-		this.result = null;
+		instance.reset();
 	}
 	
 	@Override
-	public boolean respectsNull() {
-		return true;
+	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
+			ExpressionEvaluationException, TeiidComponentException,
+			TeiidProcessingException {
+		return instance.getResult(commandContext);
 	}
-
+	
 }

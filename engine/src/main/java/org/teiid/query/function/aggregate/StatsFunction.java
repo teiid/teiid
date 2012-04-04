@@ -28,6 +28,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.util.CommandContext;
 
 public class StatsFunction extends SingleArgumentAggregateFunction {
 	
@@ -48,7 +49,7 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 	}
 	
 	@Override
-	public void addInputDirect(Object input, List<?> tuple)
+	public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
 			throws FunctionExecutionException, ExpressionEvaluationException,
 			TeiidComponentException {
 		sum += ((Number)input).doubleValue();
@@ -57,7 +58,7 @@ public class StatsFunction extends SingleArgumentAggregateFunction {
 	}
 	
 	@Override
-	public Object getResult() throws FunctionExecutionException,
+	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException {
 		double result = 0;
 		switch (type) {

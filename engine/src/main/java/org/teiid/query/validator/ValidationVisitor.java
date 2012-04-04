@@ -44,6 +44,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.metadata.AggregateAttributes;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -324,6 +325,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	} catch (IllegalArgumentException e) {
         		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_encoding", obj.getArg(1)), obj); //$NON-NLS-1$
         	}
+        } else if (obj.isAggregate()) {
+        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.user_defined_aggregate_as_function", obj, obj.getName()), obj); //$NON-NLS-1$
         }
     }
 
@@ -982,6 +985,18 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	if (!inQuery) {
     		handleValidationError(QueryPlugin.Util.getString("SQLParser.Aggregate_only_top_level", obj), obj); //$NON-NLS-1$
     		return;
+    	}
+    	if (obj.getAggregateFunction() == AggregateSymbol.Type.USER_DEFINED) {
+    		AggregateAttributes aa = obj.getFunctionDescriptor().getMethod().getAggregateAttributes();
+    		if (!aa.allowsDistinct() && obj.isDistinct()) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.uda_not_allowed", "DISTINCT", obj), obj); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+    		if (!aa.allowsOrderBy() && obj.getOrderBy() != null) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.uda_not_allowed", "ORDER BY", obj), obj); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+    		if (!aa.isWindowable() && obj.isWindowed()) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.uda_not_allowed", "windowing", obj), obj); //$NON-NLS-1$ //$NON-NLS-2$ 
+    		}
     	}
     	if (obj.getCondition() != null) {
     		Expression condition = obj.getCondition();

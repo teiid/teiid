@@ -59,8 +59,6 @@ import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.Like.MatchMode;
-import org.teiid.metadata.FunctionMethod.Determinism;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
@@ -970,11 +968,8 @@ public class Evaluator {
 	        values[i+start] = internalEvaluate(args[i], tuple);
 	    }            
 	    
-	    // Check for function we can't evaluate
-	    if(fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
-	         throw new TeiidComponentException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, fd.getName()));
-	    }
-	
+	    fd.checkNotPushdown();	
+	    
 	    // Check for special lookup function
 	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 	        if(dataMgr == null) {
@@ -993,13 +988,7 @@ public class Evaluator {
 	    }
 	    
 		// Execute function
-		Object result = fd.invokeFunction(values);
-		
-        if (context != null && fd.getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
-        	context.setDeterminismLevel(fd.getDeterministic());
-        }
-
-		return result;        
+		return fd.invokeFunction(values, context, null);
 	}
 	
 	private Object evaluate(ScalarSubquery scalarSubquery, List<?> tuple)

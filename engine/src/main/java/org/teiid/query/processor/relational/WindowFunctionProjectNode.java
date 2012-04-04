@@ -350,10 +350,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				    }
 		        }
 		        for (AggregateFunction function : aggs) {
-		        	function.addInput(tuple);
+		        	function.addInput(tuple, getContext());
 		        }
 		        for (AggregateFunction function : rowValueAggs) {
-		        	function.addInput(tuple);
+		        	function.addInput(tuple, getContext());
 		        }
 		        lastRow = tuple;
 			}
@@ -375,7 +375,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		List<Object> row = new ArrayList<Object>(aggs.size() + 1);
 		row.add(id);
 		for (AggregateFunction function : aggs) {
-			row.add(function.getResult());
+			row.add(function.getResult(getContext()));
 			if (!samePartition) {
 				function.reset();
 			}
@@ -400,7 +400,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 		}
 		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size());
 		for (WindowFunctionInfo wfi : functions) {
-			aggs.add(GroupingNode.initAccumulator(this.getContext(), wfi.function.getFunction(), this, expressionIndexes));
+			aggs.add(GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes));
 			Class<?> outputType = wfi.function.getType();
 		    ElementSymbol value = new ElementSymbol("val"); //$NON-NLS-1$
 		    value.setType(outputType);
@@ -466,8 +466,10 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
 		super.initialize(context, bufferManager, dataMgr);
-		List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
-        this.elementMap = createLookupMap(sourceElements);
+		if (this.elementMap == null) {
+			List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
+			this.elementMap = createLookupMap(sourceElements);
+		}
 	}
     
 }

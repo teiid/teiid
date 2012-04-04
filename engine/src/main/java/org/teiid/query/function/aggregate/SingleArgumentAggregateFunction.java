@@ -26,13 +26,14 @@ import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.util.CommandContext;
 
 public abstract class SingleArgumentAggregateFunction extends AggregateFunction {
 
 	@Override
-	public void addInputDirect(List<?> tuple)
+	public void addInputDirect(List<?> tuple, CommandContext commandContext)
 			throws TeiidComponentException, TeiidProcessingException {
-		addInputDirect(tuple.get(argIndexes[0]), tuple);
+		addInputDirect(tuple.get(argIndexes[0]), tuple, commandContext);
 	}
 	
 	public void initialize(java.lang.Class<?> dataType, java.lang.Class<?>[] inputTypes) {
@@ -47,6 +48,6 @@ public abstract class SingleArgumentAggregateFunction extends AggregateFunction 
 		
 	}
 	
-	public abstract void addInputDirect(Object input, List<?> tuple)
+	public abstract void addInputDirect(Object input, List<?> tuple, CommandContext commandContext)
     throws TeiidProcessingException, TeiidComponentException;
 }

@@ -132,12 +132,17 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 	 * @param expression Contained expression
 	 */
 	public AggregateSymbol(String aggregateFunction, boolean isDistinct, Expression expression) {
-		super(aggregateFunction, expression == null?EMPTY_ARGS:new Expression[] {expression});
+		this(aggregateFunction, isDistinct, expression == null?EMPTY_ARGS:new Expression[] {expression}, null);
+	}
+    
+	public AggregateSymbol(String aggregateFunction, boolean isDistinct, Expression[] args, OrderBy orderBy) {
+		super(aggregateFunction, args);
 		this.aggregate = nameMap.get(aggregateFunction);
 		if (this.aggregate == null) {
 			this.aggregate = Type.USER_DEFINED;
 		}
 		this.distinct = isDistinct;
+		this.orderBy = orderBy;
 	}
 	
 	/**

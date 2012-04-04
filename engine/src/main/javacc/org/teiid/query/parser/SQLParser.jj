@@ -3326,7 +3326,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		(expression=aggregateSymbol(info) expression = windowSpecification(expression, info))
 		|
 		// Function
-		LOOKAHEAD(2) (expression=function(info))
+		LOOKAHEAD(2) (expression=function(info) [expression = windowSpecification(expression, info)])
 		|
 		// ElementSymbol
 		(symbol=<ID> 
@@ -3389,6 +3389,9 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     {
     	WindowFunction result = new WindowFunction();
     	WindowSpecification ws = new WindowSpecification();
+    	if (!(agg instanceof AggregateSymbol)) {
+	   		throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
+    	}
     	result.setFunction((AggregateSymbol)agg);
     	ws.setPartition(partitionList);
     	ws.setOrderBy(orderBy);
@@ -3477,6 +3480,9 @@ Expression function(ParseInfo info) :
 	ArrayList args = new ArrayList(2);
 	ArrayList otherArgs = null;
 	Token funcToken = null;
+	Boolean distinct = null;
+	OrderBy orderBy = null;
+	Expression condition = null;
 }
 {
 	((	funcToken = <CONVERT>
@@ -3681,14 +3687,21 @@ Expression function(ParseInfo info) :
 	|   
 	(	funcName = id()
 		<LPAREN>
+		[<ALL> { distinct = false; } | <DISTINCT> {distinct = true;} ]
 		[ args = expressionList(info) ]
+		[ orderBy = orderby(info) ]
 		<RPAREN>
+		condition = filterClause(info)
 	))		
 	{
 		if(funcName == null) { 
 			funcName = funcToken.image;
 		}
-			
+		if (distinct != null || orderBy != null || condition != null) {
+			AggregateSymbol as = new AggregateSymbol(funcName, distinct, (Expression[])args.toArray(new Expression[args.size()]), orderBy);
+			as.setCondition(condition);
+			return as;
+		}	
 		return new Function(funcName, (Expression[])args.toArray(new Expression[args.size()]));
 	}
 }

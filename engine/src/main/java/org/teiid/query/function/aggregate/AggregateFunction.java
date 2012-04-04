@@ -28,6 +28,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -66,7 +67,7 @@ public abstract class AggregateFunction {
      */
     public abstract void reset();
 
-    public void addInput(List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
+    public void addInput(List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
     	if (conditionIndex != -1 && !Boolean.TRUE.equals(tuple.get(conditionIndex))) {
 			return;
     	}
@@ -77,7 +78,7 @@ public abstract class AggregateFunction {
     			}
     		}
     	}
-		addInputDirect(tuple);
+		addInputDirect(tuple, commandContext);
     }
     
     public boolean respectsNull() {
@@ -87,16 +88,18 @@ public abstract class AggregateFunction {
     /**
      * Called for the element value in every row of a group.
      * @param tuple 
+     * @param commandContext
      * @throws TeiidProcessingException 
      */
-    public abstract void addInputDirect(List<?> tuple) throws TeiidComponentException, TeiidProcessingException;
+    public abstract void addInputDirect(List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException;
 
     /**
      * Called after all values have been processed to get the result.
+     * @param commandContext
      * @return Result value
      * @throws TeiidProcessingException 
      */
-    public abstract Object getResult()
+    public abstract Object getResult(CommandContext commandContext)
         throws FunctionExecutionException, ExpressionEvaluationException, TeiidComponentException, TeiidProcessingException;
 
 }

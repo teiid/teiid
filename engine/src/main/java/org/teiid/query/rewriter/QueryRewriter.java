@@ -1352,7 +1352,7 @@ public class QueryRewriter {
         if (rightExpr instanceof Constant) {
             Constant const2 = (Constant)rightExpr;
             try {
-                Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() } );
+                Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() }, null, this.context );
                 combinedConst = new Constant(result, descriptor.getReturnType());
             } catch(FunctionExecutionException e) {
             	 throw new QueryValidatorException(QueryPlugin.Event.TEIID30373, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30373, e.getMessage()));
@@ -1590,9 +1590,9 @@ public class QueryRewriter {
         }
     	Object value = ((Constant)rightExpr).getValue();
     	try {
-    		Object result = descriptor.invokeFunction(new Object[] {context, ((Constant)rightExpr).getValue(), format});
-    		result = leftFunction.getFunctionDescriptor().invokeFunction(new Object[] {context, result, format } );
-    		if (((Comparable)value).compareTo(result) != 0) {
+    		Object result = descriptor.invokeFunction(new Object[] {context, ((Constant)rightExpr).getValue(), format}, null, this.context );
+    		result = leftFunction.getFunctionDescriptor().invokeFunction(new Object[] {context, result, format }, null, this.context );
+    		if (Constant.COMPARATOR.compare(value, result) != 0) {
     			return getSimpliedCriteria(crit, leftExpr, crit.getOperator() != CompareCriteria.EQ, true);
     		}
     	} catch(FunctionExecutionException e) {

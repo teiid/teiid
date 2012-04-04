@@ -35,6 +35,7 @@ import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.util.CommandContext;
 
 /**
  */
@@ -97,7 +98,7 @@ public class SortingFilter extends AggregateFunction {
 	}
 	
 	@Override
-	public void addInputDirect(List<?> tuple)
+	public void addInputDirect(List<?> tuple, CommandContext commandContext)
 			throws TeiidComponentException, TeiidProcessingException {
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
@@ -113,9 +114,9 @@ public class SortingFilter extends AggregateFunction {
 	
     /**
      * @throws TeiidProcessingException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult()
+    public Object getResult(CommandContext commandContext)
         throws TeiidComponentException, TeiidProcessingException {
 
         if(collectionBuffer != null) {
@@ -136,7 +137,7 @@ public class SortingFilter extends AggregateFunction {
 	                    break;
 	                }
 	                //TODO should possibly remove the order by columns from this tuple
-	                this.proxy.addInputDirect(tuple);
+	                this.proxy.addInputDirect(tuple, commandContext);
 	            }
             } finally {
             	sorted.remove();
@@ -146,7 +147,7 @@ public class SortingFilter extends AggregateFunction {
         }
 
         // Return
-        return this.proxy.getResult();
+        return this.proxy.getResult(commandContext);
     }
     
     @Override

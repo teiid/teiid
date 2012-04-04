@@ -37,6 +37,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -72,6 +73,16 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         this.invocationMethod = invocationMethod;
         this.requiresContext = requiresContext;
         this.method = method;
+	}
+	
+	public Object newInstance() {
+		try {
+			return invocationMethod.getDeclaringClass().newInstance();
+		} catch (InstantiationException e) {
+			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
+		} catch (IllegalAccessException e) {
+			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30602, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30602, method.getName(), method.getInvocationClass()));
+		}
 	}
 	
 	public void setHasWrappedArgs(boolean hasWrappedArgs) {
@@ -165,17 +176,25 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	public void setMetadataID(Object metadataID) {
 		this.metadataID = metadataID;
 	}
+	
+	public void checkNotPushdown() throws FunctionExecutionException {
+	    // Check for function we can't evaluate
+	    if(getPushdown() == PushDown.MUST_PUSHDOWN) {
+	         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, getName()));
+	    }
+	}
 
 	/**
 	 * Invoke the function described in the function descriptor, using the
 	 * values provided.  Return the result of the function.
-	 * @param fd Function descriptor describing the name and types of the arguments
 	 * @param values Values that should match 1-to-1 with the types described in the
 	 * function descriptor
+	 * @param context 
+	 * @param functionTarget TODO
+	 * @param fd Function descriptor describing the name and types of the arguments
 	 * @return Result of invoking the function
 	 */
-	public Object invokeFunction(Object[] values) throws FunctionExecutionException {
-
+	public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException {
         if (!isNullDependent()) {
         	for (int i = requiresContext?1:0; i < values.length; i++) {
 				if (values[i] == null) {
@@ -206,7 +225,10 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         		newValues[i - 1] = Arrays.copyOfRange(values, i - 1, values.length);
         		values = newValues;
         	}
-            Object result = invocationMethod.invoke(null, values);
+            Object result = invocationMethod.invoke(functionTarget, values);
+            if (context != null && getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
+            	context.setDeterminismLevel(getDeterministic());
+            }
             return importValue(result, getReturnType());
         } catch(ArithmeticException e) {
     		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30383, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30383, getName()));

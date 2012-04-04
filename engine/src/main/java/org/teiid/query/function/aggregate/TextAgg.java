@@ -50,15 +50,13 @@ import org.teiid.query.util.CommandContext;
 public class TextAgg extends SingleArgumentAggregateFunction {
 
     private FileStoreInputStreamFactory result;
-    private CommandContext context;
     private TextLine textLine;
     
-    public TextAgg(CommandContext context, TextLine textLine) {
-    	this.context = context;
+    public TextAgg(TextLine textLine) {
     	this.textLine = textLine;    	    	
 	}
 
-	private FileStoreInputStreamFactory buildResult() throws TeiidProcessingException {
+	private FileStoreInputStreamFactory buildResult(CommandContext context) throws TeiidProcessingException {
 		try {
 			FileStore fs = context.getBufferManager().createFileStore("textagg"); //$NON-NLS-1$
 			FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, textLine.getEncoding()==null?Streamable.ENCODING:textLine.getEncoding());
@@ -87,12 +85,12 @@ public class TextAgg extends SingleArgumentAggregateFunction {
     /**
      * @throws TeiidProcessingException 
      * @throws TeiidComponentException 
-     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List)
+     * @see org.teiid.query.function.aggregate.AggregateFunction#addInputDirect(List, CommandContext, CommandContext)
      */
-    public void addInputDirect(Object input, List<?> tuple) throws TeiidComponentException, TeiidProcessingException {
+    public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
     	try {
     		if (this.result == null) {
-    			this.result = buildResult();
+    			this.result = buildResult(commandContext);
     		}
     		String in = (String)input;
     		Writer w = result.getWriter();
@@ -104,11 +102,11 @@ public class TextAgg extends SingleArgumentAggregateFunction {
     }
 
     /**
-     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult()
+     * @see org.teiid.query.function.aggregate.AggregateFunction#getResult(CommandContext)
      */
-    public Object getResult() throws TeiidProcessingException{
+    public Object getResult(CommandContext commandContext) throws TeiidProcessingException{
     	if (this.result == null) {
-    		this.result = buildResult();
+    		this.result = buildResult(commandContext);
     	}
     	
     	try {
