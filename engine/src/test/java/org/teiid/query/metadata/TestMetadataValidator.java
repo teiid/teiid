@@ -63,6 +63,7 @@ public class TestMetadataValidator {
 		
 		DDLMetadataRepository repo = new DDLMetadataRepository();
 		MetadataFactory mf = new MetadataFactory("myVDB",1, modelName, TestDDLParser.getDataTypes(), new Properties(), ddl);
+		mf.setPhysical(physical);
 		repo.loadMetadata(mf, null, null);
 		mf.mergeInto(store);	
 		return model;
@@ -126,6 +127,26 @@ public class TestMetadataValidator {
 		ValidatorReport report = new ValidatorReport();
 		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
 		assertTrue(printError(report), report.hasItems());			
+	}
+	
+	@Test public void testProcMetadata() throws Exception {
+		String ddl = "create virtual procedure proc1(IN e1 varchar) RETURNS (e1 integer, e2 varchar(12)) AS begin create local temporary table x (e1 integer, e2 varchar); select * from x; end;" +
+		"create virtual procedure proc2(IN e1 varchar) RETURNS (e1 integer, e2 varchar(12)) AS select x.* from (exec proc1('a')) as X; ";
+		buildModel("vm1", false, this.vdb, this.store, ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new ValidatorReport();
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
+		assertFalse(printError(report), report.hasItems());			
+	}
+	
+	@Test public void testResolveTempMetadata() throws Exception {
+		String ddl = "create virtual procedure proc1() RETURNS (e1 integer, e2 varchar(12)) AS begin create local temporary table x (e1 integer, e2 varchar); select * from x; end;" +
+		"create view z (e1 integer, e2 varchar(12)) AS select x.* from (exec proc1()) as X, (exec proc1()) as Y; ";
+		buildModel("vm1", false, this.vdb, this.store, ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new ValidatorReport();
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
+		assertFalse(printError(report), report.hasItems());			
 	}
 	
 	@Test

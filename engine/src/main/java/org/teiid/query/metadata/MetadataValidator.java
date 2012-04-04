@@ -34,16 +34,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -186,6 +177,7 @@ public class MetadataValidator {
 	
     private static void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, MetadataStore store, ValidatorReport report) {
     	QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+    	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore()); //TODO: optimize this
     	ValidatorReport resolverReport = null;
     	try {
     		if (record instanceof Procedure) {
@@ -193,8 +185,7 @@ public class MetadataValidator {
     			Command command = QueryParser.getQueryParser().parseCommand(p.getQueryPlan());
     			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata);
     			resolverReport =  Validator.validate(command, metadata);
-    		}
-    		if (record instanceof Table) {
+    		} else if (record instanceof Table) {
     			Table t = (Table)record;
     			
     			if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {

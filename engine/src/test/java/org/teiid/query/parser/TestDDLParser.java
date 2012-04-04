@@ -20,13 +20,8 @@ package org.teiid.query.parser;
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,18 +31,8 @@ import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -101,7 +86,7 @@ public class TestDDLParser {
 		assertEquals("primary key not same", e1, table.getPrimaryKey().getColumns().get(0));
 		
 		assertEquals("e2", e2.getName());
-		assertEquals("varchar", e2.getDatatype().getName());
+		assertEquals("string", e2.getDatatype().getName());
 		assertEquals("unique", e2, table.getUniqueKeys().get(0).getColumns().get(0));
 		assertEquals(NullType.Nullable, e2.getNullType());
 		assertEquals(10, e2.getLength());
@@ -113,7 +98,7 @@ public class TestDDLParser {
 		assertEquals(NullType.No_Nulls, e3.getNullType());		
 		
 		assertEquals("e4", e4.getName());
-		assertEquals("decimal", e4.getDatatype().getName());
+		assertEquals("bigdecimal", e4.getDatatype().getName());
 		assertEquals(false, e4.isAutoIncremented());
 		assertEquals(12, e4.getPrecision());
 		assertEquals(3, e4.getScale());
@@ -127,22 +112,18 @@ public class TestDDLParser {
 		assertEquals("index", e5, table.getIndexes().get(0).getColumns().get(0));
 		
 		assertEquals("e6", e6.getName());
-		assertEquals("varchar", e6.getDatatype().getName());
+		assertEquals("string", e6.getDatatype().getName());
 		assertEquals("index", e6, table.getIndexes().get(1).getColumns().get(0));
 		assertEquals("hello", e6.getDefaultValue());
 	}
 	
-	@Test
+	@Test(expected=ParseException.class)
 	public void testDuplicatePrimarykey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer primary key, e2 varchar primary key)";
-		try {
-			MetadataStore mds = new MetadataStore();
-			MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
-			parser.parseDDL(mf, ddl);
-			mf.mergeInto(mds);
-		fail("two keys can ot be primary keys");
-		} catch (Exception e) {
-		}
+		MetadataStore mds = new MetadataStore();
+		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf, ddl);
+		mf.mergeInto(mds);
 	}
 	
 	@Test
@@ -429,13 +410,13 @@ public class TestDDLParser {
 		
 		FunctionMethod fm = s.getFunction("SourceFunc");
 		assertNotNull(fm);
-		assertEquals("varchar", fm.getOutputParameter().getType());
+		assertEquals("string", fm.getOutputParameter().getType());
 		assertEquals(FunctionMethod.PushDown.CAN_PUSHDOWN, fm.getPushdown());
 		assertEquals(2, fm.getInputParameterCount());
 		assertEquals("flag", fm.getInputParameters().get(0).getName());
 		assertEquals("boolean", fm.getInputParameters().get(0).getType());
 		assertEquals("msg", fm.getInputParameters().get(1).getName());
-		assertEquals("varchar", fm.getInputParameters().get(1).getType());
+		assertEquals("string", fm.getInputParameters().get(1).getType());
 		assertFalse( fm.getInputParameters().get(1).isVarArg());
 		
 		assertEquals(FunctionMethod.Determinism.DETERMINISTIC, fm.getDeterminism());
@@ -477,20 +458,20 @@ public class TestDDLParser {
 		assertEquals(ProcedureParameter.Type.Out, proc.getParameters().get(0).getType());
 		
 		assertEquals("p2", proc.getParameters().get(1).getName());
-		assertEquals("varchar", proc.getParameters().get(1).getDatatype().getName());
+		assertEquals("string", proc.getParameters().get(1).getDatatype().getName());
 		assertEquals(ProcedureParameter.Type.In, proc.getParameters().get(1).getType());
 		
 		assertEquals("p3", proc.getParameters().get(2).getName());
-		assertEquals("decimal", proc.getParameters().get(2).getDatatype().getName());
+		assertEquals("bigdecimal", proc.getParameters().get(2).getDatatype().getName());
 		assertEquals(ProcedureParameter.Type.InOut, proc.getParameters().get(2).getType());		
 		
 		ColumnSet<Procedure> ret = proc.getResultSet();
 		assertNotNull(ret);
 		assertEquals(2, ret.getColumns().size());
 		assertEquals("r1", ret.getColumns().get(0).getName());
-		assertEquals("varchar", ret.getColumns().get(0).getDatatype().getName());	
+		assertEquals("string", ret.getColumns().get(0).getDatatype().getName());	
 		assertEquals("r2", ret.getColumns().get(1).getName());
-		assertEquals("decimal", ret.getColumns().get(1).getDatatype().getName());		
+		assertEquals("bigdecimal", ret.getColumns().get(1).getDatatype().getName());		
 		
 		assertEquals("uuid", proc.getUUID());
 		assertEquals("nis", proc.getNameInSource());
@@ -540,20 +521,20 @@ public class TestDDLParser {
 		assertEquals(ProcedureParameter.Type.Out, proc.getParameters().get(0).getType());
 		
 		assertEquals("p2", proc.getParameters().get(1).getName());
-		assertEquals("varchar", proc.getParameters().get(1).getDatatype().getName());
+		assertEquals("string", proc.getParameters().get(1).getDatatype().getName());
 		assertEquals(ProcedureParameter.Type.In, proc.getParameters().get(1).getType());
 		
 		assertEquals("p3", proc.getParameters().get(2).getName());
-		assertEquals("decimal", proc.getParameters().get(2).getDatatype().getName());
+		assertEquals("bigdecimal", proc.getParameters().get(2).getDatatype().getName());
 		assertEquals(ProcedureParameter.Type.InOut, proc.getParameters().get(2).getType());		
 		
 		ColumnSet<Procedure> ret = proc.getResultSet();
 		assertNotNull(ret);
 		assertEquals(2, ret.getColumns().size());
 		assertEquals("r1", ret.getColumns().get(0).getName());
-		assertEquals("varchar", ret.getColumns().get(0).getDatatype().getName());	
+		assertEquals("string", ret.getColumns().get(0).getDatatype().getName());	
 		assertEquals("r2", ret.getColumns().get(1).getName());
-		assertEquals("decimal", ret.getColumns().get(1).getDatatype().getName());		
+		assertEquals("bigdecimal", ret.getColumns().get(1).getDatatype().getName());		
 		
 		assertEquals("uuid", proc.getUUID());
 		assertEquals("nis", proc.getNameInSource());
@@ -581,23 +562,19 @@ public class TestDDLParser {
 		return mf;
 	}
 	
+	//TODO: could elevate type logic out of metadata
 	public static Map<String, Datatype> getDataTypes() {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
 		for (String name:DataTypeManager.getAllDataTypeNames()) {
 			Datatype dt = new Datatype();
 			dt.setName(name);
-			dt.setJavaClassName(DataTypeManager.getDataTypeClass(name).getName());
+			Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(name);
+			dt.setJavaClassName(dataTypeClass.getName());
+			dt.setRuntimeTypeName(DataTypeManager.getDataTypeName(dataTypeClass));
 			datatypes.put(name, dt);	
 		}
-		Datatype dt = new Datatype();
-		dt.setName("varchar");
-		datatypes.put("varchar", dt);
-		dt.setJavaClassName(String.class.getName());
-		
-		dt = new Datatype();
-		dt.setName("decimal");		
-		datatypes.put("decimal", dt);
-		dt.setJavaClassName(BigDecimal.class.getName());
+		datatypes.put("varchar", datatypes.get(DataTypeManager.DefaultDataTypes.STRING));
+		datatypes.put("decimal", datatypes.get(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
 		return datatypes;
 	}
 }
