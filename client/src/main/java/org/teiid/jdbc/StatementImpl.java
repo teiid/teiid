@@ -188,7 +188,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
                 // silently failover to default
             }
         }
-        String queryTimeoutStr = this.execProps.getProperty(ExecutionProperties.QUERYTIMEOUT);
+        setTimeoutFromProperties();
+    }
+
+	private void setTimeoutFromProperties() {
+		String queryTimeoutStr = this.execProps.getProperty(ExecutionProperties.QUERYTIMEOUT);
         if(queryTimeoutStr != null) {
             try {
                 this.queryTimeoutMS = Integer.parseInt(queryTimeoutStr)*1000;
@@ -196,7 +200,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
                 // silently failover to default
             }
         }
-    }
+	}
 
     protected DQP getDQP() {
     	return this.driverConnection.getDQP();
@@ -861,6 +865,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         	cancel();        
             commandStatus = State.TIMED_OUT;
             queryTimeoutMS = NO_TIMEOUT;
+            setTimeoutFromProperties();
             currentRequestID = -1;
             if (this.resultSet != null) {
                 this.resultSet.close();
