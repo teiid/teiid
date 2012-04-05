@@ -632,7 +632,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         this.valid = false;
         setAbort(true);
         if (analysisRecord != null && analysisRecord.recordDebug()) {
-        	analysisRecord.println(reason + " " + object); //$NON-NLS-1$
+        	try {
+				analysisRecord.println(reason + " " + this.metadata.getName(this.modelID) + ": " + object); //$NON-NLS-1$ //$NON-NLS-2$
+			} catch (QueryMetadataException e) {
+			} catch (TeiidComponentException e) {
+			} 
         }
     }
     
@@ -658,6 +662,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         }
         
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
+        visitor.analysisRecord = analysisRecord;
         PostOrderNavigator.doVisit(obj, visitor);
         
         if(visitor.getException() != null) {

@@ -292,7 +292,7 @@ public class RulePlanSorts implements OptimizerRule {
 			if (newRoot != null) {
 				root = newRoot;
 				if (accessNode.getParent().getType() == NodeConstants.Types.TUPLE_LIMIT) {
-					newRoot = RulePushLimit.raiseAccessOverLimit(root, accessNode, metadata, capFinder, accessNode.getParent());
+					newRoot = RulePushLimit.raiseAccessOverLimit(root, accessNode, metadata, capFinder, accessNode.getParent(), record);
 				}
 				if (newRoot != null) {
 					root = newRoot;

@@ -290,7 +290,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }
             case NodeConstants.Types.TUPLE_LIMIT:
             {
-                return RulePushLimit.raiseAccessOverLimit(rootNode, accessNode, metadata, capFinder, parentNode);
+                return RulePushLimit.raiseAccessOverLimit(rootNode, accessNode, metadata, capFinder, parentNode, record);
             }
             default: 
             {
