@@ -72,7 +72,10 @@ public class TestTransformationMetadata {
 	private TransformationMetadata exampleTransformationMetadata()
 			throws TranslatorException {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
-        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
+		Datatype dt = new Datatype();
+		dt.setName(DataTypeManager.DefaultDataTypes.STRING);
+		dt.setJavaClassName(String.class.getCanonicalName());
+        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, dt);
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf.addProcedure("y"); //$NON-NLS-1$
 		
@@ -112,7 +115,10 @@ public class TestTransformationMetadata {
 	
 	@Test public void testAmbiguousTableWithPrivateModel() throws Exception {
 		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
-        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, new Datatype());
+		Datatype dt = new Datatype();
+		dt.setName(DataTypeManager.DefaultDataTypes.STRING);
+		dt.setJavaClassName(String.class.getCanonicalName());
+        datatypes.put(DataTypeManager.DefaultDataTypes.STRING, dt);		
 		MetadataFactory mf = new MetadataFactory(null, 1, "x", datatypes, new Properties(), null); //$NON-NLS-1$
 		mf.addTable("y"); //$NON-NLS-1$
 		MetadataFactory mf1 = new MetadataFactory(null, 1, "x1", datatypes, new Properties(), null); //$NON-NLS-1$

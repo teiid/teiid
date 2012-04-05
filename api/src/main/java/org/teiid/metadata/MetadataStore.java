@@ -25,7 +25,6 @@ package org.teiid.metadata;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -40,7 +39,7 @@ public class MetadataStore implements Serializable {
 	private static final long serialVersionUID = -3130247626435324312L;
 	protected Map<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
 	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
-	protected Collection<Datatype> datatypes = new LinkedHashSet<Datatype>();
+	protected Map<String, Datatype> datatypes = new TreeMap<String, Datatype>();
 	protected Map<String, String> namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	
 	public Map<String, Schema> getSchemas() {
@@ -67,18 +66,18 @@ public class MetadataStore implements Serializable {
 	}
 	
 	void addDataTypes(Collection<Datatype> types) {
-		this.datatypes.addAll(types);
+		if (types != null){
+			for (Datatype type:types) {
+				addDatatype(type);
+			}
+		}
 	}
 	
 	public void addDatatype(Datatype datatype) {
-		this.datatypes.add(datatype);
+		this.datatypes.put(datatype.getName(), datatype);
 	}
 		
-	/**
-	 * Get the datatypes defined in this store
-	 * @return
-	 */
-	public Collection<Datatype> getDatatypes() {
+	public Map<String, Datatype> getDatatypes() {
 		return datatypes;
 	}
 	
@@ -99,7 +98,7 @@ public class MetadataStore implements Serializable {
 			for (Schema s:store.getSchemaList()) {
 				addSchema(s);
 			}
-			this.datatypes.addAll(store.getDatatypes());
+			addDataTypes(store.getDatatypes().values());
 		}
 	}
 }

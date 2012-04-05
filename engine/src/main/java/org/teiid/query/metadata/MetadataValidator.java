@@ -196,7 +196,7 @@ public class MetadataValidator {
     					List<Expression> symbols = command.getProjectedSymbols();
     					for (Expression column:symbols) {
     						try {
-								addColumn(Symbol.getShortName(column), getDataType(store.getDatatypes(), column.getType()), t);
+								addColumn(Symbol.getShortName(column), getDataType(store.getDatatypes().values(), column.getType()), t);
 							} catch (TranslatorException e) {
 								log(report, model, e.getMessage());
 							}

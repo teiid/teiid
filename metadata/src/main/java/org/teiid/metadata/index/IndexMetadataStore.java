@@ -272,7 +272,7 @@ public class IndexMetadataStore extends MetadataStore {
 					uuidToRecord.put(datatype.getUUID(), datatype);
 				}
 			} else {
-				for (Datatype datatype : getDatatypes()) {
+				for (Datatype datatype : getDatatypes().values()) {
 					uuidToRecord.put(datatype.getUUID(), datatype);
 				}
 			}

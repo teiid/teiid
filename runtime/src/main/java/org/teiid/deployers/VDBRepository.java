@@ -148,12 +148,25 @@ public class VDBRepository implements Serializable{
 	
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
-		Collection<Datatype> datatypes = this.systemStore.getDatatypes();
-		for (Class<?> typeClass : DataTypeManager.getAllDataTypeClasses()) {
+		Collection<Datatype> datatypes = this.systemStore.getDatatypes().values();
+		
+		for (String typeName : DataTypeManager.getAllDataTypeNames()) {
+			
+			boolean found = false;
 			for (Datatype datatypeRecordImpl : datatypes) {
-				if (datatypeRecordImpl.getJavaClassName().equals(typeClass.getName())) {
-					datatypeMap.put(DataTypeManager.getDataTypeName(typeClass), datatypeRecordImpl);
+				if (datatypeRecordImpl.getRuntimeTypeName().equalsIgnoreCase(typeName)) {
+					datatypeMap.put(typeName, datatypeRecordImpl);
+					found = true;
 					break;
+				}
+			}
+			
+			if (!found) {
+				for (Datatype datatypeRecordImpl : datatypes) {
+					if (datatypeRecordImpl.getJavaClassName().equals(DataTypeManager.getDataTypeClass(typeName))) {
+						datatypeMap.put(typeName, datatypeRecordImpl);
+						break;
+					}			
 				}
 			}
 		}

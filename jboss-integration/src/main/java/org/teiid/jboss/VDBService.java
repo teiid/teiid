@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
 
@@ -66,9 +67,11 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.GlobalTableStore;
@@ -304,8 +307,10 @@ class VDBService implements Service<VDBMetaData> {
 				}
 				
 				if (!metadataLoaded) {
-					factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), getVDBRepository().getBuiltinDatatypes(), model.getProperties(), model.getSchemaText());
-					
+					boolean indexStore = (metadataRepo instanceof IndexMetadataRepository);
+					// designer based models define data types based on their built in data types, which are system vdb data types
+					Map<String, Datatype> datatypes = indexStore?getVDBRepository().getSystemStore().getDatatypes():getVDBRepository().getBuiltinDatatypes();
+					factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
 					
 					ExecutionFactory ef = null;
 					Object cf = null;

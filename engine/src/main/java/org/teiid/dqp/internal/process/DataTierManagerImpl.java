@@ -273,7 +273,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			final SystemTables sysTable = SystemTables.valueOf(group.getNonCorrelationName().substring(CoreConstants.SYSTEM_MODEL.length() + 1).toUpperCase());
 			switch (sysTable) {
 			case DATATYPES:
-				for (Datatype datatype : metadata.getDatatypes()) {
+				for (Datatype datatype : metadata.getDatatypes().values()) {
 					rows.add(Arrays.asList(datatype.getName(), datatype.isBuiltin(), datatype.isBuiltin(), datatype.getName(), datatype.getJavaClassName(), datatype.getScale(), 
 							datatype.getLength(), datatype.getNullType().toString(), datatype.isSigned(), datatype.isAutoIncrement(), datatype.isCaseSensitive(), datatype.getPrecisionLength(), 
 							datatype.getRadix(), datatype.getSearchType().toString(), datatype.getUUID(), datatype.getRuntimeTypeName(), datatype.getBasetypeName(), datatype.getAnnotation(), oid++));
@@ -543,7 +543,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 
 	public static Collection<AbstractMetadataRecord> getAllPropertiedObjects(CompositeMetadataStore metadata, Collection<Schema> schemas) {
 		Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
-		records.addAll(metadata.getDatatypes());
+		records.addAll(metadata.getDatatypes().values());
 		for (Schema schema : schemas) {
 			records.add(schema);
 			for (Table table : schema.getTables().values()) {

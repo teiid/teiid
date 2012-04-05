@@ -84,7 +84,7 @@ public class VDBMetadataFactory {
 		}
 
 		try {
-			IndexMetadataStore imf = loadMetadata(vdbName, vdbURL, getSystem().getDatatypes());
+			IndexMetadataStore imf = loadMetadata(vdbName, vdbURL, getSystem().getDatatypes().values());
 			
 			Collection <FunctionMethod> methods = null;
 			Collection<FunctionTree> trees = null;
