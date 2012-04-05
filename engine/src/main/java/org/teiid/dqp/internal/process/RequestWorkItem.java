@@ -521,6 +521,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	request.processor.getContext().setDataObjects(new HashSet<Object>(4));
         }
 		processor = request.processor;
+		this.dqpCore.logMMCommand(this, Event.PLAN, null);
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
 				resultsBuffer = getTupleBuffer();
@@ -709,11 +710,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         		}
         		response.setPlanDescription(analysisRecord.getQueryPlan());
 	            response.setAnnotations(analysisRecord.getAnnotations());
+	            analysisRecord.getAnnotations().clear();
         	}
             if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {
             	response.setDebugLog(analysisRecord.getDebugLog());
+            	analysisRecord.stopDebugLog();
             }
-            this.analysisRecord = null;
         }
 	}
 
@@ -973,6 +975,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     public void setCancelTask(Task cancelTask) {
 		this.cancelTask = cancelTask;
+	}
+    
+    public QueryProcessor getProcessor() {
+		return processor;
 	}
 
 }

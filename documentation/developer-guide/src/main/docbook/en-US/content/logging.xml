@@ -35,7 +35,9 @@
                 If you want to build a custom appender for command logging that will have access to 
                 log4j "LoggingEvents" to the "COMMAND_LOG" context, the appender will receive a message that is an instance of
                 <code>org.teiid.logging.CommandLogMessage</code>.  The relevant Teiid classes are defined in the <code>teiid-api-&versionNumber;.jar</code>. 
-                The CommmdLogMessage includes information about vdb, session, command sql, etc.  CommandLogMessages are logged at the DEBUG level.
+                The CommmdLogMessage includes information about vdb, session, command sql, etc.  CommandLogMessages are logged at the DEBUG level.  If the COMMAND_LOG is at the TRACE level,
+                then CommandLogMessages will also contain the query plan for user queries after the NEW event.  A typical event sequence is user query NEW, optional user query PLAN, some number of source query NEW/END, then the user query END.
+                CANCEL and ERROR events are also captured.
             </para>
             <example>
 				<title>Sample CommandLogMessage Usage</title>

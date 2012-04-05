@@ -54,6 +54,7 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.MetadataResult;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
@@ -80,6 +81,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
@@ -545,6 +547,22 @@ public class DQPCore implements DQP {
     	return cancelRequest(requestID);
     }
     
+    public PlanNode getPlan(String sessionId, long executionId) {
+    	RequestID requestID = new RequestID(sessionId, executionId);
+        if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_DQP, "getPlan for requestID=" + requestID); //$NON-NLS-1$
+        }
+        RequestWorkItem workItem = safeGetWorkItem(requestID);
+        if (workItem == null) {
+        	return null;
+        }
+        QueryProcessor qp = workItem.getProcessor();
+        if (qp == null) {
+        	return null;
+        }
+        return qp.getProcessorPlan().getDescriptionProperties();
+    }
+    
     private boolean cancelRequest(RequestID requestID) throws TeiidComponentException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
             LogManager.logDetail(LogConstants.CTX_DQP, "cancelQuery for requestID=" + requestID); //$NON-NLS-1$
@@ -672,13 +690,14 @@ public class DQPCore implements DQP {
 	}	
 	
     void logMMCommand(RequestWorkItem workItem, Event status, Integer rowCount) {
-    	if (!LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL)) {
+    	if ((status != Event.PLAN && !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.DETAIL))
+    			|| !LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE)) {
     		return;
     	}
     	
         RequestMessage msg = workItem.requestMsg;
         DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-        RequestID rID = new RequestID(workContext.getSessionId(), msg.getExecutionId());
+        RequestID rID = workItem.requestID;
     	String txnID = null;
 		TransactionContext tc = workItem.getTransactionContext();
 		if (tc != null && tc.getTransactionType() != Scope.NONE) {
@@ -690,7 +709,12 @@ public class DQPCore implements DQP {
         if (status == Event.NEW) {
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), appName, workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), msg.getCommandString());
         } else {
-            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status);
+            QueryProcessor qp = workItem.getProcessor();
+            PlanNode plan = null;
+            if (LogManager.isMessageToBeRecorded(LogConstants.CTX_COMMANDLOGGING, MessageLevel.TRACE) && qp != null) {
+            	plan = qp.getProcessorPlan().getDescriptionProperties();
+            }
+            message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status, plan);
         }
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }

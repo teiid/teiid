@@ -201,6 +201,11 @@ public class AnalysisRecord {
         }
         return null;
     }
+    
+    public void stopDebugLog() {
+    	this.stringWriter = null;
+    	this.recordDebug = false;
+    }
 
 	/**
 	 * Helper method to turn a list of projected symbols into a suitable list of

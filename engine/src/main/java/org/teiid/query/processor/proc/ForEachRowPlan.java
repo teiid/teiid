@@ -162,4 +162,13 @@ public class ForEachRowPlan extends ProcessorPlan {
 		return true;
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder val = new StringBuilder("ForEach "); //$NON-NLS-1$
+		val.append(this.queryPlan).append("\n{\n"); //$NON-NLS-1$
+		val.append(this.rowProcedure);
+        val.append("}\n"); //$NON-NLS-1$
+        return val.toString(); 
+	}
+	
 }

@@ -225,4 +225,9 @@ public class DdlPlan extends ProcessorPlan {
         return props;
 	}
 	
+	@Override
+	public String toString() {
+        return command.toString();
+	}
+	
 }

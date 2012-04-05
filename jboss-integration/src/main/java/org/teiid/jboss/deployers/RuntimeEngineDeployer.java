@@ -75,6 +75,7 @@ import org.teiid.cache.CacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.util.ExceptionUtil;
@@ -511,6 +512,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 		} catch (TeiidComponentException e) {
 			throw new AdminComponentException(e);
 		}
+    }
+
+	@Override
+    @ManagementOperation(description="Get a plan for the request",params={@ManagementParameter(name="sessionId",description="The session Identifier"), @ManagementParameter(name="executionId",description="The Execution Identifier")})    
+    public PlanNode getPlan(String sessionId, long executionId) throws AdminException {
+		return this.dqpCore.getPlan(sessionId, executionId);
     }
     
 	@Override

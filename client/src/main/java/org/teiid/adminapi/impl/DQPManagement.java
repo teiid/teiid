@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.adminapi.AdminException;
+import org.teiid.client.plan.PlanNode;
 
 
 public interface DQPManagement {
@@ -45,4 +46,12 @@ public interface DQPManagement {
     List<RequestMetadata> getRequestsUsingVDB(String vdbName, int vdbVersion) throws AdminException;
     CacheStatisticsMetadata getCacheStatistics(String cacheType);
     List<List> executeQuery(String vdbName, int version, String command, long timoutInMilli) throws AdminException;
+    /**
+     * 
+     * @param sessionId
+     * @param requestId
+     * @return the plan or null if the request does not exist
+     * @throws AdminException
+     */
+    PlanNode getPlan(String sessionId, long requestId) throws AdminException;
 }
