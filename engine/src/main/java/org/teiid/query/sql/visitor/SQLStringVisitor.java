@@ -39,103 +39,14 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.lang.AlterProcedure;
-import org.teiid.query.sql.lang.AlterTrigger;
-import org.teiid.query.sql.lang.AlterView;
-import org.teiid.query.sql.lang.ArrayTable;
-import org.teiid.query.sql.lang.AtomicCriteria;
-import org.teiid.query.sql.lang.BetweenCriteria;
-import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Create;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.Drop;
-import org.teiid.query.sql.lang.DynamicCommand;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.ExpressionCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.JoinPredicate;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.PredicateCriteria;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.SetClauseList;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SourceHint;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryFromClause;
-import org.teiid.query.sql.lang.SubquerySetCriteria;
-import org.teiid.query.sql.lang.TextTable;
-import org.teiid.query.sql.lang.UnaryFromClause;
-import org.teiid.query.sql.lang.Update;
-import org.teiid.query.sql.lang.WithQueryCommand;
-import org.teiid.query.sql.lang.XMLTable;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.sql.proc.AssignmentStatement;
-import org.teiid.query.sql.proc.Block;
-import org.teiid.query.sql.proc.BranchingStatement;
-import org.teiid.query.sql.proc.CommandStatement;
-import org.teiid.query.sql.proc.CreateUpdateProcedureCommand;
-import org.teiid.query.sql.proc.CriteriaSelector;
-import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.HasCriteria;
-import org.teiid.query.sql.proc.IfStatement;
-import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.RaiseErrorStatement;
-import org.teiid.query.sql.proc.Statement;
-import org.teiid.query.sql.proc.TranslateCriteria;
-import org.teiid.query.sql.proc.TriggerAction;
-import org.teiid.query.sql.proc.WhileStatement;
+import org.teiid.query.sql.proc.*;
 import org.teiid.query.sql.proc.Statement.Labeled;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.QueryString;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.SelectSymbol;
-import org.teiid.query.sql.symbol.SingleElementSymbol;
-import org.teiid.query.sql.symbol.TextLine;
-import org.teiid.query.sql.symbol.WindowFunction;
-import org.teiid.query.sql.symbol.WindowSpecification;
-import org.teiid.query.sql.symbol.XMLAttributes;
-import org.teiid.query.sql.symbol.XMLElement;
-import org.teiid.query.sql.symbol.XMLForest;
-import org.teiid.query.sql.symbol.XMLNamespaces;
-import org.teiid.query.sql.symbol.XMLParse;
-import org.teiid.query.sql.symbol.XMLQuery;
-import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.translator.SourceSystemFunctions;
@@ -292,6 +203,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Delete obj ) {
         // add delete clause
         append(DELETE);
+        addSourceHint(obj.getSourceHint());
         append(SPACE);
         // add from clause
         append(FROM);
@@ -340,6 +252,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( Insert obj ) {
         append(INSERT);
+    	addSourceHint(obj.getSourceHint());
         append(SPACE);
         append(INTO);
         append(SPACE);
@@ -784,21 +697,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SELECT);
 
     	SourceHint sh = obj.getSourceHint();
-    	if (sh != null) {
-        	append(SPACE);
-        	append(BEGIN_HINT);
-        	append("sh"); //$NON-NLS-1$
-        	if (sh.getGeneralHint() != null) {
-        		appendSourceHintValue(sh.getGeneralHint());
-        	}
-        	if (sh.getSourceHints() != null) {
-        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
-        			append(entry.getKey());
-        			appendSourceHintValue(entry.getValue());
-        		}
-        	}
-        	append(END_HINT);
-    	}
+    	addSourceHint(sh);
     	if (obj.getSelect() != null) {
     		visitNode(obj.getSelect());
     	}
@@ -848,6 +747,24 @@ public class SQLStringVisitor extends LanguageVisitor {
             visitNode(obj.getOption());
         }
     }
+
+	private void addSourceHint(SourceHint sh) {
+		if (sh != null) {
+        	append(SPACE);
+        	append(BEGIN_HINT);
+        	append("sh"); //$NON-NLS-1$
+        	if (sh.getGeneralHint() != null) {
+        		appendSourceHintValue(sh.getGeneralHint());
+        	}
+        	if (sh.getSourceHints() != null) {
+        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
+        			append(entry.getKey());
+        			appendSourceHintValue(entry.getValue());
+        		}
+        	}
+        	append(END_HINT);
+    	}
+	}
 
 	private void addWithClause(QueryCommand obj) {
 		if (obj.getWith() != null) {
@@ -1133,6 +1050,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Update obj ) {
         // Update clause
         append(UPDATE);
+        addSourceHint(obj.getSourceHint());
         append(SPACE);
         visitNode(obj.getGroup());
         beginClause(1);
