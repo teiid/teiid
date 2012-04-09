@@ -2006,6 +2006,9 @@ public class QueryRewriter {
         		return expression.getArg(0);
         	}
     	}
+    	if (expression.isDistinct() && expression.getAggregateFunction() == Type.USER_DEFINED && expression.getFunctionDescriptor().getMethod().getAggregateAttributes().usesDistinctRows()) {
+    		expression.setDistinct(false);
+    	}
     	if (expression.getArgs().length == 1 && expression.getCondition() != null && !expression.respectsNulls()) {
     		Expression cond = expression.getCondition();
     		Expression ex = expression.getArg(0);

@@ -71,15 +71,22 @@ public abstract class AggregateFunction {
     	if (conditionIndex != -1 && !Boolean.TRUE.equals(tuple.get(conditionIndex))) {
 			return;
     	}
-    	if (!respectsNull()) {
-    		for (int i = 0; i < argIndexes.length; i++) {
-    			if (tuple.get(argIndexes[i]) == null) {
-    				return;
-    			}
-    		}
+    	if (filter(tuple)) {
+    		return;
     	}
 		addInputDirect(tuple, commandContext);
     }
+
+	public boolean filter(List<?> tuple) {
+		if (!respectsNull()) {
+    		for (int i = 0; i < argIndexes.length; i++) {
+    			if (tuple.get(argIndexes[i]) == null) {
+    				return true;
+    			}
+    		}
+    	}
+		return false;
+	}
     
     public boolean respectsNull() {
     	return false;

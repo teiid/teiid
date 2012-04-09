@@ -547,6 +547,7 @@ public class IndexMetadataStore extends MetadataStore {
 	        	boolean deterministic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true)); //$NON-NLS-1$
 	        	boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", false)); //$NON-NLS-1$
 	        	boolean varargs = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", false)); //$NON-NLS-1$
+	        	boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", false)); //$NON-NLS-1$
 	        	FunctionParameter outputParam = null;
 	        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
 	        	boolean valid = true;
@@ -575,6 +576,20 @@ public class IndexMetadataStore extends MetadataStore {
 		        	function.setNullOnNull(nullOnNull);
 		        	if (varargs && !function.getInputParameters().isEmpty()) {
 		        		function.getInputParameters().get(args.size() - 1).setVarArg(varargs);
+		        	}
+		        	if (aggregate) {
+		        		boolean analytic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "analytic", false)); //$NON-NLS-1$
+		        		boolean allowsOrderBy = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-orderby", false)); //$NON-NLS-1$
+		        		boolean usesDistinctRows = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "uses-distinct-rows", false)); //$NON-NLS-1$
+		        		boolean allowsDistinct = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-distinct", false)); //$NON-NLS-1$
+		        		boolean decomposable = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "decomposable", false)); //$NON-NLS-1$
+		        		AggregateAttributes aa = new AggregateAttributes();
+		        		aa.setAnalytic(analytic);
+		        		aa.setAllowsOrderBy(allowsOrderBy);
+		        		aa.setUsesDistinctRows(usesDistinctRows);
+		        		aa.setAllowsDistinct(allowsDistinct);
+		        		aa.setDecomposable(decomposable);
+		        		function.setAggregateAttributes(aa);
 		        	}
 					model.addFunction(function);
 					continue;

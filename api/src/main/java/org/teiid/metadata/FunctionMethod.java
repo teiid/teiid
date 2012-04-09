@@ -481,6 +481,11 @@ public class FunctionMethod extends AbstractMetadataRecord {
     	this.classLoader = classloader;
     }
     
+    /**
+     * Gets the {@link AggregateAttributes} for this function if it 
+     * represents an aggregate function.  Must be null for non-aggregates.
+     * @return
+     */
     public AggregateAttributes getAggregateAttributes() {
 		return aggregateAttributes;
 	}

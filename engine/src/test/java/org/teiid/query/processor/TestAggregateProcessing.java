@@ -31,9 +31,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.UserDefinedAggregate;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.AggregateAttributes;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -41,6 +49,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -434,6 +443,91 @@ public class TestAggregateProcessing {
 		sampleData1(dataManager);
 
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	public static class SumAll implements UserDefinedAggregate<Integer> {
+		
+		private boolean isNull = true;
+		private int result;
+		
+		public void addInput(Integer... vals) {
+			isNull = false;
+			for (int i : vals) {
+				result += i;
+			}
+		}
+		
+		@Override
+		public Integer getResult(org.teiid.CommandContext commandContext) {
+			if (isNull) {
+				return null;
+			}
+			return result;
+		}
+
+		@Override
+		public void reset() {
+			isNull = true;
+			result = 0;
+		}
+		
+	}
+	
+	@Test public void testUserDefined() throws Exception {
+		MetadataStore ms = RealMetadataFactory.example1Store();
+		Schema s = ms.getSchemas().get("PM1");
+		FunctionMethod fm = new FunctionMethod();
+		fm.setName("myagg");
+		fm.setInvocationClass(SumAll.class.getName());
+		fm.setInvocationMethod("addInput");
+		FunctionParameter fp = new FunctionParameter();
+		fp.setType(DataTypeManager.DefaultDataTypes.INTEGER);
+		fp.setName("arg");
+		fp.setVarArg(true);
+		fm.getInputParameters().add(fp);
+		FunctionParameter fpout = new FunctionParameter();
+		fp.setType(DataTypeManager.DefaultDataTypes.INTEGER);
+		fp.setName("outp");
+		fm.setOutputParameter(fpout);
+
+		AggregateAttributes aa = new AggregateAttributes();
+		fm.setAggregateAttributes(aa);
+		s.getFunctions().put(fm.getName(), fm);
+		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
+
+		//must be in agg form
+		TestValidator.helpValidate("SELECT myagg(e2) from pm1.g1", new String[] {"myagg(e2)"}, metadata);
+
+		//run validations over default AggregateAttributes
+		TestValidator.helpValidate("SELECT myagg(distinct e2) from pm1.g1", new String[] {"myagg(DISTINCT e2)"}, metadata);
+		TestValidator.helpValidate("SELECT myagg(e2 order by e1) from pm1.g1", new String[] {"myagg(ALL e2 ORDER BY e1)"}, metadata);
+		TestValidator.helpValidate("SELECT myagg(ALL e2, e2) over () from pm1.g1", new String[] {}, metadata);
+
+		aa.setAllowsDistinct(true);
+		aa.setAllowsOrderBy(true);
+		
+		TestValidator.helpValidate("SELECT myagg(distinct e2) from pm1.g1", new String[] {}, metadata);
+		TestValidator.helpValidate("SELECT myagg(e2 order by e1) from pm1.g1", new String[] {}, metadata);
+
+		aa.setAnalytic(true);
+
+		TestValidator.helpValidate("SELECT myagg(distinct e2) from pm1.g1", new String[] {"myagg(DISTINCT e2)"}, metadata);
+		TestValidator.helpValidate("SELECT myagg(ALL e2, e2) over () from pm1.g1", new String[] {}, metadata);
+		
+		aa.setAnalytic(false);
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(6, 6),
+				Arrays.asList(8, 8),
+		};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+		
+		ProcessorPlan plan = helpGetPlan("select myagg(all e2, e2 order by e1), myagg(all e2, e2) from pm1.g1 group by e3", metadata);
 		helpProcess(plan, dataManager, expected);
 	}
 

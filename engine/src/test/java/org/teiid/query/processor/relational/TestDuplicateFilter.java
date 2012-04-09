@@ -42,7 +42,9 @@ public class TestDuplicateFilter {
     public void helpTestDuplicateFilter(Object[] input, Class<?> dataType, int expected) throws TeiidComponentException, TeiidProcessingException {
         BufferManager mgr = BufferManagerFactory.getStandaloneBufferManager();
         
-        SortingFilter filter = new SortingFilter(new Count(), mgr, "test", true); //$NON-NLS-1$
+        Count count = new Count();
+        count.setArgIndexes(new int[] {0});
+        SortingFilter filter = new SortingFilter(count, mgr, "test", true); //$NON-NLS-1$
         filter.initialize(dataType, new Class[] {dataType});
         ElementSymbol element = new ElementSymbol("val"); //$NON-NLS-1$
         element.setType(dataType);

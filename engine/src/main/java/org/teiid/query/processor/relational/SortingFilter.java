@@ -109,7 +109,9 @@ public class SortingFilter extends AggregateFunction {
         for (int i = 0; i < argIndexes.length; i++) {
 			row.add(tuple.get(argIndexes[i]));
 		}
-        this.collectionBuffer.addTuple(row);
+        if (!this.proxy.filter(row)) {
+            this.collectionBuffer.addTuple(row);
+        }
 	}
 	
     /**
@@ -150,8 +152,7 @@ public class SortingFilter extends AggregateFunction {
         return this.proxy.getResult(commandContext);
     }
     
-    @Override
     public boolean respectsNull() {
-    	return this.proxy.respectsNull();
+    	return true;
     }
 }

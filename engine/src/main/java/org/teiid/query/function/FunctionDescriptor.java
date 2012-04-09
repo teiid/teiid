@@ -23,6 +23,7 @@
 package org.teiid.query.function;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -222,7 +223,17 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         	if (method.isVarArgs()) {
         		int i = invocationMethod.getParameterTypes().length;
         		Object[] newValues = Arrays.copyOf(values, i);
-        		newValues[i - 1] = Arrays.copyOfRange(values, i - 1, values.length);
+        		Object varArgs = null;
+        		if (invocationMethod.getParameterTypes()[i - 1].getComponentType() != Object.class) {
+	        		int varArgCount = values.length - i + 1;
+	        		varArgs = Array.newInstance(invocationMethod.getParameterTypes()[i - 1].getComponentType(), varArgCount);
+	        		for (int j = 0; j < varArgCount; j++) {
+	        			Array.set(varArgs, j, values[i-1+j]);
+	        		}
+        		} else {
+        			varArgs = Arrays.copyOfRange(values, i - 1, values.length);
+        		}
+        		newValues[i - 1] = varArgs;
         		values = newValues;
         	}
             Object result = invocationMethod.invoke(functionTarget, values);

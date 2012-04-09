@@ -252,7 +252,7 @@ public class TestValidator {
 		return command;
     }
         
-	static ValidatorReport helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
+	public static ValidatorReport helpValidate(String sql, String[] expectedStringArray, QueryMetadataInterface metadata) {
         Command command = helpResolve(sql, metadata);
 
         return helpRunValidator(command, expectedStringArray, metadata);

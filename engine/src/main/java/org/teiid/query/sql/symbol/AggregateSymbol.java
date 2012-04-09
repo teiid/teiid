@@ -303,7 +303,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case EVERY:
 			return false;
 		case USER_DEFINED:
-			return getFunctionDescriptor().getMethod().getAggregateAttributes().usesAllRows();
+			return !getFunctionDescriptor().getMethod().getAggregateAttributes().usesDistinctRows();
 		}
 		return true;
     }
@@ -342,7 +342,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		case XMLAGG:
 			return orderBy == null;
 		case USER_DEFINED:
-			return false;
+			return this.getArgs().length == 1 && this.getFunctionDescriptor().getMethod().getAggregateAttributes().isDecomposable();
 		}
 		return true;
 	}

@@ -5218,6 +5218,11 @@ public class TestParser {
 		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(ALL x, y)", new ParseInfo());
 		assertEquals("SELECT foo(ALL x, y)", actualCommand.toString());
     }
+    
+    @Test public void testUserDefinedAggregateParsing1() throws QueryParserException {
+		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(x, y order by e1)", new ParseInfo());
+		assertEquals("SELECT foo(ALL x, y ORDER BY e1)", actualCommand.toString());
+    }
 
     @Test(expected=QueryParserException.class) public void testWindowedExpression() throws QueryParserException {
 		QueryParser.getQueryParser().parseCommand("SELECT foo(x, y) over ()", new ParseInfo());

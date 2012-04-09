@@ -346,7 +346,7 @@ public class FunctionTree {
         			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30600, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30600, method.getName(), invocationMethod));
         		}
         		
-        		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(method.getClass()))) {
+        		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(invocationMethod.getDeclaringClass()))) {
     				throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
             }

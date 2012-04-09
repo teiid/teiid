@@ -31,12 +31,14 @@ public class AggregateAttributes implements Serializable {
 	
 	private static final long serialVersionUID = 5398000844375944790L;
 
-	private boolean allowsDistinct;
-	private boolean windowable;
-	private boolean usesAllRows = true;
-	private boolean respectsNulls = true;
+	private boolean analytic;
+	private boolean usesDistinctRows;
 	private boolean allowsOrderBy;
-	
+	private boolean allowsDistinct;
+	private boolean decomposable;
+	/**
+	 * @return true if the aggregate allows an order by clause
+	 */
 	public boolean allowsOrderBy() {
 		return allowsOrderBy;
 	}
@@ -45,36 +47,55 @@ public class AggregateAttributes implements Serializable {
 		this.allowsOrderBy = allowsOrderBy;
 	}
 	
+	/**
+	 * @return true if the aggregate can only be used as a windowed function
+	 */
+	public boolean isAnalytic() {
+		return analytic;
+	}
+	
+	public void setAnalytic(boolean analytic) {
+		this.analytic = analytic;
+	}
+	
+	/**
+	 * 
+	 * @return True if the aggregate function specified without the
+	 * distinct keyword effectively uses only distinct rows.  
+	 * For example min/max would return true
+	 * and avg would return false.
+	 */
+	public boolean usesDistinctRows() {
+		return usesDistinctRows;
+	}
+	
+	public void setUsesDistinctRows(boolean usesDistinctRows) {
+		this.usesDistinctRows = usesDistinctRows;
+	}
+	
+	/**
+	 * @return true if the aggregate function may be decomposed as
+	 * agg(agg(x)) for non-partitioned aggregate pushdown.
+	 * This is only meaningful for single argument aggregate
+	 * functions. 
+	 */
+	public boolean isDecomposable() {
+		return decomposable;
+	}
+	
+	public void setDecomposable(boolean decomposable) {
+		this.decomposable = decomposable;
+	}
+	
+	/**
+	 * @return true if the aggregate function can use the DISTINCT keyword
+	 */
 	public boolean allowsDistinct() {
 		return allowsDistinct;
 	}
 	
 	public void setAllowsDistinct(boolean allowsDistinct) {
 		this.allowsDistinct = allowsDistinct;
-	}
-	
-	public boolean isWindowable() {
-		return windowable;
-	}
-	
-	public void setWindowable(boolean windowable) {
-		this.windowable = windowable;
-	}
-	
-	public boolean respectsNulls() {
-		return respectsNulls;
-	}
-	
-	public void setRespectsNulls(boolean respectsNulls) {
-		this.respectsNulls = respectsNulls;
-	}
-	
-	public void setUsesAllRows(boolean usesAllRows) {
-		this.usesAllRows = usesAllRows;
-	}
-	
-	public boolean usesAllRows() {
-		return this.usesAllRows;
 	}
 	
 }

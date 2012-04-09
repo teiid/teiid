@@ -22,9 +22,7 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.util.List;
@@ -169,8 +167,6 @@ public class TestDynamicImportedMetaData {
     
     @Test
     public void testDDLMetadata() throws Exception {
-    	FakeServer server = new FakeServer();
-    	
     	String ddl = "CREATE PROCEDURE getTextFiles(IN pathAndPattern varchar) RETURNS (file clob, filpath string) OPTIONS(UUID 'uuid')";
     	MetadataFactory mf = createMetadataFactory("MarketData", new Properties());
     	QueryParser.getQueryParser().parseDDL(mf, ddl);

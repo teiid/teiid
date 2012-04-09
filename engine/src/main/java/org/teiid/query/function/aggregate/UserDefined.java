@@ -70,4 +70,9 @@ public class UserDefined extends AggregateFunction {
 		return instance.getResult(commandContext);
 	}
 	
+	@Override
+	public boolean respectsNull() {
+		return !fd.getMethod().isNullOnNull();
+	}
+	
 }

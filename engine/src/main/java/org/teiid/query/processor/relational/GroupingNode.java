@@ -245,6 +245,7 @@ public class GroupingNode extends RelationalNode {
 			break;     
 		case USER_DEFINED:
 			result = new UserDefined(aggSymbol.getFunctionDescriptor());
+			break;
 		default:
 			result = new StatsFunction(function);
 		}

@@ -994,8 +994,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		if (!aa.allowsOrderBy() && obj.getOrderBy() != null) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.uda_not_allowed", "ORDER BY", obj), obj); //$NON-NLS-1$ //$NON-NLS-2$
     		}
-    		if (!aa.isWindowable() && obj.isWindowed()) {
-    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.uda_not_allowed", "windowing", obj), obj); //$NON-NLS-1$ //$NON-NLS-2$ 
+    		if (aa.isAnalytic() && !obj.isWindowed()) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.uda_analytic", obj), obj); //$NON-NLS-1$  
     		}
     	}
     	if (obj.getCondition() != null) {
