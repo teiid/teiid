@@ -23,6 +23,7 @@
 package org.teiid.core.types.basic;
 
 import java.sql.Date;
+import java.util.regex.Pattern;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.Transform;
@@ -30,6 +31,17 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToDateTransform extends Transform {
+	
+	private static boolean validate = true;
+	private static Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2}"); //$NON-NLS-1$
+	
+	static {
+		try {
+			Date.valueOf("2000-14-01"); //$NON-NLS-1$
+		} catch (Exception e) {
+			validate = false;
+		}
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -45,9 +57,12 @@ public class StringToDateTransform extends Transform {
 		try {
 			result = Date.valueOf( (String) value );
 		} catch(Exception e) {
+			if (!validate && pattern.matcher((String)value).matches()) {
+				throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+			}
 			throw new TransformationException(e, "ERR.003.029.0018", CorePlugin.Util.getString("ERR.003.029.0018", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		if (!result.toString().equals(value)) {
+		if (validate && !result.toString().equals(value)) {
 			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
 		}
 		return result;

@@ -23,6 +23,7 @@
 package org.teiid.core.types.basic;
 
 import java.sql.Timestamp;
+import java.util.regex.Pattern;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.Transform;
@@ -30,6 +31,17 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToTimestampTransform extends Transform {
+	
+	private static boolean validate = true;
+	private static Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"); //$NON-NLS-1$
+	
+	static {
+		try {
+			Timestamp.valueOf("2000-14-01 00:00:00"); //$NON-NLS-1$
+		} catch (Exception e) {
+			validate = false;
+		}
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -45,10 +57,13 @@ public class StringToTimestampTransform extends Transform {
 		try {
 			result = Timestamp.valueOf( (String) value );
 		} catch(Exception e) {
+			if (!validate && pattern.matcher((String)value).matches()) {
+				throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
+			}
 			throw new TransformationException(e, "ERR.003.029.0024", CorePlugin.Util.getString("ERR.003.029.0024", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//validate everything except for fractional seconds
-		if (!((String)value).startsWith(result.toString().substring(0, 19))) {
+		if (validate && !((String)value).startsWith(result.toString().substring(0, 19))) {
 			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
 		}
 		return result;
