@@ -709,8 +709,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         			analysisRecord.setQueryPlan(processor.getProcessorPlan().getDescriptionProperties());
         		}
         		response.setPlanDescription(analysisRecord.getQueryPlan());
-	            response.setAnnotations(analysisRecord.getAnnotations());
-	            analysisRecord.getAnnotations().clear();
+        		if (analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
+		            response.setAnnotations(analysisRecord.getAnnotations());
+		            analysisRecord.getAnnotations().clear();
+        		}
         	}
             if (requestMsg.getShowPlan() == ShowPlan.DEBUG) {
             	response.setDebugLog(analysisRecord.getDebugLog());
