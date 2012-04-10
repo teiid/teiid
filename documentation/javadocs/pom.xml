@@ -13,117 +13,117 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-adminshell</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-api</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-cache-jbosscache</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-client-jdk15</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>salesforce-api</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-file</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-hive</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-jdbc</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-ldap</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-loopback</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-olap</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-salesforce</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.connectors</groupId>
       <artifactId>translator-ws</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-console</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-engine</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-hibernate-dialect</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-jboss-integration</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-metadata</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-runtime</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>test-integration-common</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jboss.teiid.teiid-test-integration</groupId>
       <artifactId>test-integration-db</artifactId>
-      <version>{project.version}</version>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>org.codehaus.groovy</groupId>
