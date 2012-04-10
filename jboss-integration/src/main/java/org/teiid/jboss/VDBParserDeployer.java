@@ -130,7 +130,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {
-			LogManager.logError(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(IntegrationPlugin.Event.TEIID50016,file.getName())); 
+			LogManager.logError(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50016,file.getName())); 
 			return null;
 		}
 		

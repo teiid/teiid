@@ -76,7 +76,6 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
-import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -248,7 +247,7 @@ class VDBService implements Service<VDBMetaData> {
 			translator = repo.getTranslatorMetaData(name);
 		}
 		if (translator == null) {
-			throw new TranslatorNotFoundException(RuntimePlugin.Util.getString("translator_not_found", deployment.getName(), deployment.getVersion(), name)); //$NON-NLS-1$
+			throw new TranslatorNotFoundException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50078, deployment.getName(), deployment.getVersion(), name));
 		}
 		try {
 			ExecutionFactory<Object, Object> ef = map.get(translator);
@@ -261,7 +260,7 @@ class VDBService implements Service<VDBMetaData> {
 			        	final Module module = Module.getCallerModuleLoader().loadModule(moduleId);
 			        	classloader = module.getClassLoader();
 			        } catch (ModuleLoadException e) {
-			             throw new TeiidException(IntegrationPlugin.Event.TEIID50057, e, RuntimePlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, translator.getModuleName(), translator.getName()));
+			             throw new TeiidException(IntegrationPlugin.Event.TEIID50057, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, translator.getModuleName(), translator.getName()));
 			        }		
 		        }
 				
