@@ -45,87 +45,84 @@ import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.sobject.SObject;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
-	private SforceService sfService;
 	private Soap sfSoap;
-	private SessionHeader sh;
-	private CallOptions co;
-	private SalesForceManagedConnectionFactory mcf;
 	
 	private ObjectFactory partnerFactory = new ObjectFactory();
 	
 	PackageVersionHeader pvHeader = partnerFactory.createPackageVersionHeader();
 	
 	public SalesforceConnectionImpl(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
-		this.mcf = mcf;
-		login(username, password, url);
+		login(username, password, url, mcf);
+	}
+	
+	protected SalesforceConnectionImpl(Soap soap) {
+		this.sfSoap = soap;
 	}
 	
 	String getUserName() throws ResourceException {
-			try {
-				return sfSoap.getUserInfo().getUserName();
-			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e);
-			}
+		try {
+			return sfSoap.getUserInfo().getUserName();
+		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		}
 	}
 	
 	Soap getBinding() {
 		return sfSoap;
 	}
 	
-	private void login(String username, String password, URL url) throws ResourceException {
-		if (!isValid()) {
-			LoginResult loginResult = null;
-			sfSoap = null;
-			sfService = null;
-			co = new CallOptions();
-			// This value identifies Teiid as a SF certified solution.
-			// It was provided by SF and should not be changed.
-			co.setClient("RedHat/MetaMatrix/"); //$NON-NLS-1$
-			
-			if(url == null) {
-				throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
-			}
+	private void login(String username, String password, URL url, SalesForceManagedConnectionFactory mcf) throws ResourceException {
+		LoginResult loginResult = null;
+		SforceService sfService = null;
+		SessionHeader sh = null;
+		CallOptions co = new CallOptions();
+		// This value identifies Teiid as a SF certified solution.
+		// It was provided by SF and should not be changed.
+		co.setClient("RedHat/MetaMatrix/"); //$NON-NLS-1$
+		
+		if(url == null) {
+			throw new ResourceException("SalesForce URL is not specified, please provide a valid URL"); //$NON-NLS-1$
+		}
 
-			Bus bus = BusFactory.getThreadDefaultBus();
-			BusFactory.setThreadDefaultBus(mcf.getBus());
-			try {
-				sfService = new SforceService();
-				sh = new SessionHeader();
-				
-				// Session Id must be passed in soapHeader - add the handler
-				sfService.setHandlerResolver(new SalesforceHandlerResolver(sh));
-				
-				sfSoap = sfService.getSoap();
-				((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
-				loginResult = sfSoap.login(username, password);
-				
-				// Set the SessionId after login, for subsequent calls
-				sh.setSessionId(loginResult.getSessionId());
-			} catch (LoginFault e) {
-				throw new ResourceException(e);
-			} catch (InvalidIdFault e) {
-				throw new ResourceException(e);
-			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e);
-			} finally {
-				BusFactory.setThreadDefaultBus(bus);
-			}
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
-						
-			// Reset the SOAP endpoint to the returned server URL
-			((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,loginResult.getServerUrl());
-			// or maybe org.apache.cxf.message.Message.ENDPOINT_ADDRESS
-			((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.SESSION_MAINTAIN_PROPERTY,Boolean.TRUE);
-			// Set the timeout.
-			//((BindingProvider)sfSoap).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT, timeout);
-
+		Bus bus = BusFactory.getThreadDefaultBus();
+		BusFactory.setThreadDefaultBus(mcf.getBus());
+		try {
+			sfService = new SforceService();
+			sh = new SessionHeader();
 			
-			// Test the connection.
-			try {
-				sfSoap.getUserInfo();
-			} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
-				throw new ResourceException(e);
-			}
+			// Session Id must be passed in soapHeader - add the handler
+			sfService.setHandlerResolver(new SalesforceHandlerResolver(sh));
+			
+			sfSoap = sfService.getSoap();
+			((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
+			loginResult = sfSoap.login(username, password);
+			
+			// Set the SessionId after login, for subsequent calls
+			sh.setSessionId(loginResult.getSessionId());
+		} catch (LoginFault e) {
+			throw new ResourceException(e);
+		} catch (InvalidIdFault e) {
+			throw new ResourceException(e);
+		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} finally {
+			BusFactory.setThreadDefaultBus(bus);
+		}
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
+					
+		// Reset the SOAP endpoint to the returned server URL
+		((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,loginResult.getServerUrl());
+		// or maybe org.apache.cxf.message.Message.ENDPOINT_ADDRESS
+		((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.SESSION_MAINTAIN_PROPERTY,Boolean.TRUE);
+		// Set the timeout.
+		//((BindingProvider)sfSoap).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT, timeout);
+
+		
+		// Test the connection.
+		try {
+			sfSoap.getUserInfo();
+		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			throw new ResourceException(e);
 		}
 	}
 	
@@ -313,12 +310,11 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			result.setEarliestDateAvailable(deleted.getEarliestDateAvailable().toGregorianCalendar());
 			List<DeletedRecord> records = deleted.getDeletedRecords();
 			List<DeletedObject> resultRecords = new ArrayList<DeletedObject>();
-			DeletedObject object;
-			if(null !=records) {
-				for (DeletedObject record : resultRecords) {
-					object = new DeletedObject();
-					object.setID(record.getID());
-					object.setDeletedDate(record.getDeletedDate());
+			if(records != null) {
+				for (DeletedRecord record : records) {
+					DeletedObject object = new DeletedObject();
+					object.setID(record.getId());
+					object.setDeletedDate(record.getDeletedDate().toGregorianCalendar());
 					resultRecords.add(object);
 				}
 			}

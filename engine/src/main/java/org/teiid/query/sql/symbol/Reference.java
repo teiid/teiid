@@ -187,4 +187,9 @@ public class Reference implements Expression, ContextReference {
         return this.positional;
     }
     
+    public void setExpression(ElementSymbol expression) {
+    	assert this.expression != null && !this.positional;
+		this.expression = expression;
+	}
+    
 }

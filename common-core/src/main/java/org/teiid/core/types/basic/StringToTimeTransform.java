@@ -23,6 +23,7 @@
 package org.teiid.core.types.basic;
 
 import java.sql.Time;
+import java.util.regex.Pattern;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.Transform;
@@ -30,6 +31,17 @@ import org.teiid.core.types.TransformationException;
 
 
 public class StringToTimeTransform extends Transform {
+	
+	private static boolean validate = true;
+	private static Pattern pattern = Pattern.compile("\\d{2}:\\d{2}:\\d{2}"); //$NON-NLS-1$
+	
+	static {
+		try {
+			Time.valueOf("26:10:10"); //$NON-NLS-1$
+		} catch (Exception e) {
+			validate = false;
+		}
+	}
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -45,9 +57,12 @@ public class StringToTimeTransform extends Transform {
 		try {
 			result = Time.valueOf((String)value);
 		} catch(Exception e) {
+		    if (!validate && pattern.matcher((String)value).matches()) {
+				throw new TransformationException(CorePlugin.Event.TEIID10069, CorePlugin.Util.gs(CorePlugin.Event.TEIID10069, value, getTargetType().getSimpleName()));
+			}
 			  throw new TransformationException(CorePlugin.Event.TEIID10068, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10068, value));
 		}
-		if (!result.toString().equals(value)) {
+		if (validate && !result.toString().equals(value)) {
 			  throw new TransformationException(CorePlugin.Event.TEIID10069, CorePlugin.Util.gs(CorePlugin.Event.TEIID10069, value, getTargetType().getSimpleName()));
 		}
 		return result;

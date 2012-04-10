@@ -1,16 +1,7 @@
 package org.teiid.jboss;
 
-import static junit.framework.Assert.assertEquals;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ATTRIBUTES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
-import static org.junit.Assert.fail;
+import static junit.framework.Assert.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
@@ -211,10 +202,10 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-        assertEquals(38, opNames.size());
+        assertEquals(39, opNames.size());
 		String[] ops = { "add","add-anyauthenticated-role","add-data-role","assign-datasource",
 				"cache-statistics","cache-types","cancel-request","change-vdb-connection-type",
-				"clear-cache","describe","execute-query","get-translator","get-vdb",
+				"clear-cache","describe","execute-query","get-plan","get-translator","get-vdb",
 				"list-long-running-requests","list-requests","list-requests-per-session",
 				"list-requests-per-vdb","list-sessions","list-transactions","list-translators",
 				"list-vdbs","mark-datasource-available","merge-vdbs","read-attribute",

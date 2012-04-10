@@ -244,20 +244,6 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		}
 	}
 
-	private void unwrapException(TeiidRuntimeException e)
-			throws TeiidComponentException, TeiidProcessingException {
-		if (e == null) {
-			return;
-		}
-		if (e.getCause() instanceof TeiidComponentException) {
-			throw (TeiidComponentException)e.getCause();
-		}
-		if (e.getCause() instanceof TeiidProcessingException) {
-			throw (TeiidProcessingException)e.getCause();
-		}
-		throw e;
-	}
-
 	private List<?> processRow() throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());

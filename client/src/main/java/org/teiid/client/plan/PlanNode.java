@@ -26,12 +26,16 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -216,6 +220,28 @@ public class PlanNode implements Externalizable {
         writer.writeCharacters(value);
         writer.writeEndElement();
     }    
+    
+    public static PlanNode fromXml(String planString) {
+    	try {
+	    	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
+			Unmarshaller marshaller = jc.createUnmarshaller();
+			PlanNode planNode = (PlanNode) marshaller.unmarshal(new StringReader(planString));
+			setParents(planNode);
+			return planNode;
+    	} catch (JAXBException e) {
+    		//shouldn't happen
+    		throw new TeiidRuntimeException(e);
+    	}
+    }
+
+	private static void setParents(PlanNode planNode) {
+		for (Property property : planNode.properties) {
+			if (property.planNode != null) {
+				property.planNode.parent = planNode;
+				setParents(property.planNode);
+			}
+		}
+	}
     
     @Override
     public String toString() {

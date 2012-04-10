@@ -106,7 +106,7 @@ public class RulePushLimit implements OptimizerRule {
                 continue;
             }
             
-            while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder)) {
+            while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord)) {
                 plan = RuleRaiseAccess.performRaise(plan, limitNode.getFirstChild(), limitNode);
             }
             
@@ -120,7 +120,7 @@ public class RulePushLimit implements OptimizerRule {
         return plan;
     }
     
-    boolean canPushLimit(PlanNode rootNode, PlanNode limitNode, List<PlanNode> limitNodes, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
+    boolean canPushLimit(PlanNode rootNode, PlanNode limitNode, List<PlanNode> limitNodes, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord record) throws QueryMetadataException, TeiidComponentException {
         PlanNode child = limitNode.getFirstChild();
         if (child == null || child.getChildCount() == 0) {
             return false;
@@ -143,7 +143,7 @@ public class RulePushLimit implements OptimizerRule {
                 NodeEditor.removeChildNode(limitNode, child);
                 limitNodes.remove(child);
                 
-                return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder);
+                return canPushLimit(rootNode, limitNode, limitNodes, metadata, capFinder, record);
             }
             case NodeConstants.Types.SET_OP:
             {
@@ -166,7 +166,7 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.ACCESS:
             {
-                raiseAccessOverLimit(rootNode, child, metadata, capFinder, limitNode);
+                raiseAccessOverLimit(rootNode, child, metadata, capFinder, limitNode, record);
                 return false;
             }
             case NodeConstants.Types.PROJECT:
@@ -220,7 +220,7 @@ public class RulePushLimit implements OptimizerRule {
                                           PlanNode accessNode,
                                           QueryMetadataInterface metadata,
                                           CapabilitiesFinder capFinder,
-                                          PlanNode parentNode) throws QueryMetadataException,
+                                          PlanNode parentNode, AnalysisRecord analysisRecord) throws QueryMetadataException,
                                                               TeiidComponentException {
         Object modelID = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
         if (modelID == null) {
@@ -230,6 +230,9 @@ public class RulePushLimit implements OptimizerRule {
         Expression limit = (Expression)parentNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
         
         if (limit != null && !CapabilitiesUtil.supportsRowLimit(modelID, metadata, capFinder)) {
+        	if (analysisRecord != null && analysisRecord.recordDebug()) {
+            	analysisRecord.println("limit not supported by source " + metadata.getName(modelID)); //$NON-NLS-1$
+            }
             return null;
         }
         

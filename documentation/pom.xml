@@ -17,5 +17,6 @@
     <module>quick-start-example</module>
     <module>client-developers-guide</module>
     <module>caching-guide</module>
+    <module>javadocs</module>
   </modules>
 </project>

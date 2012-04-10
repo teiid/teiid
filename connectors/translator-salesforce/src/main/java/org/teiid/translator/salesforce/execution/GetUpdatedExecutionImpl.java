@@ -24,7 +24,6 @@ package org.teiid.translator.salesforce.execution;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -50,8 +49,6 @@ import org.teiid.translator.TranslatorException;
 
 public class GetUpdatedExecutionImpl implements SalesforceProcedureExecution {
 
-	private static final int RESULT = 4;
-	
 	private ProcedureExecutionParent parent;
 	private UpdatedResult updatedResult;
 	private int idIndex = 0;
@@ -105,18 +102,17 @@ public class GetUpdatedExecutionImpl implements SalesforceProcedureExecution {
 	}
 
 	@Override
-	public List<Calendar> getOutputParameterValues() {
-		List<Calendar> result = new ArrayList<Calendar>(1);
-		result.add(updatedResult.getLatestDateCovered());
+	public List<Timestamp> getOutputParameterValues() {
+		List<Timestamp> result = new ArrayList<Timestamp>(1);
+		result.add(new Timestamp(updatedResult.getLatestDateCovered().getTimeInMillis()));
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public List next() {
-		List result = null;
+	public List<?> next() {
+		List<Object> result = null;
 		if(updatedResult.getIDs() != null && idIndex < updatedResult.getIDs().size()){
-			result = new ArrayList(1);
+			result = new ArrayList<Object>(1);
 			result.add(updatedResult.getIDs().get(idIndex));
 			idIndex++;
 		}

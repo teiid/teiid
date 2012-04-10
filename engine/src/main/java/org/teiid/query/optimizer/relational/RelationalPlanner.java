@@ -267,6 +267,22 @@ public class RelationalPlanner {
                 Command subCommand = (Command)container.getCommand().clone(); 
                 ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
                 CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
+                if (node.getType() != NodeConstants.Types.JOIN) {
+                	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
+                	if (grouping != null && !correlatedReferences.isEmpty()) {
+                		SymbolMap map = (SymbolMap) grouping.getProperty(Info.SYMBOL_MAP);
+                		Map<Expression, ElementSymbol> reverseMap = new HashMap<Expression, ElementSymbol>();
+                		for (Map.Entry<ElementSymbol, Expression> entry : map.asMap().entrySet()) {
+							reverseMap.put(entry.getValue(), entry.getKey());
+						}
+                		for (Reference reference : correlatedReferences) {
+							ElementSymbol correlatedGroupingCol = reverseMap.get(reference.getExpression());
+							if (correlatedGroupingCol != null) {
+								reference.setExpression(correlatedGroupingCol);
+							}
+						}
+                	}
+                }
                 ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
                 container.getCommand().setProcessorPlan(procPlan);
                 setCorrelatedReferences(container, correlatedReferences);

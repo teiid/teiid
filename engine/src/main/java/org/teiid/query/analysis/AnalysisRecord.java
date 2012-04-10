@@ -107,7 +107,6 @@ public class AnalysisRecord {
     private boolean recordQueryPlan;
     private boolean recordDebug;
     
-    private PlanNode queryPlan;
     // Annotations
     private Collection<Annotation> annotations;
     
@@ -133,14 +132,6 @@ public class AnalysisRecord {
         return new AnalysisRecord(false, false);
     }
     
-    public PlanNode getQueryPlan() {
-		return queryPlan;
-	}
-    
-    public void setQueryPlan(PlanNode queryPlan) {
-		this.queryPlan = queryPlan;
-	}
-
     /**
      * Determine whether query plan should be recorded
      * @return True to record
@@ -201,6 +192,11 @@ public class AnalysisRecord {
             return this.stringWriter.getBuffer().toString();
         }
         return null;
+    }
+    
+    public void stopDebugLog() {
+    	this.stringWriter = null;
+    	this.recordDebug = false;
     }
 
 	/**

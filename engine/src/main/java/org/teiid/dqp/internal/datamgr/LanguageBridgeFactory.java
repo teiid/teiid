@@ -66,7 +66,7 @@ import org.teiid.translator.TranslatorException;
 public class LanguageBridgeFactory {
     private final class TupleBufferList extends AbstractList<List<?>> implements RandomAccess {
 		private final TupleBuffer tb;
-
+    
 		private TupleBufferList(TupleBuffer tb) {
 			this.tb = tb;
 		}
@@ -131,12 +131,17 @@ public class LanguageBridgeFactory {
     private int valueIndex = 0;
     private List<List<?>> allValues = new LinkedList<List<?>>();
     private Map<String, List<? extends List<?>>> dependentSets;
+    private boolean convertIn;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
             metadataFactory = new RuntimeMetadataImpl(metadata);
         }
     }
+    
+    public void setConvertIn(boolean convertIn) {
+		this.convertIn = convertIn;
+	}
 
     public org.teiid.language.Command translate(Command command) {
     	try {
@@ -405,13 +410,25 @@ public class LanguageBridgeFactory {
         return like;
     }
 
-    In translate(SetCriteria criteria) {
+    Condition translate(SetCriteria criteria) {
         Collection expressions = criteria.getValues();
         List<org.teiid.language.Expression> translatedExpressions = new ArrayList<org.teiid.language.Expression>();
         for (Iterator i = expressions.iterator(); i.hasNext();) {
             translatedExpressions.add(translate((Expression)i.next()));
         }
-        return new In(translate(criteria.getExpression()),
+        org.teiid.language.Expression expr = translate(criteria.getExpression());
+        if (convertIn) {
+        	Condition condition = null;
+        	for (org.teiid.language.Expression expression : translatedExpressions) {
+				if (condition == null) {
+					condition = new Comparison(expr, expression, criteria.isNegated()?Operator.NE:Operator.EQ); 
+				} else {
+					condition = new AndOr(new Comparison(expr, expression, criteria.isNegated()?Operator.NE:Operator.EQ), condition, criteria.isNegated()?AndOr.Operator.AND:AndOr.Operator.OR);
+				}
+			}
+        	return condition;
+        }
+        return new In(expr,
                                   translatedExpressions, 
                                   criteria.isNegated());
     }

@@ -26,15 +26,17 @@ import java.util.List;
 
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesforceConnection;
 
 
 public class ProcedureExecutionParentImpl implements ProcedureExecution, ProcedureExecutionParent {
 
+	public static final String GET_DELETED = "GetDeleted"; //$NON-NLS-1$
+	public static final String GET_UPDATED = "GetUpdated"; //$NON-NLS-1$
 	private Call command;
 	private ExecutionContext executionContext;
 	private RuntimeMetadata metadata;
@@ -75,9 +77,9 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 		if (name == null) {
 			name = getCommand().getProcedureName();
 		}
-		if("GetUpdated".equalsIgnoreCase(name)) { //$NON-NLS-1$
+		if(GET_UPDATED.equalsIgnoreCase(name)) {
 			execution = new GetUpdatedExecutionImpl(this);
-		} else if("GetDeleted".equalsIgnoreCase(name)) { //$NON-NLS-1$
+		} else if(GET_DELETED.equalsIgnoreCase(name)) {
 			execution = new GetDeletedExecutionImpl(this);
 		} else {
 			throw new AssertionError("Unknown procedure " + getCommand().getProcedureName() + " with name in source " + getCommand().getMetadataObject().getNameInSource()); //$NON-NLS-1$ //$NON-NLS-2$

@@ -391,7 +391,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	@Override
 	public void terminated() {
 		trace("channel being terminated");
-		this.sendNoticeResponse("Connection closed");
+		// no need to send any reply; this is showing as malformed packet.
 		this.ctx.getChannel().close();
 	}
 	

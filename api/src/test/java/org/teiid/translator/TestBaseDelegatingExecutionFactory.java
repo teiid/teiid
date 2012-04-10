@@ -19,26 +19,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.jdbc.ingres;
 
-import java.util.List;
+package org.teiid.translator;
 
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.translator.jdbc.FunctionModifier;
+import static org.junit.Assert.*;
 
-public class LocateFunctionModifier extends FunctionModifier {
+import java.lang.reflect.Method;
 
-    public LocateFunctionModifier() {
-    }	
-    
-	@Override
-	public List<?> translate(Function function) {
-        Expression a = function.getParameters().get(0);
-        Expression b = function.getParameters().get(1);
-        function.getParameters().set(0, b);
-        function.getParameters().set(1, a);
-        return null;
+import org.junit.Test;
+
+public class TestBaseDelegatingExecutionFactory {
+
+	@Test public void testMethodOverrides() {
+		Method[] methods = ExecutionFactory.class.getDeclaredMethods();
+		Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
+		//excluding the setter methods the counts should be equal
+		assertEquals(methods.length - 9, proxyMethods.length);
 	}
-
+	
 }

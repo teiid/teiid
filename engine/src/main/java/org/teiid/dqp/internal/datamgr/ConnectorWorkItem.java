@@ -213,6 +213,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        Command command = this.requestMsg.getCommand();
 	        this.expectedColumns = command.getProjectedSymbols().size();
 	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
+	        factory.setConvertIn(!this.connector.supportsInCriteria());
 	        org.teiid.language.Command translatedCommand = factory.translate(command);
 
 			Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.securityContext.getPartIdentifier());

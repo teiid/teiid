@@ -203,6 +203,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Delete obj ) {
         // add delete clause
         append(DELETE);
+        addSourceHint(obj.getSourceHint());
         append(SPACE);
         // add from clause
         append(FROM);
@@ -251,6 +252,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( Insert obj ) {
         append(INSERT);
+    	addSourceHint(obj.getSourceHint());
         append(SPACE);
         append(INTO);
         append(SPACE);
@@ -695,21 +697,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SELECT);
 
     	SourceHint sh = obj.getSourceHint();
-    	if (sh != null) {
-        	append(SPACE);
-        	append(BEGIN_HINT);
-        	append("sh"); //$NON-NLS-1$
-        	if (sh.getGeneralHint() != null) {
-        		appendSourceHintValue(sh.getGeneralHint());
-        	}
-        	if (sh.getSourceHints() != null) {
-        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
-        			append(entry.getKey());
-        			appendSourceHintValue(entry.getValue());
-        		}
-        	}
-        	append(END_HINT);
-    	}
+    	addSourceHint(sh);
     	if (obj.getSelect() != null) {
     		visitNode(obj.getSelect());
     	}
@@ -759,6 +747,24 @@ public class SQLStringVisitor extends LanguageVisitor {
             visitNode(obj.getOption());
         }
     }
+
+	private void addSourceHint(SourceHint sh) {
+		if (sh != null) {
+        	append(SPACE);
+        	append(BEGIN_HINT);
+        	append("sh"); //$NON-NLS-1$
+        	if (sh.getGeneralHint() != null) {
+        		appendSourceHintValue(sh.getGeneralHint());
+        	}
+        	if (sh.getSourceHints() != null) {
+        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
+        			append(entry.getKey());
+        			appendSourceHintValue(entry.getValue());
+        		}
+        	}
+        	append(END_HINT);
+    	}
+	}
 
 	private void addWithClause(QueryCommand obj) {
 		if (obj.getWith() != null) {
@@ -1044,6 +1050,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Update obj ) {
         // Update clause
         append(UPDATE);
+        addSourceHint(obj.getSourceHint());
         append(SPACE);
         visitNode(obj.getGroup());
         beginClause(1);

@@ -33,16 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.LanguageFactory;
-import org.teiid.language.Literal;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
+import org.teiid.language.*;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -116,7 +107,6 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
 		
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
 		registerFunctionModifier(SourceSystemFunctions.SUBSTRING, new AliasModifier("substr")); //$NON-NLS-1$	
-		registerFunctionModifier(SourceSystemFunctions.RAND, new AliasModifier("random")); //$NON-NLS-1$				
 		registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("LN")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("LOWER")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("UPPER")); //$NON-NLS-1$
@@ -243,7 +233,6 @@ public class TeradataExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.MOD);
         supportedFunctions.add(SourceSystemFunctions.MONTH);
         supportedFunctions.add(SourceSystemFunctions.NULLIF);
-        supportedFunctions.add(SourceSystemFunctions.RAND);
         supportedFunctions.add(SourceSystemFunctions.RIGHT);
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.SECOND);

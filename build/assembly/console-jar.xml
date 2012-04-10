@@ -1,0 +1,36 @@
+<!--This script builds a JAR for the Embedded Server Installation -->
+<assembly>
+  
+  <id>console</id>
+  
+  <formats>
+    <format>jar</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>teiid-client</baseDirectory>
+    
+  <moduleSets>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid:teiid-client</include>
+            <include>org.jboss.teiid:teiid-common-core</include>
+            <include>org.jboss.teiid:teiid-console</include>	
+        </includes>
+        
+        <binaries>
+          <includeDependencies>false</includeDependencies>
+          <unpack>true</unpack>
+          <outputDirectory></outputDirectory>
+          <includes>
+            <include>:jar:*</include>
+          </includes>
+        </binaries>
+      
+    </moduleSet>
+  </moduleSets>
+
+</assembly>

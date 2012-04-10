@@ -87,6 +87,12 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	 */
 	static final class RefCursorType {}
 	static int CURSOR_TYPE = -10;
+	
+	/*
+	 * handling for char bindings
+	 */
+	static final class FixedCharType {}
+	static int FIXED_CHAR_TYPE = 999;
 
 	private boolean oracleSuppliedDriver = true;
     
@@ -434,6 +440,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		stmt.setNull(i, Types.LONGVARBINARY);
     		return;
     	}
+    	if (paramType == FixedCharType.class) {
+    		stmt.setObject(i, param, FIXED_CHAR_TYPE);
+    		return;
+    	}
     	super.bindValue(stmt, param, paramType, i);
     }
     
@@ -446,6 +456,45 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByNullOrdering() {
     	return true;
     }    
+    
+    @Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	if (!oracleSuppliedDriver) {
+    		return super.getSQLConversionVisitor();
+    	}
+    	return new SQLConversionVisitor(this) {
+    		
+    		@Override
+    		public void visit(Comparison obj) {
+    			if (isChar(obj.getLeftExpression()) && obj.getRightExpression() instanceof Literal) {
+    				Literal l = (Literal)obj.getRightExpression();
+    				l.setType(FixedCharType.class);
+    			}
+    			super.visit(obj);
+    		}
+
+			private boolean isChar(Expression obj) {
+				if (!(obj instanceof ColumnReference)) {
+					return false;
+				}
+				ColumnReference cr = (ColumnReference)obj;
+				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING && cr.getMetadataObject() != null && "CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()); //$NON-NLS-1$
+			}
+    		
+    		public void visit(In obj) {
+    			if (isChar(obj.getLeftExpression())) {
+    				for (Expression exp : obj.getRightExpressions()) {
+    					if (exp instanceof Literal) {
+    						Literal l = (Literal)exp;
+    	    				l.setType(FixedCharType.class);
+    					}
+    				}
+    			}
+    			super.visit(obj);
+    		}
+    		
+    	};
+    }
     
     @Override
     public List<String> getSupportedFunctions() {

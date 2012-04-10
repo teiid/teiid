@@ -21,12 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ATTRIBUTES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILDREN;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -38,8 +33,8 @@ import org.jboss.as.controller.SubsystemRegistration;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.parsing.ExtensionParsingContext;
-import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.dmr.ModelNode;
 import org.teiid.logging.LogManager;
 
@@ -143,6 +138,7 @@ public class TeiidExtension implements Extension {
 		new ListLongRunningRequests().register(teiidSubsystem);
 		new TerminateSession().register(teiidSubsystem);
 		new CancelRequest().register(teiidSubsystem);
+		new GetPlan().register(teiidSubsystem);
 		new WorkerPoolStatistics().register(teiidSubsystem);
 		new ListTransactions().register(teiidSubsystem);
 		new TerminateTransaction().register(teiidSubsystem);

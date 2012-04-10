@@ -58,6 +58,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
@@ -533,12 +534,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         GroupBy groupBy = query.getGroupBy();
         Criteria having = query.getHaving();
         validateNoAggsInClause(groupBy);
+        List<GroupSymbol> correlationGroups = null;
         validateNoAggsInClause(query.getCriteria());
         if (query.getFrom() == null) {
         	validateNoAggsInClause(select);
         	validateNoAggsInClause(query.getOrderBy());
         } else {
         	validateNoAggsInClause(query.getFrom());
+        	correlationGroups = query.getFrom().getGroups();
         }
         
         Set<Expression> groupSymbols = null;
@@ -551,10 +554,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         LinkedHashSet<Expression> invalidWindowFunctions = new LinkedHashSet<Expression>();
         LinkedList<AggregateSymbol> aggs = new LinkedList<AggregateSymbol>();
         if (having != null) {
+            validateCorrelatedReferences(query, correlationGroups, groupSymbols, having, invalid);
         	AggregateSymbolCollectorVisitor.getAggregates(having, aggs, invalid, null, invalidWindowFunctions, groupSymbols);
         	hasAgg = true;
         }
         for (Expression symbol : select.getProjectedSymbols()) {
+        	if (hasAgg || !aggs.isEmpty()) {
+        		validateCorrelatedReferences(query, correlationGroups, groupSymbols, symbol, invalid);
+        	}
         	AggregateSymbolCollectorVisitor.getAggregates(symbol, aggs, invalid, null, null, groupSymbols);                                            
         }
         if ((!aggs.isEmpty() || hasAgg) && !invalid.isEmpty()) {
@@ -564,6 +571,26 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	handleValidationError(QueryPlugin.Util.getString("SQLParser.window_only_top_level", invalidWindowFunctions), invalidWindowFunctions); //$NON-NLS-1$
         }
     }
+
+    /**
+     * This validation is more convoluted than needed since it is being run before rewrite/planning.
+     * Ideally we would already have correlated references set on the subqueries.
+     */
+	private void validateCorrelatedReferences(Query query,
+			final List<GroupSymbol> correlationGroups, final Set<Expression> groupingSymbols, LanguageObject object, LinkedHashSet<Expression> invalid) {
+		if (query.getFrom() == null) {
+			return;
+		}
+		ElementCollectorVisitor ecv = new ElementCollectorVisitor(invalid) {
+			public void visit(ElementSymbol obj) {
+				if (obj.isExternalReference() && correlationGroups.contains(obj.getGroupSymbol())
+						 && (groupingSymbols == null || !groupingSymbols.contains(obj))) {
+					super.visit(obj);
+				}
+			}
+		};
+		PreOrPostOrderNavigator.doVisit(object, ecv, PreOrPostOrderNavigator.PRE_ORDER, true);
+	}
 
 	private void validateNoAggsInClause(LanguageObject clause) {
 		if (clause == null) {
