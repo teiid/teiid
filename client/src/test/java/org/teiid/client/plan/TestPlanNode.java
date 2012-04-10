@@ -22,21 +22,18 @@
 
 package org.teiid.client.plan;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 
 /**
  */
-public class TestPlanNode extends TestCase {
+public class TestPlanNode {
 
-    public TestPlanNode(String name) {
-        super(name);
-    }
-    
     public static PlanNode example1() {
     	PlanNode map = new PlanNode("x"); //$NON-NLS-1$ 
     	map.addProperty("test", ""); //$NON-NLS-1$ //$NON-NLS-2$
@@ -61,11 +58,17 @@ public class TestPlanNode extends TestCase {
         return map;
     }
 
-    public void testXml() throws Exception {
+    @Test public void testXml() throws Exception {
         assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<node name=\"x\">\n    <property name=\"test\">\n        <value></value>\n    </property>\n    <property name=\"string\">\n        <value>string</value>\n    </property>\n    <property name=\"list&lt;string&gt;\">\n        <value>item1</value>\n        <value>item2</value>\n        <value>item3</value>\n    </property>\n    <property name=\"child\">\n        <node name=\"y\">\n            <property name=\"outputCols\">\n                <value>Name (string)</value>\n                <value>Year (integer)</value>\n            </property>\n            <property name=\"Join Type\">\n                <value>INNER JOIN</value>\n            </property>\n            <property name=\"Criteria\">\n                <value>Item.ID = History.ID</value>\n            </property>\n            <property name=\"Other\"/>\n        </node>\n    </property>\n</node>\n", example1().toXml()); //$NON-NLS-1$
     }
+    
+    @Test public void testXmlRoundtrip() throws Exception {
+    	String planString = example1().toXml();
+    	PlanNode planNode = PlanNode.fromXml(planString);
+        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<node name=\"x\">\n    <property name=\"test\">\n        <value></value>\n    </property>\n    <property name=\"string\">\n        <value>string</value>\n    </property>\n    <property name=\"list&lt;string&gt;\">\n        <value>item1</value>\n        <value>item2</value>\n        <value>item3</value>\n    </property>\n    <property name=\"child\">\n        <node name=\"y\">\n            <property name=\"outputCols\">\n                <value>Name (string)</value>\n                <value>Year (integer)</value>\n            </property>\n            <property name=\"Join Type\">\n                <value>INNER JOIN</value>\n            </property>\n            <property name=\"Criteria\">\n                <value>Item.ID = History.ID</value>\n            </property>\n            <property name=\"Other\"/>\n        </node>\n    </property>\n</node>\n", planNode.toXml()); //$NON-NLS-1$
+    }
 
-    public void testText() throws Exception {
+    @Test public void testText() throws Exception {
         assertEquals("x\n  + test:\n  + string:string\n  + list<string>:\n    0: item1\n    1: item2\n    2: item3\n  + child:\n    y\n      + outputCols:\n        0: Name (string)\n        1: Year (integer)\n      + Join Type:INNER JOIN\n      + Criteria:Item.ID = History.ID\n      + Other\n", example1().toString()); //$NON-NLS-1$
     }
     

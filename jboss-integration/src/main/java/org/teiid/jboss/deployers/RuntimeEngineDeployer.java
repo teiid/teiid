@@ -516,8 +516,12 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 
 	@Override
     @ManagementOperation(description="Get a plan for the request",params={@ManagementParameter(name="sessionId",description="The session Identifier"), @ManagementParameter(name="executionId",description="The Execution Identifier")})    
-    public PlanNode getPlan(String sessionId, long executionId) throws AdminException {
-		return this.dqpCore.getPlan(sessionId, executionId);
+    public String getPlan(String sessionId, long executionId) throws AdminException {
+		PlanNode plan = this.dqpCore.getPlan(sessionId, executionId);
+		if (plan == null) {
+			return null;
+		}
+		return plan.toXml();
     }
     
 	@Override

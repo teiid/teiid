@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.adminapi.AdminException;
-import org.teiid.client.plan.PlanNode;
 
 
 public interface DQPManagement {
@@ -50,8 +49,8 @@ public interface DQPManagement {
      * 
      * @param sessionId
      * @param requestId
-     * @return the plan or null if the request does not exist
+     * @return the plan as XML or null if the request does not exist
      * @throws AdminException
      */
-    PlanNode getPlan(String sessionId, long requestId) throws AdminException;
+    String getPlan(String sessionId, long requestId) throws AdminException;
 }
