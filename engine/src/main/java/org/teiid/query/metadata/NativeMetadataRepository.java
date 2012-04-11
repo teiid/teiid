@@ -42,6 +42,10 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30591, factory.getName()));
 		}
 		
+		if (connectionFactory == null) {
+			throw new TranslatorException(QueryPlugin.Event.TEIID31097, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31097));
+		}
+		
 		Object connection = executionFactory.getConnection(connectionFactory, null);
 		Object unwrapped = null;
 		

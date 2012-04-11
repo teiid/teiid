@@ -42,12 +42,7 @@ import org.teiid.translator.ExecutionFactory;
 
 public abstract class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
-	private VDBRepository vdbRepository;
 	private TranslatorRepository translatorRepository;
-	
-	public VDBStatusChecker(VDBRepository vdbRepository) {
-		this.vdbRepository = vdbRepository;
-	}
 	
 	public void translatorAdded(String translatorName) {
 		resourceAdded(translatorName, true);
@@ -78,7 +73,7 @@ public abstract class VDBStatusChecker {
 			dsName = dsName.substring(5);
 		}		
 		
-		VDBMetaData vdb = this.vdbRepository.getVDB(vdbName, vdbVersion);
+		VDBMetaData vdb = getVDBRepository().getVDB(vdbName, vdbVersion);
 		ModelMetaData model = vdb.getModel(modelName);
 
 		synchronized (vdb) {
@@ -123,12 +118,11 @@ public abstract class VDBStatusChecker {
 		}
 	}
 	
-	public void setVDBRepository(VDBRepository repo) {
-		this.vdbRepository = repo;
-	}	
-	
 	public void resourceAdded(String resourceName, boolean translator) {
-		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
+		for (VDBMetaData vdb:getVDBRepository().getAllDeployedVDBs()) {
+			if (vdb == null) {
+				continue;
+			}
 			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
 				continue;
 			}
@@ -184,7 +178,10 @@ public abstract class VDBStatusChecker {
 	}
 	
 	public void resourceRemoved(String resourceName, boolean translator) {
-		for (VDBMetaData vdb:this.vdbRepository.getVDBs()) {
+		for (VDBMetaData vdb:getVDBRepository().getAllDeployedVDBs()) {
+			if (vdb == null) {
+				continue;
+			}			
 			if (vdb.isPreview()) {
 				continue;
 			}
@@ -231,6 +228,8 @@ public abstract class VDBStatusChecker {
 	}
 	
 	public abstract Executor getExecutor();
+	
+	public abstract VDBRepository getVDBRepository();
 	
 	public void setTranslatorRepository(TranslatorRepository repo) {
 		this.translatorRepository = repo;

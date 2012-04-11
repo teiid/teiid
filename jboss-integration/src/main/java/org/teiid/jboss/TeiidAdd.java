@@ -220,7 +220,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	newControllers.add(target.addService(TeiidServiceNames.VDB_REPO, vdbRepositoryService).install());
 		
     	// VDB Status manager
-    	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService(vdbRepository);
+    	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService();
     	statusChecker.setTranslatorRepository(translatorRepo);
     	ValueService<VDBStatusChecker> statusService = new ValueService<VDBStatusChecker>(new org.jboss.msc.value.Value<VDBStatusChecker>() {
 			@Override
@@ -230,6 +230,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	});
     	ServiceBuilder<VDBStatusChecker> statusBuilder = target.addService(TeiidServiceNames.VDB_STATUS_CHECKER, statusService);
     	statusBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  statusChecker.executorInjector);
+    	statusBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  statusChecker.vdbRepoInjector);
     	newControllers.add(statusBuilder.install());    	
     	
     	// System VDB Service
@@ -557,14 +558,16 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	
 	static class VDBStatusCheckerExecutorService extends VDBStatusChecker{
 		final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
-		
-		public VDBStatusCheckerExecutorService(VDBRepository vdbRepository) {
-			super(vdbRepository);
-		}
+		final InjectedValue<VDBRepository> vdbRepoInjector = new InjectedValue<VDBRepository>();
 		
 		@Override
 		public Executor getExecutor() {
 			return this.executorInjector.getValue();
-		}    		
+		}    	
+		
+		@Override
+		public VDBRepository getVDBRepository() {
+			return this.vdbRepoInjector.getValue();
+		}
 	}
 }

@@ -35,9 +35,6 @@ import java.util.concurrent.Executor;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -82,12 +79,12 @@ import org.teiid.translator.TranslatorException;
 
 class VDBService implements Service<VDBMetaData> {
 	private VDBMetaData vdb;
-	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-	private final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
-	private final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
-	private final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
-	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
-	private final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
+	protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
+	protected final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
+	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
+	protected final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
+	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
+	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	private VDBLifeCycleListener vdbListener;
 	
 	public VDBService(VDBMetaData metadata) {
@@ -140,9 +137,9 @@ class VDBService implements Service<VDBMetaData> {
 				}
 				// add object replication to temp/matview tables
 				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
-				if (getObjectReplicatorInjector().getValue() != null) {
+				if (objectReplicatorInjector.getValue() != null) {
 					try {
-						gts = getObjectReplicatorInjector().getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
+						gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
 						vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 					} catch (Exception e) {
 						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
@@ -187,9 +184,9 @@ class VDBService implements Service<VDBMetaData> {
 	@Override
 	public void stop(StopContext context) {
 		// stop object replication
-		if (getObjectReplicatorInjector().getValue() != null) {
+		if (this.objectReplicatorInjector.getValue() != null) {
 			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
-			getObjectReplicatorInjector().getValue().stop(gts);
+			this.objectReplicatorInjector.getValue().stop(gts);
 		}		
 		getVDBRepository().removeListener(this.vdbListener);
 		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
@@ -253,15 +250,9 @@ class VDBService implements Service<VDBMetaData> {
 			ExecutionFactory<Object, Object> ef = map.get(translator);
 			if ( ef == null) {
 				
-		        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-		        if (translator.getModuleName() != null) {
-			        try {
-			        	final ModuleIdentifier moduleId = ModuleIdentifier.create(translator.getModuleName());
-			        	final Module module = Module.getCallerModuleLoader().loadModule(moduleId);
-			        	classloader = module.getClassLoader();
-			        } catch (ModuleLoadException e) {
-			             throw new TeiidException(IntegrationPlugin.Event.TEIID50057, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, translator.getModuleName(), translator.getName()));
-			        }		
+		        ClassLoader classloader = translator.getAttachment(ClassLoader.class);
+		        if (classloader == null) {
+		        	classloader = Thread.currentThread().getContextClassLoader();
 		        }
 				
 				ef = TranslatorUtil.buildExecutionFactory(translator, classloader);
@@ -406,49 +397,25 @@ class VDBService implements Service<VDBMetaData> {
 		}
 	}    
 
-	public InjectedValue<VDBRepository> getVDBRepositoryInjector(){
-		return this.vdbRepositoryInjector;
-	}
-	
 	private VDBRepository getVDBRepository() {
 		return vdbRepositoryInjector.getValue();
-	}
-	
-	public InjectedValue<TranslatorRepository> getTranslatorRepositoryInjector(){
-		return this.translatorRepositoryInjector;
 	}
 	
 	private TranslatorRepository getTranslatorRepository() {
 		return this.translatorRepositoryInjector.getValue();
 	}
 	
-	public InjectedValue<Executor> getExecutorInjector(){
-		return this.executorInjector;
-	}
-	
 	private Executor getExecutor() {
 		return this.executorInjector.getValue();
-	}
-	
-	public InjectedValue<ObjectSerializer> getSerializerInjector() {
-		return serializerInjector;
 	}
 	
 	private ObjectSerializer getSerializer() {
 		return serializerInjector.getValue();
 	}
 	
-	public InjectedValue<BufferManager> getBufferManagerInjector() {
-		return bufferManagerInjector;
-	}
-	
 	private BufferManager getBuffermanager() {
-		return getBufferManagerInjector().getValue();
+		return bufferManagerInjector.getValue();
 	}
-	
-	public InjectedValue<ObjectReplicator> getObjectReplicatorInjector() {
-		return objectReplicatorInjector;
-	}	
 	
 	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException{
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);

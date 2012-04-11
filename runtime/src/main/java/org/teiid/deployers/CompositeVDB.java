@@ -158,7 +158,7 @@ public class CompositeVDB {
 		return false;
 	}
 	
-	private VDBMetaData buildVDB() {
+	VDBMetaData buildVDB() {
 		
 		if (this.children == null || this.children.isEmpty()) {
 			this.vdb.addAttchment(ConnectorManagerRepository.class, this.cmr);
@@ -342,5 +342,9 @@ public class CompositeVDB {
 	
 	public void setMetaloadFinished(boolean flag) {
 		this.metadataloadFinished = flag;
+	}
+	
+	public boolean isMetadataloadFinished() {
+		return this.metadataloadFinished;
 	}
 }

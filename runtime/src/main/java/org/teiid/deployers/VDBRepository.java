@@ -108,6 +108,23 @@ public class VDBRepository implements Serializable{
 		}
 		return vdbs;
 	}
+	
+	/**
+	 * This returns the all the VDBS that loaded and still loading or stalled due to data source unavailability.
+	 * @return
+	 */
+	public List<VDBMetaData> getAllDeployedVDBs(){
+		ArrayList<VDBMetaData> vdbs = new ArrayList<VDBMetaData>();
+		for(CompositeVDB cVDB:this.vdbRepo.values()) {
+			if (!cVDB.isMetadataloadFinished()) {
+				vdbs.add(cVDB.buildVDB());
+			}
+			else {
+				vdbs.add(cVDB.getVDB());
+			}
+		}
+		return vdbs;
+	}	
 
     protected VDBKey vdbId(VDBMetaData vdb) {
         return new VDBKey(vdb.getName(), vdb.getVersion());

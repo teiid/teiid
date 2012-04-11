@@ -826,7 +826,7 @@ class ExecuteQuery extends TeiidOperationHandler{
 		}
 	}
 	
-	private SessionMetadata createTemporarySession(final String vdbName, final int version, final String userName) {
+	private SessionMetadata createTemporarySession(final String vdbName, final int version, final String userName) throws OperationFailedException{
 		
         long creationTime = System.currentTimeMillis();
 
@@ -840,7 +840,11 @@ class ExecuteQuery extends TeiidOperationHandler{
         newSession.setVDBName(vdbName);
         newSession.setVDBVersion(version);
         
-        newSession.setVdb(this.vdbRepo.getVDB(vdbName, version));
+        VDBMetaData vdb = this.vdbRepo.getVDB(vdbName, version);
+        if (vdb == null) {
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("wrong_vdb")));//$NON-NLS-1$
+        }
+        newSession.setVdb(vdb);
 		return newSession;
 	}	
 }
@@ -906,6 +910,9 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 		ModelNode result = context.getResult();
 		List<VDBMetaData> vdbs = repo.getVDBs();
 		for (VDBMetaData vdb:vdbs) {
+			if (vdb == null) {
+				continue; // when vdb deployed but metadata is still being loaded this reports as null
+			}			
 			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add());
 		}
 	}
