@@ -4137,12 +4137,10 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		
 		<RETURNS> (readProcedureReturn(factory, proc) | returnDataType = parseDataType())
 		
-	    [<OPTIONS> <LPAREN>
-		   readProcedureOption(proc)
-		   (<COMMA>
-			readProcedureOption(proc)
-		   )*	   
-		   <RPAREN>
+	    [ optionsClause(proc)
+		   {
+		      setProcedureOptions(proc);
+		   }
 		]
 		[<AS>
 		stmt = statement(info)])
@@ -4207,9 +4205,7 @@ void readProcedureParameter(MetadataFactory factory, Procedure proc) :
 		} catch (TranslatorException e){
 			throw new ParseException(e.getMessage());
 		}
-	}
-	[nonReserved("VARARG") {param.setVarArg(true);}]
-	
+	}	
 }
 
 void readProcedureReturn(MetadataFactory factory, Procedure proc) :
@@ -4263,12 +4259,10 @@ void createTable(MetadataFactory factory) :
         )*
     ]    
     <RPAREN>]    
-    [<OPTIONS> <LPAREN>
-	   readTableOption(table)
-	   (<COMMA>
-		readTableOption(table)
-	   )*	   
-	   <RPAREN>
+    [optionsClause(table)
+	   {
+	      setTableOptions(table);
+	   }
 	]
 	[<AS> query = queryExpression(new ParseInfo())]
 	{
@@ -4440,9 +4434,10 @@ void createColumn(MetadataFactory factory, Table table) :
 	  |(<PRIMARY> nonReserved("KEY") { pk = true; })	 
 	  ])
 	 [<DEFAULT_KEYWORD> defalt = stringVal()]
-	 [<OPTIONS> <LPAREN>
-	   readColumnOption(column) (<COMMA> readColumnOption(column))*	   
-	   <RPAREN>
+	 [optionsClause(column)
+	   {
+	      setColumnOptions(column);
+	   }
 	 ]
 	 {
 	 	try{
@@ -4472,66 +4467,32 @@ void createColumn(MetadataFactory factory, Table table) :
 	 }
 }
 
-void readColumnOption(Column column) :
+void optionsClause(AbstractMetadataRecord record) :
 {
-	Token value = null;
+}
+{
+  <OPTIONS> <LPAREN>
+  readOption(record) (<COMMA> readOption(record))*	   
+  <RPAREN> 
+}
+
+void readOption(AbstractMetadataRecord record) :
+{
+	String value = null;
 	String key = null;
+	Token t = null;
 }
 {
 	 key = id()
-	 ((value = <STRINGVAL>)
+	 ((value = stringVal()) 
+ 	 |
+ 	 (t = <INTEGERVAL>)
+ 	 |
+ 	 (t = <DECIMALVAL>))
 	 { 
-	 	setColumnOption(column, key, normalizeStringLiteral(value.image)); 
+	 	if (t != null) {
+	 		value = t.image;
+	 	}
+	 	record.setProperty(key, value); 
 	 } 
-	 | (value = <INTEGERVAL>) 
-	 { 
-	 	setColumnOption(column, key, value.image); 
-	 }
-	 | (value = <DECIMALVAL>)
-	 { 
-	 	setColumnOption(column, key, value.image); 
-	 })
-}
-
-void readProcedureOption(Procedure proc) :
-{
-	Token value = null;
-	String key = null;
-	Token tk = null;
-}
-{
-	 (key=id()|tk=<DETERMINISTIC>{ key = tk.image;})
-	 ((value = <STRINGVAL>)
-	 { 
-	 	setProcedureOption(proc, key, normalizeStringLiteral(value.image)); 
-	 } 
-	 | (value = <INTEGERVAL>) 
-	 { 
-	 	setProcedureOption(proc, key, value.image); 
-	 }
-	 | (value = <DECIMALVAL>)
-	 { 
-	 	setProcedureOption(proc, key, value.image); 
-	 })
-}
-
-void readTableOption(Table table) :
-{
-	Token value = null;
-	String key = null;
-}
-{
-	 key = id()
-	 ((value = <STRINGVAL>)
-	 { 
-	 	setTableOption(table, key, normalizeStringLiteral(value.image)); 
-	 } 
-	 | (value = <INTEGERVAL>) 
-	 { 
-	 	setTableOption(table, key, value.image); 
-	 }
-	 | (value = <DECIMALVAL>)
-	 { 
-	 	setTableOption(table, key, value.image); 
-	 })
 }

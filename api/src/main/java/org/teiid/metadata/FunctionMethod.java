@@ -493,4 +493,34 @@ public class FunctionMethod extends AbstractMetadataRecord {
     public void setAggregateAttributes(AggregateAttributes aggregateAttributes) {
 		this.aggregateAttributes = aggregateAttributes;
 	}
+    
+	public static void convertExtensionMetadata(Procedure procedureRecord,
+			FunctionMethod function) {
+		String deterministic = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true); //$NON-NLS-1$
+		boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", true)); //$NON-NLS-1$
+		boolean varargs = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", true)); //$NON-NLS-1$
+		boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", true)); //$NON-NLS-1$
+		if (deterministic != null) {
+			function.setDeterminism(Boolean.valueOf(deterministic)?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
+		}
+		function.setNullOnNull(nullOnNull);
+		if (varargs && !function.getInputParameters().isEmpty()) {
+			function.getInputParameters().get(function.getInputParameterCount() - 1).setVarArg(varargs);
+		}
+		if (aggregate) {
+			boolean analytic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "analytic", true)); //$NON-NLS-1$
+			boolean allowsOrderBy = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-orderby", true)); //$NON-NLS-1$
+			boolean usesDistinctRows = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "uses-distinct-rows", true)); //$NON-NLS-1$
+			boolean allowsDistinct = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-distinct", true)); //$NON-NLS-1$
+			boolean decomposable = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "decomposable", true)); //$NON-NLS-1$
+			AggregateAttributes aa = new AggregateAttributes();
+			aa.setAnalytic(analytic);
+			aa.setAllowsOrderBy(allowsOrderBy);
+			aa.setUsesDistinctRows(usesDistinctRows);
+			aa.setAllowsDistinct(allowsDistinct);
+			aa.setDecomposable(decomposable);
+			function.setAggregateAttributes(aa);
+		}
+	}
+
 }

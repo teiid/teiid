@@ -22,10 +22,12 @@
 
 package org.teiid.metadata;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.core.types.DataTypeManager;
@@ -56,7 +58,7 @@ public abstract class AbstractMetadataRecord implements Serializable {
     
     private String nameInSource;
 	
-	private LinkedHashMap<String, String> properties;
+	private Map<String, String> properties;
 	private String annotation;
 
 	public static final String RELATIONAL_URI = "{http://www.teiid.org/ext/relational/2012}"; //$NON-NLS-1$
@@ -159,13 +161,20 @@ public abstract class AbstractMetadataRecord implements Serializable {
     		return this.properties.remove(key);
     	}
     	if (this.properties == null) {
-    		this.properties = new LinkedHashMap<String, String>();
+    		this.properties = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     	}
     	return this.properties.put(DataTypeManager.getCanonicalString(key), DataTypeManager.getCanonicalString(value));
     }
     
-    public void setProperties(LinkedHashMap<String, String> properties) {
-		this.properties = properties;
+    public void setProperties(Map<String, String> properties) {
+    	if (this.properties == null) {
+    		this.properties = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    	} else {
+    		this.properties.clear();
+    	}
+		if (properties != null) {
+			this.properties.putAll(properties);
+		}
 	}
 
     public String getAnnotation() {
@@ -191,6 +200,13 @@ public abstract class AbstractMetadataRecord implements Serializable {
         AbstractMetadataRecord other = (AbstractMetadataRecord)obj;
 
         return EquivalenceUtil.areEqual(this.getUUID(), other.getUUID());
+    }
+    
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+    	in.defaultReadObject();
+    	if (this.properties != null && !(this.properties instanceof TreeMap<?, ?>)) {
+    		this.setProperties(this.getProperties());
+    	}
     }
 
     public int hashCode() {

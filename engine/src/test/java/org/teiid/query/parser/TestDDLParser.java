@@ -52,7 +52,7 @@ public class TestDDLParser {
 						"e4 decimal(12,3),\n" +
 						"e5 integer auto_increment INDEX OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE 'NO'),\n" +
 						"e6 varchar index default 'hello')\n" +
-						"OPTIONS (CARDINALITY 12, UUID 'uuid2',  UPDATABLE 'yes', FOO 'BAR', ANNOTATION 'Test Table')";
+						"OPTIONS (CARDINALITY 12, UUID 'uuid2',  UPDATABLE 'true', FOO 'BAR', ANNOTATION 'Test Table')";
 				
 		Schema s = helpParse(ddl, "model");
 		Map<String, Table> tableMap = s.getTables();
@@ -403,8 +403,8 @@ public class TestDDLParser {
 	@Test
 	public void testUDF() throws Exception {
 		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(flag boolean, msg varchar) RETURNS varchar " +
-				"OPTIONS(CATEGORY 'misc', DETERMINISTIC 'DETERMINISTIC', " +
-				"NULLONNULL 'YES', JAVA_CLASS 'foo', JAVA_METHOD 'bar', RANDOM 'any')";
+				"OPTIONS(CATEGORY 'misc', DETERMINISM 'DETERMINISTIC', " +
+				"\"NULL-ON-NULL\" 'true', JAVA_CLASS 'foo', JAVA_METHOD 'bar', RANDOM 'any')";
 
 		Schema s = helpParse(ddl, "model");
 		
@@ -428,8 +428,32 @@ public class TestDDLParser {
 	}
 	
 	@Test
+	public void testUDAggregate() throws Exception {
+		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(flag boolean, msg varchar) RETURNS varchar " +
+				"OPTIONS(CATEGORY 'misc', AGGREGATE 'true', \"allows-distinct\" 'true')";
+
+		Schema s = helpParse(ddl, "model");
+		
+		FunctionMethod fm = s.getFunction("SourceFunc");
+		assertNotNull(fm);
+		assertEquals("string", fm.getOutputParameter().getType());
+		assertEquals(FunctionMethod.PushDown.CAN_PUSHDOWN, fm.getPushdown());
+		assertEquals(2, fm.getInputParameterCount());
+		assertEquals("flag", fm.getInputParameters().get(0).getName());
+		assertEquals("boolean", fm.getInputParameters().get(0).getType());
+		assertEquals("msg", fm.getInputParameters().get(1).getName());
+		assertEquals("string", fm.getInputParameters().get(1).getType());
+		assertFalse( fm.getInputParameters().get(1).isVarArg());
+		assertNotNull(fm.getAggregateAttributes());
+		assertTrue(fm.getAggregateAttributes().allowsDistinct());
+		assertEquals(FunctionMethod.Determinism.DETERMINISTIC, fm.getDeterminism());
+		assertEquals("misc", fm.getCategory());
+		assertFalse(fm.isNullOnNull());
+	}
+	
+	@Test
 	public void testVarArgs() throws Exception {
-		String ddl = "CREATE FUNCTION SourceFunc(flag boolean vararg) RETURNS varchar";
+		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar options (varargs 'true')";
 
 		Schema s = helpParse(ddl, "model");
 		

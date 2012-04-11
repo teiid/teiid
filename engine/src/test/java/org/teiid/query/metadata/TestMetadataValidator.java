@@ -252,7 +252,7 @@ public class TestMetadataValidator {
 	public void testExternalMaterializationValidate() throws Exception {
 		// note here the unique here does not matter for non-existent reference columns, only primary key counted.
 		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar);";
-		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'YES', MATERIALIZED_TABLE 'pm1.G1') AS SELECT * FROM pm1.G1";		
+		String ddl2 = "CREATE VIEW G2 OPTIONS (MATERIALIZED 'true', MATERIALIZED_TABLE 'pm1.G1') AS SELECT * FROM pm1.G1";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		buildModel("vm1", false, this.vdb, this.store, ddl2);

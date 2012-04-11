@@ -73,7 +73,7 @@ public class VDBMetadataFactory {
 			}
 			return system;
 		} catch (Exception e) {
-			throw new TeiidRuntimeException("System VDB not found");
+			throw new TeiidRuntimeException(e, "System VDB load error");
 		}
     }
 	

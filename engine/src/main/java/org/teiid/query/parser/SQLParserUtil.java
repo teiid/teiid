@@ -34,6 +34,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
@@ -41,19 +42,11 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
-import org.teiid.query.sql.lang.AlterTrigger;
-import org.teiid.query.sql.lang.CacheHint;
-import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
-import org.teiid.query.sql.lang.FromClause;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.Limit;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.QueryCommand;
-import org.teiid.query.sql.lang.SetQuery;
-import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -361,109 +354,94 @@ public class SQLParserUtil {
     	return new Block(stmt);
     }
     
-    void setColumnOption(Column c, String k, String v){
-    	int index = k.indexOf(':');
-    	if ( index != -1) {
-    		k = k.substring(index+1);
+    void setColumnOptions(Column c){
+    	Map<String, String> props = c.getProperties();
+		setCommonProperties(c, props);
+    	
+        String v = props.remove("CASE_SENSITIVE"); //$NON-NLS-1$
+    	c.setCaseSensitive(isTrue(v));
+    	
+    	v = props.remove("SELECTABLE"); //$NON-NLS-1$
+    	c.setSelectable(isTrue(v));
+    	
+    	v = props.remove("UPDATABLE"); //$NON-NLS-1$
+    	c.setUpdatable(isTrue(v));
+    	
+    	v = props.remove("SIGNED"); //$NON-NLS-1$
+    	c.setSigned(isTrue(v));
+    	
+    	v = props.remove("CURRENCY"); //$NON-NLS-1$
+    	c.setSigned(isTrue(v));
+
+    	v = props.remove("FIXED_LENGTH"); //$NON-NLS-1$
+    	c.setFixedLength(isTrue(v));
+    	
+    	v = props.remove("SEARCHABLE"); //$NON-NLS-1$
+    	if (v != null) {
+    		c.setSearchType(SearchType.valueOf(v.toUpperCase()));
     	}
-    	if(k.equalsIgnoreCase("UUID")) {  //$NON-NLS-1$
-    		c.setUUID(v);
+    	
+    	v = props.remove("MIN_VALUE"); //$NON-NLS-1$
+    	c.setMinimumValue(v);
+    	
+    	v = props.remove("MAX_VALUE"); //$NON-NLS-1$
+    	c.setMaximumValue(v);
+    	
+    	v = props.remove("CHAR_OCTET_LENGTH"); //$NON-NLS-1$
+    	if (v != null) {
+    		c.setCharOctetLength(Integer.parseInt(v));
     	}
-        else if(k.equalsIgnoreCase("NAMEINSOURCE")) { //$NON-NLS-1$
-        	c.setNameInSource(v);
-        }
-        else if(k.equalsIgnoreCase("CASE_SENSITIVE")) { //$NON-NLS-1$
-        	c.setCaseSensitive(isTrue(v));
-        }
-        else if(k.equalsIgnoreCase("SELECTABLE")) { //$NON-NLS-1$
-        	c.setSelectable(isTrue(v));
-        }
-        else if(k.equalsIgnoreCase("UPDATABLE")) { //$NON-NLS-1$
-        	c.setUpdatable(isTrue(v));
-        }
-        else if(k.equalsIgnoreCase("SIGNED")) { //$NON-NLS-1$
-        	c.setSigned(isTrue(v));
-        }
-        else if(k.equalsIgnoreCase("CURRENCY")) { //$NON-NLS-1$
-        	c.setSigned(isTrue(v));
-        }
-        else if(k.equalsIgnoreCase("FIXED_LENGTH")) { //$NON-NLS-1$
-        	c.setFixedLength(isTrue(v));
-        }
-        else if(k.equalsIgnoreCase("SEARCHABLE"))  { //$NON-NLS-1$
-        	//'YES|NO|LIKE_ONLY|ALL_EXCEPT_LIKE'
-        	if (v.equalsIgnoreCase("YES")){//$NON-NLS-1$
-        		c.setSearchType(Column.SearchType.Searchable);
-        	}
-        	else if (v.equalsIgnoreCase("NO")){//$NON-NLS-1$
-        		c.setSearchType(Column.SearchType.Unsearchable);
-        	}
-        	else if (v.equalsIgnoreCase("LIKE_ONLY")){ //$NON-NLS-1$
-        		c.setSearchType(Column.SearchType.Like_Only);
-        	}	
-        	else if (v.equalsIgnoreCase("ALL_EXCEPT_LIKE")){ //$NON-NLS-1$
-        		c.setSearchType(Column.SearchType.All_Except_Like);
-        	}			    		    	
-        }
-        else if(k.equalsIgnoreCase("MIN_VALUE")) { //$NON-NLS-1$
-        	c.setMinimumValue(v);
-        }
-        else if(k.equalsIgnoreCase("MAX_VALUE")) { //$NON-NLS-1$
-        	c.setMaximumValue(v);
-        }
-        else if(k.equalsIgnoreCase("CHAR_OCTET_LENGTH")) { //$NON-NLS-1$
-        	c.setCharOctetLength(Integer.parseInt(v));
-        }
-        else if(k.equalsIgnoreCase("ANNOTATION")) { //$NON-NLS-1$
-        	c.setAnnotation(v);
-        }
-        else if(k.equalsIgnoreCase("NATIVE_TYPE")) { //$NON-NLS-1$
-        	c.setNativeType(v);
-        }
-        else if(k.equalsIgnoreCase("RADIX")) { //$NON-NLS-1$
-        	c.setRadix(Integer.parseInt(v));
-        }
-        else if(k.equalsIgnoreCase("NULL_VALUE_COUNT")) { //$NON-NLS-1$
-        	c.setNullValues(Integer.parseInt(v));
-        }   
-        else if(k.equalsIgnoreCase("DISTINCT_VALUES")) { //$NON-NLS-1$
-        	c.setDistinctValues(Integer.parseInt(v));
-        }  
-        else {
-        	c.setProperty(k, v);
-        }
+        
+    	v = props.remove("NATIVE_TYPE"); //$NON-NLS-1$
+    	c.setNativeType(v);
+
+    	v = props.remove("RADIX"); //$NON-NLS-1$
+    	if (v != null) {
+    		c.setRadix(Integer.parseInt(v));
+    	}
+
+    	v = props.remove("NULL_VALUE_COUNT"); //$NON-NLS-1$
+    	if (v != null) {
+    		c.setNullValues(Integer.parseInt(v));
+    	}
+    	
+    	v = props.remove("DISTINCT_VALUES"); //$NON-NLS-1$
+    	if (v != null) {
+    		c.setDistinctValues(Integer.parseInt(v));
+    	}
     }
+
+	private void setCommonProperties(AbstractMetadataRecord c, Map<String, String> props) {
+		String v = props.remove("UUID"); //$NON-NLS-1$
+		c.setUUID(v);
+		
+    	v = props.remove("ANNOTATION"); //$NON-NLS-1$
+    	c.setAnnotation(v);
+		
+		v = props.remove("NAMEINSOURCE"); //$NON-NLS-1$
+    	c.setNameInSource(v);
+	}
     
-    void setTableOption(Table table, String k, String value) {
-    	int index = k.indexOf(':');
-    	if ( index != -1) {
-    		k = k.substring(index+1);
-    	}
-    	if(k.equalsIgnoreCase("UUID")) { //$NON-NLS-1$
-    		table.setUUID(value);
-    	}
-    	else if(k.equalsIgnoreCase("NAMEINSOURCE")) { //$NON-NLS-1$
-    		table.setNameInSource(value);
-    	}
-    	else if(k.equalsIgnoreCase("MATERIALIZED")) { //$NON-NLS-1$
-    		table.setMaterialized(isTrue(value));
-    	}
-    	else if(k.equalsIgnoreCase("MATERIALIZED_TABLE")) { //$NON-NLS-1$
+    void setTableOptions(Table table) {
+    	Map<String, String> props = table.getProperties();
+    	setCommonProperties(table, props);
+    	
+    	String value = props.remove("MATERIALIZED"); //$NON-NLS-1$
+		table.setMaterialized(isTrue(value));
+		
+		value = props.remove("MATERIALIZED_TABLE"); //$NON-NLS-1$
+		if (value != null) {
     		Table mattable = new Table();
     		mattable.setName(value);
     		table.setMaterializedTable(mattable);
     	}
-    	else if(k.equalsIgnoreCase("UPDATABLE")) { //$NON-NLS-1$
-    		table.setSupportsUpdate(isTrue(value));
-    	}
-    	else if(k.equalsIgnoreCase("ANNOTATION")) { //$NON-NLS-1$
-    		table.setAnnotation(value);
-    	}
-    	else if(k.equalsIgnoreCase("CARDINALITY")) { //$NON-NLS-1$
+		
+		value = props.remove("UPDATABLE"); //$NON-NLS-1$
+		table.setSupportsUpdate(isTrue(value));
+		
+    	value = props.remove("CARDINALITY"); //$NON-NLS-1$
+    	if (value != null) {
     		table.setCardinality(Integer.parseInt(value));
-    	}
-    	else {
-    		table.setProperty(k, value);
     	}
     }     
     
@@ -508,27 +486,27 @@ public class SQLParserUtil {
     		method.setUUID(proc.getUUID());
     		
     		Map<String, String> props = proc.getProperties();
+
+    		String value = props.remove("CATEGORY"); //$NON-NLS-1$
+    		method.setCategory(value);
+    		
+    		value = props.remove("DETERMINISM"); //$NON-NLS-1$
+    		if (value != null) {
+				method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
+			}
+    		
+			value = props.remove("JAVA_CLASS"); //$NON-NLS-1$
+			method.setInvocationClass(value);
+			
+			value = props.remove("JAVA_METHOD"); //$NON-NLS-1$
+			method.setInvocationMethod(value);
+			
     		for (String key:props.keySet()) {
-    			String value = props.get(key);
-    			if(key.equalsIgnoreCase("CATEGORY")) { //$NON-NLS-1$
-    				method.setCategory(value);
-    			}
-    			else if(key.equalsIgnoreCase("DETERMINISTIC")) { //$NON-NLS-1$
-    				method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
-    			}
-    			else if(key.equalsIgnoreCase("NULLONNULL")) { //$NON-NLS-1$
-    				method.setNullOnNull(isTrue(value));
-    			}
-    			else if(key.equalsIgnoreCase("JAVA_CLASS")) { //$NON-NLS-1$
-    				method.setInvocationClass(value);
-    			}
-    			else if(key.equalsIgnoreCase("JAVA_METHOD")) { //$NON-NLS-1$
-    				method.setInvocationMethod(value);
-    			}      
-    			else {
-    				method.setProperty(key, value);
-    			}     			
+    			value = props.get(key);
+				method.setProperty(key, value);
     		}
+    		
+    		FunctionMethod.convertExtensionMetadata(proc, method);
     		
     		factory.addFunction(method);
     	}
@@ -539,31 +517,18 @@ public class SQLParserUtil {
     	}
     }
     
-
-    void setProcedureOption(Procedure proc, String k, String value) {
-    	int index = k.indexOf(':');
-    	if ( index != -1) {
-    		k = k.substring(index+1);
-    	}
-    	if(k.equalsIgnoreCase("UUID")) { //$NON-NLS-1$
-    		proc.setUUID(value);
-    	}
-    	else if(k.equalsIgnoreCase("NAMEINSOURCE")) { //$NON-NLS-1$
-    		proc.setNameInSource(value);
-    	}
-    	else if(k.equalsIgnoreCase("ANNOTATION")) { //$NON-NLS-1$
-    		proc.setAnnotation(value);
-    	}
-    	else if(k.equalsIgnoreCase("UPDATECOUNT")) { //$NON-NLS-1$
+    void setProcedureOptions(Procedure proc) {
+    	Map<String, String> props = proc.getProperties();
+    	setCommonProperties(proc, props);
+    	
+    	String value = props.remove("UPDATECOUNT"); //$NON-NLS-1$
+    	if (value != null) {
     		proc.setUpdateCount(Integer.parseInt(value));
-    	}        	
-    	else {
-    		proc.setProperty(k, value);
-    	}      	
+    	}
     }
 
     public static boolean isTrue(final String text) {
-        return ("YES".equalsIgnoreCase(text)); //$NON-NLS-1$
+        return Boolean.valueOf(text);
     }    
 	
 	Column getColumn(String columnName, Table table) {

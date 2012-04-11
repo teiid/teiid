@@ -544,10 +544,6 @@ public class IndexMetadataStore extends MetadataStore {
 	    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
 	    		}
 	        } else if (procedureRecord.isFunction()) {
-	        	boolean deterministic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true)); //$NON-NLS-1$
-	        	boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", false)); //$NON-NLS-1$
-	        	boolean varargs = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", false)); //$NON-NLS-1$
-	        	boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", false)); //$NON-NLS-1$
 	        	FunctionParameter outputParam = null;
 	        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
 	        	boolean valid = true;
@@ -572,25 +568,8 @@ public class IndexMetadataStore extends MetadataStore {
 				}
 	        	if (valid && outputParam != null) {
 	        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
-		        			null, null, args, outputParam, false, deterministic?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
-		        	function.setNullOnNull(nullOnNull);
-		        	if (varargs && !function.getInputParameters().isEmpty()) {
-		        		function.getInputParameters().get(args.size() - 1).setVarArg(varargs);
-		        	}
-		        	if (aggregate) {
-		        		boolean analytic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "analytic", false)); //$NON-NLS-1$
-		        		boolean allowsOrderBy = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-orderby", false)); //$NON-NLS-1$
-		        		boolean usesDistinctRows = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "uses-distinct-rows", false)); //$NON-NLS-1$
-		        		boolean allowsDistinct = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "allows-distinct", false)); //$NON-NLS-1$
-		        		boolean decomposable = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "decomposable", false)); //$NON-NLS-1$
-		        		AggregateAttributes aa = new AggregateAttributes();
-		        		aa.setAnalytic(analytic);
-		        		aa.setAllowsOrderBy(allowsOrderBy);
-		        		aa.setUsesDistinctRows(usesDistinctRows);
-		        		aa.setAllowsDistinct(allowsDistinct);
-		        		aa.setDecomposable(decomposable);
-		        		function.setAggregateAttributes(aa);
-		        	}
+		        			null, null, args, outputParam, false, Determinism.DETERMINISTIC);
+		        	FunctionMethod.convertExtensionMetadata(procedureRecord, function);
 					model.addFunction(function);
 					continue;
 	        	}
