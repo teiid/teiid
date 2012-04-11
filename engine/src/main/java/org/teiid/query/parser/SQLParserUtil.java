@@ -531,13 +531,13 @@ public class SQLParserUtil {
         return Boolean.valueOf(text);
     }    
 	
-	Column getColumn(String columnName, Table table) {
+	Column getColumn(String columnName, Table table) throws ParseException {
 		for (Column col:table.getColumns()) {
 			if (col.getName().equalsIgnoreCase(columnName)) {
 				return col;
 			}
 		}
-		return null;
+		throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}
 	
 	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {

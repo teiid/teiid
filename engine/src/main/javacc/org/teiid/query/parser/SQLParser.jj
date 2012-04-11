@@ -4094,12 +4094,13 @@ void ddlStmts(MetadataFactory factory) :
 
 void createNameSpace(MetadataFactory factory) :
 {
-	XMLNamespaces.NamespaceItem item = null; 
+	String uri = null;
+	String prefix = null;
 }
 { 
-	<SET> nonReserved ("NAMESPACE") item = namespaceItem()
+	<SET> nonReserved ("NAMESPACE") uri = stringVal() <AS> prefix = id()
 	{
-		factory.addNamespace(item.getPrefix(), item.getUri());
+		factory.addNamespace(prefix, uri);
 	}
 }
 
@@ -4130,11 +4131,11 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		}
 	
 		<LPAREN>
-		[readProcedureParameter(factory, proc)]
-		(<COMMA> readProcedureParameter(factory, proc))*	
+		[procedureParameter(factory, proc)]
+		(<COMMA> procedureParameter(factory, proc))*	
 		<RPAREN>
 		
-		<RETURNS> (readProcedureReturn(factory, proc) | returnDataType = parseDataType())
+		<RETURNS> (procedureReturn(factory, proc) | returnDataType = parseDataType())
 		
 	    [ optionsClause(proc, factory)
 		   {
@@ -4151,7 +4152,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 			}
 			
 			if (virtual && !function && stmt == null){
-				throw new ParseException("Virtual procedure " + procName + " must define the procedure block after 'AS' keyword");
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.virtual_proc_def", procName));
 			}
 			
 	        if (returnDataType != null){
@@ -4161,35 +4162,20 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		}
 }
 
-void readProcedureParameter(MetadataFactory factory, Procedure proc) :
+void procedureParameter(MetadataFactory factory, Procedure proc) :
 {
 	String name = null;
 	ParsedDataType type = null;
-	Token direction = null;
+	ProcedureParameter.Type ppType = ProcedureParameter.Type.In;
 	ProcedureParameter param = null;
 }
 {
-	[((direction = <IN>)|(direction=<OUT>)|(direction=<INOUT>))]
+	[((<IN> {ppType = ProcedureParameter.Type.In ;})
+	 |(<OUT> {ppType = ProcedureParameter.Type.Out;})
+	 |(<INOUT> {ppType = ProcedureParameter.Type.InOut;}))]
 	name = id()
 	type = parseDataType()
 	{
-		ProcedureParameter.Type ppType = ProcedureParameter.Type.In;
-		
-		if (direction == null){
-			ppType = ProcedureParameter.Type.In;
-		}
-		else if (direction.image.equalsIgnoreCase("in")){
-			ppType = ProcedureParameter.Type.In ;
-		}
-		else if (direction.image.equalsIgnoreCase("out")){
-			ppType = ProcedureParameter.Type.Out;
-		}
-		else if (direction.image.equalsIgnoreCase("inout")){
-			ppType = ProcedureParameter.Type.InOut;
-		}
-		else {
-			throw new ParseException("Unknown type of parameter on procedure "+ proc.getName());
-		}
 		try {
 			param = factory.addProcedureParameter(name, type.type, ppType, proc);
 			if (type.length != null){
@@ -4207,7 +4193,7 @@ void readProcedureParameter(MetadataFactory factory, Procedure proc) :
 	}	
 }
 
-void readProcedureReturn(MetadataFactory factory, Procedure proc) :
+void procedureReturn(MetadataFactory factory, Procedure proc) :
 {
 	String name = null;
 	ParsedDataType type = null;
@@ -4252,9 +4238,9 @@ void createTable(MetadataFactory factory) :
     (LOOKAHEAD(2) <COMMA>
       createColumn(factory, table)
     )*	
-    [<CONSTRAINT> (readPrimaryKeys(factory, table) | readConstraints(factory, table) | readForeignKeys(factory, table))
+    [<CONSTRAINT> (primaryKeys(factory, table) | constraints(factory, table) | foreignKeys(factory, table))
         (<COMMA>
-         (readConstraints(factory, table)|readForeignKeys(factory, table))
+         (primaryKeys(factory, table) | constraints(factory, table)|foreignKeys(factory, table))
         )*
     ]    
     <RPAREN>]    
@@ -4265,17 +4251,16 @@ void createTable(MetadataFactory factory) :
 	]
 	[<AS> query = queryExpression(new ParseInfo())]
 	{
-		if (view && query == null){
-			throw new ParseException("View definition must have query plan defined");
-		}
-		
 		if (view){
-			table.setSelectTransformation(query.toString());
-		}
+		   if (query == null) {
+		      throw new ParseException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
+		   }
+		   table.setSelectTransformation(query.toString());	
+		}		
 	}
 }
 
-void readForeignKeys(MetadataFactory factory, Table table) :
+void foreignKeys(MetadataFactory factory, Table table) :
 {
 	List<String> columnNames = null;
 	String viewName = null;
@@ -4290,9 +4275,6 @@ void readForeignKeys(MetadataFactory factory, Table table) :
     {
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
-	    	if (column == null) {
-	    		throw new ParseException("Column name "+ col + " not found in table "+ table.getName());
-	    	}
 	    }  
     }
     <REFERENCES>
@@ -4307,7 +4289,7 @@ void readForeignKeys(MetadataFactory factory, Table table) :
     }
 }
 
-void readPrimaryKeys(MetadataFactory factory, Table table) :
+void primaryKeys(MetadataFactory factory, Table table) :
 {
 	List<String> columnNames = null;
 	Column column = null;
@@ -4318,12 +4300,9 @@ void readPrimaryKeys(MetadataFactory factory, Table table) :
     	columnNames = getColumnNames();
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
-	    	if (column == null) {
-	    		throw new ParseException("Column name "+ col + " not found in table "+ table.getName());
-	    	}
 	    }
 	    if (table.getPrimaryKey() != null){
-	    	throw new ParseException("Primary Key is already defined on "+ table.getName());
+	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 	 	}
 	 	try{
 	 		factory.addPrimaryKey("PK", columnNames, table);
@@ -4333,7 +4312,7 @@ void readPrimaryKeys(MetadataFactory factory, Table table) :
     }
 }
 
-void readConstraints(MetadataFactory factory, Table table) :
+void constraints(MetadataFactory factory, Table table) :
 {
 	KeyRecord keyrecord = null;
 	Column column = null;
@@ -4346,9 +4325,6 @@ void readConstraints(MetadataFactory factory, Table table) :
 	    columnNames = getColumnNames();	    
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
-	    	if (column == null) {
-	    		throw new ParseException("Column name "+ col + " not found in table "+ table.getName());
-	    	}
 	    }
 	    try{
 	    	if (type.equalsIgnoreCase("INDEX")) { 
@@ -4450,7 +4426,7 @@ void createColumn(MetadataFactory factory, Table table) :
 		 	
 		    if (pk) {
 		    	if (table.getPrimaryKey() != null) {
-		    		throw new ParseException("Primary Key is already defined on "+ table.getName());
+		    		throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 		    	}
 		 		factory.addPrimaryKey(element, columnName, table);
 		 	}
