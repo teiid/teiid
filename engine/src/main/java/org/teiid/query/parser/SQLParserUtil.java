@@ -572,6 +572,19 @@ public class SQLParserUtil {
 		}	
 	}	
 	
+	static String resolvePropertyKey(MetadataFactory factory, String key) {
+	 	int index = key.indexOf(':');
+	 	if (index > 0 && index < key.length() - 1) {
+	 		String prefix = key.substring(0, index);
+	 		String uri = factory.getNamespaces().get(prefix);
+	 		if (uri != null) {
+	 			key = '{' +uri + '}' + key.substring(index + 1, key.length());
+	 		}
+	 		//TODO warnings or errors if not resolvable 
+	 	}
+	 	return key;
+	}
+	
 	static class  ParsedDataType{
 		String type;
 		Integer length;

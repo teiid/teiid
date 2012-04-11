@@ -569,7 +569,7 @@ public class TestDDLParser {
 	
 	@Test
 	public void testNamespace() throws Exception {
-		String ddl = 	"set namespace 'http://teiid.org' AS 'teiid'";
+		String ddl = 	"set namespace 'http://teiid.org' AS teiid";
 
 		MetadataStore mds = new MetadataStore();
 		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
@@ -600,5 +600,12 @@ public class TestDDLParser {
 		datatypes.put("varchar", datatypes.get(DataTypeManager.DefaultDataTypes.STRING));
 		datatypes.put("decimal", datatypes.get(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
 		return datatypes;
+	}
+	
+	@Test public void testKeyResolve() {
+		MetadataFactory mf = new MetadataFactory(null, 1, "foo", getDataTypes(), new Properties(), null);
+		mf.addNamespace("x", "http://x");
+		assertEquals("{http://x}z", SQLParserUtil.resolvePropertyKey(mf, "x:z"));
+		assertEquals("y:z", SQLParserUtil.resolvePropertyKey(mf, "y:z"));
 	}
 }

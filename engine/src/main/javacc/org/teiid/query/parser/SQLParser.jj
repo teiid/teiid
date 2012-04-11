@@ -3855,11 +3855,11 @@ XMLNamespaces xmlNamespaces(ParseInfo info) :
 }
 {
  	<XMLNAMESPACES> <LPAREN>
-	item = namespaceItem(info)
+	item = namespaceItem()
 	{
 		namespaces.add(item);
 	}
-	(<COMMA> item = namespaceItem(info)
+	(<COMMA> item = namespaceItem()
 	 {
 		 namespaces.add(item);
 	 }
@@ -3870,7 +3870,7 @@ XMLNamespaces xmlNamespaces(ParseInfo info) :
 	}
 }
 
-XMLNamespaces.NamespaceItem namespaceItem(ParseInfo info) :
+XMLNamespaces.NamespaceItem namespaceItem() :
 {
 	String uri = null;
 	String prefix = null;
@@ -4094,13 +4094,12 @@ void ddlStmts(MetadataFactory factory) :
 
 void createNameSpace(MetadataFactory factory) :
 {
-	String uri = null;
-	String prefix = null; 
+	XMLNamespaces.NamespaceItem item = null; 
 }
 { 
-	<SET> nonReserved ("NAMESPACE") uri = stringVal() <AS> prefix = stringVal()
+	<SET> nonReserved ("NAMESPACE") item = namespaceItem()
 	{
-		factory.addNamespace(prefix, uri);
+		factory.addNamespace(item.getPrefix(), item.getUri());
 	}
 }
 
@@ -4137,7 +4136,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		
 		<RETURNS> (readProcedureReturn(factory, proc) | returnDataType = parseDataType())
 		
-	    [ optionsClause(proc)
+	    [ optionsClause(proc, factory)
 		   {
 		      setProcedureOptions(proc);
 		   }
@@ -4259,7 +4258,7 @@ void createTable(MetadataFactory factory) :
         )*
     ]    
     <RPAREN>]    
-    [optionsClause(table)
+    [optionsClause(table, factory)
 	   {
 	      setTableOptions(table);
 	   }
@@ -4434,7 +4433,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	  |(<PRIMARY> nonReserved("KEY") { pk = true; })	 
 	  ])
 	 [<DEFAULT_KEYWORD> defalt = stringVal()]
-	 [optionsClause(column)
+	 [optionsClause(column, factory)
 	   {
 	      setColumnOptions(column);
 	   }
@@ -4467,16 +4466,16 @@ void createColumn(MetadataFactory factory, Table table) :
 	 }
 }
 
-void optionsClause(AbstractMetadataRecord record) :
+void optionsClause(AbstractMetadataRecord record, MetadataFactory factory) :
 {
 }
 {
   <OPTIONS> <LPAREN>
-  readOption(record) (<COMMA> readOption(record))*	   
+  optionPair(record, factory) (<COMMA> optionPair(record, factory))*	   
   <RPAREN> 
 }
 
-void readOption(AbstractMetadataRecord record) :
+void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 {
 	String value = null;
 	String key = null;
@@ -4493,6 +4492,7 @@ void readOption(AbstractMetadataRecord record) :
 	 	if (t != null) {
 	 		value = t.image;
 	 	}
+	 	key = resolvePropertyKey(factory, key);
 	 	record.setProperty(key, value); 
 	 } 
 }

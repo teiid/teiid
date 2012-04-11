@@ -385,4 +385,8 @@ public class MetadataFactory extends Schema {
 	public int getVdbVersion() {
 		return vdbVersion;
 	}	
+	
+	public Map<String, String> getNamespaces() {
+		return namespaces;
+	}
 }
