@@ -33,7 +33,7 @@ import org.teiid.core.types.TransformationException;
 public class StringToTimestampTransform extends Transform {
 	
 	private static boolean validate = true;
-	private static Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}"); //$NON-NLS-1$
+	private static Pattern pattern = Pattern.compile("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(\\.\\d{1,9})?"); //$NON-NLS-1$
 	
 	static {
 		try {
