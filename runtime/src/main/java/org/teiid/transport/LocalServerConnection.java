@@ -169,4 +169,9 @@ public class LocalServerConnection implements ServerConnection {
 	public void cleanUp() {
 		
 	}
+	
+	@Override
+	public boolean supportsContinuous() {
+		return true;
+	}
 }

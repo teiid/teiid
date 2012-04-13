@@ -364,4 +364,9 @@ public class SocketServerConnection implements ServerConnection {
 			}
 		}
 	}
+	
+	@Override
+	public boolean supportsContinuous() {
+		return false;
+	}
 }

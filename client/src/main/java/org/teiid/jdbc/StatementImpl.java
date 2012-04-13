@@ -406,6 +406,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         resetExecutionState();
         if (options != null) {
         	if (options.isContinuous()) {
+        		if (!this.driverConnection.getServerConnection().supportsContinuous()) {
+	                throw new TeiidSQLException(JDBCPlugin.Util.getString("JDBC.continuous")); //$NON-NLS-1$
+        		}
         		if (this.getResultSetType() != ResultSet.TYPE_FORWARD_ONLY) {
 	        		String msg = JDBCPlugin.Util.getString("JDBC.forward_only_resultset"); //$NON-NLS-1$
 	                throw new TeiidSQLException(msg);
