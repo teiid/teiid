@@ -145,6 +145,13 @@ public class MetadataValidator {
 				ModelMetaData model = vdb.getModel(schema.getName());
 
 				for (Table t:schema.getTables().values()) {
+					// no need to verify the transformation of the xml mapping document, 
+					// as this is very specific and designer already validates it.
+					if (t.getTableType() == Table.Type.Document
+							|| t.getTableType() == Table.Type.XmlMappingClass
+							|| t.getTableType() == Table.Type.XmlStagingTable) {
+						continue;
+					}
 					if (t.isVirtual()) {
 						if (t.getSelectTransformation() == null) {
 							log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
