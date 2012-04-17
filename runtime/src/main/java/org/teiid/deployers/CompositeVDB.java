@@ -58,6 +58,7 @@ public class CompositeVDB {
 	private ConnectorManagerRepository cmr;
 	private FunctionTree systemFunctions;
 	private boolean metadataloadFinished = false;
+	private boolean modified;
 	
 	// used as cached item to avoid rebuilding
 	private volatile VDBMetaData mergedVDB;
@@ -81,6 +82,7 @@ public class CompositeVDB {
 		}
 		VDBMetaData childVDB = child.getVDB();
 		this.children.put(new VDBKey(childVDB.getName(), childVDB.getVersion()), child);
+		modified = true;
 		update();
 	}
 	
@@ -88,29 +90,34 @@ public class CompositeVDB {
 		if (this.children != null) {
 			this.children.remove(child);
 		}
+		modified = true;
 		update();
 	}	
 	
 	private synchronized void update() {
-		if (this.metadataloadFinished) {
-			
-			VDBMetaData newVDB = buildVDB();
-			
-			MetadataStore mergedStore = getMetadataStore();
-			
-			for (ModelMetaData model:newVDB.getModelMetaDatas().values()) {
-				MetadataRepository repo = model.getAttachment(MetadataRepository.class);
-				if (repo instanceof DefaultMetadataRepository) {
-					updateFromMetadataRepository(newVDB, mergedStore.getSchema(model.getName()), (DefaultMetadataRepository)repo);
-				}
-			}
-			
-			TransformationMetadata metadata = buildTransformationMetaData(newVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
-			newVDB.addAttchment(QueryMetadataInterface.class, metadata);
-			newVDB.addAttchment(TransformationMetadata.class, metadata);
-			newVDB.addAttchment(MetadataStore.class, mergedStore);
-			this.mergedVDB = newVDB;
+		if (!this.metadataloadFinished) {
+			return;
 		}
+		VDBMetaData newVDB = mergedVDB;
+		if (modified) {
+			newVDB = buildVDB();
+		}
+		
+		MetadataStore mergedStore = getMetadataStore();
+		
+		for (ModelMetaData model:newVDB.getModelMetaDatas().values()) {
+			MetadataRepository repo = model.getAttachment(MetadataRepository.class);
+			if (repo instanceof DefaultMetadataRepository) {
+				updateFromMetadataRepository(newVDB, mergedStore.getSchema(model.getName()), (DefaultMetadataRepository)repo);
+			}
+		}
+		
+		TransformationMetadata metadata = buildTransformationMetaData(newVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
+		newVDB.addAttchment(QueryMetadataInterface.class, metadata);
+		newVDB.addAttchment(TransformationMetadata.class, metadata);
+		newVDB.addAttchment(MetadataStore.class, mergedStore);
+		this.mergedVDB = newVDB;
+		this.modified = false;
 	}
 	
 	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
