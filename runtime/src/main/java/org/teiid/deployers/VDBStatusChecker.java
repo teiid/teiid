@@ -119,10 +119,7 @@ public abstract class VDBStatusChecker {
 	}
 	
 	public void resourceAdded(String resourceName, boolean translator) {
-		for (VDBMetaData vdb:getVDBRepository().getAllDeployedVDBs()) {
-			if (vdb == null) {
-				continue;
-			}
+		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
 			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
 				continue;
 			}
@@ -178,10 +175,7 @@ public abstract class VDBStatusChecker {
 	}
 	
 	public void resourceRemoved(String resourceName, boolean translator) {
-		for (VDBMetaData vdb:getVDBRepository().getAllDeployedVDBs()) {
-			if (vdb == null) {
-				continue;
-			}			
+		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
 			if (vdb.isPreview()) {
 				continue;
 			}

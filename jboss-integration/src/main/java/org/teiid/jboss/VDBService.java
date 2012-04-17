@@ -135,12 +135,13 @@ class VDBService implements Service<VDBMetaData> {
 				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
 					return;
 				}
+				VDBMetaData vdbInstance = vdb.getVDB();
 				// add object replication to temp/matview tables
-				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
+				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdbInstance.getAttachment(TransformationMetadata.class));
 				if (objectReplicatorInjector.getValue() != null) {
 					try {
 						gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-						vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
+						vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					} catch (Exception e) {
 						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
 					}

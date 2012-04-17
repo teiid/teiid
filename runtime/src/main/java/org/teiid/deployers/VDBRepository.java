@@ -109,50 +109,34 @@ public class VDBRepository implements Serializable{
 		return vdbs;
 	}
 	
-	/**
-	 * This returns the all the VDBS that loaded and still loading or stalled due to data source unavailability.
-	 * @return
-	 */
-	public List<VDBMetaData> getAllDeployedVDBs(){
-		ArrayList<VDBMetaData> vdbs = new ArrayList<VDBMetaData>();
-		for(CompositeVDB cVDB:this.vdbRepo.values()) {
-			if (!cVDB.isMetadataloadFinished()) {
-				vdbs.add(cVDB.buildVDB());
-			}
-			else {
-				vdbs.add(cVDB.getVDB());
-			}
-		}
-		return vdbs;
-	}	
-
     protected VDBKey vdbId(VDBMetaData vdb) {
         return new VDBKey(vdb.getName(), vdb.getVersion());
     } 	
 		
 	public VDBMetaData getVDB(String vdbName) {
     	int latestVersion = 0;
-        for (VDBKey key:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).keySet()) {
-            if(!key.getName().equalsIgnoreCase(vdbName)) {
+    	VDBMetaData result = null;
+        for (Map.Entry<VDBKey, CompositeVDB> entry:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).entrySet()) {
+            if(!entry.getKey().getName().equalsIgnoreCase(vdbName)) {
             	break;
             }
-        	VDBMetaData vdb = this.vdbRepo.get(key).getVDB();
+        	VDBMetaData vdb = entry.getValue().getVDB();
         	switch (vdb.getConnectionType()) {
         	case ANY:
-        		latestVersion = Math.max(vdb.getVersion(), latestVersion);
+        		if (vdb.getVersion() > latestVersion) {
+        			latestVersion = vdb.getVersion();
+        			result = vdb;
+        		}
         		break;
         	case BY_VERSION:
                 if (latestVersion == 0) {
             		latestVersion = vdb.getVersion();
+            		result = vdb;
                 }            	
                 break;
         	}
         }
-        if(latestVersion == 0) {
-            return null; 
-        }
-
-        return getVDB(vdbName, latestVersion);
+        return result;
 	}
 	
 	public MetadataStore getSystemStore() {
@@ -228,12 +212,14 @@ public class VDBRepository implements Serializable{
 		if (removed != null) {
 			// if this VDB was part of another VDB; then remove them.
 			for (CompositeVDB other:this.vdbRepo.values()) {
-				if (other.hasChildVdb(key)) {
-					notifyRemove(other.getVDB().getName(), other.getVDB().getVersion(), other);
-	
-					other.removeChild(key);
-	
-					notifyAdd(other.getVDB().getName(), other.getVDB().getVersion(), other);
+				synchronized (other) {
+					if (other.hasChildVdb(key)) {
+						notifyRemove(other.getVDB().getName(), other.getVDB().getVersion(), other);
+		
+						other.removeChild(key);
+		
+						notifyAdd(other.getVDB().getName(), other.getVDB().getVersion(), other);
+					}
 				}
 			}
 			notifyRemove(key.getName(), key.getVersion(), removed);
@@ -276,7 +262,7 @@ public class VDBRepository implements Serializable{
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
 			boolean valid = false;
-			v.setMetaloadFinished(true);
+			v.metadataLoadFinished();
 			VDBMetaData metdataAwareVDB = v.getVDB();			
 			ValidatorReport report = MetadataValidator.validate(metdataAwareVDB, metdataAwareVDB.removeAttachment(MetadataStore.class));
 			
