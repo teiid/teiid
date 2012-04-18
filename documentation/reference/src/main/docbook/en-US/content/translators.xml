@@ -353,7 +353,7 @@
                     <emphasis>oracle</emphasis> - for use with Oracle 9i or later.  
                     Sequences may be used with the Oracle translator. A sequence may be 
                     modeled as a table with a name in source of DUAL and columns with the 
-                    name in source set to <code>&lt;sequencesequence name&gt;.[nextval|currentval].</code>  
+                    name in source set to <code>&lt;sequence name&gt;.[nextval|currentval].</code>  
                     You can use a sequence as the default value for insert columns by 
                     setting the column to autoincrement and the name in source to 
                     <code>&lt;element name&gt;:SEQUENCE=&lt;sequence name&gt;.&lt;sequence value&gt;</code>.

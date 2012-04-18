@@ -683,7 +683,11 @@ public class ExecutionFactory<F, C> {
         
     /**
      * Get list of all supported function names.  Arithmetic functions have names like
-     * &quot;+&quot;.  
+     * &quot;+&quot;. 
+     * @see SourceSystemFunctions for a listing of system pushdown functions.  Note that
+     * not all system functions are listed as some functions will use a common name
+     * such as CONCAT vs. the || operator, and other functions will be rewritten and
+     * not pushed down, such as SPACE. 
      * @since 3.1 SP3    
      */        
     public List<String> getSupportedFunctions() {
