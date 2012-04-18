@@ -24,7 +24,9 @@ package org.teiid.jdbc;
 
 import java.net.MalformedURLException;
 import java.sql.Connection;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 import org.teiid.net.TeiidURL;
 
@@ -516,6 +518,10 @@ public class TeiidDataSource extends BaseDataSource {
 	 */	
 	public void setKerberosServicePrincipleName(String kerberosServerName) {
 		this.kerberosServicePrincipleName = kerberosServerName;
+	}
+
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		return TeiidDriver.logger;
 	}
 }
 

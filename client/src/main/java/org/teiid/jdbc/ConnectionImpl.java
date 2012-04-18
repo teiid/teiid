@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -1005,6 +1006,34 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 				setPassword(oldPassword);
 			}
 		}
+	}
+
+	public void abort(Executor executor) throws SQLException {
+		if (closed) {
+			return;
+		}
+		//TODO: ensure that threads are released.  In theory they will be since close effectively cancels current executions
+		close();
+	}
+
+	public int getNetworkTimeout() throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
+
+	public String getSchema() throws SQLException {
+		return null;
+	}
+
+	/**
+	 * @see query timeouts and the synchronousTtl setting if using socket connections
+	 */
+	public void setNetworkTimeout(Executor executor, int milliseconds)
+			throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
+
+	public void setSchema(String schema) throws SQLException {
+		
 	}
 
 }

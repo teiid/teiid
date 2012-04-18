@@ -1108,4 +1108,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 	
 	    return metadataMap;
 	}
+
+	public void closeOnCompletion() throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
+
+	public boolean isCloseOnCompletion() throws SQLException {
+		return false;
+	}
 }
