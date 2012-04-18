@@ -188,28 +188,28 @@ public class MetadataProcessor {
 			}
 			String sfTypeName = fieldType.value();
 			Column column = null;
-			if(sfTypeName.equals(FieldType.STRING) || //string
-					sfTypeName.equals(FieldType.COMBOBOX) || //"combobox"
-					sfTypeName.equals(FieldType.REFERENCE) || //"reference"
-					sfTypeName.equals(FieldType.PHONE) || //"phone"
-					sfTypeName.equals(FieldType.ID) || //"id"
-					sfTypeName.equals(FieldType.URL) || //"url"
-					sfTypeName.equals(FieldType.EMAIL) || //"email"
-					sfTypeName.equals(FieldType.ENCRYPTEDSTRING) || //"encryptedstring"
-					sfTypeName.equals(FieldType.ANY_TYPE)) {  //"anytype"
+			if(sfTypeName.equals(FieldType.STRING.value()) || //string
+					sfTypeName.equals(FieldType.COMBOBOX.value()) || //"combobox"
+					sfTypeName.equals(FieldType.REFERENCE.value()) || //"reference"
+					sfTypeName.equals(FieldType.PHONE.value()) || //"phone"
+					sfTypeName.equals(FieldType.ID.value()) || //"id"
+					sfTypeName.equals(FieldType.URL.value()) || //"url"
+					sfTypeName.equals(FieldType.EMAIL.value()) || //"email"
+					sfTypeName.equals(FieldType.ENCRYPTEDSTRING.value()) || //"encryptedstring"
+					sfTypeName.equals(FieldType.ANY_TYPE.value())) {  //"anytype"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				column.setNativeType(sfTypeName);
-				if(sfTypeName.equals(FieldType.ID)) {
+				if(sfTypeName.equals(FieldType.ID.value())) {
 					column.setNullType(NullType.No_Nulls);
 					ArrayList<String> columnNames = new ArrayList<String>();
 					columnNames.add(field.getName());
-					metadataFactory.addPrimaryKey(field.getName()+"_PK", columnNames, table);
+					metadataFactory.addPrimaryKey(field.getName()+"_PK", columnNames, table); //$NON-NLS-1$
 				}
 			}
-			else if(sfTypeName.equals(FieldType.PICKLIST)) { // "picklist"
+			else if(sfTypeName.equals(FieldType.PICKLIST.value())) { // "picklist"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				if(field.isRestrictedPicklist()) {
-					column.setNativeType("restrictedpicklist");
+					column.setNativeType("restrictedpicklist"); //$NON-NLS-1$
 				} else {
 					column.setNativeType(sfTypeName);
 				}
@@ -219,71 +219,71 @@ public class MetadataProcessor {
 			else if(sfTypeName.equals(FieldType.MULTIPICKLIST)) { //"multipicklist"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				if(field.isRestrictedPicklist()) {
-					column.setNativeType("restrictedmultiselectpicklist");
+					column.setNativeType("restrictedmultiselectpicklist");//$NON-NLS-1$
 				} else {
 					column.setNativeType(sfTypeName);
 				}
 				column.setProperty(COLUMN_PICKLIST_VALUES, getPicklistValues(field));
 			}
-			else if(sfTypeName.equals(FieldType.BASE_64)) { //"base64"
+			else if(sfTypeName.equals(FieldType.BASE_64.value())) { //"base64"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.BLOB, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.BOOLEAN)) { //"boolean"
+			else if(sfTypeName.equals(FieldType.BOOLEAN.value())) { //"boolean"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.BOOLEAN, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.CURRENCY)) { //"currency"
+			else if(sfTypeName.equals(FieldType.CURRENCY.value())) { //"currency"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DOUBLE, table);
 				column.setNativeType(sfTypeName);
 				column.setCurrency(true);
 				column.setScale(field.getScale());
 				column.setPrecision(field.getPrecision());
 			}
-			else if(sfTypeName.equals(FieldType.TEXTAREA)) { //"textarea"
+			else if(sfTypeName.equals(FieldType.TEXTAREA.value())) { //"textarea"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.STRING, table);
 				column.setNativeType(sfTypeName);
 				column.setSearchType(SearchType.Unsearchable);
 			}
-			else if(sfTypeName.equals(FieldType.INT)) { //"int"
+			else if(sfTypeName.equals(FieldType.INT.value())) { //"int"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.INTEGER, table);
 				column.setNativeType(sfTypeName);
 				column.setPrecision(field.getPrecision());
 			}
-			else if(sfTypeName.equals(FieldType.DOUBLE) || //"double"
-					sfTypeName.equals(FieldType.PERCENT)) { //"percent"
+			else if(sfTypeName.equals(FieldType.DOUBLE.value()) || //"double"
+					sfTypeName.equals(FieldType.PERCENT.value())) { //"percent"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DOUBLE, table);
 				column.setNativeType(sfTypeName);
 				column.setScale(field.getScale());
 				column.setPrecision(field.getPrecision());
 			}
-			else if(sfTypeName.equals(FieldType.DATE)) { //"date"
+			else if(sfTypeName.equals(FieldType.DATE.value())) { //"date"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.DATE, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.DATETIME)) { //"datetime"
+			else if(sfTypeName.equals(FieldType.DATETIME.value())) { //"datetime"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.TIMESTAMP, table);
 				column.setNativeType(sfTypeName);
 			}
-			else if(sfTypeName.equals(FieldType.TIME)) { //"time"
+			else if(sfTypeName.equals(FieldType.TIME.value())) { //"time"
 				column = metadataFactory.addColumn(normalizedName, DataTypeManager.DefaultDataTypes.TIME, table);
 				column.setNativeType(sfTypeName);
 			}
-			if(null == column) {
+			
+			if(column == null) {
 				LogManager.logError(LogConstants.CTX_CONNECTOR, "Unknown type returned by SalesForce: " + sfTypeName);
 				continue;
-			} else {
-				column.setNameInSource(field.getName());
-				column.setLength(field.getLength());
-				if(field.isUpdateable()) {
-					column.setUpdatable(true);
-					hasUpdateableColumn  = true;
-				}
-				column.setProperty(COLUMN_CALCULATED, String.valueOf(field.isCalculated()));
-				column.setProperty(COLUMN_CUSTOM, String.valueOf(field.isCustom()));
-				column.setProperty(COLUMN_DEFAULTED, String.valueOf(field.isDefaultedOnCreate()));
 			}
 			
+			column.setNameInSource(field.getName());
+			column.setLength(field.getLength());
+			if(field.isUpdateable()) {
+				column.setUpdatable(true);
+				hasUpdateableColumn  = true;
+			}
+			column.setProperty(COLUMN_CALCULATED, String.valueOf(field.isCalculated()));
+			column.setProperty(COLUMN_CUSTOM, String.valueOf(field.isCustom()));
+			column.setProperty(COLUMN_DEFAULTED, String.valueOf(field.isDefaultedOnCreate()));
 		}		
 	}
 	
