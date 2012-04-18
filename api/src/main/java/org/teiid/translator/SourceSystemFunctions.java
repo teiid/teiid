@@ -27,6 +27,10 @@ package org.teiid.translator;
  * The names and function forms follow the Open Group CLI functions, with a few exceptions
  * (such as lpad, rpad, bitand, bitor, etc. which are most notably supported by Oracle).
  * 
+ * Note that not all system functions are listed as some functions will use a common name
+ * such as CONCAT vs. the || operator, and other functions will be rewritten and
+ * not pushed down, such as SPACE.
+ * 
  */
 public class SourceSystemFunctions {
 	

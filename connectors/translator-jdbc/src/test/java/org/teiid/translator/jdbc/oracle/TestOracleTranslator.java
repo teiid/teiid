@@ -655,8 +655,8 @@ public class TestOracleTranslator {
      * @since 4.3
      */
     @Test public void testDUAL() throws Exception {
-        String input = "SELECT something FROM DUAL"; //$NON-NLS-1$
-        String output = "SELECT something FROM DUAL"; //$NON-NLS-1$
+        String input = "SELECT something FROM DUAL as g0"; //$NON-NLS-1$
+        String output = "SELECT seq.nextval FROM DUAL"; //$NON-NLS-1$
                
         helpTestVisitor(getOracleSpecificMetadata(),
             input, 
@@ -776,14 +776,15 @@ public class TestOracleTranslator {
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         cols.get(2).setNativeType("date"); //$NON-NLS-1$
         cols.get(3).setNativeType("CHAR");
-        RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
+        List<Column> dualCols = RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
+        dualCols.get(0).setNameInSource("seq.nextval");
         
         ProcedureParameter in1 = RealMetadataFactory.createParameter("in1", SPParameter.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
 		ColumnSet<Procedure> rs3 = RealMetadataFactory.createResultSet("proc.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ 
         Procedure p = RealMetadataFactory.createStoredProcedure("proc", foo, Arrays.asList(in1));
         p.setResultSet(rs3);
         p.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select x from y where z = $1");
-        
+
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
         return new TransformationMetadata(null, store, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     }
