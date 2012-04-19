@@ -193,15 +193,15 @@ public abstract class JDBCBaseExecution implements Execution  {
     
     public void addStatementWarnings() throws SQLException {
     	SQLWarning warning = this.statement.getWarnings();
-    	while (warning != null) {
-    		SQLWarning toAdd = warning;
-    		warning = toAdd.getNextWarning();
-    		toAdd.setNextException(null);
-    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
-    		}
-    		context.addWarning(toAdd);
-    	}
+    	if (warning != null) {
+			context.addWarning(warning);
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+		    	while (warning != null) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
+		    		warning = warning.getNextWarning();
+		    	}
+			}
+		}
     	this.statement.clearWarnings();
     }
 }

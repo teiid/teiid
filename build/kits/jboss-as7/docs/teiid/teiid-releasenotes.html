@@ -80,6 +80,8 @@
 <h4>from 7.7</h4>
 <ul>
   <li>parse/formatdate and parse/formattime are no longer pushdown functions.  They are converted into parse/formattimestamp.
+  <li>SQLWarning exception chains attached to the ExecutionContext will be returned as a single TeiidSQLWarning rather than as individual TeiidSQLWarnings.  See the TeiidSQLWarning javadocs
+for how to access the underlying SQLWarning chains.
 </ul>
 
 <h4>from 7.5</h4>
