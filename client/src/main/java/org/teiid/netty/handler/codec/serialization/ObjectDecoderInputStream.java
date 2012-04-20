@@ -22,24 +22,13 @@
  */
 package org.teiid.netty.handler.codec.serialization;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.OutputStream;
-import java.io.StreamCorruptedException;
+import java.io.*;
 import java.util.List;
 
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StreamFactoryReference;
 import org.teiid.core.util.ExternalizeUtil;
+import org.teiid.jdbc.JDBCPlugin;
 
 
 /**
@@ -83,8 +72,7 @@ public class ObjectDecoderInputStream extends ObjectInputStream {
 	    		    throw new StreamCorruptedException("invalid data length: " + dataLen); //$NON-NLS-1$
 	    		}
 	    		if (dataLen > maxObjectSize) {
-	    		    throw new StreamCorruptedException(
-	    		            "data length too big: " + dataLen + " (max: " + maxObjectSize + ')'); //$NON-NLS-1$ //$NON-NLS-2$
+	    		    throw new StreamCorruptedException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20028, dataLen, maxObjectSize));
 	    		}
 	        }
 	        fillBuffer();
