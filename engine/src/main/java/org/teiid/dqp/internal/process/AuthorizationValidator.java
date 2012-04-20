@@ -33,8 +33,34 @@ import org.teiid.query.util.CommandContext;
  */
 public interface AuthorizationValidator {
 	
-	void validate(Command command, QueryMetadataInterface metadata, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException;
+	enum CommandType {
+		USER,
+		PREPARED,
+		CACHED
+	}
 	
+	/**
+	 * Validates the given command.  If the command is not a {@link CommandType#USER} command, the command object should not be modified.
+	 * Any modification must be fully resolved using the associated {@link QueryMetadataInterface}.  Returning true for a 
+	 *  {@link CommandType#PREPARED} or  {@link CommandType#CACHED} commands means that the matching prepared plan or cache entry
+	 *  will not be used.
+	 * @param originalSql array of commands will typically contain only a single string, but may have multiple for batched updates.
+	 * @param command the parsed and resolved command. 
+	 * @param metadata
+	 * @param commandContext
+	 * @param commandType
+	 * @return true if the USER command was modified, or if the non-USER command should be modified.
+	 * @throws QueryValidatorException
+	 * @throws TeiidComponentException
+	 */
+	boolean validate(String[] originalSql, Command command, QueryMetadataInterface metadata, CommandContext commandContext, CommandType commandType) throws QueryValidatorException, TeiidComponentException;
+	
+	/**
+	 * 
+	 * @param roleName
+	 * @param commandContext
+	 * @return true if the current user has the given role
+	 */
 	boolean hasRole(String roleName, CommandContext commandContext);
 	
 	boolean isEnabled();
