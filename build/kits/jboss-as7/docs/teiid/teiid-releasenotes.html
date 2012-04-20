@@ -74,7 +74,8 @@
   <li>The translator API facilities for iterator/bulk updates were combined and updated.  Multi-valued literals were replaced by the Parameter class with an associated value iterator 
       available on the BatchedCommand.  The IteratorValueSource class was also removed.
   <li>VARBINARY, OPTIONS, and OUT were added as reserved words.
-  <li>AbstractMetadataRecord and its sub-classes use a case-insensitive map for properties rather than a LinkedHashMap.  Thus, property key lookups are now case-insensitive.    
+  <li>AbstractMetadataRecord and its sub-classes use a case-insensitive map for properties rather than a LinkedHashMap.  Thus, property key lookups are now case-insensitive.
+  <li>Removed the unused ExecutionFactory methods supportsBetweenCriteria and supportsCaseExpression.    
 </ul>
 
 <h4>from 7.7</h4>

@@ -325,16 +325,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
 
     @Override
-    public boolean supportsBetweenCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsCaseExpressions() {
-        return true;
-    }
-
-    @Override
     public boolean supportsCompareCriteriaEquals() {
         return true;
     }

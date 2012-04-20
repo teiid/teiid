@@ -85,12 +85,6 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
     }
 
     @Override
-    public boolean supportsBetweenCriteria() {
-        return false;
-    }
-
-
-    @Override
     public boolean supportsLikeCriteriaEscapeCharacter() {
         return false;
     }
@@ -157,11 +151,6 @@ public class SimpleJDBCExecutionFactory extends JDBCExecutionFactory {
 
     @Override
     public boolean supportsCorrelatedSubqueries() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsCaseExpressions() {
         return false;
     }
 

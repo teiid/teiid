@@ -194,11 +194,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public boolean supportsCaseExpressions() {
-    	return false;
-    }
-    
-    @Override
     public boolean supportsCorrelatedSubqueries() {
     	return false;
     }

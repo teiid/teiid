@@ -377,15 +377,6 @@ public class ExecutionFactory<F, C> {
     }
 
     /** 
-     * Support indicates connector accepts criteria of form (element BETWEEN constant AND constant)
-     * <br>NOT CURRENTLY USED - between is rewritten as compound compare criteria
-     * @since 4.0
-     */
-    public boolean supportsBetweenCriteria() {
-    	return false;
-    }
-    
-    /** 
      * Support indicates connector accepts criteria of form (element = constant) 
      * @since 3.1 SP2
      */
@@ -632,16 +623,6 @@ public class ExecutionFactory<F, C> {
     	return false;
     }
     
-    /**
-     * Support indicates connector can accept queries with non-searched
-     * CASE <expression> WHEN <expression> ... END
-     * <br>NOT CURRENTLY USED - case is pushed down as searched case
-     * @since 4.0
-     */
-    public boolean supportsCaseExpressions() {
-    	return false;
-    }
-
     /**
      * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
      * @since 4.0
