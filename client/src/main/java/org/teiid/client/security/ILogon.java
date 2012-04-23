@@ -37,9 +37,11 @@ public interface ILogon {
 	static final String KRB5TOKEN = "KRB5TOKEN"; //$NON-NLS-1$
 	static final String KRB5_ESTABLISHED = "KRB5_CONTEXT_ESTABLISHED"; //$NON-NLS-1$
 	
+	@Secure
     LogonResult logon(Properties connectionProperties)
     throws LogonException, TeiidComponentException, CommunicationException;
 
+	@Secure
     LogonResult neogitiateGssLogin(Properties connectionProperties, byte[] serviceToken, boolean createSession) throws LogonException;
     
    /**
@@ -60,5 +62,6 @@ public interface ILogon {
     */
    ResultsFuture<?> logoff() throws InvalidSessionException, TeiidComponentException;
    
+   @Secure
    void assertIdentity(SessionToken sessionId) throws InvalidSessionException, TeiidComponentException, CommunicationException;
 }

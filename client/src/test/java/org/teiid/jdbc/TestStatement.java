@@ -71,6 +71,14 @@ public class TestStatement {
 		assertEquals("b'ar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
+	@Test public void testSetPayloadStatement() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Properties p = new Properties();
+		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+		assertFalse(statement.execute("set payload foo bar")); //$NON-NLS-1$
+	}
+	
 	@Test public void testSetAuthorizationStatement() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
 		Properties p = new Properties();

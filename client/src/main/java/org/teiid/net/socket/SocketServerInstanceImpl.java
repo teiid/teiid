@@ -31,6 +31,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +44,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.teiid.client.security.ILogon;
+import org.teiid.client.security.Secure;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
@@ -77,6 +78,7 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     private Cryptor cryptor;
     private String serverVersion;
     private AuthenticationType authType = AuthenticationType.CLEARTEXT;
+    private HashMap<Class<?>, Object> serviceMap = new HashMap<Class<?>, Object>();
     
     private boolean hasReader;
     
@@ -275,15 +277,19 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 		}
     }
     
-	@SuppressWarnings("unchecked")
 	@Override
-	public <T> T getService(Class<T> iface) {
-		return (T)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface) {
-			@Override
-			protected SocketServerInstanceImpl getInstance() {
-				return SocketServerInstanceImpl.this;
-			}
-		});
+	public synchronized <T> T getService(Class<T> iface) {
+		Object service = this.serviceMap.get(iface);
+		if (service == null) {
+			service = Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new RemoteInvocationHandler(iface, false) {
+				@Override
+				protected SocketServerInstanceImpl getInstance() {
+					return SocketServerInstanceImpl.this;
+				}
+			});
+			this.serviceMap.put(iface, service);
+		}
+		return iface.cast(service);
 	}
 	
     public long getSynchTimeout() {
@@ -292,12 +298,12 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 
 	public static abstract class RemoteInvocationHandler implements InvocationHandler {
 
-		private boolean secure;
 		private Class<?> targetClass;
+		private boolean secureOptional;
 		
-		public RemoteInvocationHandler(Class<?> targetClass) {
+		public RemoteInvocationHandler(Class<?> targetClass, boolean secureOptional) {
 			this.targetClass = targetClass;
-			this.secure = ILogon.class.isAssignableFrom(targetClass);
+			this.secureOptional = secureOptional;
 		}
 
 		@Override
@@ -309,7 +315,8 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 				Message message = new Message();
 				message.setContents(new ServiceInvocationStruct(args, method.getName(),
 						targetClass));
-				if (secure) {
+				Secure secure = method.getAnnotation(Secure.class);
+				if (secure != null && (!secure.optional() || secureOptional)) {
 					message.setContents(instance.getCryptor().sealObject(message.getContents()));
 				}
 				ResultsFuture<Object> results = new ResultsFuture<Object>() {
