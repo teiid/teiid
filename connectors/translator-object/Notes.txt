@@ -1,0 +1,51 @@
+Notes:
+
+Limitations -
+
+1.  There is no current support for 2 or more classes named the same (but different packages) in the same model.  
+	The table name will be the name of the class, not the full classname. 
+	
+
+
+
+Modeling -
+
+-   JavaBean convention is used.  The column name (or nameinsource if used) are used in finding the get/is method.
+
+ Example:
+    	Object:   Trade
+    	Attribute:   TradeId  (getter/setter:  getTradeId/setTradeId)
+    	
+	   in the Designer, if the column name is not the name of the a attribute, then the nameInSource will have to be set to the Attribute name
+	   			example:  	columnName:		TRADE_ID
+							nameInSource:   TradeId
+								
+	The process of getting the trade id value from the Trade object will take the nameInSource (if not provided, then use column name) and prepend "get".
+	Therefore, the method name:   getTradeId  must exist on the Trade object.
+
+
+-	A model should have the hierarchical structure of a class normalized.  Meaning, any container based objects
+	(i.e., Collections, Arrays, etc.) must have a separate table defined and have a foreign key relationship to
+	its parent table/object. 	
+-   The table defined for the root object must have a primary key defined, which is the key to it being found in the cache
+-	If an object has children, then the following must occur:
+	a.  parent and child tables need a primary key
+	b.  if the child object does not contain a reference to the parent object, then the child table will need to have 
+		a column added that can be used in the creation of the foreign key (see "c" below) and used in joins
+		NOTE:  set these properties on the new column:  
+			-	Searchability=UNSEARCHABLE
+			-	Selectable=false
+			-   Updateable=false
+	c.	create the foreign key relationship between parent child, where the NameInSource for the FK being the method
+		to access child objects.
+	d.  the attribute on an object that is the container object, should not be modeled as an attribute in the table. 
+		This is because its not directly queryable.  It should have a related child table, which has a foreign key
+		(see b and c above).
+		
+		
+		
+		
+TODO:
+
+-  when importing metadata, make the Object types (of return types, collections, etc) non-selectable, because they need
+	to have their own table created and then a foreign key back to the parent table.

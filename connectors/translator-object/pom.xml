@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <artifactId>connectors</artifactId>
+        <groupId>org.jboss.teiid</groupId>
+        <version>7.7.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>translator-object</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>
+    <name>Object Translator</name>
+    <description>This is the translator for Object(s)</description>
+     <properties>
+       <version.infinispan>5.1.2.FINAL</version.infinispan>
+       <version.hibernate.search>4.1.0.CR1</version.hibernate.search>
+  </properties>
+    <dependencies>
+     
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-client</artifactId>
+ 			<scope>provided</scope>
+        </dependency>     
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-client</artifactId>
+			<type>test-jar</type>
+			<scope>provided</scope>
+		</dependency>      		
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+		<dependency>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>teiid-metadata</artifactId>
+			<type>test-jar</type>
+			<scope>provided</scope>
+		</dependency>
+           
+<!-- 
+			<dependency>
+	          <groupId>org.infinispan</groupId>
+    	      <artifactId>infinispan-core</artifactId>
+       		   <version>${version.infinispan}</version>
+       		</dependency>
+       		
+			<dependency>
+	          <groupId>org.infinispan</groupId>
+    	      <artifactId>infinispan-query</artifactId>
+       		   <version>${version.infinispan}</version>
+       		</dependency>  
+     -->       
+   
+		<dependency>
+		   <groupId>org.hibernate</groupId>
+		   <artifactId>hibernate-search</artifactId>
+		   <version>${version.hibernate.search}</version>
+		</dependency>
+                           							
+		<dependency>
+			<groupId>javax.resource</groupId>
+			<artifactId>connector-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+    </dependencies>
+    
+    
+    <build>
+        <outputDirectory>target/classes</outputDirectory>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.xml</include>
+                    <include>**/*.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.xml</exclude>
+                    <exclude>**/*.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+
+</project>
