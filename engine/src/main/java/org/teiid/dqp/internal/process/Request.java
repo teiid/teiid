@@ -470,7 +470,7 @@ public class Request implements SecurityFunctionEvaluator {
 		if (context == null) {
 			createCommandContext(command);
 		}
-		if (this.authorizationValidator != null) {
+		if (!this.workContext.isAdmin() && this.authorizationValidator != null) {
 			return this.authorizationValidator.validate(commandStr, command, metadata, context, type);
 		}
 		return false;

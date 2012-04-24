@@ -35,7 +35,6 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -75,7 +74,7 @@ public class TestMaterialization {
 		
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setTupleBufferCache(bm);
-		dataManager = new TempTableDataManager(hdm, bm, ExecutorUtils.getDirectExecutor(), cache);
+		dataManager = new TempTableDataManager(hdm, bm, cache);
 	}
 	
 	private void execute(String sql, List<?>... expectedResults) throws Exception {

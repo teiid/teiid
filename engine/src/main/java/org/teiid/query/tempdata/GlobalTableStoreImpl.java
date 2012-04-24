@@ -79,6 +79,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		private Serializable loadingAddress;
 		private long ttl = -1;
 		private boolean valid;
+		private boolean asynch; //sub state of loading
 		
 		protected MatTableInfo() {}
 		
@@ -96,7 +97,9 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 				}
 				return true;
 			case LOADING:
-				if (!firstPass && localAddress instanceof Comparable<?> && ((Comparable)localAddress).compareTo(possibleLoadingAddress) < 0) {
+				if ((!firstPass && localAddress instanceof Comparable<?> && ((Comparable)localAddress).compareTo(possibleLoadingAddress) < 0)
+						|| (refresh && asynch)) {
+					this.asynch = false;
 					this.loadingAddress = possibleLoadingAddress; //ties go to the lowest address
 					return true;
 				}
@@ -128,6 +131,11 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
 			notifyAll();
+		}
+		
+		public synchronized void setAsynchLoad() {
+			assert state == MatState.LOADING;
+			asynch = true;
 		}
 		
 		public synchronized void setTtl(long ttl) {

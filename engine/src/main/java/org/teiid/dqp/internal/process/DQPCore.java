@@ -49,6 +49,7 @@ import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.plan.PlanNode;
@@ -485,21 +486,6 @@ public class DQPCore implements DQP {
         return resultsFuture;
     }
     
-//    /**
-//     * Cancels a node in the request. (This request is called by the 
-//     * client directly using the admin API), so if this does not support
-//     * partial results then remove the original request.
-//     * @throws MetaMatrixComponentException 
-//     */
-//    public void cancelAtomicRequest(AtomicRequestID requestID) throws MetaMatrixComponentException {                    
-//        RequestWorkItem workItem = safeGetWorkItem(requestID.getRequestID());
-//        if (workItem == null) {
-//    		LogManager.logDetail(LogConstants.CTX_DQP, "Could not cancel", requestID, "parent request does not exist"); //$NON-NLS-1$ //$NON-NLS-2$
-//        	return;
-//        }
-//        workItem.requestAtomicRequestCancel(requestID);
-//    }
-    
     RequestWorkItem getRequestWorkItem(RequestID reqID) throws TeiidProcessingException {
     	RequestWorkItem result = this.requests.get(reqID);
     	if (result == null) {
@@ -695,7 +681,27 @@ public class DQPCore implements DQP {
         
         DataTierManagerImpl processorDataManager = new DataTierManagerImpl(this, this.bufferManager, this.config.isDetectingChangeEvents());
         processorDataManager.setEventDistributor(eventDistributor);
-		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.processWorkerPool, this.rsCache);
+		dataTierMgr = new TempTableDataManager(processorDataManager, this.bufferManager, this.rsCache);
+		dataTierMgr.setExecutor(new TempTableDataManager.RequestExecutor() {
+			
+			@Override
+			public void execute(String command, List<?> parameters) {
+				final String sessionId = DQPWorkContext.getWorkContext().getSessionId();
+				RequestMessage request = new RequestMessage(command);
+				request.setParameterValues(parameters);
+				request.setStatementType(StatementType.PREPARED);
+				ResultsFuture<ResultsMessage> result = executeRequest(0, request);
+				result.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
+
+					@Override
+					public void onCompletion(
+							ResultsFuture<ResultsMessage> future) {
+						terminateSession(sessionId);
+					}
+					
+				});
+			}
+		});
         dataTierMgr.setEventDistributor(eventDistributor);
                 
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

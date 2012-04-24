@@ -63,7 +63,6 @@ import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.plan.PlanNode;
-import org.teiid.client.security.SessionToken;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
@@ -75,6 +74,7 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.query.tempdata.TempTableDataManager;
 
 abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	List<TransportService> transports = new ArrayList<TransportService>();
@@ -721,11 +721,16 @@ class ExecuteQuery extends TeiidOperationHandler{
 		String user = "CLI ADMIN"; //$NON-NLS-1$
 		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
 		
-		SessionMetadata session = createTemporarySession(vdbName, version, user);
+        VDBMetaData vdb = this.vdbRepo.getVDB(vdbName, version);
+        if (vdb == null) {
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("wrong_vdb")));//$NON-NLS-1$
+        }
+        final SessionMetadata session = TempTableDataManager.createTemporarySession(user, "admin-console", vdb); //$NON-NLS-1$
 
 		final long requestID =  0L;
 		
 		DQPWorkContext context = new DQPWorkContext();
+		context.setUseCallingThread(true);
 		context.setSession(session);
 		
 		try {
@@ -735,7 +740,7 @@ class ExecuteQuery extends TeiidOperationHandler{
 					
 					long start = System.currentTimeMillis();
 					RequestMessage request = new RequestMessage(command);
-					request.setExecutionId(0L);
+					request.setExecutionId(requestID);
 					request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
 					Future<ResultsMessage> message = engine.executeRequest(requestID, request);
 					ResultsMessage rm = null;
@@ -770,7 +775,19 @@ class ExecuteQuery extends TeiidOperationHandler{
 			});
 		} catch (Throwable t) {
 			throw new OperationFailedException(new ModelNode().set(t.getMessage()));
-		} 
+		} finally {
+			try {
+				context.runInContext(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						engine.terminateSession(session.getSessionId());
+						return null;
+					}
+				});
+			} catch (Throwable e) {
+				throw new OperationFailedException(new ModelNode().set(e.getMessage()));
+			}
+		}
 	}
 	
 	private void writeResults(ModelNode resultsNode, List<String> columns,  List<? extends List<?>> results) throws SQLException {
@@ -826,27 +843,6 @@ class ExecuteQuery extends TeiidOperationHandler{
 		}
 	}
 	
-	private SessionMetadata createTemporarySession(final String vdbName, final int version, final String userName) throws OperationFailedException{
-		
-        long creationTime = System.currentTimeMillis();
-
-        // Return a new session info object
-        SessionMetadata newSession = new SessionMetadata();
-        newSession.setSessionToken(new SessionToken(userName));
-        newSession.setSessionId(newSession.getSessionToken().getSessionID());
-        newSession.setUserName(userName);
-        newSession.setCreatedTime(creationTime);
-        newSession.setApplicationName("admin-console"); //$NON-NLS-1$
-        newSession.setVDBName(vdbName);
-        newSession.setVDBVersion(version);
-        
-        VDBMetaData vdb = this.vdbRepo.getVDB(vdbName, version);
-        if (vdb == null) {
-        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("wrong_vdb")));//$NON-NLS-1$
-        }
-        newSession.setVdb(vdb);
-		return newSession;
-	}	
 }
 
 class GetVDB extends BaseOperationHandler<VDBRepository>{
