@@ -236,7 +236,7 @@ public class RuleRemoveOptionalJoins implements
 	}
 
 	public String toString() {
-        return "RuleRemoveOptionalJoins"; //$NON-NLS-1$
+        return "RemoveOptionalJoins"; //$NON-NLS-1$
     }
 
 }

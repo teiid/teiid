@@ -243,19 +243,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            List<Expression> requiredInput = collectRequiredInputSymbols(root);
 	            //targeted optimization for unnecessary aggregation
 	            if (root.getType() == NodeConstants.Types.GROUP && root.hasBooleanProperty(Info.IS_OPTIONAL) && NodeEditor.findParent(root, NodeConstants.Types.ACCESS) == null) {
-	            	PlanNode old = root;
-	            	PlanNode next = root.getFirstChild();
-	            	NodeEditor.removeChildNode(root.getParent(), root);
-	            	
-            		SymbolMap symbolMap = (SymbolMap) old.getProperty(NodeConstants.Info.SYMBOL_MAP);
-            		if (!symbolMap.asMap().isEmpty()) {
-            			FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
-            		}
-    				PlanNode parent = next.getParent();
-    				while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE) {
-    					parent = parent.getParent();
-    				}
-    				if (!old.hasCollectionProperty(Info.GROUP_COLS)) {
+	            	PlanNode parent = removeGroupBy(root, metadata);
+    				if (!root.hasCollectionProperty(Info.GROUP_COLS)) {
     					//just lob off everything under the projection
     					PlanNode project = NodeEditor.findNodePreOrder(parent, NodeConstants.Types.PROJECT);
     					project.removeAllChildren();
@@ -286,6 +275,23 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            }
 		    }
 		}
+	}
+
+	static PlanNode removeGroupBy(PlanNode root,
+			QueryMetadataInterface metadata)
+			throws QueryPlannerException {
+		PlanNode next = root.getFirstChild();
+		NodeEditor.removeChildNode(root.getParent(), root);
+		
+		SymbolMap symbolMap = (SymbolMap) root.getProperty(NodeConstants.Info.SYMBOL_MAP);
+		if (!symbolMap.asMap().isEmpty()) {
+			FrameUtil.convertFrame(next.getParent(), symbolMap.asMap().keySet().iterator().next().getGroupSymbol(), null, symbolMap.asMap(), metadata);
+		}
+		PlanNode parent = next.getParent();
+		while (parent.getParent() != null && parent.getParent().getType() != NodeConstants.Types.SOURCE && parent.getParent().getType() != NodeConstants.Types.SET_OP) {
+			parent = parent.getParent();
+		}
+		return parent;
 	}
 
 	public static Set<WindowFunction> getWindowFunctions(

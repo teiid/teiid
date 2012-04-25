@@ -239,11 +239,11 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT v_0.c_0, COUNT(v_0.c_1), MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("a", Integer.valueOf(2), Integer.valueOf(1)), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT v_0.c_0, COUNT(v_0.c_1), MAX(v_0.c_1) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0) AS v_0 GROUP BY v_0.c_0", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("a", Integer.valueOf(3), Integer.valueOf(2)), //$NON-NLS-1$
     			});
@@ -275,7 +275,7 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", bac); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, g_0.e2, COUNT(*), MAX(g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1, g_0.e2", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
@@ -307,7 +307,7 @@ public class TestAggregateProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
-        dataManager.addData("SELECT MAX(v_0.c_0), COUNT(*), COUNT(v_0.c_0), SUM(power(v_0.c_0, 2)), SUM(v_0.c_0) FROM (SELECT g_0.e2 AS c_0 FROM pm2.g2 AS g_0) AS v_0 HAVING COUNT(*) > 0", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
+        dataManager.addData("SELECT MAX(g_0.e2), COUNT(*), COUNT(g_0.e2), SUM(power(g_0.e2, 2)), SUM(g_0.e2) FROM pm2.g2 AS g_0 HAVING COUNT(*) > 0", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
         
         List[] expected = new List[] {
     		Arrays.asList(5, 8, 2.1147629234082532, 5.366666666666666),

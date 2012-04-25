@@ -211,8 +211,7 @@ public class TestUnionPlanning {
     
     @Test public void testUnionWithPartitionedAggregate() throws Exception {
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(intnum) from (SELECT IntKey, intnum FROM BQT1.SmallA where intkey in (1, 2) UNION ALL SELECT intkey, intnum FROM BQT2.SmallA where intkey in (3, 4)) A group by intkey", RealMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
-            new String[] { "SELECT MAX(v_0.c_1) FROM (SELECT g_0.IntKey AS c_0, g_0.intnum AS c_1 FROM BQT1.SmallA AS g_0 WHERE g_0.intkey IN (1, 2)) AS v_0 GROUP BY v_0.c_0", 
-        			"SELECT MAX(v_0.c_1) FROM (SELECT g_0.intkey AS c_0, g_0.intnum AS c_1 FROM BQT2.SmallA AS g_0 WHERE g_0.intkey IN (3, 4)) AS v_0 GROUP BY v_0.c_0" }, ComparisonMode.EXACT_COMMAND_STRING); 
+            new String[] { "SELECT MAX(g_0.intnum) FROM BQT2.SmallA AS g_0 WHERE g_0.intkey IN (3, 4) GROUP BY g_0.intkey", "SELECT MAX(g_0.intnum) FROM BQT1.SmallA AS g_0 WHERE g_0.intkey IN (1, 2) GROUP BY g_0.IntKey" }, ComparisonMode.EXACT_COMMAND_STRING); 
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -226,6 +225,53 @@ public class TestUnionPlanning {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });                                    
+    }
+    
+    @Test public void testUnionWithUnnecessaryGroupBy() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select intkey from (SELECT IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT intkey, intnum FROM BQT2.SmallA) A group by intkey", RealMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
+            new String[] { "SELECT g_0.intkey FROM BQT2.SmallA AS g_0", "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            1,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });                                    
+    }
+    
+    @Test public void testUnionWithUnnecessaryGroupByPartitionedConstant() throws Exception {
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+    	DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = TestOptimizer.helpPlan("select intkey from (SELECT 1 as IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT 2 as intkey, intnum FROM BQT2.SmallA) A group by intkey", RealMetadataFactory.exampleBQTCached(), null, capFinder,//$NON-NLS-1$
+            new String[] { "SELECT 1 AS c_0 FROM BQT2.SmallA AS g_0 LIMIT 1", "SELECT 1 AS c_0 FROM BQT1.SmallA AS g_0 LIMIT 1" }, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            3,      // Project
             0,      // Select
             0,      // Sort
             1       // UnionAll

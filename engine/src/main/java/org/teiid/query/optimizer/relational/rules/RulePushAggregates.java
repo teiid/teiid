@@ -184,6 +184,17 @@ public class RulePushAggregates implements
 		if (aggregates.isEmpty()) {
 			if (!groupingExpressions.isEmpty()) {
 				setOp.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
+				boolean allCols = true;
+				for (Expression ex : groupingExpressions) {
+					if (!(ex instanceof ElementSymbol)) {
+						allCols = false;
+						break;
+					}
+				}
+				if (allCols) {
+					//since there are no expressions in the grouping cols, we know the grouping node is now not needed.
+					RuleAssignOutputElements.removeGroupBy(groupNode, metadata);
+				}
 			}
 			return;
 		} 
@@ -246,6 +257,7 @@ public class RulePushAggregates implements
 			FrameUtil.convertNode(node, null, null, mapping, metadata, false);
 			node = node.getParent();
 		}
+		removeUnnecessaryViews(unionSourceParent, metadata, capFinder);
 	}
 
 	private void updateParentAggs(PlanNode groupNode, CommandContext context,
@@ -349,6 +361,42 @@ public class RulePushAggregates implements
 			updatedMapping.put(orig, entry.getKey());
 		}
 		FrameUtil.convertFrame(sourceNode, oldGroup, Collections.singleton(modifiedGroup), updatedMapping, metadata);
+		removeUnnecessaryViews(sourceNode, metadata, capFinder);
+	}
+
+	/**
+	 * TODO: remove me - the logic in {@link #addUnionGroupBy} should be redone
+	 * to not use a view, but the logic there is more straight-forward there 
+	 * and then we correct here.
+	 * @param sourceNode
+	 * @param metadata
+	 * @param capFinder
+	 * @throws QueryPlannerException
+	 * @throws QueryMetadataException
+	 * @throws TeiidComponentException
+	 */
+	private void removeUnnecessaryViews(PlanNode sourceNode,
+			QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+			throws QueryPlannerException, QueryMetadataException,
+			TeiidComponentException {
+		for (PlanNode source : NodeEditor.findAllNodes(sourceNode.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.ACCESS)) {
+			PlanNode planNode = source.getFirstChild();
+			if (planNode == null || planNode.getType() != NodeConstants.Types.ACCESS) {
+				continue;
+			}
+			//temporarily remove the access node
+			NodeEditor.removeChildNode(source, planNode);
+			PlanNode parent = RuleMergeVirtual.doMerge(source, source.getParent(), false, metadata);
+			//add it back
+			if (parent.getFirstChild() == source) {
+				source.getFirstChild().addAsParent(planNode);
+			} else {
+				parent.getFirstChild().addAsParent(planNode);
+			}
+			while (RuleRaiseAccess.raiseAccessNode(planNode, planNode, metadata, capFinder, true, null) != null) {
+				//continue to raise
+			}
+		}
 	}
 
 	private void addUnionGroupBy(
@@ -428,13 +476,6 @@ public class RulePushAggregates implements
 		if (!viewOnly) {
 			addGroupBy(cc, view, groupingColumns, aggregates, metadata, projectPlanNode.getParent());
 		}
-		
-		if (planNode.getType() == NodeConstants.Types.ACCESS) {
-			//TODO: temporarily remove the access node so that the inline view could be removed if possible 
-		    while (RuleRaiseAccess.raiseAccessNode(planNode, planNode, metadata, capFinder, true, null) != null) {
-				//continue to raise
-			}
-		}
 	}
 	
 	private void updateSymbolName(List<Expression> projectCols, int i,
@@ -455,9 +496,16 @@ public class RulePushAggregates implements
 			return false;
 		}
 		Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNode, metadata);
-		if (!CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelId, metadata, capFinder) 
-				|| !CapabilitiesUtil.supports(Capability.QUERY_GROUP_BY, modelId, metadata, capFinder)) {
+		if (!CapabilitiesUtil.supports(Capability.QUERY_GROUP_BY, modelId, metadata, capFinder)) {
 			return false;
+		}
+		if (!CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelId, metadata, capFinder)
+		    && !CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelId, metadata, capFinder)) {
+			for (Expression e : groupingExpressions) {
+				if (!(e instanceof ElementSymbol)) {
+					return false;
+				}
+			}
 		}
 		for (AggregateSymbol aggregate : aggregates) {
 			if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(aggregate, modelId, metadata, capFinder, record)) {

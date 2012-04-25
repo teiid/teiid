@@ -743,7 +743,7 @@ public class ExecutionFactory<F, C> {
 	}
 
     /**
-     * <p>Support indicates that the connector supports functions in GROUP BY, such as:
+     * <p>Support indicates that the connector supports non-column expressions in GROUP BY, such as:
      *  <code>SELECT dayofmonth(theDate), COUNT(*) FROM table GROUP BY dayofmonth(theDate)</code></p>
      * @since 5.0
      */
