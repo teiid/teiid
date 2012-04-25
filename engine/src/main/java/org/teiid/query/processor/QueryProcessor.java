@@ -34,7 +34,6 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
-import org.teiid.jdbc.SQLStates;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -148,6 +147,7 @@ public class QueryProcessor implements BatchProducer {
 	        			result.setTerminationFlag(false);
 		        		this.processPlan.close();
 		        		this.processPlan.reset();
+		        		this.context.incrementReuseCount();
 		        		this.open = false;	
 	        		}
 	            }

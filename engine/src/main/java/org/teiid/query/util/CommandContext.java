@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.security.auth.Subject;
 
@@ -148,6 +149,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    Set<CommandListener> commandListeners = null;
 	    private LRUCache<String, DecimalFormat> decimalFormatCache;
 		private LRUCache<String, SimpleDateFormat> dateFormatCache;
+		private AtomicLong reuseCount = new AtomicLong();
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -744,6 +746,15 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 			}
 		}
 		return result;
+	}
+	
+	public void incrementReuseCount() {
+		globalState.reuseCount.getAndIncrement();
+	}
+	
+	@Override
+	public long getReuseCount() {
+		return globalState.reuseCount.get();
 	}
 	
 }

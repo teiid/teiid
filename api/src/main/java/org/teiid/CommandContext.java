@@ -143,5 +143,12 @@ public interface CommandContext {
 	 * @param listener
 	 */
 	void removeListener(CommandListener listener);
+	
+	/**
+	 * Get the number of times this command has been reused.  Useful 
+	 * in continuous executions.
+	 * @return
+	 */
+	long getReuseCount();
 
 }
