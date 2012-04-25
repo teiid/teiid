@@ -99,10 +99,12 @@ public class ObjectProjections {
 
 	private void addException(String columnNameToUse1,
 			String columnNameToUse2, String table) {
+		
 		exceptionMessages.add(
-				"Query Error: multiple collections found between columns "
-						+ columnNameToUse1 + " and " + columnNameToUse2
-						+ " (table: " + table + " ) ");
+				ObjectPlugin.Util
+    			.getString(
+    					"ObjectProjections.unsupportedMultipleContainers", new Object[] { columnNameToUse1, columnNameToUse2, table }));
+
 	}
 	
 	protected void throwExceptionIfFound() throws TranslatorException {

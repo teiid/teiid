@@ -43,15 +43,14 @@ public class ObjectExecution implements ResultSetExecution {
 
     private Select query;
     private ObjectSourceProxy proxy;
-    private ObjectExecutionFactory factory;
+    private ObjectMethodManager methodManager;
     
-    @SuppressWarnings("rawtypes")
-	private Iterator resultsIt = null;  
+	private Iterator<List<Object>> resultsIt = null;  
     
-    public ObjectExecution(Command query, RuntimeMetadata metadata, ObjectSourceProxy connproxy, ObjectExecutionFactory factory) {
+    public ObjectExecution(Command query, RuntimeMetadata metadata, ObjectSourceProxy connproxy, ObjectMethodManager methodManager) {
     	this.query = (Select) query;
         this.proxy = connproxy;
-        this.factory = factory;
+        this.methodManager = methodManager;
     }
     
 	@Override
@@ -61,13 +60,13 @@ public class ObjectExecution implements ResultSetExecution {
         
         List<Object> objects = executeQuery();
 
-        List<List<?>> results = null;
+        List<List<Object>> results = null;
 		if (objects != null && objects.size() > 0) {
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution number of objects from proxy is : " + objects.size()); //$NON-NLS-1$
 
 		    ObjectProjections op = new ObjectProjections(query);
 		    
-			results = ObjectTranslator.translateObjects(objects, op, factory.getObjectMethodManager());
+			results = ObjectTranslator.translateObjects(objects, op, methodManager);
 			 
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution number of rows from translation : " + results.size()); //$NON-NLS-1$
 
@@ -102,8 +101,10 @@ public class ObjectExecution implements ResultSetExecution {
 
     @Override
     public void close() {
-        this.proxy.close();
+        if (this.proxy != null) this.proxy.close();
         this.proxy = null;
+        this.methodManager = null;
+        this.query = null;
         
     }
 

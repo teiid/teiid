@@ -26,6 +26,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -93,13 +94,12 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 		
 		Method getIsMethod(String name) {
 			return this.is.get(name);
-		}		
-		
+		}			
 	}
 	
 	@SuppressWarnings("unchecked")
 	public static ObjectMethodManager initialize(boolean firstLetterUpperCaseInColumName, ClassLoader classloader) throws TranslatorException {
-		return loadClassMethods(Collections.EMPTY_LIST, firstLetterUpperCaseInColumName, classloader);
+		return initialize(Collections.EMPTY_LIST, firstLetterUpperCaseInColumName, classloader);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -110,18 +110,22 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 		} else {
 			classNames = Collections.EMPTY_LIST;
 		}
-		return loadClassMethods(classNames, firstLetterUpperCaseInColumName, classloader);
+		return initialize(classNames, firstLetterUpperCaseInColumName, classloader);
 	}
 	
-	public static ObjectMethodManager loadClassMethods(List<String> classNames, boolean firstLetterUpperCaseInColumName, ClassLoader classloader) throws TranslatorException {
+	public static ObjectMethodManager initialize(List<String> classNames, boolean firstLetterUpperCaseInColumName, ClassLoader classloader) throws TranslatorException {
+		if (classNames == null) classNames = Collections.EMPTY_LIST;
 		
 		ObjectMethodManager osmm = new ObjectMethodManager(firstLetterUpperCaseInColumName);
-		
-		for (String clzName: classNames) {
-			osmm.loadClassByName(clzName, classloader);
-		}
+		osmm.loadClassNames(classNames, classloader);
 		
 		return osmm;
+	}
+	
+	public void loadClassNames(List<String> classNames, ClassLoader classloader) throws TranslatorException {
+		for (String clzName: classNames) {
+			loadClassByName(clzName, classloader);
+		}
 	}
 	
 	public Class<?> loadClassByName(String className, ClassLoader classLoader) throws TranslatorException {
@@ -141,25 +145,6 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 	
 	private ObjectMethodManager(boolean firstLetterUpperCaseInColumName) {
 		this.firstLetterUpperCaseInColumName = firstLetterUpperCaseInColumName;
-	}
-	
-	private ClassMethods loadClassMethods(Class<?> clzz) {
-		Method[] methods = clzz.getDeclaredMethods();
-		ClassMethods clzMethods = new ClassMethods(clzz);
-		
-		for (int i=0; i<methods.length; i++) {
-			Method m = methods[i];
-			if (m.getName().startsWith(GET)) {
-				clzMethods.addGetter(m.getName(), m);
-				// commenting out the caching of the setter methods
-//			} else if (m.getName().startsWith(SET)) {
-//				clzMethods.addSetter(m.getName(), m);
-			} else if (m.getName().startsWith(IS)) {
-				clzMethods.addIsMethod(m.getName(), m);
-			}
-		}
-		this.put(clzz.getName(), clzMethods);
-		return clzMethods;
 	}
 	
 	public Object getIsValue(String methodName, Object object)
@@ -237,7 +222,7 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 		return this.firstLetterUpperCaseInColumName;
 	}
 	
-	public static final Class<?> loadClass(final String className,
+	public static synchronized final Class<?> loadClass(final String className,
 			final ClassLoader classLoader) throws TranslatorException {
 		try {
 			Class<?> cls = null;
@@ -270,6 +255,27 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 		return clzMethods;
 
 	}
+	
+	
+	private synchronized ClassMethods loadClassMethods(Class<?> clzz) {
+		Method[] methods = clzz.getDeclaredMethods();
+		ClassMethods clzMethods = new ClassMethods(clzz);
+		
+		for (int i=0; i<methods.length; i++) {
+			Method m = methods[i];
+			if (m.getName().startsWith(GET)) {
+				clzMethods.addGetter(m.getName(), m);
+				// commenting out the caching of the setter methods
+//			} else if (m.getName().startsWith(SET)) {
+//				clzMethods.addSetter(m.getName(), m);
+			} else if (m.getName().startsWith(IS)) {
+				clzMethods.addIsMethod(m.getName(), m);
+			}
+		}
+		this.put(clzz.getName(), clzMethods);
+		return clzMethods;
+	}
+	
 	private boolean firstLetterUpperCaseInColumName = true;
 
 }

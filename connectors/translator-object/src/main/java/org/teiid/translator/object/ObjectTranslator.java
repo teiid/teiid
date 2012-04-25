@@ -86,11 +86,11 @@ public class ObjectTranslator {
 	 * 			obtaining the data from an object
 	 * @return List<List<?>> that represent the rows and columns in the result set
 	 */
-	public static List<List<?>> translateObjects(List<Object> objects, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
+	public static List<List<Object>> translateObjects(List<Object> objects, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
 
 		projections.throwExceptionIfFound();
 		
-		List<List<?>> rows = new ArrayList<List<?>>(objects.size());			
+		List<List<Object>> rows = new ArrayList<List<Object>>(objects.size());			
 		
 		// if no container objects required in the results, then
 		// perform simple logic for building a row
@@ -144,8 +144,9 @@ public class ObjectTranslator {
 			int level, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
 		
 		List<List<Object>> containerRows = new ArrayList<List<Object>>();
-		// if there another container depth, then process it first
-		// this will be recursive 
+		// if there is another container depth, then process it first
+		// this will be recursive to get to the bottom child and return
+		// back up the chain, expanding the rows for each child
 		if (level < projections.childrenDepth) {
 			String containerMethodName = projections.childrenNodes.get(level);
 			
@@ -230,6 +231,7 @@ public class ObjectTranslator {
 
 					if (projections.nodeDepth[col] == level) {
 												
+						// this should not happen, but just in case
 						if (colObject != null) throw new TranslatorException("Program Error:  column object was not null for column " + projections.columnNamesToUse[col] + " at level " + level);
 		
 						final Object value = getValue(parentObject, col, level, projections, objectManager);

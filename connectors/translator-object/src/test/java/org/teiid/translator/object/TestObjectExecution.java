@@ -28,12 +28,10 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.ObjectSourceProxy;
 import org.teiid.translator.object.testdata.TradesCacheSource;
 import org.teiid.translator.object.testdata.VDBUtility;
 
@@ -49,54 +47,110 @@ public class TestObjectExecution {
 	
 
 	@Test public void testQueryRootObject() throws Exception {
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade"); //$NON-NLS-1$
-		this.runCommand(command, 3);
-	
+		execute( createExecution("select * From Trade_Object.Trade"), 3, 4);
 	}
 	
 	@Test public void testQueryIncludeLegs() throws Exception {		
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"); //$NON-NLS-1$
-		runCommand(command, 30);
+		execute( createExecution("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"), 
+				30, 3);
 
 	}	
 	
-	private void runCommand(Select command, int expected) throws Exception {
+	@Test public void testQueryGetAllTransactions() throws Exception {
+		execute( createExecution("select T.TradeId, T.Name as TradeName, L.Name as LegName, " + 
+				" N.LineItem " +
+				" From Trade_Object.Trade as T, Trade_Object.Leg as L, Trade_Object.Transaction N " + 
+				" Where T.TradeId = L.TradeId and L.LegId = N.LegId"),150, 4);
+	}		
+	
+
+	@Test	public void testAtomicSelects() throws Exception {
+
+		Thread[] threads = new Thread[20];
+		for (int i = 0; i < threads.length; i++) {
+		    threads[i] = new Thread() {
+				public void run() {
+					for (int i=0; i<1000; i++) {
+						test();
+					}
+				}
+				public void test() {
+					ObjectExecution exec = null;
+					try {
+						exec =  createExecution("select * From Trade_Object.Trade");
+						execute(exec, 3, 4);
+					} catch (Exception e) {
+						e.printStackTrace();
+					} finally {
+						if (exec != null) exec.close();
+					}
+				}
+		    };
+  	
+		    threads[i].start();
+		}
+		for (int i = 0; i < threads.length; i++) {
+		    try {
+		       threads[i].join();
+		    } catch (InterruptedException ignore) {}
+		}
+	}
+	
+	private ObjectExecution createExecution(String sql) throws Exception {
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand(sql); //$NON-NLS-1$
 
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-
-		ObjectSourceProxy proxy = Mockito.mock(ObjectSourceProxy.class);
 		
-		Mockito.stub(proxy.get(command)).toReturn(source.getAll());
-
-		
-		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
+		final ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
 			@Override
 			protected ObjectSourceProxy createProxy(Object connection)
 					throws TranslatorException {
 
-				return (ObjectSourceProxy) connection;
+				return new ObjectSourceProxy() {
+
+					@Override
+					public List<Object> get(Command command) throws TranslatorException {
+						return source.getAll();
+					}
+
+					@Override
+					public void close() {
+						
+					}
+					
+				};
 			}
 			
 		};
 				
 		factory.start();
 			
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, proxy);
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+		
+		return exec;
+
+	}
+	
+	private void execute(ObjectExecution exec, int expected, int columns) throws Exception {
 		
 		exec.execute();
 		
 		int cnt = 0;
 		List<?> row = exec.next();
 		
+		// check the number of columns
+		assertEquals("Number of columns is incorrect", columns, row.size());
+
+		
 		while (row != null) {
 			++cnt;
 			row = exec.next();
 		}
 		assertEquals("Did not get expected number of rows", expected, cnt); //$NON-NLS-1$
+		
 		     
 		exec.close();
-		
 	}
 	
 }

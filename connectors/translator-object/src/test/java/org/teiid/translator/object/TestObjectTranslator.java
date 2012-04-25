@@ -69,7 +69,7 @@ public class TestObjectTranslator {
 		ObjectMethodManager omm = ObjectMethodManager.initialize(true, this.getClass().getClassLoader());
 
 		
-		List<List<?>> results = ObjectTranslator.translateObjects(source.getAll(), op, omm);
+		List<List<Object>> results = ObjectTranslator.translateObjects(source.getAll(), op, omm);
 		
 		assertEquals(rows, results.size());
 		

@@ -68,7 +68,6 @@ public class TestObjectProjections {
 	    // confirm the arrays match
 	    for (int i = 0; i < op.getColumns().length; i++) {
 	    	assertEquals(op.getColumnNamesToUse()[i], op.getColumnNameToUse(op.getColumns()[i]));
-	    	System.out.println("ColumnToUse: " + op.getColumnNamesToUse()[i]);
 	    }
 	}
 

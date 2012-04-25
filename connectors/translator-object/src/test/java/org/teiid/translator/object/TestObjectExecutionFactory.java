@@ -24,8 +24,11 @@ package org.teiid.translator.object;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
+
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -43,7 +46,7 @@ public class TestObjectExecutionFactory {
 
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 
-		ObjectSourceProxy proxy = Mockito.mock(ObjectSourceProxy.class);
+		final ObjectSourceProxy proxy = Mockito.mock(ObjectSourceProxy.class);
 		
 		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
@@ -51,7 +54,7 @@ public class TestObjectExecutionFactory {
 			protected ObjectSourceProxy createProxy(Object connection)
 					throws TranslatorException {
 
-				return (ObjectSourceProxy) connection;
+				return proxy;
 			}
 			
 		};
@@ -60,13 +63,52 @@ public class TestObjectExecutionFactory {
 		
 		factory.start();
 			
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, proxy);
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 		
 		assertNotNull(exec);
 		assertNotNull(factory.getObjectMethodManager());
 		assertEquals(factory.isColumnNameFirstLetterUpperCase(), false);
 		
 	}
+	
+	@Test public void testFactoryLoadingJarClassNames() throws Exception {
+		
+	//	File testjar = new File(UnitTestUtil.getTestScratchPath() + "/../" + "translator-object-7.7.1-tests.jar");
+//		File testjar = new File("target/" + "translator-object-7.7.1-tests.jar");
+		
+//		assertEquals("Testjar doesn't exist " + testjar.getAbsolutePath(), true, testjar.exists());
+		
+
+		Select command = Mockito.mock(Select.class);
+
+		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+
+		final ObjectSourceProxy proxy = Mockito.mock(ObjectSourceProxy.class);
+		
+		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
+
+			@Override
+			protected ObjectSourceProxy createProxy(Object connection)
+					throws TranslatorException {
+
+				return proxy;
+			}
+			
+		};
+		
+		factory.setColumnNameFirstLetterUpperCase(false);
+		
+		factory.setPackageNamesOfCachedObjects("org.teiid.translator.object.testdata");
+		
+		factory.start();
+			
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+		
+		assertNotNull(exec);
+		assertNotNull(factory.getObjectMethodManager());
+		assertEquals(factory.isColumnNameFirstLetterUpperCase(), false);
+		
+	}	
 	
 
   

@@ -22,11 +22,17 @@
 
 package org.teiid.translator.object;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -56,7 +62,7 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 	private ObjectMethodManager objectMethods=null;
 	
 	private boolean columnNameFirstLetterUpperCase = true;
-
+	private String packageNamesOfCachedObjects = null;
 	
 	public ObjectExecutionFactory() {
 		super();
@@ -76,13 +82,13 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 		
     @Override
     public void start() throws TranslatorException {
-    	objectMethods = ObjectMethodManager.initialize(isColumnNameFirstLetterUpperCase(), this.getClass().getClassLoader());
+    	createObjectMethodManager();
     }
    
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
     		throws TranslatorException {
-    	return new ObjectExecution((Select)command, metadata, createProxy(connection), this);
+    	return new ObjectExecution((Select)command, metadata, createProxy(connection), objectMethods);
     }    
   
 	public List getSupportedFunctions() {
@@ -94,6 +100,28 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
     }
     
     
+	/**
+	 * <p>
+	 * Returns a comma separated list of package names for the cached objects.
+	 * </p>
+	 * @return String comma separated package names
+	 */
+	@TranslatorProperty(display="PackageNamesOfCachedObjects (CSV)", advanced=true)
+	public String getPackageNamesOfCachedObjects() {
+		return this.packageNamesOfCachedObjects;
+	}
+	
+	/**
+	 * <p>
+	 * Call to set package names for the cached objects
+	 * </p>
+	 * @param String commo separated list of package names
+	 */
+	public void setPackageNamesOfCachedObjects(String packageNamesOfCachedObjects) {
+		this.packageNamesOfCachedObjects = packageNamesOfCachedObjects;
+	}
+
+  
 	/**
 	 * <p>
 	 * The {@link #getColumnNameFirstLetterUpperCase() option, when <code>false</code>, indicates that the column name (or nameInSource when specified)
@@ -138,9 +166,7 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
     @Override
 	public void getMetadata(MetadataFactory metadataFactory, Object conn)
 			throws TranslatorException {
-    	if (objectMethods != null) {
-    		objectMethods = ObjectMethodManager.initialize(isColumnNameFirstLetterUpperCase(), this.getClass().getClassLoader());
-    	}
+
 	}
 	
 	
@@ -157,6 +183,57 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 	 * @throws TranslatorException
 	 */
 	protected abstract ObjectSourceProxy createProxy(Object connection) throws TranslatorException ;
+
+	protected void createObjectMethodManager() throws TranslatorException {
+    	if (objectMethods == null) {
+    		objectMethods = ObjectMethodManager.initialize(getClassesForPackage(this.packageNamesOfCachedObjects), 
+    				isColumnNameFirstLetterUpperCase(), this.getClass().getClassLoader());
+    	}
+	}
 	
+	protected List<String> getClassesForPackage(String pkgname) throws TranslatorException {
+		if (pkgname == null) return Collections.EMPTY_LIST;
+	    ArrayList<String> classes = new ArrayList<String>();
+	    // Get a File object for the package
+	    File directory = null;
+	    String fullPath;
+	    String relPath = pkgname.replace('.', '/');
+	    URL resource = ClassLoader.getSystemClassLoader().getResource(relPath);
+	    if (resource == null) {
+	        throw new TranslatorException(ObjectPlugin.Util
+			.getString(
+					"ObjectExecutionFactory.noResourceFound", new Object[] { relPath })); //$NON-NLS-1$    
+
+	    }
+	    fullPath = resource.getFile();
+
+	    try {
+	        directory = new File(resource.toURI());
+	    } catch (URISyntaxException e) {
+	        throw new TranslatorException(ObjectPlugin.Util
+	    			.getString(
+	    					"ObjectExecutionFactory.invalidResource", new Object[] { pkgname, resource })); //$NON-NLS-1$    
+	    	
+	    } catch (IllegalArgumentException e) {
+	        directory = null;
+	    }
+
+	    if (directory != null && directory.exists()) {
+	        // Get the list of the files contained in the package
+	        String[] files = directory.list();
+	        for (int i = 0; i < files.length; i++) {
+	            // we are only interested in .class files
+	            if (files[i].endsWith(".class") && !files[i].contains("$") ) {
+	                // removes the .class extension
+	                String className = pkgname + '.' + files[i].substring(0, files[i].length() - 6);
+                    classes.add(className);
+                    
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ClassDiscovery", className); //$NON-NLS-1$
+
+	            }
+	        }
+	    }
+	    return classes;
+	}
 
 }

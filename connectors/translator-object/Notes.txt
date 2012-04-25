@@ -1,3 +1,10 @@
+To add a new data source implementation, implement the following:
+
+-  Either extend ObjectExecutionFactory or create your own.
+-  Implement ObjectSourceProxy, adding vendor specific logic for executing a query and returning a List of Objects
+
+
+
 Notes:
 
 Limitations -
@@ -5,6 +12,7 @@ Limitations -
 1.  There is no current support for 2 or more classes named the same (but different packages) in the same model.  
 	The table name will be the name of the class, not the full classname. 
 	
+
 
 
 
