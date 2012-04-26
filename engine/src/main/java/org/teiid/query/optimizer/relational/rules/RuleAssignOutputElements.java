@@ -161,8 +161,27 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	                    } 
 					}
 	            }
-		    case NodeConstants.Types.TUPLE_LIMIT:
 		    case NodeConstants.Types.DUP_REMOVE:
+		    	if (root.getType() == NodeConstants.Types.DUP_REMOVE) {
+		    		//TODO there's an analog here for a non-partitioned union, but it would mean checking projections from each branch
+		    		boolean allConstants = true;
+		    		for (Expression ex : outputElements) {
+		    			if (!(SymbolMap.getExpression(ex) instanceof Constant)) {
+		    				allConstants = false;
+		    				break;
+		    			}
+		    		}
+		    		if (allConstants && addLimit(rules, root, metadata, capFinder)) {
+		    			//TODO we could more gracefully handle the !addLimit case
+			    		PlanNode parent = root.getParent();
+			    		if (parent != null) {
+			    			NodeEditor.removeChildNode(root.getParent(), root);
+				    		execute(parent, metadata, capFinder, rules, analysisRecord, context);
+				    		return;
+			    		}
+		    		}
+		    	}
+		    case NodeConstants.Types.TUPLE_LIMIT:
 		    case NodeConstants.Types.SORT:
 		    	if (root.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
 		    		//add missing sort columns
@@ -248,13 +267,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
     					//just lob off everything under the projection
     					PlanNode project = NodeEditor.findNodePreOrder(parent, NodeConstants.Types.PROJECT);
     					project.removeAllChildren();
-    				} else {
-    					PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
-        				limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
-	    				if (!rules.contains(RuleConstants.PUSH_LIMIT)) {
-	    					rules.push(RuleConstants.PUSH_LIMIT);
-	    				}
-						parent.getFirstChild().addAsParent(limit);
+    				} else if (!addLimit(rules, parent, metadata, capFinder)) {
+						throw new AssertionError("expected limit node to be added"); //$NON-NLS-1$
     				}
 	            	execute(parent, metadata, capFinder, rules, analysisRecord, context);
 	            	return;
@@ -275,6 +289,33 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            }
 		    }
 		}
+	}
+
+	private boolean addLimit(RuleStack rules, PlanNode parent, QueryMetadataInterface metadata, CapabilitiesFinder capabilitiesFinder) throws QueryMetadataException, TeiidComponentException {
+		PlanNode accessNode = NodeEditor.findParent(parent.getFirstChild(), NodeConstants.Types.ACCESS);
+		
+		if (accessNode != null) {
+			Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+			if (!CapabilitiesUtil.supports(Capability.ROW_LIMIT, mid, metadata, capabilitiesFinder)) {
+				if (NodeEditor.findParent(parent, NodeConstants.Types.SET_OP | NodeConstants.Types.JOIN, NodeConstants.Types.ACCESS) != null) {
+					return false; //access node is too high
+				}
+				parent = accessNode.getParent();
+				if (parent == null) {
+					return false; //cannot modify the root - TODO could move this logic to another rule
+				}
+			}
+		}
+		
+		PlanNode limit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+		limit.setProperty(Info.MAX_TUPLE_LIMIT, new Constant(1));
+		
+		if (!rules.contains(RuleConstants.PUSH_LIMIT)) {
+			rules.push(RuleConstants.PUSH_LIMIT);
+		}
+		
+		parent.getFirstChild().addAsParent(limit);
+		return true;
 	}
 
 	static PlanNode removeGroupBy(PlanNode root,

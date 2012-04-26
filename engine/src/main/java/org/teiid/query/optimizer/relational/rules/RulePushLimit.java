@@ -43,10 +43,10 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SetQuery;
@@ -108,6 +108,8 @@ public class RulePushLimit implements OptimizerRule {
             
             while (canPushLimit(plan, limitNode, limitNodes, metadata, capabilitiesFinder, analysisRecord)) {
                 plan = RuleRaiseAccess.performRaise(plan, limitNode.getFirstChild(), limitNode);
+                //makes this rule safe to run after the final rule assign output elements
+                limitNode.setProperty(Info.OUTPUT_COLS, limitNode.getFirstChild().getProperty(Info.OUTPUT_COLS));
             }
             
             limitNodes.remove(limitNode);

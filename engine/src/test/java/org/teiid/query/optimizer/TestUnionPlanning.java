@@ -333,5 +333,27 @@ public class TestUnionPlanning {
             2       // UnionAll
         });                                    
     }   
+    
+    @Test public void testUnionPartitionedDistinct() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select distinct * from (SELECT 1 as IntKey, intnum FROM BQT1.SmallA UNION ALL SELECT 2 as intkey, intnum FROM BQT2.SmallA) A", RealMetadataFactory.exampleBQTCached(), null, TestInlineView.getInliveViewCapabilitiesFinder(),//$NON-NLS-1$
+            new String[] { "SELECT DISTINCT g_0.intnum FROM BQT2.SmallA AS g_0", "SELECT DISTINCT g_0.intnum FROM BQT1.SmallA AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            0,      // Project
+            0,      // Select
+            0,      // Sort
+            1       // UnionAll
+        });                                    
+    }  
 
 }

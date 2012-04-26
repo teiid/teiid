@@ -386,7 +386,7 @@ public class RulePushAggregates implements
 			}
 			//temporarily remove the access node
 			NodeEditor.removeChildNode(source, planNode);
-			PlanNode parent = RuleMergeVirtual.doMerge(source, source.getParent(), false, metadata);
+			PlanNode parent = RuleMergeVirtual.doMerge(source, source.getParent(), false, metadata, capFinder);
 			//add it back
 			if (parent.getFirstChild() == source) {
 				source.getFirstChild().addAsParent(planNode);

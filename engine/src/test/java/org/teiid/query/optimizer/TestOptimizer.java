@@ -6631,6 +6631,52 @@ public class TestOptimizer {
             });                                    
     }
     
+    @Test public void testDistinctConstant() throws Exception { 
+        String sql = "select distinct 1 from pm1.g1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, getGenericFinder(), 
+                                      new String[] {"SELECT DISTINCT 1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+    
+    //TODO: there is an unnecessary dup removal here since it is the root and the optimization cannot modify the plan root
+    @Test public void testDistinctConstant1() throws Exception { 
+        String sql = "select distinct 1 from pm1.g1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(), 
+                                      new String[] {"SELECT pm1.g1.e1 FROM pm1.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        checkNodeTypes(plan, new int[] {
+                1,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                1,      // DupRemove
+                0,      // Grouping
+                1,		// Limit
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            }, TestLimit.NODE_TYPES);          
+    }
+    
+    @Test public void testDistinctConstant2() throws Exception { 
+        String sql = "select distinct 1 from pm1.g1"; //$NON-NLS-1$
+        BasicSourceCapabilities bsc = getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        CapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT 1 AS c_0 FROM pm1.g1 AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+    
 	public static final boolean DEBUG = false;
 
 }

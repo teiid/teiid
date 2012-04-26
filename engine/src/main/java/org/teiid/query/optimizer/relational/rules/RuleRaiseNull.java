@@ -204,7 +204,7 @@ public final class RuleRaiseNull implements OptimizerRule {
                 PlanNode sourceNode = NodeEditor.findParent(grandParent.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SET_OP);
                                 
                 if (sourceNode != null) {
-                    return RuleMergeVirtual.doMerge(sourceNode, rootNode, false, metadata);
+                    return RuleMergeVirtual.doMerge(sourceNode, rootNode, false, metadata, capFinder);
                 }
                 return null;
             }

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -35,10 +36,12 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
+import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
@@ -70,7 +73,7 @@ public final class RuleMergeVirtual implements
     	boolean beforeDecomposeJoin = rules.contains(RuleConstants.DECOMPOSE_JOIN);
         for (PlanNode sourceNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
             if (sourceNode.getChildCount() > 0) {
-                plan = doMerge(sourceNode, plan, beforeDecomposeJoin, metadata);
+                plan = doMerge(sourceNode, plan, beforeDecomposeJoin, metadata, capFinder);
             }
         }
 
@@ -79,7 +82,7 @@ public final class RuleMergeVirtual implements
 
     static PlanNode doMerge(PlanNode frame,
                             PlanNode root, boolean beforeDecomposeJoin,
-                            QueryMetadataInterface metadata) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+                            QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
     	if (frame.hasBooleanProperty(Info.NO_UNNEST)) {
     		return root;
     	}
@@ -154,7 +157,7 @@ public final class RuleMergeVirtual implements
             	return root; //don't bother to merge until after
             }
 
-            return checkForSimpleProjection(frame, root, parentProject, metadata);
+            return checkForSimpleProjection(frame, root, parentProject, metadata, capFinder);
         }
 
         PlanNode parentJoin = NodeEditor.findParent(frame, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
@@ -201,6 +204,7 @@ public final class RuleMergeVirtual implements
 
     /**
      * Removes source layers that only do a simple projection of the elements below.
+     * @param capFinder 
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      * @throws QueryPlannerException 
@@ -208,7 +212,7 @@ public final class RuleMergeVirtual implements
     private static PlanNode checkForSimpleProjection(PlanNode frame,
                                                      PlanNode root,
                                                      PlanNode parentProject,
-                                                     QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
+                                                     QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
         // check that the parent only performs projection
         PlanNode nodeToCheck = parentProject.getFirstChild();
         while (nodeToCheck != frame) {
@@ -265,6 +269,7 @@ public final class RuleMergeVirtual implements
             PlanNode setOp = NodeEditor.findNodePreOrder(frame.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
             if (setOp != null) {
                 setOp.setProperty(NodeConstants.Info.USE_ALL, Boolean.FALSE);
+                distributeDupRemove(metadata, capFinder, setOp);
                 if (parentProject.getParent().getParent() != null) {
                     NodeEditor.removeChildNode(parentProject.getParent().getParent(), parentProject.getParent());
                 } else {
@@ -395,6 +400,52 @@ public final class RuleMergeVirtual implements
         }
         return true;
     }
+    
+	static void distributeDupRemove(QueryMetadataInterface metadata,
+			CapabilitiesFinder capabilitiesFinder, PlanNode unionNode)
+			throws QueryMetadataException, TeiidComponentException {
+		PlanNode unionParentSource = NodeEditor.findParent(unionNode, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
+		if (unionNode.hasBooleanProperty(Info.USE_ALL) 
+				|| unionParentSource == null 
+				|| unionParentSource.getType() != NodeConstants.Types.SOURCE 
+				|| !unionParentSource.hasProperty(Info.PARTITION_INFO)) {
+			return;
+		}
+		
+		PlanNode accessNode = NodeEditor.findParent(unionNode, NodeConstants.Types.ACCESS);
+		if (accessNode != null) {
+			Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+			if (!CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, mid, metadata, capabilitiesFinder)) {
+				return;
+			}
+		}
+		
+		//distribute dup remove
+		LinkedList<PlanNode> unionChildren = new LinkedList<PlanNode>();
+		RulePushAggregates.findUnionChildren(unionChildren, false, unionNode);
+		unionNode.setProperty(Info.USE_ALL, true);
+		for (PlanNode node : unionChildren) {
+			if (node.getType() == NodeConstants.Types.SET_OP) {
+				node.setProperty(Info.USE_ALL, false);
+			} else {
+				PlanNode projectNode = NodeEditor.findNodePreOrder(node, NodeConstants.Types.DUP_REMOVE | NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+				if (projectNode != null && projectNode.getType() == NodeConstants.Types.PROJECT) {
+					accessNode = NodeEditor.findParent(projectNode, NodeConstants.Types.ACCESS);
+					PlanNode dup = NodeFactory.getNewNode(NodeConstants.Types.DUP_REMOVE);
+					if (accessNode == null) {
+						projectNode.addAsParent(dup);
+					} else {
+						Object mid = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+						if (CapabilitiesUtil.supports(Capability.QUERY_SELECT_DISTINCT, mid, metadata, capabilitiesFinder)) {
+							projectNode.addAsParent(dup);
+						} else {
+							accessNode.addAsParent(dup);
+						}
+					}
+				}
+			}
+		}
+	}
 
     public String toString() {
         return "MergeVirtual"; //$NON-NLS-1$
