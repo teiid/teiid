@@ -30,9 +30,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
-import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.RequestMessage;
@@ -413,36 +411,32 @@ public class Request implements SecurityFunctionEvaluator {
             }
         }
         
-        try {
-        	// If using multi-source models, insert a proxy to simplify the supported capabilities.  This is 
-            // done OUTSIDE the cache (wrapped around the cache) intentionally to avoid caching the simplified
-            // capabilities which may be different for the same model in a different VDB used by this same DQP.
-        	CapabilitiesFinder finder = this.capabilitiesFinder;
-            if(this.multiSourceModels != null) {
-                finder = new MultiSourceCapabilitiesFinder(finder, this.multiSourceModels);
-            }
-            
-            boolean debug = analysisRecord.recordDebug();
-    		if(debug) {
-    			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
-                analysisRecord.println("USER COMMAND:\n" + command);		 //$NON-NLS-1$
-            }
-            // Run the optimizer
-            try {
-                processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, analysisRecord, context);
-            } finally {
-                String debugLog = analysisRecord.getDebugLog();
-                if(debugLog != null && debugLog.length() > 0) {
-                    LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
-                }
-                if (analysisRecord.recordAnnotations() && analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
-                	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
-                }
-            }
-            LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
-        } catch (QueryMetadataException e) {
-             throw new QueryPlannerException(QueryPlugin.Event.TEIID30494, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30494, requestId));
+    	// If using multi-source models, insert a proxy to simplify the supported capabilities.  This is 
+        // done OUTSIDE the cache (wrapped around the cache) intentionally to avoid caching the simplified
+        // capabilities which may be different for the same model in a different VDB used by this same DQP.
+    	CapabilitiesFinder finder = this.capabilitiesFinder;
+        if(this.multiSourceModels != null) {
+            finder = new MultiSourceCapabilitiesFinder(finder, this.multiSourceModels);
         }
+        
+        boolean debug = analysisRecord.recordDebug();
+		if(debug) {
+			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
+            analysisRecord.println("USER COMMAND:\n" + command);		 //$NON-NLS-1$
+        }
+        // Run the optimizer
+        try {
+            processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, analysisRecord, context);
+        } finally {
+            String debugLog = analysisRecord.getDebugLog();
+            if(debugLog != null && debugLog.length() > 0) {
+                LogManager.log(requestMsg.getShowPlan()==ShowPlan.DEBUG?MessageLevel.INFO:MessageLevel.TRACE, LogConstants.CTX_QUERY_PLANNER, debugLog);               
+            }
+            if (analysisRecord.recordAnnotations() && analysisRecord.getAnnotations() != null && !analysisRecord.getAnnotations().isEmpty()) {
+            	LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, analysisRecord.getAnnotations());
+            }
+        }
+        LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
     }
 
     public void processRequest() 
