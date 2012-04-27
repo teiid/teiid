@@ -109,6 +109,7 @@ class VDBService implements Service<VDBMetaData> {
 			String type = data.getType();
 			VDBTranslatorMetaData parent = getTranslatorRepository().getTranslatorMetaData(type);
 			data.setModuleName(parent.getModuleName());
+			data.addAttchment(ClassLoader.class, parent.getAttachment(ClassLoader.class));
 			
 			Set<String> keys = parent.getProperties().stringPropertyNames();
 			for (String key:keys) {
