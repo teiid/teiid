@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -47,6 +48,7 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.TranslatorException;
@@ -68,7 +70,7 @@ public class VDBRepository implements Serializable{
 	private Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
 	
 	
-	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
+	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
 			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
 		}
@@ -81,14 +83,14 @@ public class VDBRepository implements Serializable{
 		if (this.odbcEnabled && odbcStore == null) {
 			this.odbcStore = getODBCMetadataStore();
 		}
-		
-		CompositeVDB cvdb = null;
+
+		MetadataStore[] stores = null;
 		if (this.odbcStore == null) {
-			cvdb = new CompositeVDB(vdb, metadataStore, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore);
+			stores = new MetadataStore[] {this.systemStore};
+		} else {
+			stores = new MetadataStore[] {this.systemStore, odbcStore};
 		}
-		else {
-			cvdb = new CompositeVDB(vdb, metadataStore, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore);
-		}
+		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, stores);
 		this.vdbRepo.put(vdbId(vdb), cvdb); 
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
 	}

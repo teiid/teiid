@@ -37,7 +37,6 @@ import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.metadata.*;
-import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.CompositeMetadataStore;
@@ -63,12 +62,10 @@ public class CompositeVDB {
 	// used as cached item to avoid rebuilding
 	private volatile VDBMetaData mergedVDB;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, MetadataStore... additionalStores) {
+	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, MetadataStore... additionalStores) {
 		this.vdb = vdb;
 		this.store = metadataStore;
-		if (metadataStore instanceof IndexMetadataStore) {
-			this.visibilityMap = ((IndexMetadataStore)metadataStore).getEntriesPlusVisibilities();
-		}
+		this.visibilityMap = visibilityMap;
 		this.udf = udf;
 		this.systemFunctions = systemFunctions;
 		this.cmr = cmr;

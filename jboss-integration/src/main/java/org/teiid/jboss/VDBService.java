@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,6 +72,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.translator.DelegatingExecutionFactory;
@@ -86,9 +88,11 @@ class VDBService implements Service<VDBMetaData> {
 	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	private VDBLifeCycleListener vdbListener;
+	private LinkedHashMap<String, Resource> visibilityMap;
 	
-	public VDBService(VDBMetaData metadata) {
+	public VDBService(VDBMetaData metadata, LinkedHashMap<String, Resource> visibilityMap) {
 		this.vdb = metadata;
+		this.visibilityMap = visibilityMap;
 	}
 	
 	@Override
@@ -158,7 +162,7 @@ class VDBService implements Service<VDBMetaData> {
 		
 		try {
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(this.vdb, store, udf, cmr);
+			getVDBRepository().addVDB(this.vdb, store, visibilityMap, udf, cmr);
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(IntegrationPlugin.Event.TEIID50032.name(), e);
 		}		
