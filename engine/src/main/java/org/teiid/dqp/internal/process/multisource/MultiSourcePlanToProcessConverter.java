@@ -281,5 +281,11 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 		
 		return command;
 	}
+	
+	@Override
+	protected boolean minimizeProject() {
+		//running minimize twice is not allowed as the original command is modified
+		return false;
+	}
 
 }
