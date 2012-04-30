@@ -115,6 +115,19 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}
 		}
 		
+		// make sure the translator defined exists in configuration.
+		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			if (model.isSource() && !model.getSourceNames().isEmpty()) {
+				for (String source:model.getSourceNames()) {
+					String translatorName = model.getSourceTranslatorName(source);
+					Translator parent = this.translatorRepository.getTranslatorMetaData(translatorName);
+					if ( parent == null) {				
+						throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deploymentName));
+					}					
+				}
+			}
+		}			
+		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
 		if (udf != null) {
