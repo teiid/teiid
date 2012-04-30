@@ -30,6 +30,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
@@ -1124,8 +1125,24 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         return nameParts;
 	}
 
+	/**
+	 * Get the predicate name for LIKE_REGEX
+	 * @return 
+	 */
 	public String getLikeRegexString() {
 		return SQLConstants.Reserved.LIKE_REGEX;
+	}
+
+	/**
+	 * Set the fetch size on the given statement.
+	 * @param context 
+	 * @param command 
+	 * @param statement
+	 * @param fetchSize
+	 * @throws SQLException
+	 */
+	public void setFetchSize(Command command, ExecutionContext context, Statement statement, int fetchSize) throws SQLException {
+		statement.setFetchSize(fetchSize);
 	}
 	
 }

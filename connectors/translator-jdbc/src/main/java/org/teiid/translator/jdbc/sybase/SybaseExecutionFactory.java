@@ -24,7 +24,10 @@
  */
 package org.teiid.translator.jdbc.sybase;
 
+import java.sql.CallableStatement;
 import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,13 +37,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
@@ -58,6 +64,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
 	
 	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
+	protected boolean jtdsDriver;
 	
 	public SybaseExecutionFactory() {
 		setDatabaseVersion(TWELVE_5);
@@ -364,6 +371,28 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	@Override
 	public boolean supportsRowLimit() {
 		return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
+	}
+
+	@TranslatorProperty(display="JTDS Driver", description="True if the driver is the JTDS driver",advanced=true)
+	public boolean isJtdsDriver() {
+		return jtdsDriver;
+	}
+	
+	public void setJtdsDriver(boolean jtdsDriver) {
+		this.jtdsDriver = jtdsDriver;
+	}
+	
+	protected boolean setFetchSizeOnCallableStatements() {
+		return false;
+	}
+	
+	@Override
+	public void setFetchSize(Command command, ExecutionContext context,
+			Statement statement, int fetchSize) throws SQLException {
+		if (!isJtdsDriver() && !setFetchSizeOnCallableStatements() && statement instanceof CallableStatement) {
+			return;
+		}
+		super.setFetchSize(command, context, statement, fetchSize);
 	}
     
 }

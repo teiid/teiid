@@ -43,7 +43,6 @@ import org.teiid.translator.UpdateExecution;
  */
 public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExecution {
 
-	private Command command;
 	private int[] result;
 	
     /**
@@ -54,8 +53,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @param id
      */
 	public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
-        super(connection, context, env);
-        this.command = command;
+        super(command, connection, context, env);
     }
 
     // ===========================================================================================================================
