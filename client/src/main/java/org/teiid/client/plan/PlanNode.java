@@ -206,7 +206,7 @@ public class PlanNode implements Externalizable {
 		writer.writeEndElement();
     }
     
-    private void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
+    private static void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
         writer.writeStartElement(name);
         writer.writeCharacters(value);
         writer.writeEndElement();
@@ -258,6 +258,7 @@ public class PlanNode implements Externalizable {
 					   Properties nodeProps = getAttributes(reader);
 					   PlanNode childNode = new PlanNode(nodeProps.getProperty("name"));//$NON-NLS-1$
 					   node.addProperty(props.getProperty("name"), buildNode(reader, childNode));//$NON-NLS-1$
+					   break;
 				   }
 				   else {
 					   throw new XMLStreamException(JDBCPlugin.Util.gs("unexpected_element", reader.getName(), "value"), reader.getLocation());//$NON-NLS-1$ //$NON-NLS-2$
