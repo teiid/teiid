@@ -25,30 +25,18 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.*;
 
 import org.teiid.adminapi.DataPolicy;
 
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = "", propOrder = {
-    "description",
-    "permissions",
-    "mappedRoleNames"
-})
 public class DataPolicyMetadata implements DataPolicy, Serializable {
 	private static final long serialVersionUID = -4119646357275977190L;
 	
-	@XmlAttribute(name = "name", required = true)
     protected String name;
-	@XmlElement(name = "description")
     protected String description;
-	@XmlAttribute(name = "any-authenticated")
 	protected boolean anyAuthenticated;
-	@XmlAttribute(name = "allow-create-temporary-tables")
 	protected Boolean allowCreateTemporaryTables;
 
-    @XmlElement(name = "permission")
     protected PermissionMap permissions = new PermissionMap(new KeyBuilder<PermissionMetaData>() {
 		private static final long serialVersionUID = -6992984146431492449L;
 		@Override
@@ -57,7 +45,6 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		}
 	});
     
-    @XmlElement(name = "mapped-role-name")
     protected List<String> mappedRoleNames = new ArrayList<String>();
 
 	@Override
@@ -129,37 +116,19 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		return false;
 	}
 	
-	
-    @XmlAccessorType(XmlAccessType.NONE)
-    @XmlType(name = "", propOrder = {
-        "resourceName",
-        "allowCreate",
-        "allowRead",
-        "allowUpdate",
-        "allowDelete",
-        "allowExecute",
-        "allowAlter"
-    })	
 	public static class PermissionMetaData implements DataPermission, Serializable {
 		private static final long serialVersionUID = 7034744531663164277L;
         
         // XML based fields
         private String resourceName;
-        @XmlElement(name = "allow-create")
         protected Boolean allowCreate;
-        @XmlElement(name = "allow-read")
         protected Boolean allowRead;
-        @XmlElement(name = "allow-update")
         protected Boolean allowUpdate;
-        @XmlElement(name = "allow-delete")
         protected Boolean allowDelete;
-        @XmlElement(name = "allow-execute")
         protected Boolean allowExecute;
-        @XmlElement(name = "allow-alter")
         protected Boolean allowAlter;
         
         @Override
-        @XmlElement(name = "resource-name", required = true)
         public String getResourceName() {
             return resourceName;
         }

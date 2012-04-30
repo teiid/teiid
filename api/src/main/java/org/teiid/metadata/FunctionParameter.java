@@ -24,9 +24,6 @@ package org.teiid.metadata;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAttribute;
-
-
 /**
  * A function parameter defines the name and description of an input or output
  * parameter for a function.  The name should not be null, but that is not 
@@ -81,7 +78,6 @@ public class FunctionParameter implements Serializable {
      * Return name of parameter.
      * @return Name
      */
-    @XmlAttribute
     public String getName() {
         return this.name;
     }
@@ -98,7 +94,6 @@ public class FunctionParameter implements Serializable {
      * Get description of parameter
      * @return Description
      */
-    @XmlAttribute
     public String getDescription() { 
         return this.description;
     }        
@@ -116,7 +111,6 @@ public class FunctionParameter implements Serializable {
      * @return Type name
      * @see org.teiid.core.types.DataTypeManager.DefaultDataTypes
      */
-    @XmlAttribute
     public String getType() { 
         return this.type;
     }        

@@ -30,13 +30,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.XMLConstants;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-
 import org.jboss.dmr.ModelNode;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
@@ -49,32 +42,6 @@ import org.teiid.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestVDBMetaData {
-
-	
-	public void testMarshellUnmarshellUsingJaxb() throws Exception {
-		
-		VDBMetaData vdb = buildVDB();
-		
-		SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-        Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); 		 //$NON-NLS-1$
-		JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {VDBMetaData.class});
-		Marshaller marshell = jc.createMarshaller();
-		marshell.setSchema(schema);
-		marshell.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT,new Boolean(true));
-		
-		StringWriter sw = new StringWriter();
-		marshell.marshal(vdb, sw);
-				
-		//System.out.println(sw.toString());
-
-		// UnMarshell
-		Unmarshaller un = jc.createUnmarshaller();
-		un.setSchema(schema);
-		vdb = (VDBMetaData)un.unmarshal(new StringReader(sw.toString()));
-		
-		validateVDB(vdb);
-	}
-	
 	
 	@Test
 	public void testMarshellUnmarshellDirectParsing() throws Exception {

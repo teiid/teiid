@@ -28,31 +28,16 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlType;
-import javax.xml.bind.annotation.XmlValue;
-
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = "", propOrder = {
-	"description",
-    "JAXBProperties",
-    "sources",
-    "errors"
-})
 public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	private static final int DEFAULT_ERROR_HISTORY = 10;
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "supports-multi-source-bindings"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
-	@XmlElement(name = "source")
 	protected ListOverMap<SourceMappingMetadata> sources = new ListOverMap<SourceMappingMetadata>(new KeyBuilder<SourceMappingMetadata>() {
 		private static final long serialVersionUID = 2273673984691112369L;
 
@@ -62,26 +47,14 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 	});
 	
-	@XmlAttribute(name = "type")
 	protected String modelType = Type.PHYSICAL.name();
-	
-	@XmlElement(name = "description")
 	protected String description;	
-	
-	@XmlAttribute(name = "path")
 	protected String path; 
-    
-	@XmlAttribute(name = "visible")
     protected Boolean visible = true;
-    
-    @XmlElement(name = "validation-error")
     protected List<ValidationError> errors;    
-    
     protected String schemaSourceType;
-        
 	protected String schemaText;
-    
-	@XmlAttribute(name = "name", required = true)
+
 	public String getName() {
 		return super.getName();
 	}    
@@ -134,7 +107,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     }    
 	
 	@Override
-	@XmlElement(name = "property", type = PropertyMetadata.class)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}
@@ -264,22 +236,13 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	this.errors.clear();
     }
 	
-    @XmlAccessorType(XmlAccessType.NONE)
-    @XmlType(name = "", propOrder = {
-        "value"
-    })
     public static class ValidationError implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;
 
 		public enum Severity {ERROR, WARNING};
     	
-        @XmlValue
         protected String value;
-        
-        @XmlAttribute(name = "severity", required = true)
         protected String severity;
-        
-        @XmlAttribute(name = "path")
         protected String path;
         
 		public ValidationError() {};

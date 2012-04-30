@@ -7,9 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
@@ -19,11 +16,8 @@ import org.teiid.core.types.XMLType;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 
-@XmlType
-@XmlRootElement(namespace="http://www.omg.org/XMI", name="XMI")
 public class FunctionMetadataReader {
 
-	@XmlElement(namespace="http://www.metamatrix.com/metamodels/MetaMatrixFunction", name="ScalarFunction")
 	List<FunctionMethod> functionMethods = new ArrayList<FunctionMethod>();
 	
 	public static List<FunctionMethod> loadFunctionMethods(InputStream source) throws XMLStreamException {
