@@ -232,6 +232,278 @@ The following components have been updated:
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
         Detailed Release Notes - Teiid - Version ${project.version}
+   
+<h2>        Bug
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-7'>TEIID-7</a>] -         Control of BigDecimal precision and scale
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-17'>TEIID-17</a>] -         Root criteria with sibling roots
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-32'>TEIID-32</a>] -         Support null values in proc relational joins
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-37'>TEIID-37</a>] -         Parse function for XSD datatypes for Web service procedures
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-42'>TEIID-42</a>] -         Correlated subqueries in XML criteria
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-63'>TEIID-63</a>] -         Recursion Editor RECORD Feature When Limit Exceeded Does Not Work
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-69'>TEIID-69</a>] -         Fully implement Hash Join
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-102'>TEIID-102</a>] -         Metadata search with * or ? may return the wrong results
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-122'>TEIID-122</a>] -         Min/Max cardinality should be enforced during document generation
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-987'>TEIID-987</a>] -         Problem regarding how often availability is called on the Facet
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1058'>TEIID-1058</a>] -         SessionCleanupThread causes deadlocks when server is clustered
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1371'>TEIID-1371</a>] -         Translator does not unload correctly
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1465'>TEIID-1465</a>] -         Join between char and varchar
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1600'>TEIID-1600</a>] -         Exact numeric issues
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1838'>TEIID-1838</a>] -         Change to source model connection through AdminApi using assignToModel() does not reflect in jdbc queries to that source model
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1863'>TEIID-1863</a>] -         Default Salesforce URL in teiid-connector-salesforce.rar needs update to SF v22
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1864'>TEIID-1864</a>] -         TIMESTAMPADD of SQL_TSI_FRAC_SECOND fails for Sybase 15 with JConnect 6.0.5 driver
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1867'>TEIID-1867</a>] -         Duplicate metadata for multisource models
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1868'>TEIID-1868</a>] -         Internal Materialized View - Load/Refresh and Assertion Failed
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1869'>TEIID-1869</a>] -         Simple capabilities with PostgreSQL 8.3 using decodeinteger causes comm failure
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1870'>TEIID-1870</a>] -         Querying random number from DB2 v97 does not push down to source
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1871'>TEIID-1871</a>] -         Teiid is handling MySQL5.0 returning DAYNAME as a blob
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1872'>TEIID-1872</a>] -         Implicit temp table creation fails with insert and explicit columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1873'>TEIID-1873</a>] -         Security documentation does not provide adequate information to integrate additional domains for authentication
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1876'>TEIID-1876</a>] -         Netezza translator using INTNNOT when it should use INT4NOT
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1878'>TEIID-1878</a>] -         Problem with accessing custom generated materialized views
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1879'>TEIID-1879</a>] -         Teradata Query Testing - Unhandled exception causing SOCKET CLOSED condition
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1882'>TEIID-1882</a>] -         EOFException with 7.6 client against a 7.4 server
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1883'>TEIID-1883</a>] -         Query timeout is superceded by synch ttl
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1884'>TEIID-1884</a>] -         COMMAND Logging incorrectly reporting END USER COMMAND record count in EDS for forward only resultsets
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1895'>TEIID-1895</a>] -         Properly escape the column references for Excel based data
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1899'>TEIID-1899</a>] -         Getting Assertion when running Inner Merge Join query with SELECT COUNT(*) on top
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1900'>TEIID-1900</a>] -         Teiid client jar file is not complete: NoClassDefFoundError: org/jboss/modules/ModuleLoadException
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1904'>TEIID-1904</a>] -         Prepared statement for SOURCE_NAME in multi-source mode throws exception Message:Unable to evaluate
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1905'>TEIID-1905</a>] -         Dymamic VDB does not work in 8.0
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1906'>TEIID-1906</a>] -         Settting a VDB with data roles from Teiid Designer 7.5 iand deploying to Teiid 8 get a parser error
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1907'>TEIID-1907</a>] -         SQLStringVisitor should create call visitNode on Select
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1937'>TEIID-1937</a>] -         teiid encouters java.io.StreamCorruptedException
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1952'>TEIID-1952</a>] -         Oracle native driver preparedstatement char parameters are required to be padded
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1953'>TEIID-1953</a>] -         Greenplum DB - BQT correlated subquery failures
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1954'>TEIID-1954</a>] -         System Schema does not show metadata for Indexes in the SYS.Keys or SYS.KeyColumns table
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1956'>TEIID-1956</a>] -         WHERE clause throws org.teiid.jdbc.TeiidSQLException: Index: 2, Size: 1
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1957'>TEIID-1957</a>] -         Resource Adapter&#39;s not passing deployment the validation checks in 7.1.0-Final
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1960'>TEIID-1960</a>] -         Client recieving java.lang.IndexOutOfBoundsException in 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1961'>TEIID-1961</a>] -         A translator override that is not used by a physical model will cause an exception on the server when the vdb is deployed
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1962'>TEIID-1962</a>] -         EDS Ingres10 as Source - LOCATE function not returning correct query results 
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1964'>TEIID-1964</a>] -         Queries which exceed the query timeout value are reported as canceled with no reference to the reason (timed out)
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1966'>TEIID-1966</a>] -         supportsInCriteria is ignored
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1968'>TEIID-1968</a>] -         NPE in GoupingNode
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1969'>TEIID-1969</a>] -         Missing message for key JDBCQueryExecution.Error_executing_query__1
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1972'>TEIID-1972</a>] -         Non-stagable cardinality dependent aggregate should prevent the creation of a staged grouping
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1974'>TEIID-1974</a>] -         Function RAND() should be RANDOM(int, int) for Teradata
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1975'>TEIID-1975</a>] -         Failure description is incomplete
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1976'>TEIID-1976</a>] -         Metadata TYPE_NAME value is null for String Columns
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1978'>TEIID-1978</a>] -         SalesForce getDeleted function does not return deleted objects list
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1981'>TEIID-1981</a>] -         Admin API does not correctly in Domain mode
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1983'>TEIID-1983</a>] -         BaseDelegatingTranslator should delegate properties from setSupports* methods
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1986'>TEIID-1986</a>] -         Exception on the slave node during materialization table load
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1987'>TEIID-1987</a>] -         Exception Processing Web Service Response  
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1990'>TEIID-1990</a>] -         UNION pushdown
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1994'>TEIID-1994</a>] -         Regression in latest 7.7.1 code
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1998'>TEIID-1998</a>] -         Deployed translator JAR fails to be loaded when used in the VDB
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2001'>TEIID-2001</a>] -         Skip loading of Function/Other models during the Index Based VDBs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2002'>TEIID-2002</a>] -         Dynmamic Metadata load failure with Sales Force data source
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2003'>TEIID-2003</a>] -         NPE processing order by in rule collapse source
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2005'>TEIID-2005</a>] -         Source query for Oracle sequence adds an alias, which will return &quot;sequence doesn&#39;t exist&quot; errors
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2007'>TEIID-2007</a>] -         JDBC warnings are not properly handled
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2017'>TEIID-2017</a>] -         CLONE - wrong type on model in VDB definition
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2018'>TEIID-2018</a>] -         VDB resources are not associated
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2020'>TEIID-2020</a>] -         Running Sybase procedure with jconnect driver in Teiid fails
+</li>
+</ul>
+                
+<h2>        Enhancement
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1809'>TEIID-1809</a>] -         Teiid maven build needs to work off of Jboss parent pom
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1859'>TEIID-1859</a>] -         Add a capability to restrict comparisons
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1865'>TEIID-1865</a>] -         Thread-safe JDBC connection
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1898'>TEIID-1898</a>] -         In Version 8, can the Teiid-&lt;version&gt;-client.jar (JDBC driver) be renamed because it causes confusion with the Teiid-client-&lt;version&gt;.jar used in the server
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1916'>TEIID-1916</a>] -         Add support for alternate collation
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1959'>TEIID-1959</a>] -         Add a way to exclude tables/procedures from JDBC import
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1984'>TEIID-1984</a>] -         GetUpdated and GetDeleted SF procedures should be supported in dynamic vdbs
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1985'>TEIID-1985</a>] -         Additional avenues for plan information
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2006'>TEIID-2006</a>] -         Add a JDBC/ODBC statement to set the command payload
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2009'>TEIID-2009</a>] -         Allow for the possiblity of rewriten user commands by the AuthoriztionValidator
+</li>
+</ul>
+        
+<h2>        Feature Request
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-144'>TEIID-144</a>] -         ENHANCEMENT: Entitlements on XML Document Models
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-151'>TEIID-151</a>] -         ENHANCEMENT: Need a way to stop building node in a recursive XML document when the node is repeated
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-170'>TEIID-170</a>] -         Fully implement joining of parent and child mapping classes
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-174'>TEIID-174</a>] -         add support to MMCallableStatement for named parameter methods
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-176'>TEIID-176</a>] -         Auto-Staging tables should be shared in some circumstances
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-185'>TEIID-185</a>] -         Add Option For MTOM in Web Services
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-223'>TEIID-223</a>] -         XML output elements should be minimized
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-417'>TEIID-417</a>] -         Add REST Support to Data Services
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-499'>TEIID-499</a>] -         pushdown of parsedate, parsetime, parsetimestamp
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1280'>TEIID-1280</a>] -         Allow views/procedures to be defined without designer
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1352'>TEIID-1352</a>] -         Produce Admin API jar containing only Interfaces.
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1560'>TEIID-1560</a>] -         Add support for user defined / pushdown aggregate functions
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1720'>TEIID-1720</a>] -         Support for JBoss AS 7.x as host environment
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1801'>TEIID-1801</a>] -         Async Event Processing:  Reset and Re-run plan
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1819'>TEIID-1819</a>] -         Reading multi entity data from a single data file
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1834'>TEIID-1834</a>] -         Add support for a comparable binary type
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1850'>TEIID-1850</a>] -         Add support for GreenPlum Database as a source
+</li>
+</ul>
+            
+<h2>        Quality Risk
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-3'>TEIID-3</a>] -         Allow connectors to specify function capability for specific type signature
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1022'>TEIID-1022</a>] -         Index metadata should not treat cardinality 0 as unknown
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1604'>TEIID-1604</a>] -         Rationalize the context objects
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1837'>TEIID-1837</a>] -         Replication should distribute load off of the coordinator
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1841'>TEIID-1841</a>] -         week function in teiid not returning expected value
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1842'>TEIID-1842</a>] -         Remove translate criteria based update procedures
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1894'>TEIID-1894</a>] -         Consolidate bulk/iterator based inserts
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1950'>TEIID-1950</a>] -         teiid client settings properties overrides don&#39;t work with signed jars
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1995'>TEIID-1995</a>] -         Misleading error message
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2008'>TEIID-2008</a>] -         Allow client max object size to be settable
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2010'>TEIID-2010</a>] -         Remove unused translator supports.
+</li>
+</ul>
+                
+<h2>        Task
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1839'>TEIID-1839</a>] -         Redo the weather example
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1875'>TEIID-1875</a>] -         Convert community docs to confluence
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1889'>TEIID-1889</a>] -         Standardize logging in Teiid
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1901'>TEIID-1901</a>] -         Redo Quick Start guide for Teiid 8.0 changes
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1924'>TEIID-1924</a>] -         Update the documents for Teiid 8.0
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1955'>TEIID-1955</a>] -         Update to work with JBoss AS 7.1-Final
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1967'>TEIID-1967</a>] -         Bind EventDistributor to JNDI tree
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1971'>TEIID-1971</a>] -         Provide delegating Metadata Repository implementation class
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2000'>TEIID-2000</a>] -         Provide install script for Teiid to be installed in the domain mode
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2004'>TEIID-2004</a>] -         Support 1.7 JDBC methods
+</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2019'>TEIID-2019</a>] -         Remove all references to &quot;javax.xml.bind&quot; classes in the Teiid and support stream based xml
+</li>
+</ul>
+            
+<h2>        Sub-task
+</h2>
+<ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1540'>TEIID-1540</a>] -         Add the ability to delegate one shot dependent joins to the translators
+</li>
+</ul>
+            
+        
             
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
