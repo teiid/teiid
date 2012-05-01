@@ -24,23 +24,11 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
-
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = "")
 public class SourceMappingMetadata implements Serializable {
 	private static final long serialVersionUID = -4417878417697685794L;
 
-	@XmlAttribute(name = "name", required = true)
     private String name;
-    
-    @XmlAttribute(name = "connection-jndi-name")
     private String jndiName;
-    
-    @XmlAttribute(name = "translator-name",required = true)
     private String translatorName;
     
 	public SourceMappingMetadata() {}

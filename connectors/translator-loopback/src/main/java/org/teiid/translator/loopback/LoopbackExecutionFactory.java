@@ -27,11 +27,11 @@ import java.util.List;
 
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
 
 /**
@@ -111,8 +111,8 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	}    
 	
 	@Override
-    public List getSupportedFunctions() {
-        List functions = Arrays.asList(new String[] {
+    public List<String> getSupportedFunctions() {
+        List<String> functions = Arrays.asList(new String[] {
             "+", "-", "*", "/", "abs", "acos", "asin", "atan", "atan2", "ceiling", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
             "bitand", "bitnot", "bitor", "bitxor", "cos", "cot", "degrees", "cos", "cot", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
             "degrees", "exp", "floor", "log", "log10", "mod", "pi", "power", "radians",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
@@ -170,16 +170,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 
     @Override
     public boolean supportsAliasedTable() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsBetweenCriteria() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsCaseExpressions() {
         return true;
     }
 

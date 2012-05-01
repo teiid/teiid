@@ -34,7 +34,7 @@ public class TestModelMetaData {
 	public void testModelType() {
 		
 		ModelMetaData model = new ModelMetaData();
-		model.modelType = "physical";
+		model.setModelType("physical");
 		
 		assertTrue(model.getModelType() == Model.Type.PHYSICAL);
 		assertTrue(model.isSource());

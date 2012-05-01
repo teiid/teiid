@@ -29,8 +29,6 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 
-import javax.xml.bind.JAXBException;
-
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingChoiceNode;
 import org.teiid.query.mapping.xml.MappingCriteriaNode;

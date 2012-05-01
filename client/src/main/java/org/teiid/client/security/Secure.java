@@ -20,52 +20,21 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.jdbc;
+package org.teiid.client.security;
 
-import java.util.ResourceBundle;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.teiid.core.BundleUtil;
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface Secure {
+	
+	boolean optional() default false;
 
-/**
- * JDBCPlugin
- * <p>Used here in <code>jdbc</code> to have access to the new
- * logging framework.</p>
- */
-public class JDBCPlugin { // extends Plugin {
-
-    public static final String PLUGIN_ID = "org.teiid.jdbc" ; //$NON-NLS-1$
-
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
-	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
-	public static enum Event implements BundleUtil.Event {
-		TEIID20000,
-		TEIID20001,
-		TEIID20002,
-		TEIID20003,
-		TEIID20004,
-		TEIID20005,
-		TEIID20006,
-		TEIID20007,
-		TEIID20008,
-		TEIID20009,
-		TEIID20010,
-		TEIID20011,
-		TEIID20012,
-		TEIID20013,
-		TEIID20014,
-		TEIID20015,
-		TEIID20016,
-		TEIID20017,
-		TEIID20018,
-		TEIID20019,
-		TEIID20020,
-		TEIID20021,
-		TEIID20022,
-		TEIID20023,
-		TEIID20024,
-		TEIID20025,
-		TEIID20026,
-		TEIID20027,
-		TEIID20028
-	}	
 }

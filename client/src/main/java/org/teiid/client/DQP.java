@@ -26,6 +26,7 @@ import javax.transaction.xa.Xid;
 
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.MetadataResult;
+import org.teiid.client.security.Secure;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
@@ -35,6 +36,7 @@ import org.teiid.core.TeiidProcessingException;
 
 public interface DQP {
 	
+	@Secure(optional=true)
 	ResultsFuture<ResultsMessage> executeRequest(long reqID, RequestMessage message) throws TeiidProcessingException, TeiidComponentException;
 	
 	ResultsFuture<ResultsMessage> processCursorRequest(long reqID, int batchFirst, int fetchSize) throws TeiidProcessingException;

@@ -192,16 +192,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsBatchedUpdates();
 	}
 	@Override
-	public boolean supportsBetweenCriteria() {
-		return delegate.supportsBetweenCriteria();
-	}
-	@Override
 	public boolean supportsBulkUpdate() {
 		return delegate.supportsBulkUpdate();
-	}
-	@Override
-	public boolean supportsCaseExpressions() {
-		return delegate.supportsCaseExpressions();
 	}
 	@Override
 	public boolean supportsCommonTableExpressions() {

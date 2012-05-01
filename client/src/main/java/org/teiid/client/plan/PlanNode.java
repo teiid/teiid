@@ -28,24 +28,23 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.jdbc.JDBCPlugin;
 
@@ -56,17 +55,13 @@ import org.teiid.jdbc.JDBCPlugin;
  * parent. For procedure plans child PlanNodes will be processing instructions,
  * which can in turn contain other relational or procedure plans.
  */
-@XmlType
-@XmlRootElement(name="node")
 public class PlanNode implements Externalizable {
 
 	/**
 	 * A Property is a named value of a {@link PlanNode} that may be
 	 * another {@link PlanNode} or a non-null list of values.
 	 */
-	@XmlType(name = "property")
 	public static class Property implements Externalizable {
-		@XmlAttribute
 		private String name;
 		private List<String> values;
 		private PlanNode planNode;
@@ -83,7 +78,6 @@ public class PlanNode implements Externalizable {
 			return name;
 		}
 		
-		@XmlElement(name="value")
 		public List<String> getValues() {
 			return values;
 		}
@@ -92,7 +86,6 @@ public class PlanNode implements Externalizable {
 			this.values = values;
 		}
 		
-		@XmlElement(name="node")
 		public PlanNode getPlanNode() {
 			return planNode;
 		}
@@ -118,10 +111,8 @@ public class PlanNode implements Externalizable {
 		
 	}
 	
-	@XmlElement(name="property")
     private List<Property> properties = new LinkedList<Property>();
     private PlanNode parent;
-    @XmlAttribute
     private String name;
     
     public PlanNode() {
@@ -215,34 +206,75 @@ public class PlanNode implements Externalizable {
 		writer.writeEndElement();
     }
     
-    private void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
+    private static void writeElement(final XMLStreamWriter writer, String name, String value) throws XMLStreamException {
         writer.writeStartElement(name);
         writer.writeCharacters(value);
         writer.writeEndElement();
     }    
     
-    public static PlanNode fromXml(String planString) {
-    	try {
-	    	JAXBContext jc = JAXBContext.newInstance(new Class<?>[] {PlanNode.class});
-			Unmarshaller marshaller = jc.createUnmarshaller();
-			PlanNode planNode = (PlanNode) marshaller.unmarshal(new StringReader(planString));
-			setParents(planNode);
-			return planNode;
-    	} catch (JAXBException e) {
-    		//shouldn't happen
-    		throw new TeiidRuntimeException(e);
+	private static Properties getAttributes(XMLStreamReader reader) {
+		Properties props = new Properties();
+    	if (reader.getAttributeCount() > 0) {
+    		for(int i=0; i<reader.getAttributeCount(); i++) {
+    			String attrName = reader.getAttributeLocalName(i);
+    			String attrValue = reader.getAttributeValue(i);
+    			props.setProperty(attrName, attrValue);
+    		}
     	}
-    }
-
-	private static void setParents(PlanNode planNode) {
-		for (Property property : planNode.properties) {
-			if (property.planNode != null) {
-				property.planNode.parent = planNode;
-				setParents(property.planNode);
-			}
-		}
+    	return props;
 	}
-    
+	
+	public static PlanNode fromXml(String planString) throws XMLStreamException {
+		XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
+		XMLStreamReader reader = inputFactory.createXMLStreamReader(new StringReader(planString));
+
+		while (reader.hasNext()&& (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+			String element = reader.getLocalName();
+			if (element.equals("node")) { //$NON-NLS-1$
+				Properties props = getAttributes(reader);
+				PlanNode planNode = new PlanNode(props.getProperty("name"));//$NON-NLS-1$
+				planNode.setParent(null);
+				buildNode(reader, planNode);
+				return planNode;
+			}
+			throw new XMLStreamException(JDBCPlugin.Util.gs("unexpected_element", reader.getName(), "node"),reader.getLocation());//$NON-NLS-1$ //$NON-NLS-2$
+		}
+		return null;
+	}
+
+	private static PlanNode buildNode(XMLStreamReader reader, PlanNode node) throws XMLStreamException {
+	   while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+		   String property = reader.getLocalName();
+		   if (property.equals("property")) {//$NON-NLS-1$
+			   Properties props = getAttributes(reader);
+			   ArrayList<String> values = new ArrayList<String>();
+			   while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+				   String valueNode = reader.getLocalName();
+				   if (valueNode.equals("value")) {//$NON-NLS-1$
+					   values.add(reader.getElementText());					   
+				   }
+				   else if (valueNode.equals("node")) {//$NON-NLS-1$
+					   values = null;
+					   Properties nodeProps = getAttributes(reader);
+					   PlanNode childNode = new PlanNode(nodeProps.getProperty("name"));//$NON-NLS-1$
+					   node.addProperty(props.getProperty("name"), buildNode(reader, childNode));//$NON-NLS-1$
+					   break;
+				   }
+				   else {
+					   throw new XMLStreamException(JDBCPlugin.Util.gs("unexpected_element", reader.getName(), "value"), reader.getLocation());//$NON-NLS-1$ //$NON-NLS-2$
+				   }
+			   }
+			   if (values != null) {
+				   node.addProperty(props.getProperty("name"), values);//$NON-NLS-1$
+			   }
+		   }
+		   else {
+			   throw new XMLStreamException(JDBCPlugin.Util.gs("unexpected_element", reader.getName(), "property"), reader.getLocation()); //$NON-NLS-1$ //$NON-NLS-2$
+		   }
+	   }
+	   return node;
+	}
+
     @Override
     public String toString() {
     	StringBuilder builder = new StringBuilder();

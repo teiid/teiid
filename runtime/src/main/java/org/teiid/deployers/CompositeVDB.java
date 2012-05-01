@@ -36,18 +36,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.DefaultMetadataRepository;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
-import org.teiid.metadata.index.IndexMetadataStore;
+import org.teiid.metadata.*;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.CompositeMetadataStore;
@@ -68,20 +57,20 @@ public class CompositeVDB {
 	private ConnectorManagerRepository cmr;
 	private FunctionTree systemFunctions;
 	private boolean metadataloadFinished = false;
+	private boolean modified;
 	
 	// used as cached item to avoid rebuilding
-	private VDBMetaData mergedVDB;
+	private volatile VDBMetaData mergedVDB;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, MetadataStore... additionalStores) {
+	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, MetadataStore... additionalStores) {
 		this.vdb = vdb;
 		this.store = metadataStore;
-		if (metadataStore instanceof IndexMetadataStore) {
-			this.visibilityMap = ((IndexMetadataStore)metadataStore).getEntriesPlusVisibilities();
-		}
+		this.visibilityMap = visibilityMap;
 		this.udf = udf;
 		this.systemFunctions = systemFunctions;
 		this.cmr = cmr;
-		this.additionalStores = additionalStores;		
+		this.additionalStores = additionalStores;
+		this.mergedVDB = buildVDB();
 	}
 	
 	synchronized void addChild(CompositeVDB child) {
@@ -90,35 +79,42 @@ public class CompositeVDB {
 		}
 		VDBMetaData childVDB = child.getVDB();
 		this.children.put(new VDBKey(childVDB.getName(), childVDB.getVersion()), child);
-		this.mergedVDB = null;
+		modified = true;
+		update();
 	}
 	
 	synchronized void removeChild(VDBKey child) {
 		if (this.children != null) {
 			this.children.remove(child);
 		}
-		this.mergedVDB = null;
+		modified = true;
+		update();
 	}	
 	
 	private synchronized void update() {
-		if (this.mergedVDB == null && this.metadataloadFinished) {
-			
-			this.mergedVDB = buildVDB();
-			
-			MetadataStore mergedStore = getMetadataStore();
-			
-			for (ModelMetaData model:this.mergedVDB.getModelMetaDatas().values()) {
-				MetadataRepository repo = model.getAttachment(MetadataRepository.class);
-				if (repo instanceof DefaultMetadataRepository) {
-					updateFromMetadataRepository(this.mergedVDB, mergedStore.getSchema(model.getName()), (DefaultMetadataRepository)repo);
-				}
-			}
-			
-			TransformationMetadata metadata = buildTransformationMetaData(this.mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
-			this.mergedVDB.addAttchment(QueryMetadataInterface.class, metadata);
-			this.mergedVDB.addAttchment(TransformationMetadata.class, metadata);
-			this.mergedVDB.addAttchment(MetadataStore.class, mergedStore);
+		if (!this.metadataloadFinished) {
+			return;
 		}
+		VDBMetaData newVDB = mergedVDB;
+		if (modified) {
+			newVDB = buildVDB();
+		}
+		
+		MetadataStore mergedStore = getMetadataStore();
+		
+		for (ModelMetaData model:newVDB.getModelMetaDatas().values()) {
+			MetadataRepository repo = model.getAttachment(MetadataRepository.class);
+			if (repo instanceof DefaultMetadataRepository) {
+				updateFromMetadataRepository(newVDB, mergedStore.getSchema(model.getName()), (DefaultMetadataRepository)repo);
+			}
+		}
+		
+		TransformationMetadata metadata = buildTransformationMetaData(newVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
+		newVDB.addAttchment(QueryMetadataInterface.class, metadata);
+		newVDB.addAttchment(TransformationMetadata.class, metadata);
+		newVDB.addAttchment(MetadataStore.class, mergedStore);
+		this.mergedVDB = newVDB;
+		this.modified = false;
 	}
 	
 	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
@@ -144,10 +140,7 @@ public class CompositeVDB {
 		return metadata;
 	}
 	
-	public synchronized VDBMetaData getVDB() {
-		if (this.mergedVDB == null && this.metadataloadFinished) {			
-			update();
-		}
+	public VDBMetaData getVDB() {
 		return this.mergedVDB;
 	}
 	
@@ -340,11 +333,11 @@ public class CompositeVDB {
 		metadataRepository.endLoadVdb(vdbName, vdbVersion);
 	}	
 	
-	public void setMetaloadFinished(boolean flag) {
-		this.metadataloadFinished = flag;
+	public synchronized void metadataLoadFinished() {
+		if (!this.metadataloadFinished) {
+			this.metadataloadFinished = true;
+			update();
+		}
 	}
 	
-	public boolean isMetadataloadFinished() {
-		return this.metadataloadFinished;
-	}
 }

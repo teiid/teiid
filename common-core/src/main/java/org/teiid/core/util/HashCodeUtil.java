@@ -139,8 +139,12 @@ public final class HashCodeUtil {
 		}
 		return hc;
 	}
-	
+
 	public static final int expHashCode(String x) {
+		return expHashCode(x, true);
+	}
+	
+	public static final int expHashCode(String x, boolean caseSensitive) {
 		if(x == null) {
 			return 0;
 		}
@@ -148,7 +152,11 @@ public final class HashCodeUtil {
 		int index = 1;
 		int xlen = x.length()+1;	// switch to 1-based
 		while(index < xlen) {
-			hc = PRIME * hc + x.charAt(index-1);
+			int charHash = x.charAt(index-1);
+			if (!caseSensitive) {
+				charHash = Character.toUpperCase(charHash);
+			}
+			hc = PRIME * hc + charHash;
 			index = index << 1;		// left shift by 1 to double
 		}
 		return hc;

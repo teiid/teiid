@@ -825,7 +825,7 @@ public class TestMMDatabaseMetaData {
         expected.put("supportsGetGeneratedKeys", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsGroupBy", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupByBeyondSelect", Boolean.TRUE); //$NON-NLS-1$
-        expected.put("supportsGroupByUnrelated", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsGroupByUnrelated", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsIntegrityEnhancementFacility", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsLikeEscapeClause", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsLimitedOuterJoins", Boolean.TRUE); //$NON-NLS-1$
@@ -836,7 +836,7 @@ public class TestMMDatabaseMetaData {
         expected.put("supportsMultipleResultSets", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsMultipleOpenResults", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsMultipleTransactions", Boolean.TRUE); //$NON-NLS-1$
-        expected.put("supportsNamedParameters", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsNamedParameters", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsNonNullableColumns", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsOpenCursorsAcrossRollback", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsOpenStatementsAcrossCommit", Boolean.TRUE); //$NON-NLS-1$

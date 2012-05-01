@@ -80,6 +80,7 @@ public class RulePlanSorts implements OptimizerRule {
 		switch (node.getType()) {
 		case NodeConstants.Types.SORT:
 			parentBlocking = true;
+			boolean raisedAccess = false;
 			if (node.hasBooleanProperty(NodeConstants.Info.IS_DUP_REMOVAL)) {
 				break;
 			}
@@ -87,6 +88,7 @@ public class RulePlanSorts implements OptimizerRule {
 				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
 			} else {
 				root = checkForProjectOptimization(node, root, metadata, capFinder, record);
+				raisedAccess = NodeEditor.findParent(node, NodeConstants.Types.ACCESS) != null;
 			}
 			OrderBy orderBy = (OrderBy)node.getProperty(NodeConstants.Info.SORT_ORDER);
 			List<Expression> orderColumns = orderBy.getSortKeys();
@@ -120,8 +122,10 @@ public class RulePlanSorts implements OptimizerRule {
 					}
 					possibleSort.setProperty(Info.SORT_ORDER, orderBy);
 				}
-				break;
 			} 
+			if (raisedAccess) {
+				return root;
+			}
 			break;
 		case NodeConstants.Types.DUP_REMOVE:
 			if (parentBlocking) {

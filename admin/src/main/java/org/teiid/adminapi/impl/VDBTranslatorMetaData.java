@@ -23,15 +23,9 @@ package org.teiid.adminapi.impl;
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-
 import org.teiid.adminapi.Translator;
 
 
-@XmlAccessorType(XmlAccessType.NONE)
 public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator {
 	private static final long serialVersionUID = -3454161477587996138L;
 	private String type;
@@ -44,7 +38,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		return super.getName();
 	}	
 	
-	@XmlAttribute(name = "name", required = true)
 	public void setName(String name) {
 		super.setName(name);
 	}
@@ -54,13 +47,11 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		return type;
 	}
 	
-	@XmlAttribute(name = "type",required = true)
 	public void setType(String type) {
 		this.type = type;
 	}	
 	
 	@Override
-	@XmlElement(name = "property", type = PropertyMetadata.class)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}	
@@ -82,7 +73,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 		return this.description;
 	}
 	
-	@XmlAttribute(name = "description")
 	public void setDescription(String desc) {
 		this.description = desc;
 	}

@@ -27,6 +27,7 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,7 +56,7 @@ import org.teiid.net.TeiidURL;
 
 public class TeiidDriver implements Driver {
 	
-	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
+	static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	static final String DRIVER_NAME = "Teiid JDBC Driver"; //$NON-NLS-1$
 	
     private static TeiidDriver INSTANCE = new TeiidDriver();
@@ -235,6 +236,10 @@ public class TeiidDriver implements Driver {
     public boolean jdbcCompliant() {
         return false;
     }
+
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		return logger;
+	}
 }
 
 

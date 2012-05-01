@@ -21,6 +21,7 @@
  */
 package org.teiid.jboss;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.StringTokenizer;
@@ -39,14 +40,14 @@ import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceController.State;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -65,6 +66,7 @@ import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
@@ -113,6 +115,19 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}
 		}
 		
+		// make sure the translator defined exists in configuration.
+		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			if (model.isSource() && !model.getSourceNames().isEmpty()) {
+				for (String source:model.getSourceNames()) {
+					String translatorName = model.getSourceTranslatorName(source);
+					Translator parent = this.translatorRepository.getTranslatorMetaData(translatorName);
+					if ( parent == null) {				
+						throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deploymentName));
+					}					
+				}
+			}
+		}			
+		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
 		if (udf != null) {
@@ -126,8 +141,10 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		// set up the metadata repositories for each models
 		IndexMetadataRepository indexRepo = null;
 		IndexMetadataStore indexFactory = deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
+		LinkedHashMap<String, Resource> visibilityMap = null;
 		if (indexFactory != null) {
 			indexRepo = new IndexMetadataRepository(indexFactory);
+			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
 
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
@@ -139,7 +156,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}
 
 		// build a VDB service
-		VDBService vdb = new VDBService(deployment);
+		VDBService vdb = new VDBService(deployment, visibilityMap);
 		final ServiceBuilder<VDBMetaData> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		
 		// add dependencies to data-sources

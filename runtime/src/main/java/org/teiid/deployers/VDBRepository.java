@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -47,6 +48,7 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.TranslatorException;
@@ -68,7 +70,7 @@ public class VDBRepository implements Serializable{
 	private Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
 	
 	
-	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
+	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
 		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
 			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
 		}
@@ -81,14 +83,14 @@ public class VDBRepository implements Serializable{
 		if (this.odbcEnabled && odbcStore == null) {
 			this.odbcStore = getODBCMetadataStore();
 		}
-		
-		CompositeVDB cvdb = null;
+
+		MetadataStore[] stores = null;
 		if (this.odbcStore == null) {
-			cvdb = new CompositeVDB(vdb, metadataStore, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore);
+			stores = new MetadataStore[] {this.systemStore};
+		} else {
+			stores = new MetadataStore[] {this.systemStore, odbcStore};
 		}
-		else {
-			cvdb = new CompositeVDB(vdb, metadataStore, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore);
-		}
+		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, stores);
 		this.vdbRepo.put(vdbId(vdb), cvdb); 
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
 	}
@@ -109,50 +111,34 @@ public class VDBRepository implements Serializable{
 		return vdbs;
 	}
 	
-	/**
-	 * This returns the all the VDBS that loaded and still loading or stalled due to data source unavailability.
-	 * @return
-	 */
-	public List<VDBMetaData> getAllDeployedVDBs(){
-		ArrayList<VDBMetaData> vdbs = new ArrayList<VDBMetaData>();
-		for(CompositeVDB cVDB:this.vdbRepo.values()) {
-			if (!cVDB.isMetadataloadFinished()) {
-				vdbs.add(cVDB.buildVDB());
-			}
-			else {
-				vdbs.add(cVDB.getVDB());
-			}
-		}
-		return vdbs;
-	}	
-
     protected VDBKey vdbId(VDBMetaData vdb) {
         return new VDBKey(vdb.getName(), vdb.getVersion());
     } 	
 		
 	public VDBMetaData getVDB(String vdbName) {
     	int latestVersion = 0;
-        for (VDBKey key:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).keySet()) {
-            if(!key.getName().equalsIgnoreCase(vdbName)) {
+    	VDBMetaData result = null;
+        for (Map.Entry<VDBKey, CompositeVDB> entry:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).entrySet()) {
+            if(!entry.getKey().getName().equalsIgnoreCase(vdbName)) {
             	break;
             }
-        	VDBMetaData vdb = this.vdbRepo.get(key).getVDB();
+        	VDBMetaData vdb = entry.getValue().getVDB();
         	switch (vdb.getConnectionType()) {
         	case ANY:
-        		latestVersion = Math.max(vdb.getVersion(), latestVersion);
+        		if (vdb.getVersion() > latestVersion) {
+        			latestVersion = vdb.getVersion();
+        			result = vdb;
+        		}
         		break;
         	case BY_VERSION:
                 if (latestVersion == 0) {
             		latestVersion = vdb.getVersion();
+            		result = vdb;
                 }            	
                 break;
         	}
         }
-        if(latestVersion == 0) {
-            return null; 
-        }
-
-        return getVDB(vdbName, latestVersion);
+        return result;
 	}
 	
 	public MetadataStore getSystemStore() {
@@ -228,12 +214,14 @@ public class VDBRepository implements Serializable{
 		if (removed != null) {
 			// if this VDB was part of another VDB; then remove them.
 			for (CompositeVDB other:this.vdbRepo.values()) {
-				if (other.hasChildVdb(key)) {
-					notifyRemove(other.getVDB().getName(), other.getVDB().getVersion(), other);
-	
-					other.removeChild(key);
-	
-					notifyAdd(other.getVDB().getName(), other.getVDB().getVersion(), other);
+				synchronized (other) {
+					if (other.hasChildVdb(key)) {
+						notifyRemove(other.getVDB().getName(), other.getVDB().getVersion(), other);
+		
+						other.removeChild(key);
+		
+						notifyAdd(other.getVDB().getName(), other.getVDB().getVersion(), other);
+					}
 				}
 			}
 			notifyRemove(key.getName(), key.getVersion(), removed);
@@ -276,7 +264,7 @@ public class VDBRepository implements Serializable{
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v!= null) {
 			boolean valid = false;
-			v.setMetaloadFinished(true);
+			v.metadataLoadFinished();
 			VDBMetaData metdataAwareVDB = v.getVDB();			
 			ValidatorReport report = MetadataValidator.validate(metdataAwareVDB, metdataAwareVDB.removeAttachment(MetadataStore.class));
 			

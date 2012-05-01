@@ -76,7 +76,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		}
 		long ts = System.currentTimeMillis();
 		for (String name:objectNames) {
-			Table table = s.getTables().get(name.toUpperCase());
+			Table table = s.getTables().get(name);
 			if (table == null) {
 				continue;
 			}
@@ -122,7 +122,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (s == null) {
 			return null;
 		}
-		return s.getTables().get(tableName.toUpperCase());
+		return s.getTables().get(tableName);
 	}
 
 	private Schema getSchema(String vdbName, int vdbVersion, String schemaName) {
@@ -134,7 +134,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (tm == null) {
 			return null;
 		}
-		return tm.getMetadataStore().getSchemas().get(schemaName.toUpperCase());
+		return tm.getMetadataStore().getSchemas().get(schemaName);
 	}
 	
 	@Override
@@ -154,7 +154,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (s == null) {
 			return;
 		}
-		Procedure p = s.getProcedures().get(procName.toUpperCase());
+		Procedure p = s.getProcedures().get(procName);
 		if (p == null) {
 			return;
 		}

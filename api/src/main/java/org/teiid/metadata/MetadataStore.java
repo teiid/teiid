@@ -47,11 +47,7 @@ public class MetadataStore implements Serializable {
 	}
 	
 	public Schema getSchema(String name) {
-		Schema s = this.schemas.get(name);
-		if (s == null) {
-			s = this.schemas.get(name.toUpperCase());
-		}
-		return s;
+		return this.schemas.get(name);
 	}
 	
 	public void addSchema(Schema schema) {

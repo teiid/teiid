@@ -139,10 +139,10 @@ public class AccessInfo implements Serializable {
 					}
 					this.objectsAccessed.add(id);
 				} else {
-					Schema s = tm.getMetadataStore().getSchema(key.get(0).toUpperCase());
-					Modifiable m = s.getTables().get(key.get(1).toUpperCase());
+					Schema s = tm.getMetadataStore().getSchema(key.get(0));
+					Modifiable m = s.getTables().get(key.get(1));
 					if (m == null) {
-						m = s.getProcedures().get(key.get(1).toUpperCase());
+						m = s.getProcedures().get(key.get(1));
 					}
 					if (m != null) {
 						this.objectsAccessed.add(m);

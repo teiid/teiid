@@ -171,15 +171,6 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
         return supportedFunctions;
     }
     
-    /**
-     * Derby supports only SearchedCaseExpression, not CaseExpression. 
-     * @since 5.0
-     */
-    @Override
-    public boolean supportsCaseExpressions() {
-        return false;
-    }
-    
     @Override
     public boolean supportsRowLimit() {
     	return this.getDatabaseVersion().compareTo(TEN_5) >= 0;

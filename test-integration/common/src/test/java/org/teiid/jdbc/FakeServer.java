@@ -47,8 +47,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.TupleBufferCache;
@@ -412,7 +412,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         			udfMetaData.addFunctions(entry.getKey(), entry.getValue());
         		}
         	}
-			this.repo.addVDB(vdbMetaData, metadata, udfMetaData, cmr);
+			this.repo.addVDB(vdbMetaData, metadata, (metadata instanceof IndexMetadataStore)?((IndexMetadataStore)metadata).getEntriesPlusVisibilities():null, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
 			this.repo.getVDB(vdbMetaData.getName(), vdbMetaData.getVersion()).setStatus(VDB.Status.ACTIVE);
 		} catch (VirtualDatabaseException e) {

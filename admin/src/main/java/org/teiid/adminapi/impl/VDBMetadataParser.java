@@ -39,7 +39,6 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
@@ -219,7 +218,7 @@ public class VDBMetadataParser {
 	private static void parseModel(XMLStreamReader reader, ModelMetaData model) throws XMLStreamException {
 		Properties props = getAttributes(reader);
 		model.setName(props.getProperty(Element.NAME.getLocalName()));
-		model.setModelType(Model.Type.valueOf(props.getProperty(Element.TYPE.getLocalName(), "PHYSICAL")));
+		model.setModelType(props.getProperty(Element.TYPE.getLocalName(), "PHYSICAL"));
 		model.setVisible(Boolean.parseBoolean(props.getProperty(Element.VISIBLE.getLocalName(), "true")));
 		model.setPath(props.getProperty(Element.PATH.getLocalName()));
 		

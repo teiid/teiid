@@ -26,9 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 
@@ -108,7 +105,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
     
     private Determinism determinism = Determinism.DETERMINISTIC;
     
-    @XmlElement(name="inputParameters")
     protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>(2);
     private FunctionParameter outputParameter;
     private Schema parent;
@@ -154,7 +150,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * Return name of method
      * @return Name
      */
-    @XmlAttribute
     public String getName() {
         return super.getName();
     }
@@ -180,7 +175,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * Get description of method
      * @return Description
      */
-    @XmlAttribute
     public String getDescription() { 
         return this.description;
     }        
@@ -198,7 +192,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * @return Category
      * @see FunctionCategoryConstants
      */
-    @XmlAttribute
     public String getCategory() { 
         return this.category;
     }        
@@ -228,7 +221,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
         this.pushdown = pushdown;
     }
     
-    @XmlAttribute
     public void setPushDown(String pushdown) {
     	if (pushdown != null) {
 			if (pushdown.equals(REQUIRED)) {
@@ -247,7 +239,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * Get invocation class name
      * @return Invocation class name
      */
-    @XmlAttribute
     public String getInvocationClass() { 
         return this.invocationClass;
     }        
@@ -264,7 +255,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * Get invocation method name
      * @return Invocation method name
      */
-    @XmlAttribute
     public String getInvocationMethod() { 
         return this.invocationMethod;
     }        
@@ -312,7 +302,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
      * Get ouput parameter.
      * @return Output parameter or return argument
      */
-    @XmlElement(name="returnParameter")
     public FunctionParameter getOutputParameter() { 
         return this.outputParameter;
     }
@@ -448,7 +437,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
         return this.determinism;
     }
     
-    @XmlAttribute(name="deterministic")
     public void setDeterministicBoolean(boolean deterministic) {
     	this.determinism = deterministic ? Determinism.DETERMINISTIC : Determinism.NONDETERMINISTIC;
     }

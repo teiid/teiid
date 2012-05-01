@@ -646,6 +646,14 @@ public final class PropertiesUtils {
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
 
+    public static String toHex(byte[] bytes) {
+    	StringBuilder sb = new StringBuilder(bytes.length * 2);
+    	for (byte b : bytes) {
+			sb.append(toHex(b >>> 4));
+			sb.append(toHex(b));
+		}
+    	return sb.toString();
+    }
 
     public static final void copyProperty(Properties srcProperties, String srcPropName, Properties tgtProperties, String tgtPropName) {
         if(srcProperties == null || srcPropName == null || tgtProperties == null || tgtPropName == null) {
@@ -724,141 +732,7 @@ public final class PropertiesUtils {
         return original;
     }
     
- // ======================================================
-    /**
-     * Returns a boolean indicating whether the string matched the given pattern.
-     * A '*' may be
-     * given to match the pattern exactly up to the '*', then anything after.
-     * We will also support a leading star, and match on anything that ends with
-     * the string specified after the star.
-     * Note: Should also implement matching with '?' which means match any single
-     * char.
-     * @param pattern The property name to match which may include a '*'.
-     * @param props The properties to search.
-     * @return The boolean - passed or failed
-     * but never null.
-     */
-    public static boolean filterTest( String pattern, String sCandidate ) {
-
-        // Vars for match strategy
-        char   chStar               = '*';
-
-        // Match rule booleans.  Please note that 'bLeading'
-        //  and 'bTrailing' refer to the string we are searching for.
-        //  For example, if the strategy is bLeading, and the Match frag
-        //  is "wet", and the candidate string is "wetrust", it will pass.
-        //  Likewise if the strategy is bTrailing and the Match frag is
-        //  "rust" and the candidate string is "wetrust", it will pass.
-        boolean bLeading            = false;
-        boolean bTrailing           = false;
-        boolean bFullMatch          = false;
-        boolean bAnywhere           = false;
-        boolean bAllMatch           = false;
-
-        boolean bPass               = false;
-
-        String sMatchFrag           = ""; //$NON-NLS-1$
-//        List propNames              = new ArrayList();
-
-
-        // 1. Analyze pattern to resolve match strategy
-
-        //  First ensure the pattern is safe to work with.
-        //  If the pattern is an empty string, set it to '*',
-        //  which means anything passes.
-        pattern = pattern.trim();
-        if ( pattern.length() == 0 )
-            pattern = "*"; //$NON-NLS-1$
-
-        int iFirstStar  =   pattern.indexOf( chStar );
-        int iLastStar   =   pattern.lastIndexOf( chStar );
-
-        // If there are any stars:
-        if( (iFirstStar > -1) && ( iLastStar > -1 ) )
-        {
-            // and their positions are the same (same star, silly)
-            if( iFirstStar == iLastStar )
-            {
-                // and this star is at the front:
-                if( iFirstStar == 0 )
-                {
-                    // and the pattern is only one byte long:
-                    if( pattern.length() == 1 )
-                    {
-                        // Then the pattern is a single '*',
-                        // and all will pass the match:
-                        bAllMatch  = true;
-                    }
-                    else
-                    {
-                        // Or the pattern is a leading star followed
-                        //  by a string:
-                        bTrailing   = true;
-                        sMatchFrag  = pattern.substring( 1 );
-                    }
-                }
-                else
-                {
-                    // OR the star is NOT at the front, so the
-                    //  pattern is a trailing star preceded by a string:
-                    bLeading    = true;
-                    sMatchFrag  = pattern.substring( 0, iLastStar );
-
-                }
-            }
-            else
-            {
-                // They are not equal
-                //sMatchStrategy  = ANYWHERE;
-                bAnywhere   = true;
-                sMatchFrag  = pattern.substring( iFirstStar + 1, iLastStar );
-            }
-        }
-        else
-        {
-            // there are no stars at all
-            //sMatchStrategy  = FULL_MATCH;
-            bFullMatch  = true;
-            sMatchFrag  = pattern;
-        }
-
-        // Now test the string
-        String name     = sCandidate;
-        bPass           = false;
-
-        // force the match fragment and the test string to UPPER case
-        String sMatchFragUpper =   sMatchFrag.toUpperCase();
-        String sNameUpper      =   name.toUpperCase();
-
-        // Test all of the booleans.  Only one should be true.
-        if( bAllMatch ) {
-            bPass = true;
-        }
-        else
-        if( bAnywhere ) {
-            if( sNameUpper.indexOf( sMatchFragUpper ) > -1 )
-                bPass = true;
-        }
-        else
-        if( bFullMatch ) {
-            if( sNameUpper.equals( sMatchFragUpper ) )
-                bPass = true;
-        }
-        else
-        if( bLeading ) {
-            if( sNameUpper.startsWith( sMatchFragUpper ) )
-                bPass = true;
-        }
-        else
-        if( bTrailing ) {
-            if( sNameUpper.endsWith( sMatchFragUpper ) )
-                bPass = true;
-        }
-
-        return bPass;
-    }
-
-    public static void setBeanProperties(Object bean, Properties props, String prefix) {
+ public static void setBeanProperties(Object bean, Properties props, String prefix) {
 		// Move all prop names to lower case so we can use reflection to get
 	    // method names and look them up in the connection props.
 	    final Properties connProps = lowerCaseAllPropNames(props);

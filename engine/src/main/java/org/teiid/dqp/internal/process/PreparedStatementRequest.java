@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -131,6 +132,21 @@ public class PreparedStatementRequest extends Request {
     	String sqlQuery = requestMsg.getCommands()[0];
     	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
         prepPlan = prepPlanCache.get(id);
+        
+        if (prepPlan != null) {
+        	ProcessorPlan cachedPlan = prepPlan.getPlan();
+        	this.userCommand = prepPlan.getCommand();
+        	if (validateAccess(requestMsg.getCommands(), userCommand, CommandType.PREPARED)) {
+        		LogManager.logDetail(LogConstants.CTX_DQP, requestId, "AuthorizationValidator indicates that the prepared plan for command will not be used"); //$NON-NLS-1$
+            	prepPlan = null;
+            } else {
+	        	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
+	            processPlan = cachedPlan.clone();
+	            //already in cache. obtain the values from cache
+	            analysisRecord = prepPlan.getAnalysisRecord();
+            }
+        }
+        
         if (prepPlan == null) {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
@@ -149,15 +165,7 @@ public class PreparedStatementRequest extends Request {
 				}		        
 		        
 		        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
-        	}
-        } else {
-        	ProcessorPlan cachedPlan = prepPlan.getPlan();
-        	this.userCommand = prepPlan.getCommand();
-            validateAccess(userCommand);    
-        	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
-            processPlan = cachedPlan.clone();
-            //already in cache. obtain the values from cache
-            analysisRecord = prepPlan.getAnalysisRecord();
+	        }
         }
         
         if (requestMsg.isBatchedUpdate()) {

@@ -32,16 +32,17 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 	
 	private String name;
     private int version;
+    private int hashCode;
     
     public VDBKey(String name, String version) {
-        this.name = name.toUpperCase();
+        this.name = name;
         if (version != null) {
             this.version = Integer.parseInt(version);
         }
     }
     
     public VDBKey(String name, int version) {
-        this.name = name.toUpperCase();
+        this.name = name;
         this.version = version;
     }    
     
@@ -57,7 +58,10 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
      * @see java.lang.Object#hashCode()
      */
     public int hashCode() {
-        return HashCodeUtil.hashCode(name.hashCode(), version);
+    	if (hashCode == 0) {
+    		hashCode = HashCodeUtil.hashCode(HashCodeUtil.expHashCode(name, false), version); 
+    	}
+        return hashCode;
     }
     
     /** 
@@ -74,8 +78,8 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
         
         VDBKey other = (VDBKey)obj;
         
-        return other.name.equals(this.name) 
-        	&& version == other.version;
+        return version == other.version 
+        && other.name.equalsIgnoreCase(this.name);
     }
     
     /** 
@@ -87,11 +91,11 @@ public class VDBKey implements Serializable, Comparable<VDBKey>{
 
 	@Override
 	public int compareTo(VDBKey o) {
-		int compare = name.compareTo(o.name);
+		int compare = String.CASE_INSENSITIVE_ORDER.compare(name, o.name);
 		if (compare == 0) {
 			return version - o.version;
 		}
 		return compare;
 	}
-    
+	
 }

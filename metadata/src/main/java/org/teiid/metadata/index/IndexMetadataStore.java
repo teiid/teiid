@@ -28,7 +28,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Semaphore;
 
 import org.jboss.vfs.VirtualFile;
@@ -375,19 +383,6 @@ public class IndexMetadataStore extends MetadataStore {
 		
 		List<Table> records = recs;
 		
-		//load non-materialized first, so that the uuid->table cache is populated
-		Collections.sort(records, new Comparator<Table>() {
-			@Override
-			public int compare(Table o1, Table o2) {
-				if (!o1.isMaterialized()) {
-					return -1;
-				}
-				if (!o2.isMaterialized()) {
-					return 1;
-				}
-				return 0;
-			}
-		});
 		for (Table tableRecord : records) {
 	    	List<Column> columns = new ArrayList<Column>(getByParent(tableRecord.getUUID(), MetadataConstants.RECORD_TYPE.COLUMN, Column.class, false));
 	        for (Column columnRecordImpl : columns) {

@@ -41,6 +41,7 @@ import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -489,6 +490,34 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	    				l.setType(FixedCharType.class);
     					}
     				}
+    			}
+    			super.visit(obj);
+    		}
+    		
+    		public void visit(NamedTable table) {
+    			stripDualAlias(table);
+    			super.visit(table);
+    		}
+
+			private void stripDualAlias(NamedTable table) {
+				if (table.getCorrelationName() != null) {
+    				String groupName = null;
+    				AbstractMetadataRecord groupID = table.getMetadataObject();
+                    if(groupID != null) {              
+                        groupName = getName(groupID);
+                    } else {
+                        groupName = table.getName();
+                    }
+                    if (DUAL.equalsIgnoreCase(groupName)) {
+                    	table.setCorrelationName(null);
+                    }
+    			}
+			}
+    		
+    		@Override
+    		public void visit(ColumnReference obj) {
+    			if (obj.getTable() != null) {
+    				stripDualAlias(obj.getTable());
     			}
     			super.visit(obj);
     		}

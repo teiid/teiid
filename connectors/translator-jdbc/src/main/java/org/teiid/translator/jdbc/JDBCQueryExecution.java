@@ -52,7 +52,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     // ===========================================================================================================================
 
     protected ResultSet results;
-    protected Command command;
     protected Class<?>[] columnDataTypes;
 
     // ===========================================================================================================================
@@ -60,8 +59,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     // ===========================================================================================================================
 
     public JDBCQueryExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
-        super(connection, context, env);
-        this.command = command;
+        super(command, connection, context, env);
     }
     
     @Override
