@@ -345,4 +345,25 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(s.execute("select * from tables order by name"));
 		TestMMDatabaseMetaData.compareResultSet("TestODBCSocketTransport/testSelect", s.getResultSet());
 	}
+	
+	@Test public void testPayload() throws Exception {
+		Statement s = conn.createStatement();
+		assertFalse(s.execute("SET PAYLOAD x y"));
+		assertTrue(s.execute("SELECT commandpayload('x')"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String str = rs.getString(1);
+		assertEquals("y", str);
+	}
+	
+	@Test public void testShowPlan() throws Exception {
+		Statement s = conn.createStatement();
+		assertFalse(s.execute("SET SHOWPLAN ON"));
+		assertTrue(s.execute("SELECT 1"));
+		assertTrue(s.execute("SHOW PLAN"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		String str = rs.getString(1);
+		assertEquals("ProjectNode\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1\n    1: Node Process Time: 0\n    2: Node Cumulative Process Time: 0\n    3: Node Cumulative Next Batch Process Time: 0\n    4: Node Next Batch Calls: 1\n    5: Node Blocks: 0\n  + Cost Estimates:Estimated Node Cardinality: 1.0\n  + Select Columns:1\n", str);
+	}
 }

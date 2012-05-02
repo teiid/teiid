@@ -32,7 +32,6 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.sql.Blob;
-import java.sql.Clob;
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -482,9 +481,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    	break;
 		    
 		    case PG_TYPE_TEXT:
-		    	Clob clob = rs.getClob(column);
-		    	if (clob != null) {
-		    		Reader r = clob.getCharacterStream();
+		    	Reader r = rs.getCharacterStream(column);
+		    	if (r != null) {
 		    		try {
 		    			ObjectConverterUtil.write(writer, r, this.maxLobSize, false);
 		    		} finally {

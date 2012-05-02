@@ -102,8 +102,6 @@ public class PGUtil {
         	
         case Types.LONGVARCHAR:
         case Types.CLOB:            
-        	return PG_TYPE_TEXT;
-        
         case Types.SQLXML:        	
             return PG_TYPE_TEXT;
             
