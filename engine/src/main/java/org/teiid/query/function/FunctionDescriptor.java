@@ -242,7 +242,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             }
             return importValue(result, getReturnType());
         } catch(ArithmeticException e) {
-    		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30383, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30383, getName()));
+    		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getName()));
         } catch(InvocationTargetException e) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e.getTargetException(), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getName()));
         } catch(IllegalAccessException e) {

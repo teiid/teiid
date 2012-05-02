@@ -432,7 +432,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50058, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50058, policyName, this.vdb.getName(), this.vdb.getVersion()));
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.addMappedRoleName(mappedRole);
@@ -443,7 +443,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50059, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50059, policyName, this.vdb.getName(), this.vdb.getVersion()));
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.removeMappedRoleName(mappedRole);
@@ -454,7 +454,7 @@ class VDBService implements Service<VDBMetaData> {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 		
 		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50060, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50060, policyName, this.vdb.getName(), this.vdb.getVersion()));
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
 		}		
 		
 		policy.setAnyAuthenticated(true);

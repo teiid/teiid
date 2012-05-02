@@ -58,7 +58,7 @@ public class SQLXMLToStringTransform extends AnyToStringTransform {
         } catch (SQLException e) {
               throw new TransformationException(CorePlugin.Event.TEIID10066, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10066, new Object[] {getSourceType().getName(), getTargetType().getName()}));
         } catch (IOException e) {
-              throw new TransformationException(CorePlugin.Event.TEIID10067, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10067, new Object[] {getSourceType().getName(), getTargetType().getName()}));
+              throw new TransformationException(CorePlugin.Event.TEIID10066, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10066, new Object[] {getSourceType().getName(), getTargetType().getName()}));
         } finally {
         	try {
         		if (reader != null) {

@@ -100,7 +100,7 @@ public class MakeGSS {
         }         
         
         if (errors.length() > 0) {
-        	 throw new LogonException(JDBCPlugin.Event.TEIID20004, errors.toString());
+        	 throw new LogonException(JDBCPlugin.Event.TEIID20005, errors.toString());
         }
         
         String user = props.getProperty(TeiidURL.CONNECTION.USER_NAME);

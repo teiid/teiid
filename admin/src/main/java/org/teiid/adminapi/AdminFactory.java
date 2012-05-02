@@ -619,7 +619,7 @@ public class AdminFactory {
 			} catch (OperationFormatException e) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70011, e, e.getMessage());
 			} catch (IOException e) {
-				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70012, e, e.getMessage());
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70011, e, e.getMessage());
 			}      
 		}
 

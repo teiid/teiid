@@ -1133,7 +1133,7 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 			
 			if (policy == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50052, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50052, policyName, vdb.getName(), vdb.getVersion()));
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
 			}		
 			
 			policy.setAnyAuthenticated(true);
@@ -1173,7 +1173,7 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
 			
 			if (policy == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50053, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50053, policyName, vdb.getName(), vdb.getVersion()));
+				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
 			}		
 			
 			policy.setAnyAuthenticated(false);

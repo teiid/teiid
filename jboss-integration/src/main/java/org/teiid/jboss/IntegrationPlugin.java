@@ -53,8 +53,6 @@ public class IntegrationPlugin {
     	TEIID50011,
     	TEIID50012, // socket enabled
     	TEIID50013, // Wrong socket protocol
-    	TEIID50014, // socket disabled
-    	TEIID50015, // admin max sessions
     	TEIID50016, // invalid vdb file
     	TEIID50017, // vdb.xml parse exception
     	TEIID50018, // failed VDB dependency processing
@@ -66,11 +64,8 @@ public class IntegrationPlugin {
     	TEIID50024, // failed metadata load
     	TEIID50025, // VDB deployed
     	TEIID50026, // VDB undeployed
-    	TEIID50027, // metadata in-process of loading
-    	TEIID50028, // failed metadata loading
     	TEIID50029, // dynamic metadata loaded
     	TEIID50030,
-    	TEIID50031, // failed to load cached index files
     	TEIID50032, // duplicate VDB
     	TEIID50033, // duplicate source name in vdb
     	TEIID50034, // Source name mismatch
@@ -91,15 +86,10 @@ public class IntegrationPlugin {
     	TEIID50049,
     	TEIID50050,
     	TEIID50051,
-    	TEIID50052,
-    	TEIID50053,
     	TEIID50054,
     	TEIID50055,
     	TEIID50056,
     	TEIID50057,
-    	TEIID50058,
-    	TEIID50059,
-    	TEIID50060,
     	TEIID50061,
     	TEIID50062,
     	TEIID50063,

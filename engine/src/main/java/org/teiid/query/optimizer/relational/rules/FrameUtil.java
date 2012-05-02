@@ -298,9 +298,9 @@ public class FrameUtil {
 				}
 			}
 		} catch(TeiidProcessingException e) {
-		     throw new QueryPlannerException(QueryPlugin.Event.TEIID30260, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30260, ses));
+		     throw new QueryPlannerException(QueryPlugin.Event.TEIID30263, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30263, ses));
 		} catch (TeiidComponentException e) {
-			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30261, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30261, ses));
+			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30263, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30263, ses));
 		}
 	}
     
@@ -337,7 +337,7 @@ public class FrameUtil {
         try {
             return QueryRewriter.rewriteCriteria(criteria, null, metadata);
         } catch(TeiidProcessingException e) {
-             throw new QueryPlannerException(QueryPlugin.Event.TEIID30262, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30262, criteria));
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30263, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30263, criteria));
         } catch (TeiidComponentException e) {
         	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30263, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30263, criteria));
         }

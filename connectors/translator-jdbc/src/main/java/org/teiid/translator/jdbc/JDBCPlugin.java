@@ -38,7 +38,6 @@ public class JDBCPlugin {
 	
 	
 	public static enum Event implements BundleUtil.Event{
-		TEIID11001, // connection details
 		TEIID11002, // connection creation failed
 		TEIID11003, // invalid hint
 		TEIID11004,
