@@ -99,14 +99,14 @@ public class DdlPlan extends ProcessorPlan {
     		if (obj.getEnabled() == null) {
     			if (obj.isCreate()) {
         			if (getPlanForEvent(t, event) != null) {
-        				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30156, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30156, t.getName(), obj.getEvent())));
+        				 throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30156, t.getName(), obj.getEvent())));
         			}
     			} else if (getPlanForEvent(t, event) == null) {
-    				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30158, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
+    				 throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     			}
     			sql = obj.getDefinition().toString();
     		} else if (getPlanForEvent(t, event) == null) {
-				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30158, new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
+				 throw new TeiidRuntimeException(new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30158, t.getName(), obj.getEvent())));
     		}
 			if (getMetadataRepository(vdb, t.getParent().getName()) != null) {
 				if (sql != null) {

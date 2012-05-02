@@ -295,7 +295,7 @@ public class XMLQueryResolver implements CommandResolver {
         			try {
 						ResolverUtil.addTempGroup(metadata, new GroupSymbol(baseNode.getFullyQualifiedName()), Collections.EMPTY_LIST, false).setMetadataType(Type.XML);
 					} catch (QueryResolverException e) {
-						 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30132, e);
+						 throw new TeiidRuntimeException(e);
 					}
         		}
         	}

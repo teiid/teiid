@@ -22,7 +22,7 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.teiid.query.analysis.AnalysisRecord.PROP_EXPRESSION;
+import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.plan.PlanNode;
@@ -77,7 +77,7 @@ public class ErrorInstruction extends ProgramInstruction {
     		TeiidProcessingException {
     	Object value = env.evaluateExpression(expression);
             LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, new Object[] {"Processing RaiseErrorInstruction with the value :", value}); //$NON-NLS-1$ 
-         throw new ProcedureErrorInstructionException(QueryPlugin.Event.TEIID30167, ERROR_PREFIX + (value != null ? value.toString() : ""));
+         throw new ProcedureErrorInstructionException(QueryPlugin.Event.TEIID30167, ERROR_PREFIX + (value != null ? value.toString() : "")); //$NON-NLS-1$ 
     }
  
 }

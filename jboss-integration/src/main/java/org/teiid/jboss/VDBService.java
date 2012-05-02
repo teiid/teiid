@@ -429,44 +429,28 @@ class VDBService implements Service<VDBMetaData> {
 	}
 	
 	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);		
 		
 		policy.addMappedRoleName(mappedRole);
 		save();
 	}
 	
 	public void remoteDataRole(String policyName, String mappedRole) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);
 		
 		policy.removeMappedRoleName(mappedRole);
 		save();
 	}	
 	
 	public void addAnyAuthenticated(String policyName) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);		
 		
 		policy.setAnyAuthenticated(true);
 		save();
 	}	
 	
 	public void removeAnyAuthenticated(String policyName) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);
 		
 		policy.setAnyAuthenticated(false);
 		save();
@@ -504,6 +488,16 @@ class VDBService implements Service<VDBMetaData> {
 		}
 	}
 	
+	static DataPolicyMetadata getPolicy(VDBMetaData vdb, String policyName)
+			throws AdminProcessingException {
+		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		
+		if (policy == null) {
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
+		}
+		return policy;
+	}
+
 	@SuppressWarnings("serial")
 	static class TranslatorNotFoundException extends TeiidException {
 		public TranslatorNotFoundException(String msg) {

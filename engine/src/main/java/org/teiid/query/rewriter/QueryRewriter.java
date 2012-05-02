@@ -541,7 +541,7 @@ public class QueryRewriter {
                 try {
                     return rewriteExpressionDirect(element);
                 } catch (TeiidException err) {
-                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30368, err);
+                     throw new TeiidRuntimeException(err);
                 }
             }
         };

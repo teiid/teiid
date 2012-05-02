@@ -58,12 +58,12 @@ public class StringToDateTransform extends Transform {
 			result = Date.valueOf( (String) value );
 		} catch(Exception e) {
 		      if (!validate && pattern.matcher((String)value).matches()) {
-			      throw new TransformationException(CorePlugin.Event.TEIID10062, CorePlugin.Util.gs(CorePlugin.Event.TEIID10062, value, getTargetType().getSimpleName()));
+			      throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 	          }
 			  throw new TransformationException(CorePlugin.Event.TEIID10061, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10061, value));
 		}
 		if (validate && !result.toString().equals(value)) {
-			  throw new TransformationException(CorePlugin.Event.TEIID10062, CorePlugin.Util.gs(CorePlugin.Event.TEIID10062, value, getTargetType().getSimpleName()));
+			  throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 		}
 		return result;
 	}

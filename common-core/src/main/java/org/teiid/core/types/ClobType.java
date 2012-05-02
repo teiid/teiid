@@ -33,8 +33,6 @@ import java.io.Writer;
 import java.sql.Clob;
 import java.sql.SQLException;
 
-import javax.sql.rowset.serial.SerialClob;
-
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;

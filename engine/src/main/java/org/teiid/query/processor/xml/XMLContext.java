@@ -77,13 +77,7 @@ class XMLContext {
      * @return
      */
     public List<?> getCurrentRow(String aliasResultName) throws TeiidComponentException, TeiidProcessingException {
-        PlanExecutor executor = this.resultsMap.get(aliasResultName);
-        if (executor == null) {
-            if (this.parentContext != null) {
-                return this.parentContext.getCurrentRow(aliasResultName);
-            }
-             throw new TeiidComponentException(QueryPlugin.Event.TEIID30214, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30214, aliasResultName));
-        }
+        PlanExecutor executor = getExecutor(aliasResultName);
         return executor.currentRow();
     }
 
@@ -94,13 +88,7 @@ class XMLContext {
      * @throws TeiidComponentException
      */
     public List<?> getNextRow(String aliasResultName) throws TeiidComponentException, TeiidProcessingException {
-        PlanExecutor executor = this.resultsMap.get(aliasResultName);
-        if (executor == null) {
-            if (this.parentContext != null) {
-                return this.parentContext.getNextRow(aliasResultName);
-            }
-             throw new TeiidComponentException(QueryPlugin.Event.TEIID30215, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30215, aliasResultName));
-        }
+        PlanExecutor executor = getExecutor(aliasResultName);
         return executor.nextRow();
     }
     
@@ -132,15 +120,21 @@ class XMLContext {
      * @throws TeiidComponentException
      */
     public List<?> getOutputElements(String resultName) throws TeiidComponentException {
-        PlanExecutor executor = this.resultsMap.get(resultName);
+        PlanExecutor executor = getExecutor(resultName);
+        return executor.getOutputElements();        
+    }
+
+	private PlanExecutor getExecutor(String resultName)
+			throws TeiidComponentException {
+		PlanExecutor executor = this.resultsMap.get(resultName);
         if (executor == null) {
             if (this.parentContext != null) {
-                return this.parentContext.getOutputElements(resultName);
+                return this.parentContext.getExecutor(resultName);
             }
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30216, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30216, resultName));
         }
-        return executor.getOutputElements();        
-    }
+		return executor;
+	}
     
    
     /**

@@ -237,22 +237,15 @@ public final class FunctionMethods {
     
     // ================== Function = rand=====================
     
-    public static Object rand(CommandContext context, Object seed) throws FunctionExecutionException {        
-        if(context != null) {
-            if(seed == null) {
-                return new Double(context.getNextRand());
-            } else if(seed instanceof Integer) {
-                return new Double(context.getNextRand(((Integer)seed).longValue()));
-            }
-        }
-         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30393, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30393, "rand", seed)); //$NON-NLS-1$
+    public static Object rand(CommandContext context, Integer seed) {        
+        if(seed == null) {
+            return new Double(context.getNextRand());
+        } 
+        return new Double(context.getNextRand(seed.longValue()));
     }
         
-    public static Object rand(CommandContext context) throws FunctionExecutionException {
-        if(context != null) {
-            return new Double(context.getNextRand());
-        }
-         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30394, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30394, "rand"));//$NON-NLS-1$
+    public static Object rand(CommandContext context) {
+        return new Double(context.getNextRand());
     }
     
 	// ================== Function = mod =====================
@@ -462,12 +455,11 @@ public final class FunctionMethods {
 
 	// ================== Function = quarter =====================
 
-	public static Object quarter(Date date)
-		throws FunctionExecutionException {
+	public static Object quarter(Date date) {
 		int month = getField(date, Calendar.MONTH);
 		
 		if (month > 11) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30395, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30395, "quarter", date.getClass().getName())); //$NON-NLS-1$
+			 throw new AssertionError("Invalid month for " + date); //$NON-NLS-1$
 		}
 		return Integer.valueOf(month/3 + 1);
 	}
@@ -667,7 +659,7 @@ public final class FunctionMethods {
 		throws FunctionExecutionException {
 		int countValue = count.intValue();
         if(countValue < 0) {
-             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30397, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30397, countValue));
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30396, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30396, countValue));
         } else if(string.length() < countValue) {
             return string;
 		} else {
@@ -1032,7 +1024,7 @@ public final class FunctionMethods {
     public static Object rowlimitexception(Object expression)
         throws FunctionExecutionException {
     
-         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30408, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30408));
+         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30407, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30407));
     }      
     
     // ================== Function = lookup =====================
@@ -1432,7 +1424,7 @@ public final class FunctionMethods {
 		if (array instanceof java.sql.Array) {
 			return Array.getLength(((java.sql.Array)array).getArray());
 		}
-		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30417, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30417, array.getClass()));
+		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
 }

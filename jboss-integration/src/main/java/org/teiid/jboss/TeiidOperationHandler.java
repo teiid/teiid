@@ -1039,11 +1039,7 @@ class AddDataRole extends VDBOperations {
 		String mappedRole = operation.get(OperationsConstants.MAPPED_ROLE).asString();
 		
 		try {
-			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-			
-			if (policy == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50050, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50050, policyName, vdb.getName(), vdb.getVersion()));
-			}		
+			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);
 			
 			policy.addMappedRoleName(mappedRole);
 			save(vdb);
@@ -1087,11 +1083,7 @@ class RemoveDataRole extends VDBOperations {
 		String mappedRole = operation.get(OperationsConstants.MAPPED_ROLE).asString();
 		
 		try {
-			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-			
-			if (policy == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
-			}		
+			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);		
 			
 			policy.removeMappedRoleName(mappedRole);
 			save(vdb);
@@ -1130,11 +1122,7 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
 		
 		try {
-			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-			
-			if (policy == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
-			}		
+			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);
 			
 			policy.setAnyAuthenticated(true);
 			save(vdb);
@@ -1170,11 +1158,7 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
 		
 		try {
-			DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-			
-			if (policy == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
-			}		
+			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);
 			
 			policy.setAnyAuthenticated(false);
 			save(vdb);

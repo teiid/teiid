@@ -124,7 +124,7 @@ public class MakeGSS {
         else if (result instanceof CommunicationException)
         	throw (CommunicationException)result;
         else if (result instanceof Exception)
-        	 throw new LogonException(JDBCPlugin.Event.TEIID20006, (Exception)result, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20006));
+        	 throw new LogonException(JDBCPlugin.Event.TEIID20005, (Exception)result, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20005));
 
         return (LogonResult)result;
     }

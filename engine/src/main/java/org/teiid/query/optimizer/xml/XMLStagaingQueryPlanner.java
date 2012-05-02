@@ -38,7 +38,6 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingBaseNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -53,17 +52,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.GroupBy;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Option;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -87,7 +76,7 @@ public class XMLStagaingQueryPlanner {
                 try {
                     stagePlannedQuery(sourceNode, planEnv);
                 } catch (Exception e) {
-                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30291, e);
+                     throw new TeiidRuntimeException(e);
                 }
             }
         };

@@ -22,17 +22,7 @@
 
 package org.teiid.core.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,12 +63,6 @@ public final class FileUtils {
     public final static char[] SUFFIX_JAR = ".JAR".toCharArray(); //$NON-NLS-1$
     public final static char[] SUFFIX_zip = ".zip".toCharArray(); //$NON-NLS-1$
     public final static char[] SUFFIX_ZIP = ".ZIP".toCharArray(); //$NON-NLS-1$
-    
-    
-    private static final String TEMP_FILE = "delete.me"; //$NON-NLS-1$
-    private static final String TEMP_FILE_RENAMED = "delete.me.old"; //$NON-NLS-1$
-    
-    
     
     static {
         String tempDirPath = System.getProperty(JAVA_IO_TEMP_DIR); 
@@ -750,63 +734,6 @@ public final class FileUtils {
         return sb.toString();
     }
     
-    /**
-     * Test whether it's possible to read and write files in the specified directory. 
-     * @param dirPath Name of the directory to test
-     * @throws TeiidException
-     * @since 4.3
-     */
-    public static void testDirectoryPermissions(String dirPath) throws TeiidException {
-        
-        //try to create a file
-        File tmpFile = new File(dirPath + File.separatorChar + TEMP_FILE);
-        boolean success = false;
-        try {
-            success = tmpFile.createNewFile();
-        } catch (IOException e) {
-        }
-        if (!success) {
-            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_create_file_in", dirPath); //$NON-NLS-1$            
-              throw new TeiidException(CorePlugin.Event.TEIID10025, msg);
-        }
-        
-
-        //test if file can be written to
-        if (!tmpFile.canWrite()) {
-            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_write_file_in", dirPath); //$NON-NLS-1$            
-              throw new TeiidException(CorePlugin.Event.TEIID10026, msg);
-        }
-
-        //test if file can be read
-        if (!tmpFile.canRead()) {
-            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_read_file_in", dirPath); //$NON-NLS-1$            
-              throw new TeiidException(CorePlugin.Event.TEIID10027, msg);
-        }
-
-        //test if file can be renamed
-        File newFile = new File(dirPath + File.separatorChar + TEMP_FILE_RENAMED);
-        success = false;
-        try {
-            success = tmpFile.renameTo(newFile);
-        } catch (Exception e) {
-        }
-        if (!success) {
-            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_rename_file_in", dirPath); //$NON-NLS-1$            
-              throw new TeiidException(CorePlugin.Event.TEIID10028, msg);
-        }
-
-        //test if file can be deleted
-        success = false;
-        try {
-            success = newFile.delete();
-        } catch (Exception e) {
-        }
-        if (!success) {
-            final String msg = CorePlugin.Util.getString("FileUtils.Unable_to_delete_file_in", dirPath); //$NON-NLS-1$            
-              throw new TeiidException(CorePlugin.Event.TEIID10029, msg);
-        }
-    }
-
     /**
      * Rename a file. 
      * @param oldFilePath

@@ -101,7 +101,7 @@ public class Evaluator {
 			try {
 				QueryResult.serialize(row, result, SaxonXQueryExpression.DEFAULT_OUTPUT_PROPERTIES);
 			} catch (XPathException e) {
-				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30310, e);
+				 throw new TeiidRuntimeException(e);
 			}
 		}
 	}
@@ -271,7 +271,7 @@ public class Evaluator {
 		try {
 			leftValue = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30314, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30314, "left", criteria)); //$NON-NLS-1$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30312, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30312, "left", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -284,7 +284,7 @@ public class Evaluator {
 		try {
 			rightValue = evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30314, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30314, "right", criteria)); //$NON-NLS-1$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30312, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30312, "right", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -305,7 +305,7 @@ public class Evaluator {
 		try {
 			value = evaluate(criteria.getLeftExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30315, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30315, "left", criteria)); //$NON-NLS-1$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30312, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30312, "left", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -330,7 +330,7 @@ public class Evaluator {
 		try {
 			rightValue = (String) evaluate(criteria.getRightExpression(), tuple);
 		} catch(ExpressionEvaluationException e) {
-             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30315, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30315, "right", criteria)); //$NON-NLS-1$
+             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30312, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30312, "right", criteria)); //$NON-NLS-1$
 		}
 
 		// Shortcut if null
@@ -935,7 +935,7 @@ public class Evaluator {
 	                return internalEvaluate(expr.getThenExpression(i), tuple);
 	            }
 	        } catch (ExpressionEvaluationException e) {
-	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30340, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30340, "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$
+	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30346, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30346, "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$
 	        }
 	    }
 	    if (expr.getElseExpression() != null) {

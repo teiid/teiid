@@ -22,25 +22,15 @@
 
 package org.teiid.adminapi;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REMOVE_OPERATION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.*;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+import java.util.logging.Logger;
 
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -64,10 +54,10 @@ import org.teiid.adminapi.impl.MetadataMapper;
 import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataMapper;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
@@ -76,6 +66,7 @@ import org.teiid.core.util.ObjectConverterUtil;
  */
 @SuppressWarnings("nls")
 public class AdminFactory {
+	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
 	private static AdminFactory INSTANCE = new AdminFactory();
 	
 	public static AdminFactory getInstance() {
@@ -106,12 +97,12 @@ public class AdminFactory {
             List<String> nodeTypes = Util.getNodeTypes(newClient, new DefaultOperationRequestAddress());
             if (!nodeTypes.isEmpty()) {
                 boolean domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$ 
-                System.out.println("Connected to " //$NON-NLS-1$ 
+                LOGGER.info("Connected to " //$NON-NLS-1$ 
                         + (domainMode ? "domain controller at " : "standalone controller at ") //$NON-NLS-1$ //$NON-NLS-2$
                         + host + ":" + port); //$NON-NLS-1$ 
                 return new AdminImpl(newClient);
             } 
-            System.out.println(AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70051, host, port)); //$NON-NLS-1$ //$NON-NLS-2$
+            LOGGER.info(AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70051, host, port)); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (UnknownHostException e) {
         	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70000, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70000, host, e.getLocalizedMessage()));
         }
