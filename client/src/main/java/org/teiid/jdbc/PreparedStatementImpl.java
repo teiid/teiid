@@ -261,12 +261,16 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
 	private MetadataResult getMetadataResults() throws TeiidSQLException {
 		if (metadataResults == null) {
-			try {
-				metadataResults = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS)).booleanValue());
-			} catch (TeiidComponentException e) {
-				throw TeiidSQLException.create(e);
-			} catch (TeiidProcessingException e) {
-				throw TeiidSQLException.create(e);
+			if (StatementImpl.SET_STATEMENT.matcher(prepareSql).matches() || StatementImpl.TRANSACTION_STATEMENT.matcher(prepareSql).matches() || StatementImpl.SHOW_STATEMENT.matcher(prepareSql).matches()) {
+				metadataResults = new MetadataResult();
+			} else {
+				try {
+					metadataResults = this.getDQP().getMetadata(this.currentRequestID, prepareSql, Boolean.valueOf(getExecutionProperty(ExecutionProperties.ANSI_QUOTED_IDENTIFIERS)).booleanValue());
+				} catch (TeiidComponentException e) {
+					throw TeiidSQLException.create(e);
+				} catch (TeiidProcessingException e) {
+					throw TeiidSQLException.create(e);
+				}
 			}
 		}
 		return metadataResults;

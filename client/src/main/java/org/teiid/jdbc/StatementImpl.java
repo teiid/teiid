@@ -155,9 +155,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map<Integer, Integer> outParamIndexMap = new HashMap<Integer, Integer>();
     protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
     
-    private static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:([a-zA-Z]\\w*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:([a-zA-Z]\\w*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     /**
      * Factory Constructor 
      * @param driverConnection
