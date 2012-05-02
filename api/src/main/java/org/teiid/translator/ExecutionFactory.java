@@ -819,9 +819,9 @@ public class ExecutionFactory<F, C> {
 		} catch (TeiidException e) {
 			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		} catch (IllegalAccessException e) {
-			 throw new TranslatorException(DataPlugin.Event.TEIID60006, e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		} catch(InstantiationException e) {
-			 throw new TranslatorException(DataPlugin.Event.TEIID60007, e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		}    	
     } 
     

@@ -31,7 +31,6 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingElement;
@@ -118,9 +117,9 @@ public class NameInSourceResolverVisitor extends MappingVisitor {
             symbol.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(symbol.getMetadataID())));
             return symbol;
         } catch (QueryMetadataException e) {
-             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30279, e);
+             throw new TeiidRuntimeException(e);
         } catch (TeiidComponentException e) {
-             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30280, e);
+             throw new TeiidRuntimeException(e);
         }
     }
     

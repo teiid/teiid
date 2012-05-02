@@ -287,7 +287,7 @@ public class NodeDescriptor {
             } else if(namespacePrefix.equals(MappingNodeConstants.INSTANCES_NAMESPACE_PREFIX)) {
                 uri = MappingNodeConstants.INSTANCES_NAMESPACE;
             }else {
-                String msg = QueryPlugin.Util.getString("XMLPlanner.no_uri", new Object[] {namespacePrefix, name}); //$NON-NLS-1$
+                String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30213, new Object[] {namespacePrefix, name}); //$NON-NLS-1$
                  throw new TeiidComponentException(QueryPlugin.Event.TEIID30213, msg);
             }
         }

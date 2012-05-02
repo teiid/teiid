@@ -32,8 +32,6 @@ public class AdminPlugin {
 	
 	public static enum Event implements BundleUtil.Event {
 		TEIID70000,
-		TEIID70001,
-		TEIID70002,
 		TEIID70003,
 		TEIID70004,
 		TEIID70005,
@@ -43,14 +41,11 @@ public class AdminPlugin {
 		TEIID70009,
 		TEIID70010,
 		TEIID70011,
-		TEIID70012,
 		TEIID70013,
 		TEIID70014,
 		TEIID70015,
 		TEIID70016,
 		TEIID70017,
-		TEIID70018,
-		TEIID70019,
 		TEIID70020,
 		TEIID70021,
 		TEIID70022,

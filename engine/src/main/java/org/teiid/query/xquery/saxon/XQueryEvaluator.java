@@ -127,9 +127,9 @@ public class XQueryEvaluator {
 						     if (e.getCause() instanceof TeiidRuntimeException) {
 						         RelationalNode.unwrapException((TeiidRuntimeException)e.getCause());
 							 }
-							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30149, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30149));
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
 						} catch (IOException e) {
-							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30150, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30150));
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30151, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30151));
 						} finally {
 							if (!isNonBlocking) {
 								commandContext.setNonBlocking(false);

@@ -232,7 +232,7 @@ public class TransactionServerImpl implements TransactionService {
 					checkXAState(threadId, xid, false, false);
 					tc = transactions.getOrCreateTransactionContext(threadId);
 					if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-					     throw new XATransactionException(QueryPlugin.Event.TEIID30511, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30511));
+					     throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
 					}
 					tc.setTransactionTimeout(timeout);
 					tc.setXid(xid);
@@ -258,13 +258,13 @@ public class TransactionServerImpl implements TransactionService {
 				} catch (NotSupportedException e) {
 					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (WorkException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30513, XAException.XAER_INVAL, e);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (InterruptedException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30514, XAException.XAER_INVAL, e);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (ExecutionException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30515, XAException.XAER_INVAL, e);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				} catch (SystemException e) {
-					 throw new XATransactionException(QueryPlugin.Event.TEIID30516, XAException.XAER_INVAL, e);
+					 throw new XATransactionException(QueryPlugin.Event.TEIID30512, XAException.XAER_INVAL, e);
 				}
                 break;
             }
@@ -380,7 +380,7 @@ public class TransactionServerImpl implements TransactionService {
         } catch (javax.transaction.NotSupportedException err) {
              throw new XATransactionException(QueryPlugin.Event.TEIID30528, err);
         } catch (SystemException err) {
-             throw new XATransactionException(QueryPlugin.Event.TEIID30529, err);
+             throw new XATransactionException(QueryPlugin.Event.TEIID30528, err);
         }
 	}
 	
@@ -391,13 +391,13 @@ public class TransactionServerImpl implements TransactionService {
 		} catch (SecurityException e) {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
 		} catch (RollbackException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30531, e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
 		} catch (HeuristicMixedException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30532, e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
 		} catch (HeuristicRollbackException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30533, e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
 		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30534, e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30530, e);
 		} finally {
 			transactions.removeTransactionContext(context);
 		}
@@ -410,7 +410,7 @@ public class TransactionServerImpl implements TransactionService {
 		} catch (SecurityException e) {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30536, e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30535, e);
 		} finally {
             transactions.removeTransactionContext(tc);
         }
@@ -430,7 +430,7 @@ public class TransactionServerImpl implements TransactionService {
 		} catch (InvalidTransactionException e) {
 			 throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
 		} catch (SystemException e) {
-			 throw new XATransactionException(QueryPlugin.Event.TEIID30539, e);
+			 throw new XATransactionException(QueryPlugin.Event.TEIID30538, e);
 		}
 	}
 

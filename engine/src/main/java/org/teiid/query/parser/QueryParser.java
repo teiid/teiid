@@ -148,7 +148,7 @@ public class QueryParser {
             throw convertParserException(pe);
         } catch(TokenMgrError tme) {
         	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	 throw new QueryParserException(QueryPlugin.Event.TEIID30379, tme, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30379, sql));
+            	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, tme, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
             }
             throw handleTokenMgrError(tme);
         }

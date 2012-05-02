@@ -332,7 +332,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				this.notifyAll();
 			}
 		} catch (TeiidException e) {
-			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30173, e);
+			 throw new TeiidRuntimeException(e);
 		}
 	}
 

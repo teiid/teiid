@@ -293,7 +293,7 @@ public final class XMLPlanner implements CommandPlanner{
             // in the orderby. static nodes do not qualify for ordering.
             if (elementNode.getNameInSource() == null){
                 Object[] params = new Object[] {elementNode, orderBy};
-                String msg = QueryPlugin.Util.getString("XMLPlanner.The_XML_document_element_{0}_is_not_mapped_to_data_and_cannot_be_used_in_the_ORDER_BY_clause__{1}_1", params); //$NON-NLS-1$
+                String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30288, params);
                  throw new QueryPlannerException(QueryPlugin.Event.TEIID30288, msg);
             }
             

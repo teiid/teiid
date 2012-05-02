@@ -340,7 +340,7 @@ public class MatchCriteria extends PredicateCriteria implements Negatable {
 	        }
 	        
 	        if (escaped) {
-	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30450, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30450, new Object[] {pattern, new Character(escape)}));
+	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30449, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30449, new Object[] {pattern, new Character(escape)}));
 	        }
 	        
 	        if (!endsWithMatchAny) {

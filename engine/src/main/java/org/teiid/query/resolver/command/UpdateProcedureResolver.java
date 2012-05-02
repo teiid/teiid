@@ -203,7 +203,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 	AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
                     if (!metadata.elementSupports(assStmt.getVariable().getMetadataID(), SupportConstants.Element.UPDATE)) {
-                         throw new QueryResolverException(QueryPlugin.Event.TEIID30122, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30122, assStmt.getVariable()));
+                         throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, assStmt.getVariable()));
                     }
                     //don't allow variable assignments to be external
                     assStmt.getVariable().setIsExternalReference(false);

@@ -39,16 +39,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
-import org.teiid.query.sql.lang.CollectionValueIterator;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.lang.SubqueryCompareCriteria;
-import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.util.ValueIterator;
@@ -327,7 +318,7 @@ public class TestCriteriaEvaluator {
         try {
             helpTestMatch("abc", "a", 'a', true); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (ExpressionEvaluationException cee) {
-            assertEquals("Error Code:TEIID30450 Message:TEIID30450 Invalid escape sequence \"a\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID30449 Message:TEIID30449 Invalid escape sequence \"a\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
         }
     }
     

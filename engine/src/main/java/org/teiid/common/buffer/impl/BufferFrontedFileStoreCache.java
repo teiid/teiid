@@ -727,7 +727,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
         } catch(IOException e) {
-        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30047, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30047, oid));
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, oid));
         } catch (ClassNotFoundException e) {
         	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, oid));
         } catch (InterruptedException e) {
