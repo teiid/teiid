@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 
 /**
@@ -94,18 +95,9 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     }
 
     @Test public void testDefect15241b() throws Exception {
-    	
     	String sql = "SELECT p.Name, p.Value, UID FROM SYS.Properties p order by p.Name"; //$NON-NLS-1$
-    	String[] expected ={
-	    "Name[string]	Value[string]	UID[string]",	 //$NON-NLS-1$
-	    "NugentXAttribute	Nuuuuuge22222	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1", //$NON-NLS-1$
-	    "NugentYAttribute	Nuuuuuge44444	mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1",
-	    "pg_type:oid	30	mmuid:ffa4ac73-b549-470e-931f-dc36330cb8c4" ,
-	    "pg_type:oid	1009	mmuid:d9f36bdc-7b25-4af0-b9f5-a96aac6d3094" ,
-	    "pg_type:oid	1002	mmuid:bcbed548-176c-4116-a5d6-7638cb0206e1",
-	    "pg_type:oid	1028	mmuid:a385751f-a31a-4d5d-9197-3fbd390b0251" 
-    	};
-    	executeAndAssertResults(sql, expected);
+    	execute(sql);
+    	TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
     }
 
 }

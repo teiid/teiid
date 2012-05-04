@@ -64,20 +64,20 @@ public class PgFrontendProtocol extends FrameDecoder {
 	private Byte messageType;
 	private Integer dataLength;
 	private boolean initialized = false;
-	private Charset encoding = Charset.forName("UTF-8"); // client can override this
 	private ODBCServerRemote odbcProxy;
 	private PGRequest message;
 	private String user;
 	private String databaseName;
+	private PgBackendProtocol pgBackendProtocol;
 	
-	public PgFrontendProtocol(int maxObjectSize) {
+	public PgFrontendProtocol(PgBackendProtocol pgBackendProtocol, int maxObjectSize) {
         
 		if (maxObjectSize <= 0) {
             throw new IllegalArgumentException("maxObjectSize: " + maxObjectSize); //$NON-NLS-1$
         }
 		
 		this.maxObjectSize = maxObjectSize;
-		
+		this.pgBackendProtocol = pgBackendProtocol;
 		// the proxy is used for generating the object based message based on ServiceInvocationStruct class.
 		this.odbcProxy = (ODBCServerRemote)Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {ODBCServerRemote.class}, new InvocationHandler() {
 			@Override
@@ -131,7 +131,7 @@ public class PgFrontendProtocol extends FrameDecoder {
 
         byte[] data = createByteArray(this.dataLength - 4);
         buffer.readBytes(data);
-		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.encoding));
+		createRequestMessage(this.messageType, new NullTerminatedStringDataInputStream(data, new DataInputStream(new ByteArrayInputStream(data, 0, this.dataLength-4)), this.pgBackendProtocol.getEncoding()));
 		this.dataLength = null;
 		this.messageType = null;
 		return message;
@@ -209,20 +209,16 @@ public class PgFrontendProtocol extends FrameDecoder {
         }        
         this.user = props.getProperty("user");
         this.databaseName = props.getProperty("database");
-        String clientEncoding = props.getProperty("client_encoding", "UTF-8");
+        String clientEncoding = props.getProperty("client_encoding", "UTF8");
         props.setProperty("client_encoding", clientEncoding);
         props.setProperty("default_transaction_isolation", "read committed");
         props.setProperty("DateStyle", "ISO");
         props.setProperty("TimeZone", Calendar.getInstance().getTimeZone().getDisplayName());
-        Charset cs = PGCharsetConverter.getCharset(clientEncoding);
-        if (cs != null) {
-        	this.encoding = cs;
-        }
         this.odbcProxy.initialize(props);
         return message;
 	}
 	
-	private Object buildLogin(NullTerminatedStringDataInputStream data) throws IOException{
+	private Object buildLogin(NullTerminatedStringDataInputStream data) {
         this.odbcProxy.logon(this.databaseName, this.user, data);
         return message;
 	}	
@@ -263,7 +259,7 @@ public class PgFrontendProtocol extends FrameDecoder {
             
             // the params can be either text or binary
             if (formatCodeCount == 0 || (formatCodeCount == 1 && formatCodes[0] == 0) || formatCodes[i] == 0) {
-            	params[i] = new String(paramdata, this.encoding);
+            	params[i] = new String(paramdata, this.pgBackendProtocol.getEncoding());
             }
             else {
             	params[i] = paramdata;

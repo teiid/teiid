@@ -58,6 +58,7 @@ public class PGUtil {
 		public short attnum;
 		public int type;
 		public int precision;
+		public int mod = -1;
 	}
 		
 	/**

@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
@@ -248,6 +249,13 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         	} else if(resultSet != null) {
                 metadata = resultSet.getMetaData();
             } else {
+				Matcher matcher = StatementImpl.SHOW_STATEMENT.matcher(prepareSql);
+				if (matcher.matches()) {
+					this.executeShow(matcher);
+					metadata = this.resultSet.getMetaData();
+					this.resultSet = null;
+					return metadata;
+				} 
 				if (getMetadataResults().getColumnMetadata() == null) {
 					return null;
 				}
@@ -259,9 +267,9 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
         return metadata;
     }
 
-	private MetadataResult getMetadataResults() throws TeiidSQLException {
+	private MetadataResult getMetadataResults() throws SQLException {
 		if (metadataResults == null) {
-			if (StatementImpl.SET_STATEMENT.matcher(prepareSql).matches() || StatementImpl.TRANSACTION_STATEMENT.matcher(prepareSql).matches() || StatementImpl.SHOW_STATEMENT.matcher(prepareSql).matches()) {
+			if (StatementImpl.SET_STATEMENT.matcher(prepareSql).matches() || StatementImpl.TRANSACTION_STATEMENT.matcher(prepareSql).matches()) {
 				metadataResults = new MetadataResult();
 			} else {
 				try {

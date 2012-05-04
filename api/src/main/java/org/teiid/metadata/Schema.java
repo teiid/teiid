@@ -56,8 +56,12 @@ public class Schema extends AbstractMetadataRecord {
 	}
 	
 	public void addFunction(FunctionMethod function) {
+		addFunction(function.getName(), function);
+	}	
+	
+	public void addFunction(String uniqueName, FunctionMethod function) {
 		function.setParent(this);
-		if (this.functions.put(function.getName(), function) != null) {
+		if (this.functions.put(uniqueName, function) != null) {
 			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getName()));
 		}
 	}	

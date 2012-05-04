@@ -688,12 +688,9 @@ public class ExecutionFactory<F, C> {
     }
     
     protected FunctionMethod addPushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
-    	FunctionParameter[] params = new FunctionParameter[paramTypes.length];
-    	for (int i = 0; i < paramTypes.length; i++) {
-			params[i] = new FunctionParameter("param" + (i+1), paramTypes[i]); //$NON-NLS-1$
-		}
-    	FunctionMethod method = new FunctionMethod(qualifier + '.' + name, name, qualifier, params, new FunctionParameter("result", returnType)); //$NON-NLS-1$
-    	method.setNameInSource(name);
+    	FunctionMethod method = FunctionMethod.createFunctionMethod(qualifier + '.' + name, name, qualifier,
+				returnType, paramTypes);
+		method.setNameInSource(name);
     	pushdownFunctionMethods.add(method);
     	return method;
     }

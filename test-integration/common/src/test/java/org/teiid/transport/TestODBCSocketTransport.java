@@ -55,6 +55,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
+import org.teiid.jdbc.util.ResultSetUtil;
 import org.teiid.net.socket.SocketUtil;
 
 @SuppressWarnings("nls")
@@ -195,14 +196,14 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	
 	@Test public void testMultibatchSelect() throws Exception {
 		Statement s = conn.createStatement();
-		assertTrue(s.execute("select * from tables, columns"));
+		assertTrue(s.execute("select * from tables, columns limit 7000"));
 		ResultSet rs = s.getResultSet();
 		int i = 0;
 		while (rs.next()) {
 			i++;
 			rs.getString(1);
 		}
-		assertEquals(7812, i);
+		assertEquals(7000, i);
 	}
 	
 	@Test public void testBlob() throws Exception {
@@ -364,6 +365,6 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ResultSet rs = s.getResultSet();
 		assertTrue(rs.next());
 		String str = rs.getString(1);
-		assertEquals("ProjectNode\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1\n    1: Node Process Time: 0\n    2: Node Cumulative Process Time: 0\n    3: Node Cumulative Next Batch Process Time: 0\n    4: Node Next Batch Calls: 1\n    5: Node Blocks: 0\n  + Cost Estimates:Estimated Node Cardinality: 1.0\n  + Select Columns:1\n", str);
+		assertTrue(str.startsWith("ProjectNode\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
 	}
 }

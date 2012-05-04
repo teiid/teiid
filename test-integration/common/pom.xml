@@ -13,7 +13,7 @@
 		<dependency>
 			<groupId>postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>8.3-606.jdbc3</version>
+			<version>9.1-901.jdbc4</version>
 		</dependency>
 		<dependency>
   			<groupId>com.h2database</groupId>

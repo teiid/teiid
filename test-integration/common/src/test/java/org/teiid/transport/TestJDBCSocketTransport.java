@@ -137,13 +137,13 @@ public class TestJDBCSocketTransport {
 	
 	@Test public void testXmlTableScrollable() throws Exception {
 		Statement s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from tables as t, columns as t1) columns \"Name\" string) as x"));
+		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from (select t.* from tables as t, columns as t1 limit 7000) as t) columns \"Name\" string) as x"));
 		ResultSet rs = s.getResultSet();
 		int count = 0;
 		while (rs.next()) {
 			count++;
 		}
-		assertEquals(7812, count);
+		assertEquals(7000, count);
 		rs.beforeFirst();
 		while (rs.next()) {
 			count--;

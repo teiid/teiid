@@ -182,6 +182,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 
     private Properties props;    
     private Charset encoding = Charset.forName("UTF-8");
+    private String clientEncoding = "UTF8";
     private ReflectionHelper clientProxy = new ReflectionHelper(ODBCClientRemote.class);
     private ChannelHandlerContext ctx;
     private MessageEvent message;
@@ -229,7 +230,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	@Override
 	public void initialized(Properties props) {
 		this.props = props;
-		setEncoding(props.getProperty("client_encoding", "UTF-8"));
+		setEncoding(props.getProperty("client_encoding", "UTF8"));
 	}
 	
 	@Override
@@ -258,7 +259,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		// releases before 8.1; IntervalStyle was not reported by releases before 8.4; 
 		// application_name was not reported by releases before 9.0.)
 		
-		sendParameterStatus("client_encoding", PGCharsetConverter.getEncoding(this.encoding));
+		sendParameterStatus("client_encoding", clientEncoding);
 		sendParameterStatus("DateStyle", this.props.getProperty("DateStyle", "ISO"));
 		sendParameterStatus("integer_datetimes", "off");
 		sendParameterStatus("is_superuser", "off");
@@ -303,7 +304,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		Charset cs = PGCharsetConverter.getCharset(value);
 		if (cs != null) {
 			this.encoding = cs;
+			this.clientEncoding = value;
+			//TODO: for non-init this should send a parameter status
 		}
+	}
+	
+	public Charset getEncoding() {
+		return encoding;
 	}
 
 	@Override
@@ -634,7 +641,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			// pg_type.typlen
 			writeShort(getTypeSize(info.type, info.precision));
 			// pg_attribute.atttypmod
-			writeInt(-1);
+			writeInt(info.mod);
 			// text
 			writeShort(0);
 		}
@@ -663,16 +670,6 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendMessage();
 	}
 	
-	private void sendNoticeResponse(String message) {
-		trace("notice:", message);
-		startMessage('N');
-		write('S');
-		writeString("ERROR");
-		write('M');
-		writeString(message);
-		sendMessage();
-	}
-
 	private void sendParseComplete() {
 		startMessage('1');
 		sendMessage();

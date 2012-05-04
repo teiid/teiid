@@ -47,6 +47,7 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.StringUtil;
+import org.teiid.deployers.PgCatalogMetadataStore;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.ResultSetImpl;
@@ -144,9 +145,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			"\\s+and cn.contype = 'p'\\)" +  //$NON-NLS-1$
 			"\\s+order by ref.oid, ref.i", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 		
-	private static Pattern preparedAutoIncrement = Pattern.compile("select 1 \\s*from pg_catalog.pg_attrdef \\s*where adrelid = \\$1 AND adnum = \\$2 " + //$NON-NLS-1$
-			"\\s*and pg_catalog.pg_get_expr\\(adbin, adrelid\\) \\s*like '%nextval\\(%'", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-	
 	private static Pattern cursorSelectPattern = Pattern.compile("DECLARE \"(\\w+)\" CURSOR(\\s(WITH HOLD|SCROLL))? FOR (.*)", Pattern.CASE_INSENSITIVE|Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern fetchPattern = Pattern.compile("FETCH (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
 	private static Pattern movePattern = Pattern.compile("MOVE (\\d+) IN \"(\\w+)\".*", Pattern.DOTALL|Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
@@ -490,7 +488,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
                     	ResultsFuture<Integer> result = new ResultsFuture<Integer>();
 		                if (future.get()) {
 		                	List<PgColInfo> cols = getPgColInfo(stmt.getResultSet().getMetaData());
-                            client.sendResults(query.sql, stmt.getResultSet(), cols, result, true);
+                            client.sendResults(query.sql, stmt.getResultSet(), cols, result, false);
 		                } else {
 		                	client.sendUpdateCount(query.sql, stmt.getUpdateCount());
 		                	setEncoding();
@@ -594,15 +592,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			else if (modified.equalsIgnoreCase("select db_name() dbname")) { //$NON-NLS-1$
 				return "SELECT current_database()"; //$NON-NLS-1$
 			}
-			else if (preparedAutoIncrement.matcher(modified).matches()) {
-				return "SELECT 1 from matpg_relatt where attrelid = ? and attnum = ? and autoinc = true"; //$NON-NLS-1$
-			}
-			else {
+			else if (sql.equalsIgnoreCase("select current_schema()")) { //$NON-NLS-1$
 				// since teiid can work with multiple schemas at a given time
 				// this call resolution is ambiguous
-				if (sql.equalsIgnoreCase("select current_schema()")) { //$NON-NLS-1$
-					return "SELECT ''";  //$NON-NLS-1$
-				}							
+				return "SELECT ''";  //$NON-NLS-1$
 			}
 			
 		}
@@ -850,19 +843,33 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	}
 	
 	private void setEncoding() {
+		String encoding = getEncoding();
+		if (encoding != null) {
+			//this may be unnecessary
+			this.client.setEncoding(encoding);
+		}
+	}
+	
+	private String getEncoding() {
+		StatementImpl t = null;
 		try {
-			StatementImpl t = connection.createStatement();
+			t = connection.createStatement();
 			ResultSet rs = t.executeQuery("show client_encoding"); //$NON-NLS-1$
 			if (rs.next()) {
-				String encoding = rs.getString(1);
-				if (encoding != null) {
-					//this may be unnecessary
-					this.client.setEncoding(encoding);
-				}
+				return rs.getString(1);
 			}
 		} catch (Exception e) {
 			//don't care
+		} finally {
+			try {
+				if (t != null) {
+					t.close();
+				}
+			} catch (SQLException e) {
+				
+			}
 		}
+		return null;
 	}
 	
     private final class QueryWorkItem implements Runnable {
@@ -958,7 +965,10 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			done(null);
 		}
 	}
-    
+
+	/**
+	 * @see PgCatalogMetadataStore add_pg_attribute for mod calculation
+	 */
 	private List<PgColInfo> getPgColInfo(ResultSetMetaData meta)
 			throws SQLException {
 		if (meta == null) {
@@ -966,12 +976,17 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 		int columns = meta.getColumnCount();
 		final ArrayList<PgColInfo> result = new ArrayList<PgColInfo>(columns);
-		for (int i = 1; i < columns + 1; i++) {
+		for (int i = 1; i <= columns; i++) {
 			final PgColInfo info = new PgColInfo();
 			info.name = meta.getColumnLabel(i).toLowerCase();
 			info.type = meta.getColumnType(i);
 			info.type = convertType(info.type);
 			info.precision = meta.getColumnDisplaySize(i);
+			if (info.type == PG_TYPE_NUMERIC || info.type == PG_TYPE_FLOAT4 || info.type == PG_TYPE_FLOAT8) {
+				info.mod = (int) Math.min(Integer.MAX_VALUE, (4+(65536*(long)meta.getPrecision(i))+meta.getScale(i)));
+			} else {
+				info.mod = (int) Math.min(Integer.MAX_VALUE, 4+(long)meta.getColumnDisplaySize(i));
+			}
 			String name = meta.getColumnName(i);
 			String table = meta.getTableName(i);
 			String schema = meta.getSchemaName(i);

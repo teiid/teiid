@@ -29,7 +29,6 @@ import java.util.HashMap;
  */
 public class PGCharsetConverter {
 	private static HashMap<String, Charset> charSetMap = new HashMap<String, Charset>();
-	private static HashMap<Charset, String> inverseCharSetMap = new HashMap<Charset, String>();
 	
 	static {
 		mapCharset("BIG5", Charset.forName("Big5")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -70,14 +69,10 @@ public class PGCharsetConverter {
 	
 	private static void mapCharset(String name, Charset cs) {
 		charSetMap.put(name, cs);
-		inverseCharSetMap.put(cs, name);
 	}
 	
 	public static Charset getCharset(String name) {
 		return charSetMap.get(name);
 	}
 	
-	public static String getEncoding(Charset cs) {
-		return inverseCharSetMap.get(cs);
-	}
 }

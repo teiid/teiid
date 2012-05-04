@@ -482,6 +482,17 @@ public class FunctionMethod extends AbstractMetadataRecord {
 		this.aggregateAttributes = aggregateAttributes;
 	}
     
+	public static FunctionMethod createFunctionMethod(String name, String description, String category,
+			String returnType, String... paramTypes) {
+		FunctionParameter[] params = new FunctionParameter[paramTypes.length];
+		for (int i = 0; i < paramTypes.length; i++) {
+			params[i] = new FunctionParameter("param" + (i+1), paramTypes[i]); //$NON-NLS-1$
+		}
+		FunctionMethod method = new FunctionMethod(name, description, category, params, new FunctionParameter("result", returnType)); //$NON-NLS-1$
+		method.setNameInSource(name);
+		return method;
+	}
+
 	public static void convertExtensionMetadata(Procedure procedureRecord,
 			FunctionMethod function) {
 		String deterministic = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true); //$NON-NLS-1$

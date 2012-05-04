@@ -506,51 +506,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		if (resultsMode == ResultsMode.UPDATECOUNT) {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.show_update_count")); //$NON-NLS-1$
         		}
-        		String show = match.group(1);
-        		if (show.equalsIgnoreCase("PLAN")) { //$NON-NLS-1$
-        			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
-        			PlanNode plan = driverConnection.getCurrentPlanDescription();
-        			if (plan != null) {
-        				ArrayList<Object> row = new ArrayList<Object>(3);
-            			row.add(DataTypeTransformer.getClob(plan.toString()));
-        				row.add(new SQLXMLImpl(plan.toXml()));
-        				row.add(DataTypeTransformer.getClob(driverConnection.getDebugLog()));
-        				records.add(row);
-        			}
-        			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        					new String[] {DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.XML, DataTypeManager.DefaultDataTypes.CLOB});
-        			return booleanFuture(true);
-        		}
-        		if (show.equalsIgnoreCase("ANNOTATIONS")) { //$NON-NLS-1$
-        			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
-        			Collection<Annotation> annos = driverConnection.getAnnotations();
-        			for (Annotation annotation : annos) {
-        				ArrayList<Object> row = new ArrayList<Object>(4);
-            			row.add(annotation.getCategory());
-            			row.add(annotation.getPriority().name());
-            			row.add(annotation.getAnnotation());
-            			row.add(annotation.getResolution());
-        				records.add(row);
-        			}
-        			createResultSet(records, new String[] {"CATEGORY", "PRIORITY", "ANNOTATION", "RESOLUTION"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        			return booleanFuture(true);
-        		}
-        		if (show.equalsIgnoreCase("ALL")) { //$NON-NLS-1$
-        			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
-        			for (String key : driverConnection.getExecutionProperties().stringPropertyNames()) {
-        				ArrayList<Object> row = new ArrayList<Object>(4);
-            			row.add(key);
-            			row.add(driverConnection.getExecutionProperties().get(key));
-        				records.add(row);
-        			}
-        			createResultSet(records, new String[] {"NAME", "VALUE"}, //$NON-NLS-1$ //$NON-NLS-2$
-        					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
-        			return booleanFuture(true);
-        		}
-        		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperties().getProperty(JDBCURL.getValidKey(show))));
-    			createResultSet(records, new String[] {show}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
-        		return booleanFuture(true);
+        		return executeShow(match);
         	}
         }
         
@@ -591,6 +547,55 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     	}
     	return result;
     }
+
+	ResultsFuture<Boolean> executeShow(Matcher match)
+			throws SQLException {
+		String show = match.group(1);
+		if (show.equalsIgnoreCase("PLAN")) { //$NON-NLS-1$
+			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+			PlanNode plan = driverConnection.getCurrentPlanDescription();
+			if (plan != null) {
+				ArrayList<Object> row = new ArrayList<Object>(3);
+				row.add(DataTypeTransformer.getClob(plan.toString()));
+				row.add(new SQLXMLImpl(plan.toXml()));
+				row.add(DataTypeTransformer.getClob(driverConnection.getDebugLog()));
+				records.add(row);
+			}
+			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					new String[] {DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.XML, DataTypeManager.DefaultDataTypes.CLOB});
+			return booleanFuture(true);
+		}
+		if (show.equalsIgnoreCase("ANNOTATIONS")) { //$NON-NLS-1$
+			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+			Collection<Annotation> annos = driverConnection.getAnnotations();
+			for (Annotation annotation : annos) {
+				ArrayList<Object> row = new ArrayList<Object>(4);
+				row.add(annotation.getCategory());
+				row.add(annotation.getPriority().name());
+				row.add(annotation.getAnnotation());
+				row.add(annotation.getResolution());
+				records.add(row);
+			}
+			createResultSet(records, new String[] {"CATEGORY", "PRIORITY", "ANNOTATION", "RESOLUTION"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+			return booleanFuture(true);
+		}
+		if (show.equalsIgnoreCase("ALL")) { //$NON-NLS-1$
+			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
+			for (String key : driverConnection.getExecutionProperties().stringPropertyNames()) {
+				ArrayList<Object> row = new ArrayList<Object>(4);
+				row.add(key);
+				row.add(driverConnection.getExecutionProperties().get(key));
+				records.add(row);
+			}
+			createResultSet(records, new String[] {"NAME", "VALUE"}, //$NON-NLS-1$ //$NON-NLS-2$
+					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
+			return booleanFuture(true);
+		}
+		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperties().getProperty(JDBCURL.getValidKey(show))));
+		createResultSet(records, new String[] {show}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+		return booleanFuture(true);
+	}
 
 	private ResultsFuture<ResultsMessage> execute(final RequestMessage reqMsg, boolean synch) throws SQLException,
 			TeiidSQLException {

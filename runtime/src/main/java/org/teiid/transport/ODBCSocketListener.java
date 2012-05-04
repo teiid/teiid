@@ -59,9 +59,9 @@ public class ODBCSocketListener extends SocketListener {
 		return new SSLAwareChannelHandler(this, config, Thread.currentThread().getContextClassLoader(), storageManager) {
 			public ChannelPipeline getPipeline() throws Exception {
 				ChannelPipeline pipeline = new DefaultChannelPipeline();
-
-			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(1 << 20)); //$NON-NLS-1$
-			    pipeline.addLast("odbcBackendProtocol", new PgBackendProtocol(maxLobSize, maxBufferSize, config)); //$NON-NLS-1$
+				PgBackendProtocol pgBackendProtocol = new PgBackendProtocol(maxLobSize, maxBufferSize, config);
+			    pipeline.addLast("odbcFrontendProtocol", new PgFrontendProtocol(pgBackendProtocol, 1 << 20)); //$NON-NLS-1$
+			    pipeline.addLast("odbcBackendProtocol", pgBackendProtocol); //$NON-NLS-1$
 			    pipeline.addLast("handler", this); //$NON-NLS-1$
 			    return pipeline;
 			}			

@@ -21,8 +21,8 @@
  */
 package org.teiid.deployers;
 
+import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
@@ -34,11 +34,11 @@ import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Table.Type;
+import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.translator.TranslatorException;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
@@ -66,7 +66,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_user();
 		add_matpg_relatt();
 		add_matpg_datatype();
-		addHasFunctionPrivilage();
+		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
+		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	@Override
@@ -107,21 +109,27 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;		
 	}
 
-	// column defaul values
+	// column default values
 	private Table add_pg_attrdef() throws TranslatorException {
 		Table t = createView("pg_attrdef"); //$NON-NLS-1$ 
 
 		addColumn("adrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
-		addColumn("adnum", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("adnum", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$
 		addColumn("adbin", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("adsrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
-		String transformation = "SELECT null as oid, null as adsrc, null as adrelid, null as adnum from sys.tables where 1 = 0"; //$NON-NLS-1$
+		String transformation = "SELECT st.oid as adrelid, convert(t1.Position, short) as adnum, " + //$NON-NLS-1$
+				"case when t1.IsAutoIncremented then 'nextval(' else t1.DefaultValue end as adbin, " + //$NON-NLS-1$
+				"case when t1.IsAutoIncremented then 'nextval(' else t1.DefaultValue end as adsrc " + //$NON-NLS-1$
+				"FROM SYS.Columns as t1 LEFT OUTER JOIN SYS.Tables st ON (st.Name = t1.TableName AND st.SchemaName = t1.SchemaName)"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		return t;		
 	}
 	
-	//	table columns ("attributes")
+	/**
+	 * table columns ("attributes")
+	 * see also {@link ODBCServerRemoteImpl} getPGColInfo for the mod calculation
+	 */
 	private Table add_pg_attribute() throws TranslatorException {
 		Table t = createView("pg_attribute"); //$NON-NLS-1$ 
 
@@ -375,18 +383,20 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typlen", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$ 
 		// 	 typtype is b for a base type, c for a composite type (e.g., a table's row type), d for a domain, 
 		// e for an enum type, or p for a pseudo-type. See also typrelid and typbasetype
-		addColumn("typtype", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$ 
+		addColumn("typtype", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$
+		// typnotnull represents a not-null constraint on a type. Used for domains only.
+		addColumn("typnotnull", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$
 		// if this is a domain (see typtype), then typbasetype identifies the type that this one is based on. 
 		// Zero if this type is not a domain 
 		addColumn("typbasetype", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		// Domains use typtypmod to record the typmod to be applied to their base type 
 		// (-1 if base type does not use a typmod). -1 if this type is not a domain 
 		addColumn("typtypmod", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
-		
+		addColumn("typdelim", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		String transformation =
-			"select oid, typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, typbasetype, typtypmod, typrelid, typelem from texttable('" + //$NON-NLS-1$
+			"select oid, typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem from texttable('" + //$NON-NLS-1$
 			"16,boolean,1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"1043,string,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"25,text,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
@@ -513,29 +523,46 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;
 	}	
 	
-	private FunctionMethod addHasFunctionPrivilage() throws TranslatorException  {
-		FunctionMethod func = addFunction("has_function_privilege"); //$NON-NLS-1$
-		
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		
-		ArrayList<FunctionParameter> inParams = new ArrayList<FunctionParameter>();
-		inParams.add(new FunctionParameter("oid", DataTypeManager.DefaultDataTypes.INTEGER, ""));//$NON-NLS-1$ //$NON-NLS-2$
-		inParams.add(new FunctionParameter("permission", DataTypeManager.DefaultDataTypes.STRING, "")); //$NON-NLS-1$ //$NON-NLS-2$
-		
-		func.setInputParameters(inParams);
-		func.setOutputParameter(new FunctionParameter("result", DataTypeManager.DefaultDataTypes.BOOLEAN, ""));  //$NON-NLS-1$ //$NON-NLS-2$
-		
-		func.setInvocationClass(ReturnTrue.class.getName());
-		func.setInvocationMethod("result"); //$NON-NLS-1$
-		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
-		func.setClassloader(classLoader); 
-		
-		return func;
+	private FunctionMethod addFunction(String javaFunction, String name) {
+		Method[] methods = FunctionMethods.class.getMethods();
+		for (Method method : methods) {
+			if (!method.getName().equals(javaFunction)) {
+				continue;
+			}
+			String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
+			Class<?>[] params = method.getParameterTypes();
+			String[] paramTypes = new String[params.length];
+			for (int i = 0; i < params.length; i++) {
+				paramTypes[i] = DataTypeManager.getDataTypeName(params[i]);
+			}
+			FunctionMethod func = FunctionMethod.createFunctionMethod(name, name, "pg", returnType, paramTypes); //$NON-NLS-1$
+			setUUID(func);
+			addFunction(javaFunction, func);
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			func.setInvocationMethod(javaFunction);
+			func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+			func.setClassloader(classLoader);
+			func.setInvocationClass(FunctionMethods.class.getName());
+			return func;
+		}
+		throw new AssertionError("Could not find function"); //$NON-NLS-1$
 	}
 	
-	public static class ReturnTrue{
-		public static boolean result(@SuppressWarnings("unused")int oid, @SuppressWarnings("unused") String permission) {
+	public static class FunctionMethods {
+		public static Boolean hasPerm(@SuppressWarnings("unused") Integer oid,
+				@SuppressWarnings("unused") String permission) {
 			return true;
+		}
+
+		public static String getExpr2(String text,
+				@SuppressWarnings("unused") Integer oid) {
+			return text;
+		}
+
+		public static String getExpr3(String text,
+				@SuppressWarnings("unused") Integer oid,
+				@SuppressWarnings("unused") Boolean prettyPrint) {
+			return text;
 		}
 	}
 }
