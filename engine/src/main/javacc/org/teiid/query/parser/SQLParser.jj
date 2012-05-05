@@ -4158,6 +4158,9 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 	        if (returnDataType != null){
 				addProcReturnColumn(factory, proc, "return", returnDataType);
 	        }
+	        if (function) {
+	        	replaceProcedureWithFunction(factory, proc);
+	        }
 	        return procCmd; 		
 		}
 }

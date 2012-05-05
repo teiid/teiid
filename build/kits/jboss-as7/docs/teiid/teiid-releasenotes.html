@@ -60,6 +60,11 @@
   <li>allowCreateTemporaryTablesByDefault and allowFunctionCallsByDefault are now set to false. When data roles are in use the user must explicitly grant these options to the user on VDB
 </ul>
 
+<h4>from 8.0</h4>
+<ul>
+  <li>org.teiid.metadata.Schema holds FunctionMethods by uuid rather than name to accommodate overriden method signatures.
+<ul>
+
 <h4>from 7.x</h4>
 <ul>
   <li>TRANSLATE/HAS CRITERIA has been removed.  INSTEAD OF trigger actions should be used instead.  ROWS_UPDATED, INPUTS, and INPUT are no longer procedure reserved words.

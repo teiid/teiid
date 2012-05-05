@@ -23,7 +23,6 @@
 package org.teiid.metadata;
 
 import java.io.IOException;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -56,13 +55,10 @@ public class Schema extends AbstractMetadataRecord {
 	}
 	
 	public void addFunction(FunctionMethod function) {
-		addFunction(function.getName(), function);
-	}	
-	
-	public void addFunction(String uniqueName, FunctionMethod function) {
 		function.setParent(this);
-		if (this.functions.put(uniqueName, function) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getName()));
+		//TODO: ensure that all uuids are unique
+		if (this.functions.put(function.getUUID(), function) != null) {
+			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
 		}
 	}	
 
@@ -91,13 +87,18 @@ public class Schema extends AbstractMetadataRecord {
 	}
 	
 	/**
-	 * Get the functions defined in this schema
+	 * Get the functions defined in this schema in a map of uuid to {@link FunctionMethod}
 	 * @return
 	 */
 	public Map<String, FunctionMethod> getFunctions() {
 		return functions;
 	}
 	
+	/**
+	 * Get a funciton by uuid
+	 * @param funcName
+	 * @return
+	 */
 	public FunctionMethod getFunction(String funcName) {
 		return functions.get(funcName);
 	}	
@@ -139,7 +140,7 @@ public class Schema extends AbstractMetadataRecord {
     throws IOException, ClassNotFoundException {
     	in.defaultReadObject();
     	if (this.functions == null) {
-    		this.functions = new LinkedHashMap<String, FunctionMethod>();
+    		this.functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
     	}
     }
     

@@ -537,7 +537,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			}
 			FunctionMethod func = FunctionMethod.createFunctionMethod(name, name, "pg", returnType, paramTypes); //$NON-NLS-1$
 			setUUID(func);
-			addFunction(javaFunction, func);
+			addFunction(func);
 			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 			func.setInvocationMethod(javaFunction);
 			func.setPushdown(PushDown.CANNOT_PUSHDOWN);

@@ -30,6 +30,9 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryParserException;
+import org.teiid.connector.DataPlugin;
+import org.teiid.metadata.DuplicateRecordException;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.CacheHint;
@@ -347,7 +350,12 @@ public class QueryParser {
     
     public void parseDDL(MetadataFactory factory, String ddl) throws ParseException {
     	getSqlParser(ddl).parseMetadata(factory);
-    	SQLParserUtil.replaceProceduresWithFunctions(factory);
+    	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
+    	for (FunctionMethod functionMethod : factory.getFunctions().values()) {
+			if (!functions.add(functionMethod)) {
+				throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
+			}
+		}
     }
 
 }

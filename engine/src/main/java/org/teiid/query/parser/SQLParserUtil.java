@@ -445,77 +445,63 @@ public class SQLParserUtil {
     	}
     }     
     
-    static void replaceProceduresWithFunctions(MetadataFactory factory) throws ParseException {
-    	ArrayList<String> procs = new ArrayList<String>();
-    	
-    	for (Procedure proc: factory.getProcedures().values()) {
-    		if (!proc.isFunction()) {
-    			continue;
-    		}
-    		
-    		procs.add(proc.getName());
-    		
-    		FunctionMethod method = new FunctionMethod();
-    		method.setName(proc.getName());
-    		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
-    		
-    		ArrayList<FunctionParameter> ins = new ArrayList<FunctionParameter>();
-    		for (ProcedureParameter pp:proc.getParameters()) {
-    			if (pp.getType() != ProcedureParameter.Type.In) {
-    				throw new ParseException("Functions can only support 'In' parameters"); //$NON-NLS-1$
-    			}
-    			
-    			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getDatatype().getName());
-    			fp.setVarArg(pp.isVarArg());
-    			ins.add(fp);
-    		}
-    		method.setInputParameters(ins);
-    		
-    		List<Column> returnCols = proc.getResultSet().getColumns();
-    		if (returnCols != null && !returnCols.isEmpty()) {
-    			if (returnCols.size() > 1) {
-    				throw new ParseException("Functions can only return single parameter"); //$NON-NLS-1$
-    			}
-    			Column c = returnCols.get(0);
-    			FunctionParameter fp = new FunctionParameter(c.getName(), c.getDatatype().getName());
-    			method.setOutputParameter(fp);
-    		}
-    		
-    		method.setAnnotation(proc.getAnnotation());
-    		method.setNameInSource(proc.getNameInSource());
-    		method.setUUID(proc.getUUID());
-    		
-    		Map<String, String> props = proc.getProperties();
-
-    		String value = props.remove("CATEGORY"); //$NON-NLS-1$
-    		method.setCategory(value);
-    		
-    		value = props.remove("DETERMINISM"); //$NON-NLS-1$
-    		if (value != null) {
-				method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
+	static void replaceProcedureWithFunction(MetadataFactory factory,
+			Procedure proc) throws ParseException {
+		FunctionMethod method = new FunctionMethod();
+		method.setName(proc.getName());
+		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
+		
+		ArrayList<FunctionParameter> ins = new ArrayList<FunctionParameter>();
+		for (ProcedureParameter pp:proc.getParameters()) {
+			if (pp.getType() != ProcedureParameter.Type.In) {
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
 			}
-    		
-			value = props.remove("JAVA_CLASS"); //$NON-NLS-1$
-			method.setInvocationClass(value);
 			
-			value = props.remove("JAVA_METHOD"); //$NON-NLS-1$
-			method.setInvocationMethod(value);
-			
-    		for (String key:props.keySet()) {
-    			value = props.get(key);
-				method.setProperty(key, value);
-    		}
-    		
-    		FunctionMethod.convertExtensionMetadata(proc, method);
-    		
-    		factory.addFunction(method);
-    	}
-    	
-    	// remove the old procs
-    	for (String name:procs) {
-    		factory.getProcedures().remove(name);
-    	}
-    }
+			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getDatatype().getName());
+			fp.setVarArg(pp.isVarArg());
+			ins.add(fp);
+		}
+		method.setInputParameters(ins);
+		
+		List<Column> returnCols = proc.getResultSet().getColumns();
+		if (returnCols != null && !returnCols.isEmpty()) {
+			if (returnCols.size() > 1) {
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_return", proc.getName())); //$NON-NLS-1$
+			}
+			Column c = returnCols.get(0);
+			FunctionParameter fp = new FunctionParameter(c.getName(), c.getDatatype().getName());
+			method.setOutputParameter(fp);
+		}
+		
+		method.setAnnotation(proc.getAnnotation());
+		method.setNameInSource(proc.getNameInSource());
+		method.setUUID(proc.getUUID());
+		
+		Map<String, String> props = proc.getProperties();
+
+		String value = props.remove("CATEGORY"); //$NON-NLS-1$
+		method.setCategory(value);
+		
+		value = props.remove("DETERMINISM"); //$NON-NLS-1$
+		if (value != null) {
+			method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
+		}
+		
+		value = props.remove("JAVA_CLASS"); //$NON-NLS-1$
+		method.setInvocationClass(value);
+		
+		value = props.remove("JAVA_METHOD"); //$NON-NLS-1$
+		method.setInvocationMethod(value);
+		
+		for (String key:props.keySet()) {
+			value = props.get(key);
+			method.setProperty(key, value);
+		}
+		
+		FunctionMethod.convertExtensionMetadata(proc, method);
+		factory.addFunction(method);
+		factory.getProcedures().remove(proc.getName());
+	}
     
     void setProcedureOptions(Procedure proc) {
     	Map<String, String> props = proc.getProperties();

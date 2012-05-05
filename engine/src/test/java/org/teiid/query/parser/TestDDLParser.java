@@ -390,25 +390,43 @@ public class TestDDLParser {
 	
 	@Test
 	public void testPushdownFunctionNoArgs() throws Exception {
-		String ddl = "CREATE FUNCTION SourceFunc() RETURNS integer";
+		String ddl = "CREATE FUNCTION SourceFunc() RETURNS integer OPTIONS (UUID 'hello world')";
 
 		Schema s = helpParse(ddl, "model");
 		
-		FunctionMethod fm = s.getFunction("SourceFunc");
+		FunctionMethod fm = s.getFunction("hello world");
 		assertNotNull(fm);
 		assertEquals("integer", fm.getOutputParameter().getType());
 		assertEquals(FunctionMethod.PushDown.MUST_PUSHDOWN, fm.getPushdown());
 	}	
 	
+	@Test(expected=DuplicateRecordException.class)
+	public void testDuplicateFunctions() throws Exception {
+		String ddl = "CREATE FUNCTION SourceFunc() RETURNS integer; CREATE FUNCTION SourceFunc() RETURNS string";
+		helpParse(ddl, "model");
+	}
+	
+	@Test(expected=DuplicateRecordException.class)
+	public void testDuplicateFunctions1() throws Exception {
+		String ddl = "CREATE FUNCTION SourceFunc() RETURNS string OPTIONS (UUID 'a'); CREATE FUNCTION SourceFunc1() RETURNS string OPTIONS (UUID 'a')";
+		helpParse(ddl, "model");
+	}
+
+	@Test()
+	public void testDuplicateFunctions2() throws Exception {
+		String ddl = "CREATE FUNCTION SourceFunc() RETURNS string; CREATE FUNCTION SourceFunc(param string) RETURNS string";
+		helpParse(ddl, "model");
+	}
+
 	@Test
 	public void testUDF() throws Exception {
 		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(flag boolean, msg varchar) RETURNS varchar " +
 				"OPTIONS(CATEGORY 'misc', DETERMINISM 'DETERMINISTIC', " +
-				"\"NULL-ON-NULL\" 'true', JAVA_CLASS 'foo', JAVA_METHOD 'bar', RANDOM 'any')";
+				"\"NULL-ON-NULL\" 'true', JAVA_CLASS 'foo', JAVA_METHOD 'bar', RANDOM 'any', UUID 'x')";
 
 		Schema s = helpParse(ddl, "model");
 		
-		FunctionMethod fm = s.getFunction("SourceFunc");
+		FunctionMethod fm = s.getFunction("x");
 		assertNotNull(fm);
 		assertEquals("string", fm.getOutputParameter().getType());
 		assertEquals(FunctionMethod.PushDown.CAN_PUSHDOWN, fm.getPushdown());
@@ -430,11 +448,11 @@ public class TestDDLParser {
 	@Test
 	public void testUDAggregate() throws Exception {
 		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(flag boolean, msg varchar) RETURNS varchar " +
-				"OPTIONS(CATEGORY 'misc', AGGREGATE 'true', \"allows-distinct\" 'true')";
+				"OPTIONS(CATEGORY 'misc', AGGREGATE 'true', \"allows-distinct\" 'true', UUID 'y')";
 
 		Schema s = helpParse(ddl, "model");
 		
-		FunctionMethod fm = s.getFunction("SourceFunc");
+		FunctionMethod fm = s.getFunction("y");
 		assertNotNull(fm);
 		assertEquals("string", fm.getOutputParameter().getType());
 		assertEquals(FunctionMethod.PushDown.CAN_PUSHDOWN, fm.getPushdown());
@@ -453,11 +471,11 @@ public class TestDDLParser {
 	
 	@Test
 	public void testVarArgs() throws Exception {
-		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar options (varargs 'true')";
+		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar options (varargs 'true', UUID 'z')";
 
 		Schema s = helpParse(ddl, "model");
 		
-		FunctionMethod fm = s.getFunction("SourceFunc");	
+		FunctionMethod fm = s.getFunction("z");	
 		assertTrue( fm.getInputParameters().get(0).isVarArg());
 	}
 	
