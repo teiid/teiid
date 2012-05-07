@@ -31,9 +31,11 @@ import org.mockito.Mockito;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.object.BaseObjectTest;
+import org.teiid.translator.object.ObjectCacheConnection;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.example.MapCacheExecutionFactory;
-import org.teiid.translator.object.testdata.VDBUtility;
+import org.teiid.translator.object.util.VDBUtility;
+
 
 @SuppressWarnings("nls")
 public class TestMapCacheIntegration extends BaseObjectTest {
@@ -44,12 +46,14 @@ public class TestMapCacheIntegration extends BaseObjectTest {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"); //$NON-NLS-1$
 
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+		
+		ObjectCacheConnection connection = Mockito.mock(ObjectCacheConnection.class);
 
 		MapCacheExecutionFactory factory = new MapCacheExecutionFactory();	
-		factory.setCacheLoaderClassName("org.teiid.translator.object.testdata.TradesCacheSource");
+		factory.setCacheLoaderClassName("org.teiid.translator.object.util.TradesCacheSource");
 		factory.start();
 				
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, new Object());
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, connection);
 		
 		exec.execute();
 		
@@ -77,12 +81,13 @@ public class TestMapCacheIntegration extends BaseObjectTest {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade"); //$NON-NLS-1$
 
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-
+		ObjectCacheConnection connection = Mockito.mock(ObjectCacheConnection.class);
+		
 		MapCacheExecutionFactory factory = new MapCacheExecutionFactory();	
 		factory.setCacheLoaderClassName("org.teiid.translator.object.testdata.TradesCacheSource");
 		factory.start();
 				
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, new Object());
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, connection);
 		
 		exec.execute();
 		
@@ -110,12 +115,13 @@ public class TestMapCacheIntegration extends BaseObjectTest {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Transaction"); //$NON-NLS-1$
 
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+		ObjectCacheConnection connection = Mockito.mock(ObjectCacheConnection.class);
 
 		MapCacheExecutionFactory factory = new MapCacheExecutionFactory();	
 		factory.setCacheLoaderClassName("org.teiid.translator.object.testdata.TradesCacheSource");
 		factory.start();
 				
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, new Object());
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, connection);
 		
 		exec.execute();
 		

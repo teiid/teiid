@@ -35,7 +35,7 @@ import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectProjections;
 import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.testdata.VDBUtility;
+import org.teiid.translator.object.util.VDBUtility;
 
 
 @SuppressWarnings("nls")

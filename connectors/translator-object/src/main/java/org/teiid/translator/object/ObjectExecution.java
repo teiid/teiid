@@ -44,13 +44,17 @@ public class ObjectExecution implements ResultSetExecution {
     private Select query;
     private ObjectSourceProxy proxy;
     private ObjectMethodManager methodManager;
+    private ObjectExecutionFactory config;
+    private ObjectProjections op;
     
 	private Iterator<List<Object>> resultsIt = null;  
     
-    public ObjectExecution(Command query, RuntimeMetadata metadata, ObjectSourceProxy connproxy, ObjectMethodManager methodManager) {
+    public ObjectExecution(Command query, RuntimeMetadata metadata, ObjectSourceProxy proxy, ObjectMethodManager methodManager, ObjectExecutionFactory factory) {
     	this.query = (Select) query;
-        this.proxy = connproxy;
+    	this.op = new ObjectProjections(this.query);
+        this.proxy = proxy;
         this.methodManager = methodManager;
+        this.config = factory;
     }
     
 	@Override
@@ -63,8 +67,6 @@ public class ObjectExecution implements ResultSetExecution {
         List<List<Object>> results = null;
 		if (objects != null && objects.size() > 0) {
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution number of objects from proxy is : " + objects.size()); //$NON-NLS-1$
-
-		    ObjectProjections op = new ObjectProjections(query);
 		    
 			results = ObjectTranslator.translateObjects(objects, op, methodManager);
 			 
@@ -85,7 +87,7 @@ public class ObjectExecution implements ResultSetExecution {
 
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution calling proxy : " + this.proxy.getClass().getName()); //$NON-NLS-1$
 
-			return this.proxy.get(query);
+			return this.proxy.get(query, config.getCacheName(), op.rootNodeClassName);
 
 	}
 	

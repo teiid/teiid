@@ -22,6 +22,7 @@
 package org.teiid.translator.object.example;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -31,12 +32,12 @@ import org.teiid.translator.object.ObjectSourceProxy;
 
 public class MapCacheProxy implements ObjectSourceProxy {
 	private MapCacheObjectVisitor visitor = new MapCacheObjectVisitor();
-	private Object connection;
+//	private Object connection;
 	private MapCacheExecutionFactory factory;
 	
 
 	public MapCacheProxy(Object connection, MapCacheExecutionFactory factory) {
-		this.connection = connection;
+//		this.connection = connection;
 		this.factory = factory;
 	}
 
@@ -47,7 +48,7 @@ public class MapCacheProxy implements ObjectSourceProxy {
 
 
 	@Override
-	public List<Object> get(Command command) throws TranslatorException {
+	public List<Object> get(Command command, String cache, String rootClassName) throws TranslatorException {
 		visitor.visitNode(command);
 
 		List<Object> results = null;
@@ -55,16 +56,20 @@ public class MapCacheProxy implements ObjectSourceProxy {
 			results = new ArrayList<Object>(1);
 			results.add(getCache().get(visitor.value));
 			return results;
-			
+		} else if (visitor.in) {
+			results = new ArrayList(visitor.parms.size());
+			for (Iterator it=visitor.parms.iterator(); it.hasNext();) {
+				results.add(getCache().get(it.next()));
+			}
+			return results;
+		
 		} else {
 			results = new ArrayList<Object>();
 			results.addAll(getCache().values());
-			return results;
-			
+			return results;			
 		}
 	}
 	
-
 
 	@Override
 	public void close() {

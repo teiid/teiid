@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object.testdata;
+package org.teiid.translator.object.util;
 
 
 import java.util.Calendar;
@@ -28,6 +28,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.teiid.translator.object.testdata.Leg;
+import org.teiid.translator.object.testdata.Trade;
+import org.teiid.translator.object.testdata.Transaction;
 
 
 /**

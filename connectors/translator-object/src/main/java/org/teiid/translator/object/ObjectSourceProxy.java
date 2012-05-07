@@ -28,15 +28,10 @@ import org.teiid.translator.TranslatorException;
 
 /**
  * <p>
- * ObjectSourceProxy interface is how the translator will ask for objects from the cache based on
- * the {@link Command}. The visitor will provide a parsed query such that the
- * the proxy implementor can use the criteria to perform vendor specific logic to obtain
- * objects from the cache. 
+ * ObjectSourceProxy interface is implemented for a specific Object data source.  That
+ * implementation will be responsible for adding its query logic for translating the
+ * {@link Command} into vendor specific syntax for querying the cache.
  * </p> 
- * <p>
- * The specific proxy implementation will be instantiated by  {@link ObjectExecutionFactory}.
- * Passing in the connection object and ObjectExecutionFactory.
- * </P
  * 
  * @author vhalbert
  *
@@ -45,14 +40,17 @@ import org.teiid.translator.TranslatorException;
 public interface ObjectSourceProxy {
 		
 	/**
-	 * Called by {@link ObjectExecution}, passing in the sql <code>command</code>, to obtain the objects from 
-	 * the cache based.  The implementor will need to parse the command and interpret the criteria according
+	 * Called by {@link ObjectExecution}, passing in the sql {@link Command command}, the cache to be
+	 * queries and the <code>rootClassName</code> to identify the object type to be obtained from
+	 * the cachee.  The implementor will need to parse the command and interpret the criteria according
 	 * to data source query syntax.
 	 * @param command is the SELECT command to query the data source
+	 * @param cacheName is the name of the cache to query
+	 * @param rootClassName is the class type of the object in the cache
 	 * @return List of objects found in the cache.
 	 * @throws TranslatorException is thrown if there are issues querying the data source
 	 */
-	List<Object> get(Command command) throws TranslatorException;
+	List<Object> get(Command command, String cacheName, String rootClassName) throws TranslatorException;
 
 	
 	/**

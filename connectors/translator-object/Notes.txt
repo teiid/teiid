@@ -12,7 +12,8 @@ Limitations -
 1.  There is no current support for 2 or more classes named the same (but different packages) in the same model.  
 	The table name will be the name of the class, not the full classname. 
 	
-
+2.  Default, columns that are of type object are NOT Selectable or Searchable.  Its assumed that if object types like
+	Map, Collection, or Array, there needs to be a related child table that has a foreign key defined.
 
 
 
@@ -44,12 +45,18 @@ Modeling -
 			-	Searchability=UNSEARCHABLE
 			-	Selectable=false
 			-   Updateable=false
-	c.	create the foreign key relationship between parent child, where the NameInSource for the FK being the method
-		to access child objects.
+	c.	create the foreign key relationship between parent child, where the NameInSource for the FK being the method 
+		(minus the "get") to access child objects.  Example:  method - getLegs   NIS - Legs
 	d.  the attribute on an object that is the container object, should not be modeled as an attribute in the table. 
 		This is because its not directly queryable.  It should have a related child table, which has a foreign key
 		(see b and c above).
-		
+	
+
+-  Reverse Engineering the Class Metadata by performing JDBC Import
+	-  create a dynamic.vdb so that, in designer, you can do JDBC import using a Teiid connection, in order to reverse engineer
+		the class metadata.
+	-  NOTE:  The Native Type (i.e., the return type for the "Get" method) does not come thru in the metadata.  The Datdatype and 
+		the Native are set the same.
 		
 		
 		

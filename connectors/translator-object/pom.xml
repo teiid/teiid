@@ -13,7 +13,7 @@
      <properties>
        <version.infinispan>5.1.2.FINAL</version.infinispan>
        <version.hibernate.search>4.1.0.CR1</version.hibernate.search>
-  </properties>
+  	</properties>
     <dependencies>
      
         <dependency>
@@ -43,20 +43,39 @@
 			<type>test-jar</type>
 			<scope>provided</scope>
 		</dependency>
-           
+		
+		<!-- dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>connector-infinispan</artifactId>
+			<classifier>lib</classifier>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency-->
+		
+		<dependency>
+	        <groupId>org.infinispan</groupId>
+    	    <artifactId>infinispan-core</artifactId>
+       		<version>${version.infinispan}</version>
+       	</dependency>	
+		
+		<!-- dependency>
+	        <groupId>org.infinispan</groupId>
+    	    <artifactId>infinispan-core</artifactId>
+       		<version>${version.infinispan}</version>
+       	</dependency>	
+        <dependency>
+	      <groupId>org.infinispan</groupId>
+	      <artifactId>infinispan-client-hotrod</artifactId>
+	      <version>${version.infinispan}</version>
+	    </dependency-->       		
+          
 <!-- 
-			<dependency>
-	          <groupId>org.infinispan</groupId>
-    	      <artifactId>infinispan-core</artifactId>
-       		   <version>${version.infinispan}</version>
-       		</dependency>
-       		
 			<dependency>
 	          <groupId>org.infinispan</groupId>
     	      <artifactId>infinispan-query</artifactId>
        		   <version>${version.infinispan}</version>
        		</dependency>  
-     -->       
+     -->      
    
 		<dependency>
 		   <groupId>org.hibernate</groupId>

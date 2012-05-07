@@ -23,16 +23,21 @@
 package org.teiid.translator.object;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
+import javax.resource.cci.ConnectionFactory;
+
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -52,7 +57,7 @@ import org.teiid.translator.TranslatorProperty;
  *
  */
 
-public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Object> {
+public abstract class ObjectExecutionFactory extends ExecutionFactory<ConnectionFactory, ObjectCacheConnection > {
 	public static final int MAX_SET_SIZE = 100;
 
 	/*
@@ -63,6 +68,9 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 	
 	private boolean columnNameFirstLetterUpperCase = true;
 	private String packageNamesOfCachedObjects = null;
+	private String classNamesOfCachedObjects = null;
+	private String cacheName = null;
+	private String objectRelationShips = null;
 	
 	public ObjectExecutionFactory() {
 		super();
@@ -82,13 +90,16 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 		
     @Override
     public void start() throws TranslatorException {
+    	super.start();
     	createObjectMethodManager();
+    	
     }
    
     @Override
-    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectCacheConnection connection)
     		throws TranslatorException {
-    	return new ObjectExecution((Select)command, metadata, createProxy(connection), objectMethods);
+    	return new ObjectExecution((Select)command, metadata, createProxy(connection), objectMethods, this);
+    	  
     }    
   
 	public List getSupportedFunctions() {
@@ -99,7 +110,49 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
     	return true;
     }
     
-    
+	
+	/**
+	 * Get the cacheName that will be used by this factory instance to access the named cache. 
+	 * However, if not specified a default configuration will be created.
+	 * @return
+	 * @see #setCacheName(String)
+	 */
+	@TranslatorProperty(display="CacheName", advanced=true)
+	public String getCacheName() {
+		return this.cacheName;
+	}
+	
+	/**
+	 * Set the cacheName that will be used to find the named cache.
+	 * @param cacheName
+	 * @see #getCacheName()
+	 */
+	
+	public void setCacheName(String cacheName) {
+		this.cacheName = cacheName;
+	} 
+	
+	/**
+	 * Get the object relationships.  
+	 * @return
+	 * @see #setObjectRelationships(String)
+	 */
+	@TranslatorProperty(display="ObjectRelationShips", advanced=true)
+	public String getObjectRelationships() {
+		return this.objectRelationShips;
+	}
+	
+	/**
+	 * Set the object relationships so that the metadata relationships can be built.  Specify the 
+	 * relationships using the format:  <simple classname>.<getMethod>:<simple classname> 
+	 * @param cacheName
+	 * @see #getObjectRelationships()
+	 */
+	
+	public void setObjectRelationships(String objectRelationships) {
+		this.objectRelationShips = objectRelationships;
+	} 
+	
 	/**
 	 * <p>
 	 * Returns a comma separated list of package names for the cached objects.
@@ -120,6 +173,25 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 	public void setPackageNamesOfCachedObjects(String packageNamesOfCachedObjects) {
 		this.packageNamesOfCachedObjects = packageNamesOfCachedObjects;
 	}
+	
+	/**
+	 * Call to get a comma separated list of class names to use. 
+	 * @return
+	 */
+	@TranslatorProperty(display="ClassNamesOfCachedObjects (CSV)", advanced=true)
+	public String getClassNamesOfCachedObjects() {
+		return this.classNamesOfCachedObjects;
+	}
+	
+	/**
+	 * <p>
+	 * Call to set class names for the cached objects
+	 * </p>
+	 * @param String commo separated list of package names
+	 */
+	public void setClassNamesOfCachedObjects(String classNamesOfCachedObjects) {
+		this.classNamesOfCachedObjects = classNamesOfCachedObjects;
+	}	
 
   
 	/**
@@ -164,9 +236,11 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 
     
     @Override
-	public void getMetadata(MetadataFactory metadataFactory, Object conn)
+	public void getMetadata(MetadataFactory metadataFactory, ObjectCacheConnection conn)
 			throws TranslatorException {
-
+    	createObjectMethodManager();
+ 		ObjectMetadataProcessor processor = new ObjectMetadataProcessor(metadataFactory, this);
+		processor.processMetadata();
 	}
 	
 	
@@ -182,58 +256,138 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Object, Ob
 	 * @return IObjectConnectionProxy
 	 * @throws TranslatorException
 	 */
-	protected abstract ObjectSourceProxy createProxy(Object connection) throws TranslatorException ;
+	protected abstract ObjectSourceProxy createProxy(ObjectCacheConnection connection) throws TranslatorException ;
 
 	protected void createObjectMethodManager() throws TranslatorException {
-    	if (objectMethods == null) {
-    		objectMethods = ObjectMethodManager.initialize(getClassesForPackage(this.packageNamesOfCachedObjects), 
-    				isColumnNameFirstLetterUpperCase(), this.getClass().getClassLoader());
-    	}
+	    	if (objectMethods == null) {
+	
+	    		List<String> classes = new ArrayList<String>();
+	    		if (this.classNamesOfCachedObjects != null) {
+	    			classes = StringUtil.split(this.classNamesOfCachedObjects, ",");
+	    			
+	    		} else if (this.packageNamesOfCachedObjects != null && this.packageNamesOfCachedObjects.trim().length() > 0) {
+		    		List<String> packageNames = StringUtil.split(this.packageNamesOfCachedObjects, ",");
+		    		
+		    		for (String packageName : packageNames) {
+		    			classes.addAll(getClassesInPackage(packageName, null));
+		    		}
+	    		}
+		    		
+		    	objectMethods = ObjectMethodManager.initialize( classes, isColumnNameFirstLetterUpperCase(), this.getClass().getClassLoader());
+	    	}
+	}
+
+	/**
+	 * Scans all classes accessible from the context class loader which belong to the given package and subpackages.
+	 * Adapted from http://snippets.dzone.com/posts/show/4831 and extended to support use of JAR files
+	 *
+	 * @param packageName The base package
+	 * @param regexFilter an optional class name pattern.
+	 * @return The classes
+	 */
+	protected List<String> getClassesInPackage(String packageName, String regexFilter) throws TranslatorException{
+		if (packageName == null) return Collections.EMPTY_LIST;
+
+		Pattern regex = null;
+		if (regexFilter != null)
+			regex = Pattern.compile(regexFilter);
+
+		try {
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			assert classLoader != null;
+			String path = packageName.replace('.', '/');
+			Enumeration<URL> resources = classLoader.getResources(path);
+			List<String> dirs = new ArrayList<String>();
+			while (resources.hasMoreElements()) {
+				URL resource = resources.nextElement();
+				dirs.add(resource.getFile());
+			}
+			if (dirs.isEmpty()) {
+				classLoader = this.getClass().getClassLoader();
+				assert classLoader != null;
+				resources = classLoader.getResources(path);
+				while (resources.hasMoreElements()) {
+					URL resource = resources.nextElement();
+					dirs.add(resource.getFile());
+				}
+				if (dirs.isEmpty()) {				
+			        throw new TranslatorException(ObjectPlugin.Util
+			        		.getString(
+							"ObjectExecutionFactory.noResourceFound", new Object[] { packageName })); //$NON-NLS-1$   
+				}
+	
+		    }
+
+			TreeSet<String> classes = new TreeSet<String>();
+			for (String directory : dirs) {
+				classes.addAll(findClasses(directory, packageName, regex));
+			}
+			ArrayList<String> classNames = new ArrayList<String>();
+//			ArrayList<Class> classList = new ArrayList<Class>();
+			for (String clazz : classes) {
+				classNames.add(clazz);
+			}
+//			return classList.toArray(new Class[classes.size()]);
+//			
+				        
+	        return classNames;			
+			
+		} catch (TranslatorException te) {
+			throw te;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new TranslatorException(e);
+		}
+	}
+
+	/**
+	 * Recursive method used to find all classes in a given path (directory or zip file url).  Directories
+	 * are searched recursively.  (zip files are
+	 * Adapted from http://snippets.dzone.com/posts/show/4831 and extended to support use of JAR files
+	 *
+	 * @param path   The base directory or url from which to search.
+	 * @param packageName The package name for classes found inside the base directory
+	 * @param regex       an optional class name pattern.  e.g. .*Test
+	 * @return The classes
+	 */
+	private static TreeSet<String> findClasses(String path, String packageName, Pattern regex) throws Exception {
+		TreeSet<String> classes = new TreeSet<String>();
+		if (path.startsWith("file:") && path.contains("!")) {
+			
+		} else if (path.indexOf(".jar") > -1) {
+			int idx =  path.indexOf(".jar") + 4;
+        	path = "file:" + path.substring(0, idx) + "!" + path.substring(idx + 1) ;
+        }
+		if (path.startsWith("file:") && path.contains("!")) {
+			String[] split = path.split("!");
+			URL jar = new URL(split[0]);
+			ZipInputStream zip = new ZipInputStream(jar.openStream());
+			ZipEntry entry;
+			while ((entry = zip.getNextEntry()) != null) {
+				if (entry.getName().endsWith(".class")) {
+					String className = entry.getName().replaceAll("[$].*", "").replaceAll("[.]class", "").replace('/', '.');
+					if (className.startsWith(packageName) && (regex == null || regex.matcher(className).matches()))
+						classes.add(className);
+				}
+			}
+		}
+		File dir = new File(path);
+		if (!dir.exists()) {
+			return classes;
+		}
+		File[] files = dir.listFiles();
+		for (File file : files) {
+			if (file.isDirectory()) {
+				assert !file.getName().contains(".");
+				classes.addAll(findClasses(file.getAbsolutePath(), packageName + "." + file.getName(), regex));
+			} else if (file.getName().endsWith(".class")) {
+				String className = packageName + '.' + file.getName().substring(0, file.getName().length() - 6);
+				if (regex == null || regex.matcher(className).matches())
+					classes.add(className);
+			}
+		}
+		return classes;
 	}
 	
-	protected List<String> getClassesForPackage(String pkgname) throws TranslatorException {
-		if (pkgname == null) return Collections.EMPTY_LIST;
-	    ArrayList<String> classes = new ArrayList<String>();
-	    // Get a File object for the package
-	    File directory = null;
-	    String fullPath;
-	    String relPath = pkgname.replace('.', '/');
-	    URL resource = ClassLoader.getSystemClassLoader().getResource(relPath);
-	    if (resource == null) {
-	        throw new TranslatorException(ObjectPlugin.Util
-			.getString(
-					"ObjectExecutionFactory.noResourceFound", new Object[] { relPath })); //$NON-NLS-1$    
-
-	    }
-	    fullPath = resource.getFile();
-
-	    try {
-	        directory = new File(resource.toURI());
-	    } catch (URISyntaxException e) {
-	        throw new TranslatorException(ObjectPlugin.Util
-	    			.getString(
-	    					"ObjectExecutionFactory.invalidResource", new Object[] { pkgname, resource })); //$NON-NLS-1$    
-	    	
-	    } catch (IllegalArgumentException e) {
-	        directory = null;
-	    }
-
-	    if (directory != null && directory.exists()) {
-	        // Get the list of the files contained in the package
-	        String[] files = directory.list();
-	        for (int i = 0; i < files.length; i++) {
-	            // we are only interested in .class files
-	            if (files[i].endsWith(".class") && !files[i].contains("$") ) {
-	                // removes the .class extension
-	                String className = pkgname + '.' + files[i].substring(0, files[i].length() - 6);
-                    classes.add(className);
-                    
-					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ClassDiscovery", className); //$NON-NLS-1$
-
-	            }
-	        }
-	    }
-	    return classes;
-	}
 
 }

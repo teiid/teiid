@@ -11,7 +11,7 @@
       <diagramEntity xmi:uuid="mmuuid:38199303-f03d-43ea-b506-a3d7e0be856b" modelObject="mmuuid/6c111154-eb05-4aca-ae33-d5a7d0c67e46"/>
     </diagram>
   </diagram:DiagramContainer>
-  <relational:BaseTable xmi:uuid="mmuuid:5b23705c-0091-412a-9e79-c61ed02bd618" name="Trade" nameInSource="&quot;Trade&quot;">
+  <relational:BaseTable xmi:uuid="mmuuid:5b23705c-0091-412a-9e79-c61ed02bd618" name="Trade" nameInSource="org.teiid.translator.object.testdata.Trade">
     <columns xmi:uuid="mmuuid:1a601c6c-979c-4a8a-9128-ac1c9cf853a8" name="TradeDate" nameInSource="TradeDate" nativeType="java.util.Date" fixedLength="true" nullable="NULLABLE_UNKNOWN" defaultValue="NULL" caseSensitive="false" searchability="ALL_EXCEPT_LIKE">
       <type href="http://www.w3.org/2001/XMLSchema#date"/>
     </columns>

@@ -27,9 +27,12 @@ public class ObjectProjections {
 	
 	// this is the number of children deep this query is requesting information
 	protected int childrenDepth = -1;  // 
+	// this is the path of method calls to traverse the children
 	protected List<String> childrenNodes = null;
 	
 	protected List<String> exceptionMessages = new ArrayList<String>(2);
+	
+	protected String rootNodeClassName = null;
 
 	
 	public ObjectProjections(Select query) {
@@ -50,26 +53,20 @@ public class ObjectProjections {
 	
 	@SuppressWarnings("unchecked")
 	private void parse(Select query) {
-		
-		Iterator<DerivedColumn> selectSymbolItr = query.getDerivedColumns().iterator();
-		
-		int s = query.getDerivedColumns().size();
-		columns = new Column[s];
-		columnNamesToUse = new String[s];
-		nameNodes = new ArrayList[s];
-		nodeDepth = new int[s];  
+		columns = getSelectableColumns(query);
+		columnNamesToUse = new String[columns.length];
+		nameNodes = new ArrayList[columns.length];
+		nodeDepth = new int[columns.length];  
 		
 		String maxDepthColumnNameToUse = null;
 		
-		int i=0;
-		while(selectSymbolItr.hasNext()) {
-			columns[i] = getColumnFromSymbol(selectSymbolItr.next());
+		for (int i=0; i<columns.length; ++i) {
 			columnNamesToUse[i] = getColumnNameToUse(columns[i]);
 			
 			nameNodes[i] = StringUtil.getTokens(columnNamesToUse[i], ".");
 			nodeDepth[i] = nameNodes[i].size() - 1;  // if one node name, then depth is zero, and incremented from there
 			
-			// only when there are multiple node names will a container be involved
+			// only when there are multiple node names will a container/child be involved
 			if (nodeDepth[i] > 0) {
 				if (childrenDepth == -1) {
 					childrenDepth = nodeDepth[i];
@@ -91,11 +88,35 @@ public class ObjectProjections {
 				}
 			}
 					
-			i++;
 		}
 		
 	}
 
+	private Column[] getSelectableColumns(Select query) {
+		Column[] interimColumns =  new Column[query.getDerivedColumns().size()];
+		
+		Iterator<DerivedColumn> selectSymbolItr = query.getDerivedColumns().iterator();
+		int i=0;
+		while(selectSymbolItr.hasNext()) {
+			Column c = getColumnFromSymbol(selectSymbolItr.next());
+			if (!c.isSelectable()) continue;
+			
+			interimColumns[i] = c;
+			++i;
+		}
+		
+		// if all columns are included, then return, no need to rebuild the array
+		if (interimColumns.length == i+1) {
+			return interimColumns;
+		}
+		
+		Column[] columns =  new Column[i];
+		for (int x=0; x<i; ++x) {
+			columns[x] = interimColumns[x];
+		}
+		return columns;
+	
+	}
 
 	private void addException(String columnNameToUse1,
 			String columnNameToUse2, String table) {
@@ -154,6 +175,14 @@ public class ObjectProjections {
 		return (parentNodeName != null ? parentNodeName + "." : "") + nis;
 	}
 	
+	protected void setRootClassName(Table t) {
+		if (this.rootNodeClassName != null) return;
+		
+		if (t.getNameInSource() != null) {
+			this.rootNodeClassName = t.getNameInSource();
+		}
+	}
+	
 	  
 	protected  String getNameInSourceFromColumn(Column c) {
 		String name = c.getNameInSource();
@@ -167,6 +196,8 @@ public class ObjectProjections {
 	protected  String getForeignKeyNodeName(Table t) {
 		if (t == null) return null;
 		
+		setRootClassName(t);
+	
 		if (t.getForeignKeys() != null && !t.getForeignKeys().isEmpty()) {
 			ForeignKey fk = (ForeignKey)  t.getForeignKeys().get(0);
 			String fk_nis = fk.getNameInSource();

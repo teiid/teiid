@@ -26,7 +26,6 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,8 +55,15 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 			this.clz = clzz;
 		}
 		
-		String getClassName() {
+		public Class getClassIdentifier() {
+			return this.clz;
+		}
+		public String getClassName() {
 			return this.clz.getName();
+		}
+		
+		public boolean hasMethods() {
+			return (!getters.isEmpty() || !is.isEmpty() || !setters.isEmpty());
 		}
 		
 		public Map<String, Method> getGetters() {

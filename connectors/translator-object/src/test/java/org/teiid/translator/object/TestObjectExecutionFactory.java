@@ -21,21 +21,27 @@
  */
 package org.teiid.translator.object;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import java.io.File;
+import java.util.*;
+
+
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.core.util.UnitTestUtil;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Select;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.ObjectSourceProxy;
-import org.teiid.translator.object.testdata.VDBUtility;
+import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestObjectExecutionFactory {
@@ -51,7 +57,7 @@ public class TestObjectExecutionFactory {
 		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
 			@Override
-			protected ObjectSourceProxy createProxy(Object connection)
+			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
 					throws TranslatorException {
 
 				return proxy;
@@ -72,12 +78,7 @@ public class TestObjectExecutionFactory {
 	}
 	
 	@Test public void testFactoryLoadingJarClassNames() throws Exception {
-		
-	//	File testjar = new File(UnitTestUtil.getTestScratchPath() + "/../" + "translator-object-7.7.1-tests.jar");
-//		File testjar = new File("target/" + "translator-object-7.7.1-tests.jar");
-		
-//		assertEquals("Testjar doesn't exist " + testjar.getAbsolutePath(), true, testjar.exists());
-		
+	
 
 		Select command = Mockito.mock(Select.class);
 
@@ -88,7 +89,7 @@ public class TestObjectExecutionFactory {
 		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
 			@Override
-			protected ObjectSourceProxy createProxy(Object connection)
+			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
 					throws TranslatorException {
 
 				return proxy;
@@ -97,7 +98,6 @@ public class TestObjectExecutionFactory {
 		};
 		
 		factory.setColumnNameFirstLetterUpperCase(false);
-		
 		factory.setPackageNamesOfCachedObjects("org.teiid.translator.object.testdata");
 		
 		factory.start();
@@ -110,6 +110,38 @@ public class TestObjectExecutionFactory {
 		
 	}	
 	
+	@Test public void testGetMetadata() throws Exception {
+		
+		Collection dts = VDBMetadataFactory.getSystem().getDatatypes();
+		Map<String, Datatype> mapTypes = new HashMap<String, Datatype>();
+		for (Iterator it=  dts.iterator(); it.hasNext();) {
+			Datatype dt = (Datatype) it.next();
+			mapTypes.put(dt.getName()   , dt);
+		}
+		
+		MetadataFactory mfactory = new MetadataFactory("testModel", mapTypes, new Properties());
+		
+		final ObjectSourceProxy proxy = Mockito.mock(ObjectSourceProxy.class);
+		
+		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
-  
+			@Override
+			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+					throws TranslatorException {
+
+				return proxy;
+			}
+			
+		};
+		
+		factory.setColumnNameFirstLetterUpperCase(false);
+		
+		factory.setPackageNamesOfCachedObjects("org.teiid.translator.object.testdata");
+		
+		factory.start();
+		
+		factory.getMetadata(mfactory, null);
+
+	}
+
 }

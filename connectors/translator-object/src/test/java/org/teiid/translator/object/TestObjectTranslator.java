@@ -28,8 +28,8 @@ import java.util.List;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.language.Select;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.testdata.VDBUtility;
+import org.teiid.translator.object.util.TradesCacheSource;
+import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestObjectTranslator {

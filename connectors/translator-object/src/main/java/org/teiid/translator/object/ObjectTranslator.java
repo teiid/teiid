@@ -29,6 +29,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.DataTypeManager.DefaultTypeCodes;
+import org.teiid.core.types.TransformationException;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -250,31 +254,65 @@ public class ObjectTranslator {
 	}
 	
 	private static Object getValue(Object cachedObject, int columnIdx, int methodIdx, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
-
+		Object value = null;
 
 		// only the last parsed name can be where the boolean call can be made
 		// example: x.y.z z will be where "is" is called
 		// or x x could be where "is" is called
 		Class<?> clzType = projections.columns[columnIdx].getJavaType();
-
-
-		Object value = null;
-			
-		if (clzType != null && clzType == Boolean.class) {
-			final String methodName = objectManager.formatMethodName(
-					ObjectMethodManager.IS, projections.nameNodes[columnIdx].get(methodIdx) );
-			
-			value = objectManager.getIsValue(
-					methodName, cachedObject);	
-		} else {
-			final String methodName = objectManager.formatMethodName(
-					ObjectMethodManager.GET, projections.nameNodes[columnIdx].get(methodIdx) );
-			
-			value = objectManager.getGetValue(
-					methodName, cachedObject);
-			
-		}		
 		
+		if (cachedObject.getClass().equals(clzType)) {
+			return cachedObject;
+		}
+
+		Class dataTypeClass = DataTypeManager.getDataTypeClass(cachedObject.getClass().getName());
+
+		// if the class is not a native type, but the POJO object, then
+		// call the method on the class to get the value
+		if (dataTypeClass == DefaultDataClasses.OBJECT) {
+			if (clzType != null && clzType == Boolean.class) {
+				final String methodName = objectManager.formatMethodName(
+						ObjectMethodManager.IS, projections.nameNodes[columnIdx].get(methodIdx) );
+				
+				value = objectManager.getIsValue(
+						methodName, cachedObject);	
+			} else {
+				final String methodName = objectManager.formatMethodName(
+						ObjectMethodManager.GET, projections.nameNodes[columnIdx].get(methodIdx) );
+				
+				value = objectManager.getGetValue(
+						methodName, cachedObject);
+				
+			}			
+		} else {
+		
+			int datatype = DataTypeManager.getTypeCode(cachedObject.getClass());		
+	
+			switch (datatype) {
+			case DefaultTypeCodes.OBJECT:
+			case DefaultTypeCodes.CLOB:
+			case DefaultTypeCodes.BLOB:
+				
+				break;
+	
+			default:
+				
+				try {
+					if (DataTypeManager.isTransformable(cachedObject.getClass(), clzType)) {
+						value = DataTypeManager.getTransform(cachedObject.getClass(), clzType).transform(cachedObject);
+					} else {
+						return cachedObject;
+					}
+				} catch (TransformationException e) {
+					// TODO Auto-generated catch block
+					throw new TranslatorException(e);
+				}				
+				
+				break;
+			}
+		}
+		
+	
 		return value;
 	}		
 

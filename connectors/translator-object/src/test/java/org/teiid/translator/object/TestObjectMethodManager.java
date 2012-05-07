@@ -25,10 +25,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.transaction.Transaction;
 
 import org.junit.Test;
-import org.teiid.translator.object.ObjectMethodManager;
 import org.teiid.translator.object.testdata.Leg;
 import org.teiid.translator.object.testdata.Trade;
 
@@ -69,6 +71,29 @@ public class TestObjectMethodManager {
 				+ ","
 				+ Transaction.class.getName()
 				, true, this.getClass().getClassLoader());
+		
+		// should not fail
+		assertEquals(omm.size(), 3);
+		assertNotNull(omm.getClassMethods(Trade.class.getName()));
+		assertNotNull(omm.getClassMethods(Leg.class.getName()));
+		assertNotNull(omm.getClassMethods(Transaction.class.getName()));
+		assertNotNull(omm.findGetterMethod(Trade.class, "getName"));
+		assertNotNull(omm.findGetterMethod(Leg.class, "getName"));
+//		assertNotNull(omm.findGetterMethod(Transaction.class, "getLineItem"));
+		
+	}
+	
+	@Test public void testInitializationLoadingListOfClasses() throws Exception {
+
+		List<String> classNames = new ArrayList(3);
+		classNames.add(Trade.class.getName());
+		classNames.add(Leg.class.getName());
+		classNames.add(Transaction.class.getName());
+		
+		
+		
+		ObjectMethodManager omm = ObjectMethodManager.initialize(classNames,
+				true, this.getClass().getClassLoader());
 		
 		// should not fail
 		assertEquals(omm.size(), 3);

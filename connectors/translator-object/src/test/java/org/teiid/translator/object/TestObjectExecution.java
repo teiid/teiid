@@ -32,17 +32,49 @@ import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.TradesCacheSource;
-import org.teiid.translator.object.testdata.VDBUtility;
+import org.teiid.translator.object.util.TradesCacheSource;
+import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestObjectExecution {
 	
 	private static TradesCacheSource source;
+	private static ObjectExecutionFactory factory;
+	private static ExecutionContext context;
+
 	
 	@BeforeClass
     public static void beforeEach() throws Exception {        
 		source = TradesCacheSource.loadCache();
+		
+		context = Mockito.mock(ExecutionContext.class);
+
+		factory = new ObjectExecutionFactory() {
+
+			@Override
+			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+					throws TranslatorException {
+
+				return new ObjectSourceProxy() {
+
+					@Override
+					public List<Object> get(Command command, String cacheName, String className) throws TranslatorException {
+						return source.getAll();
+					}
+
+					@Override
+					public void close() {
+						
+					}
+					
+				};
+			}
+			
+		};
+		
+		factory.start();
+		
+
     }
 	
 
@@ -98,34 +130,7 @@ public class TestObjectExecution {
 	
 	private ObjectExecution createExecution(String sql) throws Exception {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand(sql); //$NON-NLS-1$
-
-		ExecutionContext context = Mockito.mock(ExecutionContext.class);
-		
-		final ObjectExecutionFactory factory = new ObjectExecutionFactory() {
-
-			@Override
-			protected ObjectSourceProxy createProxy(Object connection)
-					throws TranslatorException {
-
-				return new ObjectSourceProxy() {
-
-					@Override
-					public List<Object> get(Command command) throws TranslatorException {
-						return source.getAll();
-					}
-
-					@Override
-					public void close() {
-						
-					}
-					
-				};
-			}
-			
-		};
 				
-		factory.start();
-			
 		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 		
 		return exec;
