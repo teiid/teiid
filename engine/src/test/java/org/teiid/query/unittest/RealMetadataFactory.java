@@ -22,6 +22,7 @@
 
 package org.teiid.query.unittest;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -41,8 +42,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -50,18 +51,12 @@ import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.MappingAttribute;
-import org.teiid.query.mapping.xml.MappingDocument;
-import org.teiid.query.mapping.xml.MappingElement;
-import org.teiid.query.mapping.xml.MappingNode;
-import org.teiid.query.mapping.xml.MappingOutputter;
-import org.teiid.query.mapping.xml.MappingSequenceNode;
-import org.teiid.query.mapping.xml.MappingVisitor;
-import org.teiid.query.mapping.xml.Navigator;
+import org.teiid.query.mapping.xml.*;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
+import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.sql.lang.SPParameter;
 
 @SuppressWarnings("nls")
@@ -2651,5 +2646,9 @@ public class RealMetadataFactory {
 			
 		return createTransformationMetadata(metadataStore, "example4");
 	}
-
+	
+	public static TransformationMetadata fromDDL(File ddlFile, String vdbName, String modelName) throws Exception {
+		MetadataFactory mf = new TestDDLParser().buildMetadataFactory(ddlFile, modelName);
+		return createTransformationMetadata(mf.asMetadataStore(), vdbName);
+	}	
 }

@@ -359,19 +359,29 @@ public class SQLParserUtil {
 		setCommonProperties(c, props);
     	
         String v = props.remove("CASE_SENSITIVE"); //$NON-NLS-1$
-    	c.setCaseSensitive(isTrue(v));
+        if (v != null) {
+        	c.setCaseSensitive(isTrue(v));
+        }
     	
     	v = props.remove("SELECTABLE"); //$NON-NLS-1$
-    	c.setSelectable(isTrue(v));
+    	if (v != null) {
+    		c.setSelectable(isTrue(v));
+    	}
     	
     	v = props.remove("UPDATABLE"); //$NON-NLS-1$
-    	c.setUpdatable(isTrue(v));
+    	if (v != null) {
+    		c.setUpdatable(isTrue(v));
+    	}
     	
     	v = props.remove("SIGNED"); //$NON-NLS-1$
-    	c.setSigned(isTrue(v));
+    	if (v != null) {
+    		c.setSigned(isTrue(v));
+    	}
     	
     	v = props.remove("CURRENCY"); //$NON-NLS-1$
-    	c.setSigned(isTrue(v));
+    	if (v != null) {
+    		c.setSigned(isTrue(v));
+    	}
 
     	v = props.remove("FIXED_LENGTH"); //$NON-NLS-1$
     	c.setFixedLength(isTrue(v));
@@ -382,10 +392,14 @@ public class SQLParserUtil {
     	}
     	
     	v = props.remove("MIN_VALUE"); //$NON-NLS-1$
-    	c.setMinimumValue(v);
+    	if (v != null) {
+    		c.setMinimumValue(v);
+    	}
     	
     	v = props.remove("MAX_VALUE"); //$NON-NLS-1$
-    	c.setMaximumValue(v);
+    	if (v != null) {
+    		c.setMaximumValue(v);
+    	}
     	
     	v = props.remove("CHAR_OCTET_LENGTH"); //$NON-NLS-1$
     	if (v != null) {
@@ -393,7 +407,9 @@ public class SQLParserUtil {
     	}
         
     	v = props.remove("NATIVE_TYPE"); //$NON-NLS-1$
-    	c.setNativeType(v);
+    	if (v != null) {
+    		c.setNativeType(v);
+    	}
 
     	v = props.remove("RADIX"); //$NON-NLS-1$
     	if (v != null) {
@@ -411,15 +427,21 @@ public class SQLParserUtil {
     	}
     }
 
-	private void setCommonProperties(AbstractMetadataRecord c, Map<String, String> props) {
+	void setCommonProperties(AbstractMetadataRecord c, Map<String, String> props) {
 		String v = props.remove("UUID"); //$NON-NLS-1$
-		c.setUUID(v);
+		if (v != null) {
+			c.setUUID(v);
+		}
 		
     	v = props.remove("ANNOTATION"); //$NON-NLS-1$
-    	c.setAnnotation(v);
+    	if (v != null) {
+    		c.setAnnotation(v);
+    	}
 		
 		v = props.remove("NAMEINSOURCE"); //$NON-NLS-1$
-    	c.setNameInSource(v);
+		if (v != null) {
+			c.setNameInSource(v);
+		}
 	}
     
     void setTableOptions(Table table) {
@@ -427,7 +449,9 @@ public class SQLParserUtil {
     	setCommonProperties(table, props);
     	
     	String value = props.remove("MATERIALIZED"); //$NON-NLS-1$
-		table.setMaterialized(isTrue(value));
+    	if (value != null) {
+    		table.setMaterialized(isTrue(value));
+    	}
 		
 		value = props.remove("MATERIALIZED_TABLE"); //$NON-NLS-1$
 		if (value != null) {
@@ -437,7 +461,9 @@ public class SQLParserUtil {
     	}
 		
 		value = props.remove("UPDATABLE"); //$NON-NLS-1$
-		table.setSupportsUpdate(isTrue(value));
+		if (value != null) {
+			table.setSupportsUpdate(isTrue(value));
+		}
 		
     	value = props.remove("CARDINALITY"); //$NON-NLS-1$
     	if (value != null) {

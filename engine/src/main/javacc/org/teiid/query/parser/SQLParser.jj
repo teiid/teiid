@@ -4271,6 +4271,7 @@ void foreignKeys(MetadataFactory factory, Table table) :
 	KeyRecord pk = null;
 	Column column = null;
 	List<String> pkColumnNames = null;
+	KeyRecord key = null;
 }
 {
 	<FOREIGN> nonReserved("KEY")
@@ -4285,17 +4286,23 @@ void foreignKeys(MetadataFactory factory, Table table) :
     [pkColumnNames = getColumnNames()]
     {
 	    try{
-		    factory.addForiegnKey("FK"+table.getForeignKeys().size(), columnNames, pkColumnNames, viewName, table);   
+		    key = factory.addForiegnKey("FK"+table.getForeignKeys().size(), columnNames, pkColumnNames, viewName, table);   
 	    } catch (TranslatorException e){
 	    	throw new ParseException(e.getMessage());
 	    }
     }
+    [optionsClause(key, factory)
+	   {
+	      setCommonProperties(key, key.getProperties());
+	   }
+	]
 }
 
 void primaryKeys(MetadataFactory factory, Table table) :
 {
 	List<String> columnNames = null;
 	Column column = null;
+	KeyRecord key = null;
 }
 {
 	<PRIMARY> nonReserved("KEY")
@@ -4308,11 +4315,16 @@ void primaryKeys(MetadataFactory factory, Table table) :
 	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 	 	}
 	 	try{
-	 		factory.addPrimaryKey("PK", columnNames, table);
+	 		key = factory.addPrimaryKey("PK", columnNames, table);
 	 	} catch(TranslatorException e){
 	 		throw new ParseException(e.getMessage());
 	 	}
     }
+    [optionsClause(key, factory)
+	   {
+	      setCommonProperties(key, key.getProperties());
+	   }
+	]    
 }
 
 void constraints(MetadataFactory factory, Table table) :
@@ -4321,6 +4333,7 @@ void constraints(MetadataFactory factory, Table table) :
 	Column column = null;
 	List<String> columnNames = null;
 	String type = null;
+	KeyRecord key = null;
 }
 {
 	( <UNIQUE> { type = "UNIQUE"; } | type = nonReserved("INDEX","ACCESSPATTERN"))
@@ -4331,18 +4344,23 @@ void constraints(MetadataFactory factory, Table table) :
 	    }
 	    try{
 	    	if (type.equalsIgnoreCase("INDEX")) { 
-	    		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnNames, table);
+	    		key = factory.addIndex("INDEX"+table.getIndexes().size(), true, columnNames, table);
 	    	}
 	    	if (type.equalsIgnoreCase("UNIQUE")) { 
-	    		factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnNames, table);
+	    		key = factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnNames, table);
 	    	}	    
 	    	if (type.equalsIgnoreCase("ACCESSPATTERN")) { 
-	    		factory.addAccessPattern("AP"+table.getAccessPatterns().size(), columnNames, table);
+	    		key = factory.addAccessPattern("AP"+table.getAccessPatterns().size(), columnNames, table);
 	    	}
     	}catch(TranslatorException e){
     		throw new ParseException(e.getMessage());
     	}	    
     }
+    [optionsClause(key, factory)
+	   {
+	      setCommonProperties(key, key.getProperties());
+	   }
+	]    
 }
 
 ArrayList<String> getColumnNames() :

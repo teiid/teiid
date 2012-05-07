@@ -22,6 +22,8 @@ package org.teiid.query.parser;
  */
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,8 +33,9 @@ import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.metadata.*;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -137,6 +140,18 @@ public class TestDDLParser {
 		Table table = tableMap.get("G1");
 		
 		assertEquals(table.getColumns().subList(0, 2), table.getPrimaryKey().getColumns());
+	}
+	
+	@Test
+	public void testOptionsKey() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT UNIQUE (e1) OPTIONS (CUSTOM_PROP 'VALUE'))";
+		Schema s = helpParse(ddl, "model");
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		KeyRecord record = table.getAllKeys().iterator().next();
+		assertEquals("VALUE", record.getProperty("CUSTOM_PROP", false));
 	}
 	
 	@Test
@@ -602,6 +617,12 @@ public class TestDDLParser {
 		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf, ddl);
 		return mf;
+	}
+	
+	public MetadataFactory buildMetadataFactory(File ddlFile, String model) throws IOException, ParseException {
+		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf, ObjectConverterUtil.convertFileToString(ddlFile));
+		return mf;		
 	}
 	
 	//TODO: could elevate type logic out of metadata
