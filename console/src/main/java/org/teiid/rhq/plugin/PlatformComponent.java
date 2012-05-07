@@ -94,10 +94,10 @@ public class PlatformComponent extends Facet {
 	protected void setOperationArguments(String name,
 			Configuration configuration, Map<String, Object> valueMap) {
 		// Parameter logic for System Operations
-		if (name.equals(Platform.Operations.KILL_REQUEST)) {
+		if (name.equals(Platform.Operations.KILL_REQUEST) || name.equals(Platform.Operations.VIEW_QUERY_PLAN)) {
 			valueMap.put(Operation.Value.REQUEST_ID, configuration.getSimple(Operation.Value.REQUEST_ID).getLongValue());
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getStringValue());
-		} else if (name.equals(Platform.Operations.KILL_REQUEST)) {
+		} else if (name.equals(Platform.Operations.KILL_TRANSACTION)) {
 			valueMap.put(Operation.Value.TRANSACTION_ID, configuration.getSimple(Operation.Value.TRANSACTION_ID).getStringValue());
 		} else if (name.equals(Platform.Operations.KILL_SESSION)) {
 			valueMap.put(Operation.Value.SESSION_ID, configuration.getSimple(Operation.Value.SESSION_ID).getStringValue());

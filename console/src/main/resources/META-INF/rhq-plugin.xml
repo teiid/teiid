@@ -164,15 +164,6 @@
 		</operation>
 
 
-		<operation name="terminateSession" displayName="Terminate Session"
-			description="Terminate a specified session">
-			<parameters>
-				<c:simple-property displayName="SessionID" name="sessionID"
-					type="string" required="true" description="The ID of the session to terminate" />
-			</parameters>
-		</operation>
-
-
 		<operation name="getRequests" displayName="View current requests"
 			description="Get current requests executing against this Teiid instance">
 			<results>
@@ -212,6 +203,21 @@
 					type="long" required="true" description="The ID of the request to cancel" />
 			</parameters>
 		</operation>
+		
+		<operation name="getPlan" displayName="View query plan"
+			description="Retrieves the query plan for an in-flight request">
+			<parameters>
+				<c:simple-property displayName="Session ID" name="sessionID"
+					type="string" required="true"
+					description="The ID of the session that the request to cancel is associated with" />
+				<c:simple-property displayName="Request ID" name="requestID"
+					type="long" required="true" description="The ID of the request to retrieve the query plan for" />
+			</parameters>
+			<results>
+					<c:simple-property displayName="Query Plan"
+						name="operationResults" type="longString" description="The query execution plan for the specified session/request." />
+			</results>
+		</operation>
 
 		<operation name="getTransactions" displayName="View current transactions"
 			description="Get current transactions executing against this VDB">
@@ -242,6 +248,14 @@
 				<c:simple-property displayName="Transaction ID"
 					name="transactionID" type="string" required="true"
 					description="The ID of the transaction to terminate" />
+			</parameters>
+		</operation>
+		
+		<operation name="terminateSession" displayName="Terminate Session"
+			description="Terminate a specified session">
+			<parameters>
+				<c:simple-property displayName="SessionID" name="sessionID"
+					type="string" required="true" description="The ID of the session to terminate" />
 			</parameters>
 		</operation>
 

@@ -188,6 +188,7 @@ public class DQPManagementView implements PluginConstants {
 			ExecutedResult operationResult, final String operationName,
 			final Map<String, Object> valueMap) throws Exception {
 		Collection<RequestMetadata> resultObject = new ArrayList<RequestMetadata>();
+		String value = new String();
 		Collection<SessionMetadata> activeSessionsCollection = new ArrayList<SessionMetadata>();
 		Collection<TransactionMetadata> transactionsCollection = new ArrayList<TransactionMetadata>();
 
@@ -210,6 +211,15 @@ public class DQPManagementView implements PluginConstants {
 			MetaValue transactionMetaValue = getTransactions(connection);
 			getTransactionCollectionValue(transactionMetaValue,transactionsCollection);
 			operationResult.setContent(createReportResultList(fieldNameList,	resultObject.iterator()));
+		} else if (operationName.equals(Platform.Operations.VIEW_QUERY_PLAN)) {
+			Long requestID = (Long) valueMap.get(Operation.Value.REQUEST_ID);
+			String sessionID = (String) valueMap.get(Operation.Value.SESSION_ID);
+			MetaValue[] args = new MetaValue[] {
+					SimpleValueSupport.wrap(sessionID),
+					SimpleValueSupport.wrap(requestID) };
+			MetaValue planMetaValue = getPlan(connection, args);
+			value = ProfileServiceUtil.stringValue(planMetaValue);
+			operationResult.setContent(value);
 		} else if (operationName.equals(Platform.Operations.KILL_TRANSACTION)) {
 			String transactionID = (String) valueMap.get(Operation.Value.TRANSACTION_ID);
 			MetaValue[] args = new MetaValue[] { SimpleValueSupport.wrap(transactionID) };
@@ -468,6 +478,23 @@ public class DQPManagementView implements PluginConstants {
 		}
 
 		return transactionsCollection;
+
+	}
+	
+	protected MetaValue getPlan(ProfileServiceConnection connection, MetaValue[] args) {
+
+		MetaValue planString = null;
+		
+		try {
+			planString = executeManagedOperation(connection,
+					getRuntimeEngineDeployer(connection, mc),
+					Platform.Operations.VIEW_QUERY_PLAN, args);
+		} catch (Exception e) {
+			final String msg = "Exception executing operation: " + Platform.Operations.VIEW_QUERY_PLAN; //$NON-NLS-1$
+			LOG.error(msg, e);
+		}
+
+		return planString;
 
 	}
 
