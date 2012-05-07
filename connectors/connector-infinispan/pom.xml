@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <artifactId>connectors</artifactId>
+        <groupId>org.jboss.teiid</groupId>
+        <version>7.7.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>connector-infinispan</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>
+    <name>Infinispan Connector</name>
+    <description>This connector reads data from a Infinispan cache</description>
+    <properties>
+       <version.infinispan>5.1.2.FINAL</version.infinispan>
+       <version.hibernate.search>4.1.0.CR1</version.hibernate.search>
+    </properties>
+    <dependencies>
+
+        <dependency>
+			<groupId>org.jboss.teiid.connectors</groupId>
+			<artifactId>translator-object</artifactId>
+			<version>${project.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+             <version>1.5</version>
+              <scope>provided</scope>
+        </dependency>   
+
+		<dependency>
+	        <groupId>org.infinispan</groupId>
+    	    <artifactId>infinispan-core</artifactId>
+       		<version>${version.infinispan}</version>
+       	</dependency>	
+	    <dependency>
+	      <groupId>org.infinispan</groupId>
+	      <artifactId>infinispan-client-hotrod</artifactId>
+	      <version>${version.infinispan}</version>
+	    </dependency>  
+	    
+		<dependency>
+		  <groupId>org.jboss.logging</groupId>
+		  <artifactId>jboss-logging</artifactId>
+		  <version>3.1.1.GA</version>
+		</dependency>	     
+   	    
+		<dependency>
+		  <groupId>org.jboss.logmanager</groupId>
+		  <artifactId>jboss-logmanager</artifactId>
+		  <version>1.2.2.GA</version>
+		</dependency>  
+		 	    
+   	 	<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>		
+			<version>4.4</version>
+			<scope>test</scope>
+		</dependency>           
+        
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build_jar</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>deploy_jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>lib</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin> 
+		    <plugin>
+		        <artifactId>maven-assembly-plugin</artifactId>
+		        <configuration>
+		         <finalName>infinispan</finalName>
+		            <descriptors>
+		                <descriptor>src/assembly/kit.xml</descriptor>
+		            </descriptors>
+		            <outputDirectory>target/distribution</outputDirectory>
+		            <workDirectory>target/assembly/work</workDirectory>
+		        </configuration>
+		        <executions>
+		            <execution>
+		                <id>make-assembly</id>
+		                <phase>package</phase>
+		                <goals>
+		                    <goal>attached</goal>
+		                </goals>
+		            </execution>
+		        </executions>
+		      </plugin>  
+
+      <!-- plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-ear-plugin</artifactId>
+        <version>2.7</version>
+        <configuration>
+           <defaultJavaBundleDir>lib</defaultJavaBundleDir>
+           <modules>
+              <rarModule>
+             	 <bundleDir>/connector-infinispan.rar</bundleDir>
+             </rarModule>            
+             <javaModule>
+	  	        <groupId>org.infinispan</groupId>
+    		    <artifactId>infinispan-core</artifactId>
+    		    <includeInApplicationXml>true</includeInApplicationXml>
+             </javaModule>
+             <javaModule>
+	      		<groupId>org.infinispan</groupId>
+	      		<artifactId>infinispan-client-hotrod</artifactId>
+	      		<includeInApplicationXml>true</includeInApplicationXml>
+             </javaModule> 
+  
+          </modules>
+          
+		  <jboss>
+		    <data-sources>
+		      <data-source>src/kit/infinispan-ds.xml</data-source>
+		    </data-sources>
+		    
+			<loader-repository> 
+			      org.teiid.resource.adapter:loader=infinispan-jca.ear
+				  <loader-repository-config> 
+				     java2ParentDelegation=false 
+			     </loader-repository-config> 
+			</loader-repository>
+		    
+		  </jboss>          
+        </configuration>
+      </plugin -->		                   
+        </plugins>
+    </build>
+</project>

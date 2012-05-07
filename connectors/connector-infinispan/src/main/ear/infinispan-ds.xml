@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connection-factories>
+
+   <no-tx-connection-factory>
+      <!-- The jndi name of the DataSource -->
+      <jndi-name>InfinispanDS</jndi-name>
+      
+      <!-- The resource archive file that defines JCA connection for Coherence  -->
+      <rar-name>infinispan-jca.ear#connector-infinispan.rar</rar-name>
+      <!-- connection interface; (do not change this) -->
+      <connection-definition>javax.resource.cci.ConnectionFactory</connection-definition>     
+
+           <!-- (OPTIONAL) Infinispan Server List -->
+      <!-- config-property name="RemoteInfinispanServerList">host:port[;host:port...]</config-property-->
+<min-pool-size>5</min-pool-size>
+      <max-pool-size>20</max-pool-size>
+
+    </no-tx-connection-factory>
+
+</connection-factories>

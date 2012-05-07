@@ -1,0 +1,63 @@
+<!--This script builds a kit for the ctc-client -->
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+
+
+<!-- 
+  This packages the files into a directory that is then grabbed by the jbossas pom kitting process 
+  in order to build a complete set of artifacts to be deployed to a JBoss AS server
+ -->
+  
+  <id>jca.ear</id>
+   
+  <formats>
+	<format>dir</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <baseDirectory>/</baseDirectory>
+
+    <dependencySets>
+       
+        <dependencySet>
+          <outputDirectory>connector-infinispan.rar</outputDirectory>
+          <useTransitiveDependencies>true</useTransitiveDependencies>
+
+           <includes>
+ 
+            <include>org.jboss.teiid.connectors:connector-infinispan</include>
+            <include>org.infinispan:infinispan-core</include>
+            <include>org.infinispan:infinispan-client-hotrod</include>
+   
+            <include>commons-pool:commons-pool</include>
+            <include>org.jboss.logging:jboss-logging</include>
+            <include>org.jboss.logmanager:jboss-logmanager</include>
+            <include>org.jboss.marshalling:jboss-marshalling</include>
+            <include>org.jboss.marshalling:jboss-marshalling-river</include>
+
+
+          </includes>
+    
+        </dependencySet>
+
+    </dependencySets>
+
+    <fileSets>
+
+        <fileSet>
+            <directory>src/main/ear/</directory>
+            <outputDirectory>/</outputDirectory>
+
+        </fileSet>
+
+        <fileSet>
+            <directory>src/main/rar/</directory>
+            <outputDirectory>connector-infinispan.rar</outputDirectory>
+
+        </fileSet>
+
+    </fileSets>
+
+</assembly>
