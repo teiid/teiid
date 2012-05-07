@@ -19,49 +19,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.translator.jpa;
 
-package org.teiid.metadata;
+import java.util.ResourceBundle;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.teiid.core.BundleUtil;
 
-public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
-	
-	private static final long serialVersionUID = -1185104601468519829L;
 
-	private List<Column> columns;
-    private T parent;
-    
-    public List<Column> getColumns() {
-    	return columns;
-    }
-    
-    public void addColumn(Column column) {
-    	if (columns == null) {
-    		columns = new ArrayList<Column>();
-    	}
-    	columns.add(column);
-    }
+public class JPAPlugin { 
 
-    public void setColumns(List<Column> columns) {
-		this.columns = columns;
-	}
-    
-    @Override
-    public T getParent() {
-    	return parent;
-    }
-    
-    public void setParent(T parent) {
-		this.parent = parent;
-	}
+    public static final String PLUGIN_ID = "org.teiid.translator.jpa" ; //$NON-NLS-1$
 
-    public Column getColumn(String name) {
-    	for (Column c:columns) {
-    		if (c.getCanonicalName().equals(name.toUpperCase())) {
-    			return c;
-    		}
-    	}
-    	return null;
+    private static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
+
+    public static enum Event implements BundleUtil.Event{
+    	TEIID14001,
+    	TEIID14002,
+    	TEIID14003,
+    	TEIID14004,
+    	TEIID14005,
+    	TEIID14006,
+    	TEIID14007
     }
 }

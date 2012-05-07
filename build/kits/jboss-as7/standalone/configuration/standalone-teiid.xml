@@ -308,6 +308,7 @@
             <translator name="ws" module="org.jboss.teiid.translator.ws"/>
             <translator name="salesforce" module="org.jboss.teiid.translator.salesforce"/>
             <translator name="hive" module="org.jboss.teiid.translator.hive"/>
+            <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
             
         </subsystem>         
         <subsystem xmlns="urn:jboss:domain:threads:1.1">

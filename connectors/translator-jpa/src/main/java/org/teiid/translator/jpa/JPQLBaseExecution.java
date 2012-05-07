@@ -19,49 +19,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+package org.teiid.translator.jpa;
 
-package org.teiid.metadata;
+import javax.persistence.EntityManager;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.ExecutionContext;
 
-public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadataRecord {
+public class JPQLBaseExecution {
 	
-	private static final long serialVersionUID = -1185104601468519829L;
+	protected ExecutionContext executionContext;
+	protected RuntimeMetadata metadata; 
+	protected EntityManager enityManager;
 
-	private List<Column> columns;
-    private T parent;
-    
-    public List<Column> getColumns() {
-    	return columns;
-    }
-    
-    public void addColumn(Column column) {
-    	if (columns == null) {
-    		columns = new ArrayList<Column>();
-    	}
-    	columns.add(column);
-    }
-
-    public void setColumns(List<Column> columns) {
-		this.columns = columns;
-	}
-    
-    @Override
-    public T getParent() {
-    	return parent;
-    }
-    
-    public void setParent(T parent) {
-		this.parent = parent;
+	protected JPQLBaseExecution(ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager em) {
+		this.executionContext = executionContext;
+		this.metadata = metadata;
+		this.enityManager = em;
 	}
 
-    public Column getColumn(String name) {
-    	for (Column c:columns) {
-    		if (c.getCanonicalName().equals(name.toUpperCase())) {
-    			return c;
-    		}
-    	}
-    	return null;
-    }
 }

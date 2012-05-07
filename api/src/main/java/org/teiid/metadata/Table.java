@@ -209,6 +209,15 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		this.foriegnKeys = foriegnKeys;
 	}
     
+    public ForeignKey getForeignKey(String name) {
+    	for (ForeignKey fk:this.foriegnKeys) {
+    		if (fk.getName().equals(name)) {
+    			return fk;
+    		}
+    	}
+    	return null;
+    }
+    
     public List<KeyRecord> getIndexes() {
     	return this.indexes;
     }
