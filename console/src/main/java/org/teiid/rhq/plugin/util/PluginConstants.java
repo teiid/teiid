@@ -77,6 +77,7 @@ public interface PluginConstants {
 				public final static String GET_BUFFER_USAGE = "userBufferSpace"; //$NON-NLS-1$
 				public final static String GET_CACHE_STATS = "getCacheStatistics"; //$NON-NLS-1$
 				public final static String DEPLOY_VDB_BY_URL = "deployVdbByUrl"; //$NON-NLS-1$
+				public final static String VIEW_QUERY_PLAN = "getPlan"; //$NON-NLS-1$
 			}
 
 			public static interface Metrics {
