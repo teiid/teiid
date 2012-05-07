@@ -250,6 +250,7 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setDQPWorkContext(this.workContext);
         this.context.setTransactionService(this.transactionService);
         this.context.setTransactionContext(this.transactionContext);
+        this.context.setVDBClassLoader(workContext.getVDB().getAttachment(ClassLoader.class));
     }
     
     @Override

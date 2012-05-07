@@ -150,6 +150,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private LRUCache<String, DecimalFormat> decimalFormatCache;
 		private LRUCache<String, SimpleDateFormat> dateFormatCache;
 		private AtomicLong reuseCount = new AtomicLong();
+		private ClassLoader classLoader;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -755,6 +756,14 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	@Override
 	public long getReuseCount() {
 		return globalState.reuseCount.get();
+	}	
+
+	@Override
+	public ClassLoader getVDBClassLoader() {
+		return this.globalState.classLoader;
 	}
 	
+	public void setVDBClassLoader(ClassLoader classLoader) {
+		this.globalState.classLoader = classLoader;
+	}
 }

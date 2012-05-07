@@ -150,5 +150,11 @@ public interface CommandContext {
 	 * @return
 	 */
 	long getReuseCount();
+	
+	/**
+	 * Get class loader for VDB. 
+	 * @return
+	 */
+	ClassLoader getVDBClassLoader();
 
 }

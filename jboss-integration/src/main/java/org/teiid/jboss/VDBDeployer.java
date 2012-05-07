@@ -126,7 +126,10 @@ class VDBDeployer implements DeploymentUnitProcessor {
 					}					
 				}
 			}
-		}			
+		}
+		
+		// add VDB module's classloader as an attachment
+		deployment.addAttchment(ClassLoader.class, deploymentUnit.getAttachment(Attachments.MODULE).getClassLoader());
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
