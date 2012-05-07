@@ -144,6 +144,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}	
     
 	public void setSourceMappings(List<SourceMappingMetadata> sources){
+		this.sources.getMap().clear();
 		for (SourceMappingMetadata source: sources) {
 			addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 		}
@@ -172,12 +173,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	return s.getTranslatorName();
 	}    
     
-	public void addSourceMapping(String name, String translatorName, String connJndiName) {
-		this.sources.getMap().put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
+	public SourceMappingMetadata addSourceMapping(String name, String translatorName, String connJndiName) {
+		return this.sources.getMap().put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
 	}
 	
 	public void addSourceMapping(SourceMappingMetadata source) {
-		this.sources.getMap().put(source.getName(), new SourceMappingMetadata(source.getName(), source.getTranslatorName(), source.getConnectionJndiName()));
+		this.addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 	}    
 	
 	public List<ValidationError> getErrors(){

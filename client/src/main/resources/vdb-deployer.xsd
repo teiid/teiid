@@ -40,8 +40,12 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:complexType>
-                                    <xs:attribute name="type" type="xs:string" default="DDL"/>
-                                </xs:complexType>
+									<xs:simpleContent>
+										<xs:extension base="xs:string">
+		                                    <xs:attribute name="type" type="xs:string" default="DDL"/>
+										</xs:extension>
+									</xs:simpleContent>
+								</xs:complexType>
                             </xs:element>                            
 							<xs:element name="validation-error" minOccurs="0" maxOccurs="unbounded">
                                 <xs:annotation>
@@ -70,6 +74,10 @@
 						<xs:attribute name="visible" type="xs:boolean" default="true"/>
                         <xs:attribute name="path" type="xs:string"/>
 					</xs:complexType>
+					<xs:unique name="sourceNameUnique">
+						<xs:selector xpath="source"/>
+						<xs:field xpath="@name"/>
+					</xs:unique>					
 				</xs:element>
                 <xs:element name="translator" maxOccurs="unbounded" minOccurs="0">
                     <xs:annotation>
@@ -133,6 +141,10 @@
 			<xs:attribute name="name" type="xs:string" use="required"/>
 			<xs:attribute name="version" type="xs:int" use="required"/>
 		</xs:complexType>
+		<xs:unique name="modelNameUnique">
+			<xs:selector xpath="model"/>
+			<xs:field xpath="@name"/>
+		</xs:unique>
 	</xs:element>
 	<xs:complexType name="property">
 		<xs:annotation>

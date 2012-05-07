@@ -8,7 +8,7 @@
         <source name="s1" translator-name="translator" connection-jndi-name="java:mybinding"></source>
         <validation-error severity="ERROR">There is an error in VDB</validation-error>
     </model>
-    <model name="model-two" type="VIRTUAL" visible="true">
+    <model name="model-one" type="VIRTUAL" visible="true">
         <property name="model-prop" value="model-value"></property>
         <source name="s1" translator-name="translator" connection-jndi-name="java:binding-one"></source>
         <source name="s2" translator-name="translator" connection-jndi-name="java:binding-two"></source>

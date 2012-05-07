@@ -43,6 +43,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
 import org.teiid.metadata.index.IndexMetadataStore;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -107,6 +108,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 
 	private VDBMetaData parseVDBXML(VirtualFile file, DeploymentUnit deploymentUnit, DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
 		try {
+			VDBMetadataParser.validate(file.openStream());
 			VDBMetaData vdb = VDBMetadataParser.unmarshell(file.openStream());
 			ServiceController<?> sc = phaseContext.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
 			ObjectSerializer serializer = ObjectSerializer.class.cast(sc.getValue());
@@ -119,6 +121,8 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		} catch (XMLStreamException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		} catch (IOException e) {
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
+		} catch (SAXException e) {
 			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
 	}

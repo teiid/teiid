@@ -22,7 +22,11 @@
 package org.teiid.adminapi.impl;
 
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
@@ -179,14 +183,15 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	 * @param models
 	 */
 	public void setModels(List<Model> models) {
+		this.models.getMap().clear();
 		for (Model obj : models) {
 			ModelMetaData model = (ModelMetaData) obj;
 			addModel(model);
 		}
 	}
 	
-	public void addModel(ModelMetaData m) {
-		this.models.getMap().put(m.getName(), m);
+	public ModelMetaData addModel(ModelMetaData m) {
+		return this.models.getMap().put(m.getName(), m);
 	}	
 	
 	@Override

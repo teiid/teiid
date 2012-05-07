@@ -219,6 +219,9 @@ class VDBService implements Service<VDBMetaData> {
 			if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
 				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50033, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
+			if (sourceNames.size() > 1 && !model.isSupportsMultiSourceBindings()) {
+				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50031, model.getName(), deployment.getName(), deployment.getVersion()));
+			}
 			for (String source:sourceNames) {
 				ConnectorManager cm = cmr.getConnectorManager(source);
 				String name = model.getSourceTranslatorName(source);

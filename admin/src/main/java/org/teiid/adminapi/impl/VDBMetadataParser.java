@@ -30,12 +30,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.xml.XMLConstants;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
+import javax.xml.validation.Validator;
 
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
@@ -43,6 +48,7 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.core.types.XMLType;
+import org.xml.sax.SAXException;
 
 @SuppressWarnings("nls")
 public class VDBMetadataParser {
@@ -50,23 +56,45 @@ public class VDBMetadataParser {
 	public static VDBMetaData unmarshell(InputStream content) throws XMLStreamException {
 		 XMLInputFactory inputFactory=XMLType.getXmlInputFactory();
 		 XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
-
-        // elements
-        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
-            Element element = Element.forName(reader.getLocalName());
-            switch (element) {
-			case VDB:
-				VDBMetaData vdb = new VDBMetaData();
-				Properties props = getAttributes(reader);
-				vdb.setName(props.getProperty(Element.NAME.getLocalName()));			
-				vdb.setVersion(Integer.parseInt(props.getProperty(Element.VERSION.getLocalName())));
-				parseVDB(reader, vdb);
-				return vdb;
-             default: 
-                throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element1",reader.getName(), Element.VDB.getLocalName()), reader.getLocation()); 
-            }
-        }
+		 try {
+	        // elements
+	        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+	            Element element = Element.forName(reader.getLocalName());
+	            switch (element) {
+				case VDB:
+					VDBMetaData vdb = new VDBMetaData();
+					Properties props = getAttributes(reader);
+					vdb.setName(props.getProperty(Element.NAME.getLocalName()));			
+					vdb.setVersion(Integer.parseInt(props.getProperty(Element.VERSION.getLocalName())));
+					parseVDB(reader, vdb);
+					return vdb;
+	             default: 
+	                throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element1",reader.getName(), Element.VDB.getLocalName()), reader.getLocation()); 
+	            }
+	        }
+		 } finally {
+			 try {
+				content.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		 }
 		return null;
+	}
+
+	public static void validate(InputStream content) throws SAXException,
+			IOException, XMLStreamException {
+		try {
+			XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
+			XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
+			SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+			Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); //$NON-NLS-1$
+			Validator v = schema.newValidator();
+			v.validate(new StAXSource(reader));
+		} finally {
+			content.close();
+		}
 	}
 
 	private static void parseVDB(XMLStreamReader reader, VDBMetaData vdb) throws XMLStreamException {

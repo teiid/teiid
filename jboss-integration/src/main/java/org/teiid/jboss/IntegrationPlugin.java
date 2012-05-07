@@ -66,6 +66,7 @@ public class IntegrationPlugin {
     	TEIID50026, // VDB undeployed
     	TEIID50029, // dynamic metadata loaded
     	TEIID50030,
+    	TEIID50031, // multiple sources, non-multisource
     	TEIID50032, // duplicate VDB
     	TEIID50033, // duplicate source name in vdb
     	TEIID50034, // Source name mismatch
