@@ -88,5 +88,7 @@
     <module>translator-ws</module>
     <module>translator-olap</module>
     <module>translator-hive</module>
+    <module>translator-object</module>
+    <module>connector-infinispan</module>
   </modules>
 </project>
