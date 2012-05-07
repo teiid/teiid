@@ -20,13 +20,13 @@
  * 02110-1301 USA.
  */
 
-/*
- */
 package org.teiid.translator.jdbc.oracle;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
+import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -35,33 +35,29 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Function;
-import org.teiid.language.Insert;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
+import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
+import org.teiid.translator.jdbc.SQLConversionVisitor;
+import org.teiid.translator.jdbc.TranslatedCommand;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
@@ -73,6 +69,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	private static final String TIMESTAMP_FORMAT = DATETIME_FORMAT + ".FF";  //$NON-NLS-1$
 
     public final static String HINT_PREFIX = "/*+"; //$NON-NLS-1$
+    public static final String HINT_SUFFIX = "*/";  //$NON-NLS-1$
     public final static String DUAL = "DUAL"; //$NON-NLS-1$
     public final static String ROWNUM = "ROWNUM"; //$NON-NLS-1$
     public final static String SEQUENCE = ":SEQUENCE="; //$NON-NLS-1$
@@ -85,6 +82,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String WITHIN_DISTANCE = "sdo_within_distance"; //$NON-NLS-1$
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
+
+	/*
+	 * Handling for cursor return values
+	 */
+	static final class RefCursorType {}
+	static int CURSOR_TYPE = -10;
+	
+	/*
+	 * handling for char bindings
+	 */
+	static final class FixedCharType {}
+	static int FIXED_CHAR_TYPE = 999;
+
+	private boolean oracleSuppliedDriver = true;
     
     public void start() throws TranslatorException {
         super.start();
@@ -328,92 +339,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
-    public String getSourceComment(ExecutionContext context, Command command) {
-    	String comment = super.getSourceComment(context, command);
-    	
-    	if (context != null) {
-	    	// Check for db hints
-		    Object payload = context.getExecutionPayload();
-		    if (payload instanceof String) {
-		        String payloadString = (String)payload;
-		        if (payloadString.startsWith(HINT_PREFIX)) {
-		            comment += payloadString + " "; //$NON-NLS-1$
-		        }
-		    }
-    	}
-    	
-		if (command instanceof Select) {
-	        //
-	        // This simple algorithm determines the hint which will be added to the
-	        // query.
-	        // Right now, we look through all functions passed in the query
-	        // (returned as a collection)
-	        // Then we check if any of those functions are sdo_relate
-	        // If so, the ORDERED hint is added, if not, it isn't
-	        Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
-	        for (Function func : col) {
-	            if (func.getName().equalsIgnoreCase(OracleExecutionFactory.RELATE)) {
-	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
-	            }
-	        }
-		}
-    	return comment;
-    }
-    
-    /**
-     * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
-     *  
-     * @see org.teiid.language.visitor.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
-     * @since 5.0
-     */
-    @Override
-    public String replaceElementName(String group, String element) {        
-
-        // Check if the element was modeled as using a Sequence
-        int useIndex = element.indexOf(SEQUENCE);
-        if (useIndex >= 0) {
-        	String name = element.substring(0, useIndex);
-        	if (group != null) {
-        		return group + Tokens.DOT + name;
-        	}
-        	return name;
-        }
-
-        // Check if the group name should be discarded
-        if((group != null && DUAL.equalsIgnoreCase(group)) || element.equalsIgnoreCase(ROWNUM)) {
-            // Strip group if group or element are pseudo-columns
-            return element;
-        }
-        
-        return null;
-    }
-    
-    @Override
-    public boolean hasTimeType() {
-    	return false;
-    }
-       
-    @Override
-    public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
-    	if(param == null && Object.class.equals(paramType)){
-    		//Oracle drive does not support JAVA_OBJECT type
-    		stmt.setNull(i, Types.LONGVARBINARY);
-    		return;
-    	}
-    	super.bindValue(stmt, param, paramType, i);
-    }
-    
-    @Override
-    public NullOrder getDefaultNullOrder() {
-    	return NullOrder.HIGH;
-    }
-    
-    @Override
-    public boolean supportsOrderByNullOrdering() {
-    	return true;
-    }    
-    
-    @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
@@ -490,6 +415,173 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public String getSourceComment(ExecutionContext context, Command command) {
+    	String comment = super.getSourceComment(context, command);
+    	
+    	boolean usingPayloadComment = false;
+    	if (context != null) {
+	    	// Check for db hints
+		    Object payload = context.getExecutionPayload();
+		    if (payload instanceof String) {
+		        String payloadString = (String)payload;
+		        if (payloadString.startsWith(HINT_PREFIX)) {
+		        	int i = payloadString.indexOf(HINT_SUFFIX);
+		        	if (i > 0 && payloadString.substring(i + 2).trim().length() == 0) {
+			            comment += payloadString + " "; //$NON-NLS-1$
+			            usingPayloadComment = true;
+		        	} else {
+		        		String msg = JDBCPlugin.Util.getString("OraleExecutionFactory.invalid_hint", "Execution Payload", payloadString); //$NON-NLS-1$ //$NON-NLS-2$ 
+		        		context.addWarning(new TranslatorException(msg));
+		        		LogManager.logWarning(LogConstants.CTX_CONNECTOR, msg);
+		        	}
+		        }
+		    }
+    	}
+    	
+    	
+		if (command instanceof Select) {
+	        //
+	        // This simple algorithm determines the hint which will be added to the
+	        // query.
+	        // Right now, we look through all functions passed in the query
+	        // (returned as a collection)
+	        // Then we check if any of those functions are sdo_relate
+	        // If so, the ORDERED hint is added, if not, it isn't
+	        Collection<Function> col = CollectorVisitor.collectObjects(Function.class, command);
+	        for (Function func : col) {
+	            if (func.getName().equalsIgnoreCase(OracleExecutionFactory.RELATE)) {
+	                return comment + "/*+ ORDERED */ "; //$NON-NLS-1$
+	            }
+	        }
+		}
+    	return comment;
+    }
+    
+    /**
+     * Don't fully qualify elements if table = DUAL or element = ROWNUM or special stuff is packed into name in source value.
+     *  
+     * @see org.teiid.language.visitor.SQLStringVisitor#skipGroupInElement(java.lang.String, java.lang.String)
+     * @since 5.0
+     */
+    @Override
+    public String replaceElementName(String group, String element) {        
+
+        // Check if the element was modeled as using a Sequence
+        int useIndex = element.indexOf(SEQUENCE);
+        if (useIndex >= 0) {
+        	String name = element.substring(0, useIndex);
+        	if (group != null) {
+        		return group + Tokens.DOT + name;
+        	}
+        	return name;
+        }
+
+        // Check if the group name should be discarded
+        if((group != null && DUAL.equalsIgnoreCase(group)) || element.equalsIgnoreCase(ROWNUM)) {
+            // Strip group if group or element are pseudo-columns
+            return element;
+        }
+        
+        return null;
+    }
+    
+    @Override
+    public boolean hasTimeType() {
+    	return false;
+    }
+       
+    @Override
+    public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
+    	if(param == null && Object.class.equals(paramType)){
+    		//Oracle drive does not support JAVA_OBJECT type
+    		stmt.setNull(i, Types.LONGVARBINARY);
+    		return;
+    	}
+    	if (paramType == FixedCharType.class) {
+    		stmt.setObject(i, param, FIXED_CHAR_TYPE);
+    		return;
+    	}
+    	super.bindValue(stmt, param, paramType, i);
+    }
+    
+    @Override
+    public NullOrder getDefaultNullOrder() {
+    	return NullOrder.HIGH;
+    }
+    
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+    	return true;
+    }    
+    
+    @Override
+    public SQLConversionVisitor getSQLConversionVisitor() {
+    	if (!oracleSuppliedDriver) {
+    		return super.getSQLConversionVisitor();
+    	}
+    	return new SQLConversionVisitor(this) {
+    		
+    		@Override
+    		public void visit(Comparison obj) {
+    			if (isChar(obj.getLeftExpression()) && obj.getRightExpression() instanceof Literal) {
+    				Literal l = (Literal)obj.getRightExpression();
+    				l.setType(FixedCharType.class);
+    			}
+    			super.visit(obj);
+    		}
+
+			private boolean isChar(Expression obj) {
+				if (!(obj instanceof ColumnReference)) {
+					return false;
+				}
+				ColumnReference cr = (ColumnReference)obj;
+				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING && cr.getMetadataObject() != null && "CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()); //$NON-NLS-1$
+			}
+    		
+    		public void visit(In obj) {
+    			if (isChar(obj.getLeftExpression())) {
+    				for (Expression exp : obj.getRightExpressions()) {
+    					if (exp instanceof Literal) {
+    						Literal l = (Literal)exp;
+    	    				l.setType(FixedCharType.class);
+    					}
+    				}
+    			}
+    			super.visit(obj);
+    		}
+    		
+    		public void visit(NamedTable table) {
+    			stripDualAlias(table);
+    			super.visit(table);
+    		}
+
+			private void stripDualAlias(NamedTable table) {
+				if (table.getCorrelationName() != null) {
+    				String groupName = null;
+    				AbstractMetadataRecord groupID = table.getMetadataObject();
+                    if(groupID != null) {              
+                        groupName = getName(groupID);
+                    } else {
+                        groupName = table.getName();
+                    }
+                    if (DUAL.equalsIgnoreCase(groupName)) {
+                    	table.setCorrelationName(null);
+                    }
+    			}
+			}
+    		
+    		@Override
+    		public void visit(ColumnReference obj) {
+    			if (obj.getTable() != null) {
+    				stripDualAlias(obj.getTable());
+    			}
+    			super.visit(obj);
+    		}
+    		
+    	};
+    }
+  
+    @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
     	if (timestampValue.getNanos() == 0) {
     		String val = formatDateValue(timestampValue);
@@ -532,4 +624,46 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+    public void setOracleSuppliedDriver(boolean oracleNative) {
+		this.oracleSuppliedDriver = oracleNative;
+	}
+    
+	@TranslatorProperty(display="Oracle Native Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
+    public boolean isOracleSuppliedDriver() {
+		return oracleSuppliedDriver;
+	}
+		
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (oracleSuppliedDriver && obj instanceof Call) {
+    		Call call = (Call)obj;
+    		if (call.getReturnType() == null && call.getMetadataObject() != null) { 
+    			//oracle returns the resultset as a parameter
+    			call.setReturnType(RefCursorType.class);
+    		}
+    	}
+    	return super.translate(obj, context);
+    }
+    
+    @Override
+    protected void registerSpecificTypeOfOutParameter(
+    		CallableStatement statement, Class<?> runtimeType, int index)
+    		throws SQLException {
+    	if (oracleSuppliedDriver && index == 1 && runtimeType == RefCursorType.class) {
+    		statement.registerOutParameter(1, CURSOR_TYPE);
+    	} else {
+    		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
+    	}
+    }
+    
+    @Override
+    public ResultSet executeStoredProcedure(CallableStatement statement,
+    		TranslatedCommand command, Class<?> returnType) throws SQLException {
+    	ResultSet rs = super.executeStoredProcedure(statement, command, returnType);
+    	if (!oracleSuppliedDriver || returnType != RefCursorType.class) {
+    		return rs;
+    	}
+    	return (ResultSet)statement.getObject(1);
+    }
+
 }
