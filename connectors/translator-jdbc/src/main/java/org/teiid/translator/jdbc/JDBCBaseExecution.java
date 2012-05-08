@@ -38,6 +38,7 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.jdbc.sybase.SybaseExecutionFactory;
 
 
 /**
@@ -135,7 +136,10 @@ public abstract class JDBCBaseExecution implements Execution  {
     }
 
     protected void setSizeContraints(Statement statement) {
-    	try {
+    	try {	
+    		if (statement instanceof CallableStatement && this.executionFactory instanceof SybaseExecutionFactory) {
+    			return;
+    		}
 			statement.setFetchSize(fetchSize);
 		} catch (SQLException e) {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {

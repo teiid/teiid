@@ -800,6 +800,8 @@ public class RecordFactory {
         case MetadataConstants.PARAMETER_TYPES.RETURN_VALUE:
         	type = ProcedureParameter.Type.ReturnValue;
         	break;
+        default:
+        	throw new IllegalArgumentException("Invalid parameter type, please ensure all parameter types are valid in Designer.");
         }
         paramRd.setType(type);
 
