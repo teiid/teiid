@@ -209,7 +209,7 @@
 			<parameters>
 				<c:simple-property displayName="Session ID" name="sessionID"
 					type="string" required="true"
-					description="The ID of the session that the request to cancel is associated with" />
+					description="The ID of the session that the targeted request is associated with" />
 				<c:simple-property displayName="Request ID" name="requestID"
 					type="long" required="true" description="The ID of the request to retrieve the query plan for" />
 			</parameters>
