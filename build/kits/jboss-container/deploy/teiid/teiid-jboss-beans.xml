@@ -154,7 +154,7 @@
     <bean name="AuthorizationValidator" class="org.teiid.dqp.internal.process.DefaultAuthorizationValidator">
         <!-- Turn on authorization checking (default true) -->
         <property name="enabled">true</property>
-        <!-- The policy decider to use. (default AuthorizationValidator). 
+        <!-- The policy decider to use. (default org.teiid.dqp.internal.process.DataRolePolicyDecider). 
              This instance may be changed to another org.teiid.PolicyDecider if needed.
         -->
         <property name="policyDecider"><inject bean="PolicyDecider"/></property>

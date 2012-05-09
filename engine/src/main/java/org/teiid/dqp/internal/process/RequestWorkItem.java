@@ -50,6 +50,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
@@ -504,9 +505,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						this.resultsBuffer = cr.getResults();
 						request.initMetadata();
 						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
-						request.validateAccess(this.originalCommand);
-						this.doneProducingBatches();
-						return;
+						if (!request.validateAccess(requestMsg.getCommands(), this.originalCommand, CommandType.CACHED)) {
+							this.doneProducingBatches();
+							return;
+						}
+						LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Cached result command to be modified, will not use the cached results", cacheId); //$NON-NLS-1$
 					} 
 				} else {
 					LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Parameters are not serializable - cache cannot be used for", cacheId); //$NON-NLS-1$

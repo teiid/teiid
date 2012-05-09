@@ -41,11 +41,15 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	}
 
 	@Override
-	public void validate(Command command, QueryMetadataInterface metadata, CommandContext commandContext) throws QueryValidatorException, TeiidComponentException {
+	public boolean validate(String[] originalSql, Command command,
+			QueryMetadataInterface metadata, CommandContext commandContext,
+			CommandType commandType) throws QueryValidatorException,
+			TeiidComponentException {
 		if (enabled && policyDecider.validateCommand(commandContext)) {
 			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.policyDecider, commandContext);
 			Request.validateWithVisitor(visitor, metadata, command);
 		}		
+		return false;
 	}
 	
 	@Override

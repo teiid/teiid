@@ -47,6 +47,7 @@ import org.teiid.core.id.IDGenerator;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
@@ -289,8 +290,6 @@ public class Request implements SecurityFunctionEvaluator {
     	//ensure that the user command is distinct from the processing command
         //rewrite and planning may alter options, symbols, etc.
     	QueryResolver.resolveCommand(command, metadata);
-    	
-    	this.userCommand = (Command)command.clone();
     }
         
     private void validateQuery(Command command)
@@ -391,7 +390,9 @@ public class Request implements SecurityFunctionEvaluator {
                 
         resolveCommand(command);
 
-        validateAccess(userCommand);
+        validateAccess(requestMsg.getCommands(), command, CommandType.USER);
+        
+    	this.userCommand = (Command) command.clone();
         
         Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
         for (GroupSymbol groupSymbol : groups) {
@@ -470,11 +471,14 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setValidateXML(requestMsg.getValidationMode());
 	}
 
-	protected void validateAccess(Command command) throws QueryValidatorException, TeiidComponentException {
-		createCommandContext(command);
-		if (this.authorizationValidator != null) {
-			this.authorizationValidator.validate(command, metadata, context);
+	protected boolean validateAccess(String[] commandStr, Command command, CommandType type) throws QueryValidatorException, TeiidComponentException {
+		if (context == null) {
+			createCommandContext(command);
 		}
+		if (this.authorizationValidator != null) {
+			return this.authorizationValidator.validate(commandStr, command, metadata, context, type);
+		}
+		return false;
 	}
 	
 	public void setExecutor(Executor executor) {

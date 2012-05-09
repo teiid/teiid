@@ -35,6 +35,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
+import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
@@ -89,9 +90,8 @@ public class TestRequest extends TestCase {
         drpd.setAllowFunctionCallsByDefault(true);
         drav.setPolicyDecider(drpd);
         request.setAuthorizationValidator(drav);
-        request.validateAccess(command);
+        request.validateAccess(new String[] {QUERY}, command, CommandType.USER);
     }
-    
     
     /**
      * Test Request.processRequest().
@@ -166,7 +166,7 @@ public class TestRequest extends TestCase {
         DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.example1VDB());
         
         message.setStatementType(StatementType.PREPARED);
-        message.setParameterValues(new ArrayList());
+        message.setParameterValues(new ArrayList<Object>());
         
         helpProcessMessage(message, cache, workContext);
         
@@ -174,7 +174,7 @@ public class TestRequest extends TestCase {
         //If this doesn't throw an exception, assume it was successful.
         message = new RequestMessage(QUERY);
         message.setStatementType(StatementType.PREPARED);
-        message.setParameterValues(new ArrayList());
+        message.setParameterValues(new ArrayList<Object>());
 
         helpProcessMessage(message, cache, workContext);
     }
