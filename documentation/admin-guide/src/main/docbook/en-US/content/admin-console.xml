@@ -43,8 +43,8 @@
             Translator instances defined for use by this VDB</para>
           </listitem>
           <listitem>
-            <para><emphasis>Data Roles</emphasis>- any 
-            data roles defined for use by this VDB</para>
+            <para><emphasis>Data Roles</emphasis>- any data roles 
+            defined for use by this VDB</para>
           </listitem>
         </orderedlist>
       </listitem>
@@ -131,6 +131,9 @@
           </listitem>
           <listitem>
             <para>View Current Requests</para>
+          </listitem>
+          <listitem>
+            <para>View query plan</para>
           </listitem>
           <listitem>
             <para>Terminate requests</para>
