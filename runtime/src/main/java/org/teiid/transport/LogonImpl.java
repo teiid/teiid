@@ -159,7 +159,7 @@ public class LogonImpl implements ILogon {
 		
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
-		
+		boolean assosiated = false;
 		try {
 			String securityDomain = service.getGssSecurityDomain();
 			if (securityDomain == null) {
@@ -175,7 +175,7 @@ public class LogonImpl implements ILogon {
 			}
 			
 			if (result.context.isEstablished()) {
-				service.associateSubjectInContext(securityDomain, subject);
+				assosiated = service.associateSubjectInContext(securityDomain, subject);
 			}
 			
 			if (!result.context.isEstablished() || !createSession) {
@@ -187,12 +187,14 @@ public class LogonImpl implements ILogon {
 			
 			LogManager.logDetail(LogConstants.CTX_SECURITY, "Kerberos context established"); //$NON-NLS-1$
 			//connProps.setProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "true"); //$NON-NLS-1$
-			LogonResult loginInResult =  logon(connProps, result.serviceTicket);
-			service.clearSubjectInContext();
-			return loginInResult;
+			return logon(connProps, result.serviceTicket);
 		} catch (LoginException e) {
 			throw new LogonException(e, RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$
-		} 
+		} finally {
+			if (assosiated) {
+				this.service.clearSubjectInContext();
+			}
+		}
 	}
 	
 	private String updateDQPContext(SessionMetadata s) {

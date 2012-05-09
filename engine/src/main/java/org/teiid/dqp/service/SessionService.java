@@ -148,7 +148,7 @@ public interface SessionService {
 	
 	String getGssSecurityDomain();
 	
-	void associateSubjectInContext(String securityDomain, Subject subject); 
+	boolean associateSubjectInContext(String securityDomain, Subject subject); 
 	
 	Subject getSubjectInContext(String securityDomain);
 

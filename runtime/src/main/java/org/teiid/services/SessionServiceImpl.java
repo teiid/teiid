@@ -424,13 +424,13 @@ public class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public void associateSubjectInContext(String securityDomain, Subject subject) {
+	public boolean associateSubjectInContext(String securityDomain, Subject subject) {
     	Principal principal = null;
     	for(Principal p:subject.getPrincipals()) {
 			principal = p;
 			break;
     	}
-    	this.securityHelper.associateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
+    	return this.securityHelper.associateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
 	}
 	
 	@Override
