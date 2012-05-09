@@ -151,4 +151,6 @@ public interface SessionService {
 	void associateSubjectInContext(String securityDomain, Subject subject); 
 	
 	Subject getSubjectInContext(String securityDomain);
+
+	public void clearSubjectInContext();
 }

@@ -445,5 +445,10 @@ public class SessionServiceImpl implements SessionService {
 	@Override
 	public String getGssSecurityDomain(){
 		return this.gssSecurityDomain;
+	}
+
+	@Override
+	public void clearSubjectInContext() {
+		this.securityHelper.clearSecurityContext(null);
 	}	
 }

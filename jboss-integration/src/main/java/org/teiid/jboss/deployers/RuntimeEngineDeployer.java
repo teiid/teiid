@@ -235,6 +235,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	jdbcCsr.setAuthenticationType(this.sessionService.getAuthType());
     	jdbcCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	jdbcCsr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
+    	jdbcCsr.setSecurityHelper(getSecurityHelper());
     	
     	if (this.jdbcSocketConfiguration.getEnabled()) {
 	    	this.jdbcSocket = new SocketListener(this.jdbcSocketConfiguration, jdbcCsr, this.dqpCore.getBufferManager(), offset);
@@ -247,6 +248,7 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
     	adminCsr.setAuthenticationType(this.sessionService.getAuthType());
     	adminCsr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
     	adminCsr.registerClientService(Admin.class, adminProxy, LogConstants.CTX_ADMIN_API);
+    	adminCsr.setSecurityHelper(getSecurityHelper());
     	
     	if (this.adminSocketConfiguration.getEnabled()) {
 	    	this.adminSocket = new SocketListener(this.adminSocketConfiguration, adminCsr, this.dqpCore.getBufferManager(), offset);

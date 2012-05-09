@@ -68,18 +68,17 @@ class SecurityActions {
 	      });
 	   }	 
 	   
-	   static void pushSecurityContext(final Principal p, final Object cred, final Subject subject, final String securityDomain)
+	   static SecurityContext createSecurityContext(final Principal p, final Object cred, final Subject subject, final String securityDomain)
 	   {
-			AccessController.doPrivileged(new PrivilegedAction<Object>() {
-				public Object run() {
+			return AccessController.doPrivileged(new PrivilegedAction<SecurityContext>() {
+				public SecurityContext run() {
 					SecurityContext sc;
 					try {
 						sc = SecurityContextFactory.createSecurityContext(p, cred, subject, securityDomain);
 					} catch (Exception e) {
 						throw new RuntimeException(e);
 					}
-					setSecurityContext(sc);
-					return null;
+					return sc;
 				}
 			});
 	   }	   
