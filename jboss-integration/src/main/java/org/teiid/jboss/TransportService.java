@@ -119,6 +119,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		this.sessionService.setAuthenticationType(getAuthenticationType());
 		this.sessionService.setGssSecurityDomain(this.krb5Domain);
 		this.sessionService.start();
+		this.csr.setAuthenticationType(this.sessionService.getAuthenticationType());
 		
     	// create the necessary services
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$

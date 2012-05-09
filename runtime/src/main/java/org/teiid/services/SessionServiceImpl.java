@@ -388,13 +388,13 @@ public abstract class SessionServiceImpl implements SessionService {
 	}
 	
 	@Override
-	public void associateSubjectInContext(String securityDomain, Subject subject) {
+	public boolean associateSubjectInContext(String securityDomain, Subject subject) {
     	Principal principal = null;
     	for(Principal p:subject.getPrincipals()) {
 			principal = p;
 			break;
     	}
-    	this.securityHelper.associateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
+    	return this.securityHelper.associateSecurityContext(this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
 	}
 	
 	@Override
@@ -409,6 +409,11 @@ public abstract class SessionServiceImpl implements SessionService {
 	@Override
 	public String getGssSecurityDomain(){
 		return this.gssSecurityDomain;
+	}
+
+	@Override
+	public void clearSubjectInContext() {
+		this.securityHelper.clearSecurityContext();
 	}	
 	
     protected Collection<String> getDomainsForUser(List<String> domains, String username) {

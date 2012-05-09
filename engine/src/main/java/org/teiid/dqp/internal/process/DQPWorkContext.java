@@ -241,7 +241,7 @@ public class DQPWorkContext implements Serializable {
 			runnable.run();
 		} finally {
 			if (associated) {
-				securityHelper.clearSecurityContext(this.getSecurityDomain());			
+				securityHelper.clearSecurityContext();			
 			}
 			DQPWorkContext.releaseWorkContext();
 			if (previous != null) {
@@ -254,7 +254,7 @@ public class DQPWorkContext implements Serializable {
 		DQPWorkContext.setWorkContext(this);
 		boolean associated = false;
 		if (securityHelper != null && this.getSubject() != null) {
-			associated = securityHelper.associateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
+			associated = securityHelper.associateSecurityContext(this.getSecurityContext());			
 		}
 		return associated;
 	}
