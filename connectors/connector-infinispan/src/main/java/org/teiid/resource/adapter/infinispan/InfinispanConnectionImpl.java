@@ -1,5 +1,5 @@
 /*
- * JBoss, Home of Professional Open Source.
+sele * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.

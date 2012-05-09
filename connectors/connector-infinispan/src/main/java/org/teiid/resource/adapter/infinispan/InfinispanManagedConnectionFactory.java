@@ -31,26 +31,30 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
 	private String remoteServerList;
 	private RemoteCacheManager cacheContainer;
-	private Object lock = new Object();
+
 
 	@Override
 	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
 		
-		synchronized(lock) {
-			
-			this.cacheContainer = getOrCreateCacheContainer();
-			if (this.cacheContainer == null) {
-	            throw new ResourceException("Unable to create Infinispan CacheContainer" );
-			}
 
-		}
 	
 		return new BasicConnectionFactory() {
 
 			private static final long serialVersionUID = 1L;
+			
+			private Object lock = new Object();
+
 
 			@Override
 			public InfinispanConnectionImpl getConnection() throws ResourceException {
+				synchronized(lock) {
+					
+					RemoteCacheManager cc = getOrCreateCacheContainer();
+					if (cc == null) {
+			            throw new ResourceException("Unable to create Infinispan CacheContainer" );
+					}
+
+				}
 				return new InfinispanConnectionImpl(InfinispanManagedConnectionFactory.this);
 			}
 		};
@@ -66,12 +70,12 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
      * must be in the appropriate format of <code>host:port[;host:port...]</code> that would be used when defining an Infinispan
      * {@link RemoteCacheManager} instance. If the value is missing, <code>localhost:11311</code> is assumed.
      * 
-     * @param remoteInfinispanServerList the server list in appropriate <code>server:port;server2:port2</code> format.
+     * @param remoteServerList the server list in appropriate <code>server:port;server2:port2</code> format.
      */
-    public synchronized void setRemoteInfinispanServerList( String remoteInfinispanServerList ) {
-        if (this.remoteServerList == remoteInfinispanServerList || this.remoteServerList != null
-            && this.remoteServerList.equals(remoteInfinispanServerList)) return; // unchanged
-        this.remoteServerList = remoteInfinispanServerList;
+    public synchronized void setRemoteServerList( String remoteServerList ) {
+        if (this.remoteServerList == remoteServerList || this.remoteServerList != null
+            && this.remoteServerList.equals(remoteServerList)) return; // unchanged
+        this.remoteServerList = remoteServerList;
     }
     
     
@@ -83,9 +87,12 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			return this.cacheContainer;
 		}
         if (getRemoteServerList() == null || getRemoteServerList().equals("")) {
-        	return new RemoteCacheManager();
+        	this.cacheContainer = new RemoteCacheManager();
+        	return this.cacheContainer;
         }
-        return new RemoteCacheManager(getRemoteServerList());
+        this.cacheContainer = new RemoteCacheManager(getRemoteServerList());
+        
+        return this.cacheContainer;
 
     }
 
