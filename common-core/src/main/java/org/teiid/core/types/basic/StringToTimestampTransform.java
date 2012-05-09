@@ -63,7 +63,7 @@ public class StringToTimestampTransform extends Transform {
 			throw new TransformationException(e, "ERR.003.029.0024", CorePlugin.Util.getString("ERR.003.029.0024", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		//validate everything except for fractional seconds
-		if (validate && !((String)value).startsWith(result.toString().substring(0, 19))) {
+		if (!((String)value).startsWith(result.toString().substring(0, 19))) {
 			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
 		}
 		return result;

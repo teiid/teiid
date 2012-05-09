@@ -62,7 +62,7 @@ public class StringToDateTransform extends Transform {
 			}
 			throw new TransformationException(e, "ERR.003.029.0018", CorePlugin.Util.getString("ERR.003.029.0018", value)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		if (validate && !result.toString().equals(value)) {
+		if (!result.toString().equals(value)) {
 			throw new TransformationException(CorePlugin.Util.getString("transform.invalid_string_for_date", value, getTargetType().getSimpleName())); //$NON-NLS-1$
 		}
 		return result;

@@ -232,6 +232,10 @@ public class TestTransforms {
     	helpTestTransform(" 2005-12-01 11:13:01 ", TimestampUtil.createTimestamp(105, 11, 1, 11, 13, 1, 0)); //$NON-NLS-1$ 
     }
     
+    @Test public void testStringToTimestampFails() throws Exception {
+    	helpTransformException("2005-12-01 11:88:60", Timestamp.class, "The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$ 
+    }
+    
     @Test public void testStringToLongWithWS() throws Exception {
     	helpTestTransform(" 1 ", Long.valueOf(1)); //$NON-NLS-1$ 
     }
