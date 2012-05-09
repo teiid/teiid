@@ -193,7 +193,7 @@
             <para>SET Syntax:
             </para>
             <listitem>
-                <para>SET (parameter|SESSION AUTHORIZATION) value
+                <para>SET [PAYLOAD] (parameter|SESSION AUTHORIZATION) value
                 </para>
             </listitem>
         </itemizedlist>
@@ -205,6 +205,9 @@
             </listitem>
             <listitem>
                 <para>The value may be either a non-quoted identifier or a quoted string literal value.</para>
+            </listitem>
+            <listitem>
+                <para>If payload is specified, e.g. "SET PAYLOAD x y", then a session scoped payload properties object will have the corresponding name value pair set.  The payload object is not fully session scoped.  It will be removed from the session when the XAConnection handle is closed / returned to the pool (assumes the use of TeiidDataSource).  The session scoped payload is superseded by the usage of TeiidStatement.setPayload.</para>
             </listitem>
         </itemizedlist>
         <para>The SET statement is most commonly used to control planning and execution.</para>

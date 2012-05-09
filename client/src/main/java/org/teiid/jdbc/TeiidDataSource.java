@@ -107,6 +107,10 @@ public class TeiidDataSource extends BaseDataSource {
      * Name of Kerberos KDC service principle name
      */
     private String kerberosServicePrincipleName;
+    /**
+     * If not using ssl determines whether requests with the associated command payload should be encrypted
+     */
+    private boolean encryptRequests;
     
 	public TeiidDataSource() {
     }
@@ -516,6 +520,18 @@ public class TeiidDataSource extends BaseDataSource {
 	 */	
 	public void setKerberosServicePrincipleName(String kerberosServerName) {
 		this.kerberosServicePrincipleName = kerberosServerName;
+	}
+	
+	public void setEncryptRequests(boolean encryptRequests) {
+		this.encryptRequests = encryptRequests;
+	}
+	
+	public boolean isEncryptRequests() {
+		return encryptRequests;
+	}
+	
+	public boolean getEncryptRequests() {
+		return encryptRequests;
 	}
 }
 

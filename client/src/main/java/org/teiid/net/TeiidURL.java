@@ -86,6 +86,8 @@ public class TeiidURL {
 		public static final String JAAS_NAME = "jaasName"; //$NON-NLS-1$
 		
 		public static final String KERBEROS_SERVICE_PRINCIPLE_NAME = "kerberosServicePrincipleName"; //$NON-NLS-1$;
+		
+		public static final String ENCRYPT_REQUESTS = "encryptRequests"; //$NON-NLS-1$;
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$

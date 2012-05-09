@@ -33,6 +33,8 @@
   <LI><B>Padded String Comparison</B> - the system property org.teiid.padSpace can be set to effectively right pad strings to the same length for comparison.
   <LI><B>Copy LOBs</B> - added the copyLobs property to indicate that lob values should be copied by the engine rather than being held by reference.
   <LI><B>Enhanced parse/format pushdown</B> - added more built-in support and extension points for parse/format function pushdown.  Added parse/format timestamp handling for SQLServer, Sybase, Oracle, and PostgreSQL.
+  <LI><B>SET PAYLOAD statement</B> - SET PAYLOAD can be used to set a name value pair on a session scoped payload that will be sent with requests.
+  <LI><B>ENCRYPT REQUESTS</B> - encryptRequests may be used as a connection/datasource property when not using SSL to indicate that request messgaes and any associated payload should be encrypted.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

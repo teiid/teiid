@@ -49,6 +49,7 @@ import org.teiid.client.util.ExceptionUtil;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.gss.MakeGSS;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
@@ -211,7 +212,7 @@ public class SocketServerConnection implements ServerConnection {
 	}
 	
 	public <T> T getService(Class<T> iface) {
-		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new SocketServerInstanceImpl.RemoteInvocationHandler(iface) {
+		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new SocketServerInstanceImpl.RemoteInvocationHandler(iface, PropertiesUtils.getBooleanProperty(connProps, TeiidURL.CONNECTION.ENCRYPT_REQUESTS, false)) {
 			@Override
 			protected SocketServerInstance getInstance() throws CommunicationException {
 				if (failOver && System.currentTimeMillis() - lastPing > pingFailOverInterval) {

@@ -280,7 +280,17 @@
                            See the Admin Guide for configuration required for GSS</para>
                         </entry>
                     </row>                      
-                    						
+                    <row>
+                        <entry>
+                            <code>encryptRequests</code>
+                        </entry>
+                        <entry>
+                            <code>boolean</code>
+                        </entry>                        
+                        <entry>
+                           <para>Only applies to non-SSL socket connections.  When "true" the request message and any associate payload will be encrypted using the connection cryptor.  Default false.</para>
+                        </entry>
+                    </row>                      
                 </tbody>
             </tgroup>
         </table> 

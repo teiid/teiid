@@ -155,8 +155,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map outParamIndexMap = new HashMap();
     
     private static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set\\s+((?:session authorization)|(?:\\w+))\\s+(?:([a-zA-Z](?:\\w|_)*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+(\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:([a-zA-Z]\\w*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    private static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     /**
      * Factory Constructor 
      * @param driverConnection
@@ -407,14 +407,22 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		if (resultsMode == ResultsMode.RESULTSET) {
         			throw new TeiidSQLException(JDBCPlugin.Util.getString("StatementImpl.set_result_set")); //$NON-NLS-1$
         		}
-        		String key = match.group(1);
-        		String value = match.group(2);
+        		String key = match.group(2);
+        		String value = match.group(3);
         		if (value == null) {
-        			value = match.group(3);
+        			value = match.group(4);
         			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
         			value = value.substring(1, value.length() - 1);
         		}
-        		if ("SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
+        		if (match.group(1) != null) {
+        			//payload case
+        			Properties p = this.getMMConnection().getPayload();
+        			if (p == null) {
+        				p = new Properties();
+        				this.getMMConnection().setPayload(p);
+        			}
+        			p.setProperty(key, value);
+        		} else if ("SESSION AUTHORIZATION".equalsIgnoreCase(key)) { //$NON-NLS-1$
         			this.getMMConnection().changeUser(value, this.getMMConnection().getPassword());
         		} else if (key.equalsIgnoreCase(TeiidURL.CONNECTION.PASSWORD)) {
         			this.getMMConnection().setPassword(value);
@@ -565,7 +573,11 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		this.getConnection().beginLocalTxnIfNeeded();
         this.currentRequestID = this.driverConnection.nextRequestID();
         // Create a request message
-        reqMsg.setExecutionPayload(this.payload);        
+        if (this.payload != null) {
+        	reqMsg.setExecutionPayload(this.payload);        
+        } else {
+        	reqMsg.setExecutionPayload(this.getMMConnection().getPayload());
+        }
         reqMsg.setCursorType(this.resultSetType);
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setRowLimit(this.maxRows);

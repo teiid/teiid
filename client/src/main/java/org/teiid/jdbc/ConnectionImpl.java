@@ -100,6 +100,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     // the last query annotations
     private Collection<Annotation> annotations;
     private Properties connectionProps;
+    private Properties payload;
         
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) { 
     	this.connectionProps = info;
@@ -828,6 +829,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	}
 	
 	public void recycleConnection() {
+		this.payload = null;
         try {
         	//close all open statements
         	this.closeStatements();
@@ -1005,6 +1007,14 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 				setPassword(oldPassword);
 			}
 		}
+	}
+	
+	public Properties getPayload() {
+		return payload;
+	}
+	
+	public void setPayload(Properties payload) {
+		this.payload = payload;
 	}
 
 }
