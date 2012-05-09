@@ -22,10 +22,7 @@
 
 package org.teiid.core.types.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -37,13 +34,13 @@ import org.junit.Test;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
-import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.TestDataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.query.unittest.TimestampUtil;
 
 
@@ -233,6 +230,10 @@ public class TestTransforms {
     
     @Test public void testStringToTimeTimestampWithWS() throws Exception {
     	helpTestTransform(" 2005-12-01 11:13:01 ", TimestampUtil.createTimestamp(105, 11, 1, 11, 13, 1, 0)); //$NON-NLS-1$ 
+    }
+    
+    @Test public void testStringToTimestampFails() throws Exception {
+    	helpTransformException("2005-12-01 11:88:60", Timestamp.class, "Error Code:TEIID10060 Message:TEIID10060 The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
     @Test public void testStringToLongWithWS() throws Exception {

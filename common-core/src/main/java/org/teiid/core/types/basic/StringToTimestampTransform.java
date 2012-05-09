@@ -63,7 +63,7 @@ public class StringToTimestampTransform extends Transform {
 			  throw new TransformationException(CorePlugin.Event.TEIID10059, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10059, value));
 		}
 		//validate everything except for fractional seconds
-		if (validate && !((String)value).startsWith(result.toString().substring(0, 19))) {
+		if (!((String)value).startsWith(result.toString().substring(0, 19))) {
 			  throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 		}
 		return result;
@@ -73,7 +73,7 @@ public class StringToTimestampTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
+	public Class<?> getSourceType() {
 		return String.class;
 	}
 
@@ -81,7 +81,7 @@ public class StringToTimestampTransform extends Transform {
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return Timestamp.class;
 	}
 	

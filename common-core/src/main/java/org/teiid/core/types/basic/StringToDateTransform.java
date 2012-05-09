@@ -62,7 +62,7 @@ public class StringToDateTransform extends Transform {
 	          }
 			  throw new TransformationException(CorePlugin.Event.TEIID10061, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10061, value));
 		}
-		if (validate && !result.toString().equals(value)) {
+		if (!result.toString().equals(value)) {
 			  throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 		}
 		return result;
@@ -72,7 +72,7 @@ public class StringToDateTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
+	public Class<?> getSourceType() {
 		return String.class;
 	}
 
@@ -80,7 +80,7 @@ public class StringToDateTransform extends Transform {
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return Date.class;
 	}
 	
