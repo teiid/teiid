@@ -38,7 +38,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	@Override
 	public boolean assosiateSecurityContext(String securityDomain, Object newContext) {
 		SecurityContext context = SecurityActions.getSecurityContext();
-		if (context == null || (!context.getSecurityDomain().equals(securityDomain) && newContext != null)) {
+		if (newContext != null && (context == null || newContext != context)) {
 			SecurityActions.setSecurityContext((SecurityContext)newContext);
 			return true;
 		}
@@ -47,10 +47,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 
 	@Override
 	public void clearSecurityContext(String securityDomain) {
-		SecurityContext sc = SecurityActions.getSecurityContext();
-		if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
-			SecurityActions.clearSecurityContext();
-		}
+		SecurityActions.clearSecurityContext();
 	}
 	
 	@Override
@@ -64,8 +61,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	
 	@Override
 	public Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject) {
-		SecurityActions.pushSecurityContext(p, credentials, subject, securityDomain);
-		return getSecurityContext(securityDomain);
+		return SecurityActions.createSecurityContext(p, credentials, subject, securityDomain);
 	}
 
 	@Override
