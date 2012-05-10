@@ -125,6 +125,9 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
         String modelName = accessNode.getModelName();
 
 		if(!this.multiSourceModels.contains(modelName)) {
+			if (!accessNode.isShouldEvaluate()) {
+				accessNode.minimizeProject(accessNode.getCommand());
+			}
             return accessNode;
         }
         
