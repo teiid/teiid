@@ -51,6 +51,7 @@ import org.jboss.msc.service.ServiceController.State;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
@@ -86,7 +87,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}
-		final String deploymentName = deploymentUnit.getName();
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		
 		// check to see if there is old vdb already deployed.
@@ -103,27 +103,24 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50074, deployment));
 			}
 		}
-				
-		// add required connector managers; if they are not already there
-		for (Translator t: deployment.getOverrideTranslators()) {
-			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
-			
-			String type = data.getType();
-			Translator parent = this.translatorRepository.getTranslatorMetaData(type);
-			if ( parent == null) {				
-				throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, type, deploymentName));
-			}
-		}
 		
-		// make sure the translator defined exists in configuration.
+		// make sure the translator defined exists in configuration; otherwise add as error
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			if (model.isSource() && !model.getSourceNames().isEmpty()) {
 				for (String source:model.getSourceNames()) {
+					
 					String translatorName = model.getSourceTranslatorName(source);
-					Translator parent = this.translatorRepository.getTranslatorMetaData(translatorName);
-					if ( parent == null) {				
-						throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deploymentName));
-					}					
+					if (deployment.isOverideTranslator(translatorName)) {
+						VDBTranslatorMetaData parent = deployment.getTranslator(translatorName);
+						translatorName = parent.getType();
+					}
+					
+					Translator translator = this.translatorRepository.getTranslatorMetaData(translatorName);
+					if ( translator == null) {	
+						String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deployment.getName(), deployment.getVersion());
+						model.addError(ValidationError.Severity.ERROR.name(), msg);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+					}	
 				}
 			}
 		}
@@ -178,18 +175,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			List<String> sourceNames = model.getSourceNames();
 			for (String sourceName:sourceNames) {
 				String translatorName = model.getSourceTranslatorName(sourceName);
-				if (!deployment.isOverideTranslator(translatorName)) {
-					vdbService.addDependency(TeiidServiceNames.translatorServiceName(translatorName));
+				if (deployment.isOverideTranslator(translatorName)) {
+					VDBTranslatorMetaData translator = deployment.getTranslator(translatorName);
+					translatorName = translator.getType();					
 				}
+				vdbService.addDependency(TeiidServiceNames.translatorServiceName(translatorName));
 			}
 		}
-		
-		//override translators (if any)
-		for (Translator t: deployment.getOverrideTranslators()) {
-			VDBTranslatorMetaData data = (VDBTranslatorMetaData)t;
-			String type = data.getType();
-			vdbService.addDependency(TeiidServiceNames.translatorServiceName(type));
-		}	
 		
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.vdbRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
