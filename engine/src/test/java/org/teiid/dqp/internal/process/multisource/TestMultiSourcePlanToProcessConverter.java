@@ -234,6 +234,23 @@ public class TestMultiSourcePlanToProcessConverter {
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
     }
     
+    @Test public void testMultiReplacementWithProjectConstantLimit() throws Exception {
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final String userSql = "SELECT a, b, source_name || a, '1' FROM MultiModel.Phys"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("x", "z", "ax", "1"),
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT g_0.a, g_0.b, concat('a', g_0.a) FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
+                new List<?>[] {
+                    Arrays.asList("x", "z", "ax")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        dataMgr.addData("SELECT g_0.a, g_0.b, concat('b', g_0.a) FROM MultiModel.Phys AS g_0", //$NON-NLS-1$
+                new List<?>[] {});
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+    }
+    
     @Test public void testMultiDependentJoin() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
         

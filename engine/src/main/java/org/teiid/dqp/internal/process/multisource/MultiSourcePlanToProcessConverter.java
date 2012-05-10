@@ -126,6 +126,9 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
         String modelName = accessNode.getModelName();
 
 		if(!this.multiSourceModels.contains(modelName)) {
+			if (!accessNode.isShouldEvaluate()) {
+				accessNode.minimizeProject(accessNode.getCommand());
+			}
             return accessNode;
         }
         
@@ -282,6 +285,12 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
         }
 		
 		return command;
+	}
+	
+	@Override
+	protected boolean minimizeProject() {
+		//running minimize twice is not allowed as the original command is modified
+		return false;
 	}
 
 }

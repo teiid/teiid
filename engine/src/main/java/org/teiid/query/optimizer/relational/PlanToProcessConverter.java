@@ -328,7 +328,7 @@ public class PlanToProcessConverter {
 	                    }
                     }
                     aNode.setCommand(command);
-                    if (!aNode.isShouldEvaluate()) {
+                    if (minimizeProject() && !aNode.isShouldEvaluate()) {
                     	aNode.minimizeProject(command);
                     }
                     setRoutingName(aNode, node);
@@ -577,6 +577,10 @@ public class PlanToProcessConverter {
 		} catch(QueryMetadataException e) {
             throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0009")); //$NON-NLS-1$
 		}
+	}
+	
+	protected boolean minimizeProject() {
+		return true;
 	}
 
 }
