@@ -12,7 +12,7 @@
     <description>This connector reads data from a Infinispan cache</description>
     <properties>
        <version.infinispan>5.1.2.FINAL</version.infinispan>
-       <version.hibernate.search>4.1.0.CR1</version.hibernate.search>
+       <version.hibernate.search>3.1.0.GA</version.hibernate.search>
     </properties>
     <dependencies>
 
