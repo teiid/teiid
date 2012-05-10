@@ -298,7 +298,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	}
 	
 	public void stop(Object object) {
-		if (!Proxy.isProxyClass(object.getClass())) {
+		if (object == null || !Proxy.isProxyClass(object.getClass())) {
 			return;
 		}
 		ReplicatedInvocationHandler<?> handler = (ReplicatedInvocationHandler<?>) Proxy.getInvocationHandler(object);
