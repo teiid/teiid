@@ -42,6 +42,8 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
 import org.jboss.as.naming.deployment.ContextNames;
@@ -297,4 +299,10 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 		return socket;
 	}
 
+	
+	public static void registerReadWriteAttributes(ManagementResourceRegistration subsystem) {
+		for (int i = 0; i < attributes.length; i++) {
+			subsystem.registerReadWriteAttribute(attributes[i].getModelName(), null, AttributeWrite.INSTANCE, Storage.CONFIGURATION);
+		}		
+	}
 }

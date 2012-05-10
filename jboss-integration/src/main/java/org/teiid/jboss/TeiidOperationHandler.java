@@ -42,6 +42,7 @@ import java.util.concurrent.TimeUnit;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
+import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
@@ -139,6 +140,27 @@ class GetRuntimeVersion extends TeiidOperationHandler{
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.STRING);		
 	}	
+}
+
+/**
+ * Since all the properties in the DQP/Buffer Manager etc needs restart, just save it to the configuration
+ * then restart will apply correctly to the buffer manager. 
+ */ 
+class AttributeWrite extends AbstractWriteAttributeHandler<Void> {
+	static AttributeWrite INSTANCE = new AttributeWrite();
+	
+	@Override
+	protected boolean applyUpdateToRuntime(OperationContext context,ModelNode operation,String attributeName,ModelNode resolvedValue,
+			ModelNode currentValue, org.jboss.as.controller.AbstractWriteAttributeHandler.HandbackHolder<Void> handbackHolder)
+			throws OperationFailedException {
+		return true;
+	}
+
+	@Override
+	protected void revertUpdateToRuntime(OperationContext context, ModelNode operation, String attributeName,
+			ModelNode valueToRestore, ModelNode valueToRevert, Void handback)
+			throws OperationFailedException {
+	}
 }
 
 class GetActiveSessionsCount extends TeiidOperationHandler{
