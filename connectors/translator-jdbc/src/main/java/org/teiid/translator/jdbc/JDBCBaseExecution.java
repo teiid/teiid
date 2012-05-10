@@ -30,6 +30,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.List;
 
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
@@ -49,7 +50,8 @@ public abstract class JDBCBaseExecution implements Execution  {
     // Fields
     // ===========================================================================================================================
 
-    // Passed to constructor
+    private static final boolean ADD_EACH_WARNING = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.addEachJDBCWarning", true); //$NON-NLS-1$
+	// Passed to constructor
     protected Connection connection;
     protected ExecutionContext context;
     protected JDBCExecutionFactory executionFactory;
@@ -190,15 +192,23 @@ public abstract class JDBCBaseExecution implements Execution  {
     
     public void addStatementWarnings() throws SQLException {
     	SQLWarning warning = this.statement.getWarnings();
-    	while (warning != null) {
-    		SQLWarning toAdd = warning;
-    		warning = toAdd.getNextWarning();
-    		toAdd.setNextException(null);
-    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestIdentifier() + " Warning: ", warning); //$NON-NLS-1$
-    		}
-    		context.addWarning(toAdd);
-    	}
+		if (ADD_EACH_WARNING) {
+			while (warning != null) {
+	    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+	    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestIdentifier() + " Warning: ", warning); //$NON-NLS-1$
+	    		}
+	    		context.addWarning(warning);
+	    		warning = warning.getNextWarning();
+	    	}
+		} else if (warning != null) {
+			context.addWarning(warning);
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+		    	while (warning != null) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestIdentifier() + " Warning: ", warning); //$NON-NLS-1$
+		    		warning = warning.getNextWarning();
+		    	}
+			}
+		}
     	this.statement.clearWarnings();
     }
 }

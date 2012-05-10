@@ -22,14 +22,8 @@
 
 package org.teiid.client.util;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Externalizable;
-import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
-import java.io.ObjectOutputStream;
+import java.io.*;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -72,23 +66,27 @@ public class ExceptionHolder implements Externalizable {
 
 		if (this.exception == null) {
 			Throwable t = buildException(classNames, message, stackTrace, code);
-			if (t == null) {
-				if (causeHolder != null) {
-					this.exception = causeHolder.exception;
-				}
+			if (causeHolder != null) {
+				t.initCause(causeHolder.exception);
 			}
-			else {
-				if (causeHolder != null) {
-					t.initCause(causeHolder.exception);
+			this.exception = t;
+			
+			if (this.exception instanceof SQLException) {
+				try {
+					int count = in.readInt();
+					for (int i = 0; i < count; i++) {
+						ExceptionHolder next = (ExceptionHolder)in.readObject();
+						if (next.exception instanceof SQLException) {
+							((SQLException)this.exception).setNextException((SQLException) next.exception);
+						}
+					}
+				} catch (EOFException e) {
+					
+				} catch (OptionalDataException e) {
+					
 				}
-				this.exception = t;
 			}
 		}
-
-		if (this.exception == null) {
-			this.exception = new TeiidRuntimeException(message);
-			this.exception.setStackTrace(stackTrace);
-		}		
 	}
 	
 	@Override
@@ -126,6 +124,22 @@ public class ExceptionHolder implements Externalizable {
 		else {
 			out.writeObject(null);
 		}
+		// handle SQLException chains
+		if (exception instanceof SQLException) {
+			SQLException se = (SQLException)exception;
+			SQLException next = se.getNextException();
+			int count = 0;
+			while (next != null) {
+				count++;
+				next = next.getNextException();
+			}
+			out.writeInt(count);
+			next = se.getNextException();
+			while (next != null) {
+				out.writeObject(new ExceptionHolder(next, true));
+				next = next.getNextException();
+			}
+		}
 	}
 	
 	public Throwable getException() {
@@ -133,11 +147,11 @@ public class ExceptionHolder implements Externalizable {
 	}
 		
 	private Throwable buildException(List<String> classNames, String message, StackTraceElement[] stackTrace, String code) {
-		if (classNames.isEmpty()) {
-			return null;
-		}
+		String originalClass = Exception.class.getName();
 		
-		String originalClass = classNames.get(0);
+		if (!classNames.isEmpty()) {
+			originalClass = classNames.get(0);
+		}
 		
 		List<String> args = Arrays.asList(CorePlugin.Util.getString("ExceptionHolder.converted_exception", message, originalClass)); //$NON-NLS-1$
 		
@@ -145,18 +159,20 @@ public class ExceptionHolder implements Externalizable {
 		for (String className : classNames) {
 			try {
 				result = (Throwable)ReflectionHelper.create(className, args, ExceptionHolder.class.getClassLoader());
-				result.setStackTrace(stackTrace);
 				break;
 			} catch (TeiidException e1) {
 				//
 			}
 		}
 		
-		if (result instanceof TeiidException) {
+		if (result == null) {
+			result = new TeiidRuntimeException(args.get(0));
+		} else if (result instanceof TeiidException) {
 			((TeiidException)result).setCode(code);
 			((TeiidException)result).setOriginalType(classNames.get(0));
 		}
 		
+		result.setStackTrace(stackTrace);
 		return result;
 	}
 	
