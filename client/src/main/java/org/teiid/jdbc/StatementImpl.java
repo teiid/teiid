@@ -487,11 +487,17 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		if (show.equalsIgnoreCase("PLAN")) { //$NON-NLS-1$
         			List<ArrayList<Object>> records = new ArrayList<ArrayList<Object>>(1);
         			PlanNode plan = driverConnection.getCurrentPlanDescription();
-        			if (plan != null) {
+        			String connDebugLog = driverConnection.getDebugLog();
+        			if (plan != null || connDebugLog != null) {
         				ArrayList<Object> row = new ArrayList<Object>(3);
-            			row.add(DataTypeTransformer.getClob(plan.toString()));
-        				row.add(new SQLXMLImpl(plan.toXml()));
-        				row.add(DataTypeTransformer.getClob(driverConnection.getDebugLog()));
+        				if (plan != null) {
+	            			row.add(DataTypeTransformer.getClob(plan.toString()));
+	        				row.add(new SQLXMLImpl(plan.toXml()));
+        				} else {
+        					row.add(null);
+        					row.add(null);
+        				}
+        				row.add(DataTypeTransformer.getClob(connDebugLog));
         				records.add(row);
         			}
         			createResultSet(records, new String[] {"PLAN_TEXT", "PLAN_XML", "DEBUG_LOG"}, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$

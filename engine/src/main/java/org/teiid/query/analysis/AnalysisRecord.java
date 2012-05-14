@@ -33,6 +33,7 @@ import java.util.ListIterator;
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -54,7 +55,9 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
  */
 public class AnalysisRecord {
 	
-    // Common 
+    private static final int MAX_PLAN_LENGTH = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxPlanLength", 1<<25); //$NON-NLS-1$
+
+	// Common 
     public static final String PROP_OUTPUT_COLS = "Output Columns"; //$NON-NLS-1$
     
     // Relational
@@ -178,6 +181,9 @@ public class AnalysisRecord {
      * @param debugLine Text to add to debug writer
      */
     public void println(String debugLine) {
+    	if (this.stringWriter.getBuffer().length() > MAX_PLAN_LENGTH) {
+    		this.stringWriter.getBuffer().delete(0, this.stringWriter.getBuffer().length() - (MAX_PLAN_LENGTH*3/4));
+    	}
         this.debugWriter.println(debugLine);
     }
     
