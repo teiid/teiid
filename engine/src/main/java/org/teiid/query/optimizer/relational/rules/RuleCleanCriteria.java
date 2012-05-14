@@ -71,7 +71,7 @@ public final class RuleCleanCriteria implements OptimizerRule {
         	pushRaiseNull |= clean(node);
         }
         if (plan.getType() == NodeConstants.Types.SELECT) {
-        	pushRaiseNull = cleanCriteria(plan);
+        	pushRaiseNull |= cleanCriteria(plan);
         }
 		return pushRaiseNull;
 	}
