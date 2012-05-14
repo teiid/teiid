@@ -531,7 +531,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 		}
-		request.processRequest();
+		try {
+			request.processRequest();
+		} finally {
+			analysisRecord = request.analysisRecord;
+		}
 		originalCommand = request.userCommand;
         if (cachable && (requestMsg.useResultSetCache() || originalCommand.getCacheHint() != null) && rsCache != null && originalCommand.areResultsCachable()) {
         	this.cid = cacheId;
@@ -581,7 +585,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			//This is just a dummy result it will get replaced by collector source
 	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionId(), TupleSourceType.FINAL);
 		}
-		analysisRecord = request.analysisRecord;
 		transactionContext = request.transactionContext;
 		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
 			if (this.requestMsg.getRequestOptions().isContinuous()) {
