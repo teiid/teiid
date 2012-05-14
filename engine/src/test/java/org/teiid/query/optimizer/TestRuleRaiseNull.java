@@ -339,6 +339,12 @@ public class TestRuleRaiseNull {
         TestOptimizer.checkNodeTypes(plan, FULLY_NULL); 
     }
     
+    @Test public void testCleanCriteria() {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select * from (Select 'x' as c from pm1.g1, pm2.g1 where pm1.g1.e1 = 'a') y where c = 'y'", TestOptimizer.example1(),  //$NON-NLS-1$
+            new String[] { });
+        TestOptimizer.checkNodeTypes(plan, FULLY_NULL); 
+    }
+    
     @Test public void testRaiseNullWithUnionNotAll() {
         String sql = "select intkey from bqt2.smalla union select intkey from bqt2.smalla where 1 = 0"; //$NON-NLS-1$
         
