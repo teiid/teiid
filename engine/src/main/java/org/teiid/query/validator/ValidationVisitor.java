@@ -174,7 +174,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (obj.getUpdateInfo() != null && obj.getUpdateInfo().isInherentInsert()) {
         	try {
 				if (obj.getUpdateInfo().findInsertUpdateMapping(obj, false) == null) {
-					handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", obj.getVariables()), obj); //$NON-NLS-1$
+					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30376, obj.getVariables()), obj);
 				}
 			} catch (QueryValidatorException e) {
 				handleValidationError(e.getMessage(), obj);

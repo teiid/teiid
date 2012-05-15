@@ -315,6 +315,8 @@ class VDBService implements Service<VDBMetaData> {
 					// designer based models define data types based on their built in data types, which are system vdb data types
 					Map<String, Datatype> datatypes = indexStore?getVDBRepository().getSystemStore().getDatatypes():getVDBRepository().getBuiltinDatatypes();
 					factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
+					factory.setPhysical(model.isSource());
+					factory.setVisible(model.isVisible());
 					
 					ExecutionFactory ef = null;
 					Object cf = null;
