@@ -24,20 +24,11 @@ package org.teiid.adminapi.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import javax.xml.XMLConstants;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.XMLStreamWriter;
-import javax.xml.transform.stax.StAXSource;
+import javax.xml.stream.*;
+import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
@@ -83,15 +74,12 @@ public class VDBMetadataParser {
 		return null;
 	}
 
-	public static void validate(InputStream content) throws SAXException,
-			IOException, XMLStreamException {
+	public static void validate(InputStream content) throws SAXException, IOException {
 		try {
-			XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
-			XMLStreamReader reader = inputFactory.createXMLStreamReader(content);
 			SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 			Schema schema = schemaFactory.newSchema(VDBMetaData.class.getResource("/vdb-deployer.xsd")); //$NON-NLS-1$
 			Validator v = schema.newValidator();
-			v.validate(new StAXSource(reader));
+			v.validate(new StreamSource(content));
 		} finally {
 			content.close();
 		}
