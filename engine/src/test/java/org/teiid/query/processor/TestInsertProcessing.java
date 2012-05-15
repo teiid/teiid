@@ -15,6 +15,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
@@ -367,7 +368,7 @@ public class TestInsertProcessing {
         // if not doBulkInsert and is doBatching,
         //    check the command hist to ensure it contains the expected commands
         if ( !doBulkInsert && doBatching ) {
-            BatchedUpdateCommand bu = (BatchedUpdateCommand)new ArrayList(dataManager.getCommandHistory()).get(2);
+            BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(2);
             assertEquals(2, bu.getUpdateCommands().size());
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
@@ -388,6 +389,42 @@ public class TestInsertProcessing {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertQueryExpression() throws Exception {
+        String sql = "insert into pm1.g1 select * from pm1.g2"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        List<?>[] expected = new List<?>[] {Arrays.asList(1)};
+		dataManager.addData("INSERT INTO g1 (e1, e2, e3, e4) SELECT g2.e1, g2.e2, g2.e3, g2.e4 FROM g2", expected);
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testInsertQueryExpression1() throws Exception {
+        String sql = "insert into pm1.g1 (e1) select e1 from pm1.g2"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities(); 
+        caps.setCapabilitySupport(Capability.INSERT_WITH_QUERYEXPRESSION, true);
+        DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps); 
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        List<?>[] expected = new List<?>[] {Arrays.asList(1)};
+		dataManager.addData("INSERT INTO g1 (e1) SELECT g2.e1 FROM g2", expected);
         helpProcess(plan, dataManager, expected);
     }
 

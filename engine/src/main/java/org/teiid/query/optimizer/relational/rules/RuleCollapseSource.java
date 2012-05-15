@@ -100,7 +100,11 @@ public final class RuleCollapseSource implements OptimizerRule {
             	addDistinct(metadata, capFinder, accessNode, queryCommand);
                 command = queryCommand;
                 if (intoGroup != null) {
-                	Insert insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
+                	Insert insertCommand = (Insert)commandRoot.getParent().getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
+                	if (insertCommand == null) {
+                		//TODO: this is probably no longer needed as we rewrite select into
+                		insertCommand = new Insert(intoGroup, ResolverUtil.resolveElementsInGroup(intoGroup, metadata), null);
+                	}
                 	insertCommand.setQueryExpression(queryCommand);
                 	command = insertCommand;
                 }

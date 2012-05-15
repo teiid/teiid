@@ -22,16 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -514,7 +505,7 @@ public class FrameUtil {
         if(sourceNode.getType() != NodeConstants.Types.SOURCE) {
             sourceNode = sourceNode.getFirstChild();
         } 
-        if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE) {
+        if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0) {
             Command command = (Command) sourceNode.getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
             if(! (command instanceof QueryCommand)) {
                 return command;
