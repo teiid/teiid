@@ -504,7 +504,7 @@ public class FrameUtil {
         if(sourceNode.getType() != NodeConstants.Types.SOURCE) {
             sourceNode = sourceNode.getFirstChild();
         } 
-        if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE) {
+        if(sourceNode != null && sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0) {
             Command command = (Command) sourceNode.getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
             if(! (command instanceof QueryCommand)) {
                 return command;
