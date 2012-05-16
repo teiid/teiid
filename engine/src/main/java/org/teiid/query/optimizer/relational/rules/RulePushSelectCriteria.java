@@ -615,6 +615,15 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
 
         FrameUtil.convertNode(copyNode, sourceGroup, null, symbolMap.asMap(), metadata, true);  
+        
+        //any proc relational criteria that is not input criteria should stay above the source
+        if (sourceGroup.isProcedure() && !copyNode.getGroups().isEmpty()) {
+        	if (this.createdNodes != null) {
+        		this.createdNodes.remove(this.createdNodes.size() - 1);
+        	}
+        	return false;
+        }
+        
         PlanNode intermediateParent = NodeEditor.findParent(projectNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
         if (intermediateParent != null) {
             intermediateParent.addAsParent(copyNode);
