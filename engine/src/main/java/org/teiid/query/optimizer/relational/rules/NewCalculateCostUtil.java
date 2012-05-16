@@ -1298,7 +1298,8 @@ public class NewCalculateCostUtil {
 				depExpressions.add(dsc.getExpression());
 				continue;
 			}
-			if (sourceNode.getType() == NodeConstants.Types.SOURCE) {
+			switch (sourceNode.getType()) {
+			case NodeConstants.Types.SOURCE: {
 				PlanNode child = sourceNode.getFirstChild();
 		        child = FrameUtil.findOriginatingNode(child, child.getGroups());
 		        if (child != null && child.getType() == NodeConstants.Types.SET_OP) {
@@ -1320,7 +1321,16 @@ public class NewCalculateCostUtil {
 					NodeEditor.removeChildNode(planNode.getParent(), planNode);
 				}
 				rpsc.getCreatedNodes().clear();
-			} 
+				break;
+			}
+			case NodeConstants.Types.GROUP: {
+				if (rpsc.pushAcrossGroupBy(sourceNode, critNode, metadata, false)) {
+					critNodes.add(critNode);
+					initialTargets.add(sourceNode.getFirstChild());
+				}
+				break;
+			}
+			}
 			//the source must be a null or project node, which we don't care about
 		}
 		return targets;
