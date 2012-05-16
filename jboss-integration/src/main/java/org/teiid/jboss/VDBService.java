@@ -146,11 +146,11 @@ class VDBService implements Service<VDBMetaData> {
 				if (objectReplicatorInjector.getValue() != null) {
 					try {
 						gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-						vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					} catch (Exception e) {
 						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
 					}
 				}
+				vdbInstance.addAttchment(GlobalTableStore.class, gts);
 			}
 		};
 		
