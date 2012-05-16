@@ -348,6 +348,10 @@ public class MetadataFactory extends Schema {
 	public void mergeFrom(Schema schema) {
 		setName(schema.getName());
 		setUUID(schema.getUUID());
+		setPhysical(schema.isPhysical());
+		setProperties(schema.getProperties());
+		setVisible(schema.isVisible());
+		setAnnotation(schema.getAnnotation());
 		
 		for (Table t:schema.getTables().values()) {
 			addTable(t);
