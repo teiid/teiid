@@ -71,9 +71,9 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         if (update) {
         	boolean hasNext = procEnv.iterateCursor(rsName);
     		if (hasNext) {
-    			procEnv.getContext().getVariableContext().setValue(ProcedurePlan.ROWCOUNT, procEnv.getCurrentRow(rsName).get(0));
+    			procEnv.getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, procEnv.getCurrentRow(rsName).get(0));
     		} else {
-    			procEnv.getContext().getVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
+    			procEnv.getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
     		}
     		procEnv.removeResults(rsName);
         }

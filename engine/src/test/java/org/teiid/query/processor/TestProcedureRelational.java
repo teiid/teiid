@@ -236,6 +236,28 @@ public class TestProcedureRelational {
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }
     
+    @Test public void testProcAsTableInJoinWithOutJoinPredicate(){
+        String sql = "select param1, param2, pm1.vsp26.e2, pm1.g1.e2 from pm1.vsp26, pm1.g1 where pm1.vsp26.e2 = pm1.g1.e2 and param1 = pm1.g1.e2 and param2 = pm1.g1.e1 order by param1, param2, pm1.vsp26.e2"; //$NON-NLS-1$
+
+        // Create expected results
+        List<?>[] expected = new List[] { 
+            Arrays.asList(new Object[] { new Integer(0), "a", new Integer(0), 0}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(0), "a", new Integer(0), 0}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(0), "a", new Integer(0), 0}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(0), "a", new Integer(0), 0}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(1), "c", new Integer(1), 1}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(2), "b", new Integer(2), 2}), //$NON-NLS-1$
+            Arrays.asList(new Object[] { new Integer(3), "a", new Integer(3), 3}), //$NON-NLS-1$
+        };       
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);   
+        // Plan query
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());       
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected); 
+    }
+    
     @Test public void testProcAsTableInSubquery(){
         String sql = "select param1, param2, pm1.vsp26.e2, (select count(e1) from pm1.vsp26 where param1 = 1 and param2 = 'a') x from pm1.vsp26, pm1.g1 where param1 = pm1.g1.e2 and param2 = pm1.g1.e1 order by param1, param2, e2"; //$NON-NLS-1$
 

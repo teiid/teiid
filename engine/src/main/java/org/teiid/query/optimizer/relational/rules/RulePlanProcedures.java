@@ -82,29 +82,28 @@ public class RulePlanProcedures implements OptimizerRule {
                 continue;
             }
 
-            HashSet inputSymbols = new HashSet();
-            List inputReferences = new LinkedList();
+            HashSet<ElementSymbol> inputSymbols = new HashSet<ElementSymbol>();
+            List<Reference> inputReferences = new LinkedList<Reference>();
             
             PlanNode critNode = node.getParent();
             
-            List conjuncts = new LinkedList();
-            HashSet coveredParams = new HashSet();
+            List<Criteria> conjuncts = new LinkedList<Criteria>();
+            HashSet<ElementSymbol> coveredParams = new HashSet<ElementSymbol>();
             //List preExecNodes = new LinkedList();
                         
-            for (Iterator params = proc.getInputParameters().iterator(); params.hasNext();) {
-                SPParameter param = (SPParameter)params.next();
+            for (Iterator<SPParameter> params = proc.getInputParameters().iterator(); params.hasNext();) {
+                SPParameter param = params.next();
                 ElementSymbol symbol = param.getParameterSymbol();
                 Expression input = param.getExpression();
-                inputReferences.add(input);
+                inputReferences.add((Reference)input);
                 inputSymbols.add(symbol);
             }
             
             findInputNodes(inputSymbols, critNode, conjuncts, coveredParams);
             
-            List defaults = new LinkedList();
+            List<Expression> defaults = new LinkedList<Expression>();
             
-            for (Iterator params = inputReferences.iterator(); params.hasNext();) {
-                Reference ref = (Reference)params.next(); 
+            for (Reference ref : inputReferences) {
                 ElementSymbol symbol = ref.getExpression();
                 
                 Expression defaultValue = null;
@@ -145,9 +144,9 @@ public class RulePlanProcedures implements OptimizerRule {
         return plan;
     }
 
-    private void findInputNodes(final HashSet inputs,
+    private void findInputNodes(final HashSet<ElementSymbol> inputs,
                                PlanNode critNode,
-                               final List conjuncts, final Set params) {
+                               final List<Criteria> conjuncts, final Set<ElementSymbol> params) {
         
         while (critNode.getType() == NodeConstants.Types.SELECT) {
             final PlanNode currentNode = critNode;
@@ -209,9 +208,9 @@ public class RulePlanProcedures implements OptimizerRule {
                     return false;
                 }
                 
-                boolean checkForAnyInput(Collection expressions) {
-                    for (Iterator exprs = expressions.iterator(); exprs.hasNext();) {
-                        if (checkForAnyInput((Expression)exprs.next())) {
+                boolean checkForAnyInput(Collection<Expression> expressions) {
+                	for (Expression expr : expressions) {
+                        if (checkForAnyInput(expr)) {
                             return true;
                         }
                     }
