@@ -155,6 +155,7 @@ public class AdminFactory {
 		private static final String JAVA_CONTEXT = "java:/";
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
+    	private String profileName;
     	
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
@@ -194,14 +195,17 @@ public class AdminFactory {
 		
 		private void createConnectionFactory(String deploymentName,	String rarName, Properties properties)	throws AdminException {
 
-			///subsystem=resource-adapters/resource-adapter=fileDS:add
-			addResourceAdapter(deploymentName, rarName);
+			if (!getDeployedResourceAdapterNames().contains(deploymentName)) {
+				///subsystem=resource-adapters/resource-adapter=fileDS:add
+				addResourceAdapter(deploymentName, rarName);
+			}
 			
 			///subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS:add(jndi-name=java\:\/fooDS)
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 
 	        try {
+	        	addProfileNode(builder);	        	
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
@@ -236,6 +240,7 @@ public class AdminFactory {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
+	        	addProfileNode(builder);	        	
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
@@ -255,6 +260,7 @@ public class AdminFactory {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 	        try {
+	        	addProfileNode(builder);
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("activate"); 
@@ -266,12 +272,22 @@ public class AdminFactory {
 	        execute(request);
 		}
 
+		private void addProfileNode(DefaultOperationRequestBuilder builder) throws AdminProcessingException {
+			if (this.domainMode) {
+				String profile = getProfileName();
+				if (profile != null) {
+					builder.addNode("profile",profile);
+				}
+			}
+		}
+
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
 		private void addResourceAdapter(String deploymentName, String rarName) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
 
 	        try {
+	        	addProfileNode(builder);	        	
 	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.setOperationName("add"); 
@@ -341,7 +357,10 @@ public class AdminFactory {
 			if (!this.domainMode) {
 				return null;
 			}
-			return getChildNodeNames(null, "profile").get(0);
+			if (this.profileName == null) {
+				this.profileName = getChildNodeNames(null, "profile").get(0);
+			}
+			return this.profileName;
 		}		
 		
 		@Override
@@ -368,12 +387,7 @@ public class AdminFactory {
 	        ModelNode request;
 	        try {
 	        	
-	        	if (this.domainMode) {
-	        		String profile = getProfileName();
-	        		if (profile != null) {
-	        			builder.addNode("profile",profile);
-	        		}
-	        	}
+	        	addProfileNode(builder);
 	        	
 	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$	        		
@@ -446,20 +460,25 @@ public class AdminFactory {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
 			
-			boolean deleted = deleteDS(deployedName, false, "datasources", "data-source");
+			boolean deleted = deleteDS(deployedName,"datasources", "data-source");
 			
 			// check xa connections
 			if (!deleted) {
-				deleted = deleteDS(deployedName, false, "datasources", "xa-data-source");
+				deleted = deleteDS(deployedName,"datasources", "xa-data-source");
 			}
 			
 			// check connection factories
 			if (!deleted) {
 				Map<String, String> raDSMap = getResourceAdapterDataSources();
+				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
 				String rarName = raDSMap.get(deployedName);
 				if (rarName != null) {
-					deleted = deleteDS(rarName, true, "resource-adapters", "resource-adapter", deployedName);	
+					deleted = deleteDS(rarName,"resource-adapters", "resource-adapter", deployedName);	
 				}
+			}
+			
+			if (!deleted) {
+				throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
 		}
 
@@ -477,23 +496,15 @@ public class AdminFactory {
 			return deployedName;
 		}		
 
-		private boolean deleteDS(String deployedName, boolean connFactory, String... subsystem) throws AdminProcessingException {
+		private boolean deleteDS(String deployedName, String... subsystem) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
-
+	        
 	        try {
-	        	if (this.domainMode) {
-	        		String profile = getProfileName();
-	        		if (profile != null) {
-	        			builder.addNode("profile",profile);
-	        		}
-	        	}
+	        	addProfileNode(builder);
 	        	
 	            builder.addNode("subsystem", subsystem[0]); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode(subsystem[1], deployedName);
-	            if (connFactory) {
-	            	builder.addNode("connection-definitions", subsystem[2]);
-	            }
 	            builder.setOperationName("remove"); 
 	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
@@ -505,10 +516,10 @@ public class AdminFactory {
 	            if (!Util.isSuccess(outcome)) {
 	                return false;
 	            }
-	            return true;
 	        } catch (IOException e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70009, e, e.getMessage());
 	        }
+	        return true;
 		}
 
 		@Override
@@ -688,51 +699,56 @@ public class AdminFactory {
 			HashMap<String, String> datasourceNames = new HashMap<String, String>();
 			Set<String> resourceAdapters = getDeployedResourceAdapterNames();
 			for (String resource:resourceAdapters) {
-				DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-				try {
-				    builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-				    builder.addNode("resource-adapter", resource); //$NON-NLS-1$ //$NON-NLS-2$
-				    builder.setOperationName("read-resource"); 
-				    ModelNode request = builder.buildRequest();
-				    
-				    ModelNode outcome = this.connection.execute(request);
-				    if (Util.isSuccess(outcome)) {
-				    	if (outcome.hasDefined("result")) {
-				    		ModelNode result = outcome.get("result");
-				        	if (result.hasDefined("connection-definitions")) {
-				        		List<ModelNode> connDefs = result.get("connection-definitions").asList();
-				        		for (ModelNode conn:connDefs) {
-				        			Iterator<String> it = conn.keys().iterator();
-				        			if (it.hasNext()) {
-				        				datasourceNames.put(it.next(), resource);
-				        			}
-				        		}
-				        	}
-				    	}
-				    }
-				} catch (OperationFormatException e) {
-				     throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
-				} catch (IOException e) {
-					 throw new AdminProcessingException(AdminPlugin.Event.TEIID70017, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70017));
-				}
+				getResourceAdpaterConnections(datasourceNames, resource);
 			}
 			return datasourceNames;
 		}
+
+		private void getResourceAdpaterConnections(HashMap<String, String> datasourceNames, String rarName) throws AdminProcessingException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+			try {
+	        	addProfileNode(builder);				
+			    builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
+			    builder.addNode("resource-adapter", rarName); //$NON-NLS-1$ //$NON-NLS-2$
+			    builder.setOperationName("read-resource"); 
+			    ModelNode request = builder.buildRequest();
+			    
+			    ModelNode outcome = this.connection.execute(request);
+			    if (Util.isSuccess(outcome)) {
+			    	if (outcome.hasDefined("result")) {
+			    		ModelNode result = outcome.get("result");
+			        	if (result.hasDefined("connection-definitions")) {
+			        		List<ModelNode> connDefs = result.get("connection-definitions").asList();
+			        		for (ModelNode conn:connDefs) {
+			        			Iterator<String> it = conn.keys().iterator();
+			        			if (it.hasNext()) {
+			        				datasourceNames.put(it.next(), rarName);
+			        			}
+			        		}
+			        	}
+			    	}
+			    }
+			} catch (OperationFormatException e) {
+			     throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
+			} catch (IOException e) {
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70017, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70017));
+			}
+		}
 		
 		/**
-		 * This will get all deplyed RAR names
+		 * This will get all deployed RAR names
 		 * /subsystem=resource-adapters:read-children-names(child-type=resource-adapter)
 		 * @return
 		 * @throws AdminException
 		 */
-		private Set<String> getDeployedResourceAdapterNames() throws AdminException {
+		private Set<String> getDeployedResourceAdapterNames() throws AdminProcessingException {
 			Set<String> templates = new HashSet<String>();
 			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
 	        return templates;					
 		}
 
 		// :read-children-names(child-type=deployment)
-		private Set<String> getAvailableResourceAdapterNames() throws AdminException {
+		private Set<String> getAvailableResourceAdapterNames() throws AdminProcessingException {
 			List<String> deployments = getChildNodeNames(null, "deployment");
 			Set<String> templates = new HashSet<String>();
             for (String deployment:deployments) {
@@ -744,7 +760,7 @@ public class AdminFactory {
 		}
 
 		@Override
-		public Set<String> getDataSourceTemplateNames() throws AdminException {
+		public Set<String> getDataSourceTemplateNames() throws AdminProcessingException {
 			Set<String> templates = new HashSet<String>();
 			templates.addAll(getInstalledJDBCDrivers());
 			templates.addAll(getAvailableResourceAdapterNames());
@@ -752,7 +768,7 @@ public class AdminFactory {
 		}
 		
 		@Override
-		public Collection<? extends WorkerPoolStatistics> getWorkerPoolStats() throws AdminException {
+		public Collection<? extends WorkerPoolStatistics> getWorkerPoolStats() throws AdminProcessingException {
 			final ModelNode request = buildRequest("teiid", "workerpool-statistics");//$NON-NLS-1$
 			if (request != null) {
 		        try {
@@ -769,7 +785,7 @@ public class AdminFactory {
 
 		
 		@Override
-		public void cancelRequest(String sessionId, long executionId) throws AdminException {
+		public void cancelRequest(String sessionId, long executionId) throws AdminProcessingException {
 			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
 			if (request == null) {
 				return;
@@ -845,12 +861,7 @@ public class AdminFactory {
 				Set<String> resourceAdapters = getAvailableResourceAdapterNames();
 	        	if (resourceAdapters.contains(templateName)) {
 	        		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-		        	if (this.domainMode) {
-		        		String profile = getProfileName();
-		        		if (profile != null) {
-		        			builder.addNode("profile",profile);
-		        		}
-		        	}	        		
+		        	addProfileNode(builder);	        		
 		            builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
 		            builder.setOperationName("read-rar-description"); //$NON-NLS-1$
 		            builder.addProperty("rar-name", templateName);
@@ -1080,12 +1091,7 @@ public class AdminFactory {
 	        final ModelNode request;
 	        try {
 	        	if (subsystem != null) {
-		        	if (this.domainMode) {
-		        		String profile = getProfileName();
-		        		if (profile != null) {
-		        			builder.addNode("profile",profile);
-		        		}
-		        	}	        		        	
+		        	addProfileNode(builder);	        		        	
 		            builder.addNode("subsystem", subsystem); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
 	            builder.setOperationName(operationName); 

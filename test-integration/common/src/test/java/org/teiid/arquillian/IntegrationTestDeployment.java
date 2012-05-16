@@ -107,7 +107,7 @@ public class IntegrationTestDeployment {
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
 		System.out.println(translators);
-		assertEquals(29, translators.size());
+		assertEquals(30, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -428,6 +428,29 @@ public class IntegrationTestDeployment {
 		}		
 	}
 	
+	@Test
+	public void testCreateConnectionFactory() throws Exception{
+		String deployedName = "wsOne";
+		
+		assertFalse(admin.getDataSourceNames().contains(deployedName));
+		
+		Properties p = new Properties();
+		p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
+		p.setProperty("EndPoint", "{endpoint}");
+		admin.createDataSource(deployedName, "teiid-connector-ws.rar", p);
+		
+		assertTrue(admin.getDataSourceNames().contains(deployedName));
+		
+		admin.deleteDataSource(deployedName);
+		
+		assertFalse(admin.getDataSourceNames().contains(deployedName));
+		
+		admin.createDataSource(deployedName, "teiid-connector-ws.rar", p);
+		
+		assertTrue(admin.getDataSourceNames().contains(deployedName));
+		
+		admin.deleteDataSource(deployedName);
+	}
 	
 	
 }
