@@ -136,13 +136,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     }
                     case NodeConstants.Types.GROUP:
                     {
-                    	if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
-                        	SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-                        	FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);
-                        	NodeEditor.removeChildNode(critNode.getParent(), critNode);
-                            sourceNode.getFirstChild().addAsParent(critNode);
-                        	moved = true;
-                    	}
+                    	moved = pushAcrossGroupBy(sourceNode, critNode, metadata, true);
                     }
                 }
                 
@@ -155,6 +149,29 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		}
 
 		return plan;
+	}
+
+	boolean pushAcrossGroupBy(PlanNode sourceNode,
+			PlanNode critNode, QueryMetadataInterface metadata, boolean inPlan)
+			throws QueryPlannerException {
+		boolean moved = false;
+		if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
+			SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+			FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);
+			if (inPlan) {
+				NodeEditor.removeChildNode(critNode.getParent(), critNode);
+			    sourceNode.getFirstChild().addAsParent(critNode);
+			}
+			moved = true;
+			if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
+				PlanNode accessNode = NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS);
+				if (accessNode != null) {
+					markDependent(critNode, accessNode);
+					moved = false; //terminal position
+				}
+			}
+		}
+		return moved;
 	}
 
 	private PlanNode findOriginatingNode(QueryMetadataInterface metadata,
@@ -302,7 +319,8 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			currentNode = path.pop();
             
 			// Look for situations where we don't allow SELECT to be pushed
-			if(currentNode.getType() == NodeConstants.Types.ACCESS) {
+			switch (currentNode.getType()) {
+			case NodeConstants.Types.ACCESS:
                 try {
                     if (!RuleRaiseAccess.canRaiseOverSelect(currentNode, metadata, capFinder, critNode, null)) {
                         return currentNode;
@@ -311,17 +329,16 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     	satisfyAccessPatterns(critNode, currentNode);
                     }
 
-                    if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
-                        //once a dependent crit node is pushed, don't bother pushing it further into the command
-                        //dependent access node will use this as an assumption for where dependent sets can appear in the command
-                        critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
-                        currentNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+                    if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET) 
+                    		&& NodeEditor.findNodePreOrder(currentNode.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE) == null) {
+                        markDependent(critNode, currentNode);
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
                     throw new QueryPlannerException(e, QueryPlugin.Util.getString("ERR.015.004.0020", currentNode.getGroups())); //$NON-NLS-1$
 				}
-			} else if(currentNode.getType() == NodeConstants.Types.JOIN) {
+				break;
+			case NodeConstants.Types.JOIN:
 				//pushing below a join is not necessary under an access node
 				if (this.createdNodes == null && NodeEditor.findParent(currentNode, NodeConstants.Types.ACCESS) != null) {
 					return currentNode;
@@ -343,12 +360,23 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 }  
             
                 satisfyAccessPatterns(critNode, currentNode);
-            } else if (FrameUtil.isOrderedOrStrictLimit(currentNode)) {
-                return currentNode;
-            }
+				break;
+			default:
+				if (FrameUtil.isOrderedOrStrictLimit(currentNode)) {
+					return currentNode;
+	            }					
+			}
 		}
-
 		return sourceNode;
+	}
+
+	private void markDependent(PlanNode critNode, PlanNode accessNode) {
+		//once a dependent crit node is pushed, don't bother pushing it further into the command
+		//dependent access node will use this as an assumption for where dependent sets can appear in the command
+		critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
+		if (createdNodes == null) {
+			accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+		}
 	}
 
 	boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata)

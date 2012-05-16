@@ -393,11 +393,13 @@ public class RelationalPlanner {
         if (hints.hasRelationalProc) {
             rules.push(RuleConstants.PLAN_PROCEDURES);
         }
+        if (hints.hasJoin) {
+        	rules.push(RuleConstants.CHOOSE_DEPENDENT);
+        }
         if(hints.hasAggregates) {
             rules.push(new RulePushAggregates(idGenerator));
         }
         if(hints.hasJoin) {
-        	rules.push(RuleConstants.CHOOSE_DEPENDENT);
             rules.push(RuleConstants.CHOOSE_JOIN_STRATEGY);
             rules.push(RuleConstants.RAISE_ACCESS);
             //after planning the joins, let the criteria be pushed back into place

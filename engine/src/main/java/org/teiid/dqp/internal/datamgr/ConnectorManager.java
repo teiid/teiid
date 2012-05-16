@@ -264,10 +264,9 @@ public class ConnectorManager  {
 		return this.executionFactory;
     }
     
-	public void setExecutionFactory(ExecutionFactory<Object, Object> ef) {
-		this.executionFactory = ef;
+	public void setExecutionFactory(ExecutionFactory<?, ?> ef) {
+		this.executionFactory = (ExecutionFactory<Object, Object>) ef;
 	}
-    
     
     /**
      * Get the ConnectionFactory object required by this manager
