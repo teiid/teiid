@@ -258,9 +258,9 @@
                 </security-domain>
                 <security-domain name="teiid-security" cache-type="default">
                     <authentication>
-                        <login-module code="UsersRoles" flag="required">
-                            <module-option name="usersProperties" value="${jboss.domain.config.dir}/teiid-security-users.properties"/>
-                            <module-option name="rolesProperties" value="${jboss.domain.config.dir}/teiid-security-roles.properties"/>
+                        <login-module code="org.jboss.security.auth.spi.UsersRolesLoginModule" flag="required">
+                            <module-option name="usersProperties" value="${jboss.server.config.dir}/teiid-security-users.properties"/>
+                            <module-option name="rolesProperties" value="${jboss.server.config.dir}/teiid-security-roles.properties"/>
                         </login-module>
                     </authentication>
                 </security-domain>                
