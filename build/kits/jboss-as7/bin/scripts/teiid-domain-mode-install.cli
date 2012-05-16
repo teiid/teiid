@@ -13,7 +13,7 @@ connect
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset/eviction=EVICTION:add(max-entries=1024, strategy=LRU)
 
 /profile=ha/subsystem=security/security-domain=teiid-security:add(cache-type=default)
-/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add(login-modules=[{"code"=>"UserRoles", "flag"=>"required", "module-options"=>[("userProperties"=>"teiid-security-user.properties"), ("rolesProperties"=>"teiid-security-roles.properties")]}]) 
+/profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add(login-modules=[{"code"=>"org.jboss.security.auth.spi.UsersRolesLoginModule", "flag"=>"required", "module-options"=>[("usersProperties"=>"${jboss.domain.config.dir}/teiid-security-users.properties"), ("rolesProperties"=>"${jboss.domain.config.dir}/teiid-security-roles.properties")]}]) 
 /profile=ha/subsystem=threads/bounded-queue-thread-pool=teiid-async:add(name=teiid-async, max-threads=4, queue-length=100)
 
 /profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache)
