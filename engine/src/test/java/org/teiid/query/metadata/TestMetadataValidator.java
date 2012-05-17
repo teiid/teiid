@@ -64,7 +64,7 @@ public class TestMetadataValidator {
 		
 		DDLMetadataRepository repo = new DDLMetadataRepository();
 		MetadataFactory mf = new MetadataFactory("myVDB",1, modelName, TestDDLParser.getDataTypes(), new Properties(), ddl);
-		mf.setPhysical(physical);
+		mf.getSchema().setPhysical(physical);
 		repo.loadMetadata(mf, null, null);
 		mf.mergeInto(store);	
 		return model;
@@ -276,7 +276,7 @@ public class TestMetadataValidator {
 		vdb.addModel(model);
 		
 		MetadataFactory mf = new MetadataFactory("myVDB",1, "xmlstuff", TestDDLParser.getDataTypes(), new Properties(), null);
-		mf.setPhysical(false);
+		mf.getSchema().setPhysical(false);
 		
 		Table t = mf.addTable("xmldoctable");
 		t.setTableType(Table.Type.Document);

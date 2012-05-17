@@ -315,8 +315,7 @@ public class RecordFactory {
         model.setPrimaryMetamodelUri(getObjectValue(tokens.get(tokenIndex++)));
 
         // The next token are the supports flags
-        char[] supportFlags = (tokens.get(tokenIndex++)).toCharArray();
-        model.setVisible(getBooleanValue(supportFlags[0]));
+        tokens.get(tokenIndex++);
 
 		// The next tokens are footer values - the footer will contain the version number for the index record
 		setRecordFooterValues(model, tokens, tokenIndex);

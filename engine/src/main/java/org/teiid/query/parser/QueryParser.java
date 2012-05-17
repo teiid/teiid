@@ -351,7 +351,7 @@ public class QueryParser {
     public void parseDDL(MetadataFactory factory, String ddl) throws ParseException {
     	getSqlParser(ddl).parseMetadata(factory);
     	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
-    	for (FunctionMethod functionMethod : factory.getFunctions().values()) {
+    	for (FunctionMethod functionMethod : factory.getSchema().getFunctions().values()) {
 			if (!functions.add(functionMethod)) {
 				throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
 			}

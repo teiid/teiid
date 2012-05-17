@@ -230,9 +230,9 @@ public class CapabilitiesUtil {
         //technically the other functions are scoped to SYS or their function model, but that's 
         //not formally part of their metadata yet
         Schema schema = function.getFunctionDescriptor().getMethod().getParent();
-        if (schema == null) {
+        if (schema == null || !schema.isPhysical()) {
             // Find capabilities
-            if (!caps.supportsFunction(function.getFunctionDescriptor().getName())) {
+            if (!caps.supportsFunction(function.getFunctionDescriptor().getMethod().getFullName())) {
                 return false;
             }
             if (FunctionLibrary.isConvert(function)) {

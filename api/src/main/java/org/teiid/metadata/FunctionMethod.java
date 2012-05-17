@@ -147,31 +147,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
     }
 
     /**
-     * Return name of method
-     * @return Name
-     */
-    public String getName() {
-        return super.getName();
-    }
-    
-    /**
-     * Set name of method
-     * @param name Name
-     */
-    public void setName(String name) { 
-        super.setName(name);
-    }
-    
-    @Override
-	public String getFullName() {
-    	if (this.category != null) {
-    		return this.category + NAME_DELIM_CHAR + getName();
-    	}
-		return getName(); 
-	}
-    
-    
-    /**
      * Get description of method
      * @return Description
      */

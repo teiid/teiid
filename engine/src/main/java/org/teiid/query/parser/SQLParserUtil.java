@@ -525,8 +525,8 @@ public class SQLParserUtil {
 		}
 		
 		FunctionMethod.convertExtensionMetadata(proc, method);
-		factory.addFunction(method);
-		factory.getProcedures().remove(proc.getName());
+		factory.getSchema().addFunction(method);
+		factory.getSchema().getProcedures().remove(proc.getName());
 	}
     
     void setProcedureOptions(Procedure proc) {
@@ -555,7 +555,7 @@ public class SQLParserUtil {
 	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {
 		GroupSymbol group = trigger.getTarget();
 		
-		Table table = schema.getTable(group.getName());
+		Table table = schema.getSchema().getTable(group.getName());
 		if (trigger.getEvent().equals(Table.TriggerEvent.INSERT)) {
 			table.setInsertPlan(trigger.getDefinition().toString());
 		}

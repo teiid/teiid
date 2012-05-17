@@ -4110,7 +4110,7 @@ void createNameSpace(MetadataFactory factory) :
  */
 CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo info) :
 {
-	boolean virtual = false;
+	boolean virtual = true;
 	boolean function = false;
 	Procedure proc = null;
 	String procName = null;
@@ -4119,7 +4119,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
     ParsedDataType returnDataType = null;    
 }
 {
-	<CREATE> [<VIRTUAL> {virtual = true;}] (<PROCEDURE> | <FUNCTION> {function = true;})
+	<CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}] (<PROCEDURE> | <FUNCTION> {function = true;})
 	//the below is optional beacuse to allow the designer based metadata
 	(	procName = id()
 		{
@@ -4151,8 +4151,15 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 				proc.setQueryPlan("CREATE VIRTUAL PROCEDURE "+asBlock(stmt).toString());
 			}
 			
-			if (virtual && !function && stmt == null){
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.virtual_proc_def", procName));
+			if (!function) {
+				if (virtual && stmt == null){
+					throw new ParseException(QueryPlugin.Util.getString("SQLParser.virtual_proc_def", procName));
+				}
+				if (!virtual && stmt != null){
+					throw new ParseException(QueryPlugin.Util.getString("SQLParser.foreign_proc_def", procName));
+				}
+			} else if (stmt != null) {
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
 			}
 			
 	        if (returnDataType != null){

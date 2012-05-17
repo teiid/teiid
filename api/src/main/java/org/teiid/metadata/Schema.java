@@ -33,7 +33,6 @@ public class Schema extends AbstractMetadataRecord {
 	private static final long serialVersionUID = -5113742472848113008L;
 
 	private boolean physical = true;
-    private boolean isVisible = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     
     private Map<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
@@ -107,10 +106,6 @@ public class Schema extends AbstractMetadataRecord {
         return primaryMetamodelUri;
     }
 
-    public boolean isVisible() {
-        return isVisible;
-    }
-
     public boolean isPhysical() {
         return physical;
     }
@@ -122,13 +117,6 @@ public class Schema extends AbstractMetadataRecord {
         primaryMetamodelUri = string;
     }
 
-    /**
-     * @param b
-     */
-    public void setVisible(boolean b) {
-        isVisible = b;
-    }
-    
     public void setPhysical(boolean physical) {
 		this.physical = physical;
 	}

@@ -167,7 +167,7 @@ public class TestDynamicImportedMetaData {
     
     @Test
     public void testDDLMetadata() throws Exception {
-    	String ddl = "CREATE PROCEDURE getTextFiles(IN pathAndPattern varchar) RETURNS (file clob, filpath string) OPTIONS(UUID 'uuid')";
+    	String ddl = "CREATE FOREIGN PROCEDURE getTextFiles(IN pathAndPattern varchar) RETURNS (file clob, filpath string) OPTIONS(UUID 'uuid')";
     	MetadataFactory mf = createMetadataFactory("MarketData", new Properties());
     	QueryParser.getQueryParser().parseDDL(mf, ddl);
     	MetadataStore ms = mf.asMetadataStore();

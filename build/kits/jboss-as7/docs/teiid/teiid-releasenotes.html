@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} is the first Teiid release compatible with JBoss AS 7.x. 
+<P>Teiid ${project.version} adds metadata and integration features. 
 
 <H2>Overview</H2>
 <UL>
@@ -26,30 +26,6 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
-  <LI><B>DDL Based View Definitions</B> - Define virtual tables, procedures and functions for Dynamic VDBs using DDL.
-  <LI><B>MetadataRepository</B> - Pluggable metadata facility for any VDB and models inside it.
-  <LI><B>CallableStatement Named Parameters</B> - you can now use CallableStatement named parameter get/set methods.  
-  <LI><B>New Translator capabilities</B>
-    <UL>
-      <LI>translators may indicate which convert functions they support
-      <LI>restrict non-join comparisons to only literals.
-      <LI>return ReusableExecution instances for processing nodes that issue multiple queries.
-      <LI>translators may indicate support for dependent join handling 
-    </UL>
-  <LI><B>Continuous Asynch Queries</B> to process plans in a streamed window fashion the TeiidStatement/TeiidPreparedStatement methods now take a RequestOptions object to specify continuous mode.  See the Client and Developers Guides for more.
-  <LI><B>Texttable selectors</B> - can be used to selectively parse only record lines matching a given selector string.  Selectors may also be used for column values to join data from other records positionally.
-  <LI><B>Enhanced Comparison Support</B> - see the Admin Guide more.
-    <UL>
-      <LI><B>Comparable LOBs</B> - the system property org.teiid.comparableLobs can be set to use CLOB and BLOB values in comparison/sorting/grouping operations.
-      <LI><B>Padded Comparison</B> - the system property org.teiid.padSpace can be set to effectively right pad strings to the same length for comparison.
-      <LI><B>Collation Support</B> - the system property org.teiid.collationLocale can be set to use a different collation than the Java UTF-16 default.
-    </UL>
-  <LI><B>VARBINARY type support</B> - the Teiid VARBINARY type can now be used to support source BINARY and VARBINARY types.
-  <LI><B>Greenplum Translator</B> - for use with the Greenplum database.
-  <LI><B>Enhanced parse/format pushdown</B> - added more built-in support and extension points for parse/format function pushdown.  Added parse/format timestamp handling for SQLServer, Sybase, Oracle, and PostgreSQL.
-  <LI><B>User Defined Aggregates</B> - user defined aggregate functions can be defined via extension metadata, DDL, or connector metadata. 
-  <LI><B>SET PAYLOAD statement</B> - SET PAYLOAD can be used to set a name value pair on a session scoped payload that will be sent with requests.
-  <LI><B>ENCRYPT REQUESTS</B> - encryptRequests may be used as a connection/datasource property when not using SSL to indicate that request messgaes and any associated payload should be encrypted.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -62,7 +38,11 @@
 
 <h4>from 8.0</h4>
 <ul>
-  <li>org.teiid.metadata.Schema holds FunctionMethods by uuid rather than name to accommodate overriden method signatures.
+  <li>org.teiid.metadata.Schema holds FunctionMethods by uuid rather than name to accommodate overridden method signatures.
+  <li>MetadataFactory no longer extends Schema.  Use the MetadataFactory.getSchema method to get the target Schema.
+  <li>DDL created VIRTUAL pushdown functions should be referenced in the ExecutionFactory.getSupportedFunctions by their full <schema>.<function> name.
+  <li>DDL functions/procedures defined without the VIRTUAL keyword are by default VIRTUAL.  Use the FOREIGN keyword to indicate that they are source specific.
+  <li>FunctionMethod.getFullName returns the proper schema, not category quailified name.
 <ul>
 
 <h4>from 7.x</h4>

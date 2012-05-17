@@ -34,8 +34,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.validator.ValidatorReport;
 
@@ -57,7 +57,7 @@ public class TestDDLParser {
 						"e6 varchar index default 'hello')\n" +
 						"OPTIONS (CARDINALITY 12, UUID 'uuid2',  UPDATABLE 'true', FOO 'BAR', ANNOTATION 'Test Table')";
 				
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -133,7 +133,7 @@ public class TestDDLParser {
 	public void testMultiKeyPK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT PRIMARY KEY (e1, e2))";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -145,7 +145,7 @@ public class TestDDLParser {
 	@Test
 	public void testOptionsKey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT UNIQUE (e1) OPTIONS (CUSTOM_PROP 'VALUE'))";
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -160,7 +160,7 @@ public class TestDDLParser {
 				" CONSTRAINT PRIMARY KEY (e1, e2), INDEX(e2, e3), ACCESSPATTERN(e1), UNIQUE(e1)," +
 				" ACCESSPATTERN(e2, e3))";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -179,7 +179,7 @@ public class TestDDLParser {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT " +
 				"ACCESSPATTERN(e1), UNIQUE(e1), ACCESSPATTERN(e2, e3))";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -191,19 +191,14 @@ public class TestDDLParser {
 		assertEquals(table.getColumns().subList(1, 3), table.getAccessPatterns().get(1).getColumns());
 	}	
 	
-	@Test
+	@Test(expected=ParseException.class)
 	public void testWrongPrimarykey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, PRIMARY KEY (e3))";
 
-		try {
-			MetadataStore mds = new MetadataStore();
-			MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
-			parser.parseDDL(mf, ddl);
-			mf.mergeInto(mds);
-			fail("should fail to find e3 as the column");
-		} catch(ParseException e) {
-			
-		}
+		MetadataStore mds = new MetadataStore();
+		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf, ddl);
+		mf.mergeInto(mds);
 	}	
 
 	@Test
@@ -212,7 +207,7 @@ public class TestDDLParser {
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT " +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
 		
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		assertEquals(2, tableMap.size());
 		
@@ -232,7 +227,7 @@ public class TestDDLParser {
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
 		
 		MetadataFactory s = helpParse(ddl, "model");
-		Map<String, Table> tableMap = s.getTables();	
+		Map<String, Table> tableMap = s.getSchema().getTables();	
 		assertEquals(2, tableMap.size());
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -263,7 +258,7 @@ public class TestDDLParser {
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
 		
 		MetadataFactory s = helpParse(ddl, "model");
-		Map<String, Table> tableMap = s.getTables();	
+		Map<String, Table> tableMap = s.getSchema().getTables();	
 		assertEquals(2, tableMap.size());
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -336,14 +331,10 @@ public class TestDDLParser {
 	
 	@Test
 	public void testViewWithoutColumns() throws Exception {
-		try {
-			MetadataStore mds = new MetadataStore();			
-			MetadataFactory mf = new MetadataFactory(null, 1, "VM1", getDataTypes(), new Properties(), null); 
-			parser.parseDDL(mf,"CREATE VIEW V1 AS SELECT * FROM PM1.G1");			
-			mf.mergeInto(mds);
-		} catch(ParseException e) {
-			fail(e.getMessage());
-		}
+		MetadataStore mds = new MetadataStore();			
+		MetadataFactory mf = new MetadataFactory(null, 1, "VM1", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf,"CREATE VIEW V1 AS SELECT * FROM PM1.G1");			
+		mf.mergeInto(mds);
 	}	
 	
 	@Test
@@ -351,7 +342,7 @@ public class TestDDLParser {
 		String ddl = "CREATE VIEW V1 AS SELECT * FROM PM1.G1 " +
 				"CREATE PROCEDURE FOO(P1 integer) RETURNS (e1 integer, e2 varchar) AS SELECT * FROM PM1.G1;";
 		
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();
 		Table table = tableMap.get("V1");
 		assertNotNull(table);
@@ -379,7 +370,7 @@ public class TestDDLParser {
 				"	                text string PATH 'text') tweet;" + 
 				"                CREATE VIEW Tweet AS select * FROM twitterview.getTweets;";
 		
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();
 		Table table = tableMap.get("Tweet");
 		assertNotNull(table);
@@ -394,7 +385,7 @@ public class TestDDLParser {
 	public void testView() throws Exception {
 		String ddl = "CREATE View G1( e1 integer, e2 varchar) OPTIONS (CARDINALITY 12) AS select e1, e2 from foo.bar";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		
 		Table table = tableMap.get("G1");
@@ -405,9 +396,9 @@ public class TestDDLParser {
 	
 	@Test
 	public void testPushdownFunctionNoArgs() throws Exception {
-		String ddl = "CREATE FUNCTION SourceFunc() RETURNS integer OPTIONS (UUID 'hello world')";
+		String ddl = "CREATE FOREIGN FUNCTION SourceFunc() RETURNS integer OPTIONS (UUID 'hello world')";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		
 		FunctionMethod fm = s.getFunction("hello world");
 		assertNotNull(fm);
@@ -439,7 +430,7 @@ public class TestDDLParser {
 				"OPTIONS(CATEGORY 'misc', DETERMINISM 'DETERMINISTIC', " +
 				"\"NULL-ON-NULL\" 'true', JAVA_CLASS 'foo', JAVA_METHOD 'bar', RANDOM 'any', UUID 'x')";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		
 		FunctionMethod fm = s.getFunction("x");
 		assertNotNull(fm);
@@ -465,7 +456,7 @@ public class TestDDLParser {
 		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(flag boolean, msg varchar) RETURNS varchar " +
 				"OPTIONS(CATEGORY 'misc', AGGREGATE 'true', \"allows-distinct\" 'true', UUID 'y')";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		
 		FunctionMethod fm = s.getFunction("y");
 		assertNotNull(fm);
@@ -488,7 +479,25 @@ public class TestDDLParser {
 	public void testVarArgs() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar options (varargs 'true', UUID 'z')";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
+		
+		FunctionMethod fm = s.getFunction("z");	
+		assertTrue( fm.getInputParameters().get(0).isVarArg());
+	}
+	
+	@Test(expected=ParseException.class) public void testInvalidFunctionBody() throws Exception {
+		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		
+		FunctionMethod fm = s.getFunction("z");	
+		assertTrue( fm.getInputParameters().get(0).isVarArg());
+	}
+	
+	@Test(expected=ParseException.class) public void testInvalidProcedurenBody() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
+
+		Schema s = helpParse(ddl, "model").getSchema();
 		
 		FunctionMethod fm = s.getFunction("z");	
 		assertTrue( fm.getInputParameters().get(0).isVarArg());
@@ -501,7 +510,7 @@ public class TestDDLParser {
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2') " +
 				"AS BEGIN select * from foo; END";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		
 		Procedure proc = s.getProcedure("myProc");
 		assertNotNull(proc);
@@ -550,7 +559,7 @@ public class TestDDLParser {
 						"END;" +
 						"CREATE View G2( e1 integer, e2 varchar) AS select * from foo;";
 
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();
 		
 		assertTrue("Table not found", tableMap.containsKey("G1"));
@@ -560,11 +569,11 @@ public class TestDDLParser {
 	
 	@Test
 	public void testSourceProcedure() throws Exception {
-		String ddl = "CREATE PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
 				"RETURNS (r1 varchar, r2 decimal)" +
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');";
 		
-		Schema s = helpParse(ddl, "model");
+		Schema s = helpParse(ddl, "model").getSchema();
 		
 		Procedure proc = s.getProcedure("myProc");
 		assertNotNull(proc);
@@ -613,9 +622,9 @@ public class TestDDLParser {
 		assertEquals("http://teiid.org", mds.getNamespaces().get("teiid"));
 	}		
 
-	private MetadataFactory helpParse(String ddl, String model) throws ParseException {
+	public static MetadataFactory helpParse(String ddl, String model) throws ParseException {
 		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
-		parser.parseDDL(mf, ddl);
+		QueryParser.getQueryParser().parseDDL(mf, ddl);
 		return mf;
 	}
 	

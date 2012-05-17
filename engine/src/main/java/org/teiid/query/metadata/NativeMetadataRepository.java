@@ -24,6 +24,7 @@ package org.teiid.query.metadata;
 import javax.resource.ResourceException;
 
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
@@ -62,12 +63,12 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
-		validateMetadata(factory);
+		validateMetadata(factory.getSchema());
 		
 		super.loadMetadata(factory, executionFactory, connectionFactory);		
 	}
 	
-    private void validateMetadata(MetadataFactory schema) throws TranslatorException {
+    private void validateMetadata(Schema schema) throws TranslatorException {
     	for (Table t : schema.getTables().values()) {
 			if (t.getColumns() == null || t.getColumns().size() == 0) {
 				throw new TranslatorException(QueryPlugin.Event.TEIID30580, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30580, t.getFullName())); 

@@ -44,7 +44,7 @@ public class IndexMetadataRepository extends BaseMetadataRepository {
 			if (this.idxStore.getSchema(factory.getName()) == null) {
 				throw new TranslatorException(RuntimeMetadataPlugin.Util.gs(RuntimeMetadataPlugin.Event.TEIID80004, factory.getName()));
 			}
-			factory.mergeFrom(this.idxStore.getSchema(factory.getName()));
+			factory.setSchema(this.idxStore.getSchema(factory.getName()));
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}

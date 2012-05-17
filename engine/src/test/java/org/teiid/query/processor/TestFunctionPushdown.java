@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
@@ -35,6 +37,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -109,6 +112,37 @@ public class TestFunctionPushdown {
         
         helpPlan(sql, metadata, null, capFinder, 
                                       new String[] {}, ComparisonMode.FAILED_PLANNING); //$NON-NLS-1$ 
+	}
+	
+	@Test public void testDDLMetadata() throws Exception {
+		String ddl = "CREATE VIRTUAL FUNCTION SourceFunc(msg varchar) RETURNS varchar " +
+				"OPTIONS(CATEGORY 'misc', DETERMINISM 'DETERMINISTIC', " +
+				"\"NULL-ON-NULL\" 'true', JAVA_CLASS '"+TestFunctionPushdown.class.getName()+"', JAVA_METHOD 'sourceFunc');" +
+				"CREATE VIEW X (Y varchar) as SELECT e1 from pm1.g1;";
+
+		MetadataFactory mf = TestDDLParser.helpParse(ddl, "model");
+		mf.getSchema().setPhysical(false);
+		MetadataStore ms = mf.asMetadataStore();
+		ms.merge(RealMetadataFactory.example1Cached().getMetadataStore());
+		
+		QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(ms, "example1");
+		
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport("model.SourceFunc", true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        helpPlan("select sourceFunc(y) from x", metadata, null, capFinder, 
+                new String[] {"SELECT sourceFunc(g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$         
+
+        caps.setFunctionSupport("model.SourceFunc", false);
+        
+        helpPlan("select sourceFunc(y) from x", metadata, null, capFinder, 
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$         
+	}
+	
+	public static String sourceFunc(String msg) {
+		return msg;
 	}
 	
 }

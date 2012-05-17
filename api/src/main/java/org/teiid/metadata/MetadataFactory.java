@@ -24,7 +24,6 @@ package org.teiid.metadata;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ import org.teiid.translator.TypeFacility;
  * TODO: add support for datatype import
  * TODO: add support for unique constraints
  */
-public class MetadataFactory extends Schema {
+public class MetadataFactory {
 	private static final long serialVersionUID = 8590341087771685630L;
 	
 	private String vdbName;
@@ -53,13 +52,14 @@ public class MetadataFactory extends Schema {
 	private Map<String, String> namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	private String rawMetadata;
 	private Properties importProperties;
+	private Schema schema = new Schema();
 	
 	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> dataTypes, Properties importProperties, String rawMetadata) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.dataTypes = dataTypes;
-		setName(schemaName);
-		setUUID(this);	
+		schema.setName(schemaName);
+		setUUID(schema);	
 		this.importProperties = importProperties;
 		this.rawMetadata = rawMetadata;
 	}
@@ -75,6 +75,14 @@ public class MetadataFactory extends Schema {
 	protected void setUUID(AbstractMetadataRecord record) {
 		record.setUUID("mmuuid:" +UUID.randomUUID()); //$NON-NLS-1$
 	}
+	
+	public String getName() {
+		return this.schema.getName();
+	}
+	
+	public Schema getSchema() {
+		return this.schema;
+	}
 
 	/**
 	 * Add a table with the given name to the model.  
@@ -87,7 +95,7 @@ public class MetadataFactory extends Schema {
 		table.setTableType(Table.Type.Table);
 		table.setName(name);
 		setUUID(table);
-		addTable(table);
+		schema.addTable(table);
 		return table;
 	}
 	
@@ -246,7 +254,7 @@ public class MetadataFactory extends Schema {
 		procedure.setName(name);
 		setUUID(procedure);
 		procedure.setParameters(new LinkedList<ProcedureParameter>());
-		addProcedure(procedure);
+		schema.addProcedure(procedure);
 		return procedure;
 	}
 	
@@ -317,7 +325,7 @@ public class MetadataFactory extends Schema {
 		FunctionMethod function = new FunctionMethod();
 		function.setName(name);
 		setUUID(function);
-		addFunction(function);
+		schema.addFunction(function);
 		return function;
 	}
 	
@@ -334,7 +342,7 @@ public class MetadataFactory extends Schema {
 	}
 	
 	public void mergeInto (MetadataStore store) {
-		store.addSchema(this);
+		store.addSchema(this.schema);
 		store.addDataTypes(this.dataTypes.values());
 		store.addNamespaces(this.namespaces);
 	}
@@ -344,25 +352,9 @@ public class MetadataFactory extends Schema {
 		mergeInto(store);
 		return store;
 	}
-
-	public void mergeFrom(Schema schema) {
-		setName(schema.getName());
-		setUUID(schema.getUUID());
-		setPhysical(schema.isPhysical());
-		setProperties(schema.getProperties());
-		setVisible(schema.isVisible());
-		setAnnotation(schema.getAnnotation());
-		
-		for (Table t:schema.getTables().values()) {
-			addTable(t);
-		}
-		for (Procedure p: schema.getProcedures().values()) {
-			addProcedure(p);
-		}
-		for (FunctionMethod fm:schema.getFunctions().values()) {
-			addFunction(fm);
-		}
-		setProperties(new LinkedHashMap<String, String>(schema.getProperties()));
+	
+	public void setSchema(Schema schema) {
+		this.schema = schema;
 	}
 
 	public Map<String, Datatype> getDataTypes() {
