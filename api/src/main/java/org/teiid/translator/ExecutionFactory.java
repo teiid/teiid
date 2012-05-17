@@ -731,11 +731,11 @@ public class ExecutionFactory<F, C> {
 	}
 	
     /**
-     * Get the integer value representing the number of values allowed in an IN criteria
-     * in the WHERE clause of a query
-     * @since 5.0
+     * Get the integer value representing the max number of dependent IN predicates.
+     * This may be used to split a single dependent value via OR, or multiple dependent values
+     * via AND.
      */
-	@TranslatorProperty(display="Max number of dependent values across all IN predicates", advanced=true)
+	@TranslatorProperty(display="Max number of dependent IN predicates", advanced=true)
 	public int getMaxDependentInPredicates() {
 		return maxDependentInPredicates;
 	}
