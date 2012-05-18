@@ -134,7 +134,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     // resultSet object produced by execute methods on the statement.
     protected volatile ResultSetImpl resultSet;
 
-    private List<Exception> serverWarnings;
+    private List<Throwable> serverWarnings;
 
     // the per-execution security payload
     private Serializable payload;
@@ -783,12 +783,12 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         return this.updateCounts[0];
     }
 
-    protected void accumulateWarnings(List<Exception> serverWarnings) {
+    protected void accumulateWarnings(List<Throwable> serverWarnings) {
     	if (serverWarnings == null || serverWarnings.isEmpty()) {
     		return;
     	}
     	if (this.serverWarnings == null) {
-    		this.serverWarnings = new ArrayList<Exception>();
+    		this.serverWarnings = new ArrayList<Throwable>();
     	}
     	this.serverWarnings.addAll(serverWarnings);
     }

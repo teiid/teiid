@@ -158,7 +158,7 @@ public class ResultsMessage implements Externalizable {
     /**
      * @return
      */
-    public List getWarnings() {
+    public List<Throwable> getWarnings() {
         return warnings;
     }
 

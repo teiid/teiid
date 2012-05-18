@@ -25,6 +25,7 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.sql.ResultSet;
+import java.sql.SQLWarning;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -57,6 +58,30 @@ public class TestStatement {
 		statement.addBatch("delete from table"); //$NON-NLS-1$
 		statement.addBatch("delete from table1"); //$NON-NLS-1$
 		assertTrue(Arrays.equals(new int[] {1, 2}, statement.executeBatch()));
+	}
+	
+	@Test public void testWarnings() throws Exception {
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		DQP dqp = Mockito.mock(DQP.class);
+		ResultsFuture<ResultsMessage> results = new ResultsFuture<ResultsMessage>(); 
+		Mockito.stub(dqp.executeRequest(Mockito.anyLong(), (RequestMessage)Mockito.anyObject())).toReturn(results);
+		ResultsMessage rm = new ResultsMessage();
+		rm.setResults(new List<?>[] {Arrays.asList(1)});
+		rm.setWarnings(Arrays.asList(new Throwable()));
+		rm.setColumnNames(new String[] {"expr1"});
+		rm.setDataTypes(new String[] {"string"});
+		results.getResultsReceiver().receiveResults(rm);
+		Mockito.stub(conn.getDQP()).toReturn(dqp);
+		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY) {
+			protected java.util.TimeZone getServerTimeZone() throws java.sql.SQLException {
+				return null;
+			}
+		};
+		statement.execute("select 'a'");
+		assertNotNull(statement.getResultSet());
+		SQLWarning warning = statement.getWarnings();
+		assertNotNull(warning);
+		assertNull(warning.getNextWarning());
 	}
 	
 	@Test public void testSetStatement() throws Exception {

@@ -119,7 +119,6 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
         this.requestID = statement.getCurrentRequestID();
         this.cursorType = statement.getResultSetType();
         this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
-        accumulateWarnings(resultsMsg);
         this.serverTimeZone = statement.getServerTimeZone();
 		if (metadata == null) {
 			MetadataProvider provider = new DeferredMetadataProvider(resultsMsg.getColumnNames(),

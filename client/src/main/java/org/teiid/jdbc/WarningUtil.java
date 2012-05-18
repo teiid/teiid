@@ -70,13 +70,13 @@ class WarningUtil {
      * @param exceptions List of exceptions from server
      * @return Chain of SQLWarning corresponding to list of exceptions
      */
-    static SQLWarning convertWarnings(List<Exception> exceptions) {
+    static SQLWarning convertWarnings(List<Throwable> exceptions) {
         if(exceptions == null || exceptions.size() == 0) {
             return null;    
         }
         SQLWarning warning = null;
 
-        for (Exception ex : exceptions) {
+        for (Throwable ex : exceptions) {
             SQLWarning newWarning = createWarning(ex); 
             if(warning == null) {
                 warning = newWarning;
