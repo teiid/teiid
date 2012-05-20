@@ -34,6 +34,7 @@ import org.teiid.core.TeiidException;
 
 public class SourceWarning extends TeiidException {
 	
+	private static final StackTraceElement[] EMPTY_STACK_TRACE = new StackTraceElement[0];
 	private String modelName = "UNKNOWN"; // variable stores the name of the model for the atomic query //$NON-NLS-1$
 	private String connectorBindingName = "UNKNOWN"; // variable stores name of the connector binding //$NON-NLS-1$
 	private boolean partialResults;
@@ -53,6 +54,7 @@ public class SourceWarning extends TeiidException {
 			this.connectorBindingName = connectorBinding;
 		}		
 		this.partialResults = partialResults;
+		this.setStackTrace(EMPTY_STACK_TRACE);
 	}
 	
 	/**
