@@ -32,6 +32,7 @@ import java.util.ListIterator;
 
 import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.PlanNode;
+import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
@@ -159,6 +160,10 @@ public class AnalysisRecord {
         return this.recordDebug;
     }
     
+    public void addAnnotation(String category, String annotation, String resolution, Priority priority) {
+    	addAnnotation(new Annotation(category, annotation, resolution, priority));
+    }
+    
     /**
      * Add an annotation.  This can only be used if {@link #recordAnnotations}
      * returns true.
@@ -166,6 +171,9 @@ public class AnalysisRecord {
      */
     public void addAnnotation(Annotation annotation) {
         this.annotations.add(annotation);
+        if (this.recordDebug()) {
+        	this.println(annotation.getPriority() + " " + annotation.getCategory() + " " + annotation.getAnnotation() + " - " + annotation.getResolution()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        }
     }
     
     /**

@@ -168,7 +168,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
             // Walk to end of the chain and change recurse root
             while(recurseRoot.getType() == NodeConstants.Types.SELECT) {
             	// Look for opportunities to replace with a semi-join 
-            	recurseRoot = planMergeJoin(recurseRoot, root, analysisRecord);
+            	recurseRoot = planMergeJoin(recurseRoot, root);
             	if (root.getChildCount() == 0) {
             		root = recurseRoot.getFirstChild();
             		if (root.getType() != NodeConstants.Types.SELECT) {
@@ -240,10 +240,8 @@ public final class RuleMergeCriteria implements OptimizerRule {
      * IN ( ) / SOME ( )
      * 
      * and replace with a semi join
-     * 
-     * TODO: it would be good to have a hint to force
      */
-	private PlanNode planMergeJoin(PlanNode current, PlanNode root, AnalysisRecord analysisRecord) throws QueryMetadataException,
+	private PlanNode planMergeJoin(PlanNode current, PlanNode root) throws QueryMetadataException,
 			TeiidComponentException {
 		float sourceCost = NewCalculateCostUtil.computeCostForTree(current.getFirstChild(), metadata);
 		Criteria crit = (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA);
@@ -270,7 +268,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 
 		if (!planQuery(leftGroups, false, plannedResult)) {
 			if (plannedResult.mergeJoin && analysisRecord != null && analysisRecord.recordAnnotations()) {
-				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "could not plan as a merge join: " + crit, "ignoring hint", Priority.MEDIUM)); //$NON-NLS-1$ //$NON-NLS-2$
+				this.analysisRecord.addAnnotation(new Annotation(Annotation.HINTS, "Could not plan as a merge join: " + crit, "ignoring MJ hint", Priority.HIGH)); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			return current;
 		}
@@ -287,9 +285,6 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			List<Expression> projectedSymbols = LanguageObject.Util.deepClone(plannedResult.query.getProjectedSymbols(), Expression.class);
 			//NOTE: we could tap into the relationalplanner at a lower level to get this in a plan node form,
 			//the major benefit would be to reuse the dependent join planning logic if possible.
-			if (analysisRecord != null && analysisRecord.recordDebug()) {
-				analysisRecord.println("Attempting to plan " + crit + " as a merge join"); //$NON-NLS-1$ //$NON-NLS-2$
-			}
 			RelationalPlan subPlan = (RelationalPlan)QueryOptimizer.optimizePlan(plannedResult.query, metadata, idGenerator, capFinder, analysisRecord, context);
 			Number planCardinality = subPlan.getRootNode().getEstimateNodeCardinality();
             
@@ -301,12 +296,14 @@ public final class RuleMergeCriteria implements OptimizerRule {
 	            		|| (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost * originalCardinality.floatValue() < planCardinality.floatValue() / (100 * Math.log(Math.max(4, sourceCost))))) {
 	            	//bail-out if both are unknown or the new plan is too large
 	            	if (analysisRecord != null && analysisRecord.recordDebug()) {
-	    				analysisRecord.println("Failed to use mege join, as the cost was not favorable.  Use the MJ hint to force."); //$NON-NLS-1$
+	            		current.recordDebugAnnotation("cost of merge join plan was not favorable", null, "semi merge join will not be used", analysisRecord, metadata); //$NON-NLS-1$ //$NON-NLS-2$
 	    			}
 	            	return current;
 	            }
 			}
             
+			current.recordDebugAnnotation("Conditions met (hint or cost)", null, "Converting to a semi merge join", analysisRecord, metadata); //$NON-NLS-1$ //$NON-NLS-2$
+			
             PlanNode semiJoin = NodeFactory.getNewNode(NodeConstants.Types.JOIN);
             semiJoin.addGroups(current.getGroups());
             semiJoin.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.MERGE);

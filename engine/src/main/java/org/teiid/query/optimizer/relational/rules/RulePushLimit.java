@@ -232,9 +232,7 @@ public class RulePushLimit implements OptimizerRule {
         Expression limit = (Expression)parentNode.getProperty(NodeConstants.Info.MAX_TUPLE_LIMIT);
         
         if (limit != null && !CapabilitiesUtil.supportsRowLimit(modelID, metadata, capFinder)) {
-        	if (analysisRecord != null && analysisRecord.recordDebug()) {
-            	analysisRecord.println("limit not supported by source " + metadata.getName(modelID)); //$NON-NLS-1$
-            }
+        	parentNode.recordDebugAnnotation("limit not supported by source", modelID, "limit node not pushed", analysisRecord, metadata); //$NON-NLS-1$ //$NON-NLS-2$
             return null;
         }
         

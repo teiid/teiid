@@ -144,13 +144,13 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {     
                 // If model supports the support constant parameter, then move access node
                 if(!CapabilitiesUtil.supportsSelectDistinct(modelID, metadata, capFinder)) {
-                	recordDebug("cannot push dupremove, since distinct is not supported by source", parentNode, record); //$NON-NLS-1$
+                	parentNode.recordDebugAnnotation("distinct is not supported by source", modelID, "cannot push dupremove", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
                 	return null;
                 }
                 
                 //TODO: this check is too specific the columns could be used in expressions that are comparable
                 if (!CapabilitiesUtil.checkElementsAreSearchable((List)NodeEditor.findNodePreOrder(parentNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
-                	recordDebug("cannot push dupremove, since not all columns are comparable at the source", parentNode, record); //$NON-NLS-1$
+                	parentNode.recordDebugAnnotation("not all columns are comparable at the source", modelID, "cannot push dupremove", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
                 	return null;
                 }
                 
@@ -310,12 +310,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         List<Expression> groupCols = (List<Expression>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
         if(!CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, capFinder)) {
-        	recordDebug("cannot push group by, since group by is not supported by source", groupNode, record); //$NON-NLS-1$
+        	groupNode.recordDebugAnnotation("group by is not supported by source", modelID, "cannot push group by", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
             return false;
         }
         if (CapabilitiesUtil.supports(Capability.QUERY_ONLY_SINGLE_TABLE_GROUP_BY, modelID, metadata, capFinder)
         		&& !NodeEditor.findAllNodes(groupNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE).isEmpty()) {
-        	recordDebug("cannot push group by, since joined group by is not supported by source", groupNode, record); //$NON-NLS-1$
+        	groupNode.recordDebugAnnotation("joined group by is not supported by source", modelID, "cannot push group by", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
         	return false;
         }
         if (groupCols != null) {
@@ -335,13 +335,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         return CapabilitiesUtil.checkElementsAreSearchable(groupCols, metadata, SupportConstants.Element.SEARCHABLE_COMPARE);
     }
 
-	private static void recordDebug(String message, PlanNode node, AnalysisRecord record) {
-		if (record != null && record.recordDebug()) {
-			record.println(message + " " + node.nodeToString()); //$NON-NLS-1$
-		}
-	}
-    
-    static boolean canRaiseOverSort(PlanNode accessNode,
+	static boolean canRaiseOverSort(PlanNode accessNode,
                                    QueryMetadataInterface metadata,
                                    CapabilitiesFinder capFinder,
                                    PlanNode parentNode, AnalysisRecord record, boolean compensateForUnrelated) throws QueryMetadataException,
@@ -421,7 +415,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         } 
         
         if (parentNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING) && !CapabilitiesUtil.supports(Capability.QUERY_HAVING, modelID, metadata, capFinder)) {
-        	recordDebug("cannot push having, since having is not supported by source", parentNode, record); //$NON-NLS-1$
+        	parentNode.recordDebugAnnotation("having is not supported by source", modelID, "cannot push having", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
         	return false;
         }
         

@@ -27,6 +27,8 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -649,9 +651,9 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     private void markInvalid(LanguageObject object, String reason) {
         this.valid = false;
         setAbort(true);
-        if (analysisRecord != null && analysisRecord.recordDebug()) {
+        if (analysisRecord != null && analysisRecord.recordAnnotations()) {
         	try {
-				analysisRecord.println(reason + " " + this.metadata.getName(this.modelID) + ": " + object); //$NON-NLS-1$ //$NON-NLS-2$
+        		analysisRecord.addAnnotation(Annotation.RELATIONAL_PLANNER, reason + " " + this.metadata.getName(this.modelID), object + " was not pushed", Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$
 			} catch (QueryMetadataException e) {
 			} catch (TeiidComponentException e) {
 			} 

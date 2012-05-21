@@ -35,6 +35,7 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.query.QueryPlugin;
@@ -482,11 +483,7 @@ public class XMLQueryPlanner {
                 
         ProcessorPlan plan = null;
         
-        boolean debug = planEnv.analysisRecord.recordDebug();
-        
-        if (debug) {
-            planEnv.analysisRecord.println("Attempting to create plan for staging table " + srcGroupName); //$NON-NLS-1$
-        }
+        boolean debug = planEnv.analysisRecord.recordAnnotations();
         
         try {
             // register with env
@@ -494,11 +491,15 @@ public class XMLQueryPlanner {
         } catch (QueryPlannerException e) {
             if (implicit) {
                 if (debug) {
-                    planEnv.analysisRecord.println("Failed to create plan for staging table " + srcGroupName + " due to " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
+                	planEnv.analysisRecord.addAnnotation("XML Planning", "Planning failded for staging otable " + srcGroupName + " due to " + e.getMessage(),  "Implicit staging table will not be used", Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
                 }
                 return false;
             } 
             throw e;
+        }
+        
+        if (debug) {
+            planEnv.analysisRecord.addAnnotation("XML Planning", "Planning succeeded for staging of " + srcGroupName, (implicit?"Implicit ":"") + "staging table will be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
         }
         
         int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;

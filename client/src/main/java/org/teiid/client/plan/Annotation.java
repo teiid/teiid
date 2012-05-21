@@ -35,6 +35,7 @@ public class Annotation implements Externalizable {
 	public static final String MATERIALIZED_VIEW = "Materialized View"; //$NON-NLS-1$
 	public static final String CACHED_PROCEDURE = "Cached Procedure"; //$NON-NLS-1$
     public static final String HINTS = "Hints"; //$NON-NLS-1$
+    public static final String RELATIONAL_PLANNER = "Relational Planner"; //$NON-NLS-1$
     
     public enum Priority {
 		LOW,

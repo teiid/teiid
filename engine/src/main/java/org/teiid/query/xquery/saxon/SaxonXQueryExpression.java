@@ -68,6 +68,7 @@ import net.sf.saxon.type.TypeHierarchy;
 import net.sf.saxon.value.SequenceType;
 
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -90,6 +91,7 @@ import org.teiid.translator.WSConnection.Util;
 @SuppressWarnings("serial")
 public class SaxonXQueryExpression {
 	
+	private static final String XQUERY_PLANNING = "XQuery Planning"; //$NON-NLS-1$
 	private static final String EMPTY_STRING = ""; //$NON-NLS-1$
 	static final String DEFAULT_PREFIX = "-"; //$NON-NLS-1$
 
@@ -237,8 +239,8 @@ public class SaxonXQueryExpression {
 		try {
 			streamingPath = StreamingUtils.getStreamingPath(xQueryString, namespaceMap);
 		} catch (IllegalArgumentException e) {
-			if (record.recordDebug()) {
-				record.println("Document streaming will not be used: " + e.getMessage()); //$NON-NLS-1$
+			if (record.recordAnnotations()) {
+				record.addAnnotation(XQUERY_PLANNING, "Invalid streaming path " + xQueryString + " "+ e.getMessage(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 		}
 		this.contextRoot = null;
@@ -253,16 +255,16 @@ public class SaxonXQueryExpression {
 		try {
 			parentRoot = map.getContextRoot();
 		} catch (IllegalStateException e) {
-			if (record.recordDebug()) {
-				record.println("Document projection will not be used, since multiple context item exist."); //$NON-NLS-1$
+			if (record.recordAnnotations()) {
+				record.addAnnotation(XQUERY_PLANNING, "Multiple context items exist " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			return;
 		}
 		if (parentRoot == null) {
 			//TODO: this seems like we could omit the context item altogether
 			//this.xQuery.usesContextItem() should also be false
-			if (record.recordDebug()) {
-				record.println("Document projection will not be used, since no context item reference was found in the XQuery"); //$NON-NLS-1$
+			if (record.recordAnnotations()) {
+				record.addAnnotation(XQUERY_PLANNING, "No context item reference was found in the XQuery " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			return;			
 		}
@@ -272,8 +274,8 @@ public class SaxonXQueryExpression {
 		if (!finalNodes.isEmpty()) {  
 			if (columns != null && !columns.isEmpty()) {
 				if (finalNodes.size() != 1) {
-					if (record.recordDebug()) {
-						record.println("Document projection will not be used, since multiple return items exist"); //$NON-NLS-1$
+					if (record.recordAnnotations()) {
+						record.addAnnotation(XQUERY_PLANNING, "multiple return items exist " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					return;	
 				} 
@@ -289,15 +291,18 @@ public class SaxonXQueryExpression {
 			}
 		} 
 		if (parentRoot.hasUnknownDependencies()) {
-			if (record.recordDebug()) {
-				record.println("Document projection will not be used since there are unknown dependencies (most likely a user defined function)."); //$NON-NLS-1$
+			if (record.recordAnnotations()) {
+				record.addAnnotation(XQUERY_PLANNING, "There are unknown dependencies (most likely a user defined function) in " + xQueryString, "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 	    	return;
 		}
-		if (record.recordDebug()) {
-			StringBuilder sb = new StringBuilder();
-	    	showArcs(sb, parentRoot, 0);
-	    	record.println("Using path filtering for XQuery context item: \n" + sb.toString()); //$NON-NLS-1$
+		if (record.recordAnnotations()) {
+			StringBuilder sb = null;
+			if (record.recordDebug()) {
+				sb = new StringBuilder();
+				showArcs(sb, parentRoot, 0);
+			}
+			record.addAnnotation(XQUERY_PLANNING, "Projection conditions met for " + xQueryString, "Document projection will be used" + (sb != null ? "\n" +sb.toString():""), Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		this.contextRoot = parentRoot;
 	}
@@ -331,8 +336,8 @@ public class SaxonXQueryExpression {
 	    	for (PathMapRoot root : subMap.getPathMapRoots()) {
 				if (root.getRootExpression() instanceof ContextItemExpression || root.getRootExpression() instanceof RootExpression) {
 					if (subContextRoot != null) {
-						if (record.recordDebug()) {
-							record.println("Document projection will not be used, since multiple context items exist in column path " + xmlColumn.getPath()); //$NON-NLS-1$
+						if (record.recordAnnotations()) {
+							record.addAnnotation(XQUERY_PLANNING, "Multiple context items exist in column path " + xmlColumn.getPath(), "Document projection will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						return null;
 					}
@@ -387,15 +392,15 @@ public class SaxonXQueryExpression {
 			if (ancestor) {
 				if (current.getTarget().isReturnable()) {
 					if (axis != Axis.NAMESPACE && axis != Axis.ATTRIBUTE) {
-						if (record.recordDebug()) {
-							record.println("Document streaming will not be used, since the column path contains an invalid reverse axis " + xmlColumn.getPath()); //$NON-NLS-1$
+						if (record.recordAnnotations()) {
+							record.addAnnotation(XQUERY_PLANNING, "The column path contains an invalid reverse axis " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						return false;
 					}
 				}
 				if (!isValidAncestorAxis[axis]) {
-					if (record.recordDebug()) {
-						record.println("Document streaming will not be used, since the column path contains an invalid reverse axis " + xmlColumn.getPath()); //$NON-NLS-1$
+					if (record.recordAnnotations()) {
+						record.addAnnotation(XQUERY_PLANNING, "The column path contains an invalid reverse axis " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					return false;
 				}
@@ -404,15 +409,15 @@ public class SaxonXQueryExpression {
 						|| axis == Axis.ANCESTOR
 						|| axis == Axis.ANCESTOR_OR_SELF) {
 					if (current.getTarget().isReturnable()) {
-						if (record.recordDebug()) {
-							record.println("Document streaming will not be used, since the column path contains an invalid reverse axis " + xmlColumn.getPath()); //$NON-NLS-1$
+						if (record.recordAnnotations()) {
+							record.addAnnotation(XQUERY_PLANNING, "The column path contains an invalid reverse axis " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 						}
 						return false;
 					}
 					ancestor = true; 
 				} else {
-					if (record.recordDebug()) {
-						record.println("Document streaming will not be used, since the column path may not reference an ancestor or subtree " + xmlColumn.getPath()); //$NON-NLS-1$
+					if (record.recordAnnotations()) {
+						record.addAnnotation(XQUERY_PLANNING, "The column path may not reference an ancestor or subtree " + xmlColumn.getPath(), "Document streaming will not be used", Priority.MEDIUM); //$NON-NLS-1$ //$NON-NLS-2$
 					}
 					return false;
 				}

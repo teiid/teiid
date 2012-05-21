@@ -161,10 +161,7 @@ public class RuleRemoveOptionalJoins implements
 		joinNode.removeChild(optionalNode);
 		joinNode.getFirstChild().setProperty(NodeConstants.Info.OUTPUT_COLS, joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS));
 		NodeEditor.removeChildNode(parentNode, joinNode);
-		if (record != null && record.recordDebug()) {
-			record.println("Removing join node since " + (isOptional?"it was marked as optional ":"it will not affect the results") + joinNode); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		}
-
+		joinNode.recordDebugAnnotation((isOptional?"node was marked as optional ":"node will not affect the results"), null, "Removing join node", record, null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 		while (parentNode.getType() != NodeConstants.Types.PROJECT) {
 			PlanNode current = parentNode;
 			parentNode = parentNode.getParent();

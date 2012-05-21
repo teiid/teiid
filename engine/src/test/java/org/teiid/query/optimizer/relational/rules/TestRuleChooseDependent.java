@@ -47,17 +47,7 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.From;
-import org.teiid.query.sql.lang.IsNullCriteria;
-import org.teiid.query.sql.lang.JoinType;
-import org.teiid.query.sql.lang.MatchCriteria;
-import org.teiid.query.sql.lang.NotCriteria;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -162,7 +152,7 @@ public class TestRuleChooseDependent {
         return query;                
     }
     
-    public void helpTestValidJoin(PlanNode joinNode, PlanNode accessNode, boolean expectedValid) {
+    public void helpTestValidJoin(PlanNode joinNode, PlanNode accessNode, boolean expectedValid) throws QueryMetadataException, TeiidComponentException {
         RuleChooseDependent rule = new RuleChooseDependent();
         RuleChooseJoinStrategy.chooseJoinStrategy(joinNode, metadata);
         boolean isValid = rule.isValidJoin(joinNode, accessNode, AnalysisRecord.createNonRecordingRecord());

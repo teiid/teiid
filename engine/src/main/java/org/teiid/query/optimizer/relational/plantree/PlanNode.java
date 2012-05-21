@@ -22,19 +22,14 @@
 
 package org.teiid.query.optimizer.relational.plantree;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.client.plan.Annotation;
+import org.teiid.client.plan.Annotation.Priority;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
@@ -54,6 +49,8 @@ public class PlanNode {
 
     /** The type of node, as defined by NodeConstants.Types. */
     private int type;
+    
+    private boolean modified;
 
     /** The parent of this node, null if root. */
     private PlanNode parent;
@@ -98,6 +95,7 @@ public class PlanNode {
     	if (this.parent != null) {
     		this.parent.children.remove(this);
     	}
+    	this.modified = true;
     	this.parent = parent;
     }
 
@@ -112,6 +110,7 @@ public class PlanNode {
     		childIter.remove();
     		child.parent = null;
     	}
+    	this.modified = true;
     	return childrenCopy;
     }
     
@@ -134,11 +133,13 @@ public class PlanNode {
     }
         
     public void addFirstChild(PlanNode child) {
+    	this.modified = true;
         this.children.addFirst(child);
         child.setParent(this);
     }
     
     public void addLastChild(PlanNode child) {
+    	this.modified = true;
         this.children.addLast(child);
         child.setParent(this);
     }
@@ -150,6 +151,7 @@ public class PlanNode {
     }
     
     public PlanNode removeFromParent() {
+    	this.modified = true;
     	PlanNode result = this.parent;
     	if (result != null) {
     		result.removeChild(this);
@@ -161,6 +163,7 @@ public class PlanNode {
         boolean result = this.children.remove(child);
         if (result) {
         	child.parent = null;
+        	modified = true;
         } 
         return result;
     }    
@@ -169,13 +172,18 @@ public class PlanNode {
         if(nodeProperties == null) {
             return null;
         }
-        return nodeProperties.get(propertyID);
+        Object result = nodeProperties.get(propertyID);
+        if (result != null) {
+        	modified = true;
+        }
+        return result;
     }
 
     public Object setProperty(NodeConstants.Info propertyID, Object value) {
         if(nodeProperties == null) {
             nodeProperties = new LinkedHashMap<NodeConstants.Info, Object>();
         }    
+        modified = true;
         return nodeProperties.put(propertyID, value);
     }
 
@@ -183,6 +191,7 @@ public class PlanNode {
         if(nodeProperties == null) {
             return null;
         }   
+        modified = true;
         return nodeProperties.remove(propertyID);
     }
     
@@ -210,10 +219,12 @@ public class PlanNode {
     }
     
     public void addGroup(GroupSymbol groupID) {
+    	modified = true;
         groups.add(groupID);
     }
 
     public void addGroups(Collection<GroupSymbol> newGroups) {
+    	modified = true;
         this.groups.addAll(newGroups);
     }
         
@@ -230,7 +241,7 @@ public class PlanNode {
      * @return String representing this node and all children under this node
      */
     public String toString() {
-        StringBuffer str = new StringBuffer();
+        StringBuilder str = new StringBuilder();
         getRecursiveString(str, 0);
         return str.toString();
     }
@@ -240,7 +251,7 @@ public class PlanNode {
      * @return String representing just this node
      */
     public String nodeToString() {
-        StringBuffer str = new StringBuffer();
+    	StringBuilder str = new StringBuilder();
         getNodeString(str);
         return str.toString();
     }
@@ -248,13 +259,13 @@ public class PlanNode {
     // Define a single tab
     private static final String TAB = "  "; //$NON-NLS-1$
     
-    private void setTab(StringBuffer str, int tabStop) {
+    private void setTab(StringBuilder str, int tabStop) {
         for(int i=0; i<tabStop; i++) {
             str.append(TAB);
         }            
     }
     
-    void getRecursiveString(StringBuffer str, int tabLevel) {
+    void getRecursiveString(StringBuilder str, int tabLevel) {
         setTab(str, tabLevel);
         getNodeString(str);
         str.append(")\n");  //$NON-NLS-1$
@@ -265,13 +276,20 @@ public class PlanNode {
         }        
     }
 
-    void getNodeString(StringBuffer str) {
+    void getNodeString(StringBuilder str) {
         str.append(NodeConstants.getNodeTypeString(this.type));
         str.append("(groups="); //$NON-NLS-1$
         str.append(this.groups);
-        if(nodeProperties != null) {
-            str.append(", props="); //$NON-NLS-1$
-            str.append(nodeProperties);
+        if (modified) {
+	        if(nodeProperties != null) {
+	            str.append(", props="); //$NON-NLS-1$
+	            String props = nodeProperties.toString();
+	            if (props.length() > 100000) {
+	            	props = props.substring(0, 100000) + "..."; //$NON-NLS-1$
+	            }
+	            str.append(props);
+	        }
+	        modified = false;
         }
     }
     
@@ -280,6 +298,7 @@ public class PlanNode {
     }
     
     public void replaceChild(PlanNode child, PlanNode replacement) {
+    	modified = true;
     	int i = this.children.indexOf(child);
     	this.children.set(i, replacement);
     	child.setParent(null);
@@ -292,6 +311,7 @@ public class PlanNode {
      * @param node
      */
     public void addAsParent(PlanNode node) {
+    	modified = true;
     	if (this.parent != null) {
         	this.parent.replaceChild(this, node);
     	}
@@ -394,6 +414,15 @@ public class PlanNode {
 			return -1f;
 		}
 		return cardinality;
+	}
+	
+	public void recordDebugAnnotation(String annotation, Object modelID, String resolution, AnalysisRecord record, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+		if (record != null && record.recordAnnotations()) {
+			boolean current = this.modified;
+			this.modified = true;
+			record.addAnnotation(Annotation.RELATIONAL_PLANNER, annotation + (modelID != null?" " + metadata.getModelID(modelID):""), resolution + " " + this.nodeToString(), Priority.LOW); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			this.modified = current;
+		}
 	}
         
 }
