@@ -152,5 +152,7 @@ public interface SessionService {
 	
 	Subject getSubjectInContext(String securityDomain);
 
-	public void clearSubjectInContext();
+	public void clearSubjectInContext(Object prevSecurityContext);
+	
+	Object getSecurityContextOnThread();
 }

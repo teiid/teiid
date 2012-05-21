@@ -22,7 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.security.Principal;
 import java.util.Map;
+
+import javax.security.auth.Subject;
 
 import org.mockito.Mockito;
 import org.teiid.adminapi.DataPolicy;
@@ -30,6 +33,7 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.security.SecurityHelper;
 
 import junit.framework.TestCase;
 
@@ -92,4 +96,65 @@ public class TestDQPWorkContext extends TestCase {
 		Map<String, DataPolicy> map = message.getAllowedDataPolicies();
 		assertEquals(1, map.size());
 	}
+	
+	public void testRestoreSecurityContext() {
+		final SecurityHelper sc = new SecurityHelper() {
+			Object mycontext = null;
+			
+			@Override
+			public boolean sameSubject(String securityDomain, Object context,	Subject subject) {
+				return mycontext == context;
+			}
+			@Override
+			public Subject getSubjectInContext(String securityDomain) {
+				return null;
+			}
+			@Override
+			public Object getSecurityContextOnThread() {
+				return this.mycontext;
+			}
+			@Override
+			public Object getSecurityContext(String securityDomain) {
+				return this.mycontext;
+			}
+			@Override
+			public Object createSecurityContext(String securityDomain, Principal p,Object credentials, Subject subject) {
+				return securityDomain+"SC"; //$NON-NLS-1$ 
+			}
+			@Override
+			public void clearSecurityContext(Object prevContext) {
+				this.mycontext = prevContext;
+			}
+			@Override
+			public boolean associateSecurityContext(Object context) {
+				this.mycontext = context;
+				return true;
+			}
+		};	
+		Object previousSC = sc.createSecurityContext("test", null, null, null); //$NON-NLS-1$
+		sc.associateSecurityContext(previousSC);
+		
+		DQPWorkContext message = new DQPWorkContext() {
+		    public Subject getSubject() {
+		    	return new Subject();
+		    }			
+		};
+		message.setSecurityHelper(sc);
+		message.setSession(Mockito.mock(SessionMetadata.class));
+		final String currentSC = "teiid-security-context"; //$NON-NLS-1$
+		Mockito.stub(message.getSession().getSecurityContext()).toReturn(currentSC);
+		
+		Runnable r = new Runnable() {
+			@Override
+			public void run() {
+				assertEquals(currentSC, sc.getSecurityContextOnThread());
+			}
+		};
+		
+		message.runInContext(r);
+		
+		assertEquals(previousSC, sc.getSecurityContextOnThread());
+	}	
+	
+	
 }

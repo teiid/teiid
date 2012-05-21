@@ -430,12 +430,17 @@ public class SessionServiceImpl implements SessionService {
 			principal = p;
 			break;
     	}
-    	return this.securityHelper.associateSecurityContext(securityDomain, this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
+    	return this.securityHelper.associateSecurityContext(this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
 	}
 	
 	@Override
 	public Subject getSubjectInContext(String securityDomain) {
 		return this.securityHelper.getSubjectInContext(securityDomain);
+	}
+	
+	@Override
+	public Object getSecurityContextOnThread() {
+		return this.securityHelper.getSecurityContextOnThread();
 	}
 	
 	public void setGssSecurityDomain(String domain) {
@@ -448,7 +453,7 @@ public class SessionServiceImpl implements SessionService {
 	}
 
 	@Override
-	public void clearSubjectInContext() {
-		this.securityHelper.clearSecurityContext(null);
+	public void clearSubjectInContext(Object previousSC) {
+		this.securityHelper.clearSecurityContext(previousSC);
 	}	
 }

@@ -227,12 +227,13 @@ public class DQPWorkContext implements Serializable {
 	
 	public void runInContext(final Runnable runnable) {
 		DQPWorkContext previous = DQPWorkContext.getWorkContext();
+		Object previousSC = getSecurityContextOnThread();
 		boolean associated = attachDQPWorkContext();
 		try {
 			runnable.run();
 		} finally {
 			if (associated) {
-				securityHelper.clearSecurityContext(this.getSecurityDomain());			
+				securityHelper.clearSecurityContext(previousSC);			
 			}
 			DQPWorkContext.releaseWorkContext();
 			if (previous != null) {
@@ -241,11 +242,18 @@ public class DQPWorkContext implements Serializable {
 		}
 	}
 
+	private Object getSecurityContextOnThread() {
+		if (securityHelper != null) {
+			return securityHelper.getSecurityContextOnThread();			
+		}
+		return null;		
+	}
+	
 	private boolean attachDQPWorkContext() {
 		DQPWorkContext.setWorkContext(this);
 		boolean associated = false;
 		if (securityHelper != null && this.getSubject() != null) {
-			associated = securityHelper.associateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
+			associated = securityHelper.associateSecurityContext(this.getSecurityContext());			
 		}
 		return associated;
 	}

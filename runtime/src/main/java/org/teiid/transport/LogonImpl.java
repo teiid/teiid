@@ -160,6 +160,7 @@ public class LogonImpl implements ILogon {
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
 		boolean assosiated = false;
+		Object previousSC = null;
 		try {
 			String securityDomain = service.getGssSecurityDomain();
 			if (securityDomain == null) {
@@ -175,6 +176,7 @@ public class LogonImpl implements ILogon {
 			}
 			
 			if (result.context.isEstablished()) {
+				previousSC = service.getSecurityContextOnThread();
 				assosiated = service.associateSubjectInContext(securityDomain, subject);
 			}
 			
@@ -192,7 +194,7 @@ public class LogonImpl implements ILogon {
 			throw new LogonException(e, RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$
 		} finally {
 			if (assosiated) {
-				this.service.clearSubjectInContext();
+				this.service.clearSubjectInContext(previousSC);
 			}
 		}
 	}
