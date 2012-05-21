@@ -24,15 +24,7 @@ package org.teiid.translator.jdbc;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -811,6 +803,19 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         	stmt.setBigDecimal(i, (BigDecimal)param);
             return;
         }
+        
+        if (useStreamsForLobs()) {
+        	if (param instanceof Blob) {
+        		Blob blob = (Blob)param;
+        		stmt.setBinaryStream(i, blob.getBinaryStream(), blob.length());
+        		return;
+        	}
+        	if (param instanceof Clob) {
+        		Clob clob = (Clob)param;
+        		stmt.setCharacterStream(i, clob.getCharacterStream(), clob.length());
+        		return;
+        	}
+        }
         //convert these the following to jdbc safe values
         if (TypeFacility.RUNTIME_TYPES.BIG_INTEGER.equals(paramType)) {
             param = new BigDecimal((BigInteger)param);
@@ -823,6 +828,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         }
         
         stmt.setObject(i, param, type);
+    }
+    
+    /**
+     * If streams should be used for Blob/Clob sets on {@link PreparedStatement}s
+     * @return
+     */
+    public boolean useStreamsForLobs() {
+    	return false;
     }
     
 	/**

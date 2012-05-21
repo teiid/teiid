@@ -449,6 +449,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     }
     
     @Override
+    public boolean useStreamsForLobs() {
+    	return true;
+    }
+    
+    @Override
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.HIGH;
     }
