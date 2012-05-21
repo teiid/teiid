@@ -24,7 +24,6 @@ package org.teiid.services;
 
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -387,20 +386,6 @@ public abstract class SessionServiceImpl implements SessionService {
 		this.dqp = dqp;
 	}
 	
-	@Override
-	public boolean associateSubjectInContext(String securityDomain, Subject subject) {
-    	Principal principal = null;
-    	for(Principal p:subject.getPrincipals()) {
-			principal = p;
-			break;
-    	}
-    	return this.securityHelper.associateSecurityContext(this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
-	}
-	
-	@Override
-	public Subject getSubjectInContext(String securityDomain) {
-		return this.securityHelper.getSubjectInContext(securityDomain);
-	}
 	
 	public void setGssSecurityDomain(String domain) {
 		this.gssSecurityDomain = domain;
@@ -410,12 +395,12 @@ public abstract class SessionServiceImpl implements SessionService {
 	public String getGssSecurityDomain(){
 		return this.gssSecurityDomain;
 	}
-
-	@Override
-	public void clearSubjectInContext() {
-		this.securityHelper.clearSecurityContext();
-	}	
 	
+	@Override
+	public SecurityHelper getSecurityHelper() {
+		return securityHelper;
+	}
+
     protected Collection<String> getDomainsForUser(List<String> domains, String username) {
     	// If username is null, return all domains
         if (username == null) {

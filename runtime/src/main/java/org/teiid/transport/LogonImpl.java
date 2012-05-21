@@ -22,6 +22,7 @@
 
 package org.teiid.transport;
 
+import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Properties;
@@ -53,6 +54,7 @@ import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 
 
 public class LogonImpl implements ILogon {
@@ -67,7 +69,7 @@ public class LogonImpl implements ILogon {
 
 	public LogonResult logon(Properties connProps) throws LogonException, TeiidComponentException, CommunicationException {
 		if (this.service.getGssSecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
-			Subject user = this.service.getSubjectInContext(this.service.getGssSecurityDomain());
+			Subject user = this.service.getSecurityHelper().getSubjectInContext(this.service.getGssSecurityDomain());
 			if (user == null) {
 				 throw new LogonException(RuntimePlugin.Event.TEIID40054, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40054));
 			}
@@ -79,7 +81,6 @@ public class LogonImpl implements ILogon {
 		}
 		return logon(connProps, null);
 	}
-	
 	
 	private LogonResult logon(Properties connProps, byte[] krb5ServiceTicket) throws LogonException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
@@ -158,6 +159,7 @@ public class LogonImpl implements ILogon {
 		
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
+		Object previous = null;
 		boolean associated = false;
 		try {
 			String securityDomain = service.getGssSecurityDomain();
@@ -174,7 +176,15 @@ public class LogonImpl implements ILogon {
 			}
 			
 			if (result.context.isEstablished()) {
-				associated = service.associateSubjectInContext(securityDomain, subject);
+				Principal principal = null;
+		    	for(Principal p:subject.getPrincipals()) {
+					principal = p;
+					break;
+		    	}
+		    	SecurityHelper securityHelper = service.getSecurityHelper();
+		    	Object securityContext = securityHelper.createSecurityContext(securityDomain, principal, null, subject);
+		    	previous = securityHelper.associateSecurityContext(securityContext);
+				associated = true;
 			}
 			
 			if (!result.context.isEstablished() || !createSession) {
@@ -192,7 +202,7 @@ public class LogonImpl implements ILogon {
 			 throw new LogonException(RuntimePlugin.Event.TEIID40061, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40061));
 		} finally {
 			if (associated) {
-				service.clearSubjectInContext();
+				service.getSecurityHelper().associateSecurityContext(previous);
 			}
 		}
 	}

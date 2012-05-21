@@ -28,7 +28,7 @@ import javax.security.auth.Subject;
 
 public interface SecurityHelper {
 	
-	boolean associateSecurityContext(Object context);
+	Object associateSecurityContext(Object context);
 	
 	void clearSecurityContext();
 	
