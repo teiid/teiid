@@ -99,13 +99,13 @@ public class JPAMetadataProcessor {
 		
 		// take a second swipe and add Foreign Keys
 		for (EntityType<?> entity:entities) {
-			Table t = mf.getTable(entity.getName());
+			Table t = mf.getSchema().getTable(entity.getName());
 			addForeignKeys(mf, model, entity, t);
 		}		
 	}
 
 	private Table addEntity(MetadataFactory mf, Metamodel model, EntityType<?> entity) throws TranslatorException {
-		Table table = mf.getTable(entity.getName());
+		Table table = mf.getSchema().getTable(entity.getName());
 		if (table == null) {			
 			table = mf.addTable(entity.getName());
 			table.setSupportsUpdate(true);
@@ -218,7 +218,7 @@ public class JPAMetadataProcessor {
 				
 				for (EntityType et:model.getEntities()) {
 					if (et.getJavaType().equals(pa.getElementType().getJavaType())) {
-						forignTable = mf.getTable(et.getName());
+						forignTable = mf.getSchema().getTable(et.getName());
 						break;
 					}
 				}
