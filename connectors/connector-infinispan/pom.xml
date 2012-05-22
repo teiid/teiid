@@ -8,6 +8,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
+    <!-- packaging>ear</packaging-->
     <name>Infinispan Connector</name>
     <description>This connector reads data from a Infinispan cache</description>
     <properties>
@@ -58,11 +59,14 @@
 			<artifactId>junit</artifactId>		
 			<version>4.4</version>
 			<scope>test</scope>
-		</dependency>           
+		</dependency>      
+		
+		     
         
     </dependencies>
     <build>
-        <plugins>
+
+        <plugins>     
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
@@ -73,77 +77,192 @@
                             <goal>jar</goal>
                         </goals>
                     </execution>
-                    <execution>
-                        <id>deploy_jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>lib</classifier>
-                        </configuration>
-                    </execution>
                 </executions>
             </plugin> 
-		    <plugin>
-		        <artifactId>maven-assembly-plugin</artifactId>
-		        <configuration>
-		         <finalName>infinispan</finalName>
-		            <descriptors>
-		                <descriptor>src/assembly/kit.xml</descriptor>
-		            </descriptors>
-		            <outputDirectory>target/distribution</outputDirectory>
-		            <workDirectory>target/assembly/work</workDirectory>
-		        </configuration>
-		        <executions>
-		            <execution>
-		                <id>make-assembly</id>
-		                <phase>package</phase>
-		                <goals>
-		                    <goal>attached</goal>
-		                </goals>
-		            </execution>
-		        </executions>
-		      </plugin>  
-
-      <!-- plugin>
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-ear-plugin</artifactId>
+	        <version>2.4</version>
+	        <configuration>
+	           <!-- uri>./target/connector-infinispan-${project.version}</uri-->
+	           <defaultJavaBundleDir></defaultJavaBundleDir>
+	           <generateApplicationXml>false</generateApplicationXml>
+	           <modules>                   
+	             <javaModule>
+		  	        <groupId>org.infinispan</groupId>
+	    		    <artifactId>infinispan-core</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	    		    <!--includeInApplicationXml>true</includeInApplicationXml-->
+	             </javaModule>
+	             <javaModule>
+		      		<groupId>org.infinispan</groupId>
+		      		<artifactId>infinispan-client-hotrod</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	             </javaModule> 
+	             <javaModule>
+		  	        <groupId>org.jboss.marshalling</groupId>
+	    		    <artifactId>jboss-marshalling-river</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	             </javaModule>
+	             <javaModule>
+		      		<groupId>org.jboss.marshalling</groupId>
+		      		<artifactId>jboss-marshalling</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	             </javaModule>    
+	              <javaModule>
+		  	        <groupId>org.jboss.logging</groupId>
+	    		    <artifactId>jboss-logging</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	             </javaModule>
+	             <javaModule>
+		      		<groupId>org.jboss.logmanager</groupId>
+		      		<artifactId>jboss-logmanager</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	             </javaModule>    
+	               <javaModule>
+		      		<groupId>commons-pool</groupId>
+		      		<artifactId>commons-pool</artifactId>
+	                <bundleDir>connector-infinispan.rar</bundleDir>
+	             </javaModule>                          
+	                <jarModule>
+	                   <groupId>antlr</groupId>
+	                   <artifactId>antlr</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule> 
+	   
+	                <jarModule>
+	                   <groupId>antlr</groupId>
+	                   <artifactId>antlr</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.hibernate</groupId>
+	                   <artifactId>hibernate-search</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                <jarModule>
+	                   <groupId>org.hibernate</groupId>
+	                   <artifactId>hibernate-commons-annotations</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.hibernate</groupId>
+	                   <artifactId>ejb3-persistence</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>   
+	                 <jarModule>
+	                   <groupId>org.hibernate</groupId>
+	                   <artifactId>hibernate-core </artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>                 
+	                 <jarModule>
+	                   <groupId>org.codehaus.woodstox</groupId>
+	                   <artifactId>woodstox-core-asl</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.codehaus.woodstox</groupId>
+	                   <artifactId>stax2-api </artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>                                 
+	                 <jarModule>
+	                   <groupId>commons-collections</groupId>
+	                   <artifactId>commons-collections</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>dom4j</groupId>
+	                   <artifactId>dom4j</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>xml-apis</groupId>
+	                   <artifactId>xml-apis</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.apache.lucene</groupId>
+	                   <artifactId>lucene-core</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.slf4j</groupId>
+	                   <artifactId>slf4j-api</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>hsqldb</groupId>
+	                   <artifactId>hsqldb</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.jgroups</groupId>
+	                   <artifactId>jgroups</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	  
+	                 <jarModule>
+	                   <groupId>org.jboss.spec.javax.transaction</groupId>
+	                   <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+	                   <groupId>org.rhq.helpers</groupId>
+	                   <artifactId>rhq-pluginAnnotations</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>
+	                 <jarModule>
+			  			<groupId>org.jboss.teiid.connectors</groupId>
+						<artifactId>translator-object</artifactId>
+	                   <excluded>true</excluded>
+	                </jarModule>                
+	          </modules>
+	          
+			  <jboss>
+			    <data-sources>
+			      <data-source>infinispan-ds.xml</data-source>
+			    </data-sources>
+			    
+				<loader-repository>
+				      org.teiid.resource.adapter:loader=teiid-infinispan.ear
+				      </loader-repository>
+					  <loader-repository-config> 
+					     java2ParentDelegation=false 
+				     </loader-repository-config> 
+			    
+			  </jboss>          
+	        </configuration>
+            <executions>
+                   <execution>
+                       <id>deploy-ear</id>
+                       <phase>install</phase>
+                       <goals>
+                           <goal>ear</goal>
+                       </goals>
+                   </execution>
+               </executions>
+	      </plugin>	
+	      
+ 	<plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-ear-plugin</artifactId>
-        <version>2.7</version>
-        <configuration>
-           <defaultJavaBundleDir>lib</defaultJavaBundleDir>
-           <modules>
-              <rarModule>
-             	 <bundleDir>/connector-infinispan.rar</bundleDir>
-             </rarModule>            
-             <javaModule>
-	  	        <groupId>org.infinispan</groupId>
-    		    <artifactId>infinispan-core</artifactId>
-    		    <includeInApplicationXml>true</includeInApplicationXml>
-             </javaModule>
-             <javaModule>
-	      		<groupId>org.infinispan</groupId>
-	      		<artifactId>infinispan-client-hotrod</artifactId>
-	      		<includeInApplicationXml>true</includeInApplicationXml>
-             </javaModule> 
-  
-          </modules>
-          
-		  <jboss>
-		    <data-sources>
-		      <data-source>src/kit/infinispan-ds.xml</data-source>
-		    </data-sources>
-		    
-			<loader-repository> 
-			      org.teiid.resource.adapter:loader=infinispan-jca.ear
-				  <loader-repository-config> 
-				     java2ParentDelegation=false 
-			     </loader-repository-config> 
-			</loader-repository>
-		    
-		  </jboss>          
-        </configuration>
-      </plugin -->		                   
+        <artifactId>maven-install-plugin</artifactId>
+        <executions>
+            <execution>
+                <id>install-ear</id>
+                <phase>install</phase>
+                <goals>
+                    <goal>install-file</goal>
+                </goals>
+                <configuration>
+                    <packaging>ear</packaging>
+                    <artifactId>${project.artifactId}</artifactId>
+                    <groupId>${project.groupId}</groupId>
+                    <version>${project.version}</version>
+                    <file>${project.build.directory}/${project.artifactId}-${project.version}.ear</file>
+                </configuration>
+            </execution>
+        </executions>
+    </plugin>	      	                   
         </plugins>
     </build>
 </project>

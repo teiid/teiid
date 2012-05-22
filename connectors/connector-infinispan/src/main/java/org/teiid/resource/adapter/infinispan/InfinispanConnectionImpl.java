@@ -1,5 +1,5 @@
 /*
-sele * JBoss, Home of Professional Open Source.
+ * JBoss, Home of Professional Open Source.
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
@@ -25,6 +25,7 @@ package org.teiid.resource.adapter.infinispan;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +34,14 @@ import javax.resource.ResourceException;
 
 import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.resource.adapter.custom.spi.BasicConnection;
-import org.teiid.translator.object.ObjectCacheConnection;
+import org.teiid.translator.object.SearchCriterion;
+import org.teiid.translator.object.infinispan.InfinispanCacheConnection;
 
 
 /** 
  * Represents an implementation of the connection to an Infinispan cache. 
  */
-public class InfinispanConnectionImpl extends BasicConnection implements ObjectCacheConnection { 
+public class InfinispanConnectionImpl extends BasicConnection implements InfinispanCacheConnection { 
 
 	private InfinispanManagedConnectionFactory config;
 	
@@ -72,55 +74,85 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	public boolean isAlive() {
 		return (config == null ? false : config.getRemoteCacheManager().isStarted());
 	}
-
-	public List<Object> get(List<Object> args, String cacheName, Class<?> rootNodeType) throws Exception {
+	
+    @Override
+	public List<Object> get(SearchCriterion criterion, String cacheName, Class<?> rootNodeType) throws Exception {
+		List<Object> results = null;
 		
+		if (! criterion.isRootTableInSelect() ) {
+			return Collections.EMPTY_LIST;
+		}
+    	
 		RemoteCache<Object, Object> cache = config.getRemoteCacheManager().getCache(cacheName);
 		
-    	List<Object> results = null;
-    	if (args == null || args.size() == 0) {
+		if (criterion.getOperator() == SearchCriterion.Operator.ALL) {
     		Map<Object, Object> c = cache.getBulk();
     		results = new ArrayList<Object>();
     		for (Iterator it = c.keySet().iterator(); it.hasNext();) {
     			Object v = cache.get(it.next());
-    			if (v != null && v.getClass().equals(rootNodeType)) {
-    				addValue(v, results);
-    			}
-    		}
+    			addValue(v, results, rootNodeType);	
 
-    	} else {
-	    	results = new ArrayList<Object>(args.size());
-			for (Iterator<Object> it=args.iterator(); it.hasNext();) {
+    		}	
+    		
+    		return results;
+		}
+		
+		if (criterion.getAddCondition() != null) {
+			results = get(criterion.getAddCondition(), cacheName, rootNodeType);
+		}
+		
+		if (results == null) {
+	    	results = new ArrayList<Object>();
+		}
+		
+		if (criterion.getOperator().equals(SearchCriterion.Operator.EQUALS)) {
+		
+				Object v = cache.get(criterion.getValue());
+				if (v != null) {
+					addValue(v, results, rootNodeType);	
+				}
+    	} else if (criterion.getOperator().equals(SearchCriterion.Operator.IN)) {
+    		
+    		List<Object> parms = (List) criterion.getValue();
+			for (Iterator<Object> it=parms.iterator(); it.hasNext();) {
 				Object arg = it.next();
 				Object v = cache.get(arg);
-				if (v != null && v.getClass().equals(rootNodeType)) {
-    				addValue(v, results);    			}				
+				if (v != null) {
+					addValue(v, results, rootNodeType);	
+				}
 			}
-    	}
+    	
+    	} 
+//    	else if (criterion.getOperator().equals(SearchCriterion.Operator.LIKE)) {
+//    	// not supported yet
+//    	}
     	
     	return results;
 		
 	}
 	
-	private void addValue(Object value, List<Object> results) {
-		if (value.getClass().isArray()) {
-			List<Object> listRows = Arrays.asList((Object[]) value);
-			results.addAll(listRows);
-			return;
+	private void addValue(Object value, List<Object> results, Class rootNodeType) {
+		if (value != null && value.getClass().equals(rootNodeType)) {
+			
+			if (value.getClass().isArray()) {
+				List<Object> listRows = Arrays.asList((Object[]) value);
+				results.addAll(listRows);
+				return;
+			}
+			
+			if (value instanceof Collection) {
+				results.addAll((Collection) value); 
+				return;
+			} 
+			
+			if (value instanceof Map) {
+				Map<?,Object> mapRows = (Map) value;
+				results.addAll(mapRows.values());
+				return;
+			}
+			
+			results.add(value);
 		}
-		
-		if (value instanceof Collection) {
-			results.addAll((Collection) value); 
-			return;
-		} 
-		
-		if (value instanceof Map) {
-			Map<?,Object> mapRows = (Map) value;
-			results.addAll(mapRows.values());
-			return;
-		}
-		
-		results.add(value);
 
 	}
 	

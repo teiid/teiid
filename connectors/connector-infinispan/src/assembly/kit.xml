@@ -9,7 +9,7 @@
   in order to build a complete set of artifacts to be deployed to a JBoss AS server
  -->
   
-  <id>jca.ear</id>
+  <id>infinispan.ear</id>
    
   <formats>
 	<format>dir</format>
@@ -36,7 +36,6 @@
             <include>org.jboss.logmanager:jboss-logmanager</include>
             <include>org.jboss.marshalling:jboss-marshalling</include>
             <include>org.jboss.marshalling:jboss-marshalling-river</include>
-
 
           </includes>
     

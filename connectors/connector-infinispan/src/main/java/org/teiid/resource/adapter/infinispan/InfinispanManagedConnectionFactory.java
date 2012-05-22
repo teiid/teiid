@@ -27,6 +27,7 @@ import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.teiid.resource.adapter.custom.spi.BasicConnectionFactory;
 import org.teiid.resource.adapter.custom.spi.BasicManagedConnectionFactory;
 
+@SuppressWarnings("serial")
 public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private String remoteServerList;

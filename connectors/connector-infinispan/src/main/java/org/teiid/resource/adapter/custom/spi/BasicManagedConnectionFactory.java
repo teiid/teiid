@@ -52,7 +52,7 @@ public abstract class BasicManagedConnectionFactory implements ManagedConnection
 	public Object createConnectionFactory(ConnectionManager cm) throws ResourceException {
 		this.cf = createConnectionFactory();
 		return this.cf;
-		// return new WrappedConnectionFactory(this.cf, cm, this);
+	//	return new WrappedConnectionFactory(this.cf, cm, this);
 	}
 
 	@Override
