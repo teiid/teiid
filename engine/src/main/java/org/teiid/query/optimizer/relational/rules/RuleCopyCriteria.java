@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -44,6 +45,7 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
@@ -137,6 +139,10 @@ public final class RuleCopyCriteria implements OptimizerRule {
             return false;
         }
         
+        if (tgtCrit instanceof IsNullCriteria && ((IsNullCriteria)tgtCrit).isNegated()) {
+        	return false;
+        }
+        
         int endGroups = GroupsUsedByElementsVisitor.getGroups(tgtCrit).size();
         
         if (checkForGroupReduction) {
@@ -210,17 +216,23 @@ public final class RuleCopyCriteria implements OptimizerRule {
             
             Set<Criteria> toCopy = criteriaInfo[0];
             Set<Criteria> allCriteria = criteriaInfo[1];
-            
-            if (!toCopy.isEmpty()) {
-                Map<Expression, Expression> srcToTgt = buildElementMap(joinCrits);
-    
+
+            if (joinCrits != null && !joinCrits.isEmpty()) {
                 List<Criteria> newJoinCrits = new LinkedList<Criteria>();
-    
-                changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata);
+
+                //we don't want to continue discovery since that could be recursive
+                Map<Expression, Expression> srcToTgt = buildElementMap(joinCrits, node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)?null:newJoinCrits, combinedCriteria, metadata);
                 
-                srcToTgt = buildElementMap(allCriteria);
-                            
-                changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata);
+                changedTree |= !newJoinCrits.isEmpty();
+
+                if (!toCopy.isEmpty()) {
+                    
+                    changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata);
+                    
+                    srcToTgt = buildElementMap(allCriteria, null, null, metadata);
+                                
+                    changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata);
+                }
                 
                 joinCrits.addAll(newJoinCrits);
             }
@@ -345,11 +357,14 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * Construct a mapping of element symbol to value map based upon equality CompareCriteria in crits
      *  
      * @param crits
+     * @param newJoinCrits 
+     * @param metadata 
      * @return
      */
-    Map<Expression, Expression> buildElementMap(Collection<Criteria> crits) {
+    Map<Expression, Expression> buildElementMap(Collection<Criteria> crits, List<Criteria> newJoinCrits, Set<Criteria> allCriteria, QueryMetadataInterface metadata) {
         Map<Expression, Expression> srcToTgt = null;
-        for (Criteria theCrit : crits) {
+        for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
+        	Criteria theCrit = iter.next();
             if (theCrit instanceof IsNullCriteria) {
             	IsNullCriteria isNull = (IsNullCriteria)theCrit;
             	if (!isNull.isNegated() && isNull.getExpression() instanceof ElementSymbol) {
@@ -368,8 +383,16 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 if (srcToTgt == null) {
                     srcToTgt = new HashMap<Expression, Expression>();
             	}
-                srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
-                srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
+                Expression oldValue = srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
+                boolean removed = false;
+                if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getRightExpression(), metadata)) {
+                	iter.remove();
+                	removed = true;
+                }
+                oldValue = srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
+                if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getLeftExpression(), metadata) && !removed) {
+                	iter.remove();
+                }
             }
         }
         if (srcToTgt == null) {
@@ -377,6 +400,34 @@ public final class RuleCopyCriteria implements OptimizerRule {
         }
         return srcToTgt;
     }
+
+    /**
+     * @return true if the original crit can be removed
+     */
+	private boolean checkWithinJoin(CompareCriteria crit, List<Criteria> newJoinCrits, Set<Criteria> allCriteria,
+			Expression oldValue, Expression left, QueryMetadataInterface metadata) {
+		if (newJoinCrits == null || oldValue == null) {
+			return false;
+		}
+		if (oldValue.equals(left)) {
+			return true;
+		}
+		Criteria newCrit = new CompareCriteria((Expression)left.clone(), CompareCriteria.EQ, (Expression)oldValue.clone());
+		try {
+			newCrit = QueryRewriter.rewriteCriteria(newCrit, null, null, metadata);
+		} catch (TeiidException e) {
+			LogManager.logDetail(LogConstants.CTX_QUERY_PLANNER, e, "Could not remap target criteria in RuleCopyCriteria"); //$NON-NLS-1$
+			return false;
+		}
+		if (allCriteria.add(newCrit)) {
+			newJoinCrits.add(newCrit);
+		}
+		if (!GroupsUsedByElementsVisitor.getGroups(crit.getLeftExpression()).isEmpty() && !GroupsUsedByElementsVisitor.getGroups(crit.getRightExpression()).isEmpty()
+				&& (GroupsUsedByElementsVisitor.getGroups(left).isEmpty() || GroupsUsedByElementsVisitor.getGroups(oldValue).isEmpty())) {
+			crit.setOptional(true); //the original has been simplified
+		}
+		return false;
+	}
     
 
 	public String toString() {

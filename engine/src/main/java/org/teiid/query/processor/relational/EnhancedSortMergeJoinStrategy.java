@@ -24,9 +24,8 @@ package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
@@ -107,16 +106,17 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
      * TODO: reuse existing temp table indexes
      */
     public void createIndex(SourceState state, boolean sorted) throws TeiidComponentException, TeiidProcessingException {
-    	int keyLength = state.getExpressionIndexes().length;
+    	int[] expressionIndexes = state.getExpressionIndexes();
+		int keyLength = expressionIndexes.length;
     	List elements = state.getSource().getOutputElements();
 
     	//TODO: minimize reordering, or at least detect when it's not necessary
-    	int[] reorderedSortIndex = Arrays.copyOf(state.getExpressionIndexes(), elements.size());
-    	Set<Integer> used = new HashSet<Integer>();
-    	for (int i : state.getExpressionIndexes()) {
+    	LinkedHashSet<Integer> used = new LinkedHashSet<Integer>(); 
+    	for (int i : expressionIndexes) {
 			used.add(i);
     	}
-    	int j = state.getExpressionIndexes().length;
+    	int[] reorderedSortIndex = Arrays.copyOf(expressionIndexes, keyLength + elements.size() - used.size());
+    	int j = keyLength;
     	for (int i = 0; i < elements.size(); i++) {
     		if (!used.contains(i)) {
     			reorderedSortIndex[j++] = i;
@@ -145,12 +145,12 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		//detect if sorted and distinct
     		List<?> originalTuple = its.nextTuple();
     		//remove the tuple if it has null
-    		for (int i : state.getExpressionIndexes()) {
+    		for (int i : expressionIndexes) {
     			if (originalTuple.get(i) == null) {
     				continue outer;
     			}
     		}
-    		if (sortedDistinct && lastTuple != null && this.compare(lastTuple, originalTuple, state.getExpressionIndexes(), state.getExpressionIndexes()) == 0) {
+    		if (sortedDistinct && lastTuple != null && this.compare(lastTuple, originalTuple, expressionIndexes, expressionIndexes) == 0) {
     			sortedDistinct = false;
     		}
     		lastTuple = originalTuple;
