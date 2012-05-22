@@ -46,11 +46,11 @@ public interface ObjectSourceProxy {
 	 * to data source query syntax.
 	 * @param command is the SELECT command to query the data source
 	 * @param cacheName is the name of the cache to query
-	 * @param rootClassName is the class type of the object in the cache
+	 * @param visitor represents the source tables and columns being queried
 	 * @return List of objects found in the cache.
 	 * @throws TranslatorException is thrown if there are issues querying the data source
 	 */
-	List<Object> get(Command command, String cacheName, String rootClassName) throws TranslatorException;
+	List<Object> get(Command command, String cacheName, ObjectVisitor visitor) throws TranslatorException;
 
 	
 	/**

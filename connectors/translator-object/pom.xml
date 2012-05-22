@@ -13,6 +13,7 @@
      <properties>
        <version.infinispan>5.1.2.FINAL</version.infinispan>
        <version.hibernate.search>3.1.1.GA</version.hibernate.search>
+       <mockito.all.version>1.8.4</mockito.all.version>
   	</properties>
     <dependencies>
      
@@ -44,38 +45,11 @@
 			<scope>provided</scope>
 		</dependency>
 		
-		<!-- dependency>
-			<groupId>org.jboss.teiid.connectors</groupId>
-			<artifactId>connector-infinispan</artifactId>
-			<classifier>lib</classifier>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency-->
-		
 		<dependency>
 	        <groupId>org.infinispan</groupId>
     	    <artifactId>infinispan-core</artifactId>
        		<version>${version.infinispan}</version>
-       	</dependency>	
-		
-		<!-- dependency>
-	        <groupId>org.infinispan</groupId>
-    	    <artifactId>infinispan-core</artifactId>
-       		<version>${version.infinispan}</version>
-       	</dependency>	
-        <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-client-hotrod</artifactId>
-	      <version>${version.infinispan}</version>
-	    </dependency-->       		
-          
-<!-- 
-			<dependency>
-	          <groupId>org.infinispan</groupId>
-    	      <artifactId>infinispan-query</artifactId>
-       		   <version>${version.infinispan}</version>
-       		</dependency>  
-     -->      
+       	</dependency>	 
    
 		<dependency>
 		   <groupId>org.hibernate</groupId>
@@ -88,6 +62,13 @@
 			<artifactId>connector-api</artifactId>
 			<scope>provided</scope>
 		</dependency>
+		
+	    <dependency>
+		    <groupId>org.mockito</groupId>
+		    <artifactId>mockito-all</artifactId>
+			<version>${mockito.all.version}</version>
+			<scope>test</scope>	      
+	    </dependency>		
 
     </dependencies>
     

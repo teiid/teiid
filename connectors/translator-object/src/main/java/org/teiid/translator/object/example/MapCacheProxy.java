@@ -28,16 +28,15 @@ import java.util.Map;
 
 import org.teiid.language.Command;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.ObjectSourceProxy;
 
 public class MapCacheProxy implements ObjectSourceProxy {
 	private MapCacheObjectVisitor visitor = new MapCacheObjectVisitor();
-//	private Object connection;
 	private MapCacheExecutionFactory factory;
 	
 
 	public MapCacheProxy(Object connection, MapCacheExecutionFactory factory) {
-//		this.connection = connection;
 		this.factory = factory;
 	}
 
@@ -48,8 +47,7 @@ public class MapCacheProxy implements ObjectSourceProxy {
 
 
 	@Override
-	public List<Object> get(Command command, String cache, String rootClassName) throws TranslatorException {
-		visitor.visitNode(command);
+	public List<Object> get(Command command, String cache, ObjectVisitor sourceProjections) throws TranslatorException {
 
 		List<Object> results = null;
 		if (visitor.compare) {

@@ -33,8 +33,6 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import javax.resource.cci.ConnectionFactory;
-
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
@@ -56,9 +54,10 @@ import org.teiid.translator.TranslatorProperty;
  * @author vhalbert
  *
  */
+//public abstract class ObjectExecutionFactory extends ExecutionFactory<ConnectionFactory, ObjectCacheConnection > {
 
-public abstract class ObjectExecutionFactory extends ExecutionFactory<ConnectionFactory, ObjectCacheConnection > {
-	public static final int MAX_SET_SIZE = 100;
+public abstract class ObjectExecutionFactory extends ExecutionFactory {
+	public static final int MAX_SET_SIZE = 1000;
 
 	/*
 	 * ObjectMethodManager is the cache of methods used on the objects.
@@ -70,7 +69,7 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
 	private String packageNamesOfCachedObjects = null;
 	private String classNamesOfCachedObjects = null;
 	private String cacheName = null;
-	private String objectRelationShips = null;
+	private boolean supportFilters = true;
 	
 	public ObjectExecutionFactory() {
 		super();
@@ -85,7 +84,8 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
 		this.setSupportsSelectDistinct(false);
 		this.setSupportsInnerJoins(true);
 		this.setSupportsFullOuterJoins(false);
-		this.setSupportsOuterJoins(true);
+		this.setSupportsOuterJoins(false);
+
 	}
 		
     @Override
@@ -96,8 +96,9 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
     }
    
     @Override
-    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, ObjectCacheConnection connection)
+    public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
     		throws TranslatorException {
+
     	return new ObjectExecution((Select)command, metadata, createProxy(connection), objectMethods, this);
     	  
     }    
@@ -110,7 +111,13 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
     	return true;
     }
     
-	
+    public boolean supportsInCriteria() {
+    	return true;
+    }	
+    
+    public boolean supportsOrCriteria() {
+    	return true;
+    }	    
 	/**
 	 * Get the cacheName that will be used by this factory instance to access the named cache. 
 	 * However, if not specified a default configuration will be created.
@@ -132,25 +139,58 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
 		this.cacheName = cacheName;
 	} 
 	
+	
+	// TODO:  implement the code that supports this option for non-annotated classes
+//	/**
+//	 * Get the object relationships.  
+//	 * @return
+//	 * @see #setObjectRelationships(String)
+//	 */
+//	@TranslatorProperty(display="ObjectRelationships", advanced=true)
+//	public String getObjectRelationships() {
+//		return this.objectRelationShips;
+//	}
+//	
+//	/**
+//	 * Set the object relationships so that the metadata relationships can be built.  Specify the 
+//	 * relationships using the format:  <parent classname>.<getMethod>:<child classname> 
+//	 * @param cacheName
+//	 * @see #getObjectRelationships()
+//	 */
+//	
+//	public void setObjectRelationships(String objectRelationships) {
+//		this.objectRelationShips = objectRelationships;
+//	} 
+	
 	/**
-	 * Get the object relationships.  
+	 * <p>
+	 * Call to get the indicator if object filtering will be used to help determine if
+	 * an object is included in the results.  This option can be used when the criteria
+	 * cannot be used by the vendor specific querying capabilities. 
+	 * </p>
+	 *  This doesn't apply to the primary key when used in the criteria.
+	 * <p>
+	 * Note, the use of this option will be slower because the filtering is done post-retrieval
+	 * of the objects from the cache.
+	 * </p>
+	 * 
 	 * @return
-	 * @see #setObjectRelationships(String)
+	 * @see #setSupportFilters(boolean)
 	 */
-	@TranslatorProperty(display="ObjectRelationShips", advanced=true)
-	public String getObjectRelationships() {
-		return this.objectRelationShips;
+	@TranslatorProperty(display="SupportFilters", advanced=true)
+	public boolean isSupportFilters() {
+		return this.supportFilters;
 	}
 	
 	/**
-	 * Set the object relationships so that the metadata relationships can be built.  Specify the 
-	 * relationships using the format:  <simple classname>.<getMethod>:<simple classname> 
-	 * @param cacheName
-	 * @see #getObjectRelationships()
+	 * Set to <code>true</code> when the criteria will be used to filter the objects to be
+	 * returned in the results.  
+	 * @param supportFilters
+	 * @see #isSupportFilters()
 	 */
 	
-	public void setObjectRelationships(String objectRelationships) {
-		this.objectRelationShips = objectRelationships;
+	public void setSupportFilters(boolean supportFilters) {
+		this.supportFilters = supportFilters;
 	} 
 	
 	/**
@@ -236,7 +276,7 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
 
     
     @Override
-	public void getMetadata(MetadataFactory metadataFactory, ObjectCacheConnection conn)
+	public void getMetadata(MetadataFactory metadataFactory, Object conn)
 			throws TranslatorException {
     	createObjectMethodManager();
  		ObjectMetadataProcessor processor = new ObjectMetadataProcessor(metadataFactory, this);
@@ -256,7 +296,7 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
 	 * @return IObjectConnectionProxy
 	 * @throws TranslatorException
 	 */
-	protected abstract ObjectSourceProxy createProxy(ObjectCacheConnection connection) throws TranslatorException ;
+	protected abstract ObjectSourceProxy createProxy(Object connection) throws TranslatorException ;
 
 	protected void createObjectMethodManager() throws TranslatorException {
 	    	if (objectMethods == null) {
@@ -323,12 +363,9 @@ public abstract class ObjectExecutionFactory extends ExecutionFactory<Connection
 				classes.addAll(findClasses(directory, packageName, regex));
 			}
 			ArrayList<String> classNames = new ArrayList<String>();
-//			ArrayList<Class> classList = new ArrayList<Class>();
 			for (String clazz : classes) {
 				classNames.add(clazz);
 			}
-//			return classList.toArray(new Class[classes.size()]);
-//			
 				        
 	        return classNames;			
 			

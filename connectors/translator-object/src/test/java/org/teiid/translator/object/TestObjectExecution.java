@@ -22,12 +22,16 @@
 package org.teiid.translator.object;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
@@ -40,25 +44,29 @@ public class TestObjectExecution {
 	
 	private static TradesCacheSource source;
 	private static ObjectExecutionFactory factory;
-	private static ExecutionContext context;
-
 	
-	@BeforeClass
-    public static void beforeEach() throws Exception {        
+	@Mock
+	private ExecutionContext context;
+	
+	@Mock
+	private ObjectVisitor visitor;
+
+	@Before public void beforeEach() throws Exception{	
+ 
+		MockitoAnnotations.initMocks(this);
+
 		source = TradesCacheSource.loadCache();
-		
-		context = Mockito.mock(ExecutionContext.class);
 
 		factory = new ObjectExecutionFactory() {
 
 			@Override
-			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+			protected ObjectSourceProxy createProxy(Object connection)
 					throws TranslatorException {
 
 				return new ObjectSourceProxy() {
 
 					@Override
-					public List<Object> get(Command command, String cacheName, String className) throws TranslatorException {
+					public List<Object> get(Command command, String cacheName, ObjectVisitor visitor) throws TranslatorException {
 						return source.getAll();
 					}
 

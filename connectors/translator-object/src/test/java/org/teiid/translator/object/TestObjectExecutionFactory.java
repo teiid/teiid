@@ -24,21 +24,18 @@ package org.teiid.translator.object;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.util.*;
-
-
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Select;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.VDBMetadataFactory;
-import org.teiid.query.metadata.CompositeMetadataStore;
-import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.util.VDBUtility;
@@ -57,7 +54,7 @@ public class TestObjectExecutionFactory {
 		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
 			@Override
-			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+			protected ObjectSourceProxy createProxy( Object connection)
 					throws TranslatorException {
 
 				return proxy;
@@ -89,7 +86,7 @@ public class TestObjectExecutionFactory {
 		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
 			@Override
-			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+			protected ObjectSourceProxy createProxy(Object connection)
 					throws TranslatorException {
 
 				return proxy;
@@ -126,7 +123,7 @@ public class TestObjectExecutionFactory {
 		ObjectExecutionFactory factory = new ObjectExecutionFactory() {
 
 			@Override
-			protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+			protected ObjectSourceProxy createProxy(Object connection)
 					throws TranslatorException {
 
 				return proxy;

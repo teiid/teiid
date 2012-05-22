@@ -105,7 +105,7 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 	
 	public List<Object> get(int key) {
 		List<Object> objs = new ArrayList<Object>(1);
-		objs.add(this.get(key));
+		objs.add(super.get(key));
 		return objs;
 	}
 }

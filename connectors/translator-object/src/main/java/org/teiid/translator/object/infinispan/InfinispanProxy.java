@@ -22,17 +22,12 @@
 
 package org.teiid.translator.object.infinispan;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Command;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectCacheConnection;
+import org.teiid.translator.object.ObjectVisitor;
 import org.teiid.translator.object.ObjectSourceProxy;
 
 /** 
@@ -42,11 +37,10 @@ public class InfinispanProxy implements ObjectSourceProxy {
 	
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(InfinispanProxy.class);
 	
-	private InfinispanObjectVisitor visitor = new InfinispanObjectVisitor();
 	private InfinispanRemoteExecutionFactory factory;
-	private ObjectCacheConnection connection;
+	private InfinispanCacheConnection connection;
 	
-	public InfinispanProxy(ObjectCacheConnection connection, InfinispanRemoteExecutionFactory factory) {
+	public InfinispanProxy(InfinispanCacheConnection connection, InfinispanRemoteExecutionFactory factory) {
 		this.factory = factory;
 		this.connection = connection;
 	}
@@ -54,23 +48,22 @@ public class InfinispanProxy implements ObjectSourceProxy {
 
 	@Override
 	public void close() {
-		this.visitor = null;
 		this.factory = null;
+		this.connection = null;
 	}
 
 
 	@Override
-	public List<Object> get(Command command, String cache, String rootClassName) throws TranslatorException {
-		visitor.visitNode(command);
+	public List<Object> get(Command command, String cache, ObjectVisitor visitor) throws TranslatorException {
 		
 		Class<?> rootClass = null;
-		if (this.factory.getObjectMethodManager().getClassMethods(rootClassName) == null) {
-			rootClass = this.factory.getObjectMethodManager().loadClassByName(rootClassName, null);
+		if (this.factory.getObjectMethodManager().getClassMethods(visitor.getRootNodeClassName()) == null) {
+			rootClass = this.factory.getObjectMethodManager().loadClassByName(visitor.getRootNodeClassName(), null);
 		} else {
-			rootClass = this.factory.getObjectMethodManager().getClassMethods(rootClassName).getClassIdentifier();
+			rootClass = this.factory.getObjectMethodManager().getClassMethods(visitor.getRootNodeClassName()).getClassIdentifier();
 		}
 		try {
-			return connection.get(visitor.getKeyCriteria(), cache, rootClass);
+			return connection.get(visitor.getCriterion(), cache, rootClass);
 		} catch (Exception e) {
 			throw new TranslatorException(e.getMessage());
 		}

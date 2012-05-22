@@ -45,30 +45,33 @@ public class ObjectExecution implements ResultSetExecution {
     private ObjectSourceProxy proxy;
     private ObjectMethodManager methodManager;
     private ObjectExecutionFactory config;
-    private ObjectProjections op;
+    private RuntimeMetadata metadata;
     
 	private Iterator<List<Object>> resultsIt = null;  
     
     public ObjectExecution(Command query, RuntimeMetadata metadata, ObjectSourceProxy proxy, ObjectMethodManager methodManager, ObjectExecutionFactory factory) {
     	this.query = (Select) query;
-    	this.op = new ObjectProjections(this.query);
         this.proxy = proxy;
         this.methodManager = methodManager;
         this.config = factory;
+        this.metadata = metadata;
     }
     
 	@Override
     public void execute() throws TranslatorException {
 
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Object executing command: " + query.toString()); //$NON-NLS-1$
+        ObjectVisitor visitor = getObjectVisitor();
         
-        List<Object> objects = executeQuery();
+        visitor.visitNode(query);
+
+        List<Object> objects = executeQuery(visitor);
 
         List<List<Object>> results = null;
 		if (objects != null && objects.size() > 0) {
 		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution number of objects from proxy is : " + objects.size()); //$NON-NLS-1$
 		    
-			results = ObjectTranslator.translateObjects(objects, op, methodManager);
+			results = ObjectTranslator.translateObjects(objects, visitor, methodManager);
 			 
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution number of rows from translation : " + results.size()); //$NON-NLS-1$
 
@@ -78,17 +81,20 @@ public class ObjectExecution implements ResultSetExecution {
 			results = Collections.emptyList();
 		}
 		
-	
         this.resultsIt = results.iterator();
     }     
     
-	protected List<Object> executeQuery()
+	protected List<Object> executeQuery(ObjectVisitor op)
 				throws TranslatorException {
 
-		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution calling proxy : " + this.proxy.getClass().getName()); //$NON-NLS-1$
+	    LogManager.logDetail(LogConstants.CTX_CONNECTOR, "ObjectExecution calling proxy : " + this.proxy.getClass().getName()); //$NON-NLS-1$
 
-			return this.proxy.get(query, config.getCacheName(), op.rootNodeClassName);
+		return this.proxy.get(query, config.getCacheName(), op);
 
+	}
+	
+	protected ObjectVisitor getObjectVisitor() {
+		return new ObjectVisitor(this.config,this.metadata);
 	}
 	
     @Override
@@ -107,7 +113,7 @@ public class ObjectExecution implements ResultSetExecution {
         this.proxy = null;
         this.methodManager = null;
         this.query = null;
-        
+        this.metadata = null;
     }
 
     @Override

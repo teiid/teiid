@@ -55,7 +55,7 @@ public class ObjectMethodManager extends ConcurrentHashMap<String, Object> { // 
 			this.clz = clzz;
 		}
 		
-		public Class getClassIdentifier() {
+		public Class<?> getClassIdentifier() {
 			return this.clz;
 		}
 		public String getClassName() {

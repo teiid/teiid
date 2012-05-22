@@ -22,11 +22,15 @@
 package org.teiid.translator.object;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.teiid.language.Select;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
@@ -36,10 +40,17 @@ public class TestObjectTranslator {
 	
 	private static TradesCacheSource source;
 	
-	@BeforeClass
-    public static void beforeEach() throws Exception {        
+	@Mock
+	private  ObjectExecutionFactory factory;
+	
+	@Before public void beforeEach() {	
+		MockitoAnnotations.initMocks(this);
+		
+		when(factory.isSupportFilters()).thenReturn(true);
+		
 		source = TradesCacheSource.loadCache();
-    }	
+
+	}
 	
 	@Test public void testQueryGetAllTrades() throws Exception {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade"); //$NON-NLS-1$
@@ -64,12 +75,13 @@ public class TestObjectTranslator {
 	
 	
 	private void runTest(Select command, int rows, int columns) throws Exception {
-		ObjectProjections op = new ObjectProjections(command);
+		ObjectVisitor visitor = new ObjectVisitor(factory, VDBUtility.RUNTIME_METADATA);
+		visitor.visit(command);
 		
 		ObjectMethodManager omm = ObjectMethodManager.initialize(true, this.getClass().getClassLoader());
 
 		
-		List<List<Object>> results = ObjectTranslator.translateObjects(source.getAll(), op, omm);
+		List<List<Object>> results = ObjectTranslator.translateObjects(source.getAll(), visitor, omm);
 		
 		assertEquals(rows, results.size());
 		

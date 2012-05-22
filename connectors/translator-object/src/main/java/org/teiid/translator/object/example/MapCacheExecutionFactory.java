@@ -31,7 +31,6 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.object.ObjectCacheConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectMethodManager;
 import org.teiid.translator.object.ObjectSourceProxy;
@@ -102,7 +101,7 @@ public class MapCacheExecutionFactory extends  ObjectExecutionFactory {
 	}
 
 	@Override
-	protected ObjectSourceProxy createProxy(ObjectCacheConnection connection)
+	protected ObjectSourceProxy createProxy(Object connection)
 			throws TranslatorException {
 
 		return new MapCacheProxy(connection, this);

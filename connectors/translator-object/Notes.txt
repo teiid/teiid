@@ -15,6 +15,7 @@ Limitations -
 2.  Default, columns that are of type object are NOT Selectable or Searchable.  Its assumed that if object types like
 	Map, Collection, or Array, there needs to be a related child table that has a foreign key defined.
 
+3.  When using filtering and adding criteria, the column must also be in the SELECT CLAUSE
 
 
 Modeling -

@@ -48,6 +48,8 @@ public abstract class BaseObjectTest  {
     
     private static final int MAX_COL_WIDTH = 65;
     
+	protected static boolean print = false;    
+    
     public static void writeActualResultsToFile(boolean write) {
     	WRITE_ACTUAL_RESULTS_TO_FILE = write;
     }
@@ -113,9 +115,18 @@ public abstract class BaseObjectTest  {
 	        }
         }
 	}
+	
+    public static void compareResultSet(List<Object> rs) throws IOException, SQLException {
+    	StackTraceElement ste = new Exception().getStackTrace()[1];
+    	String testName = ste.getMethodName();
+    	String className = ste.getClassName();
+    	className = className.substring(className.lastIndexOf('.') + 1);
+    	testName = className + "/" + testName; //$NON-NLS-1$
+        compareResultSet(testName, rs);
+    }
 
 	
-	public static void compareResultSet(String testName, List<Object>... rs)
+	public static void compareResultSet(String testName, List<Object> rs)
 			throws FileNotFoundException, SQLException, IOException {
 		FileOutputStream actualOut = null;
 		BufferedReader expectedIn = null;
@@ -137,8 +148,8 @@ public abstract class BaseObjectTest  {
 //					ObjectOutput oo = null;
 //					oo = new ObjectOutputStream(actualOut);
 					
-						for (int i = 0; i < rs.length; i++) {
-							List<Object> r = rs[i];
+						for (int i = 0; i < rs.size(); i++) {
+							List<Object> r = (List) rs.get(i);
 							actualOut.write( new String("ROW_" + i).getBytes());
 							for (Iterator it=r.iterator(); it.hasNext();) {
 								Object o = it.next();
@@ -186,6 +197,20 @@ public abstract class BaseObjectTest  {
 				expectedIn.close();
 			}
 		}
+	}
+	
+	protected void printRow(int rownum, List<?> row) {
+		if (!print) return;
+		if (row == null) {
+			System.out.println("Row " + rownum + " is null");
+			return;
+		}
+		int i = 0;
+		for(Object o:row) {
+			System.out.println("Row " + rownum + " Col " + i + " - " + o.toString());
+			++i;
+		}
+		
 	}
 	
 }

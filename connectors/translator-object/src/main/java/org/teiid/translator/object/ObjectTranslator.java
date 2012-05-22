@@ -33,6 +33,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultTypeCodes;
 import org.teiid.core.types.TransformationException;
+import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 
 /**
@@ -63,56 +64,82 @@ public class ObjectTranslator {
 	 * 		if table or view is defined to have multiple container objects (ie., Maps, List, etc.) returned
 	 * 		in the same source query. 
 	 * 		<p> Example:
- 	 *				Object X
- 	 *					Attributes:  Name
+ 	 *				Object Person
+ 	 *					Attributes:  Name 
  	 *								 Addresses (List)
  	 *								 Phones (List)
- 	 *         Object X is mapped to Table A
- 	 *								 Name
+ 	 *
+ 	 *					Addresses contained Address Object(s)
  	 *								 Street
  	 *								 City
  	 *								 State
+ 	 *								 Zip
+ 	 *
+ 	 *					Phones contained Phone Object(s)
  	 *								 Phone_Number
  	 *
- 	 *		To model this correctly, you would create 2 Tables (A and B):
- 	 *					Table A
- 	 *							Name, Street, City, State
- 	 *					Table B
- 	 *							Name, Phone_Number
+ 	 *
+ 	 *		To model this correctly, you would create 3 Tables (Person, Address, Phone):
+ 	 *					Table Person
+ 	 *							Name (String)
+ 	 *							Addresses (Object)
+ 	 *							Phones (Object)
+ 	 * 							PK-Name
+ 	 *					Table Address
+ 	 *							Name,
+ 	 *							Street
+ 	 *							City
+ 	 *							State
+ 	 *							Zip
+ 	 *							FK-PersonName
+ 	 * 
+ 	 * 					Table Phone
+ 	 * 							Name
+ 	 *							Phone_Number
+ 	 *							FK-PersonName
+ 	 *					
+ 	 *
+ 	 *	 	The recommendation now is to create a view for each logical set (i.e., PersonAddresses and PersonPhoneNumbers).		
  	 *
  	 *		If the user wants a cross-product result, then allow the Teiid engine to perform that logic, but the Translator
  	 *		will only traverse one container path per result set.  I say container path, because it will be possible for 
  	 *		an object in a container to define another container object, and so on.  Theoretically, there is no depth limit. 	
 	 * <li></li>
 	 * @param objects is the List of objects from the cache
-	 * @param projections are the columns to be returned in the result set
+	 * @param visitor are the columns to be returned in the result set
 	 * @param objectManager is responsible for providing the object methods used for traversing an object and/or 
 	 * 			obtaining the data from an object
 	 * @return List<List<?>> that represent the rows and columns in the result set
 	 */
-	public static List<List<Object>> translateObjects(List<Object> objects, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
+	public static List<List<Object>> translateObjects(List<Object> objects, ObjectVisitor visitor, ObjectMethodManager objectManager) throws TranslatorException {
 
-		projections.throwExceptionIfFound();
+		visitor.throwExceptionIfFound();
 		
 		List<List<Object>> rows = new ArrayList<List<Object>>(objects.size());			
 		
 		// if no container objects required in the results, then
 		// perform simple logic for building a row
-		int numCols = projections.columnNamesToUse.length;
+		int numCols = visitor.columnNamesToUse.length;
 
-		if (!projections.hasChildren()) {
+		if (!visitor.hasChildren()) {
 			for (Iterator<Object> it = objects.iterator(); it.hasNext();) {
 				// each object represent 1 row
 				Object o = (Object) it.next();
 				
+				boolean includeRow = true;
+				
 				List<Object> row  = new ArrayList<Object>(numCols);
-				for (int i = 0; i < numCols; i++) {								
-					Object value = getValue(o, i, 0, projections, objectManager);
-					
-					row.add(value);
+				for (int i = 0; i < numCols; i++) {		
+					includeRow = addValueToRow(o, i, 0, visitor, objectManager, row);
+					if (!includeRow) {
+						row.clear();
+						break;
+					}
 				}				
 	
-				rows.add(row);
+				if (includeRow) {
+					rows.add(row);
+				}
 			}
 			
 			return rows;
@@ -123,7 +150,7 @@ public class ObjectTranslator {
 			// collection is found in its results
 			Object o = (Object) it.next();
 							
-			List<List<Object>> containerRows = processContainer(o, 0, projections, objectManager);
+			List<List<Object>> containerRows = processContainer(o, 0, visitor, objectManager);
 
 			rows.addAll(containerRows);
 		}
@@ -145,7 +172,7 @@ public class ObjectTranslator {
 	 */
 	@SuppressWarnings("unchecked")
 	private static List<List<Object>> processContainer(Object parentObject,
-			int level, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
+			int level, ObjectVisitor projections, ObjectMethodManager objectManager) throws TranslatorException {
 		
 		List<List<Object>> containerRows = new ArrayList<List<Object>>();
 		// if there is another container depth, then process it first
@@ -201,22 +228,29 @@ public class ObjectTranslator {
 
 		}
 		
+		// if no children object were needed,which would expand the number of rows,
+		// then this one object will be the one row returned
 		if (containerRows.isEmpty()) {
-			containerRows = new ArrayList<List<Object>>(1);
 			List<Object> row  = new ArrayList<Object>(projections.columnNamesToUse.length);
+			boolean includeRow = true;
 			for (int i = 0; i < projections.columnNamesToUse.length; i++) {	
 				// the column must have as many nodes as the level being processed
 				// in order to obtain the value at the current level
 				if (projections.nameNodes[i].size() >= (level + 1)) {  // level is zero based
-					Object value = getValue(parentObject, i, level, projections, objectManager);
-				
-					row.add(value);
+					includeRow = addValueToRow(parentObject, i, level, projections, objectManager, row);
+					if (!includeRow) {
+						row.clear();
+						break;
+					}
+					
 				} else {
 					row.add(null);
 				}
 			}				
 
-			containerRows.add(row);	
+			if (includeRow) {
+				containerRows.add(row);	
+			}
 			return containerRows;
 			
 		}
@@ -227,6 +261,7 @@ public class ObjectTranslator {
 						
 				List<Object> newrow  = new ArrayList<Object>(projections.columnNamesToUse.length);
 
+				boolean includeRow = true;
 				for (int col=0; col<projections.columnNamesToUse.length; ++col) {
 					// only make method calls for columns that are being processed at the same level,
 					// columns at other node depths will be loaded when its level is processed
@@ -237,10 +272,12 @@ public class ObjectTranslator {
 												
 						// this should not happen, but just in case
 						if (colObject != null) throw new TranslatorException("Program Error:  column object was not null for column " + projections.columnNamesToUse[col] + " at level " + level);
-		
-						final Object value = getValue(parentObject, col, level, projections, objectManager);
-					
-						newrow.add(value);
+								
+						includeRow = addValueToRow(parentObject, col, level, projections, objectManager, newrow);
+						if (!includeRow) {
+							newrow.clear();
+							break;
+						}
 						
 					} else {					
 						newrow.add(colObject);
@@ -248,37 +285,85 @@ public class ObjectTranslator {
 
 				}
 
-				expandedRows.add(newrow);
+				if (includeRow) {
+					expandedRows.add(newrow);
+				}
 		}
 		return expandedRows;
 	}
 	
-	private static Object getValue(Object cachedObject, int columnIdx, int methodIdx, ObjectProjections projections, ObjectMethodManager objectManager) throws TranslatorException {
-		Object value = null;
+	/*
+	 * Return false when the row should be excluded from the results
+	 */
+	private static boolean addValueToRow(Object cachedObject, int columnIdx, int methodIdx, ObjectVisitor visitor, ObjectMethodManager objectManager, List<Object> row) throws TranslatorException {
 
 		// only the last parsed name can be where the boolean call can be made
 		// example: x.y.z z will be where "is" is called
 		// or x x could be where "is" is called
-		Class<?> clzType = projections.columns[columnIdx].getJavaType();
+		Column c = visitor.columns[columnIdx];
+		Class<?> clzType = c.getJavaType();
+		
+		Object value = getValue(cachedObject, visitor.nameNodes[columnIdx].get(methodIdx), clzType, objectManager);
+		
+		if (visitor.hasFilters()) {
+			SearchCriterion sc = visitor.getFilters().get(c.getFullName());
+
+				while (sc != null) {
+						Object searchValue = null;
+						try {
+							if (sc.getValue().getClass().equals(clzType) ) {
+								searchValue = sc.getValue();
+
+								if (searchValue != null && searchValue.equals(value)) {
+								} else {
+									return false;
+								}								
+							} else if (DataTypeManager.isTransformable(sc.getValue().getClass(), clzType)) {
+								searchValue = DataTypeManager.getTransform(sc.getValue().getClass(), clzType).transform(sc.getValue());
+								// if the filter matches, then return false to indicate this row is excluded
+								if (searchValue.equals(value)) {
+								} else {
+									return false;
+								}
+							}  else {
+								return false;
+							}
+						} catch (TransformationException e) {
+							// TODO Auto-generated catch block
+							throw new TranslatorException(e);
+						}
+						
+					sc = sc.getAddCondition();
+					
+				}
+				
+		}
+		row.add(value);
+		
+		return true;
+	}
+		
+
+	private static Object getValue(Object cachedObject, String columnName, Class<?> clzType, ObjectMethodManager objectManager) throws TranslatorException {
+		Object value = null;
+		Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(cachedObject.getClass().getName());
 		
 		if (cachedObject.getClass().equals(clzType)) {
 			return cachedObject;
 		}
-
-		Class dataTypeClass = DataTypeManager.getDataTypeClass(cachedObject.getClass().getName());
 
 		// if the class is not a native type, but the POJO object, then
 		// call the method on the class to get the value
 		if (dataTypeClass == DefaultDataClasses.OBJECT) {
 			if (clzType != null && clzType == Boolean.class) {
 				final String methodName = objectManager.formatMethodName(
-						ObjectMethodManager.IS, projections.nameNodes[columnIdx].get(methodIdx) );
+						ObjectMethodManager.IS, columnName );
 				
 				value = objectManager.getIsValue(
 						methodName, cachedObject);	
 			} else {
 				final String methodName = objectManager.formatMethodName(
-						ObjectMethodManager.GET, projections.nameNodes[columnIdx].get(methodIdx) );
+						ObjectMethodManager.GET, columnName );
 				
 				value = objectManager.getGetValue(
 						methodName, cachedObject);
@@ -312,9 +397,8 @@ public class ObjectTranslator {
 			}
 		}
 		
-	
 		return value;
-	}		
+	}
 
 
 	private static CONTAINER_TYPE getContainerType(Object o) {
