@@ -22,6 +22,7 @@
 
 package org.teiid.transport;
 
+import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.util.Collection;
 import java.util.Properties;
@@ -53,6 +54,7 @@ import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 
 
 public class LogonImpl implements ILogon {
@@ -67,7 +69,7 @@ public class LogonImpl implements ILogon {
 
 	public LogonResult logon(Properties connProps) throws LogonException, TeiidComponentException, CommunicationException {
 		if (this.service.getGssSecurityDomain() != null && connProps.get(ILogon.KRB5TOKEN) != null) {
-			Subject user = this.service.getSubjectInContext(this.service.getGssSecurityDomain());
+			Subject user = this.service.getSecurityHelper().getSubjectInContext(this.service.getGssSecurityDomain());
 			if (user == null) {
 				throw new LogonException(RuntimePlugin.Util.getString("krb5_user_not_found")); //$NON-NLS-1$
 			}
@@ -160,7 +162,7 @@ public class LogonImpl implements ILogon {
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
         String password = connProps.getProperty(TeiidURL.CONNECTION.PASSWORD);		
 		boolean assosiated = false;
-		Object previousSC = null;
+		Object previous = null;
 		try {
 			String securityDomain = service.getGssSecurityDomain();
 			if (securityDomain == null) {
@@ -176,8 +178,16 @@ public class LogonImpl implements ILogon {
 			}
 			
 			if (result.context.isEstablished()) {
-				previousSC = service.getSecurityContextOnThread();
-				assosiated = service.associateSubjectInContext(securityDomain, subject);
+				Principal principal = null;
+		    	for(Principal p:subject.getPrincipals()) {
+					principal = p;
+					break;
+		    	}
+		    	SecurityHelper securityHelper = service.getSecurityHelper();
+				
+		    	Object securityContext = securityHelper.createSecurityContext(securityDomain, principal, null, subject);
+		    	previous = securityHelper.associateSecurityContext(securityContext);
+		    	assosiated = true;
 			}
 			
 			if (!result.context.isEstablished() || !createSession) {
@@ -194,7 +204,7 @@ public class LogonImpl implements ILogon {
 			throw new LogonException(e, RuntimePlugin.Util.getString("krb5_login_failed")); //$NON-NLS-1$
 		} finally {
 			if (assosiated) {
-				this.service.clearSubjectInContext(previousSC);
+				service.getSecurityHelper().associateSecurityContext(previous);
 			}
 		}
 	}

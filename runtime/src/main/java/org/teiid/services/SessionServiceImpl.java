@@ -23,7 +23,6 @@
 package org.teiid.services;
 
 import java.io.IOException;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +34,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
 import javax.security.auth.callback.NameCallback;
@@ -423,26 +421,6 @@ public class SessionServiceImpl implements SessionService {
 		this.dqp = dqp;
 	}
 	
-	@Override
-	public boolean associateSubjectInContext(String securityDomain, Subject subject) {
-    	Principal principal = null;
-    	for(Principal p:subject.getPrincipals()) {
-			principal = p;
-			break;
-    	}
-    	return this.securityHelper.associateSecurityContext(this.securityHelper.createSecurityContext(securityDomain, principal, null, subject));		
-	}
-	
-	@Override
-	public Subject getSubjectInContext(String securityDomain) {
-		return this.securityHelper.getSubjectInContext(securityDomain);
-	}
-	
-	@Override
-	public Object getSecurityContextOnThread() {
-		return this.securityHelper.getSecurityContextOnThread();
-	}
-	
 	public void setGssSecurityDomain(String domain) {
 		this.gssSecurityDomain = domain;
 	}
@@ -451,9 +429,9 @@ public class SessionServiceImpl implements SessionService {
 	public String getGssSecurityDomain(){
 		return this.gssSecurityDomain;
 	}
-
+		
 	@Override
-	public void clearSubjectInContext(Object previousSC) {
-		this.securityHelper.clearSecurityContext(previousSC);
-	}	
+	public SecurityHelper getSecurityHelper() {
+		return securityHelper;
+	}
 }

@@ -115,6 +115,10 @@ public class ThreadReuseExecutor implements Executor {
 
 		@Override
 		public void run() {
+			if (workContext.getSecurityHelper() != null) {
+				//if using the inheritable thread local security or if unassocation has been sloppy, there may a security context associated
+				workContext.getSecurityHelper().clearSecurityContext();
+			}			
 			workContext.runInContext(r);
 		}
 		

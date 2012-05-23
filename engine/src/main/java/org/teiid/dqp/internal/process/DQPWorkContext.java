@@ -96,11 +96,11 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public static void setWorkContext(DQPWorkContext context) {
-		CONTEXTS.set(context);
-	}
-
-	public static void releaseWorkContext() {
-		CONTEXTS.set(null);
+		if (context == null) {
+			CONTEXTS.remove();
+		} else {
+			CONTEXTS.set(context);
+		}
 	}	
 	
 	private SessionMetadata session = new SessionMetadata();
@@ -134,6 +134,10 @@ public class DQPWorkContext implements Serializable {
     public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
+    
+    public SecurityHelper getSecurityHelper() {
+		return securityHelper;
+	}    
 
     /**
      * @return
@@ -227,35 +231,19 @@ public class DQPWorkContext implements Serializable {
 	
 	public void runInContext(final Runnable runnable) {
 		DQPWorkContext previous = DQPWorkContext.getWorkContext();
-		Object previousSC = getSecurityContextOnThread();
-		boolean associated = attachDQPWorkContext();
+		DQPWorkContext.setWorkContext(this);
+		Object previousSecurityContext = null;
+		if (securityHelper != null) {
+			previousSecurityContext = securityHelper.associateSecurityContext(this.getSecurityContext());			
+		}
 		try {
 			runnable.run();
 		} finally {
-			if (associated) {
-				securityHelper.clearSecurityContext(previousSC);			
+			if (securityHelper != null) {
+				securityHelper.associateSecurityContext(previousSecurityContext);			
 			}
-			DQPWorkContext.releaseWorkContext();
-			if (previous != null) {
-				previous.attachDQPWorkContext();
-			}
+			DQPWorkContext.setWorkContext(previous);
 		}
-	}
-
-	private Object getSecurityContextOnThread() {
-		if (securityHelper != null) {
-			return securityHelper.getSecurityContextOnThread();			
-		}
-		return null;		
-	}
-	
-	private boolean attachDQPWorkContext() {
-		DQPWorkContext.setWorkContext(this);
-		boolean associated = false;
-		if (securityHelper != null && this.getSubject() != null) {
-			associated = securityHelper.associateSecurityContext(this.getSecurityContext());			
-		}
-		return associated;
 	}
 
 	public HashMap<String, DataPolicy> getAllowedDataPolicies() {

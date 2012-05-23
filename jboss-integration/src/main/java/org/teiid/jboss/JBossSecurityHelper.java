@@ -36,26 +36,17 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	private static final long serialVersionUID = 3598997061994110254L;
 
 	@Override
-	public boolean associateSecurityContext(Object newContext) {
+	public Object associateSecurityContext(Object newContext) {
 		SecurityContext context = SecurityActions.getSecurityContext();
-		if (context == null || (newContext != null && newContext != context)) {
+		if (newContext != context) {
 			SecurityActions.setSecurityContext((SecurityContext)newContext);
-			return true;
 		}
-		return false;
+		return context;
 	}
 
 	@Override
-	public void clearSecurityContext(Object prevContext) {
+	public void clearSecurityContext() {
 		SecurityActions.clearSecurityContext();
-		if (prevContext != null) {
-			SecurityActions.setSecurityContext((SecurityContext)prevContext);
-		}
-	}
-	
-	@Override
-	public Object getSecurityContextOnThread() {
-		return SecurityActions.getSecurityContext();
 	}
 	
 	@Override

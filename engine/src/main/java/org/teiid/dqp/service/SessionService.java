@@ -25,7 +25,6 @@ package org.teiid.dqp.service;
 import java.util.Collection;
 import java.util.Properties;
 
-import javax.security.auth.Subject;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
@@ -34,6 +33,7 @@ import org.teiid.client.security.InvalidSessionException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.Credentials;
+import org.teiid.security.SecurityHelper;
 
 
 /**
@@ -148,11 +148,5 @@ public interface SessionService {
 	
 	String getGssSecurityDomain();
 	
-	boolean associateSubjectInContext(String securityDomain, Subject subject); 
-	
-	Subject getSubjectInContext(String securityDomain);
-
-	public void clearSubjectInContext(Object prevSecurityContext);
-	
-	Object getSecurityContextOnThread();
+	SecurityHelper getSecurityHelper();
 }
