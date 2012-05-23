@@ -1,9 +1,12 @@
 package org.teiid.jdbc;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 
 
 @SuppressWarnings("nls")
@@ -47,25 +50,18 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
        executeTest("select * from tables where schemaname='BQT1'", expectedBefore); //$NON-NLS-1$
        
        this.internalConnection.close();
-       
+
        server.deployVDB(VDB2, UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
-       
-       server.mergeVDBS(VDB2, VDB1);
+
+       DeployVDBParameter param = new DeployVDBParameter(null, null);
+       VDBImportMetadata vdbImport = new VDBImportMetadata();
+       vdbImport.setName(VDB2);
+       param.vdbImports = Arrays.asList(vdbImport);
+       server.removeVDB(VDB1);
+       server.deployVDB(VDB1, UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb", param);
        
        this.internalConnection = server.createConnection("jdbc:teiid:"+VDB1);
        executeTest("select * from tables where schemaname='BQT1' order by name", expectedAfter); //$NON-NLS-1$
-       
-       server.undeployVDB(VDB2);
-       
-       // since the connection is not closed; need to behave as if still merged
-       executeTest("select * from tables where schemaname='BQT1' order by name", expectedAfter); //$NON-NLS-1$
-       
-       // re-connect should behave as the original
-       this.internalConnection.close();
-       this.internalConnection = server.createConnection("jdbc:teiid:"+VDB1);
-       
-       executeTest("select * from tables where schemaname='BQT1'", expectedBefore); //$NON-NLS-1$
-       executeTest("select * from tables where schemaname ='PartsSupplier'", expected); //$NON-NLS-1$
     }
 	
     private void executeTest(String sql, String[] expected) throws SQLException{
@@ -92,7 +88,12 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
         
         server.deployVDB(VDB2, UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
         
-        server.mergeVDBS(VDB2, "empty");
+        DeployVDBParameter param = new DeployVDBParameter(null, null);
+        VDBImportMetadata vdbImport = new VDBImportMetadata();
+        vdbImport.setName(VDB2);
+        param.vdbImports = Arrays.asList(vdbImport);
+        server.undeployVDB("empty");
+        server.deployVDB("empty", UnitTestUtil.getTestDataPath() + "/empty.vdb", param);
 
         String[] expectedAfter = {
         		"VDBName[string]    SchemaName[string]    Name[string]    Type[string]    NameInSource[string]    IsPhysical[boolean]    SupportsUpdates[boolean]    UID[string]    Cardinality[integer]    Description[string]    IsSystem[boolean]    IsMaterialized[boolean]    OID[integer]",

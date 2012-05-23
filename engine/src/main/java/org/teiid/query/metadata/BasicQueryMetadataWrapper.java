@@ -25,6 +25,7 @@ package org.teiid.query.metadata;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -371,6 +372,11 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	@Override
 	public QueryMetadataInterface getSessionMetadata() {
 		return actualMetadata.getSessionMetadata();
+	}
+	
+	@Override
+	public Set<String> getImportedModels() {
+		return actualMetadata.getImportedModels();
 	}
 
 }

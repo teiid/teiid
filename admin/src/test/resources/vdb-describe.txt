@@ -36,18 +36,11 @@
         "description" : "The Virtual Database Version",
         "required" : true
     },
-    "url" : {
-        "type" : {
-            "TYPE_MODEL_VALUE" : "STRING"
-        },
-        "description" : "The Virtual Database URL",
-        "required" : false
-    },
     "vdb-description" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "STRING"
         },
-        "description" : "<Missing message for key \"vdb-description.describe\" in: org.teiid.adminapi.i18n>",
+        "description" : "Description of the Virtual Database",
         "required" : false
     },
     "dynamic" : {
@@ -78,6 +71,35 @@
                 "required" : true
             }
         }
+    },
+    "import-vdbs" : {
+        "type" : {
+            "TYPE_MODEL_VALUE" : "LIST"
+        },
+        "value-type" : {
+            "import-vdb-name" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "Name of the Virtual Database to import",
+                "required" : true
+            },
+            "import-vdb-version" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "INT"
+                },
+                "description" : "Version of the Virtual Database to import",
+                "required" : true
+            },
+            "import-policies" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "BOOLEAN"
+                },
+                "description" : "Whether to import associated data policies",
+                "required" : false
+            }
+        },
+        "description" : "Imported vdbs"
     },
     "models" : {
         "type" : {
@@ -276,14 +298,14 @@
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "Resource Name, for which permission defined",
+                "description" : "Name of the policy",
                 "required" : true
             },
             "policy-description" : {
                 "type" : {
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
-                "description" : "<Missing message for key \"policy-description.describe\" in: org.teiid.adminapi.i18n>",
+                "description" : "Description of the policy",
                 "required" : false
             },
             "allow-create-temp-tables" : {
@@ -306,41 +328,54 @@
                 },
                 "description" : "Permissions defined for data access",
                 "value-type" : {
+                    "resource-name" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "STRING"
+                        },
+                        "description" : "Resource path name for this permission",
+                        "required" : true
+                    },
                     "allow-create" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
                         "description" : "create allowed",
-                        "type" : {
-                            "TYPE_MODEL_VALUE" : "STRING"
-                        }
-                    },
-                    "allow-read" : {
-                        "description" : "read allowed",
-                        "type" : {
-                            "TYPE_MODEL_VALUE" : "STRING"
-                        }
-                    },
-                    "allow-update" : {
-                        "description" : "update allowed",
-                        "type" : {
-                            "TYPE_MODEL_VALUE" : "STRING"
-                        }
+                        "required" : false
                     },
                     "allow-delete" : {
-                        "description" : "delete allowed",
                         "type" : {
-                            "TYPE_MODEL_VALUE" : "STRING"
-                        }
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "delete allowed",
+                        "required" : false
+                    },
+                    "allow-update" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "update allowed",
+                        "required" : false
+                    },
+                    "allow-read" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "read allowed",
+                        "required" : false
                     },
                     "allow-execute" : {
-                        "description" : "execute allowed",
                         "type" : {
-                            "TYPE_MODEL_VALUE" : "STRING"
-                        }
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "execute allowed",
+                        "required" : false
                     },
                     "allow-alter" : {
-                        "description" : "alter allowed",
                         "type" : {
-                            "TYPE_MODEL_VALUE" : "STRING"
-                        }
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "alter allowed",
+                        "required" : false
                     }
                 }
             },

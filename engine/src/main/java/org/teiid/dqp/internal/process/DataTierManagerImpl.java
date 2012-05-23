@@ -404,6 +404,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						if (target == null) {
 							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30549, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30549, uuid));
 						}
+						AbstractMetadataRecord schema = target;
+						while (!(schema instanceof Schema) && schema.getParent() != null) {
+							schema = schema.getParent();
+						}
+						if (schema instanceof Schema && vdb.getImportedModels().contains(((Schema)schema).getName())) {
+							throw new TeiidProcessingException(QueryPlugin.Event.TEIID31098, QueryPlugin.Util.getString("ValidationVisitor.invalid_alter", uuid)); //$NON-NLS-1$
+						}
 						if (getMetadataRepository(target, vdb) != null) {
 							getMetadataRepository(target, vdb).setProperty(vdbName, vdbVersion, target, key, strVal);
 						}

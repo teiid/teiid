@@ -37,6 +37,9 @@ import java.util.concurrent.Executor;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceContainer;
+import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
@@ -125,7 +128,7 @@ class VDBService implements Service<VDBMetaData> {
 		}
 
 		createConnectorManagers(cmr, repo, this.vdb);
-		
+		final ServiceBuilder<Void> vdbService = addVDBFinishedService(context);
 		this.vdbListener = new VDBLifeCycleListener() {
 			@Override
 			public void added(String name, int version, CompositeVDB vdb) {
@@ -151,6 +154,7 @@ class VDBService implements Service<VDBMetaData> {
 					}
 				}
 				vdbInstance.addAttchment(GlobalTableStore.class, gts);
+				vdbService.install();
 			}
 		};
 		
@@ -192,6 +196,32 @@ class VDBService implements Service<VDBMetaData> {
 		}
 	}
 
+	private ServiceBuilder<Void> addVDBFinishedService(StartContext context) {
+		ServiceContainer serviceContainer = context.getController().getServiceContainer();
+		final ServiceController<?> controller = serviceContainer.getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
+        if (controller != null) {
+            controller.setMode(ServiceController.Mode.REMOVE);
+        }
+        return serviceContainer.addService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()), new Service<Void>() {
+			@Override
+			public Void getValue() throws IllegalStateException,
+					IllegalArgumentException {
+				return null;
+			}
+
+			@Override
+			public void start(StartContext context)
+					throws StartException {
+				
+			}
+
+			@Override
+			public void stop(StopContext context) {
+				
+			}
+		});
+	}
+
 	@Override
 	public void stop(StopContext context) {
 		// stop object replication
@@ -202,7 +232,10 @@ class VDBService implements Service<VDBMetaData> {
 		getVDBRepository().removeListener(this.vdbListener);
 		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
 		this.vdb.setRemoved(true);
-
+		final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
+        if (controller != null) {
+            controller.setMode(ServiceController.Mode.REMOVE);
+        }
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50026, this.vdb));
 	}
 

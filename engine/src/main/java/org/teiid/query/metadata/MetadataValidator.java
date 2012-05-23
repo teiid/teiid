@@ -331,7 +331,7 @@ public class MetadataValidator {
 						}
 						
 						String referenceTableName = fk.getReferenceTableName();
-						if (referenceTableName == null && fk.getPrimaryKey() == null){
+						if (referenceTableName == null){
 							log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getName()));
 							continue;
 						}

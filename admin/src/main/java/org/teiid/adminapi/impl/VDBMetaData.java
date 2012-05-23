@@ -21,8 +21,8 @@
  */
 package org.teiid.adminapi.impl;
 
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,6 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.core.util.StringUtil;
 
 
 public class VDBMetaData extends AdminObjectImpl implements VDB {
@@ -71,18 +70,20 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		public String getKey(DataPolicyMetadata entry) {
 			return entry.getName();
 		}
-	});	
+	});
+	
+	private List<VDBImportMetadata> imports = new ArrayList<VDBImportMetadata>(2);
 	
 	private int version = 1;
 	
 	protected String description;
 	
-	private String fileUrl = null;
 	private boolean dynamic = false;
 	private VDB.Status status = VDB.Status.INACTIVE;
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private boolean removed;
 	private long queryTimeout = Long.MIN_VALUE;
+	private Set<String> importedModels = Collections.emptySet();
 
 	public String getName() {
 		return super.getName();
@@ -131,7 +132,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.status = Status.valueOf(s);
 	}
 	
-	
 	@Override
 	public int getVersion() {
 		return this.version;
@@ -141,33 +141,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		this.version = version;
 	}	
 		
-	@Override
-	public String getUrl() {
-		return this.fileUrl;
-	}
-	
-	public void setUrl(String url) {
-		this.fileUrl = url;
-	}
-	
-	public void setUrl(URL url) {
-		this.setUrl(url.toExternalForm());
-		String path = url.getPath();
-		if (path.endsWith("/")) { //$NON-NLS-1$
-			path = path.substring(0, path.length() - 1);
-		}
-		String fileName = StringUtil.getLastToken(path, "/"); //$NON-NLS-1$
-		String[] parts = fileName.split("\\."); //$NON-NLS-1$
-		if (parts[0].equalsIgnoreCase(getName()) && parts.length >= 3) {
-			try {
-				int fileVersion = Integer.parseInt(parts[parts.length - 2]);
-				this.setVersion(fileVersion);
-			} catch (NumberFormatException e) {
-				
-			}
-		}
-	}
-
 	@Override
 	public List<Model> getModels(){
 		return new ArrayList<Model>(this.models.getMap().values());
@@ -286,12 +259,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return list;
 	}
 	
-	// This one manages the JAXB binding
-	@Override
-	public List<PropertyMetadata> getJAXBProperties(){
-		return super.getJAXBProperties();
-	}
-	
 	public boolean isDynamic() {
 		return dynamic;
 	}
@@ -317,8 +284,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	}	
 	
-	public void addDataPolicy(DataPolicyMetadata policy){
-		this.dataPolicies.getMap().put(policy.getName(), policy);
+	public DataPolicyMetadata addDataPolicy(DataPolicyMetadata policy){
+		return this.dataPolicies.getMap().put(policy.getName(), policy);
 	}
 	
 	public DataPolicyMetadata getDataPolicy(String policyName) {
@@ -343,4 +310,16 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 		return queryTimeout;
 	}	
+	
+	public List<VDBImportMetadata> getVDBImports() {
+		return imports;
+	}
+	
+	public Set<String> getImportedModels() {
+		return importedModels;
+	}
+	
+	public void setImportedModels(Set<String> importedModels) {
+		this.importedModels = importedModels;
+	}
 }

@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -42,7 +43,6 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.vdb.runtime.VDBKey;
 
 @SuppressWarnings("nls")
 public class TestCompositeVDB {
@@ -53,23 +53,30 @@ public class TestCompositeVDB {
     	return vdb.getAttachment(TransformationMetadata.class);
 	}
 
-	private static CompositeVDB createCompositeVDB(MetadataStore metadataStore,	String vdbName) {
-		VDBMetaData vdbMetaData = new VDBMetaData();
-    	vdbMetaData.setName(vdbName); //$NON-NLS-1$
-    	vdbMetaData.setVersion(1);
-    	for (Schema schema : metadataStore.getSchemas().values()) {
-			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
-		}
+	private static CompositeVDB createCompositeVDB(MetadataStore metadataStore,	String vdbName) throws VirtualDatabaseException {
+		VDBMetaData vdbMetaData = createVDBMetadata(metadataStore, vdbName);
     	
     	ConnectorManagerRepository cmr = new ConnectorManagerRepository();
     	cmr.addConnectorManager("source", getConnectorManager("FakeTranslator", "FakeConnection", getFuncsOne()));
     	cmr.addConnectorManager("source2", getConnectorManager("FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
     	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metadataStore, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr);
+    	cvdb.buildCompositeState(null);
     	cvdb.metadataLoadFinished();
 		return cvdb;
 	}
-	
+
+	private static VDBMetaData createVDBMetadata(MetadataStore metadataStore,
+			String vdbName) {
+		VDBMetaData vdbMetaData = new VDBMetaData();
+    	vdbMetaData.setName(vdbName); //$NON-NLS-1$
+    	vdbMetaData.setVersion(1);
+    	for (Schema schema : metadataStore.getSchemas().values()) {
+			vdbMetaData.addModel(RealMetadataFactory.createModel(schema.getName(), schema.isPhysical()));
+		}
+		return vdbMetaData;
+	}
+
 	private static ConnectorManager getConnectorManager(String translatorName, String connectionName, List<FunctionMethod> funcs) {
 		final ExecutionFactory<Object, Object> ef = Mockito.mock(ExecutionFactory.class);
 		
@@ -107,11 +114,39 @@ public class TestCompositeVDB {
     	return funcs;		
 	}
 	
-	
 	private void helpResolve(String sql) throws Exception {
 		TransformationMetadata metadata = createTransformationMetadata(RealMetadataFactory.exampleBQTCached().getMetadataStore(), "bqt");
 		Command command = QueryParser.getQueryParser().parseCommand(sql);
 		QueryResolver.resolveCommand(command, metadata);		
+	}
+	
+	@Test(expected=VirtualDatabaseException.class) public void testImportErrors() throws Exception {
+		VDBRepository repo = new VDBRepository();
+		repo.setSystemStore(RealMetadataFactory.example1Cached().getMetadataStore());
+		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
+		MetadataStore metadataStore = RealMetadataFactory.exampleBQTCached().getMetadataStore();
+		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		
+		vdb = createVDBMetadata(metadataStore, "bqt1");
+		VDBImportMetadata vdbImport = new VDBImportMetadata();
+		vdbImport.setName("foo");
+		vdb.getVDBImports().add(vdbImport);
+		
+		try {
+			//foo does not exist
+			repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+			fail();
+		} catch (VirtualDatabaseException e) {
+			
+		}
+		
+		vdb = createVDBMetadata(metadataStore, "bqt1");
+		vdbImport.setName("bqt");
+		vdb.getVDBImports().add(vdbImport);
+		
+		//model conflict
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
 	}
 	
 	@Test
@@ -143,16 +178,5 @@ public class TestCompositeVDB {
 	public void testNonQualifiedDuplicate() throws Exception {
 		helpResolve("SELECT duplicate_func(BQT1.SmallA.INTKEY) FROM BQT1.SmallA");
 	}		
-	
-	@Test public void testRemoveChild() throws Exception {
-		CompositeVDB vdb = createCompositeVDB(RealMetadataFactory.exampleBQTStore(), "bqt");
-		VDBKey child = new VDBKey("foo", 1);
-		vdb.removeChild(child);
-		assertNotNull(vdb.getVDB());
-		assertFalse(vdb.hasChildVdb(child));
-		vdb.addChild(createCompositeVDB(RealMetadataFactory.exampleBusObjStore(), "foo"));
-		assertTrue(vdb.hasChildVdb(child));
-		assertNotNull(vdb.getVDB());
-	}
 	
 }

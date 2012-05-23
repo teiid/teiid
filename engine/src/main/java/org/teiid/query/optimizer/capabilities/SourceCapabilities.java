@@ -286,11 +286,6 @@ public interface SourceCapabilities {
          * @since 5.0
          */
         QUERY_FUNCTIONS_IN_GROUP_BY,
-        /**
-         * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
-         * 
-         * @since 4.2
-         */
         BATCHED_UPDATES,
         BULK_UPDATE,
         /**

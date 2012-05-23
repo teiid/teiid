@@ -37,6 +37,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.metadata.DefaultMetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
@@ -50,7 +51,7 @@ public class TestMetadataUpdates {
     
 	@BeforeClass public static void setUp() throws Exception {
     	FakeServer server = new FakeServer();    	
-    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", getMetadataRepo());
+    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", new DeployVDBParameter(null, getMetadataRepo()));
     	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     }
 

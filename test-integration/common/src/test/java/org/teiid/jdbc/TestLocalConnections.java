@@ -47,6 +47,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
@@ -163,7 +164,7 @@ public class TestLocalConnections {
     	FunctionMethod function = new FunctionMethod("foo", null, FunctionCategoryConstants.MISCELLANEOUS, PushDown.CANNOT_PUSHDOWN, TestLocalConnections.class.getName(), "blocking", null, new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER), false, FunctionMethod.Determinism.NONDETERMINISTIC);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("test", Arrays.asList(function));
-    	server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb", udfs);
+    	server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb", new DeployVDBParameter(udfs, null));
 	}
 	
 	@AfterClass public static void oneTimeTearDown() {

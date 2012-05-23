@@ -142,8 +142,6 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 		
 		try {
-			vdb.setUrl(file.toURL());		
-			
 			// build the metadata store
 			if (imf != null) {
 				imf.addEntriesPlusVisibilities(file, vdb);

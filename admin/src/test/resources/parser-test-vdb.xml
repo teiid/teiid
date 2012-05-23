@@ -2,6 +2,7 @@
     <description>vdb description</description>
     <property name="vdb-property2" value="vdb-value2"></property>
     <property name="vdb-property" value="vdb-value"></property>
+    <import-vdb name="x" version="2"/>
     <model name="model-one" type="PHYSICAL" visible="false">
         <description>model description</description>
         <property name="model-prop" value="model-value-override"></property>

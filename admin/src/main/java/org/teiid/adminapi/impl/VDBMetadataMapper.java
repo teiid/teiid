@@ -29,9 +29,9 @@ import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
@@ -42,8 +42,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String CONNECTIONTYPE = "connection-type"; //$NON-NLS-1$
 	private static final String STATUS = "status"; //$NON-NLS-1$
 	private static final String VERSION = "vdb-version"; //$NON-NLS-1$
-	private static final String URL = "url"; //$NON-NLS-1$
 	private static final String MODELS = "models"; //$NON-NLS-1$
+	private static final String IMPORT_VDBS = "import-vdbs"; //$NON-NLS-1$
 	private static final String OVERRIDE_TRANSLATORS = "override-translators"; //$NON-NLS-1$
 	private static final String VDB_DESCRIPTION = "vdb-description"; //$NON-NLS-1$
 	private static final String PROPERTIES = "properties"; //$NON-NLS-1$
@@ -62,8 +62,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		node.get(CONNECTIONTYPE).set(vdb.getConnectionType().toString());
 		node.get(STATUS).set(vdb.getStatus().toString());
 		node.get(VERSION).set(vdb.getVersion());
-		if (vdb.getUrl() != null) {
-		}
 		if (vdb.getDescription() != null) {
 			node.get(VDB_DESCRIPTION).set(vdb.getDescription());
 		}
@@ -75,6 +73,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			ModelNode propsNode = node.get(PROPERTIES); 
 			for (PropertyMetadata prop:properties) {
 				propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop, new ModelNode()));
+			}
+		}
+		
+		// IMPORT-VDBS
+		List<VDBImportMetadata> imports = vdb.getVDBImports();
+		if (imports != null && !imports.isEmpty()) {
+			ModelNode importNodes = node.get(IMPORT_VDBS);		
+			for(VDBImportMetadata vdbImport:imports) {
+				importNodes.add(VDBImportMapper.INSTANCE.wrap(vdbImport, new ModelNode()));
 			}
 		}
 		
@@ -126,9 +133,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (node.has(VERSION)) {
 			vdb.setVersion(node.get(VERSION).asInt());
 		}
-		if (node.has(URL)) {
-			vdb.setUrl(node.get(URL).asString());
-		}
 		if(node.has(VDB_DESCRIPTION)) {
 			vdb.setDescription(node.get(VDB_DESCRIPTION).asString());
 		}
@@ -143,6 +147,17 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 				if (prop != null) {
 					vdb.addProperty(prop.getName(), prop.getValue());
+				}
+			}
+		}
+		
+		// IMPORT-VDBS
+		if (node.get(IMPORT_VDBS).isDefined()) {
+			List<ModelNode> modelNodes = node.get(IMPORT_VDBS).asList();
+			for(ModelNode modelNode:modelNodes) {
+				VDBImportMetadata vdbImport = VDBImportMapper.INSTANCE.unwrap(modelNode);
+				if (vdbImport != null) {
+					vdb.getVDBImports().add(vdbImport);	
 				}
 			}
 		}
@@ -201,7 +216,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		node.get(STATUS).get(ALLOWED).set(statusAllowed);
 		
 		addAttribute(node, VERSION, ModelType.INT, true);
-		addAttribute(node, URL, ModelType.STRING, false);
 		addAttribute(node, VDB_DESCRIPTION, ModelType.STRING, false);
 		addAttribute(node, DYNAMIC, ModelType.BOOLEAN, false);
 		
@@ -210,6 +224,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		props.get(DESCRIPTION).set(AdminPlugin.Util.getString(PROPERTIES+DOT_DESC));
 		PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 
+		ModelNode vdbImports = node.get(IMPORT_VDBS);	
+		vdbImports.get(TYPE).set(ModelType.LIST);
+		VDBImportMapper.INSTANCE.describe(vdbImports.get(VALUE_TYPE));
+		vdbImports.get(DESCRIPTION).set(AdminPlugin.Util.getString(IMPORT_VDBS+DOT_DESC));
+		
 		ModelNode models = node.get( MODELS);	
 		models.get(TYPE).set(ModelType.LIST);
 		ModelMetadataMapper.INSTANCE.describe(models.get(VALUE_TYPE));
@@ -381,6 +400,54 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			errors.get(DESCRIPTION).set(AdminPlugin.Util.getString(VALIDITY_ERRORS+DOT_DESC));
 			ValidationErrorMapper.INSTANCE.describe(errors.get(VALUE_TYPE));
 			
+			return node; 
+		}
+	}	
+	
+	/**
+	 * vdb import mapper
+	 */
+	public static class VDBImportMapper implements MetadataMapper<VDBImportMetadata>{
+		private static final String VDB_NAME = "import-vdb-name"; //$NON-NLS-1$
+		private static final String VDB_VERSION = "import-vdb-version"; //$NON-NLS-1$
+		private static final String IMPORT_POLICIES = "import-policies"; //$NON-NLS-1$
+		
+		public static VDBImportMapper INSTANCE = new VDBImportMapper();
+		
+		@Override
+		public ModelNode wrap(VDBImportMetadata obj, ModelNode node) {
+			if (obj == null) {
+				return null;
+			}
+			
+			node.get(VDB_NAME).set(obj.getName());
+			node.get(VDB_VERSION).set(obj.getVersion());
+			node.get(IMPORT_POLICIES).set(obj.isImportDataPolicies());
+			return node;
+		}
+		
+		public VDBImportMetadata unwrap(ModelNode node) {
+			if (node == null) {
+				return null;
+			}
+			
+			VDBImportMetadata vdbImport = new VDBImportMetadata();
+			if (node.has(VDB_NAME)) {
+				vdbImport.setName(node.get(VDB_NAME).asString());
+			}
+			if (node.has(VDB_VERSION)) {
+				vdbImport.setVersion(node.get(VDB_VERSION).asInt());
+			}
+			if (node.has(IMPORT_POLICIES)) {
+				vdbImport.setImportDataPolicies(node.get(IMPORT_POLICIES).asBoolean());
+			}
+			return vdbImport;
+		}
+		
+		public ModelNode describe(ModelNode node) {
+			addAttribute(node, VDB_NAME, ModelType.STRING, true);
+			addAttribute(node, VDB_VERSION, ModelType.INT, true);
+			addAttribute(node, IMPORT_POLICIES, ModelType.BOOLEAN, false);
 			return node; 
 		}
 	}	
@@ -710,29 +777,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			permissions.get(TYPE).set(ModelType.LIST);
 			permissions.get(DESCRIPTION).set(AdminPlugin.Util.getString(DATA_PERMISSIONS+DOT_DESC));
 			
-			ModelNode create = permissions.get(VALUE_TYPE, ALLOW_CREATE);
-			create.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_CREATE+DOT_DESC));
-			create.get(TYPE).set(ModelType.STRING);
-			
-			ModelNode read = permissions.get(VALUE_TYPE, ALLOW_READ);
-			read.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_READ+DOT_DESC));
-			read.get(TYPE).set(ModelType.STRING);
-
-			ModelNode update = permissions.get(VALUE_TYPE, ALLOW_UPDATE);
-			update.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_UPDATE+DOT_DESC));
-			update.get(TYPE).set(ModelType.STRING);
-
-			ModelNode delete = permissions.get(VALUE_TYPE, ALLOW_DELETE);
-			delete.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_DELETE+DOT_DESC));
-			delete.get(TYPE).set(ModelType.STRING);
-
-			ModelNode execute = permissions.get(VALUE_TYPE, ALLOW_EXECUTE);
-			execute.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_EXECUTE+DOT_DESC));
-			execute.get(TYPE).set(ModelType.STRING);
-
-			ModelNode alter = permissions.get(VALUE_TYPE, ALLOW_ALTER);
-			alter.get(DESCRIPTION).set(AdminPlugin.Util.getString(ALLOW_ALTER+DOT_DESC));
-			alter.get(TYPE).set(ModelType.STRING);
+			PermissionMetaDataMapper.INSTANCE.describe(permissions.get(VALUE_TYPE));
 			
 			ModelNode roleNames = node.get(MAPPED_ROLE_NAMES);
 			roleNames.get(TYPE).set(ModelType.LIST);

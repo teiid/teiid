@@ -1203,25 +1203,6 @@ public class AdminFactory {
 		}
 
 		@Override
-		public void mergeVDBs(String sourceVDBName, int sourceVDBVersion,
-				String targetVDBName, int targetVDBVersion)
-				throws AdminException {
-			final ModelNode request = buildRequest("teiid", "merge-vdbs", 
-					"source-vdb-name", sourceVDBName, 
-					"source-vdb-name", String.valueOf(sourceVDBVersion),
-					"target-vdb-name", targetVDBName, 
-					"target-vdb-version", String.valueOf(targetVDBVersion));//$NON-NLS-1$
-	        try {
-	            ModelNode outcome = this.connection.execute(request);
-	            if (!Util.isSuccess(outcome)) {
-	                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70037, Util.getFailureDescription(outcome));
-	            }
-	        } catch (Exception e) {
-	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70038, e, e.getMessage());
-	        }			
-		}
-
-		@Override
 		public void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "add-data-role", 
 	        		"vdb-name", vdbName,

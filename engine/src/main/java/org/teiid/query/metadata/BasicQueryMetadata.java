@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -512,6 +513,11 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	@Override
 	public QueryMetadataInterface getSessionMetadata() {
 		return null;
+	}
+	
+	@Override
+	public Set<String> getImportedModels() {
+		return Collections.emptySet();
 	}
     
 }

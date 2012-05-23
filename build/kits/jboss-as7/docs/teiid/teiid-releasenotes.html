@@ -26,6 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <UL>
+  <li><B>VDB Reuse</B> a vdb.xml can now declare imported vdbs to reuse metadata.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -33,7 +34,6 @@
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
-  <li>allowCreateTemporaryTablesByDefault and allowFunctionCallsByDefault are now set to false. When data roles are in use the user must explicitly grant these options to the user on VDB
 </ul>
 
 <h4>from 8.0</h4>
@@ -42,7 +42,8 @@
   <li>MetadataFactory no longer extends Schema.  Use the MetadataFactory.getSchema method to get the target Schema.
   <li>DDL created VIRTUAL pushdown functions should be referenced in the ExecutionFactory.getSupportedFunctions by their full <schema>.<function> name.
   <li>DDL functions/procedures defined without the VIRTUAL keyword are by default VIRTUAL.  Use the FOREIGN keyword to indicate that they are source specific.
-  <li>FunctionMethod.getFullName returns the proper schema, not category quailified name.
+  <li>FunctionMethod.getFullName returns the proper schema, not category qualified name.
+  <li>VDB.getUrl has been removed.
 <ul>
 
 <h4>from 7.x</h4>
@@ -63,6 +64,7 @@
   <li>VARBINARY, OPTIONS, and OUT were added as reserved words.
   <li>AbstractMetadataRecord and its sub-classes use a case-insensitive map for properties rather than a LinkedHashMap.  Thus, property key lookups are now case-insensitive.
   <li>Removed the unused ExecutionFactory methods supportsBetweenCriteria and supportsCaseExpression.    
+  <li>allowCreateTemporaryTablesByDefault and allowFunctionCallsByDefault are now set to false. When data roles are in use the user must explicitly grant these options to the user on VDB
 </ul>
 
 <h4>from 7.7</h4>

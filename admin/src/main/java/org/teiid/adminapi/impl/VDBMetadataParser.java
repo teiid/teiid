@@ -24,10 +24,19 @@ package org.teiid.adminapi.impl;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.*;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.XMLConstants;
-import javax.xml.stream.*;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
@@ -36,6 +45,7 @@ import javax.xml.validation.Validator;
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.core.types.XMLType;
@@ -110,6 +120,15 @@ public class VDBMetadataParser {
 				parseDataRole(reader, policy);
 				vdb.addDataPolicy(policy);
 				break;
+			case IMPORT_VDB:
+				VDBImportMetadata vdbImport = new VDBImportMetadata();
+				Properties props = getAttributes(reader);
+				vdbImport.setName(props.getProperty(Element.NAME.getLocalName()));
+				vdbImport.setVersion(Integer.parseInt(props.getProperty(Element.VERSION.getLocalName())));
+				vdbImport.setImportDataPolicies(Boolean.parseBoolean(props.getProperty(Element.IMPORT_POLICIES.getLocalName(), "true")));
+				vdb.getVDBImports().add(vdbImport);
+				ignoreTillEnd(reader);
+				break;
 			case ENTRY:
 				// this is designer specific.
 				break;
@@ -122,6 +141,11 @@ public class VDBMetadataParser {
             			 Element.DATA_ROLE.getLocalName()), reader.getLocation()); 
             }
         }		
+	}
+
+	private static void ignoreTillEnd(XMLStreamReader reader)
+			throws XMLStreamException {
+		while(reader.nextTag() != XMLStreamConstants.END_ELEMENT);
 	}
 
 	private static void parseProperty(XMLStreamReader reader, AdminObjectImpl anObj)
@@ -141,7 +165,7 @@ public class VDBMetadataParser {
 			}
 			anObj.addProperty(key, value);
 		}
-		while(reader.nextTag() != XMLStreamConstants.END_ELEMENT);
+		ignoreTillEnd(reader);
 	}
 	
 	private static void parseDataRole(XMLStreamReader reader, DataPolicyMetadata policy) throws XMLStreamException {
@@ -253,7 +277,7 @@ public class VDBMetadataParser {
 				String translatorName = sourceProps.getProperty(Element.SOURCE_TRANSLATOR_NAME_ATTR.getLocalName());
 				String connectionName = sourceProps.getProperty(Element.SOURCE_CONNECTION_JNDI_NAME_ATTR.getLocalName());
 				model.addSourceMapping(name, translatorName, connectionName);
-				while(reader.nextTag() != XMLStreamConstants.END_ELEMENT);
+				ignoreTillEnd(reader);
 				break;
 			case VALIDATION_ERROR:
 				Properties validationProps = getAttributes(reader);
@@ -305,6 +329,8 @@ public class VDBMetadataParser {
 	    PROPERTY("property"),
 	    VALUE("value"),
 	    MODEL("model"),
+	    IMPORT_VDB("import-vdb"),
+	    IMPORT_POLICIES("import-data-policies"),
 	    TYPE("type"),
 	    VISIBLE("visible"),
 	    PATH("path"),
@@ -374,6 +400,14 @@ public class VDBMetadataParser {
 		}
 		writeProperties(writer, vdb.getProperties());
 
+		for (VDBImport vdbImport : vdb.getVDBImports()) {
+			writer.writeStartElement(Element.IMPORT_VDB.getLocalName());
+			writer.writeAttribute(Element.NAME.getLocalName(), vdbImport.getName());
+			writer.writeAttribute(Element.VERSION.getLocalName(), String.valueOf(vdbImport.getVersion()));
+			writer.writeAttribute(Element.IMPORT_POLICIES.getLocalName(), String.valueOf(vdbImport.isImportDataPolicies()));
+			writer.writeEndElement();
+		}
+		
 		// models
 		Collection<ModelMetaData> models = vdb.getModelMetaDatas().values();
 		for (ModelMetaData model:models) {
@@ -498,7 +532,7 @@ public class VDBMetadataParser {
 	}
 	
 	private static void writeProperties(final XMLStreamWriter writer, Properties props)  throws XMLStreamException  {
-		Enumeration keys = props.propertyNames();
+		Enumeration<?> keys = props.propertyNames();
 		while (keys.hasMoreElements()) {
 	        writer.writeStartElement(Element.PROPERTY.getLocalName());
 			String key = (String)keys.nextElement();
@@ -515,8 +549,4 @@ public class VDBMetadataParser {
         writer.writeEndElement();
     }     
 
-    private static void writeAttribute(final XMLStreamWriter writer, final Element element, final String value) throws XMLStreamException {
-        writer.writeAttribute(element.getLocalName(),value);
-    }     
-    
 }

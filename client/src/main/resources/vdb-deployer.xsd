@@ -8,6 +8,16 @@
 			<xs:sequence>
 				<xs:element name="description" type="xs:string" minOccurs="0"/>
 				<xs:element name="property" type="property" minOccurs="0" maxOccurs="unbounded"/>
+				<xs:element name="import-vdb" maxOccurs="unbounded" minOccurs="0">
+					<xs:annotation>
+                        <xs:documentation>An imported VDB is reused in the context of this VDB.</xs:documentation>
+                    </xs:annotation>
+                    <xs:complexType>
+						<xs:attribute name="import-data-policies" type="xs:boolean" default="true" />
+						<xs:attribute name="name" type="xs:string" use="required" />
+						<xs:attribute name="version" type="xs:integer" use="required" />
+					</xs:complexType>
+				</xs:element>
 				<xs:element name="model" maxOccurs="unbounded" minOccurs="0">
                     <xs:annotation>
                         <xs:documentation>A model defines the alias for the Schema the data being integrated. In the Designer
@@ -144,6 +154,11 @@
 		<xs:unique name="modelNameUnique">
 			<xs:selector xpath="model"/>
 			<xs:field xpath="@name"/>
+		</xs:unique>
+		<xs:unique name="importUnique">
+			<xs:selector xpath="import-vdb"/>
+			<xs:field xpath="@name"/>
+			<xs:field xpath="@version"/>
 		</xs:unique>
 	</xs:element>
 	<xs:complexType name="property">

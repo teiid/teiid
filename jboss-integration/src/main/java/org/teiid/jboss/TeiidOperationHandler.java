@@ -629,65 +629,6 @@ class TerminateTransaction extends TeiidOperationHandler{
 	}	
 }
 
-class MergeVDBs extends BaseOperationHandler<VDBRepository>{
-	
-	protected MergeVDBs() {
-		super("merge-vdbs"); //$NON-NLS-1$
-	}
-	
-	@Override
-	protected VDBRepository getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
-        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
-        return VDBRepository.class.cast(sc.getValue());	
-	}
-	
-	@Override
-	protected void executeOperation(OperationContext context, VDBRepository repo, ModelNode operation) throws OperationFailedException {
-		if (!operation.hasDefined(OperationsConstants.SOURCE_VDBNAME)) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SOURCE_VDBNAME+MISSING)));
-		}
-		if (!operation.hasDefined(OperationsConstants.SOURCE_VDBVERSION)) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SOURCE_VDBVERSION+MISSING)));
-		}
-		
-		if (!operation.hasDefined(OperationsConstants.TARGET_VDBNAME)) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.TARGET_VDBNAME+MISSING)));
-		}
-		if (!operation.hasDefined(OperationsConstants.TARGET_VDBVERSION)) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.TARGET_VDBVERSION+MISSING)));
-		}
-				
-		String sourceVDBName = operation.get(OperationsConstants.SOURCE_VDBNAME).asString();
-		int sourceVDBversion = operation.get(OperationsConstants.SOURCE_VDBVERSION).asInt();
-		String targetVDBName = operation.get(OperationsConstants.TARGET_VDBNAME).asString();
-		int targetVDBversion = operation.get(OperationsConstants.TARGET_VDBVERSION).asInt();
-		try {
-			repo.mergeVDBs(sourceVDBName, sourceVDBversion, targetVDBName, targetVDBversion);
-		} catch (AdminException e) {
-			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
-		}
-	}
-	
-	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, TYPE).set(ModelType.STRING);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBNAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SOURCE_VDBNAME));
-		
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, TYPE).set(ModelType.STRING);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SOURCE_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SOURCE_VDBVERSION));
-
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, TYPE).set(ModelType.STRING);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBNAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TARGET_VDBNAME));
-
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, TYPE).set(ModelType.STRING);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, REQUIRED).set(true);
-		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.TARGET_VDBVERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.TARGET_VDBVERSION));
-		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
-	}	
-}
-
 class ExecuteQuery extends TeiidOperationHandler{
 	
 	protected ExecuteQuery() {

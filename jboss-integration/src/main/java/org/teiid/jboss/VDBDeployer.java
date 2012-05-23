@@ -50,10 +50,11 @@ import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
@@ -169,6 +170,10 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				sb.setInitialMode(Mode.PASSIVE).install();
 			}
 		});
+		
+		for (VDBImport vdbImport : deployment.getVDBImports()) {
+			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbImport.getVersion()));
+		}
 		
 		// adding the translator services is redundant, however if one is removed then it is an issue.
 		for (Model model:deployment.getModels()) {

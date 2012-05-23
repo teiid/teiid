@@ -33,17 +33,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminFactory;
-import org.teiid.adminapi.CacheStatistics;
-import org.teiid.adminapi.PropertyDefinition;
-import org.teiid.adminapi.Request;
-import org.teiid.adminapi.Session;
-import org.teiid.adminapi.Transaction;
-import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.WorkerPoolStatistics;
+import org.teiid.adminapi.*;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminshell.Help.Doc;
 
@@ -264,15 +254,6 @@ public class AdminShell {
 			@Doc(text = "transaction id") String transactionId)
 			throws AdminException {
 		getAdmin().terminateTransaction(transactionId);
-	}
-	
-	@Doc(text = "Merge two vdbs")
-	public static void mergeVDBs(
-			@Doc(text = "source vdb name") String sourceVDBName, 
-			@Doc(text = "source vdb version") int sourceVDBVersion,
-			@Doc(text = "target vdb name") String targetVDBName, 
-			@Doc(text = "target vdb version") int targetVDBVersion) throws AdminException {
-		getAdmin().mergeVDBs(sourceVDBName, sourceVDBVersion, targetVDBName, targetVDBVersion);
 	}
 	
 	@Doc(text = "Checks if a translator exists")

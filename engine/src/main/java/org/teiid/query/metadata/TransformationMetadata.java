@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -1085,5 +1086,13 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.partialNameToFullNameCache = this.partialNameToFullNameCache;
 		tm.procedureCache = this.procedureCache; 
 		return tm;
+	}
+	
+	@Override
+	public Set<String> getImportedModels() {
+		if (this.vdbMetaData == null) {
+			return Collections.emptySet();
+		}
+		return this.vdbMetaData.getImportedModels();
 	}
 }

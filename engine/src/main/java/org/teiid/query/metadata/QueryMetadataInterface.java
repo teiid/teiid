@@ -25,6 +25,7 @@ package org.teiid.query.metadata;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -643,4 +644,6 @@ public interface QueryMetadataInterface {
 	boolean hasProcedure(String name) throws TeiidComponentException;
 
 	QueryMetadataInterface getSessionMetadata();
+
+	Set<String> getImportedModels();
 }

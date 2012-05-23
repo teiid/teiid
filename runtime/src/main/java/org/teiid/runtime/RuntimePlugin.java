@@ -112,5 +112,8 @@ public class RuntimePlugin {
     	TEIID40080,
     	TEIID40081,
     	TEIID40082,
+    	TEIID40083, //vdb import does not exist
+    	TEIID40084, //imported role conflict
+    	TEIID40085, //imported model conflict
     }
 }

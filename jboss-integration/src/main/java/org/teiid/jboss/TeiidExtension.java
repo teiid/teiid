@@ -122,7 +122,6 @@ public class TeiidExtension implements Extension {
 		// teiid level admin api operation handlers
 		new GetTranslator().register(teiidSubsystem);
 		new ListTranslators().register(teiidSubsystem);
-		new MergeVDBs().register(teiidSubsystem);
 		new ListVDBs().register(teiidSubsystem);
 		new GetVDB().register(teiidSubsystem);
 		new CacheTypes().register(teiidSubsystem);

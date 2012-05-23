@@ -41,9 +41,9 @@ import javax.security.auth.login.LoginException;
 import org.mockito.Mockito;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
-import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
@@ -97,6 +97,18 @@ import org.teiid.transport.LogonImpl;
 
 @SuppressWarnings({"nls"})
 public class FakeServer extends ClientServiceRegistryImpl implements ConnectionProfile {
+	
+	public static class DeployVDBParameter {
+		public Map<String, Collection<FunctionMethod>> udfs;
+		public MetadataRepository metadataRepo;
+		public List<VDBImportMetadata> vdbImports;
+
+		public DeployVDBParameter(Map<String, Collection<FunctionMethod>> udfs,
+				MetadataRepository metadataRepo) {
+			this.udfs = udfs;
+			this.metadataRepo = metadataRepo;
+		}
+	}
 	
 	public interface ReplicatedCache<K, V> extends Cache<K, V>  {
 		
@@ -366,52 +378,45 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	}
 	
 	public void deployVDB(String vdbName, String vdbPath) throws Exception {
-		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
-        deployVDB(vdbName, imf, null, null);		
+        deployVDB(vdbName, vdbPath, new DeployVDBParameter(null, null));		
 	}	
 
-	public void deployVDB(String vdbName, String vdbPath, MetadataRepository metadataRepo) throws Exception {
+	public void deployVDB(String vdbName, String vdbPath, DeployVDBParameter parameterObject) throws Exception {
 		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
-        deployVDB(vdbName, imf, null, metadataRepo);		
-	}
-	
-	public void deployVDB(String vdbName, String vdbPath, Map<String, Collection<FunctionMethod>> udfs) throws Exception {
-		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
-        deployVDB(vdbName, imf, udfs, null);		
+        deployVDB(vdbName, imf, parameterObject);		
 	}
 	
 	public void deployVDB(String vdbName, MetadataStore metadata) {
-		deployVDB(vdbName, metadata, null, null);
+		deployVDB(vdbName, metadata, new DeployVDBParameter(null, null));
 	}
 
-	public void deployVDB(String vdbName, MetadataStore metadata, Map<String, Collection<FunctionMethod>> udfs, MetadataRepository metadataRepo) {
+	public void deployVDB(String vdbName, MetadataStore metadata, DeployVDBParameter parameterObject) {
 		VDBMetaData vdbMetaData = new VDBMetaData();
         vdbMetaData.setName(vdbName);
         vdbMetaData.setStatus(VDB.Status.ACTIVE);
         
-        for (Schema schema : repo.getSystemStore().getSchemas().values()) {
-        	addModel(vdbMetaData, schema); 
-        }
-        
-        for (Schema schema : repo.getODBCStore().getSchemas().values()) {
-        	addModel(vdbMetaData, schema); 
-        }        
-        
         for (Schema schema : metadata.getSchemas().values()) {
         	ModelMetaData model = addModel(vdbMetaData, schema);
-        	if (metadataRepo != null) {
-        		model.addAttchment(MetadataRepository.class, metadataRepo);
+        	if (parameterObject.metadataRepo != null) {
+        		model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
         	}
         }
                         
         try {
         	UDFMetaData udfMetaData = null;
-        	if (udfs != null) {
+        	if (parameterObject.udfs != null) {
         		udfMetaData = new UDFMetaData();
-        		for (Map.Entry<String, Collection<FunctionMethod>> entry : udfs.entrySet()) {
+        		for (Map.Entry<String, Collection<FunctionMethod>> entry : parameterObject.udfs.entrySet()) {
         			udfMetaData.addFunctions(entry.getKey(), entry.getValue());
         		}
         	}
+        	
+        	if (parameterObject.vdbImports != null) {
+        		for (VDBImportMetadata vdbImport : parameterObject.vdbImports) {
+					vdbMetaData.getVDBImports().add(vdbImport);
+				}
+        	}
+        	
 			this.repo.addVDB(vdbMetaData, metadata, (metadata instanceof IndexMetadataStore)?((IndexMetadataStore)metadata).getEntriesPlusVisibilities():null, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
 			this.repo.getVDB(vdbMetaData.getName(), vdbMetaData.getVersion()).setStatus(VDB.Status.ACTIVE);
@@ -438,11 +443,6 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 	
 	public void undeployVDB(String vdbName) {
 		this.repo.removeVDB(vdbName, 1);
-	}
-	
-	public void mergeVDBS(String sourceVDB, String targetVDB) throws AdminException {
-		this.repo.mergeVDBs(sourceVDB, 1, targetVDB, 1);
-		this.repo.getVDB(targetVDB, 1).setStatus(VDB.Status.ACTIVE);
 	}
 	
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {

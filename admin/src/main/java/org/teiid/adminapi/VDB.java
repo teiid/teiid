@@ -65,12 +65,6 @@ public interface VDB extends AdminObject, DomainAware {
     public int getVersion();
     
     /**
-     * Get the URL for the VDB
-     * @return
-     */
-    public String getUrl();
-    
-    /**
      * Get the description of the VDB
      * @return
      */
@@ -99,4 +93,10 @@ public interface VDB extends AdminObject, DomainAware {
      * @return
      */
     public List<Translator> getOverrideTranslators();
+    
+    /**
+     * Get the list of vdb imports
+     * @return
+     */
+    public List<? extends VDBImport> getVDBImports();
 }

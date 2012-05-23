@@ -249,17 +249,6 @@ public interface Admin {
     void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException;
     
     /**
-     * Merge the Source VDB into Target VDB. Both Source and Target VDBs must be present for this method to
-     * succeed. The changes will not be persistent between server restarts.
-     * @param sourceVDBName
-     * @param sourceVDBVersion
-     * @param targetVDBName
-     * @param targetVDBVersion
-     */
-    void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException;
-
-    
-    /**
      * Creates a JCA data source
      * @param deploymentName - name of the source
      * @param templateName - template of data source

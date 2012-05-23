@@ -202,13 +202,13 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-        assertEquals(39, opNames.size());
+        assertEquals(38, opNames.size());
 		String[] ops = { "add","add-anyauthenticated-role","add-data-role","assign-datasource",
 				"cache-statistics","cache-types","cancel-request","change-vdb-connection-type",
 				"clear-cache","describe","execute-query","get-plan","get-translator","get-vdb",
 				"list-long-running-requests","list-requests","list-requests-per-session",
 				"list-requests-per-vdb","list-sessions","list-transactions","list-translators",
-				"list-vdbs","mark-datasource-available","merge-vdbs","read-attribute",
+				"list-vdbs","mark-datasource-available","read-attribute",
 				"read-children-names","read-children-resources","read-children-types",
 				"read-operation-description","read-operation-names","read-rar-description",
 				"read-resource","read-resource-description","remove-anyauthenticated-role",

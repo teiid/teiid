@@ -23,9 +23,9 @@ package org.teiid.adminapi.impl;
 
 import static org.junit.Assert.*;
 
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.PropertiesUtils;
@@ -70,6 +71,11 @@ public class TestVDBMetaData {
 		assertNotNull(vdb.getModel("model-one")); //$NON-NLS-1$
 		assertNotNull(vdb.getModel("model-two")); //$NON-NLS-1$
 		assertNull(vdb.getModel("model-unknown")); //$NON-NLS-1$
+		
+		assertEquals(1, vdb.getVDBImports().size());
+		VDBImport vdbImport = vdb.getVDBImports().get(0);
+		assertEquals("x", vdbImport.getName());
+		assertEquals(2, vdbImport.getVersion());
 		
 		modelOne = vdb.getModel("model-one"); //$NON-NLS-1$
 		assertEquals("model-one", modelOne.getName()); //$NON-NLS-1$
@@ -133,6 +139,11 @@ public class TestVDBMetaData {
 		vdb.addProperty("vdb-property", "vdb-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		vdb.addProperty("vdb-property2", "vdb-value2"); //$NON-NLS-1$ //$NON-NLS-2$
 		
+		VDBImportMetadata vdbImport = new VDBImportMetadata();
+		vdbImport.setName("x");
+		vdbImport.setVersion(2);
+		vdb.getVDBImports().add(vdbImport);
+		
 		ModelMetaData modelOne = new ModelMetaData();
 		modelOne.setName("model-one"); //$NON-NLS-1$
 		modelOne.addSourceMapping("s1", "translator", "java:mybinding"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -190,16 +201,9 @@ public class TestVDBMetaData {
 	public void testAdminMOCreation() {
 		VDBMetaData vdb = new VDBMetaData();
 		
-		PropertiesUtils.setBeanProperty(vdb, "url", "http://teiid.org/myvdb.vdb");
+		PropertiesUtils.setBeanProperty(vdb, "name", "x");
 		
-		assertEquals("http://teiid.org/myvdb.vdb", vdb.getUrl());
-	}
-	
-	@Test public void testSetUrlVersion() throws MalformedURLException {
-		VDBMetaData vdb = new VDBMetaData();
-		vdb.setName("foo");
-		vdb.setUrl(new URL("file:///x/foo.2.vdb"));
-		assertEquals(2, vdb.getVersion());
+		assertEquals("x", vdb.getName());
 	}
 	
 	@Test public void testVDBMetaDataMapper() {

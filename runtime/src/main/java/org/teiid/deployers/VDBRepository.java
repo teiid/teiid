@@ -32,8 +32,6 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
@@ -91,12 +89,17 @@ public class VDBRepository implements Serializable{
 			stores = new MetadataStore[] {this.systemStore, odbcStore};
 		}
 		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, stores);
-		this.vdbRepo.put(vdbId(vdb), cvdb); 
+		cvdb.buildCompositeState(this);
+		this.vdbRepo.put(vdbId(vdb), cvdb);
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
 	}
 
+	CompositeVDB getCompositeVDB(String name, int version) {
+		return this.vdbRepo.get(new VDBKey(name, version));
+	}
+	
 	public VDBMetaData getVDB(String name, int version) {
-		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
+		CompositeVDB v = getCompositeVDB(name, version);
 		if (v != null) {
 			return v.getVDB();
 		}
@@ -211,46 +214,15 @@ public class VDBRepository implements Serializable{
 	public boolean removeVDB(String vdbName, int vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		CompositeVDB removed = this.vdbRepo.remove(key);
-		if (removed != null) {
-			// if this VDB was part of another VDB; then remove them.
-			for (CompositeVDB other:this.vdbRepo.values()) {
-				synchronized (other) {
-					if (other.hasChildVdb(key)) {
-						notifyRemove(other.getVDB().getName(), other.getVDB().getVersion(), other);
-		
-						other.removeChild(key);
-		
-						notifyAdd(other.getVDB().getName(), other.getVDB().getVersion(), other);
-					}
-				}
-			}
-			notifyRemove(key.getName(), key.getVersion(), removed);
-			return true;
+		if (removed == null) {
+			return false;
 		}
-		return false;
+		notifyRemove(key.getName(), key.getVersion(), removed);
+		return true;
 	}	
 	
 	public Map<String, Datatype> getBuiltinDatatypes() {
 		return datatypeMap;
-	}
-	
-	public void mergeVDBs(String sourceVDBName, int sourceVDBVersion, String targetVDBName, int targetVDBVersion) throws AdminException{
-		CompositeVDB source = this.vdbRepo.get(new VDBKey(sourceVDBName, sourceVDBVersion));
-		if (source == null) {
-			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40037, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40037, sourceVDBName, sourceVDBVersion));
-		}
-		
-		CompositeVDB target = this.vdbRepo.get(new VDBKey(targetVDBName, targetVDBVersion));
-		if (target == null) {
-			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40038, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40038, sourceVDBName, sourceVDBVersion));
-		}		
-
-		notifyRemove(targetVDBName, targetVDBVersion, target);
-		// merge them
-		target.addChild(source);
-		
-		notifyAdd(targetVDBName, targetVDBVersion, target);
-		finishDeployment(targetVDBName, targetVDBVersion);		
 	}
 	
 	// this is called by mc
@@ -262,10 +234,13 @@ public class VDBRepository implements Serializable{
 	
 	public void finishDeployment(String name, int version) {
 		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
-		if (v!= null) {
-			boolean valid = false;
-			v.metadataLoadFinished();
-			VDBMetaData metdataAwareVDB = v.getVDB();			
+		if (v == null) {
+			return;
+		}
+		boolean valid = false;
+		v.metadataLoadFinished();
+		VDBMetaData metdataAwareVDB = v.getVDB();			
+		synchronized (metdataAwareVDB) {
 			ValidatorReport report = MetadataValidator.validate(metdataAwareVDB, metdataAwareVDB.removeAttachment(MetadataStore.class));
 			
 			if (!report.hasItems()) {
@@ -286,7 +261,6 @@ public class VDBRepository implements Serializable{
 			else {
 				metdataAwareVDB.setStatus(VDB.Status.INACTIVE);
 			}
-				
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, (VDB.Status.ACTIVE == metdataAwareVDB.getStatus())?RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version):RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40006,name, version));
 			notifyFinished(name, version, v);
 		}
