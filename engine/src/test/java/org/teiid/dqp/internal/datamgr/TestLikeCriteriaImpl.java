@@ -49,7 +49,7 @@ public class TestLikeCriteriaImpl extends TestCase {
     }
     
     public static Like example(String right, char escape, boolean negated) throws Exception {
-        return (Like)TstLanguageBridgeFactory.factory.translate(helpExample(right, escape, negated));
+        return TstLanguageBridgeFactory.factory.translate(helpExample(right, escape, negated));
     }
 
     public void testGetLeftExpression() throws Exception {

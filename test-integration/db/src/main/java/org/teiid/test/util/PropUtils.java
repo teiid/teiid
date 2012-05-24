@@ -10,7 +10,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-
+@SuppressWarnings("nls")
 public class PropUtils {
 	
 

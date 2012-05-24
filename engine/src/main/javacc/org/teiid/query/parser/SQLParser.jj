@@ -32,7 +32,7 @@ import org.teiid.translator.*;
  * file.  <B>WARNING:</B> DO NOT MODIFY the SQLParser.java file as it will be 
  * regenerated from the .jj file and your changes will be lost!</p>
  */
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unused"})
 public class SQLParser extends SQLParserUtil {
 
 } // end class

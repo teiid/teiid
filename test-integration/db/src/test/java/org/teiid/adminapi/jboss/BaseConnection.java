@@ -8,7 +8,7 @@ import java.sql.Statement;
 
 import org.teiid.jdbc.TeiidDataSource;
 
-
+@SuppressWarnings("nls")
 public class BaseConnection {
 	static String user = "admin";
 	static String password = "teiid";

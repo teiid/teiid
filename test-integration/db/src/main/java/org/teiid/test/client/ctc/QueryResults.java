@@ -78,6 +78,7 @@ import org.teiid.query.sql.symbol.Symbol;
  * the query select statement. If no ordering list is specified, the order is the same as results fields are added to this object.
  * <p>
  */
+@SuppressWarnings("nls")
 public class QueryResults implements
                          Externalizable {
 

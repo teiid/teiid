@@ -29,7 +29,7 @@ import org.teiid.net.socket.ServiceInvocationStruct;
 
 import junit.framework.TestCase;
 
-
+@SuppressWarnings("nls")
 public class TestServiceInvocationStruct extends TestCase {
 
     public void testSerialize() throws Exception {

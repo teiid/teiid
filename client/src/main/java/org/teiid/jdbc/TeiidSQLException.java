@@ -161,6 +161,7 @@ public class TeiidSQLException extends SQLException {
      * @param exception
      * @return
      */
+    @SuppressWarnings("deprecation")
     private static Throwable findRootException(Throwable exception) {
         if (exception instanceof TeiidRuntimeException) {
         	while (exception.getCause() != exception

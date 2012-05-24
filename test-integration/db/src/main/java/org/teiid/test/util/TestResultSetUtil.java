@@ -51,6 +51,7 @@ import org.teiid.jdbc.TeiidSQLException;
  * 
  * @since
  */
+@SuppressWarnings("nls")
 public class TestResultSetUtil {
 
     
@@ -60,7 +61,7 @@ public class TestResultSetUtil {
     private static final String MORE = "$ ";
     
     
-    public static List compareThrowable(Throwable t, String query, File expectedResultsFile, boolean printToConsole) throws IOException, SQLException  {
+    public static List compareThrowable(Throwable t, String query, File expectedResultsFile, boolean printToConsole) throws IOException  {
         BufferedReader expectedResultsReader = null;
         if (expectedResultsFile != null && expectedResultsFile.exists() && expectedResultsFile.canRead()) {
             expectedResultsReader = new BufferedReader(new FileReader(expectedResultsFile));

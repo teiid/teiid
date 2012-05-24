@@ -21,7 +21,6 @@
  */
 package org.teiid.translator;
 
-import org.teiid.core.BundleUtil;
 import org.teiid.core.TeiidRuntimeException;
 
 /**

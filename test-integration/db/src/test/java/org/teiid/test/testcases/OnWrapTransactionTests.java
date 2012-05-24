@@ -36,6 +36,7 @@ import org.teiid.test.framework.transaction.TxnAutoTransaction;
  * @author vanhalbert
  * 
  */
+@SuppressWarnings("nls")
 public class OnWrapTransactionTests extends CommonTransactionTests {
 
 
@@ -143,7 +144,7 @@ public class OnWrapTransactionTests extends CommonTransactionTests {
 		// force the rollback by trying to insert an invalid row.
 		list.add("insert into pm1.g2 (e1, e2) values(9999,'9999')");
 
-		executeBatch((String[]) list.toArray(new String[list.size()]));
+		executeBatch(list.toArray(new String[list.size()]));
 	    }
 
 	    @Override

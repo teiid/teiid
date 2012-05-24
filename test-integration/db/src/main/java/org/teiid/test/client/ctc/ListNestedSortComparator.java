@@ -24,8 +24,6 @@ package org.teiid.test.client.ctc;
 
 import java.util.List;
 
-import org.teiid.core.util.ArgCheck;
-
 
 
 

@@ -42,7 +42,7 @@ import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-
+@SuppressWarnings("nls")
 public class XMLQueryReader implements QueryReader {
  
     private Properties props = null;
@@ -116,7 +116,6 @@ public class XMLQueryReader implements QueryReader {
     private List <QueryTest> loadQueries(String querySetID, String queryFileName)
 	    throws IOException {
 
-	List<QueryTest> queries = null;
 //	Map<String, Object> queries = new HashMap<String, Object>();
 	File queryFile = new File(queryFileName);
 	if (!queryFile.exists() || !queryFile.canRead()) {
@@ -153,7 +152,7 @@ public class XMLQueryReader implements QueryReader {
 	String querySet = queryFileName;
 	List<String> nameParts = StringUtil.split(querySet, "./\\"); //$NON-NLS-1$
 	if (nameParts.size() > 1) {
-	    querySet = (String) nameParts.get(nameParts.size() - 2);
+	    querySet = nameParts.get(nameParts.size() - 2);
 	}
 	return querySet;
     }

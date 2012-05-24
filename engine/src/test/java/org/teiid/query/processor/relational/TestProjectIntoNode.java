@@ -22,7 +22,9 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,15 +32,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
-import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.common.buffer.TupleBatch;
-import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.*;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.events.EventDistributor;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;

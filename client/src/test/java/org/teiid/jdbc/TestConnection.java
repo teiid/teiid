@@ -41,7 +41,7 @@ import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.net.ServerConnection;
 
-
+@SuppressWarnings("nls")
 public class TestConnection extends TestCase {
 
 	protected static final String STD_DATABASE_NAME         = "QT_Ora9DS"; //$NON-NLS-1$

@@ -27,8 +27,6 @@ import java.util.Collections;
 
 import junit.framework.TestCase;
 
-import org.junit.Test;
-import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageFactory;
@@ -38,6 +36,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestPathFunctionModifier extends TestCase {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();

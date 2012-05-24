@@ -23,16 +23,10 @@
 package org.teiid.jdbc;
 
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Stack;
-
-import org.teiid.core.util.UnitTestUtil;
-import org.teiid.jdbc.TeiidDriver;
 
 
 

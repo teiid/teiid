@@ -28,8 +28,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.ResultSet;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -40,7 +38,7 @@ import org.teiid.test.client.TestProperties;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
-
+@SuppressWarnings("nls")
 public class ResultsGeneratorImpl implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$

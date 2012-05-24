@@ -87,13 +87,13 @@ public class TestSubquerySetCriteria extends TestCase {
 
     public void testEquals2() {
         SubquerySetCriteria c1 = example1();
-        SubquerySetCriteria c2 = (SubquerySetCriteria)c1.clone();
+        SubquerySetCriteria c2 = c1.clone();
         assertTrue("Equivalent set criteria should have been equal.", c1.equals(c2)); //$NON-NLS-1$
     }
 
     public void testEquals3() {
         SubquerySetCriteria c1 = example1();
-        SubquerySetCriteria c2 = (SubquerySetCriteria)c1.clone();
+        SubquerySetCriteria c2 = c1.clone();
         c2.setNegated(true);
         assertFalse("Set criteria are not the same", c1.equals(c2)); //$NON-NLS-1$
     }

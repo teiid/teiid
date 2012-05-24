@@ -43,6 +43,7 @@ import junit.framework.TestCase;
 /**
  * Tests primarily the various cloning scenarios available with PropertiesUtils
  */
+@SuppressWarnings("nls")
 public class TestPropertiesUtils extends TestCase {
 
     private final static String TEMP_FILE = UnitTestUtil.getTestScratchPath() + "/temp.properties";  //$NON-NLS-1$

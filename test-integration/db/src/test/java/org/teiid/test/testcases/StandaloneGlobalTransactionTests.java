@@ -19,6 +19,7 @@ import org.teiid.test.framework.transaction.StandaloneGlobalTransaction;
  * This is global transaction test to be used when transaction is external
  * in places like inside app server
  */
+@SuppressWarnings("nls")
 public class StandaloneGlobalTransactionTests extends LocalTransactionTests {
     
     private static Properties SYS_PROPS;

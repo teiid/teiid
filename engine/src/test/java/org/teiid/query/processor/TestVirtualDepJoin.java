@@ -457,7 +457,7 @@ public class TestVirtualDepJoin {
         BatchCollector collector = processor.createBatchCollector();
         TupleBuffer id = collector.collectTuples();
 
-        TestProcessor.examineResults((List[])expected.toArray(new List[expected.size()]), bufferMgr, id);
+        TestProcessor.examineResults(expected.toArray(new List[expected.size()]), bufferMgr, id);
     }
 
     private BufferManager createCustomBufferMgr(int batchSize) {
@@ -556,7 +556,7 @@ public class TestVirtualDepJoin {
         
         dataMgr.registerTuples(
             metadata,
-            "CustomerMaster.Customers", (List[])data.toArray(new List[data.size()]));
+            "CustomerMaster.Customers", data.toArray(new List[data.size()]));
     }
     
     @Test public void testVirtualAccessVirtualDep() throws Exception {

@@ -18,6 +18,7 @@ import org.teiid.test.framework.transaction.LocalTransaction;
  * User Transaction Test is where user handles all the transaction boundaries
  * so, autocmmit = OFF, and No transaction auto wrapping.
  */
+@SuppressWarnings("nls")
 public class LocalTransactionTests extends CommonTransactionTests {
 
 

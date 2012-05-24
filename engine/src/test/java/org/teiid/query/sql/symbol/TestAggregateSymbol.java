@@ -32,7 +32,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 
-
+@SuppressWarnings("nls")
 public class TestAggregateSymbol extends TestCase {
 
 	// ################################## FRAMEWORK ################################

@@ -248,7 +248,7 @@ public class TestMappingLoader extends TestCase {
         assertEquals(1, element.getMinOccurence());
         assertEquals(1, element.getMaxOccurence());
         
-        MappingNode node1 = (MappingNode)element.getNodeChildren().get(0);
+        MappingNode node1 = element.getNodeChildren().get(0);
              
         // make sure source's child is mapping element and mapping element's source
         // is above source        
@@ -288,17 +288,17 @@ public class TestMappingLoader extends TestCase {
         MappingElement element = (MappingElement)node;
         assertEquals("parentNode", element.getName()); //$NON-NLS-1$
         
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingChoiceNode);
         MappingChoiceNode choice = (MappingChoiceNode)node;
         assertTrue(choice.throwExceptionOnDefault());
         
-        node = (MappingNode)choice.getNodeChildren().get(0);
+        node = choice.getNodeChildren().get(0);
         assertTrue(node instanceof MappingCriteriaNode);
         MappingCriteriaNode criteria = (MappingCriteriaNode)node;
         assertEquals("childNodeCriteria", criteria.getCriteria()); //$NON-NLS-1$
         
-        node = (MappingNode)criteria.getNodeChildren().get(0);
+        node = criteria.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);
         element = (MappingElement)node;
         assertEquals("childNode", element.getName()); //$NON-NLS-1$
@@ -334,17 +334,17 @@ public class TestMappingLoader extends TestCase {
         MappingElement element = (MappingElement)node;
         assertEquals("parentNode", element.getName()); //$NON-NLS-1$
         
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingChoiceNode);
         MappingChoiceNode choice = (MappingChoiceNode)node;
         assertTrue(choice.throwExceptionOnDefault());
         
-        node = (MappingNode)choice.getNodeChildren().get(0);
+        node = choice.getNodeChildren().get(0);
         assertTrue(node instanceof MappingCriteriaNode);
         MappingCriteriaNode criteria = (MappingCriteriaNode)node;
         assertEquals("childNodeCriteria", criteria.getCriteria()); //$NON-NLS-1$
         
-        node = (MappingNode)criteria.getNodeChildren().get(0);
+        node = criteria.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);
         element = (MappingElement)node;
         assertEquals("childNode", element.getName()); //$NON-NLS-1$
@@ -419,7 +419,7 @@ public class TestMappingLoader extends TestCase {
         assertFalse(element.isRecursive());
         assertEquals("parentNodeSource", element.getSource()); //$NON-NLS-1$
         
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingElement);        
         element = (MappingElement)node;
         assertEquals("childNode", element.getName()); //$NON-NLS-1$
@@ -431,7 +431,7 @@ public class TestMappingLoader extends TestCase {
         assertEquals("ddd", attribute.getDefaultValue()); //$NON-NLS-1$
         assertEquals("fff", attribute.getValue()); //$NON-NLS-1$
         
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingRecursiveElement);        
         MappingRecursiveElement recursive = (MappingRecursiveElement)node;
         assertEquals("recursivenodename", recursive.getName()); //$NON-NLS-1$
@@ -627,7 +627,7 @@ public class TestMappingLoader extends TestCase {
         assertEquals("parentSource", element.getSource()); //$NON-NLS-1$
         
         // recursive source
-        node = (MappingNode)element.getNodeChildren().get(0);
+        node = element.getNodeChildren().get(0);
         assertTrue(node instanceof MappingRecursiveElement);        
         MappingRecursiveElement relement = (MappingRecursiveElement)node;
         

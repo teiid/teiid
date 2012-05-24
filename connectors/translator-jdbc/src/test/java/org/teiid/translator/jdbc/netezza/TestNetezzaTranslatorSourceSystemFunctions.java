@@ -30,6 +30,7 @@ import org.teiid.translator.jdbc.TranslationHelper;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestNetezzaTranslatorSourceSystemFunctions {
 
     private static NetezzaExecutionFactory TRANSLATOR; 

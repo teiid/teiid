@@ -14,7 +14,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 
 
 
-
+@SuppressWarnings("nls")
 public class JNDITransaction extends TransactionContainer {
     UserTransaction userTxn = null;
     

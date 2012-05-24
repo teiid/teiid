@@ -38,6 +38,7 @@ import org.teiid.translator.jdbc.TranslationHelper;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestNetezzaTranslatorDatetimeConversion {
 
     private static NetezzaExecutionFactory TRANSLATOR; 
@@ -54,11 +55,6 @@ public class TestNetezzaTranslatorDatetimeConversion {
     /////////////////UTILLITY FUNCTIONS/////////
     ////////////////////////////////////////////
 
-    private String getTestVDB() {
-        //return TranslationHelper.NETEZZA_VDB;
-    	return TranslationHelper.PARTS_VDB;
-    }
-    
     private String getTestBQTVDB() {
         return TranslationHelper.BQT_VDB; 
     }

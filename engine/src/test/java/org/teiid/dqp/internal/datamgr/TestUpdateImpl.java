@@ -31,7 +31,7 @@ import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
-
+@SuppressWarnings("nls")
 public class TestUpdateImpl extends TestCase {
 
     /**

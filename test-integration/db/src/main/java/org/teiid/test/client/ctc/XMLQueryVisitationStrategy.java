@@ -26,19 +26,8 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.sql.*;
+import java.util.*;
 
 import org.jdom.Attribute;
 import org.jdom.Document;
@@ -54,7 +43,6 @@ import org.teiid.test.client.QuerySQL;
 import org.teiid.test.client.QueryTest;
 import org.teiid.test.client.ctc.QueryResults.ColumnInfo;
 import org.teiid.test.framework.TestLogger;
-import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 import org.teiid.test.util.StringUtil;
 
@@ -69,7 +57,7 @@ import org.teiid.test.util.StringUtil;
  * convert the ResultSets into XML. This also helps convert Exceptions into XML
  * format.</P>
  */
-
+@SuppressWarnings("nls")
 public class XMLQueryVisitationStrategy {
 
     //the row from which we start converting ResultSets to XML

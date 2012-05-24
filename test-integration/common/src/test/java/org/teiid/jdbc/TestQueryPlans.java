@@ -24,15 +24,10 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLXML;
-import java.sql.Statement;
-import java.sql.Types;
+import java.sql.*;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 

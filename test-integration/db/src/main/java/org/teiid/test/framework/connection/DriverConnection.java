@@ -18,6 +18,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * The DriverConnection strategy that can get connections in standalone mode or
  * embedded mode.
  */
+@SuppressWarnings("nls")
 public class DriverConnection extends ConnectionStrategy {
 
     public static final String DS_USER = "user"; //$NON-NLS-1$

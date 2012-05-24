@@ -29,6 +29,7 @@ package org.teiid.test.client;
  * @author vanhalbert
  * 
  */
+@SuppressWarnings("nls")
 public interface TestResult {
 
     /**

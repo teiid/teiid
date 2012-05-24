@@ -22,7 +22,6 @@
 
 package org.teiid.cdk.api;
 
-import static org.junit.Assert.assertEquals;
 import junit.framework.TestCase;
 
 import org.teiid.core.util.UnitTestUtil;

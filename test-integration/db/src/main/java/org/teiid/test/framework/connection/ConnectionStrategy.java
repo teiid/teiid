@@ -17,7 +17,7 @@ import org.teiid.test.framework.datasource.DataStore;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-
+@SuppressWarnings("nls")
 public abstract class ConnectionStrategy {
 
     private Properties env = null;

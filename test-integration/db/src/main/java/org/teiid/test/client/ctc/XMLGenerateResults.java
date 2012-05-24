@@ -22,24 +22,13 @@
 
 package org.teiid.test.client.ctc;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 
-import org.jdom.Attribute;
-import org.jdom.CDATA;
-import org.jdom.Document;
-import org.jdom.Element;
-import org.jdom.JDOMException;
+import org.jdom.*;
 import org.jdom.output.XMLOutputter;
 import org.junit.Assert;
 import org.teiid.core.util.FileUtils;
@@ -50,7 +39,7 @@ import org.teiid.test.client.TestProperties;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
-
+@SuppressWarnings("nls")
 public class XMLGenerateResults implements ResultsGenerator {
     private static final SimpleDateFormat FILE_NAME_DATE_FORMATER = new SimpleDateFormat(
 	    "yyyyMMdd_HHmmss"); //$NON-NLS-1$

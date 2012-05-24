@@ -9,11 +9,9 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeoutException;
 
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.jdbc.AbstractQueryTest;
 import org.teiid.jdbc.TeiidSQLException;
-import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
 
@@ -21,6 +19,7 @@ import org.teiid.test.framework.query.QueryExecution;
 /** 
  * A common test case among many different transaction stuff. 
  */
+@SuppressWarnings("nls")
 public abstract class CommonTransactionTests extends BaseAbstractTransactionTestCase {
     
      

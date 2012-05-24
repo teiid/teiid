@@ -38,6 +38,7 @@ import junit.framework.TestCase;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestEscapeSyntaxModifier extends TestCase {
 
     /**

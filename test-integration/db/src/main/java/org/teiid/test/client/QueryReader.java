@@ -44,6 +44,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public interface QueryReader {
     
     /**

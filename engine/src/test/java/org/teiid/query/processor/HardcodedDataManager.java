@@ -22,18 +22,13 @@
 
 package org.teiid.query.processor;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.events.EventDistributor;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Expression;

@@ -30,6 +30,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * @author vanhalbert
  * 
  */
+@SuppressWarnings("nls")
 public class DataSourceMgr {
 
     private static DataSourceMgr _instance = null;

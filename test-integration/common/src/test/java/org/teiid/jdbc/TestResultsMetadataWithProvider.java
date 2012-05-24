@@ -33,6 +33,7 @@ import junit.framework.TestCase;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestResultsMetadataWithProvider extends TestCase {
 
     /**

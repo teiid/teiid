@@ -15,6 +15,7 @@ import org.teiid.test.framework.datasource.DataStore;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public interface ConfigPropertyNames {
 	
 	/**

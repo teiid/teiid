@@ -79,7 +79,7 @@ public class TestResultsMessage extends TestCase {
         message.setWarnings(warnings);
         return message;
     }
-    
+	@SuppressWarnings("deprecation")
     public void testSerialize() throws Exception {
         ResultsMessage message = example();
         

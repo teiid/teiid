@@ -10,7 +10,6 @@ import java.util.Properties;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
 
-import org.teiid.test.framework.datasource.DataSourceFactory;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
@@ -19,6 +18,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * server. Make sure all the jndi names are set correctly in the properties
  * file.
  */
+@SuppressWarnings("nls")
 public class JEEConnection extends ConnectionStrategy {
 
     public static final String DS_JNDINAME = "ds-jndiname"; //$NON-NLS-1$

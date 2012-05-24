@@ -7,7 +7,7 @@ package org.teiid.test.framework;
 import org.teiid.core.util.StringUtil;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-
+@SuppressWarnings("nls")
 public abstract class TransactionContainer {
 
     private String testClassName = null;

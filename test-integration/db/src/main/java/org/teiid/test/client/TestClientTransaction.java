@@ -38,6 +38,7 @@ import org.teiid.test.framework.query.AbstractQueryTransactionTest;
  * @author vanhalbert
  * 
  */
+@SuppressWarnings("nls")
 public class TestClientTransaction extends AbstractQueryTransactionTest {
 
     private QueryScenario querySet = null;

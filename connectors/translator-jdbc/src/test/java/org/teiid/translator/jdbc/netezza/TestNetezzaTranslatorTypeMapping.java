@@ -36,7 +36,7 @@ import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-
+@SuppressWarnings("nls")
 public class TestNetezzaTranslatorTypeMapping {
 
     private static NetezzaExecutionFactory TRANSLATOR; 

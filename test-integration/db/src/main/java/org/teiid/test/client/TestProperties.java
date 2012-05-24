@@ -25,6 +25,7 @@ package org.teiid.test.client;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public class TestProperties {
     
     /**

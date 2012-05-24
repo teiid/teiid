@@ -46,6 +46,7 @@ import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.util.StringUtil;
 
+@SuppressWarnings("nls")
 public class TestResultsSummary {
 
     private static final String OVERALL_SUMMARY_FILE = "Summary_totals.txt";

@@ -17,6 +17,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
 /** 
  * A transaction which is user controlled. 
  */
+@SuppressWarnings("nls")
 public class LocalTransaction extends TransactionContainer {
 
     public LocalTransaction() {

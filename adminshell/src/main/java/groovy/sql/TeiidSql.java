@@ -16,6 +16,7 @@ import org.teiid.jdbc.TeiidStatement;
 /**
  * An extension of Groovy's Sql to support getting {@link TeiidStatement} specific properties.
  */
+@SuppressWarnings("nls")
 public final class TeiidSql extends Sql {
 	private int maxRows;
 	private PlanNode plan;

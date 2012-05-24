@@ -17,6 +17,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public class DataSource {
 	public static final String CONNECTOR_TYPE="db.connectortype";
 	public static final String DB_TYPE="db.type";

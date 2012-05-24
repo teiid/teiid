@@ -21,18 +21,13 @@
  */
 package org.teiid.test.client;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import org.teiid.core.util.FileUtils;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.test.client.TestProperties.RESULT_MODES;
-import org.teiid.test.framework.ConfigPropertyLoader;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
@@ -49,6 +44,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * @author vanhalbert
  * 
  */
+@SuppressWarnings("nls")
 public abstract class QueryScenario {
 
     protected QueryReader reader = null;

@@ -33,6 +33,7 @@ import org.teiid.test.framework.exception.TransactionRuntimeException;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public class ClassFactory {
     
     /**

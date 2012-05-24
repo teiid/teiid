@@ -42,6 +42,7 @@ import org.teiid.test.framework.transaction.XATransaction;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public class TransactionFactory {
     
 

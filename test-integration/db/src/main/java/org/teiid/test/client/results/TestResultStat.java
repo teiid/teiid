@@ -30,6 +30,7 @@ import org.teiid.test.client.TestResult;
  *
  * <p>A per-query set of result stats.</p>
  */
+@SuppressWarnings("nls")
 public class TestResultStat implements TestResult, Serializable {
   
     /**

@@ -6,7 +6,6 @@
     <version>8.1.0.Alpha1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.jboss.teiid</groupId>
   <artifactId>teiid-runtime</artifactId>
   <name>Runtime Engine</name>
   <description>Teiid Runtime Engine</description>

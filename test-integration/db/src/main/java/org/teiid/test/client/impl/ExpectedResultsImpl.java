@@ -31,13 +31,12 @@ import java.util.Properties;
 
 import org.teiid.core.util.SqlUtil;
 import org.teiid.test.client.ExpectedResults;
-import org.teiid.test.client.TestProperties;
 import org.teiid.test.client.ctc.ResultsHolder;
 import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.util.TestResultSetUtil;
 
-
+@SuppressWarnings("nls")
 public class ExpectedResultsImpl implements ExpectedResults {
 
     private static final int MAX_COL_WIDTH = 65;

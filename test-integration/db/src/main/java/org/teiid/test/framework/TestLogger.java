@@ -32,6 +32,7 @@ import org.apache.log4j.ConsoleAppender;
  * @author vanhalbert
  *
  */
+@SuppressWarnings("nls")
 public class TestLogger {
     
     public static final Level INFO = Level.INFO;

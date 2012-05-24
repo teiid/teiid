@@ -57,7 +57,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 
 
 
-
+@SuppressWarnings("nls")
 public class XMLExpectedResults implements ExpectedResults {
      
     protected Properties props;

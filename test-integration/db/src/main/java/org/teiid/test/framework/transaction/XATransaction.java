@@ -13,7 +13,7 @@ import org.teiid.test.framework.TransactionContainer;
 import org.teiid.test.framework.TransactionQueryTestCase;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-
+@SuppressWarnings("nls")
 public class XATransaction extends TransactionContainer {
 	private static Random RANDOM = new Random();
 	private XidImpl xid;

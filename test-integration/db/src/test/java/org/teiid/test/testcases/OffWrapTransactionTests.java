@@ -14,7 +14,7 @@ import org.teiid.test.framework.query.AbstractQueryTransactionTest;
 import org.teiid.test.framework.query.QueryExecution;
 import org.teiid.test.framework.transaction.TxnAutoTransaction;
 
-
+@SuppressWarnings("nls")
 public class OffWrapTransactionTests extends BaseAbstractTransactionTestCase {
     
 

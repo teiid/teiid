@@ -44,6 +44,7 @@ import org.teiid.core.crypto.SymmetricCryptor;
  * <p>Test cases for {@link CryptoFactory} and carious <code>Encryptor</code>
  * and <code>Decryptor</code> implementations. </p>
  */
+@SuppressWarnings("nls")
 public class TestEncryptDecrypt {
 
     // Some strings for testing...

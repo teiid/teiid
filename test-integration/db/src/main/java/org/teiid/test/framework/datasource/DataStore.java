@@ -13,6 +13,7 @@ import org.teiid.test.framework.exception.QueryTestFailedException;
 /** 
  * This class loads the data in the databases specified, to a known state
  */
+@SuppressWarnings("nls")
 public class DataStore {
     
      /**

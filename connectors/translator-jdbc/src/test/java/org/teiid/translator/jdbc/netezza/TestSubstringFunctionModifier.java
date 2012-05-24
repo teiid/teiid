@@ -34,6 +34,7 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestSubstringFunctionModifier extends TestCase {
 
     private static final LanguageFactory LANG_FACTORY = new LanguageFactory();

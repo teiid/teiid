@@ -71,7 +71,7 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
     }
 
     public String toString() {
-        return "BasicSourceCapabilities<caps=" + capabilityMap + ", funcs=" + functionMap + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        return "BasicSourceCapabilities<caps=" + capabilityMap + ", funcs=" + functionMap + ">"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
     }
     
     /**

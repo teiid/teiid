@@ -52,7 +52,7 @@ public class TestSubqueryInCriteriaImpl extends TestCase {
     }
     
     public static SubqueryIn example() throws Exception {
-        return (SubqueryIn)TstLanguageBridgeFactory.factory.translate(helpExample());
+        return TstLanguageBridgeFactory.factory.translate(helpExample());
     }
 
     public void testGetExpression() throws Exception {

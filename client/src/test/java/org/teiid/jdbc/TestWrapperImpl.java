@@ -32,7 +32,7 @@ import java.sql.Wrapper;
 import org.teiid.jdbc.WrapperImpl;
 
 import junit.framework.TestCase;
-
+@SuppressWarnings("nls")
 public class TestWrapperImpl extends TestCase {
 	
 	interface Foo extends Wrapper {

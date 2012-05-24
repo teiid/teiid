@@ -37,6 +37,7 @@ import org.teiid.jdbc.BatchResults.BatchFetcher;
 /** 
  * @since 4.3
  */
+@SuppressWarnings("nls")
 public class TestBatchResults {
 	
 	static class MockBatchFetcher implements BatchFetcher {

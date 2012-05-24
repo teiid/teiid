@@ -19,7 +19,7 @@ import org.teiid.test.framework.TestLogger;
 import org.teiid.test.framework.exception.QueryTestFailedException;
 import org.teiid.test.framework.exception.TransactionRuntimeException;
 
-
+@SuppressWarnings("nls")
 public class DataSourceConnection extends ConnectionStrategy {
 
     public static final String DS_USER = "user"; //$NON-NLS-1$

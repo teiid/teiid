@@ -56,7 +56,8 @@ public class TestMetaMatrixException extends TestCase {
         assertNotNull(e);
     }
 
-    public void testMetaMatrixExceptionWithNullThrowable() {
+    @SuppressWarnings("deprecation")
+	public void testMetaMatrixExceptionWithNullThrowable() {
         final TeiidException err = new TeiidException((Throwable)null);
         assertNull(err.getChild());
         assertNull(err.getCode());
@@ -64,7 +65,8 @@ public class TestMetaMatrixException extends TestCase {
         
     }
 
-    public void testMetaMatrixExceptionWithMessage() {
+    @SuppressWarnings("deprecation")
+	public void testMetaMatrixExceptionWithMessage() {
         final TeiidException err = new TeiidException("Test"); //$NON-NLS-1$
         assertNull(err.getChild());
         assertNull(err.getCode());
@@ -75,6 +77,7 @@ public class TestMetaMatrixException extends TestCase {
     	Code,
     	propertyValuePhrase,
     }
+    @SuppressWarnings("deprecation")
     public void testMetaMatrixExceptionWithCodeAndMessage() {
         final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$ 
         assertNull(err.getChild());
@@ -83,7 +86,7 @@ public class TestMetaMatrixException extends TestCase {
         
     }
 
-    
+    @SuppressWarnings("deprecation")
     public void testMetaMatrixExceptionWithExceptionAndMessage() {
         final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$ 
         final TeiidException err = new TeiidException(child, "Test"); //$NON-NLS-1$
@@ -92,7 +95,7 @@ public class TestMetaMatrixException extends TestCase {
         assertEquals("Error Code:propertyValuePhrase Message:Test", err.getMessage()); //$NON-NLS-1$
         
     }
-
+    @SuppressWarnings("deprecation")
     public void testMetaMatrixExceptionWithExceptionAndCodeAndMessage() {
         final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$
         final TeiidException err = new TeiidException(Event.Code,child, "Test"); //$NON-NLS-1$

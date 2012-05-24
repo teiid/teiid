@@ -19,7 +19,7 @@ import org.teiid.test.util.PropUtils;
  * @author vanhalbert
  *
  */
-
+@SuppressWarnings("nls")
 public class ConfigPropertyLoader {
 
 	/**
