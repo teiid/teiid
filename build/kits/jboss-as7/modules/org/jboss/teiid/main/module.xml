@@ -10,9 +10,7 @@
         <resource-root path="json-simple-1.1.jar" />
         <resource-root path="xom-1.2.jar" />
         <resource-root path="nux-1.6.jar" />
-        <resource-root path="conf" />
     </resources>
-
 
     <dependencies>
         <module name="javax.api" />
