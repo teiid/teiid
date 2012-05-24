@@ -59,6 +59,7 @@ public class TeiidLoginContext {
 	private String securitydomain;
 	private Object credentials;
 	private SecurityHelper securityHelper;
+	private Object securityContext;
 	
 	public TeiidLoginContext(SecurityHelper helper) {
 		this.securityHelper = helper;
@@ -79,6 +80,7 @@ public class TeiidLoginContext {
 					this.userName = getUserName(existing)+AT+domain;
 					this.securitydomain = domain;     
 					this.loginContext = createLoginContext(domain, existing);
+			        this.securityContext = this.securityHelper.getSecurityContext(this.securitydomain);
 					return;
 	        	}
             }
@@ -118,7 +120,16 @@ public class TeiidLoginContext {
 				this.loginContext.login();
 				this.userName = baseUsername+AT+domain;
 				this.securitydomain = domain;
-				return;
+	        	Subject subject = this.loginContext.getSubject();
+	        	Principal principal = null;
+	        	for(Principal p:subject.getPrincipals()) {
+	        		if (baseUsername.equals(p.getName())) {
+	        			principal = p;
+	        			break;
+	        		}
+	        	}
+		        this.securityContext = this.securityHelper.createSecurityContext(this.securitydomain, principal, credentials, subject);
+		        return;
 			} catch (LoginException e) {
 				LogManager.logDetail(LogConstants.CTX_SECURITY,e, e.getMessage()); 
 			}
@@ -158,22 +169,7 @@ public class TeiidLoginContext {
     }
     
     public Object getSecurityContext() {
-    	Object sc = null;
-        if (this.loginContext != null) {
-        	sc = this.securityHelper.getSecurityContext(this.securitydomain);
-        	if ( sc == null){
-	        	Subject subject = this.loginContext.getSubject();
-	        	Principal principal = null;
-	        	for(Principal p:subject.getPrincipals()) {
-	        		if (this.userName.startsWith(p.getName())) {
-	        			principal = p;
-	        			break;
-	        		}
-	        	}
-	        	return this.securityHelper.createSecurityContext(this.securitydomain, principal, credentials, subject);
-        	}
-        }
-    	return sc;
+    	return securityContext;
     }
     
     static String getBaseUsername(String username) {

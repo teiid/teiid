@@ -159,6 +159,9 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) { 
 			LogManager.logDetail(LogConstants.CTX_TRANSPORT, "processing message:" + packet); //$NON-NLS-1$
         }
+		if (this.workContext.getSecurityHelper() != null) {
+			this.workContext.getSecurityHelper().clearSecurityContext();
+		}
 		final ServerWorkItem work = new ServerWorkItem(this, packet.getMessageKey(), packet, this.csr);
 		this.workContext.runInContext(work);
 	}
