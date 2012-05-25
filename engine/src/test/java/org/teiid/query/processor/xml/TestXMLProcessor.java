@@ -3325,7 +3325,7 @@ public class TestXMLProcessor {
                 "", metadata, dataMgr);  //$NON-NLS-1$
             fail("Should have failed with QueryPlannerException but didn't"); //$NON-NLS-1$
         } catch (QueryPlannerException e) {
-            String expectedMsg = "Error Code:TEIID30288 Message:TEIID30288 The XML document element [element] name='Suppliers' minOccurs=1 maxOccurs=1 is not mapped to data and cannot be used in the ORDER BY clause: ORDER BY Suppliers"; //$NON-NLS-1$
+            String expectedMsg = "TEIID30288 The XML document element [element] name='Suppliers' minOccurs=1 maxOccurs=1 is not mapped to data and cannot be used in the ORDER BY clause: ORDER BY Suppliers"; //$NON-NLS-1$
             assertEquals(expectedMsg, e.getMessage());
         }  
     }    

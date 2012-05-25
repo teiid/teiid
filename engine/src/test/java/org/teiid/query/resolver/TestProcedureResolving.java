@@ -738,7 +738,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                Table.TriggerEvent.UPDATE, "Error Code:TEIID30126 Message:TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
+                Table.TriggerEvent.UPDATE, "TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
     }
     
     // variables cannot be used among insert elements
@@ -753,7 +753,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                Table.TriggerEvent.UPDATE, "Error Code:TEIID30126 Message:TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
+                Table.TriggerEvent.UPDATE, "TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
     }
     
     //should resolve first to the table's column
@@ -798,7 +798,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     Table.TriggerEvent.UPDATE, "Error Code:TEIID30124 Message:TEIID30124 Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "TEIID30124 Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable() {
@@ -855,7 +855,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        helpFailUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE, "Error Code:TEIID30118 Message:TEIID30118 Cannot create temporary table \"loopCursor\". An object with the same name already exists."); //$NON-NLS-1$
+        helpFailUpdateProcedure(proc.toString(), userUpdateStr, Table.TriggerEvent.UPDATE, "TEIID30118 Cannot create temporary table \"loopCursor\". An object with the same name already exists."); //$NON-NLS-1$
     }
     
     @Test public void testProcedureCreateDrop() {
@@ -937,7 +937,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1=1"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 Table.TriggerEvent.UPDATE, "Error Code:TEIID30082 Message:Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
+				 Table.TriggerEvent.UPDATE, "TEIID30082 Cannot set symbol 'pm1.g1.e4' with expected type double to expression 'convert(var1, string)'"); //$NON-NLS-1$
     }
     
     // special variable INPUT compared against invalid type
@@ -952,7 +952,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-				 Table.TriggerEvent.UPDATE, "Error Code:TEIID30082 Message:Cannot set symbol 'pm1.g1.e2' with expected type integer to expression '\"new\".e1'"); //$NON-NLS-1$
+				 Table.TriggerEvent.UPDATE, "TEIID30082 Cannot set symbol 'pm1.g1.e2' with expected type integer to expression '\"new\".e1'"); //$NON-NLS-1$
     }
     
     @Test public void testVirtualProcedure() throws Exception {
@@ -969,7 +969,7 @@ public class TestProcedureResolving {
     
     //cursor starts with "#" Defect14924
     @Test public void testVirtualProcedureInvalid1() throws Exception {
-    	helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "Error Code:TEIID30125 Message:Cursor names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "TEIID30125 Cursor names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testVirtualProcedureWithOrderBy() throws Exception {
@@ -993,7 +993,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testLoopRedefinition2() throws Exception {
-        helpResolveException("EXEC pm1.vsp11()", RealMetadataFactory.example1Cached(), "Error Code:TEIID30124 Message:TEIID30124 Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp11()", RealMetadataFactory.example1Cached(), "TEIID30124 Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     @Test public void testVariableResolutionWithIntervening() throws Exception {

@@ -118,11 +118,11 @@ public class TestSocketRemoting {
 		}
 		
 		@Override
-		public void send(Message message, ResultsReceiver<Object> listener,
+		public void send(Message message, ResultsReceiver<Object> l,
 				Serializable messageKey) throws CommunicationException,
 				InterruptedException {
 			ServerWorkItem workItem = new ServerWorkItem(this, messageKey, message, server);
-			this.listener = listener;
+			this.listener = l;
 			workItem.run();
 		}
 
@@ -154,7 +154,7 @@ public class TestSocketRemoting {
 			createFakeConnection(serverInstance);
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (CommunicationException e) {
-			assertEquals("Error Code:TEIID20018 Message:TEIID20018 Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
+			assertEquals("TEIID20018 Unable to find a component used authenticate on to Teiid", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

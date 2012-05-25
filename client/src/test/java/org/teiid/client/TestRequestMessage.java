@@ -25,13 +25,12 @@ package org.teiid.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.client.RequestMessage;
+import junit.framework.TestCase;
+
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.UnitTestUtil;
-
-import junit.framework.TestCase;
 
 
 public class TestRequestMessage extends TestCase {
@@ -48,7 +47,7 @@ public class TestRequestMessage extends TestCase {
         RequestMessage message = new RequestMessage();
         message.setStatementType(StatementType.CALLABLE);
         message.setFetchSize(100);
-        List params = new ArrayList();
+        List<Integer> params = new ArrayList<Integer>();
         params.add(new Integer(100));
         params.add(new Integer(200));
         params.add(new Integer(300));
@@ -100,7 +99,7 @@ public class TestRequestMessage extends TestCase {
 			rm.setTxnAutoWrapMode("foo"); //$NON-NLS-1$
 			fail("exception expected"); //$NON-NLS-1$
 		} catch (TeiidProcessingException e) {
-			assertEquals("Error Code:TEIID20000 Message:TEIID20000 'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
+			assertEquals("TEIID20000 'FOO' is an invalid transaction autowrap mode.", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 

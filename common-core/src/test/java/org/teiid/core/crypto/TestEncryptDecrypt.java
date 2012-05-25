@@ -34,10 +34,6 @@ import java.util.Arrays;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.core.crypto.BasicCryptor;
-import org.teiid.core.crypto.CryptoException;
-import org.teiid.core.crypto.Cryptor;
-import org.teiid.core.crypto.SymmetricCryptor;
 
 
 /**
@@ -162,7 +158,7 @@ public class TestEncryptDecrypt {
             cryptor.encrypt( "" ); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
-            assertEquals("Error Code:TEIID10015 Message:TEIID10015 Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID10015 Attempt to encrypt zero-length cleartext.", e.getMessage()); //$NON-NLS-1$
         } 
     }
 
@@ -176,7 +172,7 @@ public class TestEncryptDecrypt {
             cryptor.encrypt( (String)null );
             fail("expected exception"); //$NON-NLS-1$
         } catch ( CryptoException e ) {
-            assertEquals("Error Code:TEIID10014 Message:TEIID10014 Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID10014 Attempt to encrypt null cleartext.", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

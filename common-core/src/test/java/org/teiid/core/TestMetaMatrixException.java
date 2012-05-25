@@ -22,9 +22,9 @@
 
 package org.teiid.core;
 
-import org.teiid.core.TeiidException;
+import static org.junit.Assert.*;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * Tests the children Iterator of the MetaMatrixException.  Primarily it does
@@ -35,17 +35,9 @@ import junit.framework.TestCase;
  * {@link org.teiid.core.TeiidException#getChild getChild}
  * method recursively.
  */
-public class TestMetaMatrixException extends TestCase {
+public class TestMetaMatrixException {
 
-	// ################################## FRAMEWORK ################################
-
-	public TestMetaMatrixException(String name) {
-		super(name);
-	}
-
-	// ################################## ACTUAL TESTS ################################
-
-    public void testFailMetaMatrixExceptionWithNullMessage() {
+    @Test public void testFailMetaMatrixExceptionWithNullMessage() {
         Throwable e = null;
         try {
             new TeiidException((String)null);  // should throw NPE
@@ -56,19 +48,15 @@ public class TestMetaMatrixException extends TestCase {
         assertNotNull(e);
     }
 
-    @SuppressWarnings("deprecation")
-	public void testMetaMatrixExceptionWithNullThrowable() {
+    @Test public void testMetaMatrixExceptionWithNullThrowable() {
         final TeiidException err = new TeiidException((Throwable)null);
-        assertNull(err.getChild());
         assertNull(err.getCode());
         assertNull(err.getMessage());
         
     }
 
-    @SuppressWarnings("deprecation")
-	public void testMetaMatrixExceptionWithMessage() {
+    @Test public void testMetaMatrixExceptionWithMessage() {
         final TeiidException err = new TeiidException("Test"); //$NON-NLS-1$
-        assertNull(err.getChild());
         assertNull(err.getCode());
         assertEquals("Test", err.getMessage()); //$NON-NLS-1$
         
@@ -77,31 +65,26 @@ public class TestMetaMatrixException extends TestCase {
     	Code,
     	propertyValuePhrase,
     }
-    @SuppressWarnings("deprecation")
-    public void testMetaMatrixExceptionWithCodeAndMessage() {
+    @Test public void testMetaMatrixExceptionWithCodeAndMessage() {
         final TeiidException err = new TeiidException(Event.Code, "Test"); //$NON-NLS-1$ 
-        assertNull(err.getChild());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
-        assertEquals("Error Code:Code Message:Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
+    }
+
+    
+    @Test public void testMetaMatrixExceptionWithExceptionAndMessage() {
+        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$ 
+        final TeiidException err = new TeiidException(child, "Test"); //$NON-NLS-1$
+        assertEquals("propertyValuePhrase", err.getCode()); //$NON-NLS-1$
+        assertEquals("propertyValuePhrase Test", err.getMessage()); //$NON-NLS-1$
         
     }
 
-    @SuppressWarnings("deprecation")
-    public void testMetaMatrixExceptionWithExceptionAndMessage() {
-        final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$ 
-        final TeiidException err = new TeiidException(child, "Test"); //$NON-NLS-1$
-        assertSame(child, err.getChild());
-        assertEquals("propertyValuePhrase", err.getCode()); //$NON-NLS-1$
-        assertEquals("Error Code:propertyValuePhrase Message:Test", err.getMessage()); //$NON-NLS-1$
-        
-    }
-    @SuppressWarnings("deprecation")
-    public void testMetaMatrixExceptionWithExceptionAndCodeAndMessage() {
+    @Test public void testMetaMatrixExceptionWithExceptionAndCodeAndMessage() {
         final TeiidException child = new TeiidException(Event.propertyValuePhrase, "Child"); //$NON-NLS-1$
         final TeiidException err = new TeiidException(Event.Code,child, "Test"); //$NON-NLS-1$
-        assertSame(child, err.getChild());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
-        assertEquals("Error Code:Code Message:Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
         
     }
 }

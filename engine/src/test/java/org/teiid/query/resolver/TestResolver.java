@@ -799,7 +799,7 @@ public class TestResolver {
     }
 
 	@Test public void testUnknownFunction() {	    
-		helpResolveException("SELECT abc(e1) FROM pm1.g1", "Error Code:TEIID30068 Message:TEIID30068 The function 'abc(e1)' is an unknown form.  Check that the function name and number of arguments is correct."); //$NON-NLS-1$ //$NON-NLS-2$
+		helpResolveException("SELECT abc(e1) FROM pm1.g1", "TEIID30068 The function 'abc(e1)' is an unknown form.  Check that the function name and number of arguments is correct."); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test public void testConversionPossible() {	    
@@ -1405,7 +1405,7 @@ public class TestResolver {
     }   
         
     @Test public void testFailedConversion_defect9725() throws Exception{
-    	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "Error Code:TEIID30072 Message:TEIID30072 The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available: pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "TEIID30072 The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available: pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
             
     @Test public void testLookupFunction() {     
@@ -1904,11 +1904,11 @@ public class TestResolver {
      * the group g1 is not known to the order by clause of a union
      */
     @Test public void testUnionOrderByFail() {
-        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY g1.e1", "Error Code:TEIID30086 Message:TEIID30086 ORDER BY expression 'g1.e1' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY g1.e1", "TEIID30086 ORDER BY expression 'g1.e1' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
     }      
     
     @Test public void testUnionOrderByFail1() {
-        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g1.e1", "Error Code:TEIID30086 Message:TEIID30086 ORDER BY expression 'pm1.g1.e1' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1 FROM pm1.g1 UNION SELECT pm1.g2.e1 FROM pm1.g2 ORDER BY pm1.g1.e1", "TEIID30086 ORDER BY expression 'pm1.g1.e1' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testOrderByPartiallyQualified() {
@@ -2136,7 +2136,7 @@ public class TestResolver {
     }
 
     @Test public void testParameterError() throws Exception {
-        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "Error Code:TEIID30142 Message:TEIID30142 Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "TEIID30142 Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testUnionOfAliasedLiteralsGetsModified() {
@@ -2263,7 +2263,7 @@ public class TestResolver {
         procedure = procedure + "DECLARE string VARIABLES.X = 1;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
-        helpResolveException(procedure, "Error Code:TEIID30136 Message:TEIID30136 Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
+        helpResolveException(procedure, "TEIID30136 Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
     }
     
     @Test public void testCreate() {
@@ -2274,7 +2274,7 @@ public class TestResolver {
     
     @Test public void testCreateQualifiedName() {
         String sql = "CREATE LOCAL TEMPORARY TABLE pm1.g1 (column1 string)"; //$NON-NLS-1$
-        helpResolveException(sql, "Error Code:TEIID30117 Message:TEIID30117 Cannot create temporary table \"pm1.g1\". Local temporary tables must be created with unqualified names."); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30117 Cannot create temporary table \"pm1.g1\". Local temporary tables must be created with unqualified names."); //$NON-NLS-1$
     }
     
     @Test public void testProcedureConflict() {
@@ -2294,7 +2294,7 @@ public class TestResolver {
 
     @Test public void testCreateAlreadyExists() {
         String sql = "CREATE LOCAL TEMPORARY TABLE g1 (column1 string)"; //$NON-NLS-1$
-        helpResolveException(sql, "Error Code:TEIID30118 Message:TEIID30118 Cannot create temporary table \"g1\". An object with the same name already exists."); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30118 Cannot create temporary table \"g1\". An object with the same name already exists."); //$NON-NLS-1$
     }
 
     @Test public void testCreateImplicitName() {
@@ -2304,7 +2304,7 @@ public class TestResolver {
     }
     
     @Test public void testCreateInProc() throws Exception{
-        helpResolveException("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table g1(c1 string); end", "Error Code:TEIID30118 Message:TEIID30118 Cannot create temporary table \"g1\". An object with the same name already exists.");//$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("CREATE VIRTUAL PROCEDURE BEGIN create local temporary table g1(c1 string); end", "TEIID30118 Cannot create temporary table \"g1\". An object with the same name already exists.");//$NON-NLS-1$ //$NON-NLS-2$
     }
     
     //this was the old virt.agg procedure.  It was defined in such a way that relied on the scope leak of #temp
@@ -2399,7 +2399,7 @@ public class TestResolver {
     @Test public void testLookupWithoutConstant() throws Exception{
         String sql = "SELECT lookup('pm1.g1', convert('e3', float), 'e2', e2) FROM pm1.g1"; //$NON-NLS-1$
         
-        helpResolveException(sql, metadata, "Error Code:TEIID30095 Message:TEIID30095 The first three arguments for the LOOKUP function must be specified as constants."); //$NON-NLS-1$
+        helpResolveException(sql, metadata, "TEIID30095 The first three arguments for the LOOKUP function must be specified as constants."); //$NON-NLS-1$
     }
     
     /**
@@ -2420,19 +2420,19 @@ public class TestResolver {
     @Test public void testUpdateError() {
         String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
         
-        helpResolveException(userUpdateStr, metadata, "Error Code:TEIID30061 Message:TEIID30061 Update is not allowed on the view vm1.g2: a procedure must be defined to handle the Update."); //$NON-NLS-1$
+        helpResolveException(userUpdateStr, metadata, "TEIID30061 Update is not allowed on the view vm1.g2: a procedure must be defined to handle the Update."); //$NON-NLS-1$
     }
     
     @Test public void testInsertError() {
         String userUpdateStr = "INSERT into vm1.g2 (e1) values ('x')"; //$NON-NLS-1$
         
-        helpResolveException(userUpdateStr, metadata, "Error Code:TEIID30061 Message:TEIID30061 Insert is not allowed on the view vm1.g2: a procedure must be defined to handle the Insert."); //$NON-NLS-1$
+        helpResolveException(userUpdateStr, metadata, "TEIID30061 Insert is not allowed on the view vm1.g2: a procedure must be defined to handle the Insert."); //$NON-NLS-1$
     }
     
     @Test public void testDeleteError() {
         String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
         
-        helpResolveException(userUpdateStr, metadata, "Error Code:TEIID30061 Message:TEIID30061 Delete is not allowed on the view vm1.g2: a procedure must be defined to handle the Delete."); //$NON-NLS-1$
+        helpResolveException(userUpdateStr, metadata, "TEIID30061 Delete is not allowed on the view vm1.g2: a procedure must be defined to handle the Delete."); //$NON-NLS-1$
     }
                 
     @Test public void testResolveXMLSelect() {
@@ -2442,13 +2442,13 @@ public class TestResolver {
         procedure = procedure + "select VARIABLES.X from xmltest.doc1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
-        helpResolveException(procedure, "Error Code:TEIID30136 Message:TEIID30136 Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
+        helpResolveException(procedure, "TEIID30136 Unable to resolve element: VARIABLES.X"); //$NON-NLS-1$
     }
     
     @Test public void testXMLJoinFail() {
         String query = "select * from xmltest.doc1, xmltest.doc2"; //$NON-NLS-1$
          
-        helpResolveException(query, "Error Code:TEIID30112 Message:TEIID30112 Only one XML document may be specified in the FROM clause of a query."); //$NON-NLS-1$
+        helpResolveException(query, "TEIID30112 Only one XML document may be specified in the FROM clause of a query."); //$NON-NLS-1$
     }
     
     @Test public void testExecProjectedSymbols() {
@@ -2478,7 +2478,7 @@ public class TestResolver {
 
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "example1");
 
-        helpResolveException("select * from pm1.sq2", metadata, "Error Code:TEIID30114 Message:TEIID30114 Cannot access procedure pm1.sq2 using table semantics since the parameter and result set column names are not all unique."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("select * from pm1.sq2", metadata, "TEIID30114 Cannot access procedure pm1.sq2 using table semantics since the parameter and result set column names are not all unique."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testInlineViewNullLiteralInUnion() {
@@ -2490,21 +2490,21 @@ public class TestResolver {
     @Test public void testSelectIntoWithDuplicateNames() {
         String sql = "select 1 as x, 2 as x into #temp"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:TEIID30091 Message:TEIID30091 Cannot create group '#temp' with multiple columns named 'x'"); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30091 Cannot create group '#temp' with multiple columns named 'x'"); //$NON-NLS-1$
     }
     
     @Test public void testCreateWithDuplicateNames() {
         String sql = "CREATE LOCAL TEMPORARY TABLE temp_table (column1 string, column1 string)"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:TEIID30091 Message:TEIID30091 Cannot create group \'temp_table\' with multiple columns named \'column1\'"); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30091 Cannot create group \'temp_table\' with multiple columns named \'column1\'"); //$NON-NLS-1$
     }
     
     @Test public void testXMLQuery4() {
-        helpResolveException("SELECT * FROM xmltest.doc1 group by a2", "Error Code:TEIID30130 Message:TEIID30130 Queries against XML documents can not have a GROUP By clause"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT * FROM xmltest.doc1 group by a2", "TEIID30130 Queries against XML documents can not have a GROUP By clause"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testXMLQuery5() {
-        helpResolveException("SELECT * FROM xmltest.doc1 having a2='x'", "Error Code:TEIID30131 Message:TEIID30131 Queries against XML documents can not have a HAVING clause"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT * FROM xmltest.doc1 having a2='x'", "TEIID30131 Queries against XML documents can not have a HAVING clause"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testSelectIntoWithOrderBy() {
@@ -2514,8 +2514,8 @@ public class TestResolver {
     }
     
     @Test public void testUnionBranchesWithDifferentElementCounts() {
-        helpResolveException("SELECT e2, e3 FROM pm1.g1 UNION SELECT e2 FROM pm1.g2","Error Code:TEIID30147 Message:TEIID30147 Queries combined with the set operator UNION must have the same number of output elements."); //$NON-NLS-1$ //$NON-NLS-2$
-        helpResolveException("SELECT e2 FROM pm1.g1 UNION SELECT e2, e3 FROM pm1.g2","Error Code:TEIID30147 Message:TEIID30147 Queries combined with the set operator UNION must have the same number of output elements."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT e2, e3 FROM pm1.g1 UNION SELECT e2 FROM pm1.g2","TEIID30147 Queries combined with the set operator UNION must have the same number of output elements."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT e2 FROM pm1.g1 UNION SELECT e2, e3 FROM pm1.g2","TEIID30147 Queries combined with the set operator UNION must have the same number of output elements."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testSelectIntoWithNullLiteral() {
@@ -2545,19 +2545,19 @@ public class TestResolver {
     @Test public void testInsertWithoutColumnsFails() {
         String sql = "Insert into pm1.g1 values (1, 2)"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:TEIID30127 Message:TEIID30127 INSERT statement must have the same number of elements and values specified.  This statement has 4 elements and 2 values."); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30127 INSERT statement must have the same number of elements and values specified.  This statement has 4 elements and 2 values."); //$NON-NLS-1$
     }
     
     @Test public void testInsertWithoutColumnsFails1() {
         String sql = "Insert into pm1.g1 values (1, 2, 3, 4)"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:TEIID30082 Message:TEIID30082 Expected value of type 'boolean' but '3' is of type 'integer' and no implicit conversion is available."); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30082 Expected value of type 'boolean' but '3' is of type 'integer' and no implicit conversion is available."); //$NON-NLS-1$
     }
     
     @Test public void testInsertWithQueryFails() {
         String sql = "Insert into pm1.g1 select 1, 2, 3, 4"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:TEIID30128 Message:TEIID30128 Cannot convert insert query expression projected symbol '3' of type java.lang.Integer to insert column 'pm1.g1.e3' of type java.lang.Boolean"); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30128 Cannot convert insert query expression projected symbol '3' of type java.lang.Integer to insert column 'pm1.g1.e3' of type java.lang.Boolean"); //$NON-NLS-1$
     }
     
     @Test public void testInsertWithQueryImplicitWithColumns() {
@@ -2573,7 +2573,7 @@ public class TestResolver {
     @Test public void testInsertWithQueryImplicitWithoutColumns1() {
         String sql = "Insert into #X select 1 as x, 2 as y, 3 as y"; //$NON-NLS-1$
         
-        helpResolveException(sql, "Error Code:TEIID30091 Message:TEIID30091 Cannot create group '#X' with multiple columns named 'y'"); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID30091 Cannot create group '#X' with multiple columns named 'y'"); //$NON-NLS-1$
     }
 
     @Test public void testInsertWithoutColumnsPasses() {
@@ -2612,7 +2612,7 @@ public class TestResolver {
     }
 
     @Test public void testUniqeNamesWithInlineView() {
-        helpResolveException("select * from (select count(intNum) a, count(stringKey) b, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", RealMetadataFactory.exampleBQTCached(), "Error Code:TEIID30091 Message:TEIID30091 Cannot create group 'q1' with multiple columns named 'b'"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("select * from (select count(intNum) a, count(stringKey) b, bqt1.smalla.intkey as b from bqt1.smalla group by bqt1.smalla.intkey) q1 order by q1.a", RealMetadataFactory.exampleBQTCached(), "TEIID30091 Cannot create group 'q1' with multiple columns named 'b'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
             
     @Test public void testResolveOldProcRelational() {
@@ -2640,7 +2640,7 @@ public class TestResolver {
 	@Test public void testCallableStatementTooManyParameters() throws Exception {
 		String sql = "{call pm4.spTest9(?, ?)}"; //$NON-NLS-1$
 		
-		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "Error Code:TEIID30142 Message:TEIID30142 Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
+		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "TEIID30142 Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
 	}	
 	    
     @Test public void testUpdateSetClauseReferenceType() {
@@ -2656,7 +2656,7 @@ public class TestResolver {
     @Test public void testNoTypeCriteria() {
     	String sql = "select * from pm1.g1 where ? = ?"; //$NON-NLS-1$
     	
-    	helpResolveException(sql, RealMetadataFactory.example1Cached(), "Error Code:TEIID30083 Message:TEIID30083 Expression '? = ?' has a parameter with non-determinable type information.  The use of an explicit convert may be necessary."); //$NON-NLS-1$
+    	helpResolveException(sql, RealMetadataFactory.example1Cached(), "TEIID30083 Expression '? = ?' has a parameter with non-determinable type information.  The use of an explicit convert may be necessary."); //$NON-NLS-1$
     }
     
     @Test public void testReferenceInSelect() {
@@ -2710,7 +2710,7 @@ public class TestResolver {
     
     // ambiguous, should fail
     @Test public void testOrderBy_J658d() {
-        helpResolveException("SELECT pm1.g1.e1, e2 as x, e3 as x FROM pm1.g1 ORDER BY x, e1 ", "Error Code:TEIID30084 Message:TEIID30084 Element 'x' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1, e2 as x, e3 as x FROM pm1.g1 ORDER BY x, e1 ", "TEIID30084 Element 'x' in ORDER BY is ambiguous and may refer to more than one element of SELECT clause."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     @Test public void testOrderBy_J658e() {
         Query resolvedQuery = (Query) helpResolve("SELECT pm1.g1.e1, e2 as x, e3 as e2 FROM pm1.g1 ORDER BY x, e2 "); //$NON-NLS-1$
@@ -2829,7 +2829,7 @@ public class TestResolver {
     }
     
     @Test public void testOrderByExpression2() {
-    	helpResolveException("select pm1.g1.e1 from pm1.g1 union select pm1.g2.e1 from pm1.g2 order by pm1.g1.e1 || 2", "Error Code:TEIID30086 Message:TEIID30086 ORDER BY expression '(pm1.g1.e1 || 2)' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("select pm1.g1.e1 from pm1.g1 union select pm1.g2.e1 from pm1.g2 order by pm1.g1.e1 || 2", "TEIID30086 ORDER BY expression '(pm1.g1.e1 || 2)' cannot be used with a set query."); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testOrderByConstantFails() {

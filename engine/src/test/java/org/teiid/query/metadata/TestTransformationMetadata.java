@@ -22,8 +22,7 @@
 
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +54,7 @@ public class TestTransformationMetadata {
 			tm.getStoredProcedureInfoForProcedure("y"); //$NON-NLS-1$
 			fail("expected exception"); //$NON-NLS-1$
 		} catch (QueryMetadataException e) {
-			assertEquals("Error Code:TEIID30358 Message:TEIID30358 Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
+			assertEquals("TEIID30358 Procedure 'y' is ambiguous, use the fully qualified name instead", e.getMessage()); //$NON-NLS-1$
 		}
 	}
 	

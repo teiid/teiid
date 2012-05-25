@@ -203,7 +203,7 @@ public class TestTransforms {
             transform.transform("1"); //$NON-NLS-1$
             fail("expected exception"); //$NON-NLS-1$
         } catch (TransformationException e) {
-            assertEquals("Error Code:TEIID10076 Message:TEIID10076 Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID10076 Invalid conversion from type class java.lang.Object with value '1' to type class java.sql.Time", e.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -233,7 +233,7 @@ public class TestTransforms {
     }
     
     @Test public void testStringToTimestampFails() throws Exception {
-    	helpTransformException("2005-12-01 11:88:60", Timestamp.class, "Error Code:TEIID10060 Message:TEIID10060 The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	helpTransformException("2005-12-01 11:88:60", Timestamp.class, "TEIID10060 The string representation '2005-12-01 11:88:60' of a Timestamp value is not valid."); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
     @Test public void testStringToLongWithWS() throws Exception {
@@ -245,11 +245,11 @@ public class TestTransforms {
     }
     
     @Test public void testRangeCheck() throws Exception {
-    	helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "Error Code:TEIID10058 Message:TEIID10058 The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
+    	helpTransformException(300, DataTypeManager.DefaultDataClasses.BYTE, "TEIID10058 The Integer value '300' is outside the of range for Byte"); //$NON-NLS-1$
     }
     
     @Test public void testRangeCheck1() throws Exception {
-    	helpTransformException(new Double("1E11"), DataTypeManager.DefaultDataClasses.INTEGER, "Error Code:TEIID10058 Message:TEIID10058 The Double value '100,000,000,000' is outside the of range for Integer"); //$NON-NLS-1$ //$NON-NLS-2$  
+    	helpTransformException(new Double("1E11"), DataTypeManager.DefaultDataClasses.INTEGER, "TEIID10058 The Double value '100,000,000,000' is outside the of range for Integer"); //$NON-NLS-1$ //$NON-NLS-2$  
     }
 
 

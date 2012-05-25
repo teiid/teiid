@@ -33,8 +33,8 @@ import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.security.InvalidSessionException;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.util.ExceptionUtil;
-import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -161,7 +161,6 @@ public class TeiidSQLException extends SQLException {
      * @param exception
      * @return
      */
-    @SuppressWarnings("deprecation")
     private static Throwable findRootException(Throwable exception) {
         if (exception instanceof TeiidRuntimeException) {
         	while (exception.getCause() != exception
@@ -170,13 +169,13 @@ public class TeiidSQLException extends SQLException {
         	}
         	if (exception instanceof TeiidRuntimeException) {
         		TeiidRuntimeException runtimeException = (TeiidRuntimeException) exception;
-        		while (runtimeException.getChild() != exception
-        				&& runtimeException.getChild() != null) {
-        			if (runtimeException.getChild() instanceof TeiidRuntimeException) {
+        		while (runtimeException.getCause() != exception
+        				&& runtimeException.getCause() != null) {
+        			if (runtimeException.getCause() instanceof TeiidRuntimeException) {
         				runtimeException = (TeiidRuntimeException) runtimeException
-        						.getChild();
+        						.getCause();
         			} else {
-        				exception = runtimeException.getChild();
+        				exception = runtimeException.getCause();
         				break;
         			}
         		}

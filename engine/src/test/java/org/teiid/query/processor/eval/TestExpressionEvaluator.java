@@ -51,7 +51,15 @@ import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.CaseExpression;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
+import org.teiid.query.sql.symbol.TestCaseExpression;
+import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -176,7 +184,7 @@ public class TestExpressionEvaluator {
             fail("Exception expected"); //$NON-NLS-1$
         } catch (TeiidComponentException e){
         	//this should be a componentexception, since it is unexpected
-            assertEquals(e.getMessage(), "Error Code:TEIID30346 Message:TEIID30346 Unable to evaluate e2: No value was available"); //$NON-NLS-1$
+            assertEquals(e.getMessage(), "TEIID30346 Unable to evaluate e2: No value was available"); //$NON-NLS-1$
         }
     }
 
@@ -296,7 +304,7 @@ public class TestExpressionEvaluator {
         	helpTestWithValueIterator(expr, values, null);
             fail("Expected ExpressionEvaluationException but got none"); //$NON-NLS-1$
         } catch (ExpressionEvaluationException e) {
-            assertEquals("Error Code:TEIID30328 Message:TEIID30328 Unable to evaluate (SELECT x FROM y): Error Code:TEIID30345 Message:TEIID30345 The command of this scalar subquery returned more than one value: SELECT x FROM y", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30328 Unable to evaluate (SELECT x FROM y): TEIID30345 The command of this scalar subquery returned more than one value: SELECT x FROM y", e.getMessage()); //$NON-NLS-1$
         } 
     }
 

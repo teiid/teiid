@@ -137,16 +137,6 @@ public class TeiidRuntimeException extends RuntimeException {
     //############################################################################################################################
 
     /**
-     * Get the exception which is linked to this exception.
-     *
-     * @return The linked exception
-     * @deprecated use {@link #getCause()} instead
-     */
-    public Throwable getChild() {
-        return this.getCause();
-    }
-    
-    /**
      * Get the error code.
      *
      * @return The error code 

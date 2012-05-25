@@ -883,7 +883,7 @@ public class TestQueryRewriter {
             fail("Expected QueryValidatorException due to divide by 0"); //$NON-NLS-1$
         } catch(TeiidException e) {
         	// looks like message is being wrapped with another exception with same message
-            assertEquals("Error Code:TEIID30328 Message:TEIID30328 Unable to evaluate (5 / 0): Error Code:TEIID30384 Message:TEIID30384 Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
+            assertEquals("TEIID30328 Unable to evaluate (5 / 0): TEIID30384 Error while evaluating function /", e.getMessage());  //$NON-NLS-1$
         }       
     }
     
@@ -896,7 +896,7 @@ public class TestQueryRewriter {
             QueryRewriter.rewriteCriteria(origCrit, null, metadata);
             fail("Expected QueryValidatorException due to invalid string"); //$NON-NLS-1$
         } catch(TeiidException e) {
-            assertEquals("Error Code:TEIID30328 Message:TEIID30328 Unable to evaluate convert('x', integer): Error Code:TEIID30384 Message:TEIID30384 Error while evaluating function convert", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30328 Unable to evaluate convert('x', integer): TEIID30384 Error while evaluating function convert", e.getMessage()); //$NON-NLS-1$
         }       
     }
     
@@ -1118,7 +1118,7 @@ public class TestQueryRewriter {
             getRewritenProcedure(procedure, userQuery, Table.TriggerEvent.INSERT);
             fail("exception expected"); //$NON-NLS-1$
         } catch (QueryValidatorException e) {
-            assertEquals("Error Code:TEIID30367 Message:TEIID30367 Infinite loop detected, procedure will not be executed.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30367 Infinite loop detected, procedure will not be executed.", e.getMessage()); //$NON-NLS-1$
         }
     }
     

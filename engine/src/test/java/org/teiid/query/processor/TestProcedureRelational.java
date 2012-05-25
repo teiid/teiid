@@ -604,7 +604,7 @@ public class TestProcedureRelational {
             TestProcessor.doProcess(plan, dataManager, expected, TestProcessor.createCommandContext()); 
             fail("QueryPlannerException was expected.");  //$NON-NLS-1$
         } catch (QueryValidatorException e) {
-        	assertEquals("Error Code:TEIID30164 Message:TEIID30164 The procedure parameter pm1.vsp26.param2 is not nullable, but is set to null.",e.getMessage());  //$NON-NLS-1$
+        	assertEquals("TEIID30164 The procedure parameter pm1.vsp26.param2 is not nullable, but is set to null.",e.getMessage());  //$NON-NLS-1$
         }
     }
     

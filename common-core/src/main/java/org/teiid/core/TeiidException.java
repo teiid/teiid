@@ -99,10 +99,11 @@ public class TeiidException extends Exception {
     }
     
 	public String getMessage() {
-		if (code == null || code.length() == 0) {
-			return super.getMessage();
+		String message = super.getMessage();
+		if (code == null || code.length() == 0 || message.startsWith(code)) {
+			return message;
 		}
-		return "Error Code:"+code+" Message:"+super.getMessage(); //$NON-NLS-1$ //$NON-NLS-2$
+		return code+" "+message; //$NON-NLS-1$
 	} 
 	
     /**
@@ -156,17 +157,6 @@ public class TeiidException extends Exception {
         return buf.toString();
     }
     
-    /**
-     * Get the exception which is linked to this exception.
-     *
-     * @return The linked exception
-     * @see #getCause()
-     * @deprecated 
-     */
-    public Throwable getChild() {
-        return super.getCause();
-    }
-
     /**
      * Returns a string representation of this class.
      *

@@ -43,14 +43,6 @@ public class LogonException extends TeiidSecurityException {
     public LogonException(  ) {
         super( );
     }
-    /**
-     * Construct an instance with the message specified.
-     *
-     * @param message A message describing the exception
-     */
-    public LogonException( String message ) {
-        super( message );
-    }
 
     /**
      * Construct an instance with the message and error code specified.
@@ -66,14 +58,5 @@ public class LogonException extends TeiidSecurityException {
         super(event, t, message );
     }    
 
-    /**
-     * Construct an instance from a message and an exception to chain to this one.
-     *
-     * @param code A code denoting the exception
-     * @param e An exception to nest within this one
-     */
-    public LogonException( Throwable e, String message ) {
-        super( e, message );
-    }
 }
 

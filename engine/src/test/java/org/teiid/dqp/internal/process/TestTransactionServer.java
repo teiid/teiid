@@ -76,7 +76,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100, false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30523 Message:TEIID30523 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30523 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -91,7 +91,7 @@ public class TestTransactionServer {
             server.begin(THREAD1);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30526 Message:javax.transaction.InvalidTransactionException: Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30526 javax.transaction.InvalidTransactionException: Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -106,7 +106,7 @@ public class TestTransactionServer {
             server.start(THREAD2, XID1, XAResource.TMNOFLAGS, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30522 Message:TEIID30522 Global transaction Teiid-Xid global:1 branch:null format:0 already exists.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30522 Global transaction Teiid-Xid global:1 branch:null format:0 already exists.", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -120,7 +120,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID2, XAResource.TMNOFLAGS, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30523 Message:TEIID30523 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30523 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -135,7 +135,7 @@ public class TestTransactionServer {
             server.begin(THREAD1);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30526 Message:javax.transaction.InvalidTransactionException: Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30526 javax.transaction.InvalidTransactionException: Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -152,7 +152,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID2, XAResource.TMJOIN, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30517 Message:TEIID30517 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30517 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -166,7 +166,7 @@ public class TestTransactionServer {
         try {
             server.commit(THREAD1);
         } catch (XATransactionException e) {
-            assertEquals("Error Code:TEIID30526 Message:javax.transaction.InvalidTransactionException: No transaction found for client abc1.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30526 javax.transaction.InvalidTransactionException: No transaction found for client abc1.", e.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -186,7 +186,7 @@ public class TestTransactionServer {
         try {
             server.rollback(THREAD1);
         } catch (XATransactionException e) {
-            assertEquals("Error Code:TEIID30526 Message:javax.transaction.InvalidTransactionException: No transaction found for client abc1.", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30526 javax.transaction.InvalidTransactionException: No transaction found for client abc1.", e.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -197,7 +197,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID1, XAResource.TMJOIN, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30525 Message:TEIID30525 Concurrent enlistment in global transaction Teiid-Xid global:1 branch:null format:0 is not supported.", //$NON-NLS-1$
+            assertEquals("TEIID30525 Concurrent enlistment in global transaction Teiid-Xid global:1 branch:null format:0 is not supported.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -210,7 +210,7 @@ public class TestTransactionServer {
             server.end(THREAD1, XID1, XAResource.TMSUSPEND,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30524 Message:TEIID30524 Client is not currently enlisted in transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30524 Client is not currently enlisted in transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -224,7 +224,7 @@ public class TestTransactionServer {
             server.start(THREAD2, XID1, XAResource.TMRESUME, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30518 Message:TEIID30518 Cannot resume, transaction Teiid-Xid global:1 branch:null format:0 was not suspended by client abc2.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30518 Cannot resume, transaction Teiid-Xid global:1 branch:null format:0 was not suspended by client abc2.", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -233,7 +233,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID1, Integer.MAX_VALUE, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30519 Message:TEIID30519 Unknown START flags", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30519 Unknown START flags", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
@@ -242,7 +242,7 @@ public class TestTransactionServer {
             server.end(THREAD1, XID1, XAResource.TMSUCCESS,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30521 Message:TEIID30521 No global transaction found for Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30521 No global transaction found for Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -254,7 +254,7 @@ public class TestTransactionServer {
             server.prepare(THREAD1, XID1,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30505 Message:TEIID30505 Suspended work still exists on transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30505 Suspended work still exists on transaction Teiid-Xid global:1 branch:null format:0.", ex.getMessage()); //$NON-NLS-1$
         }
     }
     

@@ -318,7 +318,7 @@ public class TestCriteriaEvaluator {
         try {
             helpTestMatch("abc", "a", 'a', true); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (ExpressionEvaluationException cee) {
-            assertEquals("Error Code:TEIID30449 Message:TEIID30449 Invalid escape sequence \"a\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30449 Invalid escape sequence \"a\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
         }
     }
     
@@ -327,7 +327,7 @@ public class TestCriteriaEvaluator {
         try {
             helpTestMatch("abc", "ab", 'a', true); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (ExpressionEvaluationException cee) {
-            assertEquals("Error Code:TEIID30449 Message:TEIID30449 Invalid escape sequence \"ab\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30449 Invalid escape sequence \"ab\" with escape character \"a\"", cee.getMessage()); //$NON-NLS-1$
         }
     }
     
