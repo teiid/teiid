@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>Object</name>
+	<comment>No Product Application, version 7.7.0.v20120327-0117-H1030-Beta2</comment>
+	<projects>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.teiid.designer.core.modelBuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.teiid.designer.core.modelNature</nature>
+	</natures>
+</projectDescription>
