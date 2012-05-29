@@ -94,12 +94,12 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public static void setWorkContext(DQPWorkContext context) {
-		CONTEXTS.set(context);
+		if (context == null) {
+			CONTEXTS.remove();
+		} else {
+			CONTEXTS.set(context);
+		}
 	}
-
-	public static void releaseWorkContext() {
-		CONTEXTS.set(null);
-	}	
 	
 	private SessionMetadata session = new SessionMetadata();
     private String clientAddress;
@@ -132,6 +132,10 @@ public class DQPWorkContext implements Serializable {
     public void setSecurityHelper(SecurityHelper securityHelper) {
 		this.securityHelper = securityHelper;
 	}
+    
+    public SecurityHelper getSecurityHelper() {
+		return securityHelper;
+	}    
 
     /**
      * @return
@@ -225,28 +229,20 @@ public class DQPWorkContext implements Serializable {
 	
 	public void runInContext(final Runnable runnable) {
 		DQPWorkContext previous = DQPWorkContext.getWorkContext();
-		boolean associated = attachDQPWorkContext();
+		DQPWorkContext.setWorkContext(this);
+		Object previousSecurityContext = null;
+		if (securityHelper != null) {
+			previousSecurityContext = securityHelper.assosiateSecurityContext(this.getSecurityContext());			
+		}
 		try {
 			runnable.run();
 		} finally {
-			if (associated) {
-				securityHelper.clearSecurityContext(this.getSecurityDomain());			
+			if (securityHelper != null) {
+				securityHelper.assosiateSecurityContext(previousSecurityContext);			
 			}
-			DQPWorkContext.releaseWorkContext();
-			if (previous != null) {
-				previous.attachDQPWorkContext();
-			}
+			DQPWorkContext.setWorkContext(previous);
 		}
-	}
-
-	private boolean attachDQPWorkContext() {
-		DQPWorkContext.setWorkContext(this);
-		boolean associated = false;
-		if (securityHelper != null && this.getSubject() != null) {
-			associated = securityHelper.assosiateSecurityContext(this.getSecurityDomain(), this.getSecurityContext());			
-		}
-		return associated;
-	}
+	}	
 
 	public HashMap<String, DataPolicy> getAllowedDataPolicies() {
 		if (this.policies == null) {

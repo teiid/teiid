@@ -59,17 +59,19 @@ public class TestMembershipServiceImpl extends TestCase {
     	HashSet<Principal> principals = new HashSet<Principal>();
     	principals.add(p);
     	
-    	Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
+    	final Subject subject = new Subject(false, principals, new HashSet(), new HashSet());
     	SecurityHelper sh = Mockito.mock(SecurityHelper.class);
     	Mockito.stub(sh.getSubjectInContext("passthrough")).toReturn(subject); //$NON-NLS-1$
     	
         TeiidLoginContext membershipService = new TeiidLoginContext(sh) {
 			public LoginContext createLoginContext(String domain, CallbackHandler handler) throws LoginException {
         		LoginContext context =  Mockito.mock(LoginContext.class);
+        		Mockito.stub(context.getSubject()).toReturn(subject);
         		return context;
         	}
 			protected LoginContext createLoginContext(String domain, Subject subject) throws LoginException {
         		LoginContext context =  Mockito.mock(LoginContext.class);
+        		Mockito.stub(context.getSubject()).toReturn(subject);
         		return context;
 		    }			
         };
