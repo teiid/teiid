@@ -255,6 +255,20 @@ The following components have been updated:
 </h2>
 <h4>From ${project.version}</h4>
 <ul>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-832'>TEIID-832</a>] - (modified to only support TEIID-2005 changes) added support for calling oracle stored procedures returning cursor/resultsets</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1533'>TEIID-1533</a>] - additional controls for dependent joins</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1868'>TEIID-1868</a>] - Internal Materialized View - Load/Refresh and Assertion Failed</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1899'>TEIID-1899</a>] - Getting Assertion when running Inner Merge Join query with SELECT COUNT(*) on top</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-1956'>TEIID-1956</a>] - WHERE clause throws org.teiid.jdbc.TeiidSQLException: Index: 2, Size: 1</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2005'>TEIID-2005</a>] - Source query for Oracle sequence adds an alias, which will return "sequence doesn't exist" errors</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2020'>TEIID-2020</a>] - Running Sybase procedure with jconnect driver in Teiid fails</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2037'>TEIID-2037</a>] - Security context is not propagated correctly between Teiid engine and data sources</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2045'>TEIID-2045</a>] - fix for insert with query expression</li>
+<li>[<a href='https://issues.jboss.org/browse/TEIID-2048'>TEIID-2048</a>] - Error during dependent procedure execution</li>
+</ul>
+
+<h4>From 7.4.3</h4>
+<ul>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-1920'>TEIID-1920</a>] - fixing issues with dynamic sql</li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-1925'>TEIID-1925</a>] - Corrected method name to getExecutionId. Also removed getProcessingTime method since that has been removed</li>
 <li>[<a href='https://issues.jboss.org/browse/TEIID-1950'>TEIID-1950</a>] - renaming the teiid-client-settings in the client to not interfere with signed jars</li>
