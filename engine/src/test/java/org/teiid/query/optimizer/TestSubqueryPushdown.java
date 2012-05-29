@@ -40,6 +40,7 @@ import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
@@ -176,7 +177,7 @@ public class TestSubqueryPushdown {
             "(c37s.stringkey = ('1' || (m37s.intkey || '0'))) AND " + //$NON-NLS-1$
             "(m37s.stringkey = m37n.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT g_0.intkey FROM bqt1.mediuma AS g_0, bqt1.smallb AS g_1 WHERE (g_0.stringkey = concat('1', concat(g_1.intkey, '0'))) AND (g_0.datevalue = (SELECT MAX(g_2.datevalue) FROM bqt1.mediuma AS g_2, bqt1.smallb AS g_3 WHERE (g_2.stringkey = concat('1', concat(g_3.intkey, '0'))) AND (g_3.stringkey LIKE '%0') AND (g_3.stringkey = g_1.stringkey))) AND (g_1.stringkey LIKE '%0')"; //$NON-NLS-1$
+        String sqlOut = "SELECT g_0.intkey FROM bqt1.mediuma AS g_0, bqt1.smallb AS g_1 WHERE (g_0.stringkey = concat('1', concat(g_1.intkey, '0'))) AND (g_1.stringkey LIKE '%0') AND (g_0.datevalue = (SELECT MAX(g_2.datevalue) FROM bqt1.mediuma AS g_2, bqt1.smallb AS g_3 WHERE (g_2.stringkey = concat('1', concat(g_3.intkey, '0'))) AND (g_3.stringkey LIKE '%0') AND (g_3.stringkey = g_1.stringkey)))"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, RealMetadataFactory.exampleBQTCached(),  
             null, capFinder,
@@ -1058,6 +1059,62 @@ public class TestSubqueryPushdown {
             0       // UnionAll
         }); 
         checkJoinCounts(plan, 0, 0);
+    }
+    
+    /**
+     * Shows the default preference against on subquery
+     */
+    @Test public void testSubuqeryOn() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+    	bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 INNER JOIN bqt1.smallb as AG5 ON 1 = 1 WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT 1 FROM bqt1.smalla AS g_0 CROSS JOIN bqt1.smallb AS g_1 WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma AS g_2 WHERE (g_1.intkey = 1) AND (g_0.intkey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+    
+    /**
+     * Shows the pushdown is inhibited due to lack of support
+     */
+    @Test public void testSubuqeryOn1() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+    	bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
+        TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 LEFT OUTER JOIN bqt1.smallb as AG5 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT g_0.intkey FROM bqt1.smalla AS g_0", "SELECT g_0.intkey FROM bqt1.smallb AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+
+    /**
+     * Shows pushdown of on subquery with support
+     */
+    @Test public void testSubuqeryOn2() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+    	bsc.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, ExecutionFactory.SupportedJoinCriteria.ANY);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_ANSI_JOIN, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
+        TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 LEFT OUTER JOIN bqt1.smallb as AG5 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT 1 FROM bqt1.smalla AS g_0 LEFT OUTER JOIN bqt1.smallb AS g_1 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma AS g_2 WHERE (g_1.intkey = 1) AND (g_0.intkey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    
+    	
     }
 
 }

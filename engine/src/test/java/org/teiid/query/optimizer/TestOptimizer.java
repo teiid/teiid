@@ -2786,7 +2786,7 @@ public class TestOptimizer {
     }   
 
     /** Case 1456, defect 10492*/
-    @Test public void testAliasingDefect2(){
+    @Test public void testAliasingDefect2() throws TeiidComponentException, TeiidProcessingException{
         // Create query
         String sql = "SELECT X.e1 FROM vm1.g1 X, vm1.g1 Z WHERE X.e2 = (SELECT MAX(e2) FROM vm1.g1 Y WHERE X.e1 = Y.e1 AND Y.e2 = Z.e2) AND X.e1 = Z.e1";//$NON-NLS-1$
 
@@ -2806,7 +2806,7 @@ public class TestOptimizer {
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
-            new String[] { "SELECT g1__1.e1 FROM pm1.g1 AS g1__1, pm1.g1 AS g1__2 WHERE (g1__1.e2 = (SELECT MAX(pm1.g1.e2) FROM pm1.g1 WHERE (pm1.g1.e1 = g1__1.e1) AND (pm1.g1.e2 = g1__2.e2))) AND (g1__1.e1 = g1__2.e1)" }, SHOULD_SUCCEED); //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g1 AS g_1 WHERE (g_0.e1 = g_1.e1) AND (g_0.e2 = (SELECT MAX(g_2.e2) FROM pm1.g1 AS g_2 WHERE (g_2.e1 = g_0.e1) AND (g_2.e2 = g_1.e2)))" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
     }   
 

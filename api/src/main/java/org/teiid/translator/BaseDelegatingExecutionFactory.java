@@ -429,4 +429,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsAdvancedOlapOperations() {
 		return delegate.supportsAdvancedOlapOperations();
 	}
+	@Override
+	public boolean supportsSubqueryInOn() {
+		return delegate.supportsSubqueryInOn();
+	}
 }

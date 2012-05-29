@@ -173,4 +173,9 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 		return true;
 	}
 	
+	@Override
+	public boolean supportsSubqueryInOn() {
+		return false;
+	}
+	
 }

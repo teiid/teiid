@@ -844,6 +844,17 @@ int count = visitor.getCount();]]></programlisting>
               </row>
               <row>
                 <entry>
+                  <para>SubqueryInOn</para>
+                </entry>
+                <entry>
+                  <para>Join and base subquery support, such as ExistsCriteria</para>
+                </entry>
+                <entry>
+                  <para>Translator can support subqueries in the ON clause.  Defaults to true.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
                   <para>InlineViews</para>
                 </entry>
                 <entry>

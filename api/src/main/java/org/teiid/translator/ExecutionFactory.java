@@ -962,5 +962,13 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsFormatLiteral(String literal, Format format) {
 		return false;
 	}
+	
+	/**
+	 * Refines subquery support.
+	 * @return true if subqueries are supported in the on clause.
+	 */
+	public boolean supportsSubqueryInOn() {
+		return true;
+	}
 
 }
