@@ -112,6 +112,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.ONLY_FORMAT_LITERALS, srcCaps.supportsOnlyFormatLiterals());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, srcCaps.supportsOnlyLiteralComparison());
         tgtCaps.setCapabilitySupport(Capability.DEPENDENT_JOIN, srcCaps.supportsDependentJoins());
+        tgtCaps.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, srcCaps.supportsSubqueryInOn());
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

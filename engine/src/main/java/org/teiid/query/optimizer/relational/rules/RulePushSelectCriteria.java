@@ -129,10 +129,10 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     case NodeConstants.Types.JOIN:
                     {
         				//pushing below a join is not necessary under an access node
-        				if (NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS) == null) {
+        				if (NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS) == null && critNode.getSubqueryContainers().isEmpty()) {
                             moved = handleJoinCriteria(sourceNode, critNode, metadata);
-                            break;
         				}
+        				break;
                     }
                     case NodeConstants.Types.GROUP:
                     {

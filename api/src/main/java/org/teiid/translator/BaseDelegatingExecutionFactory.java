@@ -418,6 +418,10 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsAdvancedOlapOperations();
 	}
 	@Override
+	public boolean supportsSubqueryInOn() {
+		return delegate.supportsSubqueryInOn();
+	}
+	@Override
 	public boolean supportsConvert(int fromType, int toType) {
 		return delegate.supportsConvert(fromType, toType);
 	}

@@ -55,6 +55,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
@@ -687,6 +688,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             return false;                        
         } 
         if (sjc == SupportedJoinCriteria.ANY) {
+        	boolean subqueryOn = CapabilitiesUtil.supports(Capability.CRITERIA_ON_SUBQUERY, accessModelID, metadata, capFinder);
+    		if (!subqueryOn && !ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(crit).isEmpty()) {
+    			return false;
+    		}
         	return true;
         }
         //theta join must be between elements with a compare predicate
