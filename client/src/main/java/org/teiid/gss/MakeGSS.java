@@ -81,17 +81,30 @@ public class MakeGSS {
         	errors.append(nl);
         }
         
+        String krb5 = System.getProperty("java.security.krb5.conf"); //$NON-NLS-1$
         String realm = System.getProperty("java.security.krb5.realm"); //$NON-NLS-1$
-        if (realm == null) {
-        	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.realm")); //$NON-NLS-1$ //$NON-NLS-2$
+        String kdc = System.getProperty("java.security.krb5.kdc"); //$NON-NLS-1$
+        
+        
+        if (krb5 == null && realm == null && kdc == null) {
+        	errors.append(JDBCPlugin.Util.getString("no_gss_selection")); //$NON-NLS-1$
         	errors.append(nl);
         }
-        
-        String kdc = System.getProperty("java.security.krb5.kdc"); //$NON-NLS-1$
-        if (kdc == null) {
-        	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.kdc")); //$NON-NLS-1$ //$NON-NLS-2$
-        	errors.append(nl);
-        }  
+        else if (krb5 != null && (realm != null || kdc != null)) {
+        	errors.append(JDBCPlugin.Util.getString("ambigious_gss_selection")); //$NON-NLS-1$
+        	errors.append(nl);        	
+        }
+        else if ((realm != null && kdc == null) || (realm == null && kdc != null)) {
+        	// krb5 is null here..
+            if (realm == null) {
+            	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.realm")); //$NON-NLS-1$ //$NON-NLS-2$
+            	errors.append(nl);
+            }
+            if (kdc == null) {
+            	errors.append(JDBCPlugin.Util.getString("system_prop_missing", "java.security.krb5.kdc")); //$NON-NLS-1$ //$NON-NLS-2$
+            	errors.append(nl);
+            }         	
+        }
         
         String config = System.getProperty("java.security.auth.login.config"); //$NON-NLS-1$
         if (config == null) {
