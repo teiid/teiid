@@ -95,7 +95,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
     	// add vdb life cycle listeners
     	getVdbRepository().addListener(new VDBLifeCycleListener() {
 			
-			private Set<VDBKey> recentlyRemoved = Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000));
+			private Set<VDBKey> recentlyRemoved = Collections.synchronizedSet(Collections.newSetFromMap(new LRUCache<VDBKey, Boolean>(10000)));
 			
 			@Override
 			public void removed(String name, int version, CompositeVDB vdb) {

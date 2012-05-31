@@ -24,11 +24,10 @@ package org.teiid.core.util;
 
 import javax.naming.ConfigurationException;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.ExceptionUtil;
-
-import junit.framework.TestCase;
 
 public class TestMetaMatrixExceptionUtil extends TestCase {
 
@@ -40,14 +39,12 @@ public class TestMetaMatrixExceptionUtil extends TestCase {
         NullPointerException npe = new NullPointerException();
         TeiidRuntimeException e = new TeiidRuntimeException(npe);
         assertEquals("TeiidRuntimeException->NullPointerException", ExceptionUtil.getLinkedMessagesVerbose(e)); //$NON-NLS-1$
-		assertEquals("nullnull", ExceptionUtil.getLinkedMessages(e)); //$NON-NLS-1$
     }
 
     public void testWithMessage() {
         NullPointerException npe = new NullPointerException("problem"); //$NON-NLS-1$
         TeiidRuntimeException e = new TeiidRuntimeException(npe);
         assertEquals("TeiidRuntimeException-problem->NullPointerException", ExceptionUtil.getLinkedMessagesVerbose(e)); //$NON-NLS-1$
-		assertEquals("problemproblem", ExceptionUtil.getLinkedMessages(e)); //$NON-NLS-1$
     }
 
     public void testWithAndWithoutMessage() {
@@ -55,7 +52,6 @@ public class TestMetaMatrixExceptionUtil extends TestCase {
         TeiidException ce = new TeiidException(npe, "problem"); //$NON-NLS-1$
         TeiidRuntimeException e = new TeiidRuntimeException(ce);
         assertEquals("TeiidRuntimeException-problem->TeiidException->NullPointerException", ExceptionUtil.getLinkedMessagesVerbose(e)); //$NON-NLS-1$
-		assertEquals("problemproblemnull", ExceptionUtil.getLinkedMessages(e)); //$NON-NLS-1$
     }
 
     public void testConfigurationException() {
@@ -64,6 +60,5 @@ public class TestMetaMatrixExceptionUtil extends TestCase {
         configException.setRootCause(npe);
         TeiidException e = new TeiidException(configException, "problem3"); //$NON-NLS-1$
         assertEquals("TeiidException-problem3->ConfigurationException-problem2->NullPointerException-problem1", ExceptionUtil.getLinkedMessagesVerbose(e)); //$NON-NLS-1$
-		assertEquals("problem3problem2problem1", ExceptionUtil.getLinkedMessages(e)); //$NON-NLS-1$
     }
 }

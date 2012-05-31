@@ -26,8 +26,6 @@
  */
 package org.teiid.core;
 
-import org.teiid.core.TeiidRuntimeException;
-
 import junit.framework.TestCase;
 
 
@@ -82,7 +80,7 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         final TeiidRuntimeException err = new TeiidRuntimeException(code, "Test"); //$NON-NLS-1$
         assertNull(err.getCause());
         assertEquals(code, err.getCode());
-        assertEquals("Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("1234 Test", err.getMessage()); //$NON-NLS-1$
         
     }
 
@@ -92,7 +90,7 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         final TeiidRuntimeException err = new TeiidRuntimeException(child, "Test"); //$NON-NLS-1$
         assertSame(child, err.getCause());
         assertEquals(code, err.getCode());
-        assertEquals("Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("1234 Test", err.getMessage()); //$NON-NLS-1$
         
     }
     public static enum Event implements BundleUtil.Event {
@@ -104,7 +102,7 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         final TeiidRuntimeException err = new TeiidRuntimeException(Event.Code, child,"Test"); //$NON-NLS-1$
         assertSame(child, err.getCause());
         assertEquals("Code", err.getCode()); //$NON-NLS-1$
-        assertEquals("Test", err.getMessage()); //$NON-NLS-1$
+        assertEquals("Code Test", err.getMessage()); //$NON-NLS-1$
         
     }
 }

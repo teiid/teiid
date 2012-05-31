@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -42,7 +43,7 @@ import org.teiid.translator.TypeFacility;
  * TODO: add support for datatype import
  * TODO: add support for unique constraints
  */
-public class MetadataFactory {
+public class MetadataFactory implements Serializable {
 	private static final long serialVersionUID = 8590341087771685630L;
 	
 	private String vdbName;

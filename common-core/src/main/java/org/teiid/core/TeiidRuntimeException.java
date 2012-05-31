@@ -154,8 +154,16 @@ public class TeiidRuntimeException extends RuntimeException {
      *
      * @return String representation of instance
      */
-    public String toString() {
-        return ExceptionUtil.getLinkedMessages(this);
+    public String getFullMessage() {
+        return ExceptionUtil.getLinkedMessagesVerbose(this);
     }
+    
+	public String getMessage() {
+		String message = super.getMessage();
+		if (code == null || code.length() == 0 || message.startsWith(code)) {
+			return message;
+		}
+		return code+" "+message; //$NON-NLS-1$
+	} 
 
 }

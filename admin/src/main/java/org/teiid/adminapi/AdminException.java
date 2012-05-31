@@ -45,7 +45,7 @@ public abstract class AdminException extends TeiidException {
 	private static final long serialVersionUID = -4446936145500241358L;
 	// List of Admin exceptions in
     // case of multiple failure
-    private List children;
+    private List<AdminException> children;
 
     /**
      * No-arg ctor.
@@ -110,8 +110,11 @@ public abstract class AdminException extends TeiidException {
      * @return The non-null list of failures.
      * @since 4.3
      */
-    public List getChildren() {
-        return (children != null ? children : Collections.EMPTY_LIST);
+    public List<AdminException> getChildren() {
+    	if (children == null) {
+    		return Collections.emptyList();
+    	}
+        return children;
     }
 
     /**
@@ -123,7 +126,7 @@ public abstract class AdminException extends TeiidException {
      */
     public void addChild(AdminException child) {
         if ( children == null ) {
-            children = new ArrayList();
+            children = new ArrayList<AdminException>();
         }
         children.add(child);
     }

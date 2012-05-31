@@ -46,7 +46,9 @@ import org.teiid.translator.ExecutionFactory;
  */
 public final class TranslatorDeployer implements DeploymentUnitProcessor {
 
-    @Override
+    private static final String DEPLOYMENT_NAME = "deployment-name"; //$NON-NLS-1$
+
+	@Override
     public void deploy(final DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
         final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
         final ServiceTarget target = phaseContext.getServiceTarget();
@@ -66,6 +68,7 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
         		if (metadata == null) {
         			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50070, moduleName)); 
         		}
+        		metadata.addProperty(DEPLOYMENT_NAME, deploymentUnit.getName());
         		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		
         		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));

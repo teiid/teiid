@@ -3,7 +3,6 @@
  */
 package org.teiid.test.framework.exception;
 
-import java.io.Serializable;
 import java.util.List;
 
 import org.teiid.core.TeiidRuntimeException;
@@ -22,8 +21,7 @@ import org.teiid.core.util.ExceptionUtil;
 	 * Subclasses of this exception typically only need to implement whatever
 	 * constructors they need. <p>
 	 */
-public class QueryTestFailedException extends Exception
-	implements Serializable{
+public class QueryTestFailedException extends Exception {
 	    //############################################################################################################################
 		//# Static Methods                                                                                                           #
 		//############################################################################################################################
@@ -187,7 +185,7 @@ public class QueryTestFailedException extends Exception
 	     * @see #getFormattedMessage
 	     */
 	    public String getFullMessage() {
-	        return ExceptionUtil.getLinkedMessages(this, 0 );
+	        return ExceptionUtil.getLinkedMessagesVerbose(this);
 	    }
 
 	    /* (non-Javadoc)

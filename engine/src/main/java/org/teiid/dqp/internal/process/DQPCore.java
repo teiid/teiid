@@ -316,8 +316,9 @@ public class DQPCore implements DQP {
     	return results;
 	}    
 
-	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) {
+	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) throws TeiidProcessingException {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+    	checkLoading(workContext);
 		RequestID requestID = workContext.getRequestID(reqID);
 		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), this.config.getMaxRowsFetchSize()));
 		Request request = null;
@@ -690,7 +691,12 @@ public class DQPCore implements DQP {
 				RequestMessage request = new RequestMessage(command);
 				request.setParameterValues(parameters);
 				request.setStatementType(StatementType.PREPARED);
-				ResultsFuture<ResultsMessage> result = executeRequest(0, request);
+				ResultsFuture<ResultsMessage> result;
+				try {
+					result = executeRequest(0, request);
+				} catch (TeiidProcessingException e) {
+					throw new TeiidRuntimeException(e);
+				}
 				result.addCompletionListener(new ResultsFuture.CompletionListener<ResultsMessage>() {
 
 					@Override
@@ -868,8 +874,16 @@ public class DQPCore implements DQP {
 			boolean allowDoubleQuotedVariable)
 			throws TeiidComponentException, TeiidProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		checkLoading(workContext);
 		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
+	}
+
+	private void checkLoading(DQPWorkContext workContext)
+			throws TeiidProcessingException {
+		if (workContext.getVDB().isLoading()) {
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, workContext.getVDB()));
+		}
 	}
 	
 	public boolean isExceptionOnMaxSourceRows() {

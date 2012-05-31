@@ -61,6 +61,18 @@ public class LocalServerConnection implements ServerConnection {
 	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry();
+		
+		String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
+		String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
+		int firstIndex = vdbName.indexOf('.');
+		int lastIndex = vdbName.lastIndexOf('.');
+		if (firstIndex != -1 && firstIndex == lastIndex) {
+			vdbVersion = vdbName.substring(firstIndex+1);
+			vdbName = vdbName.substring(0, firstIndex);
+		}
+		if (vdbVersion != null) {
+			this.csr.waitForFinished(connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME), Integer.valueOf(vdbVersion));
+		}
 		workContext.setSecurityHelper(csr.getSecurityHelper());
 		workContext.setUseCallingThread(useCallingThread);
 		authenticate();

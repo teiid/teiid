@@ -102,6 +102,16 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	public ClientServiceRegistry getValue() throws IllegalStateException, IllegalArgumentException {
 		return this;
 	}
+	
+	@Override
+	public void waitForFinished(String vdbName, int vdbVersion) {
+		VDBRepository repo = this.vdbRepositoryInjector.getValue();
+		try {
+			repo.waitForFinished(vdbName, vdbVersion);
+		} catch (InterruptedException e) {
+			return; //just allow the thread to continue/error
+		}
+	}
 
 	@Override
 	public void start(StartContext context) throws StartException {

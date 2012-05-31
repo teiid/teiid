@@ -144,7 +144,11 @@ public class CompositeVDB {
 				}
 				newMergedVDB.getImportedModels().add(m.getName());
 			}
-			mergedRepo.getConnectorManagers().putAll(importedVDB.cmr.getConnectorManagers());
+			for (Map.Entry<String, ConnectorManager> entry : importedVDB.cmr.getConnectorManagers().entrySet()) {
+				if (mergedRepo.getConnectorManagers().put(entry.getKey(), entry.getValue()) != null) {
+					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40086, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40086, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), entry.getKey()));
+				}
+			}
 		}
 		this.mergedVDB = newMergedVDB;
 	}
@@ -180,6 +184,9 @@ public class CompositeVDB {
 		return mergedUDF;
 	}
 	
+	/**
+	 * TODO: we are not checking for collisions here.
+	 */
 	private LinkedHashMap<String, Resource> getVisibilityMap() {
 		if (this.children == null || this.children.isEmpty()) {
 			return this.visibilityMap;

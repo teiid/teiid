@@ -67,6 +67,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 @SuppressWarnings("nls")
 public class AdminFactory {
 	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
+	private static Set<String> optionalProps = new HashSet<String>(Arrays.asList("connection-url", "password", "check-valid-connection-sql", "pool-prefill", "max-pool-size", "min-pool-size"));
 	private static AdminFactory INSTANCE = new AdminFactory();
 	
 	public static AdminFactory getInstance() {
@@ -398,20 +399,14 @@ public class AdminFactory {
 	            builder.addProperty("driver-name", templateName);
 	            
 	            builder.addProperty("pool-name", deploymentName);
-	            builder.addProperty("pool-prefill", "false");
-	            builder.addProperty("max-pool-size", "20");
-	            builder.addProperty("min-pool-size", "10");
 	            
 	            if (properties != null) {
 		            builder.addProperty("connection-url", properties.getProperty("connection-url"));
-		            if (properties.getProperty("user-name") != null) {
-		            	builder.addProperty("user-name", properties.getProperty("user-name"));
-		            }
-		            if (properties.getProperty("password") != null) {
-		            	builder.addProperty("password", properties.getProperty("password"));
-		            }
-		            if (properties.getProperty("check-valid-connection-sql") != null) {
-		            	builder.addProperty("check-valid-connection-sql", properties.getProperty("check-valid-connection-sql"));
+		            for (String prop : optionalProps) {
+		            	String value = properties.getProperty(prop);
+		            	if (value != null) {
+		            		builder.addProperty(prop, value);
+		            	}
 		            }
 	            }
 	            else {

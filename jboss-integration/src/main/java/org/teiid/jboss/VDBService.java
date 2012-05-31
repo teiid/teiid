@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -160,8 +161,6 @@ class VDBService implements Service<VDBMetaData> {
 		
 		getVDBRepository().addListener(this.vdbListener);
 				
-		boolean preview = this.vdb.isPreview();
-		
 		MetadataStore store = new MetadataStore();
 		
 		try {
@@ -174,6 +173,7 @@ class VDBService implements Service<VDBMetaData> {
 		this.vdb.removeAttachment(UDFMetaData.class);
 		
 		// load metadata from the models
+		AtomicInteger loadCount = new AtomicInteger(this.vdb.getModelMetaDatas().values().size());
 		for (ModelMetaData model: this.vdb.getModelMetaDatas().values()) {
 			MetadataRepository metadataRepository = model.getAttachment(MetadataRepository.class);
 			if (metadataRepository == null) {
@@ -181,17 +181,11 @@ class VDBService implements Service<VDBMetaData> {
 			}
 			model.addAttchment(MetadataRepository.class, metadataRepository);
 			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {
-				loadMetadata(this.vdb, model, cmr, metadataRepository, store);
+				loadMetadata(this.vdb, model, cmr, metadataRepository, store, loadCount);
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was being loaded from its repository in separate thread"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			else {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " skipped being loaded because of its type ", model.getModelType()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
-			}
-		}
-		
-		synchronized (this.vdb) {
-			if (preview) {
-				vdb.setStatus(VDB.Status.ACTIVE);
 			}
 		}
 	}
@@ -230,8 +224,10 @@ class VDBService implements Service<VDBMetaData> {
 			this.objectReplicatorInjector.getValue().stop(gts);
 		}		
 		getVDBRepository().removeListener(this.vdbListener);
-		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
-		this.vdb.setRemoved(true);
+		VDBMetaData runtimeMetadata = getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
+		if (runtimeMetadata != null) {
+			runtimeMetadata.setStatus(VDB.Status.REMOVED);
+		}
 		final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
@@ -320,7 +316,7 @@ class VDBService implements Service<VDBMetaData> {
 	}
 
 
-    private boolean loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore) {
+    private boolean loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
 
     	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); 
 		model.addError(ModelMetaData.ValidationError.Severity.ERROR.toString(), msg); 
@@ -385,7 +381,7 @@ class VDBService implements Service<VDBMetaData> {
 						
 			    		model.clearErrors();				
 			    		
-			    		if (vdb.isValid()) {
+			    		if (loadCount.decrementAndGet() == 0) {
 			    			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 			    		}
 			    	} 
@@ -428,7 +424,7 @@ class VDBService implements Service<VDBMetaData> {
     // if is not dynamic always cache; else check for the flag (this may need to be revisited with index vdb)
 	private void cacheMetadataStore(final VDBMetaData vdb, MetadataFactory schema) {
 		boolean cache = !vdb.isDynamic();
-		if (!vdb.isDynamic()) {
+		if (vdb.isDynamic()) {
 			cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		

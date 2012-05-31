@@ -25,13 +25,12 @@ package org.teiid.query.sql.visitor;
 import java.util.Collection;
 import java.util.Iterator;
 
+import junit.framework.TestCase;
+
 import org.teiid.core.TeiidException;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-
-import junit.framework.TestCase;
 
 
 public class TestDeepGroupCollectorVisitor extends TestCase {
@@ -42,10 +41,9 @@ public class TestDeepGroupCollectorVisitor extends TestCase {
     public void helpTestVisitor(String sql, String[] expectedGroups) {
         LanguageObject obj = null;
         try {
-            QueryParser parser = new QueryParser();
-            obj = parser.parseCommand(sql);
+            obj = QueryParser.getQueryParser().parseCommand(sql);
         } catch(TeiidException e) {
-            fail("Unexpected exception while parsing: " + e.getFullMessage()); //$NON-NLS-1$
+        	throw new RuntimeException(e);
         }
         
         Collection actualGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(obj, false);

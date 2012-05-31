@@ -35,6 +35,7 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
@@ -115,6 +116,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			if (serializer.buildVdbXml(vdb).exists()) {
 				vdb = VDBMetadataParser.unmarshell(new FileInputStream(serializer.buildVdbXml(vdb)));
 			}
+			vdb.setStatus(Status.LOADING);
 			deploymentUnit.putAttachment(TeiidAttachments.VDB_METADATA, vdb);
 			LogManager.logDetail(LogConstants.CTX_RUNTIME,"VDB "+file.getName()+" has been parsed.");  //$NON-NLS-1$ //$NON-NLS-2$
 			return vdb;

@@ -23,21 +23,11 @@
 package org.teiid.core.util;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import org.teiid.core.util.PropertiesUtils;
-import org.teiid.core.util.PropertiesUtils.InvalidPropertyException;
+import java.util.*;
 
 import junit.framework.TestCase;
+
+import org.teiid.core.util.PropertiesUtils.InvalidPropertyException;
 
 
 /**
@@ -496,7 +486,7 @@ public class TestPropertiesUtils extends TestCase {
     		PropertiesUtils.getIntProperty(p, "x", 1); //$NON-NLS-1$
     		fail("expected exception"); //$NON-NLS-1$
     	} catch (InvalidPropertyException e) {
-    		assertEquals("Property 'x' with value 'y' is not a valid Integer.", e.getMessage()); //$NON-NLS-1$
+    		assertEquals("TEIID10037 Property 'x' with value 'y' is not a valid Integer.", e.getMessage()); //$NON-NLS-1$
     	}
     }
     

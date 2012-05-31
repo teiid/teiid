@@ -72,6 +72,7 @@ import org.teiid.query.metadata.TransformationMetadata.Resource;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
+	private static final String DEPLOYMENT_NAME = "deployment-name"; //$NON-NLS-1$
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
@@ -89,7 +90,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			return;
 		}
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-		
+		deployment.addProperty(DEPLOYMENT_NAME, deploymentUnit.getName());
 		// check to see if there is old vdb already deployed.
         final ServiceController<?> controller = context.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
         if (controller != null) {

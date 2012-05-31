@@ -24,6 +24,7 @@ package org.teiid.deployers;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +32,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -57,6 +60,9 @@ import org.teiid.vdb.runtime.VDBKey;
  * Repository for VDBs
  */
 public class VDBRepository implements Serializable{
+	private static final int DEPLOY_TIMEOUT = 60000;
+	private static final int LOAD_TIMEOUT = 600000;
+
 	private static final long serialVersionUID = 312177538191772674L;
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
@@ -66,12 +72,11 @@ public class VDBRepository implements Serializable{
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
 	private Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
-	
+	private ReentrantLock lock = new ReentrantLock();
+	private Condition vdbAdded = lock.newCondition();
 	
 	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
-		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
-			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
-		}
+		VDBKey key = vdbId(vdb);
 		
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
@@ -90,8 +95,40 @@ public class VDBRepository implements Serializable{
 		}
 		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, stores);
 		cvdb.buildCompositeState(this);
-		this.vdbRepo.put(vdbId(vdb), cvdb);
+		lock.lock();
+		try {
+			if (vdbRepo.containsKey(key)) {
+				 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
+			}
+			this.vdbRepo.put(key, cvdb);
+			vdbAdded.signalAll();
+		} finally {
+			lock.unlock();
+		}
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
+	}
+	
+	public void waitForFinished(String vdbName, int vdbVersion) throws InterruptedException {
+		CompositeVDB cvdb = null;
+		VDBKey key = new VDBKey(vdbName, vdbVersion);
+		Date toWait = new Date(System.currentTimeMillis() + DEPLOY_TIMEOUT);
+		lock.lock();
+		try {
+			while (cvdb == null) {
+				cvdb = this.vdbRepo.get(key);
+				if (cvdb == null && !vdbAdded.awaitUntil(toWait)) {
+					return; //TODO: should there be a message/exception
+				}
+			}
+		} finally {
+			lock.unlock();
+		}
+		VDBMetaData vdb = cvdb.getVDB();
+		synchronized (vdb) {
+			while (vdb.isLoading()) {
+				vdb.wait(LOAD_TIMEOUT);
+			}
+		}
 	}
 
 	CompositeVDB getCompositeVDB(String name, int version) {
@@ -211,14 +248,14 @@ public class VDBRepository implements Serializable{
 		this.odbcEnabled = true;
 	}
 	
-	public boolean removeVDB(String vdbName, int vdbVersion) {
+	public VDBMetaData removeVDB(String vdbName, int vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
 		CompositeVDB removed = this.vdbRepo.remove(key);
 		if (removed == null) {
-			return false;
+			return null;
 		}
 		notifyRemove(key.getName(), key.getVersion(), removed);
-		return true;
+		return removed.getVDB();
 	}	
 	
 	public Map<String, Datatype> getBuiltinDatatypes() {
@@ -259,7 +296,7 @@ public class VDBRepository implements Serializable{
 				metdataAwareVDB.setStatus(VDB.Status.ACTIVE);
 			}
 			else {
-				metdataAwareVDB.setStatus(VDB.Status.INACTIVE);
+				metdataAwareVDB.setStatus(VDB.Status.INVALID);
 			}
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, (VDB.Status.ACTIVE == metdataAwareVDB.getStatus())?RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version):RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40006,name, version));
 			notifyFinished(name, version, v);

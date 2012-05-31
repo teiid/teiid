@@ -79,31 +79,13 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	protected String description;
 	
 	private boolean dynamic = false;
-	private VDB.Status status = VDB.Status.INACTIVE;
+	private volatile VDB.Status status = VDB.Status.ACTIVE;
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
-	private boolean removed;
 	private long queryTimeout = Long.MIN_VALUE;
 	private Set<String> importedModels = Collections.emptySet();
 
-	public String getName() {
-		return super.getName();
-	}
-	
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion();
-	}
-	
-	// This needed by JAXB marshaling
-	public void setName(String name) {
-		super.setName(name);
-	} 
-	
-	public boolean isRemoved() {
-		return removed;
-	}
-	
-	public void setRemoved(boolean removed) {
-		this.removed = removed;
 	}
 	
 	@Override
@@ -124,12 +106,20 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return this.status;
 	}
 	
-	public void setStatus(Status s) {
+	public boolean isLoading() {
+		return this.status.isLoading();
+	}
+	
+	public synchronized void setStatus(Status s) {
+		this.notifyAll();
+		if (this.status == Status.REMOVED) {
+			return;
+		}
 		this.status = s;
 	}
 	
 	public void setStatus(String s) {
-		this.status = Status.valueOf(s);
+		setStatus(Status.valueOf(s));
 	}
 	
 	@Override

@@ -123,6 +123,10 @@
           This is to enable faster build for development time.
           -->
       <id>dev</id>
+      <properties>
+        <maven.javadoc.skip>true</maven.javadoc.skip>
+        <skipTests>true</skipTests>
+      </properties>
       <modules>
         <module>build</module>
       </modules>

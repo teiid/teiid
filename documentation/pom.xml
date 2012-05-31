@@ -11,12 +11,6 @@
   <name>Documents</name>
   <description>Teiid Documentation Aggregator</description>
   <modules>
-    <module>admin-guide</module>
-    <module>reference</module>
-    <module>developer-guide</module>
-    <module>quick-start-example</module>
-    <module>client-developers-guide</module>
-    <module>caching-guide</module>
     <module>javadocs</module>
   </modules>
 </project>

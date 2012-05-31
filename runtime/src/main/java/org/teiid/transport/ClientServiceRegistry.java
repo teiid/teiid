@@ -39,4 +39,6 @@ public interface ClientServiceRegistry {
 	
 	AuthenticationType getAuthenticationType();
 
+	void waitForFinished(String vdbName, int vdbVersion);
+
 }

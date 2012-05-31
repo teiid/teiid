@@ -27,6 +27,7 @@ import java.util.concurrent.Executor;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -83,7 +84,7 @@ public abstract class VDBStatusChecker {
 			
 			boolean dsReplaced = false;
 			if (!cm.getConnectionName().equals(dsName)){
-				vdb.setStatus(VDB.Status.INACTIVE);
+				markInvalid(vdb);
 				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName);
 				model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 				cm = new ConnectorManager(translatorName, dsName); 
@@ -117,10 +118,18 @@ public abstract class VDBStatusChecker {
 			}
 		}
 	}
+
+	private void markInvalid(VDBMetaData vdb) {
+		if (vdb.getStatus() == Status.LOADING) {
+			vdb.setStatus(Status.INCOMPLETE);
+		} else if (vdb.getStatus() == Status.ACTIVE){
+			vdb.setStatus(Status.INVALID);
+		}
+	}
 	
 	public void resourceAdded(String resourceName, boolean translator) {
 		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
-			if (vdb.getStatus() == VDB.Status.ACTIVE || vdb.isPreview()) {
+			if (vdb.getStatus() == VDB.Status.ACTIVE) {
 				continue;
 			}
 			LinkedList<Runnable> runnables = new LinkedList<Runnable>();
@@ -167,7 +176,11 @@ public abstract class VDBStatusChecker {
 						getExecutor().execute(runnable);
 					}
 				} else if (valid) {
-					vdb.setStatus(VDB.Status.ACTIVE);
+					if (vdb.getStatus() == Status.INVALID) {
+						vdb.setStatus(VDB.Status.ACTIVE);
+					} else {
+						vdb.setStatus(VDB.Status.LOADING);
+					}
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
 				}
 			}
@@ -176,16 +189,13 @@ public abstract class VDBStatusChecker {
 	
 	public void resourceRemoved(String resourceName, boolean translator) {
 		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
-			if (vdb.isPreview()) {
-				continue;
-			}
 			synchronized (vdb) {
 				for (Model m:vdb.getModels()) {
 					ModelMetaData model = (ModelMetaData)m;
 					
 					String sourceName = getSourceName(resourceName, model, translator);
 					if (sourceName != null) {
-						vdb.setStatus(VDB.Status.INACTIVE);
+						markInvalid(vdb);
 						String msg = null;
 						if (translator) {
 							msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40005, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName));

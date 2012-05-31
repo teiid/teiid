@@ -42,8 +42,8 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -458,7 +458,7 @@ public class TestDQPCore {
     }
 
 	private void helpTestPlanInvalidation(String query) throws InterruptedException,
-			ExecutionException, TimeoutException {
+			ExecutionException, TimeoutException, TeiidProcessingException {
 		String sql = "insert into #temp select * FROM vqt.SmallB"; //$NON-NLS-1$
         String userName = "1"; //$NON-NLS-1$
         int sessionid = 1; //$NON-NLS-1$
@@ -627,7 +627,7 @@ public class TestDQPCore {
     }
 
 	private ResultsMessage execute(String userName, int sessionid, RequestMessage reqMsg)
-			throws InterruptedException, ExecutionException, TimeoutException {
+			throws InterruptedException, ExecutionException, TimeoutException, TeiidProcessingException {
 		DQPWorkContext.getWorkContext().getSession().setSessionId(String.valueOf(sessionid));
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
 

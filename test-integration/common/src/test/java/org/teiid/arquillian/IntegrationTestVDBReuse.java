@@ -41,7 +41,7 @@ import org.teiid.jdbc.TeiidDriver;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
-public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCase {
+public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 
 	private Admin admin;
 	
@@ -55,10 +55,9 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
-
+	
 	@Test
-    public void testViewDefinition() throws Exception {
-				
+    public void testReuse() throws Exception {
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
 		
 		Properties props = new Properties();
@@ -72,7 +71,19 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
 		
-		execute("SELECT * FROM Sys.Columns WHERE tablename='stock'"); //$NON-NLS-1$
+		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
+		this.internalResultSet.next();
+		int cols = this.internalResultSet.getInt(1);
+		
+		admin.deploy("reuse-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("reuse-vdb.xml")));
+		
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse", 1, 3));
+		
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
+		this.internalResultSet.next();
+		assertTrue(this.internalResultSet.getInt(1) > cols);
     }
 
 }

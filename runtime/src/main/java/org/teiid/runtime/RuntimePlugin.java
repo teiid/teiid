@@ -48,7 +48,6 @@ public class RuntimePlugin {
     	TEIID40016, // pg ssl error
     	TEIID40017, // unexpected exp for session
     	TEIID40018,
-    	TEIID40019,
     	TEIID40020,
     	TEIID40021,
     	TEIID40022,
@@ -78,8 +77,6 @@ public class RuntimePlugin {
     	TEIID40046,
     	TEIID40047,
     	TEIID40048,
-    	TEIID40049,
-    	TEIID40050,
     	TEIID40051,
     	TEIID40052,
     	TEIID40053,
@@ -115,5 +112,6 @@ public class RuntimePlugin {
     	TEIID40083, //vdb import does not exist
     	TEIID40084, //imported role conflict
     	TEIID40085, //imported model conflict
+    	TEIID40086, //imported connector manager conflict
     }
 }

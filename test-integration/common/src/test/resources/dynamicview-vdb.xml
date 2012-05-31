@@ -3,7 +3,7 @@
         <source name="text-connector" translator-name="file" connection-jndi-name="java:/marketdata-file"/>
     </model>
     <model visible = "true" type = "VIRTUAL" name = "portfolio">
-         <metadata import-type = "DDL"><![CDATA[
+         <metadata type = "DDL"><![CDATA[
               CREATE VIEW stock (
                 symbol varchar,
                 price decimal

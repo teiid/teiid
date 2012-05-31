@@ -235,7 +235,7 @@ public class MetadataValidator {
 		}
     }
 
-	private static Datatype getDataType(Collection<Datatype> dataTypes, Class clazz) {
+	private static Datatype getDataType(Collection<Datatype> dataTypes, Class<?> clazz) {
 		for (Datatype type:dataTypes) {
 			if (type.getJavaClassName().equals(clazz.getName())) {
 				return type;

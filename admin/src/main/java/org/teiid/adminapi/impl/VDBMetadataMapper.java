@@ -211,7 +211,10 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		
 		ModelNode statusAllowed = new ModelNode();
 		statusAllowed.add(Status.ACTIVE.toString());
-		statusAllowed.add(Status.INACTIVE.toString());
+		statusAllowed.add(Status.LOADING.toString());
+		statusAllowed.add(Status.INVALID.toString());
+		statusAllowed.add(Status.REMOVED.toString());
+		statusAllowed.add(Status.INCOMPLETE.toString());
 		addAttribute(node, STATUS, ModelType.STRING, true);
 		node.get(STATUS).get(ALLOWED).set(statusAllowed);
 		

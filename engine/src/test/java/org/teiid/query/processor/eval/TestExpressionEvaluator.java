@@ -72,7 +72,7 @@ public class TestExpressionEvaluator {
             Object actualValue = helpEval(expr, elementList, valueList, dataMgr, context);
             assertEquals("Did not get expected result", expectedValue, actualValue); //$NON-NLS-1$
         } catch(TeiidException e) {
-            fail("Received unexpected exception: " + e.getFullMessage()); //$NON-NLS-1$
+            throw new RuntimeException(e);
         }
     }
 

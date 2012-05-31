@@ -44,7 +44,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -118,13 +117,7 @@ public abstract class SessionServiceImpl implements SessionService {
 	@Override
 	public void closeSession(String sessionID) throws InvalidSessionException {
 		LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"closeSession", sessionID}); //$NON-NLS-1$
-		if (sessionID == null) {
-			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041, sessionID));
-		}
-		SessionMetadata info = this.sessionCache.remove(sessionID);
-		if (info == null) {
-			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
-		}
+		SessionMetadata info = getSessionInfo(sessionID, true);
 		if (info.getVDBName() != null) {
             try {
     			dqp.terminateSession(info.getSessionId());
@@ -226,13 +219,8 @@ public abstract class SessionServiceImpl implements SessionService {
 		} catch (NumberFormatException e) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));
 		}
-		
 		if (vdb == null) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40046, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40046, vdbName, vdbVersion));
-		}
-		
-		if (vdb.getStatus() != VDB.Status.ACTIVE) {
-			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40047, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40047, vdbName, vdbVersion));
 		}
 		if (vdb.getConnectionType() == ConnectionType.NONE) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40048, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40048, vdbName, vdbVersion));
@@ -240,7 +228,6 @@ public abstract class SessionServiceImpl implements SessionService {
 		return vdb;
 	}
 
-	
 	@Override
 	public LoginContext createLoginContext(final String securityDomain, final String user, final String password) throws LoginException{
 		CallbackHandler handler = new CallbackHandler() {
@@ -297,7 +284,7 @@ public abstract class SessionServiceImpl implements SessionService {
 
 	@Override
 	public void pingServer(String sessionID) throws InvalidSessionException {
-		SessionMetadata info = getSessionInfo(sessionID);
+		SessionMetadata info = getSessionInfo(sessionID, false);
 		info.setLastPingTime(System.currentTimeMillis());
 		this.sessionCache.put(sessionID, info);
 		LogManager.logDetail(LogConstants.CTX_SECURITY, "Keep-alive ping received for session:", sessionID); //$NON-NLS-1$
@@ -311,25 +298,25 @@ public abstract class SessionServiceImpl implements SessionService {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogConstants.CTX_SECURITY,e,RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40019, new Object[] {e.getMessage()}));
+			LogManager.logWarning(LogConstants.CTX_SECURITY,e,e.getMessage());
 			return false;
 		}
 	}
 
 	@Override
 	public SessionMetadata validateSession(String sessionID) throws InvalidSessionException, SessionServiceException {
-		SessionMetadata info = getSessionInfo(sessionID);
+		SessionMetadata info = getSessionInfo(sessionID, false);
 		return info;
 	}
 
-	private SessionMetadata getSessionInfo(String sessionID)
+	private SessionMetadata getSessionInfo(String sessionID, boolean remove)
 			throws InvalidSessionException {
 		if (sessionID == null) {
-			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40049, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40049, sessionID));
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40041, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40041));
 		}
-		SessionMetadata info = this.sessionCache.get(sessionID);
+		SessionMetadata info = remove?this.sessionCache.remove(sessionID):this.sessionCache.get(sessionID);
 		if (info == null) {
-			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40050, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40050, sessionID));
+			 throw new InvalidSessionException(RuntimePlugin.Event.TEIID40042, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40042, sessionID));
 		}
 		return info;
 	}

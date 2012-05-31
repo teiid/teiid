@@ -103,5 +103,10 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	public AuthenticationType getAuthenticationType() {
 		return authenticationType;
 	}
+	
+	@Override
+	public void waitForFinished(String vdbName, int vdbVersion) {
 		
+	}
+	
 }
