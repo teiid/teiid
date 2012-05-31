@@ -25,6 +25,7 @@
 			<groupId>org.jboss.teiid.connectors</groupId>
 			<artifactId>salesforce-api</artifactId>
 			<version>${project.version}</version>
+            <scope>provided</scope>
 		</dependency>
         <dependency>
             <groupId>javax.resource</groupId>
