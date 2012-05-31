@@ -22,7 +22,6 @@
 
 package org.teiid.core;
 
-import org.teiid.core.util.ExceptionUtil;
 
 
 /**
@@ -134,15 +133,6 @@ public class TeiidRuntimeException extends RuntimeException {
     
     private void setCode( String code ) {
         this.code = code;
-    }
-
-    /**
-     * Returns a string representation of this class.
-     *
-     * @return String representation of instance
-     */
-    public String toString() {
-        return ExceptionUtil.getLinkedMessages(this);
     }
 
 }

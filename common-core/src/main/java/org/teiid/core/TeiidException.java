@@ -162,12 +162,4 @@ public class TeiidException extends Exception {
         return super.getCause();
     }
 
-    /**
-     * Returns a string representation of this class.
-     *
-     * @return String representation of instance
-     */
-    public String toString() {
-        return getFullMessage();
-    }
 }
