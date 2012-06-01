@@ -80,7 +80,7 @@ public class VDBRepository implements Serializable{
 		
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
-			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40036, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40036));
+			 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40022, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
 		}	
 		
 		if (this.odbcEnabled && odbcStore == null) {
@@ -298,7 +298,7 @@ public class VDBRepository implements Serializable{
 			else {
 				metdataAwareVDB.setStatus(VDB.Status.INVALID);
 			}
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, (VDB.Status.ACTIVE == metdataAwareVDB.getStatus())?RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version):RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40006,name, version));
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metdataAwareVDB.getStatus()));
 			notifyFinished(name, version, v);
 		}
 	}

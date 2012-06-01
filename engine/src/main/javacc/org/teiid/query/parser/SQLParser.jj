@@ -2805,7 +2805,7 @@ Character charVal(ParseInfo info, String type) :
 	escStr=stringVal()
 	{
 		if (escStr.length() != 1) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_char", type, escStr)); //$NON-NLS-1$
+			throw new ParseException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30398, type, escStr)); //$NON-NLS-1$
 		}
 		return Character.valueOf(escStr.charAt(0));
 	}
@@ -3577,7 +3577,7 @@ Expression function(ParseInfo info) :
 	          if (expression instanceof Constant) {
 	              Object value = ((Constant)expression).getValue();
 	              if (value instanceof String && ((String)value).length() != 1) {
-				      throw new ParseException(QueryPlugin.Util.getString("SQLParser.Invalid_char", "TRIM CHAR", value)); //$NON-NLS-1$
+				      throw new ParseException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30398, "TRIM CHAR", value)); //$NON-NLS-1$
 	              }
 	          }
 	          args.add(expression);

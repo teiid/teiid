@@ -181,7 +181,7 @@ public abstract class VDBStatusChecker {
 					} else {
 						vdb.setStatus(VDB.Status.LOADING);
 					}
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion()));
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
 				}
 			}
 		}
@@ -205,7 +205,7 @@ public abstract class VDBStatusChecker {
 						}
 						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40006,vdb.getName(), vdb.getVersion()));
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
 					}
 				}
 			}

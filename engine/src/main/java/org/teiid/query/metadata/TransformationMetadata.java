@@ -478,7 +478,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         Table tableRecord = (Table) groupID;
         if (!tableRecord.isVirtual()) {
-             throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecord.getFullName()));
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecord.getFullName(), "Query")); //$NON-NLS-1$
         }
         LiveTableQueryNode queryNode = new LiveTableQueryNode(tableRecord);
 
@@ -497,7 +497,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-             throw new QueryMetadataException(QueryPlugin.Event.TEIID30360, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30360, tableRecordImpl.getFullName()));
+             throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Insert")); //$NON-NLS-1$
         }
         return tableRecordImpl.isInsertPlanEnabled()?tableRecordImpl.getInsertPlan():null;
     }
@@ -506,7 +506,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-        	 throw new QueryMetadataException(QueryPlugin.Event.TEIID30361, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30361,tableRecordImpl.getFullName()));
+        	throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Update")); //$NON-NLS-1$
         }
         return tableRecordImpl.isUpdatePlanEnabled()?tableRecordImpl.getUpdatePlan():null;
     }
@@ -515,7 +515,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         ArgCheck.isInstanceOf(Table.class, groupID);
         Table tableRecordImpl = (Table)groupID;
         if (!tableRecordImpl.isVirtual()) {
-             throw new QueryMetadataException(QueryPlugin.Event.TEIID30362, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30362,tableRecordImpl.getFullName()));
+        	throw new QueryMetadataException(QueryPlugin.Event.TEIID30359, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30359, tableRecordImpl.getFullName(), "Delete")); //$NON-NLS-1$
         }
         return tableRecordImpl.isDeletePlanEnabled()?tableRecordImpl.getDeletePlan():null;
     }

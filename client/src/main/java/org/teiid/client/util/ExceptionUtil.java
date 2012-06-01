@@ -48,7 +48,6 @@ public class ExceptionUtil {
 	public static Throwable convertException(Method method, Throwable exception) {
 		boolean canThrowXATransactionException = false;
 		boolean canThrowComponentException = false;
-		boolean canThrowAdminException = false;
         Class<?>[] exceptionClasses = method.getExceptionTypes();
         for (int i = 0; i < exceptionClasses.length; i++) {
 			if (exception.getClass().isAssignableFrom(exceptionClasses[i])) {

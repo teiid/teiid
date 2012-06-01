@@ -76,7 +76,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID1, XAResource.TMNOFLAGS, 100, false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("TEIID30523 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30517 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -91,7 +91,7 @@ public class TestTransactionServer {
             server.begin(THREAD1);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("TEIID30526 javax.transaction.InvalidTransactionException: Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30517 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -120,7 +120,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID2, XAResource.TMNOFLAGS, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("TEIID30523 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30517 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }
@@ -135,7 +135,7 @@ public class TestTransactionServer {
             server.begin(THREAD1);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("TEIID30526 javax.transaction.InvalidTransactionException: Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
+            assertEquals("TEIID30517 Client thread already involved in a transaction. Transaction nesting is not supported. The current transaction must be completed first.", //$NON-NLS-1$
                          ex.getMessage());
         }
     }

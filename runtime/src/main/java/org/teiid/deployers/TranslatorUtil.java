@@ -223,7 +223,7 @@ public class TranslatorUtil {
 				}
 			}
 		} else if (method.getParameterTypes().length != 0) {
-			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40030, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40030, method));
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40029, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40029, method));
 		} else {
 			getter = method;
 			try {

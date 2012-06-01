@@ -711,9 +711,9 @@ public class ResolverUtil {
 	
 		// Check that type of the expression is same as the type of the
 		// single projected symbol of the subquery
-		Class exprType = expression.getType();
+		Class<?> exprType = expression.getType();
 		if(exprType == null) {
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30092, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30092, expression));
+	         throw new QueryResolverException(QueryPlugin.Event.TEIID30075, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30075, expression));
 		}
 		String exprTypeName = DataTypeManager.getDataTypeName(exprType);
 	

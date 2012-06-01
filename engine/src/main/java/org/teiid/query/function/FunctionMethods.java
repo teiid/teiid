@@ -702,7 +702,7 @@ public final class FunctionMethods {
 
 	public static String trim(String trimSpec, String trimChar, String string) throws FunctionExecutionException {
 		if (trimChar.length() != 1) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30398, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30398, "trim char", trimChar));//$NON-NLS-1$
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30398, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30398, "TRIM CHAR", trimChar));//$NON-NLS-1$
 		}
 		if (!trimSpec.equalsIgnoreCase(SQLConstants.Reserved.LEADING)) {
 			string = rightTrim(string, trimChar.charAt(0));

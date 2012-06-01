@@ -113,7 +113,7 @@ public class SocketConfiguration {
 			}
 			return addr;
 		} catch (UnknownHostException e) {
-			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40066, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40066));
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40065, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40065));
 		}		
 	}
 	

@@ -77,7 +77,7 @@ public class LogonImpl implements ILogon {
 		}
 		
 		if (!AuthenticationType.CLEARTEXT.equals(service.getAuthenticationType())) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055));
+			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "JAAS")); //$NON-NLS-1$
 		}
 		return logon(connProps, null);
 	}
@@ -154,7 +154,7 @@ public class LogonImpl implements ILogon {
 	public LogonResult neogitiateGssLogin(Properties connProps, byte[] serviceTicket, boolean createSession) throws LogonException {
 		
 		if (!AuthenticationType.GSS.equals(service.getAuthenticationType())) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40058, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40058));
+			 throw new LogonException(RuntimePlugin.Event.TEIID40055, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40055, "Kerberos")); //$NON-NLS-1$
 		}		
 		
         String user = connProps.getProperty(TeiidURL.CONNECTION.USER_NAME);
@@ -172,7 +172,7 @@ public class LogonImpl implements ILogon {
 			Subject subject = ctx.getSubject();
 			GSSResult result =  Subject.doAs(subject, new GssAction(serviceTicket));
 			if (result == null) {
-				 throw new LogonException(RuntimePlugin.Event.TEIID40060, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40060));
+				 throw new LogonException(RuntimePlugin.Event.TEIID40014, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 			}
 			
 			if (result.context.isEstablished()) {
@@ -199,7 +199,7 @@ public class LogonImpl implements ILogon {
 			LogonResult loginInResult =  logon(connProps, result.serviceTicket);
 			return loginInResult;
 		} catch (LoginException e) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40061, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40061));
+			 throw new LogonException(RuntimePlugin.Event.TEIID40014, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40014));
 		} finally {
 			if (associated) {
 				service.getSecurityHelper().associateSecurityContext(previous);

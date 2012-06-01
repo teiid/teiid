@@ -36,8 +36,6 @@ public class DataPlugin {
 	public static enum Event implements BundleUtil.Event {
 		TEIID60000,
 		TEIID60001,
-		TEIID60002,
-		TEIID60003,
 		TEIID60004,
 		TEIID60005,
 		TEIID60008,

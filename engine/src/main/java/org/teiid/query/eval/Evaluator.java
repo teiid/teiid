@@ -930,13 +930,9 @@ public class Evaluator {
 	private Object evaluate(SearchedCaseExpression expr, List<?> tuple)
 	throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	    for (int i = 0; i < expr.getWhenCount(); i++) {
-	        try {
-	            if (evaluate(expr.getWhenCriteria(i), tuple)) {
-	                return internalEvaluate(expr.getThenExpression(i), tuple);
-	            }
-	        } catch (ExpressionEvaluationException e) {
-	             throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30346, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30346, "CASE", expr.getWhenCriteria(i))); //$NON-NLS-1$
-	        }
+            if (evaluate(expr.getWhenCriteria(i), tuple)) {
+                return internalEvaluate(expr.getThenExpression(i), tuple);
+            }
 	    }
 	    if (expr.getElseExpression() != null) {
 	        return internalEvaluate(expr.getElseExpression(), tuple);
@@ -1027,7 +1023,7 @@ public class Evaluator {
 
 	private CommandContext getContext(LanguageObject expression) throws TeiidComponentException {
 		if (context == null) {
-			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30346, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30346, expression, "No value was available")); //$NON-NLS-1$
+			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
 		}
 		return context;
 	}   

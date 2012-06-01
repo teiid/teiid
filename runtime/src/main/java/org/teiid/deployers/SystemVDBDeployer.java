@@ -70,7 +70,7 @@ public class SystemVDBDeployer {
 		} catch (URISyntaxException e) {
 			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40022, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
 		} catch (IOException e) {
-			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40023, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40023));
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40022, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40022));
 		}
 	}
 

@@ -22,13 +22,11 @@
 
 package org.teiid.query.processor.relational;
 
-import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
-import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
@@ -37,6 +35,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
@@ -92,27 +91,15 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 		
 		Object array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
 		
-		if (!array.getClass().isArray()) {
-			if (array instanceof java.sql.Array) {
-				try {
-					array = ((java.sql.Array)array).getArray();
-				} catch (SQLException e) {
-					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
-				}
-			} else {
-				 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30189, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30189, array.getClass()));
-			}
-		}
-		
 		for (int output : projectionIndexes) {
 			ProjectedColumn col = table.getColumns().get(output);
 			try {
-				Object val = Array.get(array, output);
+				Object val = FunctionMethods.array_get(array, output + 1);
 				tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
 			} catch (TransformationException e) {
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
-			} catch (ArrayIndexOutOfBoundsException e) {
-				 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30191, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30191, output + 1));
+			} catch (SQLException e) {
+				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
 			}
 		}
 		addBatchRow(tuple);

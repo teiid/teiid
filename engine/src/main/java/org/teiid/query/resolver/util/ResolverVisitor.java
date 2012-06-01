@@ -767,7 +767,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            while(valIter.hasNext()) {
 	                Expression value = (Expression) valIter.next();
 	                if(value.getType() == null) {
-	                     throw new QueryResolverException(QueryPlugin.Event.TEIID30076, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30076, value));
+	                     throw new QueryResolverException(QueryPlugin.Event.TEIID30075, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30075, value));
 	                } else if(! value.getType().equals(setType)) {
 	                     throw new QueryResolverException(QueryPlugin.Event.TEIID30077, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30077, scrit));
 	                }
@@ -777,7 +777,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	            scrit.setExpression(ResolverUtil.convertExpression(scrit.getExpression(), exprTypeName, setTypeName, metadata));
 	
 	        } else {
-	             throw new QueryResolverException(QueryPlugin.Event.TEIID30078, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30078, scrit));
+	             throw new QueryResolverException(QueryPlugin.Event.TEIID30077, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30077, scrit));
 	        }
 	    }
 	

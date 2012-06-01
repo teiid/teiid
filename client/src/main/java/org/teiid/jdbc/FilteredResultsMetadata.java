@@ -33,10 +33,6 @@ public class FilteredResultsMetadata extends WrapperImpl implements ResultSetMet
     private ResultSetMetaData delegate; 
     private int actualColumnCount;
     
-    static FilteredResultsMetadata newInstance (ResultSetMetaData rsmd, int actualColumnCount) {
-        return new FilteredResultsMetadata(rsmd, actualColumnCount);
-    }    
-    
     FilteredResultsMetadata(ResultSetMetaData rsmd, int actualColumnCount) {
         this.delegate = rsmd;
         this.actualColumnCount = actualColumnCount;
@@ -48,7 +44,7 @@ public class FilteredResultsMetadata extends WrapperImpl implements ResultSetMet
     
     private void verifyColumnIndex(int index) throws SQLException {
         if(index > actualColumnCount) {
-            throw new SQLException(JDBCPlugin.Util.getString("FilteredResultsMetadata.Invalid_index", index)); //$NON-NLS-1$
+            throw new SQLException(JDBCPlugin.Util.getString("StaticMetadataProvider.Invalid_column", index)); //$NON-NLS-1$
         }
     }
 

@@ -126,9 +126,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         if(tempID != null) {
             return tempID;
         }
-        Object[] params = new Object[]{elementName};
-        String msg = QueryPlugin.Util.getString("TempMetadataAdapter.Element_____{0}_____not_found._1", params); //$NON-NLS-1$
-         throw new QueryMetadataException(QueryPlugin.Event.TEIID30350, msg);
+        throw new QueryMetadataException(QueryPlugin.Event.TEIID30350, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30350, elementName));
     }
     
     /**
@@ -151,9 +149,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         if(tempID != null) {
             return tempID;
         }
-        Object[] params = new Object[]{groupName};
-        String msg = QueryPlugin.Util.getString("TempMetadataAdapter.Group_____{0}_____not_found._1", params); //$NON-NLS-1$
-         throw new QueryMetadataException(QueryPlugin.Event.TEIID30351, msg);
+        throw new QueryMetadataException(QueryPlugin.Event.TEIID30351, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30351, groupName));
     }
 
     @Override

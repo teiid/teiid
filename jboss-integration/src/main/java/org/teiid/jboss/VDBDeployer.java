@@ -313,7 +313,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}
 			else {
 				// if the schema type is a module based
-				current = getModuleBasedMetadataRepository(model.getName(), repoType);
+				current = getModuleBasedMetadataRepository(repoType);
 			}			
 		
 			if (current != null) {
@@ -331,7 +331,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		return first;
 	}
 
-	private MetadataRepository getModuleBasedMetadataRepository(final String modelName, final String moduleName) throws DeploymentUnitProcessingException {
+	private MetadataRepository getModuleBasedMetadataRepository(final String moduleName) throws DeploymentUnitProcessingException {
 		final Module module;
         ClassLoader moduleLoader = this.getClass().getClassLoader();
         ModuleLoader ml = Module.getCallerModuleLoader();
@@ -340,7 +340,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
             	module = ml.loadModule(ModuleIdentifier.create(moduleName));
             	moduleLoader = module.getClassLoader();
 	        } catch (ModuleLoadException e) {
-	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50068, moduleName, modelName));
+	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, moduleName));
 	        }
         }
         

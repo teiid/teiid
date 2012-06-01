@@ -726,7 +726,7 @@ public class AdminFactory {
 			} catch (OperationFormatException e) {
 			     throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
 			} catch (IOException e) {
-				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70017, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70017));
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
 			}
 		}
 		

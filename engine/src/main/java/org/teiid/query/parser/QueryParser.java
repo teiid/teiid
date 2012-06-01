@@ -158,9 +158,9 @@ public class QueryParser {
 		return result;
 	}
 	
-	public CacheHint parseCacheHint(String sql) throws QueryParserException {
+	public CacheHint parseCacheHint(String sql) {
         if(sql == null || sql.length() == 0) {
-             throw new QueryParserException(QueryPlugin.Event.TEIID30380, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30380));
+             return null;
         }        
         return SQLParserUtil.getQueryCacheOption(sql);        
 	}	
@@ -194,7 +194,7 @@ public class QueryParser {
     }
 
     private QueryParserException convertParserException(ParseException pe) {
-        QueryParserException qpe = new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", getMessage(pe, 1, 10))); //$NON-NLS-1$
+        QueryParserException qpe = new QueryParserException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31100, getMessage(pe, 1, 10)));
         qpe.setParseException(pe);
         if (pe.currentToken == null) {
         	pe.currentToken = parser.token;

@@ -144,7 +144,7 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-              throw new CryptoException(CorePlugin.Event.TEIID10012,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10012, e.getClass().getName(), e.getMessage()));
+              throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
         } 
     }
             
@@ -205,9 +205,6 @@ public class BasicCryptor implements Cryptor {
     }
     
     public synchronized Object sealObject(Object object) throws CryptoException {
-    	if (object != null && !(object instanceof Serializable)) {
-    		  throw new CryptoException(CorePlugin.Event.TEIID10019, CorePlugin.Util.gs(CorePlugin.Event.TEIID10019));
-    	}
         try {
             return new SealedObject((Serializable)object, encryptCipher);        
         } catch ( Exception e ) {
@@ -216,7 +213,7 @@ public class BasicCryptor implements Cryptor {
             } catch (CryptoException err) {
                 //shouldn't happen
             }
-              throw new CryptoException(CorePlugin.Event.TEIID10020, CorePlugin.Util.gs(CorePlugin.Event.TEIID10020, e.getMessage()));
+              throw new CryptoException(CorePlugin.Event.TEIID10013, CorePlugin.Util.gs(CorePlugin.Event.TEIID10013, e.getMessage()));
         }
     }
 

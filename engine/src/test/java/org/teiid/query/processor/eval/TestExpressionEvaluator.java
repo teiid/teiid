@@ -184,7 +184,7 @@ public class TestExpressionEvaluator {
             fail("Exception expected"); //$NON-NLS-1$
         } catch (TeiidComponentException e){
         	//this should be a componentexception, since it is unexpected
-            assertEquals(e.getMessage(), "TEIID30346 Unable to evaluate e2: No value was available"); //$NON-NLS-1$
+            assertEquals("TEIID30328 Unable to evaluate e2: No value was available", e.getMessage()); //$NON-NLS-1$
         }
     }
 

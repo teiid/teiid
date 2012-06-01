@@ -450,7 +450,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 					}
 					if (wasQualified && !qualified) {
 						if (!Character.isWhitespace(chr)) {
-							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30185, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30185, textLine, systemId));
+							 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30183, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30183, textLine, systemId));
 						}
 						//else just ignore
 					} else {

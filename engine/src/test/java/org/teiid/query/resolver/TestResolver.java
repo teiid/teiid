@@ -2136,7 +2136,7 @@ public class TestResolver {
     }
 
     @Test public void testParameterError() throws Exception {
-        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "TEIID30142 Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "TEIID30140 Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testUnionOfAliasedLiteralsGetsModified() {
@@ -2640,7 +2640,7 @@ public class TestResolver {
 	@Test public void testCallableStatementTooManyParameters() throws Exception {
 		String sql = "{call pm4.spTest9(?, ?)}"; //$NON-NLS-1$
 		
-		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "TEIID30142 Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
+		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "TEIID30140 Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
 	}	
 	    
     @Test public void testUpdateSetClauseReferenceType() {

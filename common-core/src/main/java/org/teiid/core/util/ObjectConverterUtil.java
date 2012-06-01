@@ -22,21 +22,8 @@
 
 package org.teiid.core.util;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.sql.SQLException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -59,7 +46,7 @@ public class ObjectConverterUtil {
                   throw new TeiidException(CorePlugin.Event.TEIID10030, ioe,CorePlugin.Util.gs(CorePlugin.Event.TEIID10030,params));
           } catch (SQLException sqe) {
                 final Object[] params = new Object[]{data.getClass().getName()};
-                  throw new TeiidException(CorePlugin.Event.TEIID10031, sqe,CorePlugin.Util.gs(CorePlugin.Event.TEIID10031,params));
+                  throw new TeiidException(CorePlugin.Event.TEIID10030, sqe,CorePlugin.Util.gs(CorePlugin.Event.TEIID10030,params));
           }
     }
 

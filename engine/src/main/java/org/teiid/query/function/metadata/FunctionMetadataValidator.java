@@ -279,7 +279,7 @@ public class FunctionMetadataValidator {
 				char ch = identifier.charAt(i);
 				if(! Character.isJavaIdentifierPart(ch)) {
 				    if(! allowMultiple || ! (ch == '.')) {
-					 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30433, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30433,strName, new Character(ch)));
+					 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30431, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,strName, new Character(ch)));
 				    }
 				}
 			}

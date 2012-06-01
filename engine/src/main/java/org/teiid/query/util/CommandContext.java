@@ -424,11 +424,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public Object getFromContext(Expression expression) throws TeiidComponentException {
 		if (variableContext == null || !(expression instanceof ElementSymbol)) {
-			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30348, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30348,expression, "No value was available")); //$NON-NLS-1$
+			throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
 		}
 		Object value = variableContext.getValue((ElementSymbol)expression);
 		if (value == null && !variableContext.containsVariable((ElementSymbol)expression)) {
-			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30349, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30349,expression, "No value was available"));//$NON-NLS-1$
+			throw new TeiidComponentException(QueryPlugin.Event.TEIID30328, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30328, expression, QueryPlugin.Util.getString("Evaluator.no_value"))); //$NON-NLS-1$
 		}
 		return value;
 	}

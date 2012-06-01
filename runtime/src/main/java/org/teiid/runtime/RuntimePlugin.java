@@ -34,9 +34,8 @@ public class RuntimePlugin {
     public static enum Event implements BundleUtil.Event{
     	TEIID40001, // undefined translator properties
     	TEIID40002, // failed to load ODBC metadata
-    	TEIID40003, // VDB Active
+    	TEIID40003, // VDB status
     	TEIID40005, // datasource or translator not found
-    	TEIID40006, // VDB inactive
     	TEIID40007, // keep alive failed
     	TEIID40008, // expired session
     	TEIID40009, // terminate session
@@ -51,24 +50,18 @@ public class RuntimePlugin {
     	TEIID40020,
     	TEIID40021,
     	TEIID40022,
-    	TEIID40023,
     	TEIID40024,
     	TEIID40025,
     	TEIID40026,
     	TEIID40027,
     	TEIID40028,
     	TEIID40029,
-    	TEIID40030,
     	TEIID40031,
     	TEIID40032,
     	TEIID40033,
     	TEIID40034,
     	TEIID40035,
-    	TEIID40036,
-    	TEIID40037,
-    	TEIID40038,
     	TEIID40039,
-    	TEIID40040,
     	TEIID40041,
     	TEIID40042,
     	TEIID40043,
@@ -84,15 +77,11 @@ public class RuntimePlugin {
     	TEIID40055,
     	TEIID40056,
     	TEIID40057,
-    	TEIID40058,
     	TEIID40059,
-    	TEIID40060,
-    	TEIID40061,
     	TEIID40062,
     	TEIID40063,
     	TEIID40064,
     	TEIID40065,
-    	TEIID40066,
     	TEIID40067,
     	TEIID40068,
     	TEIID40069,

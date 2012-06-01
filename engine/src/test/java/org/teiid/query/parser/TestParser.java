@@ -49,7 +49,7 @@ import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestParser {
 
     static void helpTest(String sql, String expectedString, Command expectedCommand) {
@@ -2664,7 +2664,7 @@ public class TestParser {
 	}
 	
     @Test public void testLikeWithEscapeException(){
-        helpException("SELECT a from db.g where b like '#String' escape '#1'", "Parsing error: LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
+        helpException("SELECT a from db.g where b like '#String' escape '#1'", "TEIID31100 Parsing error: TEIID30398 LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
 	/** SELECT "date"."time" from db.g */
@@ -3238,7 +3238,7 @@ public class TestParser {
     
     //using clause should use short names
     @Test public void testDynamicCommandStatement3(){
-        helpException("create virtual procedure begin execute string z as a1 string, a2 integer into #g using variables.x=variables.y; end", "Parsing error: Invalid simple identifier format: [variables.x]"); //$NON-NLS-1$ //$NON-NLS-2$       
+        helpException("create virtual procedure begin execute string z as a1 string, a2 integer into #g using variables.x=variables.y; end", "TEIID31100 Parsing error: Invalid simple identifier format: [variables.x]"); //$NON-NLS-1$ //$NON-NLS-2$       
     }
     
     //into clause requires as clause
@@ -4740,7 +4740,7 @@ public class TestParser {
         try {
             QueryParser.getQueryParser().parseCommand("SELECT FROM"); //$NON-NLS-1$
         } catch(QueryParserException e) {
-            assertTrue(e.getMessage().startsWith("Parsing error: Encountered \"FROM\" at line 1, column 8.")); //$NON-NLS-1$
+            assertTrue(e.getMessage().startsWith("TEIID31100 Parsing error: Encountered \"FROM\" at line 1, column 8.")); //$NON-NLS-1$
         }
     }
     
@@ -4789,7 +4789,7 @@ public class TestParser {
     }
         
     @Test public void testCreateTempTable7() {
-        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"Parsing error: Invalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Invalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
     @Test public void testCreateTempTableWithPrimaryKey() {
@@ -4835,7 +4835,7 @@ public class TestParser {
     @Test public void testBadAlias() {
         String sql = "select a as a.x from foo"; //$NON-NLS-1$
         
-        helpException(sql, "Parsing error: Invalid alias format: [a.x]"); //$NON-NLS-1$
+        helpException(sql, "TEIID31100 Parsing error: Invalid alias format: [a.x]"); //$NON-NLS-1$
     }
     
     @Test public void testNameSpacedFunctionName() {
@@ -5064,7 +5064,7 @@ public class TestParser {
     }
     
     @Test public void testTextTableColumns() throws Exception {
-        helpException("SELECT * from texttable(foo x string)", "Parsing error: Expected non-reserved word [COLUMNS], but was x.");
+        helpException("SELECT * from texttable(foo x string)", "TEIID31100 Parsing error: Expected non-reserved word [COLUMNS], but was x.");
     }
     
     @Test public void testXMLTable() throws Exception {

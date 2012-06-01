@@ -205,7 +205,7 @@ public class ExecResolver extends ProcedureContainerResolver {
     		 throw new QueryResolverException(QueryPlugin.Event.TEIID30141, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30141, namedExpressions.keySet(), expected));
         }
         if (!postionalExpressions.isEmpty()) {
-        	 throw new QueryResolverException(QueryPlugin.Event.TEIID30142, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30142, inputParams, origInputs, storedProcedureCommand.getGroup().toString()));
+        	 throw new QueryResolverException(QueryPlugin.Event.TEIID30140, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30140, inputParams, origInputs, storedProcedureCommand.getGroup().toString()));
         }
         
         // Create temporary metadata that defines a group based on either the stored proc
@@ -294,7 +294,7 @@ public class ExecResolver extends ProcedureContainerResolver {
         QueryNode plan = storedProcedureInfo.getQueryPlan();
         
         if (plan.getQuery() == null) {
-             throw new QueryResolverException(QueryPlugin.Event.TEIID30146, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30146));
+             throw new QueryResolverException(QueryPlugin.Event.TEIID30146, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30146, group));
         }
         
         return plan.getQuery();

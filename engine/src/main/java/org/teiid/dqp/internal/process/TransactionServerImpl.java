@@ -329,7 +329,7 @@ public class TransactionServerImpl implements TransactionService {
             if (!threadBound) {
                 tc = transactions.getOrCreateTransactionContext(threadId);
                 if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-                     throw new XATransactionException(QueryPlugin.Event.TEIID30523, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30523, new Object[] {xid, threadId}));
+                     throw new XATransactionException(QueryPlugin.Event.TEIID30517, XAException.XAER_PROTO, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
                 }
             }
             return null;
@@ -353,11 +353,8 @@ public class TransactionServerImpl implements TransactionService {
 
         try {
 	        if (tc.getTransactionType() != TransactionContext.Scope.NONE) {
-	            if (tc.getTransactionType() != TransactionContext.Scope.LOCAL) {
-	                throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
-	            }
-	            if (!transactionExpected) {
-	            	throw new InvalidTransactionException(QueryPlugin.Util.getString("TransactionServer.existing_transaction")); //$NON-NLS-1$
+	            if (tc.getTransactionType() != TransactionContext.Scope.LOCAL || !transactionExpected) {
+	                throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517)); 
 	            }
 	            transactionManager.resume(tc.getTransaction());
 	        } else if (transactionExpected) {
@@ -469,7 +466,7 @@ public class TransactionServerImpl implements TransactionService {
      */
     public void begin(TransactionContext context) throws XATransactionException{
         if (context.getTransactionType() != TransactionContext.Scope.NONE) {
-             throw new XATransactionException(QueryPlugin.Event.TEIID30540, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30540));
+             throw new XATransactionException(QueryPlugin.Event.TEIID30517, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30517));
         }
         beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);

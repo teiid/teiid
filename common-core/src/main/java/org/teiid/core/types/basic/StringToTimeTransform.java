@@ -26,6 +26,7 @@ import java.sql.Time;
 import java.util.regex.Pattern;
 
 import org.teiid.core.CorePlugin;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 
@@ -58,12 +59,12 @@ public class StringToTimeTransform extends Transform {
 			result = Time.valueOf((String)value);
 		} catch(Exception e) {
 		    if (!validate && pattern.matcher((String)value).matches()) {
-				throw new TransformationException(CorePlugin.Event.TEIID10069, CorePlugin.Util.gs(CorePlugin.Event.TEIID10069, value, getTargetType().getSimpleName()));
+				throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 			}
 			  throw new TransformationException(CorePlugin.Event.TEIID10068, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10068, value));
 		}
 		if (validate && !result.toString().equals(value)) {
-			  throw new TransformationException(CorePlugin.Event.TEIID10069, CorePlugin.Util.gs(CorePlugin.Event.TEIID10069, value, getTargetType().getSimpleName()));
+			  throw new TransformationException(CorePlugin.Event.TEIID10060, CorePlugin.Util.gs(CorePlugin.Event.TEIID10060, value, getTargetType().getSimpleName()));
 		}
 		return result;
 	}
@@ -72,16 +73,16 @@ public class StringToTimeTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
-		return String.class;
+	public Class<?> getSourceType() {
+		return DataTypeManager.DefaultDataClasses.STRING;
 	}
 
 	/**
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
-		return Time.class;
+	public Class<?> getTargetType() {
+		return DataTypeManager.DefaultDataClasses.TIME;
 	}
 	
 	@Override

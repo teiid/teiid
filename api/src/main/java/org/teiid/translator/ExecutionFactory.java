@@ -259,17 +259,17 @@ public class ExecutionFactory<F, C> {
 
 	@SuppressWarnings("unused")
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
-		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001));
+		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createResultSetExecution")); //$NON-NLS-1$
 	}
 
 	@SuppressWarnings("unused")
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
-		 throw new TranslatorException(DataPlugin.Event.TEIID60002,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60002));
+		 throw new TranslatorException(DataPlugin.Event.TEIID60001,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createProcedureExecution")); //$NON-NLS-1$
 	}
 
 	@SuppressWarnings("unused")
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
-		 throw new TranslatorException(DataPlugin.Event.TEIID60003,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60003));
+		 throw new TranslatorException(DataPlugin.Event.TEIID60001,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createUpdateExecution")); //$NON-NLS-1$
 	}   
 	
     /** 
