@@ -274,7 +274,7 @@
                             <goal>deploy-file</goal>
                         </goals>
                         <configuration>
-                            <url>file:///tmp/repo</url>
+                            <url>file:///tmp/deploy-mead</url>
                             <repositoryId>Internal testing release</repositoryId>
                             <packaging>ear</packaging>
                             <artifactId>${project.artifactId}</artifactId>
