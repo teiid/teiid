@@ -262,7 +262,37 @@
                 </configuration>
             </execution>
         </executions>
-    </plugin>	      	                   
+    </plugin>	
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>deploy-ear</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy-file</goal>
+                        </goals>
+                        <configuration>
+                            <url>file:///tmp/repo</url>
+                            <repositoryId>Internal testing release</repositoryId>
+                            <packaging>ear</packaging>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <groupId>${project.groupId}</groupId>
+                            <version>${project.version}</version>
+                            <file>${project.build.directory}/${project.artifactId}-${project.version}.ear</file>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
         </plugins>
     </build>
 </project>
+
+<distributionManagement>
+    <repository>
+        <id>Internal testing release</id>
+        <name>Deployment of ear</name>
+        <url>${maven.repo.local}</url>
+    </repository>
+</distributionManagement>
