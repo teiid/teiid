@@ -9,10 +9,10 @@
   in order to build a complete set of artifacts to be deployed to a JBoss AS server
  -->
   
-  <id>infinispan.ear</id>
+  <id>${project.version}</id>
    
   <formats>
-	<format>dir</format>
+	<format>ear</format>
   </formats>
   
   <includeBaseDirectory>false</includeBaseDirectory>
