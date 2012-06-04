@@ -238,14 +238,6 @@
           </plugin>   
         </plugins>
     </build>
-    
- <distributionManagement>
-    <repository>
-        <id>Internal testing release</id>
-        <name>Deployment of ear</name>
-        <url>${maven.repo.local}</url>
-    </repository>
-</distributionManagement>
    
 </project>
  
