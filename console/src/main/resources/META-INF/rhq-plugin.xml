@@ -73,7 +73,7 @@
 
 
 <plugin name="TeiidPlugin" displayName="Teiid Plugin" package="org.teiid.rhq.plugin"
-	version="2.0.1" description="Supports management and monitoring of JBoss Teiid"
+	version="2.3.0" description="Supports management and monitoring of JBoss Teiid"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:xmlns:rhq-plugin"
 	xmlns:c="urn:xmlns:rhq-configuration">
 
