@@ -140,11 +140,11 @@ public final class HashCodeUtil {
 		return hc;
 	}
 
-	public static final int expHashCode(String x) {
+	public static final int expHashCode(CharSequence x) {
 		return expHashCode(x, true);
 	}
 	
-	public static final int expHashCode(String x, boolean caseSensitive) {
+	public static final int expHashCode(CharSequence x, boolean caseSensitive) {
 		if(x == null) {
 			return 0;
 		}

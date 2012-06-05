@@ -35,6 +35,8 @@ import java.sql.SQLException;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
@@ -272,6 +274,30 @@ public final class ClobType extends Streamable<Clob> implements Clob, Sequencabl
 		} catch (IOException e) {
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10057, e);
 		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof ClobType)) {
+			return false;
+		}
+		ClobType other = (ClobType)obj;
+		if (EquivalenceUtil.areEqual(reference, other.reference)) {
+			return true;
+		}
+		try {
+			return this.compareTo(other) == 0;
+		} catch (TeiidRuntimeException e) {
+			return false;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return HashCodeUtil.expHashCode(this.getCharSequence());
 	}
 
 }

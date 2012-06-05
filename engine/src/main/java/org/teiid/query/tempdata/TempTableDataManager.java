@@ -74,6 +74,7 @@ import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
@@ -242,8 +243,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 			return buffer.createIndexedTupleSource();
 		}
 		//construct a query with a no cache hint
-		//note that it's safe to use the stringified form of the parameters because
-		//it's not possible to use xml/clob/blob/object
 		CacheHint hint = proc.getCacheHint();
 		proc.setCacheHint(null);
 		Option option = new Option();
@@ -251,7 +250,12 @@ public class TempTableDataManager implements ProcessorDataManager {
 		option.addNoCacheGroup(fullName);
 		proc.setOption(option);
 		Determinism determinismLevel = context.resetDeterminismLevel();
-		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(proc.toString(), fullName.toUpperCase(), context);
+		StoredProcedure cloneProc = (StoredProcedure)proc.clone();
+		int i = 0;
+		for (SPParameter param : cloneProc.getInputParameters()) {
+			param.setExpression(new Reference(i++));
+		}
+		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(cloneProc.toString(), fullName.toUpperCase(), context, vals.toArray());
 		qp.setNonBlocking(true);
 		qp.getContext().setDataObjects(null);
 		BatchCollector bc = qp.createBatchCollector();

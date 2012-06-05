@@ -34,6 +34,7 @@ import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
@@ -195,6 +196,30 @@ public final class BlobType extends Streamable<Blob> implements Blob, Comparable
 		} catch (IOException e) {
 			  throw new TeiidRuntimeException(CorePlugin.Event.TEIID10049, e);
 		}
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		}
+		if (!(obj instanceof BlobType)) {
+			return false;
+		}
+		BlobType other = (BlobType)obj;
+		if (EquivalenceUtil.areEqual(reference, other.reference)) {
+			return true;
+		}
+		try {
+			return this.compareTo(other) == 0;
+		} catch (TeiidRuntimeException e) {
+			return false;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return 1;
 	}
 	
 }

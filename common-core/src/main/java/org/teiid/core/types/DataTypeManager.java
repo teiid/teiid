@@ -67,6 +67,7 @@ public class DataTypeManager {
 	
 	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableLobs", false); //$NON-NLS-1$
+	private static final boolean COMPARABLE_OBJECT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableObject", false); //$NON-NLS-1$
 	public static final boolean PAD_SPACE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.padSpace", false); //$NON-NLS-1$
 	
 	private static boolean valueCacheEnabled;
@@ -854,7 +855,7 @@ public class DataTypeManager {
 	}
 	
     public static boolean isNonComparable(String type) {
-        return DataTypeManager.DefaultDataTypes.OBJECT.equals(type)
+        return (!COMPARABLE_OBJECT && DataTypeManager.DefaultDataTypes.OBJECT.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
