@@ -23,11 +23,8 @@ package org.teiid.translator.jdbc.teradata;
 
 import static org.junit.Assert.*;
 
-import java.sql.Date;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -35,7 +32,6 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
-import org.teiid.language.In;
 import org.teiid.language.LanguageFactory;
 import org.teiid.query.unittest.TimestampUtil;
 import org.teiid.translator.TranslatorException;
@@ -155,59 +151,6 @@ public class TestTeradataTranslator {
         helpTest(LANG_FACTORY.createLiteral("1.0", String.class), "double", "cast('1.0' AS double precision)"); 
     }      
     
-	@Test public void testInDecompose() throws Exception {
-    	Expression left = LANG_FACTORY.createLiteral("1", String.class);
-    	List<Expression> right = new ArrayList<Expression>();
-    	right.add(LANG_FACTORY.createLiteral("2", String.class));
-    	right.add(LANG_FACTORY.createLiteral("3", String.class));
-    		
-        In expr = LANG_FACTORY.createIn(left,right, false);
-        
-        assertEquals("'1' IN ('2', '3')", helpGetString(expr));
-    }    
-	
-	@Test public void testSingleInDecompose() throws Exception {
-    	Expression left = LANG_FACTORY.createLiteral("1", String.class);
-    	List<Expression> right = new ArrayList<Expression>();
-    	right.add(LANG_FACTORY.createLiteral("2", String.class));
-    		
-        In expr = LANG_FACTORY.createIn(left,right, false);
-        
-        assertEquals("'1' IN ('2')", helpGetString(expr));
-    }  
-	
-	@Test public void testInDecomposeNonLiterals() throws Exception {
-    	Expression left = LANG_FACTORY.createLiteral("1", String.class);
-    	List<Expression> right = new ArrayList<Expression>();
-    	right.add(LANG_FACTORY.createFunction("func", new Expression[] {}, Date.class));
-    	right.add(LANG_FACTORY.createLiteral("3", String.class));
-    		
-        In expr = LANG_FACTORY.createIn(left,right, false);
-        
-        assertEquals("'1' = func() OR '1' = '3'", helpGetString(expr));
-    }
-	
-	@Test public void testNegatedInDecomposeNonLiterals() throws Exception {
-    	Expression left = LANG_FACTORY.createLiteral("1", String.class);
-    	List<Expression> right = new ArrayList<Expression>();
-    	right.add(LANG_FACTORY.createFunction("func", new Expression[] {}, Date.class));
-    	right.add(LANG_FACTORY.createLiteral("3", String.class));
-    		
-        In expr = LANG_FACTORY.createIn(left,right, true);
-        
-        assertEquals("'1' <> func() AND '1' <> '3'", helpGetString(expr));
-    }
-	
-	@Test public void testsingleInDecomposeNonLiterals() throws Exception {
-    	Expression left = LANG_FACTORY.createLiteral("1", String.class);
-    	List<Expression> right = new ArrayList<Expression>();
-    	right.add(LANG_FACTORY.createFunction("func", new Expression[] {}, Date.class));
-    		
-        In expr = LANG_FACTORY.createIn(left,right, false);
-        
-        assertEquals("'1' = func()", helpGetString(expr));
-    }
-	
 	@Test public void testNullComapreNull() throws Exception {
 		String input = "SELECT INTKEY, STRINGKEY, DOUBLENUM FROM bqt1.smalla WHERE NULL <> NULL";
 		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.DoubleNum FROM SmallA WHERE 1 = 0";
@@ -231,4 +174,11 @@ public class TestTeradataTranslator {
 		String out = "SELECT SmallA.IntKey, SmallA.StringKey, SmallA.ShortValue FROM SmallA WHERE position('0' in SmallA.StringKey) = 2 OR position('2' in substr(cast(SmallA.ShortValue AS varchar(4000)),4)) = 6 ORDER BY 1";
 		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
 	}	
+	
+	@Test public void testInValues() throws Exception {
+		String input = "SELECT INTKEY FROM BQT1.SmallA WHERE STRINGKEY IN (INTKEY, 'a', 'b') AND STRINGKEY NOT IN (SHORTVALUE, 'c') AND INTKEY IN (1, 2) ORDER BY intkey";
+		String out = "SELECT SmallA.IntKey FROM SmallA WHERE (SmallA.StringKey = cast(SmallA.IntKey AS varchar(4000)) OR SmallA.StringKey IN ('a', 'b')) AND (SmallA.StringKey <> cast(SmallA.ShortValue AS varchar(4000)) AND SmallA.StringKey NOT IN ('c')) AND SmallA.IntKey IN (1, 2) ORDER BY 1";
+		TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null, input, out, TRANSLATOR);		
+	}	
+
 }
