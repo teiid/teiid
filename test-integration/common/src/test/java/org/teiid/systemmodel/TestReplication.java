@@ -39,7 +39,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.metadata.FunctionMethod;
@@ -47,6 +46,7 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
+import org.teiid.runtime.EmbeddedConfiguration;
 
 @SuppressWarnings("nls")
 public class TestReplication {
@@ -142,8 +142,9 @@ public class TestReplication {
 					}
 				});
 
-		server.setReplicator(jor);
-		server.start(new DQPConfiguration(), true);
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.setObjectReplicator(jor);
+		server.start(config, true);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("funcs", Arrays.asList(new FunctionMethod("pause", null, null, PushDown.CANNOT_PUSHDOWN, TestMatViews.class.getName(), "pause", null, new FunctionParameter("return", DataTypeManager.DefaultDataTypes.INTEGER), true, Determinism.NONDETERMINISTIC)));
     	server.deployVDB(MATVIEWS, UnitTestUtil.getTestDataPath() + "/matviews.vdb", new DeployVDBParameter(udfs, null));

@@ -37,6 +37,7 @@ import javax.resource.spi.work.Work;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 
@@ -125,7 +126,7 @@ public class TestThreadReuseExecutor {
     }
     
     @Test(expected=ExecutionException.class) public void testScheduleException() throws Exception {
-    	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
+    	TeiidExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
     	ScheduledFuture<?> future = pool.schedule(new Runnable() {
     		@Override
     		public void run() {

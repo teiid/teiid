@@ -50,7 +50,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     }
     
     @BeforeClass public static void oneTimeSetup() throws Exception {
-    	server = new FakeServer();
+    	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp_1.vdb");
     }
     

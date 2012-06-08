@@ -46,7 +46,7 @@ public class TestPartsDatabaseMetadata {
     static final String VDB = "PartsSupplier";
     
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer();
+    	FakeServer server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     	dbMetadata = connection.getMetaData();

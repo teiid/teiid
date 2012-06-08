@@ -41,7 +41,7 @@ public class TestCase3473 {
     ////////////////////Query Related Methods///////////////////////////
 
     @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer();
+    	FakeServer server = new FakeServer(true);
     	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
     	dbmd = conn.getMetaData();

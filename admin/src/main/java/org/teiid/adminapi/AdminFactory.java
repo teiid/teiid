@@ -67,7 +67,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 @SuppressWarnings("nls")
 public class AdminFactory {
 	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
-	private static Set<String> optionalProps = new HashSet<String>(Arrays.asList("connection-url", "password", "check-valid-connection-sql", "pool-prefill", "max-pool-size", "min-pool-size"));
+	private static Set<String> optionalProps = new HashSet<String>(Arrays.asList("password", "check-valid-connection-sql", "pool-prefill", "max-pool-size", "min-pool-size"));
 	private static AdminFactory INSTANCE = new AdminFactory();
 	
 	public static AdminFactory getInstance() {

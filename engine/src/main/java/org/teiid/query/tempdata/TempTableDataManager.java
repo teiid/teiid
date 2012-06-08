@@ -435,6 +435,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		SessionMetadata session = createTemporarySession(context.getUserName(), "asynch-mat-view-load", context.getDQPWorkContext().getVDB()); //$NON-NLS-1$
 		session.setSubject(context.getSubject());
 		session.setSecurityDomain(context.getSession().getSecurityDomain());
+		session.setSecurityContext(context.getSession().getSecurityContext());
 		DQPWorkContext workContext = new DQPWorkContext();
 		workContext.setAdmin(true);
 		DQPWorkContext current = context.getDQPWorkContext();

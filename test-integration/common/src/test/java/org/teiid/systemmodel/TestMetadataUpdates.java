@@ -50,7 +50,7 @@ public class TestMetadataUpdates {
     static final String VDB = "metadata";
     
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer();    	
+    	FakeServer server = new FakeServer(true);    	
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", new DeployVDBParameter(null, getMetadataRepo()));
     	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
     }

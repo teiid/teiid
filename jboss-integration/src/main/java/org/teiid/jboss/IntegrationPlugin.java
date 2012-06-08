@@ -43,7 +43,6 @@ public class IntegrationPlugin {
     	TEIID50001,
     	TEIID50002,
     	TEIID50003,
-    	TEIID50004,
     	TEIID50005,
     	TEIID50006,
     	TEIID50007, // failed to load module
@@ -66,10 +65,7 @@ public class IntegrationPlugin {
     	TEIID50026, // VDB undeployed
     	TEIID50029, // dynamic metadata loaded
     	TEIID50030,
-    	TEIID50031, // multiple sources, non-multisource
     	TEIID50032, // duplicate VDB
-    	TEIID50033, // duplicate source name in vdb
-    	TEIID50034, // Source name mismatch
     	TEIID50035, // translator not found
     	TEIID50036,
     	TEIID50037, // odbc enabled
@@ -100,7 +96,6 @@ public class IntegrationPlugin {
     	TEIID50070,
     	TEIID50071,
     	TEIID50072,
-    	TEIID50073,
     	TEIID50074,
     	TEIID50075,
     	TEIID50076,

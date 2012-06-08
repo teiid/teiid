@@ -102,5 +102,8 @@ public class RuntimePlugin {
     	TEIID40084, //imported role conflict
     	TEIID40085, //imported model conflict
     	TEIID40086, //imported connector manager conflict
+    	TEIID40087, //pass-through failed
+    	TEIID40088, //event distributor replication failed
+    	TEIID40089, //txn disabled
     }
 }

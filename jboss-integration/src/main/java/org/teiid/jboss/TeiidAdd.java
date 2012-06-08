@@ -22,10 +22,7 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.List;
 import java.util.Locale;
@@ -44,8 +41,8 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.services.path.RelativePathService;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
@@ -59,17 +56,17 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.ValueService;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.CacheFactory;
+import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.deployers.SystemVDBDeployer;
@@ -89,6 +86,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jboss.JGroupsObjectReplicator;
+import org.teiid.services.InternalEventDistributorFactory;
 
 class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 
@@ -257,6 +255,9 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
 			newControllers.add(serviceBuilder.install());
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
+    	} else {
+			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$
     	}
 
     	// TODO: remove verbose service by moving the buffer service from runtime project
@@ -274,7 +275,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	
     	
     	EventDistributorFactoryService edfs = new EventDistributorFactoryService();
-    	ServiceBuilder<EventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
+    	ServiceBuilder<InternalEventDistributorFactory> edfsServiceBuilder = target.addService(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, edfs);
     	edfsServiceBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, edfs.vdbRepositoryInjector);
     	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
     	newControllers.add(edfsServiceBuilder.install());
@@ -369,7 +370,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
         engineBuilder.addDependency(TeiidServiceNames.AUTHORIZATION_VALIDATOR, AuthorizationValidator.class, engine.getAuthorizationValidatorInjector());
         engineBuilder.addDependency(rsCache?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.CACHE_RESULTSET, SessionAwareCache.class, engine.getResultSetCacheInjector());
         engineBuilder.addDependency(TeiidServiceNames.CACHE_PREPAREDPLAN, SessionAwareCache.class, engine.getPreparedPlanCacheInjector());
-        engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, EventDistributorFactory.class, engine.getEventDistributorFactoryInjector());
+        engineBuilder.addDependency(TeiidServiceNames.EVENT_DISTRIBUTOR_FACTORY, InternalEventDistributorFactory.class, engine.getEventDistributorFactoryInjector());
         
         engineBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
         ServiceController<DQPCore> controller = engineBuilder.install(); 

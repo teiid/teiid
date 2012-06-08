@@ -24,15 +24,9 @@ package org.teiid.services;
 
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.security.auth.Subject;
@@ -67,7 +61,7 @@ import org.teiid.security.SecurityHelper;
 /**
  * This class serves as the primary implementation of the Session Service.
  */
-public abstract class SessionServiceImpl implements SessionService {
+public class SessionServiceImpl implements SessionService {
 	public static final String AT = "@"; //$NON-NLS-1$
 	/*
 	 * Configuration state
@@ -153,8 +147,15 @@ public abstract class SessionServiceImpl implements SessionService {
         if (domains!= null && !domains.isEmpty() && authenticate) {
 	        // Authenticate user...
 	        // if not authenticated, this method throws exception
+            LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", userName, applicationName}); //$NON-NLS-1$
+
         	boolean onlyAllowPassthrough = Boolean.valueOf(properties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
-	        TeiidLoginContext membership = authenticate(userName, credentials, applicationName, domains, onlyAllowPassthrough);
+        	TeiidLoginContext membership = null;
+        	if (onlyAllowPassthrough) {
+                membership = passThroughLogin(userName, domains);
+        	} else {
+	        	membership = authenticate(userName, credentials, applicationName, domains);
+        	}
 	        userName = membership.getUserName();
 	        securityDomain = membership.getSecurityDomain();
 	        securityContext = membership.getSecurityContext();
@@ -189,9 +190,44 @@ public abstract class SessionServiceImpl implements SessionService {
         this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
+
+	public TeiidLoginContext passThroughLogin(String userName,
+			List<String> domains)
+			throws LoginException {
+		
+		for (String domain:getDomainsForUser(domains, userName)) {
+			Subject existing = this.securityHelper.getSubjectInContext(domain);
+			if (existing != null) {
+				return new TeiidLoginContext(getUserName(existing, userName)+AT+domain, existing, domain, this.securityHelper.getSecurityContext(domain));
+			}
+		}
+		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));
+	}
 	
-	abstract protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, boolean onlyallowPassthrough)
-			throws LoginException;	
+	private String getUserName(Subject subject, String userName) {
+		Set<Principal> principals = subject.getPrincipals();
+		for (Principal p:principals) {
+			if (p instanceof Group) {
+				continue;
+			}
+			return p.getName();
+		}
+		return getBaseUsername(userName);
+	}
+	
+	/**
+	 * 
+	 * @param userName
+	 * @param credentials
+	 * @param applicationName
+	 * @param domains
+	 * @return
+	 * @throws LoginException
+	 */
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains)
+			throws LoginException {
+		return passThroughLogin(userName, domains);
+	}
 
 	VDBMetaData getActiveVDB(String vdbName, String vdbVersion) throws SessionServiceException {
 		VDBMetaData vdb = null;

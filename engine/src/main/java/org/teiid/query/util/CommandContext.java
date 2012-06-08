@@ -42,8 +42,8 @@ import javax.security.auth.Subject;
 
 import org.teiid.CommandListener;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.Session;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
@@ -136,7 +136,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private Subject subject;
 	    private HashSet<Object> dataObjects;
 
-		private Session session;
+		private SessionMetadata session;
 
 		private RequestID requestId;
 		
@@ -579,11 +579,11 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	@Override
-	public Session getSession() {
+	public SessionMetadata getSession() {
 		return this.globalState.session;
 	}
 	
-	public void setSession(Session session) {
+	public void setSession(SessionMetadata session) {
 		this.globalState.session = session;
 	}
 	

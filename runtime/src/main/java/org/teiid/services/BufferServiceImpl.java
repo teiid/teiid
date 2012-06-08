@@ -80,10 +80,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public void start(){
     	try {
-    		LogManager.logDetail(LogConstants.CTX_DQP, "Starting BufferManager using", bufferDir); //$NON-NLS-1$
-    		if (!bufferDir.exists()) {
-    			this.bufferDir.mkdirs();
-    		}
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl();
             this.bufferMgr.setConnectorBatchSize(Integer.valueOf(connectorBatchSize));
@@ -95,6 +91,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
             
             // If necessary, add disk storage manager
             if(useDisk) {
+        		LogManager.logDetail(LogConstants.CTX_DQP, "Starting BufferManager using", bufferDir); //$NON-NLS-1$
+        		if (!bufferDir.exists()) {
+        			this.bufferDir.mkdirs();
+        		}
             	// start the file storage manager in clean state
                 // wise FileStorageManager is smart enough to clean up after itself
                 cleanDirectory(bufferDir);

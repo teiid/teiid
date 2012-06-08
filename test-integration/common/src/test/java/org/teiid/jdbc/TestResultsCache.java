@@ -39,7 +39,7 @@ public class TestResultsCache {
 	private Connection conn;
 	
 	@Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer();
+    	FakeServer server = new FakeServer(true);
     	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }

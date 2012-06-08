@@ -14,7 +14,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
 	
 	private static final String VDB1 = "PartsSupplier"; //$NON-NLS-1$
 	private static final String VDB2 = "QT_Ora9DS"; //$NON-NLS-1$
-	FakeServer server = new FakeServer();
+	FakeServer server = new FakeServer(true);
 	
 	@Test
     public void testMerge() throws Throwable {

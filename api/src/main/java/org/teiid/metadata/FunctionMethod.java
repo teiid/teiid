@@ -427,6 +427,19 @@ public class FunctionMethod extends AbstractMetadataRecord {
     	return false;
     }
     
+    /**
+     * 
+     * @param varargs
+     * @return true if the value was successfully set.
+     */
+    public boolean setVarArgs(boolean varargs) {
+    	if (this.inParameters != null && this.inParameters.size() > 0) {
+    		inParameters.get(inParameters.size() - 1).setVarArg(varargs);
+    		return true;
+    	}
+    	return false;
+    }
+    
     public void setParent(Schema parent) {
 		this.parent = parent;
 	}

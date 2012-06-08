@@ -47,6 +47,7 @@ import org.teiid.jdbc.TeiidStatement;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -102,9 +103,9 @@ public class TestExecutionReuse {
 	}
     
     @BeforeClass public static void oneTimeSetUp() throws Exception {
-    	DQPConfiguration config = new DQPConfiguration();
+    	EmbeddedConfiguration config = new EmbeddedConfiguration();
     	config.setUserRequestSourceConcurrency(1);
-    	server = new FakeServer(config);
+    	server = new FakeServer(false);
 		server.setConnectorManagerRepository(new ConnectorManagerRepository() {
 			private ConnectorManager cm = new ConnectorManager("x", "y") {
 				private ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object>() {
@@ -134,6 +135,7 @@ public class TestExecutionReuse {
 				return cm;
 			}
 		});
+		server.start(config, false);
 		server.deployVDB("PartsSupplier", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     }
     
@@ -149,20 +151,20 @@ public class TestExecutionReuse {
 		ts.submitExecute("select part_id from parts", new StatementCallback() {
 			int rowCount;
 			@Override
-			public void onRow(Statement s, ResultSet rs) throws SQLException {
+			public void onRow(Statement stmt, ResultSet rs) throws SQLException {
 				rowCount++;
 				if (rowCount == EXEC_COUNT) {
-					s.close();
+					stmt.close();
 				}
 			}
 			
 			@Override
-			public void onException(Statement s, Exception e) {
+			public void onException(Statement stmt, Exception e) {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
 			
 			@Override
-			public void onComplete(Statement s) {
+			public void onComplete(Statement stmt) {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
 		}, new RequestOptions().continuous(true));

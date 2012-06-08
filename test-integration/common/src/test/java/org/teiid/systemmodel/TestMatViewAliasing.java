@@ -48,7 +48,7 @@ public class TestMatViewAliasing {
 	private FakeServer server;
 	
 	@Before public void setUp() throws Exception {
-    	server = new FakeServer();
+    	server = new FakeServer(true);
     	
     	VDBRepository vdbRepository = new VDBRepository();
     	vdbRepository.setSystemStore(VDBMetadataFactory.getSystem());

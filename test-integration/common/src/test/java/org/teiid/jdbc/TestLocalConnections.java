@@ -94,7 +94,7 @@ public class TestLocalConnections {
 		return 1;
 	}
 
-	static FakeServer server = new FakeServer();
+	static FakeServer server = new FakeServer(true);
 	
 	@SuppressWarnings("serial")
 	@BeforeClass public static void oneTimeSetup() throws Exception {
@@ -223,7 +223,7 @@ public class TestLocalConnections {
     	final Statement s = c.createStatement();
     	s.execute("select 1");
     	
-    	assertFalse(server.dqp.getRequests().isEmpty());
+    	assertFalse(server.getDqp().getRequests().isEmpty());
 
     	Thread t = new Thread() {
     		public void run() {
@@ -242,7 +242,7 @@ public class TestLocalConnections {
     		fail();
     	}
     	
-    	assertTrue(server.dqp.getRequests().isEmpty());
+    	assertTrue(server.getDqp().getRequests().isEmpty());
     	
     	if (handler.t != null) {
     		throw handler.t;

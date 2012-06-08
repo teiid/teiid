@@ -179,4 +179,8 @@ public class DQPConfiguration{
 		return queryTimeout;
 	}
 
+	public TeiidExecutor getTeiidExecutor() {
+		return new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, getMaxThreads());
+	}
+
 }

@@ -22,10 +22,7 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -34,21 +31,28 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.junit.*;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.net.socket.SocketUtil;
 
@@ -126,13 +130,11 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			config.setPortNumber(addr.getPort());
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class));
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
-			FakeServer server = new FakeServer();
+			FakeServer server = new FakeServer(true);
 			server.setUseCallingThread(false);
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 			
-			TeiidDriver driver = new TeiidDriver();
-			driver.setEmbeddedProfile(server);
-			odbcTransport.setDriver(driver);
+			odbcTransport.setDriver(server.getDriver());
 		}
 		
 		public void stop() {

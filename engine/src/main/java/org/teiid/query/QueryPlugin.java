@@ -542,5 +542,8 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31098, //alter imported
     	TEIID31099, //vdb loading
     	TEIID31100, //parse exception
+    	TEIID31101, 
+    	TEIID31102, 
+    	TEIID31103, 
 	}
 }

@@ -179,7 +179,7 @@ public class DQPCore implements DQP {
 		}
 	}
 	
-	private ThreadReuseExecutor processWorkerPool;
+	private TeiidExecutor processWorkerPool;
     
     // Resources
     private BufferManager bufferManager;
@@ -650,12 +650,12 @@ public class DQPCore implements DQP {
 		return chunkSize;
 	}
 	
-	public void start(DQPConfiguration config) {
-		this.config = config;
+	public void start(DQPConfiguration theConfig) {
+		this.config = theConfig;
         this.authorizationValidator = config.getAuthorizationValidator();
         this.chunkSize = config.getLobChunkSizeInKB() * 1024;
 
-        this.processWorkerPool = new ThreadReuseExecutor(DQPConfiguration.PROCESS_PLAN_QUEUE_NAME, config.getMaxThreads());
+        this.processWorkerPool = config.getTeiidExecutor();
         //we don't want cancellations waiting on normal processing, so they get a small dedicated pool
         //TODO: overflow to the worker pool
         Executor timeoutExecutor = ExecutorUtils.newFixedThreadPool(3, "Server Side Timeout"); //$NON-NLS-1$

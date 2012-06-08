@@ -22,7 +22,6 @@
 
 package org.teiid.jdbc;
 
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
@@ -78,14 +77,7 @@ public class TeiidDriver implements Driver {
         return INSTANCE;
     }
     
-    /**
-     * Should be a singleton and only constructed in {@link #getInstance}.
-     */
-    public TeiidDriver() {
-        // this is not singleton, if you want singleton make this private.
-    }
-
-    public Connection connect(String url, Properties info) throws SQLException {
+    public ConnectionImpl connect(String url, Properties info) throws SQLException {
     	ConnectionType conn = JDBCURL.acceptsUrl(url);
     	if (conn == null) {
     		return null;

@@ -1,7 +1,6 @@
 package org.teiid.services;
 
-import static org.junit.Assert.fail;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class TestSessionServiceImpl {
 			@Override
 			protected TeiidLoginContext authenticate(String userName,
 					Credentials credentials, String applicationName,
-					List<String> domains, boolean onlyallowPassthrough)
+					List<String> domains)
 					throws LoginException {
 				return null;
 			}

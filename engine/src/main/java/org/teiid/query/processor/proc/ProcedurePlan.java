@@ -57,7 +57,6 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;

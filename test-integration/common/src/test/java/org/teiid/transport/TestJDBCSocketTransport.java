@@ -39,7 +39,6 @@ import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ConnectionProfile;
@@ -50,6 +49,7 @@ import org.teiid.jdbc.TestMMDatabaseMetaData;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.SocketServerConnectionFactory;
+import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
@@ -66,13 +66,14 @@ public class TestJDBCSocketTransport {
 		config.setBindAddress(addr.getHostName());
 		config.setPortNumber(0);
 		
-		DQPConfiguration dqpConfig = new DQPConfiguration();
+		EmbeddedConfiguration dqpConfig = new EmbeddedConfiguration();
 		dqpConfig.setMaxActivePlans(2);
-		server = new FakeServer(dqpConfig);
+		server = new FakeServer(false);
+		server.start(dqpConfig, false);
 		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		
-		jdbcTransport = new SocketListener(addr, config, server, BufferManagerFactory.getStandaloneBufferManager());
+		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager());
 	}
 	
 	@AfterClass public static void oneTimeTearDown() throws Exception {

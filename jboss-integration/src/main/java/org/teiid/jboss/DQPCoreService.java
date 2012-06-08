@@ -52,10 +52,10 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.TransactionService;
-import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.services.InternalEventDistributorFactory;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -74,7 +74,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 	private final InjectedValue<AuthorizationValidator> authorizationValidatorInjector = new InjectedValue<AuthorizationValidator>();
 	private final InjectedValue<SessionAwareCache> preparedPlanCacheInjector = new InjectedValue<SessionAwareCache>();
 	private final InjectedValue<SessionAwareCache> resultSetCacheInjector = new InjectedValue<SessionAwareCache>();
-	private final InjectedValue<EventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<EventDistributorFactory>();
+	private final InjectedValue<InternalEventDistributorFactory> eventDistributorFactoryInjector = new InjectedValue<InternalEventDistributorFactory>();
 	
 	@Override
     public void start(final StartContext context) {
@@ -86,7 +86,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.dqpCore.setBufferManager(bufferManagerInjector.getValue());
 		
 		this.dqpCore.setTransactionService((TransactionService)LogManager.createLoggingProxy(LogConstants.CTX_TXN_LOG, transactionServerImpl, new Class[] {TransactionService.class}, MessageLevel.DETAIL, Thread.currentThread().getContextClassLoader()));
-		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getEventDistributor());
+		this.dqpCore.setEventDistributor(getEventDistributorFactoryInjector().getValue().getReplicatedEventDistributor());
 		this.dqpCore.setResultsetCache(getResultSetCacheInjector().getValue());
 		this.dqpCore.setPreparedPlanCache(getPreparedPlanCacheInjector().getValue());
 		this.dqpCore.start(this);
@@ -197,7 +197,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		return workManagerInjector;
 	}
 
-	public InjectedValue<EventDistributorFactory> getEventDistributorFactoryInjector() {
+	public InjectedValue<InternalEventDistributorFactory> getEventDistributorFactoryInjector() {
 		return eventDistributorFactoryInjector;
 	}
 }

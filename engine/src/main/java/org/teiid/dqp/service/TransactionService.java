@@ -29,7 +29,6 @@ import java.util.Collection;
 import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.Transaction;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;

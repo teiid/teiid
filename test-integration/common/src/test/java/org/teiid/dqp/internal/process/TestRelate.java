@@ -62,7 +62,7 @@ public class TestRelate {
     @BeforeClass public static void oneTimeSetUp() throws Exception {
     	//DQPConfiguration config = new DQPConfiguration();
     	//config.setUserRequestSourceConcurrency(1);
-    	server = new FakeServer();
+    	server = new FakeServer(true);
     	JdbcDataSource h2ds = new JdbcDataSource();
     	h2ds.setURL("jdbc:h2:zip:src/test/resources/relate/test.zip!/test");
     	final DataSource ds = JdbcConnectionPool.create(h2ds);

@@ -22,10 +22,8 @@
 package org.teiid.jboss;
 
 import java.security.Principal;
-import java.security.acl.Group;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.login.LoginException;
@@ -48,61 +46,32 @@ public class JBossSessionService extends SessionServiceImpl {
 	}
 		
 	@Override
-	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains, boolean onlyallowPassthrough)
+	protected TeiidLoginContext authenticate(String userName, Credentials credentials, String applicationName, List<String> domains)
 			throws LoginException {
-        return authenticateUser(userName, credentials, applicationName, domains, securityDomainMap, onlyallowPassthrough);                        
-	}
-	
-	private TeiidLoginContext authenticateUser(String username, final Credentials credential, String applicationName, List<String> domains, Map<String, SecurityDomainContext> securityDomainMap, boolean onlyallowPassthrough) 
-		throws LoginException {
-		
-        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"authenticateUser", username, applicationName}); //$NON-NLS-1$
-                
-        final String baseUsername = getBaseUsername(username);
+        final String baseUsername = getBaseUsername(userName);
 
-    	if (onlyallowPassthrough) {
-            for (String domain:getDomainsForUser(domains, username)) {
-	        	Subject existing = this.securityHelper.getSubjectInContext(domain);
-	        	if (existing != null) {
-					return new TeiidLoginContext(getUserName(existing)+AT+domain, existing, domain, this.securityHelper.getSecurityContext(domain));
-	        	}
-            }
-            throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50073));
-    	}
-
-        
         // If username specifies a domain (user@domain) only that domain is authenticated against.
         // If username specifies no domain, then all domains are tried in order.
-        for (String domain:getDomainsForUser(domains, username)) {
+        for (String domain:getDomainsForUser(domains, userName)) {
     		// this is the configured login for teiid
         	SecurityDomainContext securityDomainContext = securityDomainMap.get(domain);
         	if (securityDomainContext != null) {
         		AuthenticationManager authManager = securityDomainContext.getAuthenticationManager();
         		if (authManager != null) {
-                    Principal userPrincipal = new SimplePrincipal(username);
+                    Principal userPrincipal = new SimplePrincipal(userName);
                     Subject subject = new Subject();
-                    boolean isValid = authManager.isValid(userPrincipal, credential==null?null:new String(credential.getCredentialsAsCharArray()), subject);
+                    String credString = credentials==null?null:new String(credentials.getCredentialsAsCharArray());
+                    boolean isValid = authManager.isValid(userPrincipal, credString, subject);
                     if (isValid) {
-        				String userName = baseUsername+AT+domain;
-        				Object securityContext = this.securityHelper.createSecurityContext(domain, userPrincipal, credential==null?null:new String(credential.getCredentialsAsCharArray()), subject);
-        				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", username, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
-        				return new TeiidLoginContext(userName, subject, domain, securityContext);
+        				String qualifiedUserName = baseUsername+AT+domain;
+        				Object securityContext = this.securityHelper.createSecurityContext(domain, userPrincipal, credString, subject);
+        				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful for \"", userName, "\""}); //$NON-NLS-1$ //$NON-NLS-2$
+        				return new TeiidLoginContext(qualifiedUserName, subject, domain, securityContext);
                     }            			
         		}
         	}
         }
-        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, username ));       
+        throw new LoginException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50072, userName ));       
     }	
-	
-	private String getUserName(Subject subject) {
-		Set<Principal> principals = subject.getPrincipals();
-		for (Principal p:principals) {
-			if (p instanceof Group) {
-				continue;
-			}
-			return p.getName();
-		}
-		return null;
-	}
-	
+		
 }

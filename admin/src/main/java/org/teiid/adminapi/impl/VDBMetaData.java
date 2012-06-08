@@ -22,6 +22,7 @@
 package org.teiid.adminapi.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -141,15 +142,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 	
 	/**
-	 * This method required to make the JNDI assignment on the model work; if not persistent Management framework
-	 * treating "models" as ReadOnly property. The actual assignment is done in the VDBMetaDataClassInstancefactory
 	 * @param models
 	 */
-	public void setModels(List<Model> models) {
+	public void setModels(Collection<ModelMetaData> models) {
 		this.models.getMap().clear();
-		for (Model obj : models) {
-			ModelMetaData model = (ModelMetaData) obj;
-			addModel(model);
+		for (ModelMetaData obj : models) {
+			addModel(obj);
 		}
 	}
 	
@@ -206,7 +204,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
         if (!getValidityErrors().isEmpty()) {
             return false;
         }
-                
         if (getModels().isEmpty()) {
             return false;        	
         }
@@ -215,11 +212,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
     			List<String> resourceNames = m.getSourceNames();
     			if (resourceNames.isEmpty()) {
     				return false;
-    			}
-    			for (String sourceName:resourceNames) {
-    				if (m.getSourceConnectionJndiName(sourceName) == null) {
-    					return false;
-    				}
     			}
     		}
     	}

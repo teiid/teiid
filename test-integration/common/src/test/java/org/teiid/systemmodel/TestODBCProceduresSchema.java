@@ -43,7 +43,7 @@ public class TestODBCProceduresSchema extends AbstractMMQueryTestCase {
 	}
 	
 	@BeforeClass public static void oneTimeSetup() throws Exception {
-		server = new FakeServer();
+		server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/bqt.vdb");
 	}
 	

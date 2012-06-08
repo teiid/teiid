@@ -21,81 +21,39 @@
  */
 package org.teiid.jboss;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.deployers.EventDistributorImpl;
 import org.teiid.deployers.VDBRepository;
-import org.teiid.events.EventDistributor;
-import org.teiid.events.EventDistributorFactory;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
+import org.teiid.services.AbstractEventDistributorFactoryService;
+import org.teiid.services.InternalEventDistributorFactory;
 
-public class EventDistributorFactoryService implements Service<EventDistributorFactory> {
+public class EventDistributorFactoryService extends AbstractEventDistributorFactoryService implements Service<InternalEventDistributorFactory> {
 	
 	InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
-	private EventDistributor replicatableEventDistributor;
-	private EventDistributor eventDistributorProxy;
-	
-	@Override
-	public EventDistributorFactory getValue() throws IllegalStateException, IllegalArgumentException {
-		return new EventDistributorFactory() {
-			@Override
-			public EventDistributor getEventDistributor() {
-				return eventDistributorProxy;
-			}
-		};
-	}
-
+		
 	@Override
 	public void start(StartContext context) throws StartException {
-		final EventDistributor ed = new EventDistributorImpl() {
-			@Override
-			public VDBRepository getVdbRepository() {
-				return vdbRepositoryInjector.getValue();
-			}
-		};
-		
-		// this instance is by use of teiid internally; only invokes the remote instances
-		if (objectReplicatorInjector.getValue() != null) {
-			try {
-				this.replicatableEventDistributor = objectReplicatorInjector.getValue().replicate("$TEIID_ED$", EventDistributor.class, ed, 0); //$NON-NLS-1$
-			} catch (Exception e) {
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50004, this));
-			}
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
-		}
-		else {
-			LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("distributed_cache_not_enabled")); //$NON-NLS-1$
-		}
-		
-		// for external client to call. invokes local instance and remote ones too.
-		this.eventDistributorProxy = (EventDistributor)Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {EventDistributor.class}, new InvocationHandler() {
-			
-			@Override
-			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-				method.invoke(ed, args);
-				if (replicatableEventDistributor != null) {
-					method.invoke(replicatableEventDistributor, args);
-				}
-				return null;
-			}
-		});		
+		start();
 	}
 
 	@Override
 	public void stop(StopContext context) {
-    	if (objectReplicatorInjector.getValue() != null && this.replicatableEventDistributor != null) {
-    		objectReplicatorInjector.getValue().stop(this.replicatableEventDistributor);
-    		this.replicatableEventDistributor = null;
-    	}
+		stop();
 	}
+	
+	@Override
+	protected ObjectReplicator getObjectReplicator() {
+		return objectReplicatorInjector.getValue();
+	}
+	
+	@Override
+	protected VDBRepository getVdbRepository() {
+		return vdbRepositoryInjector.getValue();
+	}
+
 }

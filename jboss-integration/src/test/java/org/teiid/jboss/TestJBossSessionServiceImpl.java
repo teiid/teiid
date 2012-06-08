@@ -100,7 +100,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
         jss.setSecurityHelper(ms);
         jss.setSecurityDomains(domains);
         
-        TeiidLoginContext c = jss.authenticate("user1", credentials, null, domains, false); //$NON-NLS-1$ //$NON-NLS-2$
+        TeiidLoginContext c = jss.authenticate("user1", credentials, null, domains); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("user1@testFile", c.getUserName()); //$NON-NLS-1$
     }
     
@@ -116,7 +116,7 @@ public class TestJBossSessionServiceImpl extends TestCase {
         jss.setSecurityHelper(ms);
         jss.setSecurityDomains(domains);
         
-        TeiidLoginContext c = jss.authenticate("user1", new Credentials("pass1".toCharArray()), null, domains, true); //$NON-NLS-1$ //$NON-NLS-2$
+        TeiidLoginContext c = jss.passThroughLogin("user1", domains); //$NON-NLS-1$ //$NON-NLS-2$
         
         assertEquals("alreadylogged@passthrough", c.getUserName()); //$NON-NLS-1$
     }

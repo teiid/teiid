@@ -31,7 +31,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.Delayed;
-import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
@@ -40,6 +39,8 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.resource.spi.work.Work;
 
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.core.util.NamedThreadFactory;
@@ -70,7 +71,7 @@ import org.teiid.query.QueryPlugin;
  * TODO: bounded queuing - we never bothered bounding in the past with our worker pools, but reasonable
  * defaults would be a good idea.
  */
-public class ThreadReuseExecutor implements Executor {
+public class ThreadReuseExecutor implements TeiidExecutor {
 	
 	public interface PrioritizedRunnable extends Runnable {
 		
@@ -84,7 +85,7 @@ public class ThreadReuseExecutor implements Executor {
 		
 	}
 	
-	static class RunnableWrapper implements PrioritizedRunnable {
+	public static class RunnableWrapper implements PrioritizedRunnable, Work {
 		Runnable r;
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		long creationTime;
@@ -124,6 +125,11 @@ public class ThreadReuseExecutor implements Executor {
 		
 		public DQPWorkContext getDqpWorkContext() {
 			return workContext;
+		}
+
+		@Override
+		public void release() {
+			
 		}
 		
 	}

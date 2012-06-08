@@ -110,7 +110,7 @@ public class CompositeVDB {
 		VDBMetaData newMergedVDB = new VDBMetaData();
 		newMergedVDB.setName(this.vdb.getName());
 		newMergedVDB.setVersion(this.vdb.getVersion());
-		newMergedVDB.setModels(this.vdb.getModels());
+		newMergedVDB.setModels(this.vdb.getModelMetaDatas().values());
 		newMergedVDB.setDataPolicies(this.vdb.getDataPolicies());
 		newMergedVDB.setDescription(this.vdb.getDescription());
 		newMergedVDB.setStatus(this.vdb.getStatus());

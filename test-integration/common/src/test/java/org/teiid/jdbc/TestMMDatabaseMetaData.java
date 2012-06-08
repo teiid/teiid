@@ -146,7 +146,7 @@ public class TestMMDatabaseMetaData {
     
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
-    	FakeServer server = new FakeServer();
+    	FakeServer server = new FakeServer(true);
     	server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
         conn = server.createConnection("jdbc:teiid:QT_Ora9DS"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -915,7 +915,7 @@ public class TestMMDatabaseMetaData {
         expected.put("getSystemFunctions", DatabaseMetaDataImpl.SYSTEM_FUNCTIONS); //$NON-NLS-1$
         expected.put("getTimeDateFunctions", DatabaseMetaDataImpl.DATE_FUNCTIONS); //$NON-NLS-1$
         //expected.put("getUrl", primaryUrl + serverUrl); //$NON-NLS-1$
-        expected.put("getUserName", CoreConstants.DEFAULT_ANON_USERNAME+"@somedomain"); //$NON-NLS-1$
+        expected.put("getUserName", CoreConstants.DEFAULT_ANON_USERNAME+"@teiid-security"); //$NON-NLS-1$
 
         // return type - Object
         expected.put("getConnection", conn); //$NON-NLS-1$

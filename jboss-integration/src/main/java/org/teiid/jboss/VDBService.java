@@ -67,6 +67,7 @@ import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -240,54 +241,35 @@ class VDBService implements Service<VDBMetaData> {
 		return this.vdb;
 	}
 	
-	private void createConnectorManagers(ConnectorManagerRepository cmr, TranslatorRepository repo, final VDBMetaData deployment) throws StartException {
-		IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
+	private void createConnectorManagers(ConnectorManagerRepository cmr, final TranslatorRepository repo, final VDBMetaData deployment) throws StartException {
+		final IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
-		for (Model model:deployment.getModels()) {
-			List<String> sourceNames = model.getSourceNames();
-			if (sourceNames.size() != new HashSet<String>(sourceNames).size()) {
-				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50033, model.getName(), deployment.getName(), deployment.getVersion()));
-			}
-			if (sourceNames.size() > 1 && !model.isSupportsMultiSourceBindings()) {
-				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50031, model.getName(), deployment.getName(), deployment.getVersion()));
-			}
-			for (String source:sourceNames) {
-				ConnectorManager cm = cmr.getConnectorManager(source);
-				String name = model.getSourceTranslatorName(source);
-				String connection = model.getSourceConnectionJndiName(source);
-				if (cm != null) {
-					if (!cm.getTranslatorName().equals(name)
-							|| !cm.getConnectionName().equals(connection)) {
-						throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50034, source, deployment.getName(), deployment.getVersion()));
-					}
-					continue;
+		try {
+			cmr.createConnectorManagers(deployment, new ConnectorManagerRepository.ExecutionFactoryProvider() {
+				
+				@Override
+				public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
+					return VDBService.getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
 				}
-
-				cm = new ConnectorManager(name, connection);
-				try {
-					ExecutionFactory<Object, Object> ef = getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
-					cm.setExecutionFactory(ef);
-					cmr.addConnectorManager(source, cm);
-				} catch (TranslatorNotFoundException e) {
-					if (e.getCause() != null) {
-						throw new StartException(IntegrationPlugin.Event.TEIID50035.name(), e.getCause());
-					}
-					throw new StartException(IntegrationPlugin.Event.TEIID50035.name()+" "+e.getMessage()); //$NON-NLS-1$
-				}
+			});
+		} catch (ConnectorManagerException e) {
+			if (e.getCause() != null) {
+				throw new StartException(IntegrationPlugin.Event.TEIID50035.name()+" "+e.getMessage(), e.getCause()); //$NON-NLS-1$
 			}
+			throw new StartException(e.getMessage());
 		}
 	}
 	
-	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws TranslatorNotFoundException {
+	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws ConnectorManagerException {
 		if (!building.add(name)) {
-			throw new TranslatorNotFoundException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50076, deployment.getName(), deployment.getVersion(), building));
+			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50076, deployment.getName(), deployment.getVersion(), building));
 		}
 		VDBTranslatorMetaData translator = vdbRepo.getTranslatorMetaData(name);
 		if (translator == null) {
 			translator = repo.getTranslatorMetaData(name);
 		}
 		if (translator == null) {
-			throw new TranslatorNotFoundException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50078, deployment.getName(), deployment.getVersion(), name));
+			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50078, deployment.getName(), deployment.getVersion(), name));
 		}
 		try {
 			ExecutionFactory<Object, Object> ef = map.get(translator);
@@ -311,7 +293,7 @@ class VDBService implements Service<VDBMetaData> {
 			}
 			return ef;
 		} catch(TeiidException e) {
-			throw new TranslatorNotFoundException(e);
+			throw new ConnectorManagerException(e);
 		}
 	}
 
@@ -531,13 +513,4 @@ class VDBService implements Service<VDBMetaData> {
 		return policy;
 	}
 
-	@SuppressWarnings("serial")
-	static class TranslatorNotFoundException extends TeiidException {
-		public TranslatorNotFoundException(String msg) {
-			super(msg);
-		}
-		public TranslatorNotFoundException(Throwable t) {
-			super(t);
-		}
-	}
 }

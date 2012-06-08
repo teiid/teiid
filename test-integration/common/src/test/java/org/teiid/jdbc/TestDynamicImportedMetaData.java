@@ -55,7 +55,7 @@ public class TestDynamicImportedMetaData {
 	private FakeServer server;
 	
 	@Before public void setup() {
-		this.server = new FakeServer();
+		this.server = new FakeServer(true);
 	}
 	
 	@After public void tearDown() {
