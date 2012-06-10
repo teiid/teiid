@@ -36,9 +36,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.language.*;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -285,6 +287,21 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
 		Limit limit = queryCommand.getLimit();
 		queryCommand.setLimit(null);
+		
+		if (command instanceof Select) {
+			Select select = (Select)command;
+			
+			TableReference tr = select.getFrom().get(0);
+			if (tr instanceof NamedTable && isDual((NamedTable)tr)) {
+				if (limit.getRowOffset() > 0 || limit.getRowLimit() == 0) {
+					//no data
+					select.setWhere(new Comparison(new Literal(1, TypeFacility.RUNTIME_TYPES.INTEGER), new Literal(0, TypeFacility.RUNTIME_TYPES.INTEGER), Operator.EQ));
+					return null;
+				}
+				return null; //dual does not allow a limit
+			}
+		}
+		
     	List<Object> parts = new ArrayList<Object>();
     	parts.add("SELECT "); //$NON-NLS-1$
     	/*
@@ -327,6 +344,17 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		}
 		return parts;
     }
+    
+	private boolean isDual(NamedTable table) {
+		String groupName = null;
+		AbstractMetadataRecord groupID = table.getMetadataObject();
+		if(groupID != null) {              
+		    groupName = SQLStringVisitor.getRecordName(groupID);
+		} else {
+		    groupName = table.getName();
+		}
+		return DUAL.equalsIgnoreCase(groupName);
+	}
 
     @Override
     public boolean useAsInGroupAlias(){
@@ -506,14 +534,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 
 			private void stripDualAlias(NamedTable table) {
 				if (table.getCorrelationName() != null) {
-    				String groupName = null;
-    				AbstractMetadataRecord groupID = table.getMetadataObject();
-                    if(groupID != null) {              
-                        groupName = getName(groupID);
-                    } else {
-                        groupName = table.getName();
-                    }
-                    if (DUAL.equalsIgnoreCase(groupName)) {
+                    if (isDual(table)) {
                     	table.setCorrelationName(null);
                     }
     			}
