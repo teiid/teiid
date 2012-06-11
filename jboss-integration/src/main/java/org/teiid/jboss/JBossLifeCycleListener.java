@@ -25,10 +25,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.ServiceContainer.TerminateListener;
+import org.jboss.msc.service.ServiceController;
 import org.teiid.deployers.ContainerLifeCycleListener;
 
-class JBossLifeCycleListener implements TerminateListener, ContainerLifeCycleListener {
+class JBossLifeCycleListener extends AbstractServiceListener<Object> implements TerminateListener, ContainerLifeCycleListener {
 
 	private boolean shutdownInProgress = false;
 	private List<ContainerLifeCycleListener.LifeCycleEventListener> listeners = Collections.synchronizedList(new ArrayList<ContainerLifeCycleListener.LifeCycleEventListener>());
@@ -49,4 +51,15 @@ class JBossLifeCycleListener implements TerminateListener, ContainerLifeCycleLis
 	public void addListener(LifeCycleEventListener listener) {
 		listeners.add(listener);
 	}
+	
+	@Override
+    public void transition(final ServiceController controller, final ServiceController.Transition transition) {
+		if (transition.equals(ServiceController.Transition.UP_to_STOP_REQUESTED)) {
+			this.shutdownInProgress = true;
+		}
+		else if (transition.equals(ServiceController.Transition.STOP_REQUESTED_to_UP)) {
+			this.shutdownInProgress = false;
+		}
+		
+    }	
 }

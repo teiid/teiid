@@ -37,24 +37,23 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.modules.ModuleLoader;
-import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceController.State;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
@@ -77,11 +76,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
 	private VDBStatusChecker vdbStatusChecker;
+	JBossLifeCycleListener shutdownListener;
 	
-	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker) {
+	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker, JBossLifeCycleListener shutdownListener) {
 		this.translatorRepository = translatorRepo;
 		this.asyncThreadPoolName = poolName;
 		this.vdbStatusChecker = vdbStatusChecker;
+		this.shutdownListener = shutdownListener;
 	}
 	
 	public void deploy(final DeploymentPhaseContext context)  throws DeploymentUnitProcessingException {
@@ -196,21 +197,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.bufferManagerInjector);
 		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.objectReplicatorInjector);
 		vdbService.setInitialMode(Mode.PASSIVE).install();
-		
-		ServiceController<?> scMain = deploymentUnit.getServiceRegistry().getService(deploymentUnit.getServiceName().append("contents")); //$NON-NLS-1$
-		scMain.addListener(new AbstractServiceListener<Object>() {
-			@Override
-		    public void serviceRemoveRequested(final ServiceController controller) {
-				final VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-				
-				ServiceController<?> sc = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
-				if (sc != null) {
-					ObjectSerializer serilalizer = ObjectSerializer.class.cast(sc.getValue());
-					serilalizer.removeAttachments(vdb);	
-					LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-		    }			
-		});
 	}
 	
 	private void dataSourceDependencies(VDBMetaData deployment, DependentServices svcListener) {
@@ -280,6 +266,17 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}	
+		
+		if (!this.shutdownListener.isShutdownInProgress()) {
+			final VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+			
+			ServiceController<?> sc = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.OBJECT_SERIALIZER);
+			if (sc != null) {
+				ObjectSerializer serilalizer = ObjectSerializer.class.cast(sc.getValue());
+				serilalizer.removeAttachments(vdb);	
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
+			}		
+		}
 	}
 	
 	private MetadataRepository getMetadataRepository(VDBMetaData vdb, String modelName, IndexMetadataRepository indexRepo) throws DeploymentUnitProcessingException {
