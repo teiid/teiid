@@ -565,7 +565,7 @@
 						name="cacheType" type="string" required="true"
 						description="The cache type to clear" default="QUERY_SERVICE_RESULT_SET_CACHE">
 						<c:property-options>
-							<c:option value="QUERY_SERVICE_RESULT_SET_CACHE" default="true" name="Result Set" />
+							<c:option value="QUERY_SERVICE_RESULT_SET_CACHE" name="Result Set" />
 							<c:option value="PREPARED_PLAN_CACHE" name="Prepared Plan" />
 						</c:property-options>
 					</c:simple-property>	
@@ -609,19 +609,19 @@
 						readOnly="true" />
 					<c:simple-property name="status" type="string"
 						description="The Virtual Database Status" required="false"
-						summary="true" readOnly="true">
+						summary="true" readOnly="true" default="INACTIVE">
 						<c:property-options>
 							<c:option value="ACTIVE" name="UP" />
-							<c:option value="INACTIVE" name="DOWN" default="true" />
+							<c:option value="INACTIVE" name="DOWN" />
 						</c:property-options>
 					</c:simple-property>
-					<c:simple-property name="connectionType" type="string"
+					<c:simple-property name="connectionType" type="string" default="BY_VERSION"
 						description="Allowable Connections: 1) NONE - disallow new connections 2) BY VERSION - allow connections only if the version is specified or if this is the earliest 'BY VERSION' vdb and there are no vdbs marked as 'ANY' 
 3) ANY - allow connections with or without a version specified. If multiple versions of same VDB are deployed, connect to one specified with ANY, or if there are multiple VDBs with ANY then connect to the latest version with ANY "
 						required="false">
 						<c:property-options>
 							<c:option value="NONE" name="NONE" />
-							<c:option value="BY_VERSION" name="BY VERSION" default="true" />
+							<c:option value="BY_VERSION" name="BY VERSION" />
 							<c:option value="ANY" name="ANY" />
 						</c:property-options>
 					</c:simple-property>
