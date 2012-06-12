@@ -355,7 +355,7 @@ class VDBService implements Service<VDBMetaData> {
 			    		
 			    		if (!cached) {
 				    		// cache the schema to disk
-							cacheMetadataStore(vdb, factory);
+							cacheMetadataStore(model, factory);
 			    		}
 						
 						// merge into VDB metadata
@@ -404,21 +404,18 @@ class VDBService implements Service<VDBMetaData> {
     }
         
     // if is not dynamic always cache; else check for the flag (this may need to be revisited with index vdb)
-	private void cacheMetadataStore(final VDBMetaData vdb, MetadataFactory schema) {
+	private void cacheMetadataStore(final ModelMetaData model, MetadataFactory schema) {
 		boolean cache = !vdb.isDynamic();
 		if (vdb.isDynamic()) {
 			cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		if (cache) {
-			for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
-				final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
-				try {
-					// TODO: save the model not VDB here.
-					getSerializer().saveAttachment(cachedFile, schema, false);
-				} catch (IOException e) {
-					LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50044, vdb.getName(), vdb.getVersion(), model.getName()));
-				}
+			final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
+			try {
+				getSerializer().saveAttachment(cachedFile, schema, false);
+			} catch (IOException e) {
+				LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50044, vdb.getName(), vdb.getVersion(), model.getName()));
 			}
 		}
 	}    
