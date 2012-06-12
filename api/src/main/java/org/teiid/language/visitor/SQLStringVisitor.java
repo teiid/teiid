@@ -105,7 +105,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
      * @return the name of that element or group as defined in the source
      */
     protected String getName(AbstractMetadataRecord object) {
-        String nameInSource = object.getNameInSource();
+        return getRecordName(object);
+    }
+
+	public static String getRecordName(AbstractMetadataRecord object) {
+		String nameInSource = object.getNameInSource();
         if(nameInSource != null && nameInSource.length() > 0) {
             return nameInSource;
         }

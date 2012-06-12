@@ -664,6 +664,28 @@ public class TestOracleTranslator {
             null,
             output);
     }
+    
+    @Test public void testDUALLimit() throws Exception {
+        String input = "SELECT something FROM DUAL as g0 LIMIT 2"; //$NON-NLS-1$
+        String output = "SELECT seq.nextval FROM DUAL"; //$NON-NLS-1$
+               
+        helpTestVisitor(getOracleSpecificMetadata(),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+    }
+    
+    @Test public void testDUALLimit1() throws Exception {
+        String input = "SELECT something FROM DUAL as g0 LIMIT 1, 2"; //$NON-NLS-1$
+        String output = "SELECT seq.nextval FROM DUAL WHERE 1 = 0"; //$NON-NLS-1$
+               
+        helpTestVisitor(getOracleSpecificMetadata(),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+    }
 
     /**
      * Test Oracle's rownum pseudo-column.  Not a real column, so it can't
