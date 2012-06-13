@@ -58,5 +58,8 @@ public class LogonException extends TeiidSecurityException {
         super(event, t, message );
     }    
 
+    public LogonException(Throwable t) {
+        super(t);
+    }
 }
 

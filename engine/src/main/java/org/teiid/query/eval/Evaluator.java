@@ -404,7 +404,7 @@ public class Evaluator {
     		try {
     			values = vis.getCachedSet(ref.getValueExpression());
     		} catch (TeiidProcessingException e) {
-    			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30319, e, e.getMessage());
+    			 throw new ExpressionEvaluationException(e);
     		}
         	if (values != null) {
         		return values.contains(leftValue);
@@ -417,7 +417,7 @@ public class Evaluator {
         	try {
 				valueIter = evaluateSubquery((SubquerySetCriteria)criteria, tuple);
 			} catch (TeiidProcessingException e) {
-				 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30320, e, e.getMessage());
+				 throw new ExpressionEvaluationException(e);
 			}
         } else {
         	throw new AssertionError("unknown set criteria type"); //$NON-NLS-1$
@@ -495,7 +495,7 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(criteria, tuple);
 		} catch (TeiidProcessingException e) {
-			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30324, e, e.getMessage());
+			 throw new ExpressionEvaluationException(e);
 		}
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
@@ -565,7 +565,7 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(criteria, tuple);
 		} catch (TeiidProcessingException e) {
-			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30327, e, e.getMessage());
+			 throw new ExpressionEvaluationException(e);
 		}
         if(valueIter.hasNext()) {
             return !criteria.isNegated();
@@ -670,7 +670,7 @@ public class Evaluator {
 				}
 			}
 		} catch (TransformationException e) {
-			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30330, e, e.getMessage());
+			 throw new ExpressionEvaluationException(e);
 		} catch (SQLException e) {
 			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30331, e, e.getMessage());
 		}
@@ -820,7 +820,7 @@ public class Evaluator {
 				}
 			}, function.getDelimiter(), function.getQuote());
 		} catch (TransformationException e) {
-			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30337, e, e.getMessage());
+			 throw new ExpressionEvaluationException(e);
 		}
 	}
 
@@ -833,7 +833,7 @@ public class Evaluator {
 		try {
 			return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
 		} catch (TeiidProcessingException e) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30338, e, e.getMessage());
+			 throw new FunctionExecutionException(e);
 		}
 	}
 
@@ -852,7 +852,7 @@ public class Evaluator {
 			   }
 			   return XMLSystemFunctions.xmlElement(context, function.getName(), namespaces(function.getNamespaces()), attributes, values);
 		   } catch (TeiidProcessingException e) {
-			    throw new FunctionExecutionException(QueryPlugin.Event.TEIID30339, e, e.getMessage());
+			    throw new FunctionExecutionException(e);
 		   }
 	}
 	
@@ -979,7 +979,7 @@ public class Evaluator {
 	        try {
 				return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
 			} catch (TeiidProcessingException e) {
-				 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30343, e, e.getMessage());
+				 throw new ExpressionEvaluationException(e);
 			}
 	    }
 	    
@@ -995,7 +995,7 @@ public class Evaluator {
 		try {
 			valueIter = evaluateSubquery(scalarSubquery, tuple);
 		} catch (TeiidProcessingException e) {
-			 throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30344, e, e.getMessage());
+			 throw new ExpressionEvaluationException(e);
 		}
 	    if(valueIter.hasNext()) {
 	        result = valueIter.next();

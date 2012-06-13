@@ -276,7 +276,7 @@ public class QueryResolver {
             // Resolve this command
             resolver.resolveCommand(currentCommand, resolverMetadata, resolveNullLiterals);            
         } catch(QueryMetadataException e) {
-             throw new QueryResolverException(QueryPlugin.Event.TEIID30064, e, e.getMessage());
+             throw new QueryResolverException(e);
         }
 
         // Flag that this command has been resolved.

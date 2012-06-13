@@ -66,7 +66,7 @@ public abstract class AdminException extends TeiidException {
     }
     
     AdminException(Throwable cause) {
-    	this(cause.getMessage(), cause);
+    	super(cause);
     }
 
     /**

@@ -212,9 +212,9 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			try {
 				sqlxml = XMLSystemFunctions.saveToBufferManager(dtm.getBufferManager(), sxt);
 			} catch (TeiidComponentException e) {
-				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30501, e);
+				 throw new TeiidRuntimeException(e);
 			} catch (TeiidProcessingException e) {
-				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30502, e);
+				 throw new TeiidRuntimeException(e);
 			}
 			return new XMLType(sqlxml);
 		}

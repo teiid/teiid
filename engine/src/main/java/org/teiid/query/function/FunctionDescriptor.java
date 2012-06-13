@@ -248,7 +248,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         } catch(IllegalAccessException e) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30385, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30385, method.toString()));
         } catch (TransformationException e) {
-        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30386, e, e.getMessage());
+        	 throw new FunctionExecutionException(e);
 		}
 	}
 

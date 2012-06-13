@@ -623,10 +623,10 @@ public class QueryRewriter {
             query.setInto(null);
             insert.setQueryExpression(query);
             return rewriteInsert(correctDatatypes(insert));
-        } catch (QueryMetadataException err) {
-             throw new QueryValidatorException(QueryPlugin.Event.TEIID30369, err, err.getMessage());
-        } catch (TeiidComponentException err) {
-             throw new QueryValidatorException(QueryPlugin.Event.TEIID30370, err, err.getMessage());
+        } catch (QueryMetadataException e) {
+             throw new QueryValidatorException(e);
+        } catch (TeiidComponentException e) {
+             throw new QueryValidatorException(e);
 		}
     }
 
@@ -1915,7 +1915,7 @@ public class QueryRewriter {
                 	try {
 						return new Constant(FunctionMethods.convert(((Constant)value).getValue(), DataTypeManager.getDataTypeName(type)), es.getType());
 					} catch (FunctionExecutionException e) {
-						 throw new QueryValidatorException(QueryPlugin.Event.TEIID30374, e, e.getMessage());
+						 throw new QueryValidatorException(e);
 					}
                 }
                 return new Reference(es);

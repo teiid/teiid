@@ -109,7 +109,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 			try {
 				return multiSourceModify((AccessNode)node);
 			} catch (TeiidProcessingException e) {
-				 throw new QueryPlannerException(QueryPlugin.Event.TEIID30560, e, e.getMessage());
+				 throw new QueryPlannerException(e);
 			} 
 		} else if (node instanceof ProjectIntoNode) {
 			ProjectIntoNode pin = (ProjectIntoNode)node;

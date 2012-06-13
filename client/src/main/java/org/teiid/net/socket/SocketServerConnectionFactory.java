@@ -303,7 +303,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 			try {
 				discovery = (ServerDiscovery)ReflectionHelper.create(discoveryStrategyName, null, this.getClass().getClassLoader());
 			} catch (TeiidException e) {
-				 throw new ConnectionException(JDBCPlugin.Event.TEIID20015, e, e.getMessage());
+				 throw new ConnectionException(e);
 			}
 		}
 		

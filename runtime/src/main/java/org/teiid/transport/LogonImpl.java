@@ -113,9 +113,9 @@ public class LogonImpl implements ILogon {
 			}
 			return result;
 		} catch (LoginException e) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40056, e.getMessage());
+			 throw new LogonException(e);
 		} catch (SessionServiceException e) {
-			 throw new LogonException(RuntimePlugin.Event.TEIID40057, e, e.getMessage());
+			 throw new LogonException(e);
 		}
 	}
 	  

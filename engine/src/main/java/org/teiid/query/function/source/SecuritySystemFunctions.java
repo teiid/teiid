@@ -41,8 +41,8 @@ public class SecuritySystemFunctions {
         
         try {
             return eval.hasRole(SecurityFunctionEvaluator.DATA_ROLE, roleName);
-        } catch (TeiidComponentException err) {
-             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30435, err, err.getMessage());
+        } catch (TeiidComponentException e) {
+             throw new FunctionExecutionException(e);
         }
     }
 	
@@ -56,8 +56,8 @@ public class SecuritySystemFunctions {
         
         try {
             return eval.hasRole(roleType, roleName);
-        } catch (TeiidComponentException err) {
-             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30436, err, err.getMessage());
+        } catch (TeiidComponentException e) {
+             throw new FunctionExecutionException(e);
         }
     }
     

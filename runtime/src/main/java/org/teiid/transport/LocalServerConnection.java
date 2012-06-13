@@ -94,7 +94,7 @@ public class LocalServerConnection implements ServerConnection {
         } catch (LogonException e) {
             // Propagate the original message as it contains the message we want
             // to give to the user
-             throw new ConnectionException(RuntimePlugin.Event.TEIID40068, e, e.getMessage());
+             throw new ConnectionException(e);
         } catch (TeiidComponentException e) {
         	if (e.getCause() instanceof CommunicationException) {
         		throw (CommunicationException)e.getCause();

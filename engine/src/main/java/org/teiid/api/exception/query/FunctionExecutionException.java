@@ -47,6 +47,10 @@ public class FunctionExecutionException extends ExpressionEvaluationException {
         super( message );
     }
 
+    public FunctionExecutionException(Throwable e) {
+        super(e);
+    }
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *

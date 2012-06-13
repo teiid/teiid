@@ -139,7 +139,7 @@ public class SocketServerConnection implements ServerConnection {
 			        } catch (LogonException e) {
 			            // Propagate the original message as it contains the message we want
 			            // to give to the user
-			             throw new ConnectionException(JDBCPlugin.Event.TEIID20017, e, e.getMessage());
+			             throw new ConnectionException(e);
 			        } catch (TeiidComponentException e) {
 			        	if (e.getCause() instanceof CommunicationException) {
 			        		throw (CommunicationException)e.getCause();
@@ -233,7 +233,7 @@ public class SocketServerConnection implements ServerConnection {
 				try {
 					return selectServerInstance(false);
 				} catch (ConnectionException e) {
-					 throw new CommunicationException(JDBCPlugin.Event.TEIID20022, e, e.getMessage());
+					 throw new CommunicationException(e);
 				}
 			}
 			
@@ -333,7 +333,7 @@ public class SocketServerConnection implements ServerConnection {
 		try {
 			return selectServerInstance(false).getHostInfo().equals(((SocketServerConnection)otherService).selectServerInstance(false).getHostInfo());
 		} catch (ConnectionException e) {
-			 throw new CommunicationException(JDBCPlugin.Event.TEIID20024, e, e.getMessage());
+			 throw new CommunicationException(e);
 		}
 	}
 	
@@ -359,9 +359,9 @@ public class SocketServerConnection implements ServerConnection {
 			try {
 				this.logon(logonInstance, true);
 			} catch (LogonException e) {
-				 throw new ConnectionException(JDBCPlugin.Event.TEIID20025, e, e.getMessage());
+				 throw new ConnectionException(e);
 			} catch (TeiidComponentException e) {
-				 throw new CommunicationException(JDBCPlugin.Event.TEIID20026, e, e.getMessage());
+				 throw new CommunicationException(e);
 			}
 		}
 	}

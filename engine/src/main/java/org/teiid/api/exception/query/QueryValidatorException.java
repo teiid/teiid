@@ -48,6 +48,10 @@ public class QueryValidatorException extends QueryProcessingException {
         super( message );
     }
 
+    public QueryValidatorException(Throwable e) {
+        super(e);
+    }
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *

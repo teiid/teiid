@@ -53,8 +53,8 @@ class TupleSourceValueIterator implements ValueIterator{
 	public boolean hasNext() throws TeiidComponentException{
 	    try {
             return tupleSourceIterator.hasNext();
-        } catch (TeiidProcessingException err) {
-             throw new TeiidComponentException(QueryPlugin.Event.TEIID30186, err, err.getMessage());
+        } catch (TeiidProcessingException e) {
+             throw new TeiidComponentException(e);
         }
 	}
 
@@ -65,8 +65,8 @@ class TupleSourceValueIterator implements ValueIterator{
 	public Object next() throws TeiidComponentException{
 	    try {
             return tupleSourceIterator.nextTuple().get(columnIndex);
-        } catch (TeiidProcessingException err) {
-             throw new TeiidComponentException(QueryPlugin.Event.TEIID30187, err, err.getMessage());
+        } catch (TeiidProcessingException e) {
+             throw new TeiidComponentException(e);
         }
 	}
     

@@ -211,7 +211,7 @@ public class QueryOptimizer {
 		try {
 			command = QueryRewriter.rewrite(command, metadata, context);
 		} catch (TeiidProcessingException e) {
-			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30246, e, e.getMessage());
+			 throw new QueryPlannerException(e);
 		}
 		result = PROCEDURE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);
 		return result;

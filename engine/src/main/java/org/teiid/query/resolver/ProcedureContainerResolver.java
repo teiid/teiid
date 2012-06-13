@@ -187,7 +187,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		try {
 			return QueryResolver.resolveView(group, metadata.getVirtualPlan(group.getMetadataID()), SQLConstants.Reserved.SELECT, metadata).getUpdateInfo();
 		} catch (QueryValidatorException e) {
-			 throw new QueryResolverException(QueryPlugin.Event.TEIID30062, e, e.getMessage());
+			 throw new QueryResolverException(e);
 		}
 	}
 	

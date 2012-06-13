@@ -49,6 +49,10 @@ public class QueryPlannerException extends QueryProcessingException {
         super( message );
     }
     
+    public QueryPlannerException(Throwable e) {
+        super(e);
+    }
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *

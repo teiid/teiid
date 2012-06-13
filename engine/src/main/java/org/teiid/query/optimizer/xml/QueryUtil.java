@@ -106,7 +106,7 @@ public class QueryUtil {
         try {
             return QueryRewriter.rewrite(query, metadata, context);
         } catch(TeiidProcessingException e) {
-             throw new QueryPlannerException(QueryPlugin.Event.TEIID30282, e, e.getMessage());
+             throw new QueryPlannerException(e);
         }
     }
 

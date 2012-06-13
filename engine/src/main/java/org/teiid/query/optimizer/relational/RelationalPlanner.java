@@ -179,7 +179,7 @@ public class RelationalPlanner {
 		try {
 			plan = generatePlan(command, true);
 		} catch (TeiidProcessingException e) {
-			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30252, e, e.getMessage());
+			 throw new QueryPlannerException(e);
 		}
 
 		if(debug) {

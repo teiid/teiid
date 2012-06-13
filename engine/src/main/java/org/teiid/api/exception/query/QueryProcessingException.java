@@ -48,6 +48,10 @@ public class QueryProcessingException extends TeiidProcessingException {
     public QueryProcessingException( String message ) {
         super( message );
     }
+    
+    public QueryProcessingException(Throwable e) {
+        super(e);
+    }    
 
     /**
      * Construct an instance from a message and an exception to chain to this one.

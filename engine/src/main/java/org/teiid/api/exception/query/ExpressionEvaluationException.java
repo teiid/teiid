@@ -48,6 +48,10 @@ public class ExpressionEvaluationException extends TeiidProcessingException {
         super( message );
     }
   
+    public ExpressionEvaluationException(Throwable e) {
+        super(e);
+    }
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *

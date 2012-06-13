@@ -48,7 +48,10 @@ public class TransformationException extends TeiidProcessingException {
         super(message);
     }
 
-
+    public TransformationException(Exception e) {
+        super(e);
+    }
+    
     /**
      * Construct an instance from a message and an exception to chain to this one.
      *
