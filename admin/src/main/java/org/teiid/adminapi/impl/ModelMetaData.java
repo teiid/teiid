@@ -51,7 +51,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	protected String description;	
 	protected String path; 
     protected Boolean visible = true;
-    protected List<ValidationError> errors;    
+    protected List<ValidationError> validationErrors;
+    protected transient List<ValidationError> runtimeErrors;
     protected String schemaSourceType;
 	protected String schemaText;
 
@@ -185,16 +186,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return getValidationErrors(Severity.ERROR);
 	}
 	
-	public void setErrors(List<ValidationError> errors){
-		this.errors = errors;
-	}	
-	
 	public synchronized List<ValidationError> getValidationErrors(ValidationError.Severity severity){
-		if (this.errors == null) {
+		if (this.validationErrors == null) {
 			return Collections.emptyList();
 		}
 		List<ValidationError> list = new ArrayList<ValidationError>();
-		for (ValidationError ve: this.errors) {
+		for (ValidationError ve: this.validationErrors) {
 			if (Severity.valueOf(ve.severity) == severity) {
 				list.add(ve);
 			}
@@ -203,39 +200,60 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}	
 	
     public synchronized ValidationError addError(String severity, String message) {
-        if (this.errors == null) {
-            this.errors = new LinkedList<ValidationError>();
+        if (this.validationErrors == null) {
+            this.validationErrors = new LinkedList<ValidationError>();
         }
         ValidationError ve = new ValidationError(severity, message);
-        this.errors.add(ve);
-        if (this.errors.size() > DEFAULT_ERROR_HISTORY) {
-        	this.errors.remove(0);
+        this.validationErrors.add(ve);
+        if (this.validationErrors.size() > DEFAULT_ERROR_HISTORY) {
+        	this.validationErrors.remove(0);
         }
         return ve;
     }
+    
+	public List<ValidationError> getRuntimeErrors(){
+		if (this.runtimeErrors == null) {
+			return Collections.emptyList();
+		}
+		List<ValidationError> list = new ArrayList<ValidationError>();
+		for (ValidationError ve: this.runtimeErrors) {
+			if (Severity.valueOf(ve.severity) == Severity.ERROR) {
+				list.add(ve);
+			}
+		}
+		return list;		
+	}    
+    
+    public synchronized ValidationError addRuntimeError(String severity, String message) {
+        if (this.runtimeErrors == null) {
+            this.runtimeErrors = new LinkedList<ValidationError>();
+        }
+        ValidationError ve = new ValidationError(severity, message);
+        this.runtimeErrors.add(ve);
+        if (this.runtimeErrors.size() > DEFAULT_ERROR_HISTORY) {
+        	this.runtimeErrors.remove(0);
+        }
+        return ve;
+    }    
     
     public synchronized ValidationError addError(ValidationError ve) {
-        if (this.errors == null) {
-            this.errors = new LinkedList<ValidationError>();
+        if (this.validationErrors == null) {
+            this.validationErrors = new LinkedList<ValidationError>();
         }
-        this.errors.add(ve);
-        if (this.errors.size() > DEFAULT_ERROR_HISTORY) {
-        	this.errors.remove(0);
+        this.validationErrors.add(ve);
+        if (this.validationErrors.size() > DEFAULT_ERROR_HISTORY) {
+        	this.validationErrors.remove(0);
         }
         return ve;
-    }
-    
-    
-    public synchronized boolean removeError(ValidationError remove) {
-    	if (this.errors == null) {
-    		return false;
-    	}
-    	return this.errors.remove(remove);
     }
     
     public synchronized void clearErrors() {
-    	this.errors.clear();
+    	this.validationErrors.clear();
     }
+    
+    public synchronized void clearRuntimeErrors() {
+    	this.runtimeErrors.clear();
+    }    
 	
     public static class ValidationError implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;

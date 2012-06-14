@@ -86,7 +86,7 @@ public abstract class VDBStatusChecker {
 			if (!cm.getConnectionName().equals(dsName)){
 				markInvalid(vdb);
 				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName);
-				model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+				model.addRuntimeError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 				cm = new ConnectorManager(translatorName, dsName); 
 				cm.setExecutionFactory(ef);
 				cmr.addConnectorManager(sourceName, cm);
@@ -137,7 +137,7 @@ public abstract class VDBStatusChecker {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 				
 				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
-					if (model.getErrors().isEmpty()) {
+					if (model.getRuntimeErrors().isEmpty()) {
 						continue;
 					}
 	
@@ -149,7 +149,7 @@ public abstract class VDBStatusChecker {
 					ConnectorManager cm = cmr.getConnectorManager(sourceName);
 					String status = cm.getStausMessage();
 					if (status != null && status.length() > 0) {
-						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
+						model.addRuntimeError(ModelMetaData.ValidationError.Severity.ERROR.name(), status);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, status);					
 					} else {
 						//get the pending metadata load
@@ -157,14 +157,14 @@ public abstract class VDBStatusChecker {
 						if (r != null) {
 							runnables.add(r);
 						} else {
-							model.clearErrors();
+							model.clearRuntimeErrors();
 						}
 					}
 				}
 	
 				boolean valid = true;
 				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
-					if (!model.getErrors().isEmpty()) {
+					if (!model.getRuntimeErrors().isEmpty()) {
 						valid = false;
 						break;
 					}
@@ -203,7 +203,7 @@ public abstract class VDBStatusChecker {
 						else {
 							msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
 						}
-						model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
+						model.addRuntimeError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
 					}

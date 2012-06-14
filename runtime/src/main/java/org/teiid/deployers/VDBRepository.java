@@ -314,7 +314,7 @@ public class VDBRepository implements Serializable{
 					if (cm != null) {
 						String msg = cm.getStausMessage();
 						if (msg != null && msg.length() > 0) {
-							model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), cm.getStausMessage());
+							model.addRuntimeError(ModelMetaData.ValidationError.Severity.ERROR.name(), cm.getStausMessage());
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, cm.getStausMessage());
 						}
 					}					
