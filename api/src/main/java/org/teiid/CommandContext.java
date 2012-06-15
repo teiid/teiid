@@ -23,6 +23,7 @@
 package org.teiid;
 
 import java.io.Serializable;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.TimeZone;
 
@@ -31,6 +32,7 @@ import javax.security.auth.Subject;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.VDB;
+import org.teiid.jdbc.TeiidSQLWarning;
 
 /**
  * Context information for the currently executing command.
@@ -156,5 +158,12 @@ public interface CommandContext {
 	 * @return
 	 */
 	ClassLoader getVDBClassLoader();
+	
+	/**
+     * Add an exception as a warning.  The exception will be wrapped by a {@link TeiidSQLWarning} for the client. 
+     * The warnings can be consumed through the {@link Statement#getWarnings()} method.  
+     * @param ex
+     */
+    void addWarning(Exception ex);
 
 }

@@ -39,7 +39,6 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
@@ -773,17 +772,24 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
         if (globalState.warnings == null) {
             return null;
         }
-        List<Exception> copied = globalState.warnings;
-        globalState.warnings = null;
-        return copied;
+        synchronized (this.globalState) {
+            List<Exception> copied = globalState.warnings;
+            globalState.warnings = null;
+            return copied;
+		}
     }
     
-    public void addWarning(TeiidException warning) {
-        if (globalState.warnings == null) {
-        	globalState.warnings = new ArrayList<Exception>(1);
-        }
+    public void addWarning(Exception warning) {
+    	if (warning == null) {
+    		return;
+    	}
+    	synchronized (this.globalState) {
+            if (globalState.warnings == null) {
+            	globalState.warnings = new ArrayList<Exception>(1);
+            }
+            globalState.warnings.add(warning);
+		}
         LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
-        globalState.warnings.add(warning);
     }
 
 }
