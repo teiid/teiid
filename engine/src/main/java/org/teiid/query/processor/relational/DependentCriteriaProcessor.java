@@ -28,6 +28,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -100,18 +101,43 @@ public class DependentCriteriaProcessor {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
                     int distinctCount = dvs.getTupleBuffer().getRowCount();
                     if (setState.maxNdv > 0 && setState.maxNdv < distinctCount) {
-	                    if (dvs.getTupleBuffer().getSchema().size() >= 1) {
+	                    if (dvs.getTupleBuffer().getSchema().size() > 1) {
 		                    distinctCount = 0;
     	                	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-        	            	Object last = null;
-            	        	distinctCount = 0;
-	                    	while (vi.hasNext()) {
-    	                		Object next = vi.next();
-        	            		if (last == null || Constant.COMPARATOR.compare(next, last) != 0) {
-            	        			distinctCount++;
-                	    		}
-                    			last = next;
-                    		}
+	                    	if (dvs.getTupleBuffer().getSchema().indexOf(setState.valueExpression) == 0) {
+	        	            	Object last = null;
+		                    	while (vi.hasNext()) {
+	    	                		Object next = vi.next();
+	        	            		if (next != null && (last == null || Constant.COMPARATOR.compare(next, last) != 0)) {
+	            	        			distinctCount++;
+	                	    		}
+	                    			last = next;
+	                    		}
+	                    	} else {
+	                    		//secondary attributes are not in sorted order, so we use an approximate count
+	                    		Set<Object> set = null;
+	                    		int maxSize = Math.min(10000, dvs.getTupleBuffer().getRowCount());
+	                    		List<Object> buffer = Arrays.asList(new Object[maxSize]);
+	                    		if (!DataTypeManager.isHashable(setState.valueExpression.getType())) {
+	                        		set = new TreeSet<Object>(Constant.COMPARATOR);
+	                    		} else {
+	                    			set = new HashSet<Object>();
+	                    		}
+	                    		int i = 0;
+		                    	while (vi.hasNext()) {
+	    	                		Object next = vi.next();
+	    	                		if (next == null) {
+	    	                			continue;
+	    	                		}
+	        	            		if (set.add(next)) {
+	            	        			distinctCount++;
+	                	    		}
+	        	            		Object old = buffer.set(i++%maxSize, next);
+	        	            		if (set.size() > maxSize) {
+	        	            			set.remove(old);
+	        	            		}
+	                    		}
+	                    	}
                     	}
                     	if (!setState.overMax && distinctCount > setState.maxNdv) {
                     		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30011, valueSource, setState.valueExpression, setState.maxNdv));
