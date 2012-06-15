@@ -27,6 +27,8 @@ import java.util.Map;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.Criteria;
 
@@ -91,8 +93,13 @@ public class RecurseProgramCondition extends CriteriaCondition {
             terminate = env.getProgramRecursionCount(this.getThenProgram()) >= this.recursionLimit;
 
             //handle the case of exception on recursion limit reached
-            if (terminate && this.exceptionOnRecursionLimit){
-                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30212, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30212));
+            if (terminate){
+            	if (this.exceptionOnRecursionLimit) {
+            		throw new TeiidComponentException(QueryPlugin.Event.TEIID30212, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30212));
+            	}
+            	//TODO: if record, then add a log/warning
+        		//env.getProcessorContext().addWarning(new TeiidException(QueryPlugin.Event.TEIID31104, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31104, recursionLimit)));
+            	LogManager.logDetail(LogConstants.CTX_XML_PLAN, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31104, recursionLimit));
             }
         }
 

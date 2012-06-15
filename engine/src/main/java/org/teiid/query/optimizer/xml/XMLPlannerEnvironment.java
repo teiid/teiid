@@ -35,8 +35,6 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.processor.xml.Program;
-import org.teiid.query.processor.xml.XMLProcessorEnvironment;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Symbol;
@@ -110,14 +108,6 @@ public final class XMLPlannerEnvironment{
         this.metadata = qmi;
     }
 
-    XMLProcessorEnvironment createProcessorEnvironment(Program mainProgram) {
-        XMLProcessorEnvironment processorEnv = new XMLProcessorEnvironment(mainProgram);
-        
-        processorEnv.setDocumentGroup(documentGroup);
-        return processorEnv;
-    }
-      
-        
     TempMetadataAdapter getGlobalMetadata() {
         return new TempMetadataAdapter(metadata, this.globalTempMetadata, this.stagingTableMap, this.queryNodeMap);
     }

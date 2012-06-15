@@ -226,7 +226,7 @@ public class QueryProcessor implements BatchProducer {
     }
 
     public List<Exception> getAndClearWarnings() {
-        return this.processPlan.getAndClearWarnings();
+        return this.context.getAndClearWarnings();
     }
     
     /** 

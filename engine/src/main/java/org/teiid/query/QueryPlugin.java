@@ -524,5 +524,7 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31101, 
     	TEIID31102, 
     	TEIID31103, 
+    	TEIID31104, //recursion limit hit
+    	TEIID31105, //warning
 	}
 }

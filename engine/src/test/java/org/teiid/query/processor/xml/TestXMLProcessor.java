@@ -5719,10 +5719,9 @@ public class TestXMLProcessor {
      * termination criteria - should the chunk of document that meets the 
      * criteria be included or not?  In this test below, it is expected to
      * be included, but is not included in actual results due to recent
-     * changes for Booz Allen POC.  I could see it going either way.
+     * changes.  I could see it going either way.
      *  
-     * sbale 4/27/05 I have changed expected results as a result of changes for
-     * Booz Allen POC.  Previously, the recursive fragment of the document that
+     * sbale 4/27/05 Previously, the recursive fragment of the document that
      * satisfied the recursion termination criteria was included, now it is not.
      * See commented out section below for previous expected results. 
      * @throws Exception
@@ -5905,8 +5904,7 @@ public class TestXMLProcessor {
     }
 
     /**
-     * sbale 4/27/05 I have changed expected results as a result of changes for
-     * Booz Allen POC.  Previously, the recursive fragment of the document that
+     * sbale 4/27/05.  Previously, the recursive fragment of the document that
      * satisfied the recursion termination criteria was included, now it is not.
      * See commented out section below for previous expected results. 
      * @throws Exception

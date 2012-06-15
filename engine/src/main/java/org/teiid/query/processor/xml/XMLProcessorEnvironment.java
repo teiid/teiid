@@ -65,8 +65,9 @@ public class XMLProcessorEnvironment {
     protected XMLProcessorEnvironment(){
     }
     
-    public XMLProcessorEnvironment(Program mainProgram){
+    public XMLProcessorEnvironment(Program mainProgram, GroupSymbol docGroup){
         pushProgram(mainProgram);
+        this.documentGroup = docGroup;
     }
     
     /**
@@ -262,7 +263,7 @@ public class XMLProcessorEnvironment {
         return this.commandContext;
     }
     
-    public Object clone() {
+    public XMLProcessorEnvironment clone() {
         XMLProcessorEnvironment clone = new XMLProcessorEnvironment();
         copyIntoClone(clone);
         return clone;
@@ -288,11 +289,6 @@ public class XMLProcessorEnvironment {
         return this.documentGroup;
     }
 
-    public void setDocumentGroup(GroupSymbol documentGroup) {
-        this.documentGroup = documentGroup;
-    }
-    
-    
     boolean isStagingTableLoaded(String tableName) {
         return this.loadedStagingTables.contains(tableName);
     }

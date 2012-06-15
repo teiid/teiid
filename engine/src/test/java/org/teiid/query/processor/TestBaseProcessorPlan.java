@@ -22,28 +22,28 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
+
 import java.util.Collections;
 import java.util.List;
 
+import org.junit.Test;
 import org.teiid.core.TeiidException;
+import org.teiid.query.util.CommandContext;
 
-import junit.framework.TestCase;
 
+public class TestBaseProcessorPlan {
 
-public class TestBaseProcessorPlan extends TestCase {
-
-    public TestBaseProcessorPlan(String name) {
-        super(name);
-    }
-
-    public void testGetAndClearWarnings() {        
+    @Test public void testGetAndClearWarnings() {        
         FakeProcessorPlan plan = new FakeProcessorPlan(Collections.emptyList(), Collections.emptyList());
+        CommandContext cc = new CommandContext();
+        plan.initialize(cc, null, null);
         TeiidException warning = new TeiidException("test"); //$NON-NLS-1$
         plan.addWarning(warning);
         
-        List warnings = plan.getAndClearWarnings();
+        List<Exception> warnings = cc.getAndClearWarnings();
         assertEquals("Did not get expected number of warnings", 1, warnings.size()); //$NON-NLS-1$
         assertEquals("Did not get expected warning", warning, warnings.get(0)); //$NON-NLS-1$
-        assertNull("Did not clear warnings from plan", plan.getAndClearWarnings());         //$NON-NLS-1$
+        assertNull("Did not clear warnings from plan", cc.getAndClearWarnings());         //$NON-NLS-1$
     }
 }

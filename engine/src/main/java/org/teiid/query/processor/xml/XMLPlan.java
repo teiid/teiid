@@ -123,8 +123,8 @@ public class XMLPlan extends ProcessorPlan {
         super.reset();
         
         nextBatchCount = 1;
-        
-        this.env = (XMLProcessorEnvironment)this.env.clone();
+        this.context = new XMLContext();
+        this.env = this.env.clone();
         
 		LogManager.logTrace(LogConstants.CTX_XML_PLAN, "XMLPlan reset"); //$NON-NLS-1$
     }
@@ -213,9 +213,7 @@ public class XMLPlan extends ProcessorPlan {
     }
     
     /**
-     * Validate the document against the Apache Xerces parser
-     * The constants in the code are specific to the Apache Xerces parser and must be used
-     * Known limitiation is when it is attempted to validate against multiple schemas
+     * Validate the document against 
      * @param xmlDoc
      * @throws TeiidComponentException if the document cannot be validated against the schema
      *
@@ -282,9 +280,9 @@ public class XMLPlan extends ProcessorPlan {
 
 		// determine if we have any warnings, errors, or fatal errors and report as necessary
 		if (errorHandler.hasExceptions()) {
-		    List exceptionList = errorHandler.getExceptionList();
-		    for (Iterator i = exceptionList.iterator(); i.hasNext();) {
-                addWarning((TeiidException)i.next());                
+		    List<TeiidException> exceptionList = errorHandler.getExceptionList();
+		    for (Iterator<TeiidException> i = exceptionList.iterator(); i.hasNext();) {
+                addWarning(i.next());                
             }		    
 		}
     }
@@ -455,7 +453,7 @@ public class XMLPlan extends ProcessorPlan {
  	 * meaning the plan has finished processing.
  	 */
 	public XMLPlan clone(){
-        XMLPlan xmlPlan = new XMLPlan((XMLProcessorEnvironment)this.env.clone());
+        XMLPlan xmlPlan = new XMLPlan(this.env.clone());
         xmlPlan.xmlSchemas = this.xmlSchemas;
         return xmlPlan;
     }

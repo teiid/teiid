@@ -29,11 +29,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -77,17 +75,6 @@ public class FakeProcessorPlan extends ProcessorPlan {
      */
     public FakeProcessorPlan clone() {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * @see org.teiid.query.processor.ProcessorPlan#initialize(org.teiid.query.processor.ProcessorDataManager, java.lang.Object, org.teiid.common.buffer.BufferManager, java.lang.String, int)
-     */
-    public void initialize(
-        CommandContext context,
-        ProcessorDataManager dataMgr,
-        BufferManager bufferMgr) {
-            
-        // nothing
     }
 
     /**

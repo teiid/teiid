@@ -132,7 +132,7 @@ public final class XMLPlanner implements CommandPlanner{
         Program programPlan = XMLPlanToProcessVisitor.planProgram(planEnv.mappingDoc, planEnv);
         
         // create plan from program and initialized environment
-        XMLProcessorEnvironment env = planEnv.createProcessorEnvironment(programPlan);    
+        XMLProcessorEnvironment env = new XMLProcessorEnvironment(programPlan, planEnv.documentGroup);
         XMLPlan plan = new XMLPlan(env);
     	plan.setXMLSchemas(metadata.getXMLSchemas(group.getMetadataID()));
         if(debug) {

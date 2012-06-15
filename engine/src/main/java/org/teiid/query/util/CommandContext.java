@@ -25,15 +25,7 @@ package org.teiid.query.util;
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
@@ -47,6 +39,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
@@ -151,6 +144,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private LRUCache<String, SimpleDateFormat> dateFormatCache;
 		private AtomicLong reuseCount = new AtomicLong();
 		private ClassLoader classLoader;
+		
+	    private List<Exception> warnings = null;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -766,4 +761,29 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public void setVDBClassLoader(ClassLoader classLoader) {
 		this.globalState.classLoader = classLoader;
 	}
+	
+    /**
+     * Get all warnings found while processing this plan.  These warnings may
+     * be detected throughout the plan lifetime, which means new ones may arrive
+     * at any time.  This method returns all current warnings and clears 
+     * the current warnings list.  The warnings are in order they were detected.
+     * @return Current list of warnings, never null
+     */
+    public List<Exception> getAndClearWarnings() {
+        if (globalState.warnings == null) {
+            return null;
+        }
+        List<Exception> copied = globalState.warnings;
+        globalState.warnings = null;
+        return copied;
+    }
+    
+    public void addWarning(TeiidException warning) {
+        if (globalState.warnings == null) {
+        	globalState.warnings = new ArrayList<Exception>(1);
+        }
+        LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
+        globalState.warnings.add(warning);
+    }
+
 }

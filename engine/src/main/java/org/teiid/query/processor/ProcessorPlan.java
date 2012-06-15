@@ -24,7 +24,6 @@ package org.teiid.query.processor;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
@@ -55,8 +54,6 @@ import org.teiid.query.util.CommandContext;
  */
 public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 	
-    private List<Exception> warnings = null;
-    
     private CommandContext context;
 
 	/**
@@ -69,36 +66,20 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
 	 * @param dataMgr Data manager reference
      * @param bufferMgr Buffer manager reference
 	 */
-	public abstract void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr);
+	public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
+		this.context = context;
+	}
 	
-    /**
-     * Get all warnings found while processing this plan.  These warnings may
-     * be detected throughout the plan lifetime, which means new ones may arrive
-     * at any time.  This method returns all current warnings and clears 
-     * the current warnings list.  The warnings are in order they were detected.
-     * @return Current list of warnings, never null
-     */
-    public List<Exception> getAndClearWarnings() {
-        if (warnings == null) {
-            return null;
-        }
-        List<Exception> copied = warnings;
-        warnings = null;
-        return copied;
-    }
-    
-    protected void addWarning(TeiidException warning) {
-        if (warnings == null) {
-            warnings = new ArrayList<Exception>(1);
-        }
-        warnings.add(warning);
-    }
-
+	public void addWarning(TeiidException warning) {
+		if (context != null) {
+			context.addWarning(warning);
+		}
+	}
+	
     /**
      * Reset a plan so that it can be processed again.
      */
     public void reset() {
-    	this.warnings = null;
     }
     
     /**
