@@ -713,7 +713,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             if (info != null && info.isInherentUpdate()) {
             	Set<ElementSymbol> updateCols = update.getChangeList().getClauseMap().keySet();
             	if (!info.hasValidUpdateMapping(updateCols)) {
-            		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.nonUpdatable", updateCols), update); //$NON-NLS-1$
+            		handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30376, updateCols), update);
             	}
             }
         } catch(TeiidException e) {
