@@ -49,8 +49,6 @@ import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -59,15 +57,17 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.RuntimeVDB;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
 import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -84,14 +84,17 @@ import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-class VDBService implements Service<VDBMetaData> {
+class VDBService implements Service<RuntimeVDB> {
 	private VDBMetaData vdb;
+	private RuntimeVDB runtimeVDB;
 	protected final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	protected final InjectedValue<TranslatorRepository> translatorRepositoryInjector = new InjectedValue<TranslatorRepository>();
 	protected final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	protected final InjectedValue<ObjectSerializer> serializerInjector = new InjectedValue<ObjectSerializer>();
 	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
+	protected final InjectedValue<VDBStatusChecker> vdbStatusCheckInjector = new InjectedValue<VDBStatusChecker>();
+	
 	private VDBLifeCycleListener vdbListener;
 	private LinkedHashMap<String, Resource> visibilityMap;
 	
@@ -101,7 +104,7 @@ class VDBService implements Service<VDBMetaData> {
 	}
 	
 	@Override
-	public void start(StartContext context) throws StartException {
+	public void start(final StartContext context) throws StartException {
 		
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		TranslatorRepository repo = new TranslatorRepository();
@@ -189,6 +192,30 @@ class VDBService implements Service<VDBMetaData> {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " skipped being loaded because of its type ", model.getModelType()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
 			}
 		}
+		
+		this.runtimeVDB = buildRuntimeVDB(this.vdb);		
+	}
+
+	private RuntimeVDB buildRuntimeVDB(VDBMetaData vdbMetadata) {
+		RuntimeVDB.VDBModificationListener modificationListener = new RuntimeVDB.VDBModificationListener() {
+			@Override
+			public void dataRoleChanged(String policyName) throws AdminProcessingException {
+				save();
+			}
+			@Override
+			public void connectionTypeChanged() throws AdminProcessingException {
+				save();
+			}
+			@Override
+			public void dataSourceChanged(String modelName, String sourceName,String translatorName, String dsName) throws AdminProcessingException {
+				save();
+			}
+		};
+		return new RuntimeVDB(vdbMetadata, modificationListener) {
+			protected VDBStatusChecker getVDBStatusChecker() {
+				return VDBService.this.vdbStatusCheckInjector.getValue();
+			}
+		};
 	}
 
 	private ServiceBuilder<Void> addVDBFinishedService(StartContext context) {
@@ -237,8 +264,8 @@ class VDBService implements Service<VDBMetaData> {
 	}
 
 	@Override
-	public VDBMetaData getValue() throws IllegalStateException,IllegalArgumentException {
-		return this.vdb;
+	public RuntimeVDB getValue() throws IllegalStateException,IllegalArgumentException {
+		return this.runtimeVDB;
 	}
 	
 	private void createConnectorManagers(ConnectorManagerRepository cmr, final TranslatorRepository repo, final VDBMetaData deployment) throws StartException {
@@ -440,74 +467,14 @@ class VDBService implements Service<VDBMetaData> {
 		return bufferManagerInjector.getValue();
 	}
 	
-	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException{
-		DataPolicyMetadata policy = getPolicy(vdb, policyName);		
-		
-		policy.addMappedRoleName(mappedRole);
-		save();
-	}
-	
-	public void remoteDataRole(String policyName, String mappedRole) throws AdminProcessingException{
-		DataPolicyMetadata policy = getPolicy(vdb, policyName);
-		
-		policy.removeMappedRoleName(mappedRole);
-		save();
-	}	
-	
-	public void addAnyAuthenticated(String policyName) throws AdminProcessingException{
-		DataPolicyMetadata policy = getPolicy(vdb, policyName);		
-		
-		policy.setAnyAuthenticated(true);
-		save();
-	}	
-	
-	public void removeAnyAuthenticated(String policyName) throws AdminProcessingException{
-		DataPolicyMetadata policy = getPolicy(vdb, policyName);
-		
-		policy.setAnyAuthenticated(false);
-		save();
-	}		
-	
-	public void changeConnectionType(ConnectionType type) throws AdminProcessingException {
-		this.vdb.setConnectionType(type);
-		save();
-	}
-	
-	public void assignDatasource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
-		ModelMetaData model = this.vdb.getModel(modelName);
-		
-		if (model == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50062, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50062, modelName, this.vdb.getName(), this.vdb.getVersion()));
-		}
-		
-		SourceMappingMetadata source = model.getSourceMapping(sourceName);
-		if(source == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50063, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50063, sourceName, modelName, this.vdb.getName(), this.vdb.getVersion()));
-		}
-		source.setTranslatorName(translatorName);
-		source.setConnectionJndiName(dsName);
-		save();
-	}
-	
-	private void save() throws AdminProcessingException{
+	private void save() throws AdminProcessingException {
 		try {
 			ObjectSerializer os = getSerializer();
 			VDBMetadataParser.marshell(this.vdb, os.getVdbXmlOutputStream(this.vdb));
 		} catch (IOException e) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50064, e);
+			throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50064, e);
 		} catch (XMLStreamException e) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50065, e);
+			throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50065, e);
 		}
 	}
-	
-	static DataPolicyMetadata getPolicy(VDBMetaData vdb, String policyName)
-			throws AdminProcessingException {
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
-		}
-		return policy;
-	}
-
 }

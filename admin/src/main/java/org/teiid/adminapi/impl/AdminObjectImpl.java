@@ -24,10 +24,8 @@ package org.teiid.adminapi.impl;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
 
 import org.teiid.adminapi.AdminObject;
 
@@ -40,15 +38,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	private String serverName;
 	private String hostName;
 		
-	private ListOverMap<PropertyMetadata> properties = new ListOverMap<PropertyMetadata>(new KeyBuilder<PropertyMetadata>() {
-		private static final long serialVersionUID = 3687928367250819142L;
-
-		@Override
-		public String getKey(PropertyMetadata entry) {
-			return entry.getName();
-		}
-	});
-	
+	private Properties properties = new Properties();	
 	private transient Map<String, Object> attachments = Collections.synchronizedMap(new HashMap<String, Object>());
 		
 	@Override
@@ -87,8 +77,8 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	@Override
 	public Properties getProperties() {
 		Properties props = new Properties();
-		for (PropertyMetadata p:this.properties.getMap().values()) {
-			props.setProperty(p.getName(), p.getValue());
+		for (String key:this.properties.stringPropertyNames()) {
+			props.setProperty(key, this.properties.getProperty(key));
 		}
 		return props;
 	}
@@ -102,110 +92,93 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 		}
 	}	
 	
-	public List<PropertyMetadata> getJAXBProperties(){
-		return properties;
-	}
-	
-	public void setJAXBProperties(List<PropertyMetadata> props){
-		this.properties.clear();
-		if (props != null) {			
-			for (PropertyMetadata prop:props) {
-				addProperty(prop.getName(), prop.getValue());
-			}
-		}
-	}	
-	
 	@Override
 	public String getPropertyValue(String name) {
-		PropertyMetadata prop = this.properties.getMap().get(name);
-		if (prop == null) {
-			return null;
-		}
-		return prop.getValue();
+		return this.properties.getProperty(name);
 	}
 
 	public void addProperty(String key, String value) {
-		this.properties.getMap().put(key, new PropertyMetadata(key, value));
+		this.properties.setProperty(key, value);
 	}
 	
-	   /**
-	    * Add attachment
-	    *
-	    * @param <T> the expected type
-	    * @param attachment the attachment
-	    * @param type the type
-	    * @return any previous attachment
-	    * @throws IllegalArgumentException for a null name, attachment or type
-	    * @throws UnsupportedOperationException when not supported by the implementation
-	    */	
-		public <T> T addAttchment(Class<T> type, T attachment) {
-	      if (type == null)
+   /**
+    * Add attachment
+    *
+    * @param <T> the expected type
+    * @param attachment the attachment
+    * @param type the type
+    * @return any previous attachment
+    * @throws IllegalArgumentException for a null name, attachment or type
+    * @throws UnsupportedOperationException when not supported by the implementation
+    */	
+	public <T> T addAttchment(Class<T> type, T attachment) {
+      if (type == null)
+          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+      Object result = this.attachments.put(type.getName(), attachment);
+      if (result == null)
+         return null;
+      return type.cast(result);
+      
+	}
+	
+	public Object addAttchment(String key, Object attachment) {
+	      if (key == null)
 	          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-	      Object result = this.attachments.put(type.getName(), attachment);
+	      Object result = this.attachments.put(key, attachment);
 	      if (result == null)
 	         return null;
-	      return type.cast(result);
-	      
-		}
-		
-		public Object addAttchment(String key, Object attachment) {
-		      if (key == null)
-		          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-		      Object result = this.attachments.put(key, attachment);
-		      if (result == null)
-		         return null;
-		      return result;
-		}		
-		
-	   /**
-	    * Remove attachment
-	    * 
-	    * @param <T> the expected type
-	    * @return the attachment or null if not present
-	    * @param type the type
-	    * @throws IllegalArgumentException for a null name or type
-	    */	
-		public <T> T removeAttachment(Class<T> type) {
-			if (type == null)
-				throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-			Object result = this.attachments.remove(type.getName());
-			if (result == null)
-				return null;
-			return type.cast(result);
-		}
-		
-		public Object removeAttachment(String key) {
-			if (key == null)
-				throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-			Object result = this.attachments.remove(key);
-			if (result == null)
-				return null;
-			return result;
-		}		
-	   /**
-	    * Get attachment
-	    * 
-	    * @param <T> the expected type
-	    * @param type the type
-	    * @return the attachment or null if not present
-	    * @throws IllegalArgumentException for a null name or type
-	    */
-	   public <T> T getAttachment(Class<T> type) {
-	      if (type == null)
+	      return result;
+	}		
+	
+   /**
+    * Remove attachment
+    * 
+    * @param <T> the expected type
+    * @return the attachment or null if not present
+    * @param type the type
+    * @throws IllegalArgumentException for a null name or type
+    */	
+	public <T> T removeAttachment(Class<T> type) {
+		if (type == null)
+			throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+		Object result = this.attachments.remove(type.getName());
+		if (result == null)
+			return null;
+		return type.cast(result);
+	}
+	
+	public Object removeAttachment(String key) {
+		if (key == null)
+			throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+		Object result = this.attachments.remove(key);
+		if (result == null)
+			return null;
+		return result;
+	}		
+   /**
+    * Get attachment
+    * 
+    * @param <T> the expected type
+    * @param type the type
+    * @return the attachment or null if not present
+    * @throws IllegalArgumentException for a null name or type
+    */
+   public <T> T getAttachment(Class<T> type) {
+      if (type == null)
+          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+      Object result = this.attachments.get(type.getName());
+      if (result == null)
+         return null;
+      return type.cast(result);      
+   }	
+   
+   public Object getAttachment(String key) {
+	      if (key == null)
 	          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-	      Object result = this.attachments.get(type.getName());
+	      Object result = this.attachments.get(key);
 	      if (result == null)
 	         return null;
-	      return type.cast(result);      
-	   }	
-	   
-	   public Object getAttachment(String key) {
-		      if (key == null)
-		          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-		      Object result = this.attachments.get(key);
-		      if (result == null)
-		         return null;
-		      return result;  
-	   }		
+	      return result;  
+   }		
 	   	   
 }

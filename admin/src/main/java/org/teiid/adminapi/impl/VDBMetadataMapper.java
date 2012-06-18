@@ -23,6 +23,7 @@ package org.teiid.adminapi.impl;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -68,11 +69,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		node.get(DYNAMIC).set(vdb.isDynamic());
 		
 		//PROPERTIES
-		List<PropertyMetadata> properties = vdb.getJAXBProperties();
+		Properties properties = vdb.getProperties();
 		if (properties!= null && !properties.isEmpty()) {
-			ModelNode propsNode = node.get(PROPERTIES); 
-			for (PropertyMetadata prop:properties) {
-				propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop, new ModelNode()));
+			ModelNode propsNode = node.get(PROPERTIES);
+			for (String key:properties.stringPropertyNames()) {
+				propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
 			}
 		}
 		
@@ -144,9 +145,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (node.get(PROPERTIES).isDefined()) {
 			List<ModelNode> propNodes = node.get(PROPERTIES).asList();
 			for (ModelNode propNode:propNodes) {
-				PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
+				String[] prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 				if (prop != null) {
-					vdb.addProperty(prop.getName(), prop.getValue());
+					vdb.addProperty(prop[0], prop[1]);
 				}
 			}
 		}
@@ -282,11 +283,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				node.get(MODELPATH).set(model.getPath());
 			}
 
-			List<PropertyMetadata> properties = model.getJAXBProperties();
+			Properties properties = model.getProperties();
 			if (properties!= null && !properties.isEmpty()) {
 				ModelNode propsNode = node.get(PROPERTIES); 
-				for (PropertyMetadata prop:properties) {
-					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop,  new ModelNode()));
+				for (String key:properties.stringPropertyNames()) {
+					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
 				}
 			}
 			
@@ -339,9 +340,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.get(PROPERTIES).isDefined()) {
 				List<ModelNode> propNodes = node.get(PROPERTIES).asList();
 				for (ModelNode propNode:propNodes) {
-					PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
+					String[] prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 					if (prop != null) {
-						model.addProperty(prop.getName(), prop.getValue());
+						model.addProperty(prop[0], prop[1]);
 					}
 				}
 			}
@@ -582,11 +583,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				node.get(MODULE_NAME).set(translator.getModuleName());
 			}
 
-			List<PropertyMetadata> properties = translator.getJAXBProperties();
+			Properties properties = translator.getProperties();
 			if (properties!= null && !properties.isEmpty()) {
 				ModelNode propsNode = node.get(PROPERTIES); 
-				for (PropertyMetadata prop:properties) {
-					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(prop, new ModelNode()));
+				for (String key:properties.stringPropertyNames()) {
+					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
 				}
 			}
 			wrapDomain(translator, node);
@@ -614,9 +615,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.get(PROPERTIES).isDefined()) {
 				List<ModelNode> propNodes = node.get(PROPERTIES).asList();
 				for (ModelNode propNode:propNodes) {
-					PropertyMetadata prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
+					String[] prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
 					if (prop != null) {
-						translator.addProperty(prop.getName(), prop.getValue());
+						translator.addProperty(prop[0], prop[1]);
 					}
 				}
 			}
@@ -638,38 +639,35 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}		
 	}	
 	
+	
 	/**
 	 * Property Metadata mapper
 	 */
-	public static class PropertyMetaDataMapper implements MetadataMapper<PropertyMetadata>{
+	public static class PropertyMetaDataMapper {
 		private static final String PROPERTY_NAME = "property-name"; //$NON-NLS-1$
 		private static final String PROPERTY_VALUE = "property-value"; //$NON-NLS-1$
 		
 		public static PropertyMetaDataMapper INSTANCE = new PropertyMetaDataMapper();
 		
-		public ModelNode wrap(PropertyMetadata property, ModelNode node) {
-			if (property == null) {
-				return null;
-			}			
-			
-			node.get(PROPERTY_NAME).set(property.getName());
-			node.get(PROPERTY_VALUE).set(property.getValue());
-			
+		public ModelNode wrap(String key, String value, ModelNode node) {
+			node.get(PROPERTY_NAME).set(key);
+			node.get(PROPERTY_VALUE).set(value);
 			return node;
 		}
 		
-		public PropertyMetadata unwrap(ModelNode node) {
+		public String[] unwrap(ModelNode node) {
 			if(node == null) {
 				return null;
 			}
-			PropertyMetadata property = new PropertyMetadata();
+			String key = null;
+			String value = null;
 			if (node.has(PROPERTY_NAME)) {
-				property.setName(node.get(PROPERTY_NAME).asString());
+				key = node.get(PROPERTY_NAME).asString();
 			}
 			if(node.has(PROPERTY_VALUE)) {
-				property.setValue(node.get(PROPERTY_VALUE).asString());
+				value = node.get(PROPERTY_VALUE).asString();
 			}
-			return property;
+			return new String[] {key, value};
 		}
 		
 		public ModelNode describe(ModelNode node) {
@@ -688,12 +686,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String MAPPED_ROLE_NAMES = "mapped-role-names"; //$NON-NLS-1$
 		private static final String ALLOW_CREATE_TEMP_TABLES = "allow-create-temp-tables"; //$NON-NLS-1$
 		private static final String ANY_AUTHENTICATED = "any-authenticated"; //$NON-NLS-1$
-		private static final String ALLOW_CREATE = "allow-create"; //$NON-NLS-1$
-		private static final String ALLOW_READ = "allow-read"; //$NON-NLS-1$
-		private static final String ALLOW_UPDATE = "allow-update"; //$NON-NLS-1$
-		private static final String ALLOW_DELETE = "allow-delete"; //$NON-NLS-1$
-		private static final String ALLOW_EXECUTE = "allow-execute"; //$NON-NLS-1$
-		private static final String ALLOW_ALTER= "allow-alter"; //$NON-NLS-1$
 		private static final String POLICY_DESCRIPTION = "policy-description"; //$NON-NLS-1$
 		
 		public static DataPolicyMetadataMapper INSTANCE = new DataPolicyMetadataMapper();

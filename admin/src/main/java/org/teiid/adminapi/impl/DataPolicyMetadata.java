@@ -37,13 +37,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	protected boolean anyAuthenticated;
 	protected Boolean allowCreateTemporaryTables;
 
-    protected PermissionMap permissions = new PermissionMap(new KeyBuilder<PermissionMetaData>() {
-		private static final long serialVersionUID = -6992984146431492449L;
-		@Override
-		public String getKey(PermissionMetaData entry) {
-			return entry.getResourceName().toLowerCase();
-		}
-	});
+    protected PermissionMap permissions = new PermissionMap();
     
     protected List<String> mappedRoleNames = new ArrayList<String>();
 
@@ -67,19 +61,19 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
 	@Override
 	public List<DataPermission> getPermissions() {
-		return new ArrayList<DataPermission>(this.permissions.getMap().values());
+		return new ArrayList<DataPermission>(this.permissions.values());
 	}
 	
 	public void setPermissions(List<DataPermission> permissions) {
-		this.permissions.getMap().clear();
+		this.permissions.clear();
 		for (DataPermission permission:permissions) {
-			this.permissions.add((PermissionMetaData)permission);
+			this.permissions.put(permission.getResourceName().toLowerCase(), (PermissionMetaData)permission);
 		}
 	}	
 	
 	public void addPermission(PermissionMetaData... permissions) {
 		for (PermissionMetaData permission:permissions) {
-			this.permissions.add(permission);
+			this.permissions.put(permission.getResourceName().toLowerCase(), permission);
 		}
 	}
 	
@@ -104,7 +98,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	public boolean allows(String resourceName, DataPolicy.PermissionType type) {
 		resourceName = resourceName.toLowerCase();
 		while (resourceName.length() > 0) {
-			PermissionMetaData p = this.permissions.getMap().get(resourceName);
+			PermissionMetaData p = this.permissions.get(resourceName);
 			if (p != null) {
 				Boolean allowed = p.allows(type);
 				if (allowed != null) {

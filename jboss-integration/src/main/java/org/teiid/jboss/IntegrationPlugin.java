@@ -81,13 +81,10 @@ public class IntegrationPlugin {
     	TEIID50047,
     	TEIID50048,
     	TEIID50049,
-    	TEIID50051,
     	TEIID50054,
     	TEIID50055,
     	TEIID50056,
     	TEIID50057,
-    	TEIID50062,
-    	TEIID50063,
     	TEIID50064,
     	TEIID50065,
     	TEIID50066,    	
@@ -101,7 +98,6 @@ public class IntegrationPlugin {
     	TEIID50076,
     	TEIID50077,
     	TEIID50078,
-    	
     	TEIID50086,
     	TEIID50087,
     	TEIID50088

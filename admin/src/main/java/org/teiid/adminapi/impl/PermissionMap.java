@@ -22,19 +22,17 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.util.LinkedHashMap;
+
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 
-public class PermissionMap extends ListOverMap<PermissionMetaData> {
+public class PermissionMap extends LinkedHashMap<String, PermissionMetaData> {
 	
 	private static final long serialVersionUID = -1170556665834875267L;
 
-	public PermissionMap(KeyBuilder<PermissionMetaData> builder) {
-		super(builder);
-	}
-
 	@Override
-	public void add(int index, PermissionMetaData element) {
-		PermissionMetaData previous = this.map.get(builder.getKey(element));
+	public PermissionMetaData put(String key, PermissionMetaData element) {
+		PermissionMetaData previous = get(element.getResourceName().toLowerCase());
 		if (previous != null) {
 			if (element.allowCreate != null) {
 				previous.setAllowCreate(element.allowCreate);
@@ -48,10 +46,8 @@ public class PermissionMap extends ListOverMap<PermissionMetaData> {
 			if (element.allowDelete != null) {
 				previous.setAllowDelete(element.allowDelete);
 			}
+			return previous;
 		}
-		else {
-			super.add(index, element);
-		}
+		return super.put(element.getResourceName().toLowerCase(), element);
 	}
-
 }

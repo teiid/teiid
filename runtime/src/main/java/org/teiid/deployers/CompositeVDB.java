@@ -114,7 +114,7 @@ public class CompositeVDB {
 		newMergedVDB.setDataPolicies(this.vdb.getDataPolicies());
 		newMergedVDB.setDescription(this.vdb.getDescription());
 		newMergedVDB.setStatus(this.vdb.getStatus());
-		newMergedVDB.setJAXBProperties(this.vdb.getJAXBProperties());
+		newMergedVDB.setProperties(this.vdb.getProperties());
 		newMergedVDB.setConnectionType(this.vdb.getConnectionType());
 		ConnectorManagerRepository mergedRepo = new ConnectorManagerRepository();
 		mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());

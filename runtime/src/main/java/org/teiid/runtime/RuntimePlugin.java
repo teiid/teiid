@@ -102,5 +102,8 @@ public class RuntimePlugin {
     	TEIID40087, //pass-through failed
     	TEIID40088, //event distributor replication failed
     	TEIID40089, //txn disabled
+    	TEIID40090,
+    	TEIID40091,
+    	TEIID40092
     }
 }

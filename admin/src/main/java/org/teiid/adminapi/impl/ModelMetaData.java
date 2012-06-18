@@ -25,6 +25,7 @@ package org.teiid.adminapi.impl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -38,15 +39,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "supports-multi-source-bindings"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
-	protected ListOverMap<SourceMappingMetadata> sources = new ListOverMap<SourceMappingMetadata>(new KeyBuilder<SourceMappingMetadata>() {
-		private static final long serialVersionUID = 2273673984691112369L;
-
-		@Override
-		public String getKey(SourceMappingMetadata entry) {
-			return entry.getName();
-		}
-	});
-	
+	protected LinkedHashMap<String, SourceMappingMetadata> sources = new LinkedHashMap<String, SourceMappingMetadata>();	
 	protected String modelType = Type.PHYSICAL.name();
 	protected String description;	
 	protected String path; 
@@ -107,11 +100,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return Boolean.parseBoolean(supports);
     }    
 	
-	@Override
-	public List<PropertyMetadata> getJAXBProperties(){
-		return super.getJAXBProperties();
-	}
-	
     public void setSupportsMultiSourceBindings(boolean supports) {
         addProperty(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY, Boolean.toString(supports));
     }
@@ -137,15 +125,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     }    
 
 	public List<SourceMappingMetadata> getSourceMappings(){
-		return new ArrayList<SourceMappingMetadata>(this.sources.getMap().values());
+		return new ArrayList<SourceMappingMetadata>(this.sources.values());
 	}
 	
 	public SourceMappingMetadata getSourceMapping(String sourceName){
-		return this.sources.getMap().get(sourceName);
+		return this.sources.get(sourceName);
 	}	
     
 	public void setSourceMappings(List<SourceMappingMetadata> sources){
-		this.sources.getMap().clear();
+		this.sources.clear();
 		for (SourceMappingMetadata source: sources) {
 			addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 		}
@@ -153,12 +141,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     
     @Override
     public List<String> getSourceNames() {
-    	return new ArrayList<String>(this.sources.getMap().keySet());
+    	return new ArrayList<String>(this.sources.keySet());
 	}
     
     @Override
     public String getSourceConnectionJndiName(String sourceName) {
-    	SourceMappingMetadata s = this.sources.getMap().get(sourceName);
+    	SourceMappingMetadata s = this.sources.get(sourceName);
     	if (s == null) {
     		return null;
     	}
@@ -167,7 +155,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     
     @Override
     public String getSourceTranslatorName(String sourceName) {
-    	SourceMappingMetadata s = this.sources.getMap().get(sourceName);
+    	SourceMappingMetadata s = this.sources.get(sourceName);
     	if (s == null) {
     		return null;
     	}
@@ -175,7 +163,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}    
     
 	public SourceMappingMetadata addSourceMapping(String name, String translatorName, String connJndiName) {
-		return this.sources.getMap().put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
+		return this.sources.put(name, new SourceMappingMetadata(name, translatorName, connJndiName));
 	}
 	
 	public void addSourceMapping(SourceMappingMetadata source) {

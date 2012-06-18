@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,43 +43,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 
 	private static final long serialVersionUID = -4723595252013356436L;
 	
-	/**
-	 * This simulating a list over a map. JAXB requires a list and performance recommends
-	 * map and we would like to keep one variable to represent both. 
-	 */
-	protected ListOverMap<ModelMetaData> models = new ListOverMap<ModelMetaData>(new KeyBuilder<ModelMetaData>() {
-		private static final long serialVersionUID = 846247100420118961L;
-
-		@Override
-		public String getKey(ModelMetaData entry) {
-			return entry.getName();
-		}
-	});
-	
-	protected ListOverMap<VDBTranslatorMetaData> translators = new ListOverMap<VDBTranslatorMetaData>(new KeyBuilder<VDBTranslatorMetaData>() {
-		private static final long serialVersionUID = 3890502172003653563L;
-
-		@Override
-		public String getKey(VDBTranslatorMetaData entry) {
-			return entry.getName();
-		}
-	});	
-	
-	protected ListOverMap<DataPolicyMetadata> dataPolicies = new ListOverMap<DataPolicyMetadata>(new KeyBuilder<DataPolicyMetadata>() {
-		private static final long serialVersionUID = 4954591545242715254L;
-
-		@Override
-		public String getKey(DataPolicyMetadata entry) {
-			return entry.getName();
-		}
-	});
-	
+	private LinkedHashMap<String, ModelMetaData> models = new LinkedHashMap<String, ModelMetaData>();
+	private LinkedHashMap<String, VDBTranslatorMetaData> translators = new LinkedHashMap<String, VDBTranslatorMetaData>(); 
+	private LinkedHashMap<String, DataPolicyMetadata> dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>(); 
 	private List<VDBImportMetadata> imports = new ArrayList<VDBImportMetadata>(2);
-	
 	private int version = 1;
-	
-	protected String description;
-	
+	private String description;
 	private boolean dynamic = false;
 	private volatile VDB.Status status = VDB.Status.ACTIVE;
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
@@ -134,44 +104,44 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		
 	@Override
 	public List<Model> getModels(){
-		return new ArrayList<Model>(this.models.getMap().values());
+		return new ArrayList<Model>(this.models.values());
 	}
 	
 	public Map<String, ModelMetaData> getModelMetaDatas() {
-		return this.models.getMap();
+		return this.models;
 	}
 	
 	/**
 	 * @param models
 	 */
 	public void setModels(Collection<ModelMetaData> models) {
-		this.models.getMap().clear();
+		this.models.clear();
 		for (ModelMetaData obj : models) {
 			addModel(obj);
 		}
 	}
 	
 	public ModelMetaData addModel(ModelMetaData m) {
-		return this.models.getMap().put(m.getName(), m);
+		return this.models.put(m.getName(), m);
 	}	
 	
 	@Override
 	public List<Translator> getOverrideTranslators() {
-		return new ArrayList<Translator>(this.translators.getMap().values());
+		return new ArrayList<Translator>(this.translators.values());
 	}
 	
 	public void setOverrideTranslators(List<Translator> translators) {
 		for (Translator t: translators) {
-			this.translators.getMap().put(t.getName(), (VDBTranslatorMetaData)t);
+			this.translators.put(t.getName(), (VDBTranslatorMetaData)t);
 		}
 	}
 	
 	public void addOverideTranslator(VDBTranslatorMetaData t) {
-		this.translators.getMap().put(t.getName(), t);
+		this.translators.put(t.getName(), t);
 	}
 	
 	public boolean isOverideTranslator(String name) {
-		return this.translators.getMap().containsKey(name);
+		return this.translators.containsKey(name);
 	}
 	
 	@Override
@@ -186,7 +156,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	@Override
 	public List<String> getValidityErrors(){
 		List<String> allErrors = new ArrayList<String>();
-		for (ModelMetaData model:this.models.getMap().values()) {
+		for (ModelMetaData model:this.models.values()) {
 			List<ValidationError> errors = model.getErrors();
 			if (errors != null && !errors.isEmpty()) {
 				for (ValidationError m:errors) {
@@ -202,7 +172,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	@Override
 	public List<String> getRuntimeErrors(){
 		List<String> allErrors = new ArrayList<String>();
-		for (ModelMetaData model:this.models.getMap().values()) {
+		for (ModelMetaData model:this.models.values()) {
 			List<ValidationError> errors = model.getRuntimeErrors();
 			if (errors != null && !errors.isEmpty()) {
 				for (ValidationError m:errors) {
@@ -226,7 +196,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
         if (getModels().isEmpty()) {
             return false;        	
         }
-    	for(ModelMetaData m: this.models.getMap().values()) {
+    	for(ModelMetaData m: this.models.values()) {
     		if (m.isSource()) {
     			List<String> resourceNames = m.getSourceNames();
     			if (resourceNames.isEmpty()) {
@@ -238,7 +208,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
     } 	
     
 	public String toString() {
-		return getName()+VERSION_DELIM+getVersion()+ models.getMap().values(); 
+		return getName()+VERSION_DELIM+getVersion()+ models.values(); 
 	}
 	
 	public boolean isVisible(String modelName) {
@@ -247,12 +217,12 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 
 	public ModelMetaData getModel(String modelName) {
-		return this.models.getMap().get(modelName);
+		return this.models.get(modelName);
 	}
 	
 	public Set<String> getMultiSourceModelNames(){
 		Set<String> list = new HashSet<String>();
-		for(ModelMetaData m: models.getMap().values()) {
+		for(ModelMetaData m: models.values()) {
 			if (m.isSupportsMultiSourceBindings()) {
 				list.add(m.getName());
 			}
@@ -270,7 +240,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	@Override
 	public List<DataPolicy> getDataPolicies(){
-		return new ArrayList<DataPolicy>(this.dataPolicies.getMap().values());
+		return new ArrayList<DataPolicy>(this.dataPolicies.values());
 	}	
 	
 	/**
@@ -279,22 +249,22 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	 * @param policies
 	 */
 	public void setDataPolicies(List<DataPolicy> policies){
-		this.dataPolicies.getMap().clear();
+		this.dataPolicies.clear();
 		for (DataPolicy policy:policies) {
-			this.dataPolicies.getMap().put(policy.getName(), (DataPolicyMetadata)policy);
+			this.dataPolicies.put(policy.getName(), (DataPolicyMetadata)policy);
 		}
 	}	
 	
 	public DataPolicyMetadata addDataPolicy(DataPolicyMetadata policy){
-		return this.dataPolicies.getMap().put(policy.getName(), policy);
+		return this.dataPolicies.put(policy.getName(), policy);
 	}
 	
 	public DataPolicyMetadata getDataPolicy(String policyName) {
-		return this.dataPolicies.getMap().get(policyName);
+		return this.dataPolicies.get(policyName);
 	}
 	
 	public VDBTranslatorMetaData getTranslator(String name) {
-		return this.translators.getMap().get(name);
+		return this.translators.get(name);
 	}
 	
 	public boolean isPreview() {

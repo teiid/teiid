@@ -21,9 +21,16 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE_TYPE;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -38,8 +45,6 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-
-import javax.xml.stream.XMLStreamException;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
@@ -58,15 +63,24 @@ import org.jboss.msc.service.ServiceName;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.VDB.ConnectionType;
+import org.teiid.adminapi.impl.CacheStatisticsMetadata;
+import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.TransactionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
+import org.teiid.deployers.RuntimeVDB;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
@@ -934,15 +948,14 @@ class GetTranslator extends TranslatorOperationHandler{
 	}	
 }
 
-abstract class VDBOperations extends BaseOperationHandler<VDBMetaData>{
-	private ObjectSerializer serializer;
+abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 	
 	public VDBOperations(String operationName) {
 		super(operationName);
 	}
 	
 	@Override
-	public VDBMetaData getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
+	public RuntimeVDB getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_NAME+MISSING)));
 		}
@@ -954,11 +967,8 @@ abstract class VDBOperations extends BaseOperationHandler<VDBMetaData>{
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 
-		ServiceController<?> osSvc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.OBJECT_SERIALIZER);
-		this.serializer = ObjectSerializer.class.cast(osSvc.getValue());
-		
 		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.vdbServiceName(vdbName, vdbVersion));
-        return VDBMetaData.class.cast(sc.getValue());	
+        return RuntimeVDB.class.cast(sc.getValue());	
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -970,16 +980,6 @@ abstract class VDBOperations extends BaseOperationHandler<VDBMetaData>{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION));
 	}	
-	
-	protected void save(VDBMetaData vdb) throws AdminProcessingException{
-		try {
-			VDBMetadataParser.marshell(vdb, this.serializer.getVdbXmlOutputStream(vdb));
-		} catch (IOException e) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50048, e);
-		} catch (XMLStreamException e) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50049, e);
-		}
-	}	
 }
 
 class AddDataRole extends VDBOperations {
@@ -989,7 +989,7 @@ class AddDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
@@ -1002,10 +1002,7 @@ class AddDataRole extends VDBOperations {
 		String mappedRole = operation.get(OperationsConstants.MAPPED_ROLE).asString();
 		
 		try {
-			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);
-			
-			policy.addMappedRoleName(mappedRole);
-			save(vdb);
+			vdb.addDataRole(policyName, mappedRole);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -1033,7 +1030,7 @@ class RemoveDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
@@ -1046,10 +1043,7 @@ class RemoveDataRole extends VDBOperations {
 		String mappedRole = operation.get(OperationsConstants.MAPPED_ROLE).asString();
 		
 		try {
-			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);		
-			
-			policy.removeMappedRoleName(mappedRole);
-			save(vdb);
+			vdb.remoteDataRole(policyName, mappedRole);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -1077,18 +1071,14 @@ class AddAnyAuthenticatedDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
 
 		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
-		
 		try {
-			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);
-			
-			policy.setAnyAuthenticated(true);
-			save(vdb);
+			vdb.addAnyAuthenticated(policyName);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -1113,18 +1103,14 @@ class RemoveAnyAuthenticatedDataRole extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.DATA_ROLE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DATA_ROLE+MISSING)));
 		}
 
 		String policyName = operation.get(OperationsConstants.DATA_ROLE).asString();
-		
 		try {
-			DataPolicyMetadata policy = VDBService.getPolicy(vdb, policyName);
-			
-			policy.setAnyAuthenticated(false);
-			save(vdb);
+			vdb.removeAnyAuthenticated(policyName);
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -1148,15 +1134,14 @@ class ChangeVDBConnectionType extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.CONNECTION_TYPE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.CONNECTION_TYPE+MISSING)));
 		}
 
 		String connectionType = operation.get(OperationsConstants.CONNECTION_TYPE).asString();
 		try {
-			vdb.setConnectionType(connectionType);
-			save(vdb);
+			vdb.changeConnectionType(ConnectionType.valueOf(connectionType));
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
@@ -1180,7 +1165,7 @@ class AssignDataSource extends VDBOperations {
 	}
 	
 	@Override
-	protected void executeOperation(OperationContext context, VDBMetaData vdb, ModelNode operation) throws OperationFailedException {
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.MODEL_NAME)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.MODEL_NAME+MISSING)));
 		}
@@ -1204,23 +1189,7 @@ class AssignDataSource extends VDBOperations {
 		String dsName = operation.get(OperationsConstants.DS_NAME).asString();
 		
 		try {
-			ModelMetaData model = vdb.getModel(modelName);
-			
-			if (model == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50054, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50054, modelName, vdb.getName(), vdb.getVersion()));
-			}
-			
-			SourceMappingMetadata source = model.getSourceMapping(sourceName);
-			if(source == null) {
-				 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50055, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50055, sourceName, modelName, vdb.getName(), vdb.getVersion()));
-			}
-			source.setTranslatorName(translatorName);
-			source.setConnectionJndiName(dsName);
-			save(vdb);
-			ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
-			VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
-			// enforce the changes in the engine.
-			vsc.dataSourceReplaced(vdb.getName(), vdb.getVersion(), modelName, sourceName, translatorName, dsName);
+			vdb.assignDatasource(modelName, sourceName, translatorName, dsName);			
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}

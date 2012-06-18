@@ -21,8 +21,6 @@
  */
 package org.teiid.adminapi.impl;
 
-import java.util.List;
-
 import org.teiid.adminapi.Translator;
 
 
@@ -49,11 +47,6 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	
 	public void setType(String type) {
 		this.type = type;
-	}	
-	
-	@Override
-	public List<PropertyMetadata> getJAXBProperties(){
-		return super.getJAXBProperties();
 	}	
 	
 	public String toString() {
