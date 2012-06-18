@@ -92,12 +92,6 @@ public interface VDB extends AdminObject, DomainAware {
     public List<String> getValidityErrors();
     
     /**
-     * Shows any validity errors present in the VDB
-     * @return
-     */
-    public List<String> getRuntimeErrors();    
-    
-    /**
      * Shows if VDB is a valid entity
      * @return
      */

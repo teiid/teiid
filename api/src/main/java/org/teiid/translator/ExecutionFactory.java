@@ -47,6 +47,7 @@ import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TypeFacility.RUNTIME_CODES;
+import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
 
 
 
@@ -687,6 +688,14 @@ public class ExecutionFactory<F, C> {
     	return pushdownFunctionMethods;
     }
     
+    /**
+     * Adds a pushdown function.
+     * @param qualifier will be pre-pended to the name
+     * @param name
+     * @param returnType see {@link RUNTIME_NAMES} for type names
+     * @param paramTypes see {@link RUNTIME_NAMES} for type names
+     * @return the FunctionMethod created.
+     */
     protected FunctionMethod addPushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
     	FunctionMethod method = FunctionMethod.createFunctionMethod(qualifier + '.' + name, name, qualifier,
 				returnType, paramTypes);

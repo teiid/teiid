@@ -519,7 +519,7 @@ public class VDBMetadataParser {
 		}
 		
 		// model validation errors
-		for (ValidationError ve:model.getErrors()) {
+		for (ValidationError ve:model.getErrors(false)) {
 			writer.writeStartElement(Element.VALIDATION_ERROR.getLocalName());
 			writer.writeAttribute(Element.VALIDATION_SEVERITY_ATTR.getLocalName(), ve.getSeverity());
 			if (ve.getPath() != null) {

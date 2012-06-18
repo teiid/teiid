@@ -24,7 +24,7 @@ package org.teiid.adminapi.impl;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.teiid.adminapi.DataPolicy;
 
@@ -39,7 +39,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
     protected PermissionMap permissions = new PermissionMap();
     
-    protected List<String> mappedRoleNames = new ArrayList<String>();
+    protected List<String> mappedRoleNames = new CopyOnWriteArrayList<String>();
 
 	@Override
     public String getName() {

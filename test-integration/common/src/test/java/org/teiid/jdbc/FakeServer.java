@@ -105,6 +105,7 @@ public class FakeServer extends EmbeddedServer {
 			config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 			this.transactionService.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
 			this.transactionService.setWorkManager(new FakeWorkManager());
+			detectTransactions = false;
 		}
 		this.repo.odbcEnabled();
 		this.realBufferManager = realBufferMangaer;

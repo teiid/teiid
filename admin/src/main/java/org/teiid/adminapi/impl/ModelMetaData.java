@@ -49,15 +49,6 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     protected String schemaSourceType;
 	protected String schemaText;
 
-	public String getName() {
-		return super.getName();
-	}    
-
-	// This is needed by JAXB
-	public void setName(String name) {
-		super.setName(name);
-	}
-
 	@Override
 	public String getDescription() {
 		return description;
@@ -170,53 +161,39 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		this.addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
 	}    
 	
-	public List<ValidationError> getErrors(){
-		return getValidationErrors(Severity.ERROR);
-	}
+	public synchronized List<ValidationError> getErrors(){
+		return getErrors(true);
+	}	
 	
-	public synchronized List<ValidationError> getValidationErrors(ValidationError.Severity severity){
-		if (this.validationErrors == null) {
+	public synchronized List<ValidationError> getErrors(boolean includeRuntime){
+		if (this.validationErrors == null && this.runtimeErrors == null) {
 			return Collections.emptyList();
 		}
 		List<ValidationError> list = new ArrayList<ValidationError>();
-		for (ValidationError ve: this.validationErrors) {
-			if (Severity.valueOf(ve.severity) == severity) {
-				list.add(ve);
-			}
+		if (this.validationErrors != null) {
+			list.addAll(validationErrors);
+		}
+		if (includeRuntime && this.runtimeErrors != null) {
+			list.addAll(runtimeErrors);
 		}
 		return list;
-	}	
+	}
 	
-    public synchronized ValidationError addError(String severity, String message) {
-        if (this.validationErrors == null) {
-            this.validationErrors = new LinkedList<ValidationError>();
-        }
+    public ValidationError addError(String severity, String message) {
         ValidationError ve = new ValidationError(severity, message);
-        this.validationErrors.add(ve);
-        if (this.validationErrors.size() > DEFAULT_ERROR_HISTORY) {
-        	this.validationErrors.remove(0);
-        }
+        addError(ve);
         return ve;
     }
     
-	public List<ValidationError> getRuntimeErrors(){
-		if (this.runtimeErrors == null) {
-			return Collections.emptyList();
-		}
-		List<ValidationError> list = new ArrayList<ValidationError>();
-		for (ValidationError ve: this.runtimeErrors) {
-			if (Severity.valueOf(ve.severity) == Severity.ERROR) {
-				list.add(ve);
-			}
-		}
-		return list;		
+	public synchronized boolean hasRuntimeErrors(){
+		return this.runtimeErrors != null && !this.runtimeErrors.isEmpty();
 	}    
     
-    public synchronized ValidationError addRuntimeError(String severity, String message) {
+    public synchronized ValidationError addRuntimeError(String message) {
+        ValidationError ve = new ValidationError(Severity.ERROR.name(), message);
         if (this.runtimeErrors == null) {
             this.runtimeErrors = new LinkedList<ValidationError>();
         }
-        ValidationError ve = new ValidationError(severity, message);
         this.runtimeErrors.add(ve);
         if (this.runtimeErrors.size() > DEFAULT_ERROR_HISTORY) {
         	this.runtimeErrors.remove(0);
@@ -229,18 +206,13 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
             this.validationErrors = new LinkedList<ValidationError>();
         }
         this.validationErrors.add(ve);
-        if (this.validationErrors.size() > DEFAULT_ERROR_HISTORY) {
-        	this.validationErrors.remove(0);
-        }
         return ve;
     }
     
-    public synchronized void clearErrors() {
-    	this.validationErrors.clear();
-    }
-    
     public synchronized void clearRuntimeErrors() {
-    	this.runtimeErrors.clear();
+    	if (runtimeErrors != null) {
+    		runtimeErrors = null;
+    	}
     }    
 	
     public static class ValidationError implements Serializable{

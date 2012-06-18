@@ -65,7 +65,6 @@ public class IntegrationPlugin {
     	TEIID50026, // VDB undeployed
     	TEIID50029, // dynamic metadata loaded
     	TEIID50030,
-    	TEIID50032, // duplicate VDB
     	TEIID50035, // translator not found
     	TEIID50036,
     	TEIID50037, // odbc enabled
@@ -85,8 +84,6 @@ public class IntegrationPlugin {
     	TEIID50055,
     	TEIID50056,
     	TEIID50057,
-    	TEIID50064,
-    	TEIID50065,
     	TEIID50066,    	
     	TEIID50067,
     	TEIID50069,
@@ -98,8 +95,6 @@ public class IntegrationPlugin {
     	TEIID50076,
     	TEIID50077,
     	TEIID50078,
-    	TEIID50086,
-    	TEIID50087,
     	TEIID50088
     }
 }

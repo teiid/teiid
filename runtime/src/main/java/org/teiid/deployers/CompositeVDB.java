@@ -78,7 +78,7 @@ public class CompositeVDB {
 		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
 			for (Map.Entry<String, Collection<FunctionMethod>> entry : udf.getFunctions().entrySet()) {
-				udfs.add(new FunctionTree(entry.getKey(), new UDFSource(entry.getValue()), true));
+				udfs.add(new FunctionTree(entry.getKey(), new UDFSource(entry.getValue()), true, udf.getClassLoader()));
 			}
 		}
 		
@@ -87,7 +87,7 @@ public class CompositeVDB {
 			compositeStore.merge(s);
 			for (Schema schema:s.getSchemas().values()) {
 				if (!schema.getFunctions().isEmpty()) {
-					udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
+					udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true, udf.getClassLoader()));
 				}
 			}
 		}

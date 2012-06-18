@@ -42,6 +42,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private MetadataStore systemStore;
 	private ObjectReplicator objectReplicator;
 	private WorkManager workManager;
+	private boolean useDisk = true;
 	
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -98,6 +99,17 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		if (workManager == null) {
 			return super.getTeiidExecutor();
 		}
+		//TODO: if concurrency is 1, then use a direct executor
+		//the only scheduled task right now just restarts a workitem,
+		//so that can be done in the scheduler thread
 		return new WorkManagerTeiidExecutor(workManager);
+	}
+	
+	public boolean isUseDisk() {
+		return useDisk;
+	}
+	
+	public void setUseDisk(boolean useDisk) {
+		this.useDisk = useDisk;
 	}
 }

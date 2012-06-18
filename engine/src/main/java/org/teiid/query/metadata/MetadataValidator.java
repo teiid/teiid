@@ -177,8 +177,8 @@ public class MetadataValidator {
 	}	
 	
 	private static void log(ValidatorReport report, ModelMetaData model, String msg) {
-		model.addError(ModelMetaData.ValidationError.Severity.ERROR.name(), msg);
-		LogManager.logInfo(LogConstants.CTX_QUERY_RESOLVER, msg);
+		model.addRuntimeError(msg);
+		LogManager.logWarning(LogConstants.CTX_QUERY_RESOLVER, msg);
 		report.handleValidationError(msg);
 	}
 	

@@ -284,7 +284,7 @@ public class VDBRepository implements Serializable{
 				valid  = true;					
 			}
 			else {
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
+				LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
 			}
 			
 			// check the data sources available
@@ -314,7 +314,7 @@ public class VDBRepository implements Serializable{
 					if (cm != null) {
 						String msg = cm.getStausMessage();
 						if (msg != null && msg.length() > 0) {
-							model.addRuntimeError(ModelMetaData.ValidationError.Severity.ERROR.name(), cm.getStausMessage());
+							model.addRuntimeError(cm.getStausMessage());
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, cm.getStausMessage());
 						}
 					}					

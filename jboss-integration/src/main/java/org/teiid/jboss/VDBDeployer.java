@@ -23,8 +23,6 @@ package org.teiid.jboss;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ServiceLoader;
-import java.util.StringTokenizer;
 import java.util.concurrent.Executor;
 
 import org.jboss.as.naming.deployment.ContextNames;
@@ -34,24 +32,20 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.Module;
-import org.jboss.modules.ModuleIdentifier;
-import org.jboss.modules.ModuleLoadException;
-import org.jboss.modules.ModuleLoader;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceController.Mode;
-import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
+import org.jboss.msc.service.ServiceController.Mode;
+import org.jboss.msc.service.ServiceController.State;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
@@ -62,12 +56,9 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.metadata.DDLMetadataRepository;
-import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 
 
@@ -122,8 +113,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 					Translator translator = this.translatorRepository.getTranslatorMetaData(translatorName);
 					if ( translator == null) {	
 						String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deployment.getName(), deployment.getVersion());
-						model.addError(ValidationError.Severity.ERROR.name(), msg);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+						model.addRuntimeError(msg);
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, msg);
 					}	
 				}
 			}
@@ -150,17 +141,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			indexRepo = new IndexMetadataRepository(indexFactory);
 			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
-
-		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-			if (model.isSource() && model.getSourceNames().isEmpty()) {
-	    		throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50087, model.getName(), deployment.getName(), deployment.getVersion()));
-	    	}
-			MetadataRepository repo = getMetadataRepository(deployment, model.getName(), indexRepo);
-			model.addAttchment(MetadataRepository.class, repo);
-		}
-
 		// build a VDB service
 		VDBService vdb = new VDBService(deployment, visibilityMap);
+		if (indexRepo != null) {
+			vdb.addMetadataRepository("index", indexRepo); //$NON-NLS-1$
+		}
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		
 		// add dependencies to data-sources
@@ -241,7 +226,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 
 		@Override
 		public void start(StartContext context) throws StartException {
-			ServiceController s = context.getController().getServiceContainer().getService(this.svcName);
+			ServiceController<?> s = context.getController().getServiceContainer().getService(this.svcName);
 			if (s != null) {
 				this.vdbStatusChecker.dataSourceAdded(this.dsName);
 			}
@@ -249,7 +234,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 
 		@Override
 		public void stop(StopContext context) {
-			ServiceController s = context.getController().getServiceContainer().getService(this.svcName);
+			ServiceController<?> s = context.getController().getServiceContainer().getService(this.svcName);
 			if (s.getMode().equals(Mode.REMOVE) || s.getState().equals(State.STOPPING)) {
 				this.vdbStatusChecker.dataSourceRemoved(this.dsName);
 			}
@@ -282,74 +267,4 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}
 	}
 	
-	private MetadataRepository getMetadataRepository(VDBMetaData vdb, String modelName, IndexMetadataRepository indexRepo) throws DeploymentUnitProcessingException {
-		final ModelMetaData model = vdb.getModel(modelName);
-				
-		if (model.getSchemaSourceType() == null) {
-			if (!vdb.isDynamic()) {
-				return indexRepo;
-			}
-			
-			if (vdb.isDynamic() && model.isSource()) {
-				return new NativeMetadataRepository();
-			}
-			return null;
-		}
-		
-		MetadataRepository first = null;
-		MetadataRepository current = null;
-		MetadataRepository previous = null;
-		StringTokenizer st = new StringTokenizer(model.getSchemaSourceType(), ","); //$NON-NLS-1$
-		while (st.hasMoreTokens()) {
-			String repoType = st.nextToken().trim();
-			if (repoType.equalsIgnoreCase("DDL")) { //$NON-NLS-1$
-				current =  new DDLMetadataRepository();
-			}
-			else if (repoType.equalsIgnoreCase("INDEX")) { //$NON-NLS-1$
-				current = indexRepo;
-			}
-			else if (repoType.equalsIgnoreCase("NATIVE")) { //$NON-NLS-1$
-				current = new NativeMetadataRepository();
-			}
-			else {
-				// if the schema type is a module based
-				current = getModuleBasedMetadataRepository(repoType);
-			}			
-		
-			if (current != null) {
-				if (first == null) {
-					first = current;
-				}
-				
-				if (previous != null) {
-					previous.setNext(current);
-				}
-				previous = current;
-				current = null;
-			}
-		}
-		return first;
-	}
-
-	private MetadataRepository getModuleBasedMetadataRepository(final String moduleName) throws DeploymentUnitProcessingException {
-		final Module module;
-        ClassLoader moduleLoader = this.getClass().getClassLoader();
-        ModuleLoader ml = Module.getCallerModuleLoader();
-        if (moduleName != null && ml != null) {
-	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(moduleName));
-            	moduleLoader = module.getClassLoader();
-	        } catch (ModuleLoadException e) {
-	            throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, moduleName));
-	        }
-        }
-        
-        final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
-        if (serviceLoader != null) {
-        	for (MetadataRepository loader:serviceLoader) {
-        		return loader;
-        	}
-        }
-		return null;
-	}	
 }

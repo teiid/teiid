@@ -62,7 +62,7 @@ import org.teiid.query.QueryPlugin;
 
 public class TransactionServerImpl implements TransactionService {
 
-    private static class TransactionMapping {
+    protected static class TransactionMapping {
 
         // (connection -> transaction for global and local)
         private Map<String, TransactionContext> threadToTransactionContext = new HashMap<String, TransactionContext>();
@@ -112,10 +112,10 @@ public class TransactionServerImpl implements TransactionService {
         }
     }
 
-    private TransactionMapping transactions = new TransactionMapping();
+    protected TransactionMapping transactions = new TransactionMapping();
     
     private XATerminator xaTerminator;
-    private TransactionManager transactionManager;
+    protected TransactionManager transactionManager;
     private WorkManager workManager;
 
     public void setXaTerminator(XATerminator xaTerminator) {

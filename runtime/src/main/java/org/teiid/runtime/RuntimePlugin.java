@@ -104,6 +104,9 @@ public class RuntimePlugin {
     	TEIID40089, //txn disabled
     	TEIID40090,
     	TEIID40091,
-    	TEIID40092
+    	TEIID40092,
+    	TEIID40093, //no sources
+    	TEIID40094, //invalid metadata repso
+    	
     }
 }

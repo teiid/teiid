@@ -170,41 +170,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 	
 	@Override
-	public List<String> getRuntimeErrors(){
-		List<String> allErrors = new ArrayList<String>();
-		for (ModelMetaData model:this.models.values()) {
-			List<ValidationError> errors = model.getRuntimeErrors();
-			if (errors != null && !errors.isEmpty()) {
-				for (ValidationError m:errors) {
-					if (ValidationError.Severity.valueOf(m.getSeverity()).equals(ValidationError.Severity.ERROR)) {
-						allErrors.add(m.getValue());
-					}
-				}
-			}
-		}
-		return allErrors; 
-	}
-
-	@Override
     public boolean isValid() {
-        if (!getValidityErrors().isEmpty()) {
-            return false;
-        }
-        if (!getRuntimeErrors().isEmpty()) {
-            return false;
-        }        
-        if (getModels().isEmpty()) {
-            return false;        	
-        }
-    	for(ModelMetaData m: this.models.values()) {
-    		if (m.isSource()) {
-    			List<String> resourceNames = m.getSourceNames();
-    			if (resourceNames.isEmpty()) {
-    				return false;
-    			}
-    		}
-    	}
-        return true;
+        return Status.ACTIVE.equals(this.status);
     } 	
     
 	public String toString() {

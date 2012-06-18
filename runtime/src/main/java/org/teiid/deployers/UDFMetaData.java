@@ -43,6 +43,7 @@ import org.teiid.runtime.RuntimePlugin;
 public class UDFMetaData {
 	private HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();
 	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
+	private ClassLoader classLoader;
 	
 	public void addModelFile(VirtualFile file) {
 		this.files.put(file.getPathName(), file);
@@ -92,11 +93,10 @@ public class UDFMetaData {
 	}
 
 	public void setFunctionClassLoader(ClassLoader functionClassLoader) {
-		for (String name : this.methods.keySet()) {
-			Collection <FunctionMethod> funcs = this.methods.get(name);
-			for(FunctionMethod fm:funcs) {
-				fm.setClassloader(functionClassLoader);
-			}
-		}
-	}	
+		this.classLoader = functionClassLoader;
+	}
+	
+	public ClassLoader getClassLoader() {
+		return classLoader;
+	}
 }

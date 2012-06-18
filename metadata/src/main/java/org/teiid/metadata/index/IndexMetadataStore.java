@@ -240,27 +240,7 @@ public class IndexMetadataStore extends MetadataStore {
 		
 		if (!this.loaded) {
 			if (systemDatatypes == null) {
-				InputStream is = this.getClass().getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
-				try {
-					InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8")); //$NON-NLS-1$
-					BufferedReader br = new BufferedReader(isr);
-					String s = br.readLine();
-					String[] props = s.split("\\|"); //$NON-NLS-1$
-					while ((s = br.readLine()) != null) {
-						Datatype dt = new Datatype();
-						String[] vals = s.split("\\|"); //$NON-NLS-1$
-						Properties p = new Properties();
-						for (int i = 0; i < props.length; i++) {
-							if (vals[i].length() != 0) {
-								p.setProperty(props[i], new String(vals[i]));
-							}
-						}
-						PropertiesUtils.setBeanProperties(dt, p, null);
-						addDatatype(dt);
-					}
-				} finally {
-					is.close();
-				}
+				loadSystemDatatypes(this);
 			}
 	    	ArrayList<Index> tmp = new ArrayList<Index>();
 			for (VirtualFile f : indexFiles) {
@@ -298,6 +278,30 @@ public class IndexMetadataStore extends MetadataStore {
 			getProcedures(modelName);
 		}
     }
+
+	public static void loadSystemDatatypes(MetadataStore ms) throws IOException {
+		InputStream is = IndexMetadataStore.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
+		try {
+			InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8")); //$NON-NLS-1$
+			BufferedReader br = new BufferedReader(isr);
+			String s = br.readLine();
+			String[] props = s.split("\\|"); //$NON-NLS-1$
+			while ((s = br.readLine()) != null) {
+				Datatype dt = new Datatype();
+				String[] vals = s.split("\\|"); //$NON-NLS-1$
+				Properties p = new Properties();
+				for (int i = 0; i < props.length; i++) {
+					if (vals[i].length() != 0) {
+						p.setProperty(props[i], new String(vals[i]));
+					}
+				}
+				PropertiesUtils.setBeanProperties(dt, p, null);
+				ms.addDatatype(dt);
+			}
+		} finally {
+			is.close();
+		}
+	}
 
     public void addIndexFile(VirtualFile f) {
     	this.indexFiles.add(f);
