@@ -572,6 +572,7 @@ public class TestDependentJoins {
         		metadata,
             "pm1.g1", new List[] { 
 				    Arrays.asList(new Object[] { "a",   new Integer(0),     Boolean.FALSE,  new Double(2.0) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "q",   null,     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
 				    Arrays.asList(new Object[] { "b",   new Integer(1),     Boolean.TRUE,   null }), //$NON-NLS-1$
 				    Arrays.asList(new Object[] { "c",   new Integer(2),     Boolean.FALSE,  new Double(0.0) }), //$NON-NLS-1$
 				    } );       
@@ -579,7 +580,7 @@ public class TestDependentJoins {
         dataMgr.registerTuples(
         		metadata,
             "pm6.g1", new List[] { 
-				    Arrays.asList(new Object[] { "b",   new Integer(0) }), //$NON-NLS-1$
+				    Arrays.asList(new Object[] { "b",   1 }), //$NON-NLS-1$
 				    Arrays.asList(new Object[] { "d",   new Integer(3) }), //$NON-NLS-1$
 				    Arrays.asList(new Object[] { "e",   new Integer(1) }), //$NON-NLS-1$
 				    } );      
@@ -842,7 +843,7 @@ public class TestDependentJoins {
         FakeDataManager dataManager = helpTestBackoff(true);
         
         //note that the dependent join was not actually performed
-        assertEquals(new HashSet<String>(Arrays.asList("SELECT pm1.g1.e1 FROM pm1.g1", "SELECT pm6.g1.e1 FROM pm6.g1 ORDER BY pm6.g1.e1")), 
+        assertEquals(new HashSet<String>(Arrays.asList("SELECT pm6.g1.e1, pm6.g1.e2 FROM pm6.g1 ORDER BY pm6.g1.e1, pm6.g1.e2", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1")), 
         		new HashSet<String>(dataManager.getQueries()));
     }
     
@@ -897,7 +898,7 @@ public class TestDependentJoins {
 			QueryMetadataException, TeiidComponentException,
 			TeiidProcessingException {
 		// Create query 
-        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1"; //$NON-NLS-1$
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm6.g1 WHERE pm1.g1.e1=pm6.g1.e1 and pm1.g1.e2=pm6.g1.e2"; //$NON-NLS-1$
 
         // Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -908,10 +909,12 @@ public class TestDependentJoins {
         RealMetadataFactory.setCardinality("pm1.g1", 1, fakeMetadata);
         if (setNdv) {
         	fakeMetadata.getElementID("pm1.g1.e1").setDistinctValues(1);
+        	fakeMetadata.getElementID("pm1.g1.e2").setDistinctValues(1);
         }
         RealMetadataFactory.setCardinality("pm6.g1", 1000, fakeMetadata);
         if (setNdv) {
         	fakeMetadata.getElementID("pm6.g1.e1").setDistinctValues(1000);
+        	fakeMetadata.getElementID("pm6.g1.e2").setDistinctValues(1000);
         }
         // Plan query
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
@@ -931,8 +934,8 @@ public class TestDependentJoins {
                 new String("b")})}; //$NON-NLS-1$
 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, fakeMetadata, new String[] {
-        		"SELECT pm6.g1.e1 FROM pm6.g1 WHERE pm6.g1.e1 IN (<dependent values>) ORDER BY pm6.g1.e1",
-        		"SELECT pm1.g1.e1 FROM pm1.g1"
+        		"SELECT pm6.g1.e1, pm6.g1.e2 FROM pm6.g1 WHERE (pm6.g1.e1 IN (<dependent values>)) AND (pm6.g1.e2 IN (<dependent values>)) ORDER BY pm6.g1.e1, pm6.g1.e2", 
+        		"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"
         }, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
 
         // Run query
