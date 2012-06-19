@@ -27,17 +27,21 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -108,22 +112,47 @@ public class DependentCriteriaProcessor {
                 }
             	for (SetState setState : dependentSetStates) {
                     setState.valueIterator = dvs.getValueIterator(setState.valueExpression);
-                    if (setState.maxNdv > 0 && setState.maxNdv < dvs.getTupleBuffer().getRowCount()) {
-                    	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-                    	Comparable last = null;
-                    	int distinctCount = 0;
-                    	while (vi.hasNext()) {
-                    		Comparable next = (Comparable) vi.next();
-                    		if (last == null || next.compareTo(last) != 0) {
-                    			distinctCount++;
-                    		}
-                    		last = next;
-                    	}
-                    	if (!setState.overMax && distinctCount > setState.maxNdv) {
-                    		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DependentCriteriaProcessor.dep_join_backoff", valueSource, setState.valueExpression, setState.maxNdv)); //$NON-NLS-1$
-                    		setState.overMax = true;
-                    	}
+                    int distinctCount = dvs.getTupleBuffer().getRowCount();
+                    if (setState.maxNdv <= 0 || setState.maxNdv >= distinctCount) {
+                    	continue;
                     }
+                    if (dvs.getTupleBuffer().getSchema().size() > 1) {
+	                    distinctCount = 0;
+	                	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
+                    	if (dvs.getTupleBuffer().getSchema().indexOf(setState.valueExpression) == 0) {
+        	            	Object last = null;
+	                    	while (vi.hasNext()) {
+    	                		Object next = vi.next();
+        	            		if (next != null && (last == null || ((Comparable)next).compareTo(last) != 0)) {
+            	        			distinctCount++;
+                	    		}
+                    			last = next;
+                    		}
+                    	} else {
+                    		//secondary attributes are not in sorted order, so we use an approximate count
+                    		Set<Object> set = new TreeSet<Object>();
+                    		int maxSize = Math.min(10000, dvs.getTupleBuffer().getRowCount());
+                    		List<Object> buffer = Arrays.asList(new Object[maxSize]);
+                    		int i = 0;
+	                    	while (vi.hasNext()) {
+    	                		Object next = vi.next();
+    	                		if (next == null) {
+    	                			continue;
+    	                		}
+        	            		if (set.add(next)) {
+            	        			distinctCount++;
+                	    		}
+        	            		Object old = buffer.set(i++%maxSize, next);
+        	            		if (set.size() > maxSize) {
+        	            			set.remove(old);
+        	            		}
+                    		}
+                    	}
+                	}
+                	if (!setState.overMax && distinctCount > setState.maxNdv) {
+                		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.getString("DependentCriteriaProcessor.dep_join_backoff", valueSource, setState.valueExpression, setState.maxNdv)); //$NON-NLS-1$
+                		setState.overMax = true;
+                	}
     			}
             }
         }
