@@ -321,7 +321,7 @@ public class VDBRepository implements Serializable{
 				}
 	    	}			
 		}
-		return vdb.isValid();
+		return vdb.getValidityErrors().isEmpty();
 	}
 	
 	
