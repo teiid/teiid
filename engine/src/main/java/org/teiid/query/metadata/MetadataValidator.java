@@ -211,7 +211,7 @@ public class MetadataValidator {
     				}
     			}
     			
-    			GroupSymbol symbol = new GroupSymbol(t.getName(), t.getFullName());
+    			GroupSymbol symbol = new GroupSymbol(t.getName());
     			ResolverUtil.resolveGroup(symbol, metadata);
 
     			// this seems to parse, resolve and validate.

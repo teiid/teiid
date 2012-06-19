@@ -34,9 +34,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
@@ -47,6 +50,7 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.UpdateExecution;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
@@ -82,7 +86,9 @@ public class TestEmbeddedServer {
 					throws TranslatorException {
 				assertEquals(conn, Integer.valueOf(1));
 				Table t = metadataFactory.addTable("my-table");
-				metadataFactory.addColumn("my-column", TypeFacility.RUNTIME_NAMES.STRING, t);
+				t.setSupportsUpdate(true);
+				Column c = metadataFactory.addColumn("my-column", TypeFacility.RUNTIME_NAMES.STRING, t);
+				c.setUpdatable(true);
 			}
 			
 			@Override
@@ -114,6 +120,37 @@ public class TestEmbeddedServer {
 				};
 				return rse;
 			}
+			
+			@Override
+			public UpdateExecution createUpdateExecution(Command command,
+					ExecutionContext executionContext,
+					RuntimeMetadata metadata, Object connection)
+					throws TranslatorException {
+				UpdateExecution ue = new UpdateExecution() {
+					
+					@Override
+					public void execute() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public void close() {
+						
+					}
+					
+					@Override
+					public void cancel() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public int[] getUpdateCounts() throws DataNotAvailableException,
+							TranslatorException {
+						return new int[] {2};
+					}
+				};
+				return ue;
+			}
 		});
 		final AtomicInteger counter = new AtomicInteger();
 		ConnectionFactoryProvider<AtomicInteger> cfp = new ConnectionFactoryProvider<AtomicInteger>() {
@@ -130,14 +167,23 @@ public class TestEmbeddedServer {
 		mmd.setName("my-schema");
 		mmd.addSourceMapping("x", "y", "z");
 
-		es.deployVDB("test", Arrays.asList(mmd));
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("virt");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view \"my-view\" (\"my-column\" string OPTIONS (UPDATABLE 'true')) OPTIONS (UPDATABLE 'true') as select * from \"my-table\"");
+
+		es.deployVDB("test", Arrays.asList(mmd, mmd1));
 		
 		TeiidDriver td = es.getDriver();
 		Connection c = td.connect("jdbc:teiid:test", null);
 		Statement s = c.createStatement();
-		ResultSet rs = s.executeQuery("select * from \"my-table\"");
+		ResultSet rs = s.executeQuery("select * from \"my-view\"");
 		assertFalse(rs.next());
 		assertEquals("my-column", rs.getMetaData().getColumnLabel(1));
+		
+		s.execute("update \"my-view\" set \"my-column\" = 'a'");
+		assertEquals(2, s.getUpdateCount());
 	}
 
 }
