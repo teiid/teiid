@@ -117,15 +117,7 @@ public class JPAMetadataProcessor {
 	}
 	
 	private boolean columnExists(String name, Table table) {
-		if (table.getColumns() == null) {
-			return false;
-		}
-		for (Column existingColumn: table.getColumns()) {
-			if (existingColumn.getName().equals(name)) {
-				return true;
-			}
-		}		
-		return false;
+		return table.getColumnByName(name) != null;
 	}
 	
 	private Column addColumn(MetadataFactory mf, String name, String type, Table entityTable) throws TranslatorException {

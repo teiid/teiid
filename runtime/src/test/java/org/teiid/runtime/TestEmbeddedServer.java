@@ -171,7 +171,7 @@ public class TestEmbeddedServer {
 		mmd1.setName("virt");
 		mmd1.setModelType(Type.VIRTUAL);
 		mmd1.setSchemaSourceType("ddl");
-		mmd1.setSchemaText("create view \"my-view\" (\"my-column\" string OPTIONS (UPDATABLE 'true')) OPTIONS (UPDATABLE 'true') as select * from \"my-table\"");
+		mmd1.setSchemaText("create view \"my-view\" OPTIONS (UPDATABLE 'true') as select * from \"my-table\"");
 
 		es.deployVDB("test", Arrays.asList(mmd, mmd1));
 		

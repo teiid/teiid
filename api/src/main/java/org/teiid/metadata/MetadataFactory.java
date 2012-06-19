@@ -115,6 +115,9 @@ public class MetadataFactory implements Serializable {
 			//TODO: for now this is not used
 			 throw new TranslatorException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
 		}
+		if (table.getColumnByName(name) != null) {
+			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+		}
 		Column column = new Column();
 		column.setName(name);
 		table.addColumn(column);
@@ -302,17 +305,11 @@ public class MetadataFactory implements Serializable {
 	private void assignColumns(List<String> columnNames, Table table,
 			ColumnSet<?> columns) throws TranslatorException {
 		for (String columnName : columnNames) {
-			boolean match = false;
-			for (Column column : table.getColumns()) {
-				if (column.getName().equals(columnName)) {
-					match = true;
-					columns.getColumns().add(column);
-					break;
-				}
+			Column column = table.getColumnByName(columnName);
+			if (column == null) {
+				throw new TranslatorException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));				
 			}
-			if (!match) {
-				 throw new TranslatorException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));
-			}
+			columns.getColumns().add(column);
 		}
 	}
 	

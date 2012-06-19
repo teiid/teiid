@@ -35,8 +35,8 @@ import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.TableStats;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
@@ -96,12 +96,10 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		for (Column c : t.getColumns()) {
-			if (c.getName().equalsIgnoreCase(columnName)) {
-				c.setColumnStats(stats);
-				t.setLastModified(System.currentTimeMillis());
-				break;
-			}
+		Column c = t.getColumnByName(columnName);
+		if (c != null) {
+			c.setColumnStats(stats);
+			t.setLastModified(System.currentTimeMillis());
 		}
 	}
 	

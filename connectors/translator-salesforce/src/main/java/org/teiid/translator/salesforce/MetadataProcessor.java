@@ -99,8 +99,8 @@ public class MetadataProcessor {
 			
 			Column col = null;
 			columns = child.getColumns();
-			for (Iterator colIter = columns.iterator(); colIter.hasNext();) {
-				Column column = (Column) colIter.next();
+			for (Iterator<Column> colIter = columns.iterator(); colIter.hasNext();) {
+				Column column = colIter.next();
 				if(column.getName().equals(relationship.getForeignKeyField())) {
 					col = column;
 				}

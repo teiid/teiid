@@ -4267,6 +4267,11 @@ void createTable(MetadataFactory factory) :
 		   }
 		   table.setSelectTransformation(query.toString());	
 		}		
+		if (!table.supportsUpdate() && table.getColumns() != null) {
+			for (Column c : table.getColumns()) {
+				c.setUpdatable(false);
+			}
+		}
 	}
 }
 
@@ -4413,6 +4418,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	  {
 	  	try{
     		column = factory.addColumn(validateElementName(element), type.type, table);
+    		column.setUpdatable(true);
 		    if (type.length != null){
 		    	column.setLength(type.length);
 		    }
@@ -4487,11 +4493,15 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 }
 {
 	 key = id()
-	 ((value = stringVal()) 
+	 (value = stringVal() 
  	 |
- 	 (t = <INTEGERVAL>)
+ 	 t = <INTEGERVAL>
  	 |
- 	 (t = <DECIMALVAL>))
+ 	 t = <DECIMALVAL>
+ 	 |
+ 	 t = <TRUE>
+ 	 |
+ 	 t = <FALSE>)
 	 { 
 	 	if (t != null) {
 	 		value = t.image;

@@ -544,10 +544,9 @@ public class SQLParserUtil {
     }    
 	
 	Column getColumn(String columnName, Table table) throws ParseException {
-		for (Column col:table.getColumns()) {
-			if (col.getName().equalsIgnoreCase(columnName)) {
-				return col;
-			}
+		Column c = table.getColumnByName(columnName);
+		if (c != null) {
+			return c;
 		}
 		throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}

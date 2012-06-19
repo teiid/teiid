@@ -247,13 +247,10 @@ public class MetadataValidator {
 	private static Column addColumn(String name, Datatype type, Table table) throws TranslatorException {
 		Column column = new Column();
 		column.setName(name);
-		if (table.getColumns() != null) {
-			for (Column c:table.getColumns()) {
-				if (c.getName().equalsIgnoreCase(name)) {
-					throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31087, name, table.getFullName()));
-				}
-			}
+		if (table.getColumnByName(name) != null) {
+			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31087, name, table.getFullName()));
 		}
+		column.setUpdatable(table.supportsUpdate());
 		table.addColumn(column);
 		column.setPosition(table.getColumns().size()); //1 based indexing
 		if (type == null) {
