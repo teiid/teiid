@@ -159,7 +159,28 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	public void addSourceMapping(SourceMappingMetadata source) {
 		this.addSourceMapping(source.getName(), source.getTranslatorName(), source.getConnectionJndiName());
-	}    
+	}
+	
+	public synchronized boolean hasErrors() {
+		if (this.validationErrors == null && this.runtimeErrors == null) {
+			return false;
+		}
+		if (this.validationErrors != null) {
+			for (ValidationError error : this.validationErrors) {
+				if (error.getSeverity() == Severity.ERROR) {
+					return true;
+				}
+			}
+		}
+		if (this.runtimeErrors != null) {
+			for (ValidationError error : this.runtimeErrors) {
+				if (error.getSeverity() == Severity.ERROR) {
+					return true;
+				}
+			}
+		}
+		return false;	
+	}
 	
 	public synchronized List<ValidationError> getErrors(){
 		return getErrors(true);
@@ -180,7 +201,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
 	
     public ValidationError addError(String severity, String message) {
-        ValidationError ve = new ValidationError(severity, message);
+        ValidationError ve = new ValidationError(Severity.valueOf(severity), message);
         addError(ve);
         return ve;
     }
@@ -190,7 +211,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}    
     
     public synchronized ValidationError addRuntimeError(String message) {
-        ValidationError ve = new ValidationError(Severity.ERROR.name(), message);
+        ValidationError ve = new ValidationError(Severity.ERROR, message);
         if (this.runtimeErrors == null) {
             this.runtimeErrors = new LinkedList<ValidationError>();
         }
@@ -221,12 +242,12 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		public enum Severity {ERROR, WARNING};
     	
         protected String value;
-        protected String severity;
+        protected Severity severity;
         protected String path;
         
 		public ValidationError() {};
         
-        public ValidationError(String severity, String msg) {
+        public ValidationError(Severity severity, String msg) {
         	this.severity = severity;
         	this.value = msg;
         }
@@ -239,11 +260,11 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 			this.value = value;
 		}
 
-		public String getSeverity() {
+		public Severity getSeverity() {
 			return severity;
 		}
 
-		public void setSeverity(String severity) {
+		public void setSeverity(Severity severity) {
 			this.severity = severity;
 		}       
 		

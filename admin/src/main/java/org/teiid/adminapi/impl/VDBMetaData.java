@@ -27,7 +27,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
@@ -35,6 +34,7 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 
 
 public class VDBMetaData extends AdminObjectImpl implements VDB {
@@ -78,7 +78,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 	
 	public boolean isLoading() {
-		return this.status.isLoading();
+		return this.status == Status.LOADING;
 	}
 	
 	public synchronized void setStatus(Status s) {
@@ -107,7 +107,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return new ArrayList<Model>(this.models.values());
 	}
 	
-	public Map<String, ModelMetaData> getModelMetaDatas() {
+	public LinkedHashMap<String, ModelMetaData> getModelMetaDatas() {
 		return this.models;
 	}
 	
@@ -160,7 +160,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 			List<ValidationError> errors = model.getErrors();
 			if (errors != null && !errors.isEmpty()) {
 				for (ValidationError m:errors) {
-					if (ValidationError.Severity.valueOf(m.getSeverity()).equals(ValidationError.Severity.ERROR)) {
+					if (m.getSeverity() == Severity.ERROR) {
 						allErrors.add(m.getValue());
 					}
 				}
@@ -171,9 +171,18 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	@Override
     public boolean isValid() {
-        return Status.ACTIVE.equals(this.status);
+        return status == Status.ACTIVE && !hasErrors();
     } 	
-    
+	
+	public boolean hasErrors() {
+		for (ModelMetaData model : this.models.values()) {
+			if (model.hasErrors()) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public String toString() {
 		return getName()+VERSION_DELIM+getVersion()+ models.values(); 
 	}

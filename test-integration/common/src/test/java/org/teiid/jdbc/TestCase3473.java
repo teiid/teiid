@@ -26,7 +26,9 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
@@ -37,12 +39,20 @@ import org.teiid.core.util.UnitTestUtil;
 public class TestCase3473 {
 
     private DatabaseMetaData dbmd;
+    private static FakeServer server;
+    
+    @BeforeClass public static void oneTimeSetup() throws Exception {
+    	server = new FakeServer(true);
+    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+    }
+    
+    @AfterClass public static void oneTimeTeardown() throws Exception {
+    	server.stop();
+    }
  
     ////////////////////Query Related Methods///////////////////////////
 
     @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
     	dbmd = conn.getMetaData();
     }

@@ -92,11 +92,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
         }
 		
 		boolean preview = deployment.isPreview();
-		if (!preview) {
-			List<String> errors = deployment.getValidityErrors();
-			if (errors != null && !errors.isEmpty()) {
-				throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50074, deployment));
-			}
+		if (!preview && deployment.hasErrors()) {
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50074, deployment));
 		}
 		
 		// make sure the translator defined exists in configuration; otherwise add as error

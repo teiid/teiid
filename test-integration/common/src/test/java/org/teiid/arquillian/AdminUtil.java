@@ -27,6 +27,7 @@ import java.util.Properties;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.Status;
 
 @SuppressWarnings("nls")
 public class AdminUtil {
@@ -71,7 +72,7 @@ public class AdminUtil {
 				first = false;
 			}
 			VDB vdb = admin.getVDB(vdbName, vdbVersion);
-			if (vdb != null && !vdb.getStatus().isLoading()) {
+			if (vdb != null && vdb.getStatus() != Status.LOADING) {
 				return true;
 			}
 		} while (System.currentTimeMillis() < waitUntil);

@@ -27,9 +27,7 @@
         "allowed" : [
             "ACTIVE",
             "LOADING",
-            "INVALID",
-            "REMOVED",
-            "INCOMPLETE"
+            "REMOVED"
         ]
     },
     "vdb-version" : {

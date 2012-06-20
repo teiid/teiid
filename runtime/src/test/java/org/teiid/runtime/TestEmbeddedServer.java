@@ -27,7 +27,6 @@ import static org.junit.Assert.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -36,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -173,7 +173,7 @@ public class TestEmbeddedServer {
 		mmd1.setSchemaSourceType("ddl");
 		mmd1.setSchemaText("create view \"my-view\" OPTIONS (UPDATABLE 'true') as select * from \"my-table\"");
 
-		es.deployVDB("test", Arrays.asList(mmd, mmd1));
+		es.deployVDB("test", mmd, mmd1);
 		
 		TeiidDriver td = es.getDriver();
 		Connection c = td.connect("jdbc:teiid:test", null);
@@ -184,6 +184,48 @@ public class TestEmbeddedServer {
 		
 		s.execute("update \"my-view\" set \"my-column\" = 'a'");
 		assertEquals(2, s.getUpdateCount());
+	}
+	
+	@Test(expected=VirtualDatabaseException.class) public void testDeploymentError() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("virt");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view \"my-view\" OPTIONS (UPDATABLE 'true') as select * from \"my-table\"");
+
+		es.deployVDB("test", mmd1);
+	}
+	
+	@Test public void testValidationOrder() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view v as select 1");
+
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("a");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("ddl");
+		mmd2.setSchemaText("create view v1 as select * from v");
+
+		//We need mmd1 to validate before mmd2, reversing the order will result in an exception
+		es.deployVDB("test", mmd1, mmd2);
+		
+		try {
+			es.deployVDB("test2", mmd2, mmd1);
+			fail();
+		} catch (VirtualDatabaseException e) {
+			
+		}
 	}
 
 }

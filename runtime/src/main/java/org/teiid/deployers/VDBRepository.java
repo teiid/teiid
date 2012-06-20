@@ -35,7 +35,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -250,10 +250,15 @@ public class VDBRepository implements Serializable{
 	
 	public VDBMetaData removeVDB(String vdbName, int vdbVersion) {
 		VDBKey key = new VDBKey(vdbName, vdbVersion);
+		return removeVDB(key);
+	}
+
+	private VDBMetaData removeVDB(VDBKey key) {
 		CompositeVDB removed = this.vdbRepo.remove(key);
 		if (removed == null) {
 			return null;
 		}
+		removed.getVDB().setStatus(Status.REMOVED);
 		notifyRemove(key.getName(), key.getVersion(), removed);
 		return removed.getVDB();
 	}	
@@ -270,40 +275,40 @@ public class VDBRepository implements Serializable{
 	}
 	
 	public void finishDeployment(String name, int version) {
-		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
+		VDBKey key = new VDBKey(name, version);
+		CompositeVDB v = this.vdbRepo.get(key);
 		if (v == null) {
 			return;
 		}
-		boolean valid = false;
 		v.metadataLoadFinished();
-		VDBMetaData metdataAwareVDB = v.getVDB();			
-		synchronized (metdataAwareVDB) {
-			ValidatorReport report = MetadataValidator.validate(metdataAwareVDB, metdataAwareVDB.removeAttachment(MetadataStore.class));
-			
-			if (!report.hasItems()) {
-				valid  = true;					
-			}
-			else {
-				LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
-			}
-			
-			// check the data sources available
-			if (valid) {
-				valid = hasValidDataSources(metdataAwareVDB);
-			}
-			
-			if (valid) {
-				metdataAwareVDB.setStatus(VDB.Status.ACTIVE);
-			}
-			else {
-				metdataAwareVDB.setStatus(VDB.Status.INVALID);
-			}
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metdataAwareVDB.getStatus()));
+		VDBMetaData metadataAwareVDB = v.getVDB();			
+		synchronized (metadataAwareVDB) {
+			ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
+
+			if (report.hasItems()) {
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
+				if (!v.getVDB().isPreview()) {
+					processMetadataValidatorReport(key, report);
+					if (v.getVDB().getStatus() == Status.REMOVED) {
+						return;
+					}
+				}
+			} 
+			metadataAwareVDB.setStatus(Status.ACTIVE);
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
 			notifyFinished(name, version, v);
 		}
 	}
 	
-	boolean hasValidDataSources(VDBMetaData vdb) {
+	/**
+	 * @param key 
+	 * @param report  
+	 */
+	protected void processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
+		this.removeVDB(key);
+	}
+
+	void validateDataSources(VDBMetaData vdb) {
 		ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 		
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
@@ -321,7 +326,6 @@ public class VDBRepository implements Serializable{
 				}
 	    	}			
 		}
-		return vdb.getValidityErrors().isEmpty();
 	}
 	
 	

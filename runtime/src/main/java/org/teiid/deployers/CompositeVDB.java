@@ -206,20 +206,26 @@ public class CompositeVDB {
 	}
 	
 	private MetadataStore getMetadataStore() {
-		if (this.children == null || this.children.isEmpty()) {
-			return this.store;
-		}		
-		
 		MetadataStore mergedStore = new MetadataStore();
 		if (this.store != null) {
-			mergedStore.merge(this.store);
-		}
-		for (CompositeVDB child:this.children.values()) {
-			MetadataStore childStore = child.getMetadataStore();
-			if ( childStore != null) {
-				mergedStore.merge(childStore);
+			//the order of the models is important for resolving ddl
+			//TODO we might consider not using the intermediate MetadataStore
+			for (ModelMetaData model : this.vdb.getModelMetaDatas().values()) {
+				Schema s = this.store.getSchemas().get(model.getName());
+				if (s != null) {
+					mergedStore.addSchema(s);					
+				}
 			}
-		}		
+			mergedStore.addDataTypes(store.getDatatypes().values());
+		}
+		if (this.children != null && !this.children.isEmpty()) {
+			for (CompositeVDB child:this.children.values()) {
+				MetadataStore childStore = child.getMetadataStore();
+				if ( childStore != null) {
+					mergedStore.merge(childStore);
+				}
+			}		
+		}
 		return mergedStore;
 	}
 		

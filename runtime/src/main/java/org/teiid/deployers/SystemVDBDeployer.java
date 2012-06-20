@@ -63,7 +63,7 @@ public class SystemVDBDeployer {
 			}
 			
 			IndexMetadataStore idxStore = new IndexMetadataStore(mountPoint);
-			idxStore.load(null);
+			idxStore.load(null, null);
 			
 			// uri conversion is only to remove the spaces in URL, note this only with above kind situation  
 			this.vdbRepository.setSystemStore(idxStore);

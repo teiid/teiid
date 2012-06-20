@@ -179,7 +179,7 @@ public class TestDynamicImportedMetaData {
     	MetadataFactory m2 = createMetadataFactory("portfolio", new Properties());
 
     	QueryParser.getQueryParser().parseDDL(m2, ddl2);
-    	
+    	m2.getSchema().setPhysical(false);
     	m2.mergeInto(ms);
     	
     	server.deployVDB("test", ms);

@@ -86,7 +86,7 @@ public class IntegrationTestDeployment {
 		VDB vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "bqt", 1, 3));
-		assertEquals(Status.INVALID, vdb.getStatus());
+		assertFalse(vdb.isValid());
 
 		Properties props = new Properties();
 		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
@@ -105,7 +105,6 @@ public class IntegrationTestDeployment {
 		admin.deleteDataSource("Oracle11_PushDS");
 		vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
-		assertEquals(Status.INVALID, vdb.getStatus());
 	}
 
 	@Test

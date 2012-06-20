@@ -244,7 +244,7 @@ public class TestDDLParser {
 		modelOne.setName("model"); //$NON-NLS-1$
 		vdb.addModel(modelOne);
 
-		ValidatorReport report = MetadataValidator.validate(vdb, s.asMetadataStore());
+		ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 		
 		assertFalse(report.hasItems());
 		
@@ -275,7 +275,7 @@ public class TestDDLParser {
 		modelOne.setName("model"); //$NON-NLS-1$
 		vdb.addModel(modelOne);
 
-		ValidatorReport report = MetadataValidator.validate(vdb, s.asMetadataStore());
+		ValidatorReport report = new MetadataValidator().validate(vdb, s.asMetadataStore());
 		
 		assertTrue(report.hasItems());
 	}	
@@ -304,7 +304,7 @@ public class TestDDLParser {
 		MetadataStore s = f1.asMetadataStore();
 		f2.mergeInto(s);
 
-		ValidatorReport report = MetadataValidator.validate(vdb, s);
+		ValidatorReport report = new MetadataValidator().validate(vdb, s);
 		
 		assertFalse(report.hasItems());
 		
@@ -316,17 +316,13 @@ public class TestDDLParser {
 		assertEquals(fk.getPrimaryKey().getColumns(), s.getSchema("model").getTable("G1").getColumns());
 	}	
 	
-	@Test
+	@Test(expected=ParseException.class)
 	public void testViewWithoutPlan() throws Exception {
 		String ddl = "CREATE View G1( e1 integer, e2 varchar)";
-		try {
-			MetadataStore mds = new MetadataStore();
-			MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
-			parser.parseDDL(mf,ddl);
-			mf.mergeInto(mds);
-			fail("should fail define a view with out a plan");
-		} catch(ParseException e) {
-		}
+		MetadataStore mds = new MetadataStore();
+		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf,ddl);
+		mf.mergeInto(mds);
 	}	
 	
 	@Test
@@ -618,8 +614,8 @@ public class TestDDLParser {
 		parser.parseDDL(mf, ddl);
 		mf.mergeInto(mds);
 		
-		assertTrue(mds.getNamespaces().keySet().contains("teiid"));
-		assertEquals("http://teiid.org", mds.getNamespaces().get("teiid"));
+		assertTrue(mf.getNamespaces().keySet().contains("teiid"));
+		assertEquals("http://teiid.org", mf.getNamespaces().get("teiid"));
 	}		
 
 	public static MetadataFactory helpParse(String ddl, String model) throws ParseException {

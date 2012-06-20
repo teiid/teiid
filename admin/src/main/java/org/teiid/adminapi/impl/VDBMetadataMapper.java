@@ -37,6 +37,7 @@ import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
  
 public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String VDBNAME = "vdb-name"; //$NON-NLS-1$
@@ -213,9 +214,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		ModelNode statusAllowed = new ModelNode();
 		statusAllowed.add(Status.ACTIVE.toString());
 		statusAllowed.add(Status.LOADING.toString());
-		statusAllowed.add(Status.INVALID.toString());
 		statusAllowed.add(Status.REMOVED.toString());
-		statusAllowed.add(Status.INCOMPLETE.toString());
 		addAttribute(node, STATUS, ModelType.STRING, true);
 		node.get(STATUS).get(ALLOWED).set(statusAllowed);
 		
@@ -475,7 +474,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (error.getPath() != null) {
 				node.get(ERROR_PATH).set(error.getPath());
 			}
-			node.get(SEVERITY).set(error.getSeverity());
+			node.get(SEVERITY).set(error.getSeverity().name());
 			node.get(MESSAGE).set(error.getValue());
 			
 			return node;
@@ -491,7 +490,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				error.setPath(node.get(ERROR_PATH).asString());
 			}
 			if (node.has(SEVERITY)) {
-				error.setSeverity(node.get(SEVERITY).asString());
+				error.setSeverity(Severity.valueOf(node.get(SEVERITY).asString()));
 			}
 			if(node.has(MESSAGE)) {
 				error.setValue(node.get(MESSAGE).asString());

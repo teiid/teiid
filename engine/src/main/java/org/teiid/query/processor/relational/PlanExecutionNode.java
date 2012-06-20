@@ -117,7 +117,7 @@ public class PlanExecutionNode extends RelationalNode {
         
 		TupleBatch batch = plan.nextBatch();
        
-        for (List tuple : batch.getTuples()) {
+        for (List<?> tuple : batch.getTuples()) {
             addBatchRow(tuple);
 		}
         
@@ -132,6 +132,11 @@ public class PlanExecutionNode extends RelationalNode {
         return pullBatch();
 	}
 
+    /**
+	 * @throws BlockedException  
+     * @throws TeiidComponentException 
+     * @throws TeiidProcessingException 
+	 */
     protected boolean prepareNextCommand() throws BlockedException,
                                           TeiidComponentException, TeiidProcessingException {
         return true;

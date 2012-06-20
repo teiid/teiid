@@ -40,7 +40,6 @@ public class MetadataStore implements Serializable {
 	protected Map<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
 	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
 	protected Map<String, Datatype> datatypes = new TreeMap<String, Datatype>();
-	protected Map<String, String> namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	
 	public Map<String, Schema> getSchemas() {
 		return schemas;
@@ -61,7 +60,7 @@ public class MetadataStore implements Serializable {
 		return schemaList;
 	}
 	
-	void addDataTypes(Collection<Datatype> types) {
+	public void addDataTypes(Collection<Datatype> types) {
 		if (types != null){
 			for (Datatype type:types) {
 				addDatatype(type);
@@ -76,18 +75,6 @@ public class MetadataStore implements Serializable {
 	public Map<String, Datatype> getDatatypes() {
 		return datatypes;
 	}
-	
-	public void addNamespace(String prefix, String uri) {
-		this.namespaces.put(prefix, uri);
-	}	
-	
-	public Map<String, String> getNamespaces() {
-		return this.namespaces;
-	}
-	
-	void addNamespaces(Map<String, String> namespaces) {
-		this.namespaces.putAll(namespaces);
-	}	
 	
 	public void merge(MetadataStore store) {
 		if (store != null) {

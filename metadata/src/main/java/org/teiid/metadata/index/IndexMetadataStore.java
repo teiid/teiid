@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.Semaphore;
 
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
@@ -149,7 +148,6 @@ public class IndexMetadataStore extends MetadataStore {
 	private HashSet<VirtualFile> indexFiles = new HashSet<VirtualFile>();
 	private LinkedHashMap<String, Resource> vdbEntries;
 	private boolean loaded = false;
-	private Semaphore lock = new Semaphore(1);
 	
 	public IndexMetadataStore() {
 		
@@ -221,62 +219,57 @@ public class IndexMetadataStore extends MetadataStore {
     		}
     	}
     }
-    public void load(Collection<Datatype> systemDatatypes) throws IOException {
-    	load(null, systemDatatypes);
-    	Collection<AbstractMetadataRecord> modelRecords = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();
-    	for (AbstractMetadataRecord record:modelRecords) {
-    		Schema s = (Schema) record;
-    		load(s.getName(), systemDatatypes);
-    	}
-    }
     
 	public void load(String modelName, Collection<Datatype> systemDatatypes) throws IOException {
 		// there are multiple threads trying to load this, since the initial index lading is not 
 		// optimized for multi-thread loading this locking to sync will work
-		try {
-			this.lock.acquire();
-		} catch (InterruptedException e) {
+		synchronized (this) {
+			if (!this.loaded) {
+				if (systemDatatypes == null) {
+					loadSystemDatatypes(this);
+				}
+		    	ArrayList<Index> tmp = new ArrayList<Index>();
+				for (VirtualFile f : indexFiles) {
+					Index index = new Index(f, true);
+					index.setDoCache(true);
+		            tmp.add(index);
+				}
+				this.indexes = tmp.toArray(new Index[tmp.size()]);
+				loadAll();
+				//force close, since we cached the index files
+				for (Index index : tmp) {
+					index.close(); 
+				}
+				Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
+				if (systemDatatypes != null) {
+					for (Datatype datatype : systemDatatypes) {
+						uuidToRecord.put(datatype.getUUID(), datatype);
+					}
+				} else {
+					for (Datatype datatype : getDatatypes().values()) {
+						uuidToRecord.put(datatype.getUUID(), datatype);
+					}
+				}
+				for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
+					addDatatype((Datatype) datatypeRecordImpl);
+				}
+				this.loaded = true;
+			}
 		}
 		
-		if (!this.loaded) {
-			if (systemDatatypes == null) {
-				loadSystemDatatypes(this);
-			}
-	    	ArrayList<Index> tmp = new ArrayList<Index>();
-			for (VirtualFile f : indexFiles) {
-				Index index = new Index(f, true);
-				index.setDoCache(true);
-	            tmp.add(index);
-			}
-			this.indexes = tmp.toArray(new Index[tmp.size()]);
-			loadAll();
-			//force close, since we cached the index files
-			for (Index index : tmp) {
-				index.close(); 
-			}
-			Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
-			if (systemDatatypes != null) {
-				for (Datatype datatype : systemDatatypes) {
-					uuidToRecord.put(datatype.getUUID(), datatype);
-				}
-			} else {
-				for (Datatype datatype : getDatatypes().values()) {
-					uuidToRecord.put(datatype.getUUID(), datatype);
-				}
-			}
-			for (AbstractMetadataRecord datatypeRecordImpl : uuidToRecord.values()) {
-				addDatatype((Datatype) datatypeRecordImpl);
-			}
-			this.loaded = true;
-		}
-		
-		this.lock.release();
-
-		if (this.loaded) {
-			getModels(modelName);
-			getTables(modelName);
-			getProcedures(modelName);
-		}
+    	// the index map below is keyed by uuid not modelname, so map lookup is not possible
+    	Collection<AbstractMetadataRecord> modelRecords = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();
+    	for (AbstractMetadataRecord modelRecord:modelRecords) {
+    		Schema s = (Schema) modelRecord;
+    		if (modelName == null || s.getName().equalsIgnoreCase(modelName)) {
+    			addSchema(s);
+    			getTables(s);
+    			getProcedures(s);
+    			if (modelName != null) {
+    				break;
+    			}
+    		}
+    	}
     }
 
 	public static void loadSystemDatatypes(MetadataStore ms) throws IOException {
@@ -357,25 +350,24 @@ public class IndexMetadataStore extends MetadataStore {
 		return this.vdbEntries;
 	}
 	
-    private void getModels(String modelName) {
-    	// the index map below is keyed by uuid not modelname, so map lookup is not possible
-    	Collection<AbstractMetadataRecord> modelRecords = getByType(MetadataConstants.RECORD_TYPE.MODEL).values();
-    	for (AbstractMetadataRecord modelRecord:modelRecords) {
-    		Schema s = (Schema) modelRecord;
-    		if (s.getName().equalsIgnoreCase(modelName)) {
-    			addSchema((Schema) modelRecord);
-    		}
-    	}
+	/**
+	 * override for thread safety
+	 */
+    @Override
+    public synchronized void addSchema(Schema schema) {
+    	super.addSchema(schema);
+    }
+
+	/**
+	 * override for thread safety
+	 */
+    @Override
+    public synchronized Schema getSchema(String name) {
+    	return super.getSchema(name);
     }
     
-    private void getTables(String modelName) {
-    	Schema model  = getSchemas().get(modelName);
-    	
-    	if (model == null) {
-    		return;
-    	}
-    	
-    	Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(modelName);
+    private void getTables(Schema model) {
+    	Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(model.getName());
 		if (entries == null) {
 			return;
 		}
@@ -495,12 +487,7 @@ public class IndexMetadataStore extends MetadataStore {
         return record;
     }
     
-    private void getProcedures(String modelName) {
-    	Schema model  = getSchemas().get(modelName);
-    	if (model == null) {
-    		return;
-    	}
-    	
+    private void getProcedures(Schema model) {
 		Map<Character, List<AbstractMetadataRecord>> entries = schemaEntries.get(model.getName());
 		if (entries == null) {
 			return;

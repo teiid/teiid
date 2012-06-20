@@ -342,7 +342,6 @@ public class MetadataFactory implements Serializable {
 	public void mergeInto (MetadataStore store) {
 		store.addSchema(this.schema);
 		store.addDataTypes(this.dataTypes.values());
-		store.addNamespaces(this.namespaces);
 	}
 	
 	public MetadataStore asMetadataStore() {

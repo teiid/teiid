@@ -119,7 +119,7 @@ public class TestMMDatabaseMetaData {
     static Connection conn = null;
     
     DatabaseMetaData dbmd;
-    private Map expectedMap = new HashMap();
+    private Map<String, Object> expectedMap = new HashMap<String, Object>();
 
     // constant 
     private static final int NO_LIMIT = 0;
@@ -147,6 +147,7 @@ public class TestMMDatabaseMetaData {
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
     	FakeServer server = new FakeServer(true);
+    	server.setThrowMetadataErrors(false); //there are invalid views due to aggregate datatype changes
     	server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
         conn = server.createConnection("jdbc:teiid:QT_Ora9DS"); //$NON-NLS-1$ //$NON-NLS-2$
     }
@@ -154,7 +155,7 @@ public class TestMMDatabaseMetaData {
     /** Test all the non-query methods */
     @Test
     public void testMethodsWithoutParams() throws Exception {
-        Class dbmdClass = dbmd.getClass();
+        Class<?> dbmdClass = dbmd.getClass();
         // non-query Methods return String, boolean or int
         Method[] methods = dbmdClass.getDeclaredMethods();
 
@@ -168,9 +169,9 @@ public class TestMMDatabaseMetaData {
                 Object expectedReturn = expectedMap.get(methods[i].getName());
                 Object[] params = null;
                 
-                if (expectedReturn instanceof List) {
+                if (expectedReturn instanceof List<?>) {
                     // has input parameters
-                    List returned = (List) expectedReturn;
+                    List<?> returned = (List) expectedReturn;
                     params = (Object[]) returned.get(1);
                     //SYS.out.println(" params == " + params[0]);
                     expectedValue = returned.get(0);
@@ -191,10 +192,10 @@ public class TestMMDatabaseMetaData {
     /** Test all the methods that throw exception */ 
     @Test
     public void testMethodsWithExceptions() throws Exception {
-        Class dbmdClass = dbmd.getClass();
+        Class<?> dbmdClass = dbmd.getClass();
         Method[] methods = dbmdClass.getDeclaredMethods();
         
-        expectedMap = new HashMap(); //none expected
+        expectedMap = new HashMap<String, Object>(); //none expected
         //SYS.out.println(" -- total method == " + methods.length + ", non-query == " + expectedMap.size());
         for (int i =0; i< methods.length; i++) {
             if (expectedMap.containsKey(methods[i].getName())) {
@@ -768,7 +769,7 @@ public class TestMMDatabaseMetaData {
     }
 
     private void helpTestMethodsWithParams(String methodName, boolean returned, Object[] params) throws Exception {
-        Class dbmdClass = dbmd.getClass();
+        Class<?> dbmdClass = dbmd.getClass();
         Method[] methods = dbmdClass.getDeclaredMethods();
 
         for (int i = 0; i < methods.length; i++) {
@@ -782,7 +783,7 @@ public class TestMMDatabaseMetaData {
 
     //////////////////////Expected Result//////////////////
 
-    private Map getExpected() {
+    private Map<String, Object> getExpected() {
         Map<String, Object> expected = new HashMap<String, Object>();
         // return type -- boolean
         expected.put("allProceduresAreCallable", Boolean.TRUE); //$NON-NLS-1$

@@ -54,6 +54,7 @@ import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.BundleUtil.Event;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -92,6 +93,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.query.validator.ValidatorFailure;
+import org.teiid.query.validator.ValidatorReport;
 import org.teiid.services.AbstractEventDistributorFactoryService;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
@@ -102,6 +105,7 @@ import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
+import org.teiid.vdb.runtime.VDBKey;
 
 /**
  * A simplified server environment for embedded use.
@@ -189,8 +193,28 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 	}
 	
+	private static class VDBValidationError extends TeiidRuntimeException {
+		
+		private VDBValidationError(Event event, String message) {
+			super(event, message);
+		}
+	}
+	
 	protected DQPCore dqp = new DQPCore();
-	protected VDBRepository repo = new VDBRepository();
+	/**
+	 * Custom vdb repository that will immediately throw exceptions for metadata validation errors
+	 */
+	protected VDBRepository repo = new VDBRepository() {
+		@Override
+		protected void processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
+			if (throwMetadataErrors) {
+				super.processMetadataValidatorReport(key, report); //remove
+				ValidatorFailure firstFailure = report.getItems().iterator().next();
+				throw new VDBValidationError(RuntimePlugin.Event.TEIID40095, firstFailure.getMessage());
+			}
+		}
+	};
+	protected boolean throwMetadataErrors = true;
 	private ConcurrentHashMap<String, ExecutionFactory<?, ?>> translators = new ConcurrentHashMap<String, ExecutionFactory<?, ?>>();
 	private ConcurrentHashMap<String, ConnectionFactoryProvider<?>> connectionFactoryProviders = new ConcurrentHashMap<String, ConnectionFactoryProvider<?>>();
 	protected SessionServiceImpl sessionService = new SessionServiceImpl();
@@ -442,20 +466,24 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @throws VirtualDatabaseException
 	 * @throws TranslatorException
 	 */
-	public void deployVDB(String name, List<ModelMetaData> models)
+	public void deployVDB(String name, ModelMetaData... models)
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		checkStarted();
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setDynamic(true);
 		vdb.setName(name);
-		vdb.setModels(models);
+		vdb.setModels(Arrays.asList(models));
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();
 		udfMetaData.setFunctionClassLoader(Thread.currentThread().getContextClassLoader());
 		this.assignMetadataRepositories(vdb, null);
 		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, Resource>(), udfMetaData, cmr);
-		this.loadMetadata(vdb, cmr, metadataStore);
+		try {
+			this.loadMetadata(vdb, cmr, metadataStore);
+		} catch (VDBValidationError e) {
+			throw new VirtualDatabaseException(RuntimePlugin.Event.valueOf(e.getCode()), e.getMessage());
+		}
 	}
 	
 	/**

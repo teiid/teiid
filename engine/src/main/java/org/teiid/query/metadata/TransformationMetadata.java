@@ -275,7 +275,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
     public List<Column> getElementIDsInGroupID(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
-    	return ((Table)groupID).getColumns();
+    	List<Column> columns = ((Table)groupID).getColumns();
+    	if (columns == null || columns.isEmpty()) {
+    		throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, ((Table)groupID).getName()));
+    	}
+    	return columns;
     }
 
     public Object getGroupIDForElementID(final Object elementID) throws TeiidComponentException, QueryMetadataException {

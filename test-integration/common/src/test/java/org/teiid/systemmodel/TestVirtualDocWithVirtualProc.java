@@ -51,6 +51,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     
     @BeforeClass public static void oneTimeSetup() throws Exception {
     	server = new FakeServer(true);
+    	server.setThrowMetadataErrors(false); //this vdb has invalid update procedures
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/xml-vp/xmlvp_1.vdb");
     }
     

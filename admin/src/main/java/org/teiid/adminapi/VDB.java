@@ -40,23 +40,18 @@ import java.util.List;
  */
 public interface VDB extends AdminObject, DomainAware {
 
-    public static enum Status{
-    	                   //loaded | valid
-    	INCOMPLETE(true),  //f        f
-    	LOADING(true),     //f        t
-    	INVALID(false),    //t        f
-    	ACTIVE(false),     //t        t
-    	REMOVED(false);
-
-    	private boolean loading;
-    	private Status(boolean loading) {
-    		this.loading = loading;
-		}
-    	
-		public boolean isLoading() {
-			return loading;
-		}};
-
+    public enum Status{
+    	/**
+    	 * Initial state waiting for metadata to load
+    	 */
+    	LOADING,     
+    	/**
+    	 * In the vdb repository and querable, but not necessarily valid
+    	 */
+    	ACTIVE,      
+    	REMOVED
+    };
+    
     public enum ConnectionType {NONE, BY_VERSION, ANY}
     
     /**

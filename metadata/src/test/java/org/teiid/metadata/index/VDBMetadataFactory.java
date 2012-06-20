@@ -112,7 +112,7 @@ public class VDBMetadataFactory {
     		// it is hard to event when the test is done, otherwise we need to elevate the VFS to top
     	}
     	IndexMetadataStore store =  new IndexMetadataStore(root);
-    	store.load(dataTypes);
+    	store.load(null, dataTypes);
     	return store;
 
 	}	

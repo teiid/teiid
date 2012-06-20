@@ -30,6 +30,7 @@ import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -191,6 +192,7 @@ public class FakeServer extends EmbeddedServer {
 
 	private ModelMetaData addModel(VDBMetaData vdbMetaData, Schema schema) {
 		ModelMetaData model = new ModelMetaData();
+		model.setModelType(schema.isPhysical()?Type.PHYSICAL:Type.VIRTUAL);
 		model.setName(schema.getName());
 		vdbMetaData.addModel(model);
 		model.addSourceMapping("source", "translator", "jndi:source");
@@ -211,6 +213,10 @@ public class FakeServer extends EmbeddedServer {
 	
 	public ClientServiceRegistryImpl getClientServiceRegistry() {
 		return services;
+	}
+	
+	public void setThrowMetadataErrors(boolean throwMetadataErrors) {
+		this.throwMetadataErrors = throwMetadataErrors;
 	}
 	
 }

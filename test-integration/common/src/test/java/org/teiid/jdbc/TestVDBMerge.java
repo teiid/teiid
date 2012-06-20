@@ -3,6 +3,8 @@ package org.teiid.jdbc;
 import java.sql.SQLException;
 import java.util.Arrays;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.core.util.UnitTestUtil;
@@ -14,8 +16,18 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
 	
 	private static final String VDB1 = "PartsSupplier"; //$NON-NLS-1$
 	private static final String VDB2 = "QT_Ora9DS"; //$NON-NLS-1$
-	FakeServer server = new FakeServer(true);
-	
+
+	private FakeServer server;
+    
+    @Before public void setup() throws Exception {
+    	server = new FakeServer(true);
+    	server.setThrowMetadataErrors(false); //test vdb has errors
+    }
+    
+    @After public void teardown() throws Exception {
+    	server.stop();
+    }
+    
 	@Test
     public void testMerge() throws Throwable {
 		

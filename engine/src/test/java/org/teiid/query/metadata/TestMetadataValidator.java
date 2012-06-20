@@ -75,7 +75,7 @@ public class TestMetadataValidator {
 		String ddl = "create foreign table g1(e1 integer, e2 varchar(12)); create view g2(e1 integer, e2 varchar(12)) AS select * from foo;";
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report);
+		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());
 	}
 
@@ -95,7 +95,7 @@ public class TestMetadataValidator {
 		String ddl = "create foreign table g1(e1 integer, e2 varchar(12)); create view g2(e1 integer, e2 varchar(12)) AS select * from foo;";
 		buildModel("vm1", false, this.vdb, this.store, ddl);
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report);
+		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());
 	}
 	
@@ -104,7 +104,7 @@ public class TestMetadataValidator {
 		buildModel("vm1", false, this.vdb, this.store, "create view g2(e1 integer, e2 varchar(12)) AS select * from foo;");
 		buildModel("pm1", true, this.vdb, this.store, "create foreign table g1(e1 integer, e2 varchar(12));");
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report);
+		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report, new MetadataValidator());
 		assertFalse(printError(report), report.hasItems());	
 	}
 	
@@ -112,7 +112,7 @@ public class TestMetadataValidator {
 	public void testMinimalDataNoColumns() throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, "create foreign table g1;");
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.MinimalMetadata().execute(vdb, store, report);
+		new MetadataValidator.MinimalMetadata().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());		
 	}
 	
@@ -126,7 +126,7 @@ public class TestMetadataValidator {
 		buildModel("vm1", false, this.vdb, this.store, ddl);
 		buildTransformationMetadata();
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());			
 	}
 	
@@ -136,7 +136,7 @@ public class TestMetadataValidator {
 		buildModel("vm1", false, this.vdb, this.store, ddl);
 		buildTransformationMetadata();
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
 		assertFalse(printError(report), report.hasItems());			
 	}
 	
@@ -146,7 +146,7 @@ public class TestMetadataValidator {
 		buildModel("vm1", false, this.vdb, this.store, ddl);
 		buildTransformationMetadata();
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
 		assertFalse(printError(report), report.hasItems());			
 	}
 	
@@ -155,7 +155,7 @@ public class TestMetadataValidator {
 		buildModel("vm1", false, this.vdb, this.store, "create view g1 (e1 integer, e2 varchar(12)) AS select * from pm1.g1; create view g2 AS select * from pm1.g1;");
 		buildTransformationMetadata();
 		ValidatorReport report = new ValidatorReport();
-		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report);
+		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
 		assertTrue(printError(report), report.hasItems());		
 	}
 	
@@ -170,7 +170,7 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		
 		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey());
@@ -189,7 +189,7 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		
 		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey());
@@ -208,7 +208,7 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		
 		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey());
@@ -228,7 +228,7 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertTrue(printError(report), report.hasItems());
 	}	
 	
@@ -245,7 +245,7 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 	}	
 	
@@ -261,7 +261,7 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		assertNotNull("pm1.G1", store.getSchema("vm1").getTable("G2").getMaterializedTable());
 		assertEquals("G1", store.getSchema("vm1").getTable("G2").getMaterializedTable().getName());
@@ -293,8 +293,7 @@ public class TestMetadataValidator {
 		
 		buildTransformationMetadata();
 		
-		ValidatorReport report = new ValidatorReport();
-		report = MetadataValidator.validate(this.vdb, this.store);
+		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 	}	
 }

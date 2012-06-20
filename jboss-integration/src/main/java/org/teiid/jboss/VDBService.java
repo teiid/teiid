@@ -52,7 +52,6 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
@@ -245,10 +244,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			this.objectReplicatorInjector.getValue().stop(gts);
 		}		
 		getVDBRepository().removeListener(this.vdbListener);
-		VDBMetaData runtimeMetadata = getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
-		if (runtimeMetadata != null) {
-			runtimeMetadata.setStatus(VDB.Status.REMOVED);
-		}
+		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
 		final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
