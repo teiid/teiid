@@ -22,6 +22,7 @@
  
 package org.teiid.jdbc;
 
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,6 +57,10 @@ public class NonBlockingRowProcessor implements
 				public void run() {
 					while (true) {
 						try {
+							if (stmt.isClosed()) {
+								callback.onComplete(stmt);
+								break;
+							}
 							ResultsFuture<Boolean> hasNext = resultSet.submitNext();
 							synchronized (hasNext) {
 								if (!hasNext.isDone()) {
@@ -77,6 +82,7 @@ public class NonBlockingRowProcessor implements
 							}
 						} catch (Exception e) {
 							onException(e);
+							break;
 						}
 					}
 				}
@@ -107,6 +113,12 @@ public class NonBlockingRowProcessor implements
 	}
 
 	private void onException(Exception e) {
+		if (e instanceof ExecutionException) {
+			ExecutionException ee = (ExecutionException)e;
+			if (ee.getCause() instanceof Exception) {
+				e = (Exception)ee.getCause();
+			}
+		}
 		try {
 			callback.onException(stmt, e);
 		} catch (Exception e1) {

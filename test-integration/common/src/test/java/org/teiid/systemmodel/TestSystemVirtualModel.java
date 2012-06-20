@@ -32,7 +32,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
@@ -50,6 +52,17 @@ import org.teiid.jdbc.TestMMDatabaseMetaData;
 @SuppressWarnings("nls")
 public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
+	
+	private static FakeServer server;
+    
+    @BeforeClass public static void setup() throws Exception {
+    	server = new FakeServer(true);
+    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+    }
+    
+    @AfterClass public static void teardown() throws Exception {
+    	server.stop();
+    }
 
 	public TestSystemVirtualModel() {
 		// this is needed because the result files are generated
@@ -58,8 +71,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 	
     @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
-    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
     	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	
    	}
    
@@ -186,8 +197,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void testAsynch() throws Exception {
-		Statement s = this.internalConnection.createStatement();
-		TeiidStatement ts = s.unwrap(TeiidStatement.class);
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
 		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
 			int rowCount;
@@ -210,8 +221,8 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void testAsynchContinuous() throws Exception {
-		Statement s = this.internalConnection.createStatement();
-		TeiidStatement ts = s.unwrap(TeiidStatement.class);
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
 		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
 			int rowCount;
@@ -225,7 +236,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 			
 			@Override
 			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().receiveResults(rowCount);
+				result.getResultsReceiver().exceptionOccurred(e);
 			}
 			
 			@Override
