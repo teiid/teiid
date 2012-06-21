@@ -334,6 +334,15 @@ public class AdminShell {
 		return getAdmin().getDataSourceTemplateNames();
 	}
 	
+	@Doc(text = "Restart the VDB")
+	public static void restartVDB(
+			@Doc(text = "vdb name") String vdbName, 
+			@Doc(text = "vdb version") int vdbVersion,
+			@Doc(text = "models") String... models)
+			throws AdminException {
+		getAdmin().restartVDB(vdbName, vdbVersion, models);
+	}	
+	
 	@Doc(text = "Get the current org.teiid.adminapi.Admin instance for direct use. Note: Used for advanced usecases to bypass AdminShell methods")
 	public static Admin getAdmin() {
 		if (internalAdmin == null) {

@@ -23,25 +23,18 @@ package org.teiid.jboss;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.naming.deployment.ContextNames;
-import org.jboss.as.server.deployment.Attachments;
-import org.jboss.as.server.deployment.DeploymentPhaseContext;
-import org.jboss.as.server.deployment.DeploymentUnit;
-import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
-import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.as.server.deployment.*;
 import org.jboss.modules.Module;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
+import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
@@ -139,10 +132,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
 		// build a VDB service
-		VDBService vdb = new VDBService(deployment, visibilityMap);
+		final VDBService vdb = new VDBService(deployment, visibilityMap);
 		if (indexRepo != null) {
 			vdb.addMetadataRepository("index", indexRepo); //$NON-NLS-1$
 		}
+		
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		
 		// add dependencies to data-sources
@@ -173,16 +167,70 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			}
 		}
 		
+		ServiceName vdbSwitchServiceName = TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion());
 		vdbService.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class,  vdb.vdbRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class,  vdb.translatorRepositoryInjector);
 		vdbService.addDependency(TeiidServiceNames.executorServiceName(this.asyncThreadPoolName), Executor.class,  vdb.executorInjector);
 		vdbService.addDependency(TeiidServiceNames.OBJECT_SERIALIZER, ObjectSerializer.class, vdb.serializerInjector);
 		vdbService.addDependency(TeiidServiceNames.BUFFER_MGR, BufferManager.class, vdb.bufferManagerInjector);
 		vdbService.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, vdb.vdbStatusCheckInjector);
-		
+		vdbService.addDependency(vdbSwitchServiceName, CountDownLatch.class, new InjectedValue<CountDownLatch>());
 		vdbService.addDependency(DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, vdb.objectReplicatorInjector);
+		
+		// VDB restart switch, control the vdbservice by adding removing the switch service. If you
+		// remove the service by setting status remove, there is no way start it back up if vdbservice used alone
+		installVDBSwitchService(context.getServiceTarget(), vdbSwitchServiceName);
+		
+		vdbService.addListener(new AbstractServiceListener<Object>() {
+        	@Override
+            public void transition(final ServiceController controller, final ServiceController.Transition transition) {
+        		if (transition.equals(ServiceController.Transition.DOWN_to_WAITING)) {
+        			RuntimeVDB runtimeVDB = RuntimeVDB.class.cast(controller.getValue());
+        			if (runtimeVDB != null && runtimeVDB.isRestartInProgress()) {
+            			ServiceName vdbSwitchServiceName = TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion());
+            			ServiceController<?> switchSvc =  controller.getServiceContainer().getService(vdbSwitchServiceName);
+            			if (switchSvc != null) {
+            				CountDownLatch latch = CountDownLatch.class.cast(switchSvc.getValue());
+            				try {
+            					latch.await(5, TimeUnit.SECONDS);
+							} catch (InterruptedException e) {
+								// todo:log it?
+							}
+            			}
+            			installVDBSwitchService(controller.getServiceContainer(), vdbSwitchServiceName);
+        			}
+        		}
+            }			
+		});
 		vdbService.setInitialMode(Mode.PASSIVE).install();
 	}
+	
+	private void installVDBSwitchService(final ServiceTarget serviceTarget, ServiceName vdbSwitchServiceName) {
+		// install switch service now.
+		ServiceBuilder<CountDownLatch> svc = serviceTarget.addService(vdbSwitchServiceName, new Service<CountDownLatch>() {
+			private CountDownLatch latch = new CountDownLatch(1);
+			@Override
+			public CountDownLatch getValue() throws IllegalStateException,IllegalArgumentException {
+				return this.latch;
+			}
+			@Override
+			public void start(StartContext context) throws StartException {
+			}
+			@Override
+			public void stop(StopContext context) {
+			}
+		});
+		svc.addListener(new AbstractServiceListener<Object>() {
+			@Override
+		    public void transition(final ServiceController controller, final ServiceController.Transition transition) {
+				if (transition.equals(ServiceController.Transition.REMOVING_to_REMOVED)) {
+					CountDownLatch latch = CountDownLatch.class.cast(controller.getValue());
+					latch.countDown();
+				}
+			}
+		});
+		svc.install();
+	}	
 	
 	private void dataSourceDependencies(VDBMetaData deployment, DependentServices svcListener) {
 		

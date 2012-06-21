@@ -1301,6 +1301,42 @@ public class AdminFactory {
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70050, e);
 	        }	    	
-	    }		
+	    }
+
+		@Override
+		public void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException {
+			ModelNode request = null;
+			String modelNames = null;
+			
+			if (models != null && models.length > 0) {
+				StringBuilder sb = new StringBuilder();
+				for (int i = 0; i < models.length-1; i++) {
+					sb.append(models[i]).append(",");
+				}
+				sb.append(models[models.length-1]);
+				modelNames = sb.toString();
+			}
+	        
+			if (modelNames != null) {
+				request = buildRequest("teiid", "restart-vdb", 
+		        		"vdb-name", vdbName,
+		        		"vdb-version", String.valueOf(vdbVersion),
+		        		"model-names", modelNames);//$NON-NLS-1$ //$NON-NLS-2$
+			}
+			else {
+				request = buildRequest("teiid", "restart-vdb", 
+		        		"vdb-name", vdbName,
+		        		"vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$ 			
+			}
+	        
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70045, Util.getFailureDescription(outcome));
+	            }
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
+	        }		        
+		}		
     }
 }

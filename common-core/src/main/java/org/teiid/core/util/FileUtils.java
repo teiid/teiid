@@ -766,8 +766,11 @@ public final class FileUtils {
     }
     
     
-    
-    
+    public static void remove(File file) {
+        if (file.exists()) {
+            file.delete();
+        }  
+    }   
 
     public static void remove(String filePath) throws IOException {
         File file = new File(filePath);

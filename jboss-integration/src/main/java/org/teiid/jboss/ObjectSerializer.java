@@ -106,6 +106,10 @@ public class ObjectSerializer {
 		String dirName = baseDirectory(vdb.getName()+"_"+vdb.getVersion()); //$NON-NLS-1$
 		FileUtils.removeDirectoryAndChildren(new File(dirName));
 	}
+	
+	public void removeAttachment(File file) {
+		FileUtils.remove(file);
+	}
 
 	private String baseDirectory(String fileName) {
 		String dirName = this.storagePath + File.separator + fileName + File.separator;

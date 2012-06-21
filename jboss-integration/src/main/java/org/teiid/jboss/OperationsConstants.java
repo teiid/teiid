@@ -35,6 +35,7 @@ class OperationsConstants {
 	public static final String SOURCE_NAME = "source-name"; //$NON-NLS-1$
 	public static final String DS_NAME = "ds-name"; //$NON-NLS-1$
 	public static final String RAR_NAME = "rar-name"; //$NON-NLS-1$
+	public static final String MODEL_NAMES = "model-names"; //$NON-NLS-1$
 	
 	public static final String SOURCE_VDBNAME = "source-vdb-name";//$NON-NLS-1$
 	public static final String SOURCE_VDBVERSION = "source-vdb-version";//$NON-NLS-1$

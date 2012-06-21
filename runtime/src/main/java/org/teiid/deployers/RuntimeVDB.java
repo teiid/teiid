@@ -34,11 +34,13 @@ import org.teiid.runtime.RuntimePlugin;
 public abstract class RuntimeVDB {
 	private VDBMetaData vdb;
 	private VDBModificationListener listener;
+	private boolean restartInProgress = false;
 	
 	public interface VDBModificationListener {
 		void dataRoleChanged(String policyName) throws AdminProcessingException;
 		void connectionTypeChanged() throws AdminProcessingException;
 		void dataSourceChanged(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException;
+		void onRestart(List<String> modelNames) throws AdminProcessingException;
 	}
 	
 	public RuntimeVDB(VDBMetaData vdb, VDBModificationListener listener) {
@@ -145,6 +147,13 @@ public abstract class RuntimeVDB {
 		}
 	}
 	
+	public void restart(List<String> modelNames) throws AdminProcessingException {
+		synchronized(this.vdb) {
+			this.restartInProgress = true;
+			this.listener.onRestart(modelNames);
+		}
+	}
+	
 	private DataPolicyMetadata getPolicy(String policyName)
 			throws AdminProcessingException {
 		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
@@ -154,6 +163,10 @@ public abstract class RuntimeVDB {
 		}
 		return policy;
 	}	
+	
+	public boolean isRestartInProgress() {
+		return this.restartInProgress;
+	}
 	
 	protected abstract VDBStatusChecker getVDBStatusChecker();
 }

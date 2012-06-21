@@ -503,8 +503,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		
 		try {
 			ConnectorManager cm = getConnectorManager(model, cmr);
-			ef = ((cm == null)?null:cm.getExecutionFactory());
-			cf = ((cm == null)?null:cm.getConnectionFactory());
+			if (cm != null) {
+				ef = cm.getExecutionFactory();
+				if (ef.isSourceRequired()) {
+					cf = cm.getConnectionFactory();
+				}
+			}
 		} catch (TranslatorException e1) {
 			//ignore data source not availability, it may not be required.
 		}

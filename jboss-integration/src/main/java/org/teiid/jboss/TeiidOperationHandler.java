@@ -1158,6 +1158,40 @@ class ChangeVDBConnectionType extends VDBOperations {
 	}		
 }
 
+class RestartVDB extends VDBOperations {
+
+	public RestartVDB() {
+		super("restart-vdb"); //$NON-NLS-1$
+	}
+	
+	@Override
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
+		List<String> models = new ArrayList<String>();
+		if (operation.hasDefined(OperationsConstants.MODEL_NAMES)) {
+			String modelNames = operation.get(OperationsConstants.MODEL_NAMES).asString();
+			for (String model:modelNames.split(",")) { //$NON-NLS-1$
+				models.add(model.trim());
+			}			
+		}
+
+		try {
+			vdb.restart(models);
+		} catch (AdminProcessingException e) {
+			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
+		}
+	}
+	
+	@Override
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		super.describeParameters(operationNode, bundle);
+		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MODEL_NAMES, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MODEL_NAMES, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MODEL_NAMES, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.MODEL_NAMES));
+		operationNode.get(REPLY_PROPERTIES).setEmptyObject();
+	}		
+}
+
 class AssignDataSource extends VDBOperations {
 
 	public AssignDataSource() {

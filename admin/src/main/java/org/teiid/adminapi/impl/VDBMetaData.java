@@ -83,9 +83,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public synchronized void setStatus(Status s) {
 		this.notifyAll();
-		if (this.status == Status.REMOVED) {
-			return;
-		}
 		this.status = s;
 	}
 	

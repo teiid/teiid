@@ -22,13 +22,73 @@
 
 package org.teiid.arquillian;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.teiid.language.Command;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
+import org.teiid.translator.*;
+import org.teiid.translator.loopback.LoopbackExecution;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @org.teiid.translator.Translator(name = "loopy")
+@SuppressWarnings("nls")
 public class SampleExecutionFactory extends LoopbackExecutionFactory {
+	static int metadataloaded = 0; // use of static is bad, but we instantiate a separate translator for each vdb load
+	
 	public SampleExecutionFactory() {
 		setSupportsSelectDistinct(true);
 		setWaitTime(10);
 		setRowCount(200);
 	}
+	
+	@Override
+	public void getMetadata(MetadataFactory metadataFactory, Object conn) throws TranslatorException {
+		super.getMetadata(metadataFactory, conn);
+		metadataloaded++;
+		
+		Table t = metadataFactory.addTable("Matadata");
+		metadataFactory.addColumn("execCount", "integer", t);
+	}
+	
+	@Override
+	public boolean isSourceRequired() {
+		return false;
+	}	
+	
+    @Override
+    public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
+    		throws TranslatorException {
+    	if (command.toString().equals("SELECT g_0.execCount FROM Matadata AS g_0")) { //$NON-NLS-1$
+    		return new ResultSetExecution() {
+				boolean served = false;
+				@Override
+				public void execute() throws TranslatorException {
+					
+				}
+				
+				@Override
+				public void close() {
+					
+				}
+				
+				@Override
+				public void cancel() throws TranslatorException {
+				}
+				
+				@Override
+				public List<?> next() throws TranslatorException, DataNotAvailableException {
+					if (!served) {
+						served = true;
+						return Arrays.asList(metadataloaded);
+					}
+					return null;
+				}
+			};
+    	}
+        return new LoopbackExecution(command, this);
+    }   
+	
 }

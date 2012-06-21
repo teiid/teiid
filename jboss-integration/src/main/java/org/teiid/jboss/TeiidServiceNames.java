@@ -38,6 +38,7 @@ public class TeiidServiceNames {
 	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_FINISHED_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb-finished"); //$NON-NLS-1$ //$NON-NLS-2$
+	private static ServiceName VDB_SWITCH_SVC_BASE = ServiceName.JBOSS.append("teiid", "switch"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName OBJECT_SERIALIZER = ServiceName.JBOSS.append("teiid", "object-serializer"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName CACHE_RESULTSET = ServiceName.JBOSS.append("teiid", "cache", "resultset"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	public static ServiceName CACHE_PREPAREDPLAN = ServiceName.JBOSS.append("teiid", "cache", "prepared-plan"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -57,6 +58,10 @@ public class TeiidServiceNames {
 	public static ServiceName vdbFinishedServiceName(String vdbName, int version) {
 		return VDB_FINISHED_SVC_BASE.append(vdbName, String.valueOf(version)); 
 	}
+	
+	public static ServiceName vdbSwitchServiceName(String vdbName, int version) {
+		return VDB_SWITCH_SVC_BASE.append(vdbName, String.valueOf(version)); 
+	}	
 	
 	public static ServiceName executorServiceName(String poolName) {
 		return ServiceName.JBOSS.append("thread", "executor", poolName); //$NON-NLS-1$ //$NON-NLS-2$

@@ -24,15 +24,7 @@ package org.teiid.jboss;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -42,13 +34,7 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.modules.ModuleLoader;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceContainer;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.*;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
@@ -58,18 +44,11 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.RuntimeVDB;
-import org.teiid.deployers.TranslatorUtil;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBLifeCycleListener;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -185,10 +164,10 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			throw new StartException(e);
 		}
 				
-		this.runtimeVDB = buildRuntimeVDB(this.vdb);		
+		this.runtimeVDB = buildRuntimeVDB(this.vdb, context.getController().getServiceContainer());		
 	}
 
-	private RuntimeVDB buildRuntimeVDB(VDBMetaData vdbMetadata) {
+	private RuntimeVDB buildRuntimeVDB(final VDBMetaData vdbMetadata, final ServiceContainer serviceContainer) {
 		RuntimeVDB.VDBModificationListener modificationListener = new RuntimeVDB.VDBModificationListener() {
 			@Override
 			public void dataRoleChanged(String policyName) throws AdminProcessingException {
@@ -202,12 +181,42 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			public void dataSourceChanged(String modelName, String sourceName,String translatorName, String dsName) throws AdminProcessingException {
 				save();
 			}
+			@Override
+			public void onRestart(List<String> modelNames) {
+				ServiceController<?> switchSvc = serviceContainer.getService(TeiidServiceNames.vdbSwitchServiceName(vdbMetadata.getName(), vdbMetadata.getVersion()));
+		        if (switchSvc != null) {
+		        	if (!modelNames.isEmpty()) {
+						for (String model:modelNames) {
+							deleteModelCache(model);
+						}		        	
+		        	}
+		        	else {
+		        		for (String model:vdbMetadata.getModelMetaDatas().keySet()) {
+		        			deleteModelCache(model);
+		        		}
+		        	}
+		            switchSvc.setMode(ServiceController.Mode.REMOVE);
+		        }		        
+			}			
 		};
 		return new RuntimeVDB(vdbMetadata, modificationListener) {
 			protected VDBStatusChecker getVDBStatusChecker() {
 				return VDBService.this.vdbStatusCheckInjector.getValue();
 			}
 		};
+	}
+	
+	Service<Void> createVoidService() {
+		return new Service<Void>() {
+			@Override
+			public Void getValue() throws IllegalStateException, IllegalArgumentException {
+				return null;
+			}
+			@Override
+			public void start(StartContext sc)throws StartException {}
+			@Override
+			public void stop(StopContext sc) {}
+		};		
 	}
 
 	private ServiceBuilder<Void> addVDBFinishedService(StartContext context) {
@@ -216,28 +225,15 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
         }
-        return serviceContainer.addService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()), new Service<Void>() {
-			@Override
-			public Void getValue() throws IllegalStateException,
-					IllegalArgumentException {
-				return null;
-			}
-
-			@Override
-			public void start(StartContext sc)
-					throws StartException {
-				
-			}
-
-			@Override
-			public void stop(StopContext sc) {
-				
-			}
-		});
+        return serviceContainer.addService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()), createVoidService());
 	}
 
 	@Override
 	public void stop(StopContext context) {
+		ServiceController<?> switchSvc = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbSwitchServiceName(vdb.getName(), vdb.getVersion()));
+        if (switchSvc != null) {
+            switchSvc.setMode(ServiceController.Mode.REMOVE);
+        }
 		// stop object replication
 		if (this.objectReplicatorInjector.getValue() != null) {
 			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
@@ -248,7 +244,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
-        }
+        }	        
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50026, this.vdb));
 	}
 
@@ -347,8 +343,12 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					
 					try {
 						ConnectorManager cm = getConnectorManager(model, cmr);
-						ef = ((cm == null)?null:cm.getExecutionFactory());
-						cf = ((cm == null)?null:cm.getConnectionFactory());
+						if (cm != null) {
+							ef = cm.getExecutionFactory();
+							if (ef.isSourceRequired()) {
+								cf = cm.getConnectionFactory();
+							}
+						}
 					} catch (TranslatorException e1) {
 						//ignore data source not availability, it may not be required.
 					}
@@ -413,6 +413,11 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			}
 		}
 	}    
+	
+	private void deleteModelCache(String modelName) {
+		final File cachedFile = getSerializer().buildModelFile(vdb, modelName);
+		getSerializer().removeAttachment(cachedFile);
+	}
 
 	protected VDBRepository getVDBRepository() {
 		return vdbRepositoryInjector.getValue();

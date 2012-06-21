@@ -90,6 +90,16 @@ public interface Admin {
      * @return
      */
     VDB getVDB(String vdbName, int vdbVersion) throws AdminException;
+    
+    /**
+     * Restart the VDB. This issues reload of the metadata.
+     * @param vdbName
+     * @param vbdVersion
+     * @param models names for which metadata needs to be reloaded, if null or not supplied all models reloaded
+     * @throws AdminException 
+     * @return
+     */
+    void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException;    
 
     /**
      * Get the translators that are available in the configuration

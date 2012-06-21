@@ -24,15 +24,14 @@ package org.teiid.arquillian;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -405,5 +404,54 @@ public class IntegrationTestDeployment {
 		admin.deleteDataSource(deployedName);
 	}
 	
-	
+	@Test
+	public void testVDBRestart() throws Exception{
+		String vdbName = "test";
+		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+				"<vdb name=\"test\" version=\"1\">\n" + 
+				"    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+				"    <model name=\"loopy\">\n" + 
+				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
+				"    </model>\n" + 
+				"</vdb>";
+		
+		Collection<?> vdbs = admin.getVDBs();
+		assertTrue(vdbs.isEmpty());
+		
+		JavaArchive jar = getLoopyArchive();
+		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		// normal load
+		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		int count = assertMetadataLoadCount(false, 1);
+
+		// 1st restart
+		admin.restartVDB(vdbName, 1);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		count = assertMetadataLoadCount(true, count+1);
+
+		// 2nd restart
+		admin.restartVDB(vdbName, 1);
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		count = assertMetadataLoadCount(true, count+1);
+		
+		admin.undeploy("loopy.jar");
+	}
+
+	private int assertMetadataLoadCount(boolean check, int expected) throws SQLException {				
+		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:test.1@mm://localhost:31000;user=user;password=user", null);		
+		Statement stmt = conn.createStatement();
+		stmt.execute("SELECT execCount FROM Matadata");
+		ResultSet rs = stmt.getResultSet();
+		rs.next();
+		int execCount = rs.getInt(1);
+		if (check) {
+			assertEquals(expected, execCount);
+		}
+		rs.close();
+		stmt.close();
+		conn.close();
+		return execCount;
+	}	
 }
