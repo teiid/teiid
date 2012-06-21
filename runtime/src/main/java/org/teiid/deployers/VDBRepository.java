@@ -294,6 +294,7 @@ public class VDBRepository implements Serializable{
 					}
 				}
 			} 
+			validateDataSources(metadataAwareVDB);
 			metadataAwareVDB.setStatus(Status.ACTIVE);
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
 			notifyFinished(name, version, v);

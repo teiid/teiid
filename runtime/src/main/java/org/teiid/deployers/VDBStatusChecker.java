@@ -21,12 +21,12 @@
  */
 package org.teiid.deployers;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -83,8 +83,7 @@ public abstract class VDBStatusChecker {
 			
 			boolean dsReplaced = false;
 			if (!cm.getConnectionName().equals(dsName)){
-				String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName);
-				model.addRuntimeError(msg);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName));
 				cm = new ConnectorManager(translatorName, dsName); 
 				cm.setExecutionFactory(ef);
 				cmr.addConnectorManager(sourceName, cm);
@@ -118,11 +117,8 @@ public abstract class VDBStatusChecker {
 	}
 
 	public void resourceAdded(String resourceName, boolean translator) {
+		List<Runnable> runnables = new ArrayList<Runnable>();
 		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
-			if (vdb.getStatus() == VDB.Status.ACTIVE) {
-				continue;
-			}
-			LinkedList<Runnable> runnables = new LinkedList<Runnable>();
 			synchronized (vdb) {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 				
@@ -152,19 +148,14 @@ public abstract class VDBStatusChecker {
 					}
 				}
 	
-				boolean valid = true;
-				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
-					if (model.hasRuntimeErrors()) {
-						valid = false;
-						break;
-					}
-				}
+				boolean valid = !vdb.hasErrors();
 				
 				if (!runnables.isEmpty()) {
 					//the task themselves will set the status on completion/failure
 					for (Runnable runnable : runnables) {						
 						getExecutor().execute(runnable);
 					}
+					runnables.clear();
 				} else if (valid) {
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
 				}
