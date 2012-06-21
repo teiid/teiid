@@ -363,4 +363,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		String str = rs.getString(1);
 		assertTrue(str.startsWith("ProjectNode\n  + Output Columns:expr1 (integer)\n  + Statistics:\n    0: Node Output Rows: 1"));
 	}
+	
+	@Test public void testSetEmptyLiteral() throws Exception {
+		Statement s = conn.createStatement();
+		assertFalse(s.execute("SET min_client_messages TO ''"));
+		assertTrue(s.execute("SHOW min_client_messages"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		assertEquals("", rs.getString(1));
+	}
 }

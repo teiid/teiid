@@ -130,7 +130,7 @@ public class ODBCClientInstance implements ChannelListener{
 				throw e.getCause();
 			}		
 		} catch (Throwable e) {
-			this.client.errorOccurred(e);
+			this.server.errorOccurred(e);
 		}
 	}
 

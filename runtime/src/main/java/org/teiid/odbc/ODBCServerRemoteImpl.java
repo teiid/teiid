@@ -69,7 +69,7 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	private static final String UNNAMED = "UNNAMED"; //$NON-NLS-1$
-	private static Pattern setPattern = Pattern.compile("(SET|set)\\s+(\\w+)\\s+(TO|to)\\s+'(\\w+\\d*)'");//$NON-NLS-1$
+	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
@@ -603,7 +603,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return "select 63"; //$NON-NLS-1$
 		}
 		else if ((m = setPattern.matcher(sql)).matches()) {
-			return "SET " + m.group(2) + " " + m.group(4); //$NON-NLS-1$ //$NON-NLS-2$
+			return "SET " + m.group(1) + " " + m.group(2); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else if (modified.equalsIgnoreCase("BEGIN")) { //$NON-NLS-1$
 			return "START TRANSACTION"; //$NON-NLS-1$
@@ -693,7 +693,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 	}
 	
-	private void errorOccurred(Throwable error) {
+	public void errorOccurred(Throwable error) {
 		this.client.errorOccurred(error);
 		synchronized (this) {
 			this.errorOccurred = true;

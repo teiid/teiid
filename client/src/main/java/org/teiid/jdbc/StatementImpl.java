@@ -434,8 +434,8 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		String value = match.group(3);
         		if (value == null) {
         			value = match.group(4);
-        			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
         			value = value.substring(1, value.length() - 1);
+        			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
         		}
         		if (match.group(1) != null) {
         			//payload case
