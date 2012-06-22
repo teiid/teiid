@@ -24,6 +24,7 @@ package org.teiid.adminapi;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Properties;
 import java.util.Set;
 
@@ -32,6 +33,8 @@ import org.teiid.adminapi.VDB.ConnectionType;
 public interface Admin {
 
 	public enum Cache {PREPARED_PLAN_CACHE, QUERY_SERVICE_RESULT_SET_CACHE};
+	
+	public enum SchemaObjectType {TABLES, PROCEDURES, FUNCTIONS};
     
     /**
      * Assign a {@link Translator} and Data source to a {@link VDB}'s Model
@@ -292,5 +295,16 @@ public interface Admin {
      * @param jndiName
      * @throws AdminException
      */
-    void markDataSourceAvailable(String jndiName) throws AdminException;    
+    void markDataSourceAvailable(String jndiName) throws AdminException;
+    
+    /**
+     * Retrieve the schema of the given model
+     *  
+     * @param vdbName
+     * @param vdbVersion
+     * @param modelName
+     * @param EnumSet<SchemaObjectType> Type of schema objects to retrieve, null means ALL the schema object types
+     * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.  
+     */
+    String getSchema(String vdbName, int vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
 }

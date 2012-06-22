@@ -37,11 +37,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -60,9 +56,8 @@ import org.jboss.jca.common.api.metadata.ra.ResourceAdapter;
 import org.jboss.jca.common.api.metadata.ra.ResourceAdapter1516;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
-import org.teiid.adminapi.Admin;
-import org.teiid.adminapi.AdminException;
-import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
 import org.teiid.adminapi.impl.RequestMetadata;
@@ -89,6 +84,10 @@ import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.TempTableDataManager;
 
 abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
@@ -863,6 +862,96 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.OBJECT);		
 		VDBMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
+	}	
+}
+
+class GetSchema extends BaseOperationHandler<VDBRepository>{
+	
+	protected GetSchema() {
+		super("get-schema"); //$NON-NLS-1$
+	}
+	
+	@Override
+	protected VDBRepository getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
+        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
+        return VDBRepository.class.cast(sc.getValue());	
+	}
+	
+	@Override
+	protected void executeOperation(OperationContext context, VDBRepository repo, ModelNode operation) throws OperationFailedException {
+		if (!operation.hasDefined(OperationsConstants.VDB_NAME)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_NAME+MISSING)));
+		}
+		if (!operation.hasDefined(OperationsConstants.VDB_VERSION)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION+MISSING)));
+		}
+		if (!operation.hasDefined(OperationsConstants.MODEL_NAME)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.MODEL_NAME+MISSING)));
+		}		
+		
+		ModelNode result = context.getResult();
+		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
+		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
+		String modelName = operation.get(OperationsConstants.MODEL_NAME).asString();
+
+		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
+		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("no_vdb_found", vdbName, vdbVersion))); //$NON-NLS-1$
+		}
+		
+		EnumSet<SchemaObjectType> schemaTypes = null;
+		if (vdb.getModel(modelName) == null){
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("no_model_found", vdbName, vdbVersion, modelName))); //$NON-NLS-1$
+		}
+		
+		if (operation.hasDefined(OperationsConstants.ENTITY_TYPE)) {
+			String[] types = operation.get(OperationsConstants.ENTITY_TYPE).asString().toUpperCase().split(","); //$NON-NLS-1$
+			if (types.length > 0) {
+				ArrayList<SchemaObjectType> sot = new ArrayList<Admin.SchemaObjectType>();
+				for (int i = 1; i < types.length; i++) {
+					sot.add(SchemaObjectType.valueOf(types[i]));
+				}
+				schemaTypes =  EnumSet.of(SchemaObjectType.valueOf(types[0]), sot.toArray(new SchemaObjectType[sot.size()]));
+			}
+			else {
+				schemaTypes = EnumSet.of(SchemaObjectType.valueOf(types[0]));
+			}
+		}
+		
+		String regEx = null;
+		if (operation.hasDefined(OperationsConstants.ENTITY_PATTERN)) {
+			regEx = operation.get(OperationsConstants.ENTITY_PATTERN).asString();
+		}
+		
+		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
+		Schema schema = metadataStore.getSchema(modelName);
+		String ddl = DDLStringVisitor.getDDLString(schema, schemaTypes, regEx);
+		result.set(ddl);
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_NAME));
+		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION));
+
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MODEL_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MODEL_NAME, REQUIRED).set(true);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.MODEL_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.MODEL_NAME));
+		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.ENTITY_TYPE, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.ENTITY_TYPE, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.ENTITY_TYPE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.ENTITY_TYPE));
+
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.ENTITY_PATTERN, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.ENTITY_PATTERN, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.ENTITY_PATTERN, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.ENTITY_PATTERN));
+		
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.STRING);		
 	}	
 }
 

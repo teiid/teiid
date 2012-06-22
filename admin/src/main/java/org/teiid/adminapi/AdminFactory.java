@@ -22,7 +22,9 @@
 
 package org.teiid.adminapi;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.*;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REMOVE_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,11 +34,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Logger;
 
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.CallbackHandler;
-import javax.security.auth.callback.NameCallback;
-import javax.security.auth.callback.PasswordCallback;
-import javax.security.auth.callback.UnsupportedCallbackException;
+import javax.security.auth.callback.*;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
@@ -49,12 +47,7 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.AdminObjectImpl;
-import org.teiid.adminapi.impl.MetadataMapper;
-import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBMetadataMapper;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
@@ -1337,6 +1330,50 @@ public class AdminFactory {
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
 	        }		        
+		}
+
+		@Override
+		public String getSchema(String vdbName, int vdbVersion,
+				String modelName, EnumSet<SchemaObjectType> allowedTypes,
+				String typeNamePattern) throws AdminException {
+			ModelNode request = null;
+			
+			ArrayList<String> params = new ArrayList<String>();
+			params.add("vdb-name");
+			params.add(vdbName);
+			params.add("vdb-version");
+			params.add(String.valueOf(vdbVersion));
+			params.add("model-name");
+			params.add(modelName);
+			
+			if (allowedTypes != null) {
+				params.add("entity-type");
+				StringBuilder sb = new StringBuilder();
+				for (SchemaObjectType type:allowedTypes) {
+					if (sb.length() > 0) {
+						sb.append(",");
+					}
+					sb.append(type.name());
+				}
+				params.add(sb.toString());
+			}
+			
+			if (typeNamePattern != null) {
+				params.add("entity-pattern");
+				params.add(typeNamePattern);
+			}
+			
+			request = buildRequest("teiid", "get-schema", params.toArray(new String[params.size()]));//$NON-NLS-1$ //$NON-NLS-2$
+			
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70045, Util.getFailureDescription(outcome));
+	            }
+	            return outcome.get(RESULT).asString();
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
+	        }
 		}		
     }
 }

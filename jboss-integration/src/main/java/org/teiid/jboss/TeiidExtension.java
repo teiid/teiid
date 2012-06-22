@@ -148,6 +148,7 @@ public class TeiidExtension implements Extension {
 		new ExecuteQuery().register(teiidSubsystem);
 		new MarkDataSourceAvailable().register(teiidSubsystem);
 		new ReadRARDescription().register(teiidSubsystem);
+		new GetSchema().register(teiidSubsystem);
 	}
 
 	@Override

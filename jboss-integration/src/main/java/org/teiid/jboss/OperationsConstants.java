@@ -45,4 +45,6 @@ class OperationsConstants {
 	public static final String TIMEOUT_IN_MILLI = "timeout-in-milli";//$NON-NLS-1$
 	public static final String TRANSLATOR_NAME = "translator-name"; //$NON-NLS-1$
 
+	public static final String ENTITY_TYPE = "entity-type"; //$NON-NLS-1$
+	public static final String ENTITY_PATTERN = "entity-pattern"; //$NON-NLS-1$
 }

@@ -454,4 +454,35 @@ public class IntegrationTestDeployment {
 		conn.close();
 		return execCount;
 	}	
+	
+	@Test
+	public void testDDLExport() throws Exception{
+		String vdbName = "test";
+		String testVDB = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" + 
+				"<vdb name=\"test\" version=\"1\">\n" + 
+				"    <property name=\"UseConnectorMetadata\" value=\"cached\" />\n" + 
+				"    <model name=\"loopy\">\n" + 
+				"        <source name=\"loop\" translator-name=\"loopy\" />\n" + 
+				"    </model>\n" + 
+				"</vdb>";
+		
+		Collection<?> vdbs = admin.getVDBs();
+		assertTrue(vdbs.isEmpty());
+		
+		JavaArchive jar = getLoopyArchive();
+		admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		// normal load
+		admin.deploy("test-vdb.xml", new ByteArrayInputStream(testVDB.getBytes()));
+		AdminUtil.waitForVDBLoad(admin, vdbName, 1, 3);
+		
+		String ddl = admin.getSchema(vdbName, 1, "loopy", null, null);
+
+		String expected = "CREATE FOREIGN TABLE Matadata (\n" + 
+				"	execCount int OPTIONS (SEARCHABLE 'Searchable')\n" + 
+				");";
+		assertEquals(expected, ddl);
+		
+		admin.undeploy("loopy.jar");
+	}	
 }

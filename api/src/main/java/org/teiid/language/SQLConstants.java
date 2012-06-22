@@ -47,6 +47,8 @@ public class SQLConstants {
 		public static final String LPAREN = "("; //$NON-NLS-1$
 		public static final String RPAREN = ")"; //$NON-NLS-1$
 		public static final String COLON = ":"; //$NON-NLS-1$
+		public static final String TICK = "'"; //$NON-NLS-1$
+		public static final String SEMICOLON = ";"; //$NON-NLS-1$
 	}
 	
 	public interface NonReserved {
