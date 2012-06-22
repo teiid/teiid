@@ -22,17 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.CommandContext;
 import org.teiid.PolicyDecider;
@@ -53,17 +43,7 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.AlterProcedure;
-import org.teiid.query.sql.lang.AlterTrigger;
-import org.teiid.query.sql.lang.AlterView;
-import org.teiid.query.sql.lang.Create;
-import org.teiid.query.sql.lang.Delete;
-import org.teiid.query.sql.lang.Drop;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.Into;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -298,7 +278,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     		Map<String, LanguageObject> procMap = new LinkedHashMap<String, LanguageObject>();
                     		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap);
                     		validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
-                    	} else if (group.isTempTable()) {
+                    	} else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
                     		validateTemp(actionCode, group, auditContext);
                     	}
                         continue;

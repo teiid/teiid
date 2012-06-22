@@ -278,7 +278,7 @@
             <transport name="odbc" protocol="pg" socket-binding="teiid-odbc">
                 <authentication security-domain="teiid-security"/>
             </transport>
-                    
+            <authorization-validator-module>org.jboss.teiid</authorization-validator-module>        
             <translator name="jdbc-simple" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="jdbc-ansi" module="org.jboss.teiid.translator.jdbc"/>
             <translator name="access" module="org.jboss.teiid.translator.jdbc"/>

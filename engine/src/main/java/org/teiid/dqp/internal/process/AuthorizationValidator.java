@@ -63,7 +63,4 @@ public interface AuthorizationValidator {
 	 */
 	boolean hasRole(String roleName, CommandContext commandContext);
 	
-	boolean isEnabled();
-	
-	void setEnabled(boolean enabled);
 }

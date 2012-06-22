@@ -287,22 +287,21 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
     	else {
     		DataRolePolicyDecider drpd = new DataRolePolicyDecider();
-    		drpd.setAllowCreateTemporaryTablesByDefault(true);
-    		drpd.setAllowFunctionCallsByDefault(true);
     		policyDecider = drpd;
     	}
     	
     	final AuthorizationValidator authValidator;
     	if (Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.isDefined(operation)) {
     		authValidator = buildService(AuthorizationValidator.class, Element.AUTHORIZATION_VALIDATOR_MODULE_ELEMENT.asString(operation));
-    		authValidator.setEnabled(true);
     	}
     	else {
     		DefaultAuthorizationValidator dap = new DefaultAuthorizationValidator();
-    		dap.setPolicyDecider(policyDecider);
-    		dap.setEnabled(true);
+    		dap.setEnabled(false);
     		authValidator = dap;
     	}
+		if (authValidator instanceof DefaultAuthorizationValidator) {
+			((DefaultAuthorizationValidator)authValidator).setPolicyDecider(policyDecider);
+		}
     	
     	ValueService<AuthorizationValidator> authValidatorService = new ValueService<AuthorizationValidator>(new org.jboss.msc.value.Value<AuthorizationValidator>() {
 			@Override

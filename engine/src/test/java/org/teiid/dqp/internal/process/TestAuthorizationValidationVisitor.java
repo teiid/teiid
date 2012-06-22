@@ -310,7 +310,10 @@ public class TestAuthorizationValidationVisitor {
         helpTest("SELECT e1 INTO #temp FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc1()); //$NON-NLS-1$
         helpTest("SELECT e1 INTO #temp FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {"#temp"}, RealMetadataFactory.example1VDB(), exampleAuthSvc2()); //$NON-NLS-1$
         helpTest("SELECT e1 INTO #temp FROM pm1.g1", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc2(), exampleAuthSvc1()); //$NON-NLS-1$
-
+    }
+    
+    @Test public void testCommonTable() throws Exception {
+    	helpTest("WITH X AS (SELECT e1 from pm1.g2) SELECT e1 from x", RealMetadataFactory.example1Cached(), new String[] {}, RealMetadataFactory.example1VDB(), exampleAuthSvc2()); //$NON-NLS-1$
     }
     
     @Test public void testTempTableSelectInto1() throws Exception {

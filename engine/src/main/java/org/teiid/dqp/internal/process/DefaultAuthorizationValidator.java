@@ -68,12 +68,10 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 		return policyDecider;
 	}
 	
-	@Override
 	public boolean isEnabled() {
 		return enabled;
 	}
 	
-	@Override
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}

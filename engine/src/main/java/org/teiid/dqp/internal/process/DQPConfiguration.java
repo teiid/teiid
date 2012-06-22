@@ -100,20 +100,6 @@ public class DQPConfiguration{
 		this.lobChunkSizeInKB = lobChunkSizeInKB;
 	}
 	
-    /**
-     * Determine whether role checking is enabled on the server.
-     * @return <code>true</code> if server-side role checking is enabled.
-     */
-    public boolean getUseDataRoles() {
-        return this.authorizationValidator != null && this.authorizationValidator.isEnabled();
-    }
-
-	public void setUseDataRoles(boolean useEntitlements) {
-		if (this.authorizationValidator != null) {
-			this.authorizationValidator.setEnabled(useEntitlements);
-		}
-	}
-
 	public int getQueryThresholdInSecs() {
 		return (int)queryThresholdInMilli/1000;
 	}
