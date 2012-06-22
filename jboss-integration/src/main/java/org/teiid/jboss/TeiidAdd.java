@@ -24,6 +24,7 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -77,7 +78,6 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DataRolePolicyDecider;
 import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -281,13 +281,9 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	edfsServiceBuilder.addDependency(replicatorAvailable?DependencyType.REQUIRED:DependencyType.OPTIONAL, TeiidServiceNames.OBJECT_REPLICATOR, ObjectReplicator.class, edfs.objectReplicatorInjector);
     	newControllers.add(edfsServiceBuilder.install());
     	
-    	PolicyDecider policyDecider;
+    	PolicyDecider policyDecider = null;
     	if (Element.POLICY_DECIDER_MODULE_ELEMENT.isDefined(operation)) {
     		policyDecider = buildService(PolicyDecider.class, Element.POLICY_DECIDER_MODULE_ELEMENT.asString(operation));    		
-    	}
-    	else {
-    		DataRolePolicyDecider drpd = new DataRolePolicyDecider();
-    		policyDecider = drpd;
     	}
     	
     	final AuthorizationValidator authValidator;
@@ -296,12 +292,9 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}
     	else {
     		DefaultAuthorizationValidator dap = new DefaultAuthorizationValidator();
-    		dap.setEnabled(false);
+    		dap.setPolicyDecider(policyDecider);
     		authValidator = dap;
     	}
-		if (authValidator instanceof DefaultAuthorizationValidator) {
-			((DefaultAuthorizationValidator)authValidator).setPolicyDecider(policyDecider);
-		}
     	
     	ValueService<AuthorizationValidator> authValidatorService = new ValueService<AuthorizationValidator>(new org.jboss.msc.value.Value<AuthorizationValidator>() {
 			@Override
@@ -426,12 +419,15 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
             moduleId = ModuleIdentifier.create(moduleName);
             module = Module.getCallerModuleLoader().loadModule(moduleId);
         } catch (ModuleLoadException e) {
-            throw new OperationFailedException(e, new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50069, moduleName)));
+            throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50069, moduleName), e);
         }
         ServiceLoader<T> services = module.loadService(type);
-        return services.iterator().next();
+        Iterator<T> iter = services.iterator();
+        if (!iter.hasNext()) {
+        	throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50089, type.getName(), moduleName));
+        }
+        return iter.next();
     }
-	
 		
     private BufferManagerService buildBufferManager(ModelNode node) {
     	BufferManagerService bufferManger = new BufferManagerService();

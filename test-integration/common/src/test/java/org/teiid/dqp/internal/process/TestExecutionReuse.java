@@ -36,6 +36,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.internal.progress.OngoingStubbing;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -93,6 +95,7 @@ public class TestExecutionReuse {
 	}
 	
 	private static FakeReusableExecution execution;
+	private static boolean isDisposed;
 	
 	@Before public void setup() throws DataNotAvailableException, TranslatorException {
 		execution = Mockito.mock(FakeReusableExecution.class);
@@ -100,6 +103,16 @@ public class TestExecutionReuse {
 		for (int i = 1; i < EXEC_COUNT; i++) {
 			stubbing.toReturn((List<Object>) Arrays.asList((Object)null)).toReturn(null);
 		}
+		Mockito.doAnswer(new Answer<Void>() {
+			@Override
+			public Void answer(InvocationOnMock invocation) throws Throwable {
+				synchronized (TestExecutionReuse.class) {
+					isDisposed = true;
+					TestExecutionReuse.class.notify();
+				}
+				return null;
+			}
+		}).when(execution).dispose();
 	}
     
     @BeforeClass public static void oneTimeSetUp() throws Exception {
@@ -160,7 +173,7 @@ public class TestExecutionReuse {
 			
 			@Override
 			public void onException(Statement stmt, Exception e) {
-				result.getResultsReceiver().receiveResults(rowCount);
+				result.getResultsReceiver().exceptionOccurred(e);
 			}
 			
 			@Override
@@ -168,6 +181,11 @@ public class TestExecutionReuse {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
 		}, new RequestOptions().continuous(true));
+		synchronized (TestExecutionReuse.class) {
+			while (!isDisposed) {
+				TestExecutionReuse.class.wait();
+			}
+		}
 		assertEquals(EXEC_COUNT, result.get().intValue());
 		Mockito.verify(execution, Mockito.times(1)).dispose();
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).execute();

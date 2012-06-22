@@ -101,6 +101,7 @@ import org.teiid.query.QueryPlugin;
  */
 public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, StorageManager {
 	
+	private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(120);
 	private static final int DEFAULT_MIN_DEFRAG = 1 << 26;
 	private static final byte[] HEADER_SKIP_BUFFER = new byte[16];
 	private static final int EVICTION_SCANS = 2;
@@ -1017,11 +1018,17 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 				}
 				freedLock.lock();
 				try {
-					next = blocksInuse.getAndSetNextClearBit();
-					if (next != EMPTY_ADDRESS) {
-						return next;
+					long waitTime = TIMEOUT_NANOS;
+					while (true) {
+						next = blocksInuse.getAndSetNextClearBit();
+						if (next != EMPTY_ADDRESS) {
+							return next;
+						}
+						waitTime = blocksFreed.awaitNanos(waitTime);
+						if (waitTime <= 0) {
+							break;
+						}
 					}
-					blocksFreed.await(120, TimeUnit.SECONDS);
 				} finally {
 					freedLock.unlock();
 				}

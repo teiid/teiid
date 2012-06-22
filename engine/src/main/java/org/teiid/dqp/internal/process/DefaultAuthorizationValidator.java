@@ -34,7 +34,6 @@ import org.teiid.query.util.CommandContext;
  */
 public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	
-	private boolean enabled = true;
 	private PolicyDecider policyDecider;
 	
 	public DefaultAuthorizationValidator() {
@@ -45,7 +44,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 			QueryMetadataInterface metadata, CommandContext commandContext,
 			CommandType commandType) throws QueryValidatorException,
 			TeiidComponentException {
-		if (enabled && policyDecider.validateCommand(commandContext)) {
+		if (policyDecider != null && policyDecider.validateCommand(commandContext)) {
 			AuthorizationValidationVisitor visitor = new AuthorizationValidationVisitor(this.policyDecider, commandContext);
 			Request.validateWithVisitor(visitor, metadata, command);
 		}		
@@ -54,7 +53,7 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	
 	@Override
 	public boolean hasRole(String roleName, CommandContext commandContext) {
-		if (!enabled) {
+		if (policyDecider == null) {
 			return true;
 		}
 		return this.policyDecider.hasRole(roleName, commandContext);
@@ -62,18 +61,6 @@ public class DefaultAuthorizationValidator implements AuthorizationValidator {
 	
 	public void setPolicyDecider(PolicyDecider policyDecider) {
 		this.policyDecider = policyDecider;
-	}
-	
-	public PolicyDecider getPolicyDecider() {
-		return policyDecider;
-	}
-	
-	public boolean isEnabled() {
-		return enabled;
-	}
-	
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
 	}
 	
 }

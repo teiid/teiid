@@ -91,7 +91,8 @@ public class TestFunctionLibrary {
 	
 	// ################################## TEST HELPERS ################################
 	
-    private FunctionDescriptor helpCreateDescriptor(String name, Class<?>[] types) { 
+    @SuppressWarnings("serial")
+	private FunctionDescriptor helpCreateDescriptor(String name, Class<?>[] types) { 
         final String fname = name;
         final Class<?>[] ftypes = types;
         return new FunctionDescriptor() {

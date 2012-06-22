@@ -29,6 +29,8 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLInputFactory;
@@ -78,8 +80,7 @@ public class VDBMetadataParser {
 			 try {
 				content.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				Logger.getLogger(VDBMetadataParser.class.getName()).log(Level.FINE, "Exception closing vdb stream", e);
 			}
 		 }
 		return null;

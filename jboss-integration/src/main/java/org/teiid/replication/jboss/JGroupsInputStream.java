@@ -50,12 +50,15 @@ public class JGroupsInputStream extends InputStream {
         if (buf == null) {
         	lock.lock();
             try {
-                write.await(timeout, TimeUnit.MILLISECONDS);
+            	long waitTime = TimeUnit.MILLISECONDS.toNanos(timeout);
+            	while (buf == null) {
+            		waitTime = write.awaitNanos(waitTime);
+					if (waitTime <= 0) {
+	            		throw new IOException(new TimeoutException());
+	            	}
+            	}
                 if (index < 0) {
                 	return -1;
-                }
-                if (buf == null) {
-                	throw new IOException(new TimeoutException());
                 }
             } catch(InterruptedException e) {
             	throw new IOException(e);
@@ -95,7 +98,7 @@ public class JGroupsInputStream extends InputStream {
     		if (index == -1) {
     			return;
     		}
-    		if (buf != null) {
+    		while (buf != null) {
     			doneReading.await();
     		}
     		if (index == -1) {

@@ -142,7 +142,6 @@ public class TestRequest extends TestCase {
         request.initialize(message, Mockito.mock(BufferManager.class),
 				new FakeDataManager(), new FakeTransactionService(), TEMP_TABLE_STORE, workContext, null);
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
-        drav.setEnabled(false);
         request.setAuthorizationValidator(drav);
         request.processRequest();
         return request;
