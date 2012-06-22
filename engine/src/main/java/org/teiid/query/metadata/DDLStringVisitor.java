@@ -397,10 +397,6 @@ public class DDLStringVisitor {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
 		
-		if (column.isCaseSensitive()) {
-			addOption(options, CASE_SENSITIVE, String.valueOf(column.isCaseSensitive()));
-		}
-		
 		if (!column.isSelectable()) {
 			addOption(options, SELECTABLE, String.valueOf(column.isSelectable()));
 		}		
@@ -410,19 +406,36 @@ public class DDLStringVisitor {
 			addOption(options, UPDATABLE, String.valueOf(column.isUpdatable()));
 		}
 		
-		if (column.isSigned()) {
-			addOption(options, SIGNED, String.valueOf(column.isSigned()));
-		}
+
 		
 		if (column.isCurrency()) {
 			addOption(options, CURRENCY, String.valueOf(column.isCurrency()));
 		}
 			
+		/* - designer uses this on all non-numeric just verbose, commenting for now
+		// only record if not default
+		if (column.isCaseSensitive() && !column.getDatatype().isCaseSensitive()) {
+			addOption(options, CASE_SENSITIVE, String.valueOf(column.isCaseSensitive()));
+		}
+		
+		if (column.isSigned() && !column.getDatatype().isSigned()) {
+			addOption(options, SIGNED, String.valueOf(column.isSigned()));
+		}		 * 
 		if (column.isFixedLength()) {
 			addOption(options, FIXED_LENGTH, String.valueOf(column.isFixedLength()));
 		}
+		// length and octet length should be same. so this should be never be true.
+		if (column.getCharOctetLength() != 0 && column.getLength() != column.getCharOctetLength()) {
+			addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
+		}	
+		// 10 is default assumed
+		if (column.getRadix() != 0 && column.getRadix() != 10) {
+			addOption(options, RADIX, column.getRadix());
+		}
+		*/
 		
-		if (column.getSearchType() != null) {
+		// by default the search type is default data type search, so avoid it.
+		if (column.getSearchType() != null && !column.getSearchType().equals(column.getDatatype().getSearchType())) {
 			addOption(options, SEARCHABLE, column.getSearchType().name());
 		}
 		
@@ -434,21 +447,15 @@ public class DDLStringVisitor {
 			addOption(options, MAX_VALUE, column.getMaximumValue());
 		}
 		
-		if (column.getCharOctetLength() != 0) {
-			addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
-		}	
-		
 		// only set native type on the foreign tables, on view the data type is type
 		if (table.isPhysical() && column.getNativeType() != null) {
 			addOption(options, NATIVE_TYPE, column.getNativeType());
 		}
 		
-		if (column.getRadix() != 0) {
-			addOption(options, RADIX, column.getRadix());
-		}
 		if (column.getNullValues() != -1) {
 			addOption(options, NULL_VALUE_COUNT, column.getNullValues());
 		}
+		
 		if (column.getDistinctValues() != -1) {
 			addOption(options, DISTINCT_VALUES, column.getDistinctValues());
 		}		
