@@ -41,6 +41,7 @@ import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -56,6 +57,29 @@ import org.teiid.query.util.CommandContext;
  * of processor nodes will use an instance of this class to do that work.
  */
 public class SubqueryAwareEvaluator extends Evaluator {
+
+	@SuppressWarnings("serial")
+	private final class LRUBufferCache extends LRUCache<List<?>, TupleBuffer> {
+		
+		private LRUCache<List<?>, TupleBuffer> spillOver;
+		
+		private LRUBufferCache(int maxSize, LRUCache<List<?>, TupleBuffer> spillOver) {
+			super(maxSize);
+			this.spillOver = spillOver;
+		}
+
+		protected boolean removeEldestEntry(Map.Entry<java.util.List<?>,TupleBuffer> eldest) {
+			if (super.removeEldestEntry(eldest)) {
+				if (spillOver != null && eldest.getValue().getRowCount() <= 2) {
+					spillOver.put(eldest.getKey(), eldest.getValue());
+				} else {
+					eldest.getValue().remove();
+				}
+				return true;
+			}
+			return false;
+		}
+	}
 
 	public class SubqueryState {
 		QueryProcessor processor;
@@ -81,7 +105,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	
 	//processing state
 	private Map<String, SubqueryState> subqueries = new HashMap<String, SubqueryState>();
-	private LRUCache<List<?>, TupleBuffer> cache = new LRUCache<List<?>, TupleBuffer>(1024);
+	private Map<Command, String> commands = new HashMap<Command, String>(); //TODO: could determine this ahead of time
+	private LRUCache<List<?>, TupleBuffer> smallCache = new LRUBufferCache(1024, null);
+	private LRUCache<List<?>, TupleBuffer> cache = new LRUBufferCache(512, smallCache);
 	private int maxTuples = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE << 4;
 	private int currentTuples = 0;
 	
@@ -120,6 +146,15 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		String key = ref.getContextSymbol();
 		SubqueryState state = this.subqueries.get(key);
 		if (state == null) {
+			String otherKey = commands.get(container.getCommand());
+			if (otherKey != null) {
+				state = this.subqueries.get(otherKey);
+				if (state != null) {
+					key = otherKey;
+				}
+			}
+		}
+		if (state == null) {	
 			state = new SubqueryState();
 			state.plan = container.getCommand().getProcessorPlan().clone();
 	        if (container.getCommand().getCorrelatedReferences() != null) {
@@ -131,6 +166,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		        }
 	        }
 			this.subqueries.put(key, state);
+			this.commands.put(container.getCommand(), key);
 		}
 		SymbolMap correlatedRefs = container.getCommand().getCorrelatedReferences();
 		VariableContext currentContext = null;
@@ -168,10 +204,13 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		    				removeBuffer = false;
 		    				this.currentTuples += tb.getRowCount();
 		    				while (this.currentTuples > maxTuples && !cache.isEmpty()) {
-		    					//TODO: this should handle empty results better
 		    					Iterator<TupleBuffer> i = this.cache.values().iterator();
 		    					TupleBuffer buffer = i.next();
-		    					buffer.remove();
+		    					if (buffer.getRowCount() <= 2) {
+		    						this.smallCache.put(cacheKey, buffer);
+		    					} else {
+		    						buffer.remove();
+		    					}
 		    					this.currentTuples -= buffer.getRowCount();
 		    					i.remove();
 		    				}
@@ -181,6 +220,9 @@ public class SubqueryAwareEvaluator extends Evaluator {
     				List<Object> cacheKey = new ArrayList<Object>(refValues);
     				cacheKey.add(key);
     				TupleBuffer cachedResult = cache.get(cacheKey);
+    				if (cachedResult == null) {
+    					cachedResult = smallCache.get(cacheKey);
+    				}
     				if (cachedResult != null) {
     					state.close(false);
     					return new TupleSourceValueIterator(cachedResult.createIndexedTupleSource(), 0);

@@ -2292,6 +2292,23 @@ public class TestProcessor {
         assertEquals(3, dataManager.getQueries().size());
     }
     
+    @Test public void testCorrelatedSubqueryCaching1() throws Exception {
+        String sql = "Select (select e2 FROM pm2.g1 WHERE pm1.g1.e3 = pm2.g1.e3 limit 1), (select e2 FROM pm2.g1 WHERE pm1.g1.e3 = pm2.g1.e3 limit 1) from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+            Arrays.asList(0, 0) 
+        };
+
+        FakeDataManager dataManager = new FakeDataManager();
+        sampleData1(dataManager);
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        doProcess(plan, dataManager, expected, createCommandContext());
+
+        assertEquals(2, dataManager.getQueries().size());
+    }
+    
     /**
      * There is a bug when the second query in a UNION ALL has a correlated subquery, and both
      * the outer and inner query are selecting from the same virtual group, and aliasing them
