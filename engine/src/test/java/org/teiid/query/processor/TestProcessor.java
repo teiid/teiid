@@ -2286,9 +2286,9 @@ public class TestProcessor {
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 
         // Run query
-        doProcess(plan, dataManager, expected, createCommandContext());
+        helpProcess(plan, dataManager, expected);
 
-        //three queries - 1 for the outer and 1 each for true/false
+        //three queries - 1 for the outer and 1 each for true/false x 3 runs
         assertEquals(3, dataManager.getQueries().size());
     }
     

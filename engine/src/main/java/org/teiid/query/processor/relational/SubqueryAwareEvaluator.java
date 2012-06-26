@@ -79,6 +79,14 @@ public class SubqueryAwareEvaluator extends Evaluator {
 			}
 			return false;
 		}
+		
+		@Override
+		public void clear() {
+			for (TupleBuffer buffer : values()) {
+				buffer.remove();
+			}
+			super.clear();
+		}
 	}
 
 	public class SubqueryState {
@@ -125,17 +133,17 @@ public class SubqueryAwareEvaluator extends Evaluator {
 	public void reset() {
 		for (SubqueryState subQueryState : subqueries.values()) {
 			subQueryState.plan.reset();
+			subQueryState.close(true);
 		}
+		cache.clear();
+		smallCache.clear();
+		currentTuples = 0;
 	}
 	
 	public void close() {
-		for (SubqueryState state : subqueries.values()) {
-			state.close(true);
-		}
-		for (TupleBuffer buffer : cache.values()) {
-			buffer.remove();
-		}
-		cache.clear();
+		reset();
+		commands.clear();
+		subqueries.clear();
 	}
 	
 	@Override
