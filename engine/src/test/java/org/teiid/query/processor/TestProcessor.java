@@ -2289,7 +2289,7 @@ public class TestProcessor {
         helpProcess(plan, dataManager, expected);
 
         //three queries - 1 for the outer and 1 each for true/false x 3 runs
-        assertEquals(3, dataManager.getQueries().size());
+        assertEquals(9, dataManager.getQueries().size());
     }
     
     @Test public void testCorrelatedSubqueryCaching1() throws Exception {
