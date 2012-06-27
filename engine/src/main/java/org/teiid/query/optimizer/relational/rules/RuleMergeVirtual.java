@@ -280,16 +280,11 @@ public final class RuleMergeVirtual implements
         }
 
         correctOrderBy(frame, selectSymbols, parentProject);
+
         PlanNode parentSource = NodeEditor.findParent(frame, NodeConstants.Types.SOURCE);        
-        PlanNode parentSetOp = NodeEditor.findParent(parentProject, NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
   
-        if (parentSetOp == null || NodeEditor.findNodePreOrder(parentSetOp, NodeConstants.Types.PROJECT) == parentProject) {
-	        if (parentSource != null) {
-	        	FrameUtil.correctSymbolMap(((SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), parentSource);
-	        }
-	        if (parentSetOp != null) {
-	        	correctOrderBy(frame, selectSymbols, parentSetOp);
-	        }
+        if (parentSource != null && NodeEditor.findNodePreOrder(parentSource, NodeConstants.Types.PROJECT) == parentProject) {
+        	FrameUtil.correctSymbolMap(((SymbolMap)frame.getProperty(NodeConstants.Info.SYMBOL_MAP)).asMap(), parentSource);
         }
         
         prepareFrame(frame);
@@ -304,19 +299,22 @@ public final class RuleMergeVirtual implements
                  
         return root;
     }
-
+    /**
+     * special handling is needed since we are retaining the child aliases
+     */
 	private static void correctOrderBy(PlanNode frame,
-			List<Expression> selectSymbols, PlanNode startNode) {
-		PlanNode sort = NodeEditor.findParent(startNode, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
-		if (sort != null) { //special handling is needed since we are retaining the child aliases
-			List<Expression> childProject = (List<Expression>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
-			OrderBy elements = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
-			for (OrderByItem item : elements.getOrderByItems()) {
-				item.setSymbol(childProject.get(selectSymbols.indexOf(item.getSymbol())));
-			}
-		    sort.getGroups().clear();
-		    sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
+			List<Expression> selectSymbols, PlanNode parentProject) {
+		PlanNode sort = NodeEditor.findParent(parentProject, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+		if (sort == null || NodeEditor.findNodePreOrder(sort, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) != parentProject) {
+			return;
 		}
+		List<Expression> childProject = (List<Expression>)NodeEditor.findNodePreOrder(frame, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
+		OrderBy elements = (OrderBy)sort.getProperty(NodeConstants.Info.SORT_ORDER);
+		for (OrderByItem item : elements.getOrderByItems()) {
+			item.setSymbol(childProject.get(selectSymbols.indexOf(item.getSymbol())));
+		}
+	    sort.getGroups().clear();
+	    sort.addGroups(GroupsUsedByElementsVisitor.getGroups(elements));
 	}
     
     /**
