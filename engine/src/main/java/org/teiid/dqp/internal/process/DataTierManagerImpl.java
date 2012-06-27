@@ -69,6 +69,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SourceHint;
@@ -163,22 +164,22 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return eventDistributor;
 	}
     
-	public TupleSource registerRequest(CommandContext context, Command command, String modelName, String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {
+	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException, TeiidProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)context.getProcessorID());
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)) {
 			return processSystemQuery(context, command, workItem.getDqpWorkContext());
 		}
 		
-		AtomicRequestMessage aqr = createRequest(workItem, command, modelName, connectorBindingId, nodeID);
+		AtomicRequestMessage aqr = createRequest(workItem, command, modelName, parameterObject.connectorBindingId, parameterObject.nodeID);
 		aqr.setCommandContext(context);
 		SourceHint sh = context.getSourceHint();
 		if (sh != null) {
 			aqr.setGeneralHint(sh.getGeneralHint());
 			aqr.setHint(sh.getSourceHint(aqr.getConnectorName()));
 		}
-		if (limit > 0) {
-			aqr.setFetchSize(Math.min(limit, aqr.getFetchSize()));
+		if (parameterObject.limit > 0) {
+			aqr.setFetchSize(Math.min(parameterObject.limit, aqr.getFetchSize()));
 		}
 		if (context.getDataObjects() != null) {
 			for (GroupSymbol gs : GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false)) {
@@ -188,7 +189,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorWork work = cmr.getConnectorManager(aqr.getConnectorName()).registerRequest(aqr);
 		work.setRequestWorkItem(workItem);
-        return new DataTierTupleSource(aqr, workItem, work, this, limit);
+        return new DataTierTupleSource(aqr, workItem, work, this, parameterObject.limit);
 	}
 
 	/**

@@ -706,7 +706,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		}
 	}
 	
-		public static DecimalFormat getDecimalFormat(CommandContext context, String format) {
+	public static DecimalFormat getDecimalFormat(CommandContext context, String format) {
 		DecimalFormat result = null;
 		if (context != null) {
 			if (context.globalState.decimalFormatCache == null) {

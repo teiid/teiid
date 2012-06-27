@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -34,6 +35,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -49,6 +51,7 @@ import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleChooseJoinStrategy;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
@@ -61,10 +64,13 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 
 
 public class PlanToProcessConverter {
@@ -72,6 +78,15 @@ public class PlanToProcessConverter {
 	private IDGenerator idGenerator;
 	private AnalysisRecord analysisRecord;
 	private CapabilitiesFinder capFinder;
+	
+	private Map<List<Object>, AccessNode> sharedCommands = new HashMap<List<Object>, AccessNode>();
+	private Map<List<Object>, Integer> topCount = new HashMap<List<Object>, Integer>();
+	private int sharedId;
+	
+	public static class SharedStateKey {
+		int id;
+		int expectedReaders;
+	}
 	
 	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder) {
 		this.metadata = metadata;
@@ -82,23 +97,27 @@ public class PlanToProcessConverter {
 	
     public RelationalPlan convert(PlanNode planNode)
         throws QueryPlannerException, TeiidComponentException {
-
-        boolean debug = analysisRecord.recordDebug();
-        if(debug) {
-            analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
-            analysisRecord.println("CONVERTING PLAN TREE TO PROCESS TREE"); //$NON-NLS-1$
-        }
-
-        // Convert plan tree nodes into process tree nodes
-        RelationalNode processNode = convertPlan(planNode);
-        if(debug) {
-            analysisRecord.println("\nPROCESS PLAN = \n" + processNode); //$NON-NLS-1$
-            analysisRecord.println("============================================================================"); //$NON-NLS-1$
-        }
-
-        RelationalPlan processPlan = new RelationalPlan(processNode);
-        return processPlan;
-
+    	try {
+	        boolean debug = analysisRecord.recordDebug();
+	        if(debug) {
+	            analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
+	            analysisRecord.println("CONVERTING PLAN TREE TO PROCESS TREE"); //$NON-NLS-1$
+	        }
+	
+	        // Convert plan tree nodes into process tree nodes
+	        RelationalNode processNode = convertPlan(planNode);
+	        if(debug) {
+	            analysisRecord.println("\nPROCESS PLAN = \n" + processNode); //$NON-NLS-1$
+	            analysisRecord.println("============================================================================"); //$NON-NLS-1$
+	        }
+	
+	        RelationalPlan processPlan = new RelationalPlan(processNode);
+	        return processPlan;
+    	} finally {
+    		sharedCommands.clear();
+    		topCount.clear();
+    		sharedId = 0;
+    	}
     }
 
 	private RelationalNode convertPlan(PlanNode planNode)
@@ -273,7 +292,7 @@ public class PlanToProcessConverter {
                     AccessNode aNode = null;
                     Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
                     Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
-                    
+                    EvaluatableVisitor ev = null;
                     if(node.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
                         if (command instanceof StoredProcedure) {
                             List references = (List)node.getProperty(NodeConstants.Info.PROCEDURE_INPUTS);
@@ -310,7 +329,8 @@ public class PlanToProcessConverter {
                         } catch (QueryMetadataException err) {
                              throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
                         }
-                        aNode.setShouldEvaluateExpressions(EvaluatableVisitor.needsProcessingEvaluation(command));
+                        ev = EvaluatableVisitor.needsEvaluation(command);
+                        aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     }
                     
                     if (command instanceof QueryCommand) {
@@ -330,6 +350,45 @@ public class PlanToProcessConverter {
                     	aNode.minimizeProject(command);
                     }
                     setRoutingName(aNode, node);
+                    //check if valid to share this with other nodes
+                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.returnsResultSet()) {
+                    	//create a top level key to avoid the full command toString
+                    	String modelName = aNode.getModelName();
+    					Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
+                    	List<Object> topKey = new ArrayList<Object>(groups.size() + 1);
+                    	topKey.add(modelName);
+                    	for (GroupSymbol groupSymbol : groups) {
+                    		topKey.add(groupSymbol.toString());
+                    	}
+                    	
+                    	AccessNode other = sharedCommands.get(topKey);
+                    	if (other == null) {
+                    		sharedCommands.put(topKey, aNode);
+                    		topCount.put(topKey, 1);
+                    	} else {
+                    		int count = topCount.get(topKey);
+                    		if (count == 1) {
+                            	Command c = other.getCommand();
+                            	List<Object> key = getCommandKey(c);
+                    			sharedCommands.put(key, other);
+                    		}
+                    		topCount.put(topKey, ++count);
+                        	Command c = aNode.getCommand();
+                        	List<Object> key = getCommandKey(c);
+                        	
+                        	AccessNode initial = this.sharedCommands.get(key);
+                        	if (initial != null) {
+                        		if (initial.info == null) {
+                        			initial.info = new RegisterRequestParameter.SharedAccessInfo();
+                        			initial.info.id = sharedId++;
+                        		}
+                        		initial.info.sharingCount++;
+                        		aNode.info = initial.info;
+                        	} else {
+                        		this.sharedCommands.put(key, aNode);
+                        	}
+                    	}
+                    }
                 }
                 break;
 
@@ -489,6 +548,14 @@ public class PlanToProcessConverter {
 		}
 
 		return processNode;
+	}
+
+	private List<Object> getCommandKey(Command c) {
+		List<Reference> refs = ReferenceCollectorVisitor.getReferences(c);
+		List<Object> key = new ArrayList<Object>(2);
+		key.add(c.toString());
+		key.add(refs);
+		return key;
 	}
 
 	private void updateGroupName(PlanNode node, TableFunctionReference tt) {

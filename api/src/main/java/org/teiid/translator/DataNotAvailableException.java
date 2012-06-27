@@ -26,6 +26,10 @@ import org.teiid.core.TeiidRuntimeException;
 /**
  * Used by asynch connectors to indicate data is not available 
  * and results should be polled for after the given delay in milliseconds.
+ * <br>
+ * Note that delays are not guaranteed.  The delay is the maximum amount of time before the plan will be re-queued for execution.  
+ * There are several scenarios that would cause the delay to be shorter, such as multiple sources where one source returns a shorter 
+ * delay or if the engine believes more work is to be done before allowing the plan to sit idle.
  */
 public class DataNotAvailableException extends TeiidRuntimeException {
 

@@ -39,6 +39,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.FakeTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.ProjectIntoNode.Mode;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
@@ -127,7 +128,7 @@ public class TestProjectIntoNode {
             this.expectedBatchSize = expectedBatchSize;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
-        public TupleSource registerRequest(CommandContext context,Command command,String modelName,String connectorBindingId, int nodeID, int limit) throws TeiidComponentException, TeiidProcessingException {
+        public TupleSource registerRequest(CommandContext context,Command command,String modelName,RegisterRequestParameter parameterObject) throws TeiidComponentException, TeiidProcessingException {
             callCount++;
             
             int batchSize = 1;

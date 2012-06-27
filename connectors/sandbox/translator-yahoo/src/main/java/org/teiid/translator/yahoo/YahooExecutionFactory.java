@@ -23,15 +23,15 @@
 package org.teiid.translator.yahoo;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
@@ -53,13 +53,9 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connectionFactory)
     		throws TranslatorException {
-    	return new YahooExecution((Select)command, metadata);
+    	return new YahooExecution((Select)command);
     }    
     
-    public List getSupportedFunctions() {
-        return Collections.EMPTY_LIST;
-    }
-
     public boolean supportsCompareCriteriaEquals() {
         return true;
     }
@@ -77,14 +73,22 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
 	public void getMetadata(MetadataFactory metadataFactory, Object connection) throws TranslatorException {
 		Table t = metadataFactory.addTable("Stock"); //$NON-NLS-1$
 		metadataFactory.addColumn("symbol", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
-		metadataFactory.addColumn("last", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
-		metadataFactory.addColumn("date", DataTypeManager.DefaultDataTypes.DATE, t); //$NON-NLS-1$
-		metadataFactory.addColumn("time", DataTypeManager.DefaultDataTypes.TIME, t); //$NON-NLS-1$
-		metadataFactory.addColumn("change", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
-		metadataFactory.addColumn("open", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
-		metadataFactory.addColumn("high", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
-		metadataFactory.addColumn("low", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
-		metadataFactory.addColumn("volume", DataTypeManager.DefaultDataTypes.BIG_INTEGER, t); //$NON-NLS-1$
+		Column c = metadataFactory.addColumn("last", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("date", DataTypeManager.DefaultDataTypes.DATE, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("time", DataTypeManager.DefaultDataTypes.TIME, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("change", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("open", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("high", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("low", DataTypeManager.DefaultDataTypes.DOUBLE, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
+		c = metadataFactory.addColumn("volume", DataTypeManager.DefaultDataTypes.BIG_INTEGER, t); //$NON-NLS-1$
+		c.setSearchType(SearchType.Unsearchable);
 		metadataFactory.addAccessPattern("needs_symbol", Arrays.asList("symbol"), t); //$NON-NLS-1$ //$NON-NLS-2$
 	} 
 	

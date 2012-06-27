@@ -39,6 +39,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.ProjectIntoNode.Mode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Create;
@@ -148,13 +149,13 @@ public class RelationalPlan extends ProcessorPlan {
 					Create create = new Create();
 					create.setElementSymbolsAsColumns(withCommand.getColumns());
 					create.setTable(withCommand.getGroupSymbol());
-					this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0, -1);
+					this.root.getDataManager().registerRequest(getContext(), create, TempMetadataAdapter.TEMP_MODEL.getID(), new RegisterRequestParameter());
     			}
     			while (true) {
     				TupleBatch batch = withProcessor.nextBatch();
     				Insert insert = new Insert(withCommand.getGroupSymbol(), withCommand.getColumns(), null);
             		insert.setTupleSource(new CollectionTupleSource(batch.getTuples().iterator()));
-            		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), null, 0, -1);
+            		this.root.getDataManager().registerRequest(getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getID(), new RegisterRequestParameter());
     				if (batch.getTerminationFlag()) {
     					break;
     				}

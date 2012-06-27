@@ -39,6 +39,7 @@ import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.util.VariableContext;
@@ -129,15 +130,15 @@ class RelationalPlanExecutor implements PlanExecutor {
 
 	        	Insert insert = this.resultInfo.getTempInsert();
 	        	insert.setTupleSource(new TempLoadTupleSource());
-	        	this.dataManager.registerRequest(this.internalProcessor.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+	        	this.dataManager.registerRequest(this.internalProcessor.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
 	        	if (!doneLoading) {
 	        		throw BlockedException.block("Blocking on result set load"); //$NON-NLS-1$
 	        	}
         		internalProcessor.closeProcessing();
 				AlterTempTable att = new AlterTempTable(tempTable);
 				//mark the temp table as non-updatable
-				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
-        		this.tupleSource = this.dataManager.registerRequest(this.internalProcessor.getContext(), this.resultInfo.getTempSelect(), TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+        		this.tupleSource = this.dataManager.registerRequest(this.internalProcessor.getContext(), this.resultInfo.getTempSelect(), TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
 	        }
 			//force execution
         	currentRow();
@@ -146,7 +147,7 @@ class RelationalPlanExecutor implements PlanExecutor {
 				AlterTempTable att = new AlterTempTable(tempTable);
 				//TODO: if the parent is small, then this is not necessary
 				att.setIndexColumns(this.resultInfo.getFkColumns());
-				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+				this.dataManager.registerRequest(this.internalProcessor.getContext(), att, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
 			}
 
 			this.currentRowNumber = 0;
@@ -220,7 +221,7 @@ class RelationalPlanExecutor implements PlanExecutor {
         	LogManager.logDetail(LogConstants.CTX_XML_PLAN, "Unloading result set temp table", rsTempTable); //$NON-NLS-1$
         	internalProcessor.closeProcessing();
         	try {
-				this.tupleSource = this.dataManager.registerRequest(this.internalProcessor.getContext(), this.resultInfo.getTempDrop(), TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+				this.tupleSource = this.dataManager.registerRequest(this.internalProcessor.getContext(), this.resultInfo.getTempDrop(), TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
 			} catch (TeiidProcessingException e) {
 		        LogManager.logDetail(org.teiid.logging.LogConstants.CTX_XML_PLAN, e, "Error dropping result set temp table", rsTempTable); //$NON-NLS-1$
 			}

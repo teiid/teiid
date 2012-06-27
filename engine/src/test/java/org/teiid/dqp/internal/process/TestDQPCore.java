@@ -59,6 +59,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings("nls")
 public class TestDQPCore {
@@ -397,13 +398,16 @@ public class TestDQPCore {
     @Test public void testSourceConcurrency() throws Exception {
     	//setup default of 2
     	agds.setSleep(100);
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+    	agds.setCaps(bsc);
     	StringBuffer sql = new StringBuffer();
     	int branches = 20;
     	for (int i = 0; i < branches; i++) {
     		if (i > 0) {
     			sql.append(" union all ");
     		}
-    		sql.append("select intkey || " + i + " from bqt1.smalla");
+    		sql.append("select stringkey || " + i + " from bqt1.smalla");
     	}
     	sql.append(" limit 2");
     	helpExecute(sql.toString(), "a");

@@ -68,6 +68,7 @@ public class AnalysisRecord {
     public static final String PROP_GROUP_COLS = "Grouping Columns"; //$NON-NLS-1$
     public static final String PROP_SQL = "Query"; //$NON-NLS-1$
     public static final String PROP_MODEL_NAME = "Model Name"; //$NON-NLS-1$
+    public static final String PROP_SHARING_ID = "Sharing ID"; //$NON-NLS-1$
     public static final String PROP_DEPENDENT = "Dependent Join"; //$NON-NLS-1$
     public static final String PROP_JOIN_STRATEGY = "Join Strategy"; //$NON-NLS-1$
     public static final String PROP_JOIN_TYPE = "Join Type"; //$NON-NLS-1$

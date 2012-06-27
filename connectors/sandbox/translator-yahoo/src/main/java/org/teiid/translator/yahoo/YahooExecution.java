@@ -46,10 +46,9 @@ import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 
 /**
@@ -63,21 +62,17 @@ public class YahooExecution implements ResultSetExecution {
     private static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy"); //$NON-NLS-1$
     private static SimpleDateFormat TIME_FORMAT = new SimpleDateFormat("HH:mma"); //$NON-NLS-1$
 
-    // Connector resources
-    private RuntimeMetadata metadata;
     private Select command;
     
     // Execution state
-    List results;
+    Iterator<List<?>> results;
     int[] neededColumns;
-    int returnIndex = 0;
     private Select query;
 
     /**
      * 
      */
-    public YahooExecution(Select query, RuntimeMetadata metadata) {
-        this.metadata = metadata;
+    public YahooExecution(Select query) {
         this.query = query;
     }
     
@@ -90,22 +85,22 @@ public class YahooExecution implements ResultSetExecution {
         String yahooUrl = translateIntoUrl(query);
         
         // Execute url to get results
-        this.results = executeUrl(yahooUrl);
+        this.results = executeUrl(yahooUrl).iterator();
         
         // Determine needed columns in results
-        this.neededColumns = getNeededColumns(query.getDerivedColumns(), this.metadata);        
+        this.neededColumns = getNeededColumns(query.getDerivedColumns()); 
     }    
 
     static String translateIntoUrl(Select query) throws TranslatorException {
         StringBuffer url = new StringBuffer();
         url.append(YahooPlugin.Util.getString("YahooExecution.URL_BEGIN")); //$NON-NLS-1$
         
-        Set tickers = getTickers(query);
+        Set<String> tickers = getTickers(query);
         if(tickers.size() == 0) { 
             throw new TranslatorException(YahooPlugin.Util.getString("YahooExecution.No_tickers")); //$NON-NLS-1$
         }
         String urlAppendChar = YahooPlugin.Util.getString("YahooExecution.URL_APPEND_CHAR"); //$NON-NLS-1$
-        Iterator tickerIter = tickers.iterator();
+        Iterator<String> tickerIter = tickers.iterator();
         url.append(tickerIter.next());        
         while(tickerIter.hasNext()) {
             url.append(urlAppendChar);
@@ -119,7 +114,7 @@ public class YahooExecution implements ResultSetExecution {
     /**
      * @return
      */
-    static Set getTickers(Select query) throws TranslatorException {
+    static Set<String> getTickers(Select query) throws TranslatorException {
         Condition crit = query.getWhere();
         if(crit == null) {
             throw new TranslatorException(YahooPlugin.Util.getString("YahooExecution.Must_have_criteria")); //$NON-NLS-1$
@@ -131,8 +126,8 @@ public class YahooExecution implements ResultSetExecution {
      * @param yahooUrl
      * @return
      */
-    protected List executeUrl(String yahooUrl) throws TranslatorException {
-        List rows = new ArrayList();
+    protected List<List<?>> executeUrl(String yahooUrl) throws TranslatorException {
+        List<List<?>> rows = new ArrayList<List<?>>();
         InputStreamReader inSR  = null;
         BufferedReader buffReader = null;
         
@@ -167,8 +162,12 @@ public class YahooExecution implements ResultSetExecution {
         } catch(IOException e) {
             throw new TranslatorException(e, e.getMessage());
         } finally {
-            buffReader = null;
-            inSR = null; 
+        	if (buffReader != null) {
+        		try {
+					buffReader.close();
+				} catch (IOException e) {
+				}
+        	}
         }
         
         return rows;
@@ -178,8 +177,8 @@ public class YahooExecution implements ResultSetExecution {
      * @param line
      * @return
      */
-    static List parseLine(String line) {
-        List row = new ArrayList();
+    static List<Object> parseLine(String line) {
+        List<Object> row = new ArrayList<Object>();
         StringTokenizer rowToken = new StringTokenizer(line,","); //$NON-NLS-1$
         for(int i=0; rowToken.hasMoreTokens(); i++){
             String data = rowToken.nextToken();
@@ -196,8 +195,10 @@ public class YahooExecution implements ResultSetExecution {
             } else if(i==2) {
                 if(!data.equals("0")){ //$NON-NLS-1$
                     try {
-                        Date date = DATE_FORMAT.parse(data);
-                        row.add(new java.sql.Date(date.getTime()));
+                    	synchronized (DATE_FORMAT) {
+                            Date date = DATE_FORMAT.parse(data);
+                            row.add(new java.sql.Date(date.getTime()));
+						}
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
                         LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14001, params)); 
@@ -209,8 +210,10 @@ public class YahooExecution implements ResultSetExecution {
             } else if(i==3) {
                 if(!data.equals("0")){ //$NON-NLS-1$
                     try {
-                        Date time = TIME_FORMAT.parse(data);
-                        row.add(new java.sql.Time(time.getTime()));
+                    	synchronized (TIME_FORMAT) {
+                            Date time = TIME_FORMAT.parse(data);
+                            row.add(new java.sql.Time(time.getTime()));
+						}
                     } catch(ParseException e) {
                         Object[] params = new Object[] { data, e.getMessage() };
                         LogManager.logWarning(LogConstants.CTX_CONNECTOR, YahooPlugin.Util.gs(YahooPlugin.Event.TEIID14002, params));
@@ -231,12 +234,13 @@ public class YahooExecution implements ResultSetExecution {
     /**
      * @param select
      * @return
+     * @throws TranslatorException 
      */
-    static int[] getNeededColumns(List<DerivedColumn> select, RuntimeMetadata metadata) throws TranslatorException {
+    static int[] getNeededColumns(List<DerivedColumn> select) throws TranslatorException {
         int[] cols = new int[select.size()];
-        Iterator iter = select.iterator();
+        Iterator<DerivedColumn> iter = select.iterator();
         for(int i=0; iter.hasNext(); i++) {
-            DerivedColumn symbol = (DerivedColumn) iter.next();
+            DerivedColumn symbol = iter.next();
             Expression expr = symbol.getExpression();
             if(expr instanceof ColumnReference) {
                 Column element = ((ColumnReference)expr).getMetadataObject();
@@ -250,22 +254,19 @@ public class YahooExecution implements ResultSetExecution {
     }
 
     @Override
-    public List next() throws TranslatorException, DataNotAvailableException {
-        if (returnIndex < results.size()) {
-            List row = (List) results.get(returnIndex++);
-            return projectRow(row, neededColumns);
+    public List<?> next() throws TranslatorException, DataNotAvailableException {
+        if (results.hasNext()) {
+            return projectRow(results.next(), neededColumns);
         }
-        
         return null;
     }
-
 
     /**
      * @param row
      * @param neededColumns
      */
-    static List projectRow(List row, int[] neededColumns) {
-        List output = new ArrayList(neededColumns.length);
+    static List<Object> projectRow(List<?> row, int[] neededColumns) {
+        List<Object> output = new ArrayList<Object>(neededColumns.length);
         
         for(int i=0; i<neededColumns.length; i++) {
             output.add(row.get(neededColumns[i]-1));

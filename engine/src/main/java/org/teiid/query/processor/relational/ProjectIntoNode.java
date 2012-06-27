@@ -38,6 +38,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
@@ -209,7 +210,7 @@ public class ProjectIntoNode extends RelationalNode {
     }
 
     private void registerRequest(Command command) throws TeiidComponentException, TeiidProcessingException {
-    	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, null, getID(), -1);        
+    	tupleSource = getDataManager().registerRequest(getContext(), command, this.modelName, new RegisterRequestParameter(null, getID(), -1));        
     }
     
     private void closeRequest() {

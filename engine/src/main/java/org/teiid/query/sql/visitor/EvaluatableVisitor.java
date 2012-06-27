@@ -20,9 +20,6 @@
  * 02110-1301 USA.
  */
 
-/**
- * 
- */
 package org.teiid.query.sql.visitor;
 
 import java.util.TreeSet;
@@ -155,6 +152,8 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
     
     public void visit(DependentSetCriteria obj) {
+    	//without knowing what is feeding this, we need to treat it as non-deterministic
+    	setDeterminismLevel(Determinism.NONDETERMINISTIC);
 		evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
     
@@ -217,5 +216,23 @@ public class EvaluatableVisitor extends LanguageVisitor {
         EvaluatableVisitor visitor = new EvaluatableVisitor();
         DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor.levels.contains(EvaluationLevel.PROCESSING);
+    }
+    
+    public boolean requiresEvaluation(EvaluationLevel evaluationLevel) {
+    	return levels.contains(evaluationLevel);
+    }
+    
+    public Determinism getDeterminismLevel() {
+		return determinismLevel;
+	}
+    
+    public boolean hasCorrelatedReferences() {
+		return hasCorrelatedReferences;
+	}
+    
+    public static final EvaluatableVisitor needsEvaluation(LanguageObject obj) {
+        EvaluatableVisitor visitor = new EvaluatableVisitor();
+        DeepPreOrderNavigator.doVisit(obj, visitor);
+        return visitor;
     }
 }

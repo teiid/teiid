@@ -80,30 +80,7 @@
                 </goals>
               </execution>
             </executions>
-          </plugin>          
-        </plugins>
-    </build>
-    
-    <profiles>
-      <profile>
-        <!-- 
-            This profile is activated manually, as in "mvn ... -P release ..."
-  		  -->
-        <id>release</id>
-        <build>
-          <plugins>
-            <plugin>
-              <artifactId>maven-assembly-plugin</artifactId>
-              <configuration>
-                <descriptors>
-                  <descriptor>assembly/src.xml</descriptor>
-                  <descriptor>assembly/client-jar.xml</descriptor>
-                  <descriptor>assembly/console-jar.xml</descriptor>    
-                  <descriptor>assembly/jboss-as7/dist.xml</descriptor>
-                  <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
-                </descriptors>
-              </configuration>
-            </plugin>
+          </plugin>
 
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
@@ -128,7 +105,32 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>              
+            </plugin>
+          
+        </plugins>
+    </build>
+    
+    <profiles>
+      <profile>
+        <!-- 
+            This profile is activated manually, as in "mvn ... -P release ..."
+  		  -->
+        <id>release</id>
+        <build>
+          <plugins>
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <configuration>
+                <descriptors>
+                  <descriptor>assembly/src.xml</descriptor>
+                  <descriptor>assembly/client-jar.xml</descriptor>
+                  <descriptor>assembly/console-jar.xml</descriptor>    
+                  <descriptor>assembly/jboss-as7/dist.xml</descriptor>
+                  <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                </descriptors>
+              </configuration>
+            </plugin>
+
           </plugins>
         </build>
       </profile>

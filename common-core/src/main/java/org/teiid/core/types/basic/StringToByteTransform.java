@@ -48,7 +48,7 @@ public class StringToByteTransform extends Transform {
 	 * Type of the incoming value.
 	 * @return Source type
 	 */
-	public Class getSourceType() {
+	public Class<?> getSourceType() {
 		return String.class;
 	}
 
@@ -56,7 +56,7 @@ public class StringToByteTransform extends Transform {
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return Byte.class;
 	}
 	

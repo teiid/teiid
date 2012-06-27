@@ -43,6 +43,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.OrderByItem;
@@ -74,6 +75,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private Object[] projection;
     private List<Expression> originalSelect;
 	private Object modelId;
+	
+	public RegisterRequestParameter.SharedAccessInfo info;
     
     protected AccessNode() {
 		super();
@@ -328,7 +331,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
-	protected void addBatchRow(List row) {
+	protected void addBatchRow(List<?> row) {
 		if (this.getOutputElements().isEmpty()) {
 			//a dummy column was added to the query, just remove it now
 			row = Collections.emptyList();
@@ -362,7 +365,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 				limit = parent.getLimit() + parent.getOffset();
 			}
 		}
-		tupleSources.add(getDataManager().registerRequest(getContext(), atomicCommand, modelName, connectorBindingId, getID(), limit));
+		RegisterRequestParameter param = new RegisterRequestParameter(connectorBindingId, getID(), limit);
+		param.info = info;
+		tupleSources.add(getDataManager().registerRequest(getContext(), atomicCommand, modelName, param));
 		if (tupleSources.size() > 1) {
         	reserved += getBufferManager().reserveBuffers(schemaSize, BufferReserveMode.FORCE);
 		}
@@ -393,6 +398,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	protected void getNodeString(StringBuffer str) {
 		super.getNodeString(str);
 		str.append(command);
+		if (this.info != null) {
+			str.append(" [SHARED ").append(this.info.id).append("]"); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 	}
 
 	public Object clone(){
@@ -412,12 +420,16 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			target.originalSelect = source.originalSelect;
 		}
 		target.command = source.command;
+		target.info = source.info;
 	}
 
     public PlanNode getDescriptionProperties() {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         props.addProperty(PROP_MODEL_NAME, this.modelName);
+        if (this.info != null) {
+        	props.addProperty(PROP_SHARING_ID, String.valueOf(this.info.id));
+        }
         return props;
     }
 

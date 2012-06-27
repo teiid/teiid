@@ -51,6 +51,7 @@ import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -209,7 +210,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
                 		c.setRuntimeType(DataTypeManager.getDataTypeName(es.getType()));
                 		create.getColumns().add(c);
                 	}
-                    procEnv.getDataManager().registerRequest(procEnv.getContext(), create, TempMetadataAdapter.TEMP_MODEL.getName(), null, 0, -1);
+                    procEnv.getDataManager().registerRequest(procEnv.getContext(), create, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
                 }
             }
 

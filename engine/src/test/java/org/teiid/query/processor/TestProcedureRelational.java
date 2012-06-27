@@ -754,7 +754,7 @@ public class TestProcedureRelational {
         	@Override
         	public TupleSource registerRequest(CommandContext context,
         			Command command, String modelName,
-        			String connectorBindingId, int nodeID, int limit)
+        			RegisterRequestParameter parameterObject)
         			throws TeiidComponentException {
         		if (command instanceof StoredProcedure) {
         			StoredProcedure proc = (StoredProcedure)command;
@@ -766,7 +766,7 @@ public class TestProcedureRelational {
         			});
         		}
         		return super.registerRequest(context, command, modelName,
-        				connectorBindingId, nodeID, limit);
+        				parameterObject);
         	}
         };
         

@@ -22,9 +22,15 @@
 
 package org.teiid.translator.yahoo;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import org.teiid.language.*;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.Literal;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.translator.TranslatorException;
 
@@ -33,21 +39,10 @@ import org.teiid.translator.TranslatorException;
  */
 public class TickerCollectorVisitor extends HierarchyVisitor {
 
-    private Set tickers = new HashSet();
+    private Set<String> tickers = new HashSet<String>();
     private TranslatorException exception;
 
-    /**
-     * 
-     */
-    public TickerCollectorVisitor() {
-        super();        
-    }
-
-    public void reset() {
-        tickers = new HashSet();
-    }
-
-    public Set getTickers() {
+    public Set<String> getTickers() {
         return this.tickers;
     }
     
@@ -61,10 +56,8 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
     }
 
     public void visit(In obj) {
-        List exprs = obj.getRightExpressions();
-        Iterator iter = exprs.iterator();
-        while(iter.hasNext()) {
-            Expression expr = (Expression) iter.next();
+        List<Expression> exprs = obj.getRightExpressions();
+        for (Expression expr : exprs) {
             addTickerFromExpression(expr);
         }
     }
@@ -84,8 +77,7 @@ public class TickerCollectorVisitor extends HierarchyVisitor {
          
     }
     
-    
-    public static Set getTickers(Condition crit) throws TranslatorException {
+    public static Set<String> getTickers(Condition crit) throws TranslatorException {
         TickerCollectorVisitor visitor = new TickerCollectorVisitor();
         crit.acceptVisitor(visitor);
         

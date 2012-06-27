@@ -66,6 +66,7 @@ import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -161,9 +162,9 @@ public class ProcedurePlan extends ProcessorPlan {
 			
 			@Override
 			public TupleSource registerRequest(CommandContext context, Command command,
-					String modelName, String connectorBindingId, int nodeID, int limit)
+					String modelName, RegisterRequestParameter parameterObject)
 					throws TeiidComponentException, TeiidProcessingException {
-				TupleSource ts = parentDataMrg.registerRequest(context, command, modelName, connectorBindingId, nodeID, limit);
+				TupleSource ts = parentDataMrg.registerRequest(context, command, modelName, parameterObject);
 				if (blockContext != null && ts instanceof DataTierTupleSource) {
 					txnTupleSources.add(new WeakReference<DataTierTupleSource>((DataTierTupleSource)ts));
 				}

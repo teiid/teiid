@@ -36,6 +36,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.util.VariableContext;
@@ -113,7 +114,7 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         }
         if (!commandsToExecute.isEmpty()) {
             BatchedUpdateCommand command = new BatchedUpdateCommand(commandsToExecute);
-            tupleSource = getDataManager().registerRequest(getContext(), command, modelName, null, getID(), -1);
+            tupleSource = getDataManager().registerRequest(getContext(), command, modelName, new RegisterRequestParameter(null, getID(), -1));
         }
     }
     

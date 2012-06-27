@@ -91,7 +91,7 @@ public class TestSourceHints {
 			@Override
 			public TupleSource registerRequest(CommandContext context,
 					Command command, String modelName,
-					String connectorBindingId, int nodeID, int limit)
+					RegisterRequestParameter parameterObject)
 					throws TeiidComponentException {
 				if (general == null && hint == null) {
 					assertNull(context.getSourceHint());

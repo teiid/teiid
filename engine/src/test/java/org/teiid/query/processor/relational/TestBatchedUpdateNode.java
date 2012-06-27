@@ -42,6 +42,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestBatchedUpdatePlanner;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -214,10 +215,10 @@ public class TestBatchedUpdateNode {
         	this.numExecutedCommands = numExecutedCommands;
         }
         public Object lookupCodeValue(CommandContext context,String codeTableName,String returnElementName,String keyElementName,Object keyValue) throws BlockedException,TeiidComponentException {return null;}
-        public TupleSource registerRequest(CommandContext context,Command command,String modelName,String connectorBindingId, int nodeID, int limit) throws TeiidComponentException {
+        public TupleSource registerRequest(CommandContext context,Command command,String modelName,RegisterRequestParameter parameterObject) throws TeiidComponentException {
             assertEquals("myProcessorID", context.getProcessorID()); //$NON-NLS-1$
             assertEquals("myModelName", modelName); //$NON-NLS-1$
-            assertEquals(1, nodeID);
+            assertEquals(1, parameterObject.nodeID);
             commands.add(command.toString());
             actualCommands.add(command);
             return new FakeTupleSource(numExecutedCommands);

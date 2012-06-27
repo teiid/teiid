@@ -67,6 +67,7 @@ import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
@@ -122,7 +123,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		CommandContext context,
 		Command command,
 		String modelName,
-		String connectorBindingId, int nodeID, int limit)
+		RegisterRequestParameter parameterObject)
 		throws TeiidComponentException, TeiidProcessingException {          
 
 		TempTableStore tempTableStore = context.getTempTableStore();
@@ -132,7 +133,7 @@ public class TempTableDataManager implements ProcessorDataManager {
             	return result;
             }
         }
-        return this.processorDataManager.registerRequest(context, command, modelName, connectorBindingId, nodeID, limit);
+        return this.processorDataManager.registerRequest(context, command, modelName, parameterObject);
 	}
 	        
     TupleSource registerRequest(CommandContext context, String modelName, Command command) throws TeiidComponentException, TeiidProcessingException {
