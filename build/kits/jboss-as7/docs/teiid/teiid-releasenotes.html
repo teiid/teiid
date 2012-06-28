@@ -47,6 +47,7 @@
   <li>VDB.getUrl has been removed.
   <li>VDB.Status now has three states - LOADING, ACTIVE, REMOVED.  To check for validity use the isValid method, rather than checking for the VALID state.
   <li>The standalone and cli configuration files specify a setting for the teiid subsystem policy-decider-module.  If a module is not specified, then data roles will not be checked.
+  <li>local connections specifying a VDB version will wait for their VDB to finish loading before allowing a connection.
 <ul>
 
 <h4>from 7.x</h4>

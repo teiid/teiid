@@ -55,6 +55,7 @@ import org.teiid.dqp.service.SessionServiceException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.SessionServiceImpl;
@@ -104,13 +105,10 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	}
 	
 	@Override
-	public void waitForFinished(String vdbName, int vdbVersion) {
+	public void waitForFinished(String vdbName, int vdbVersion,
+			int timeOutMillis) throws ConnectionException {
 		VDBRepository repo = this.vdbRepositoryInjector.getValue();
-		try {
-			repo.waitForFinished(vdbName, vdbVersion);
-		} catch (InterruptedException e) {
-			return; //just allow the thread to continue/error
-		}
+		repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
 	}
 
 	@Override

@@ -75,6 +75,7 @@ public class FakeServer extends EmbeddedServer {
 	
 	@SuppressWarnings("serial")
 	public FakeServer(boolean start) {
+		waitForLoad = true;
 		cmr = new ProviderAwareConnectorManagerRepository() {
 			@Override
 			public ConnectorManager getConnectorManager(String connectorName) {

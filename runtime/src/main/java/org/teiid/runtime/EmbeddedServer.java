@@ -221,7 +221,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected ObjectReplicator replicator;
 	protected BufferServiceImpl bufferService = new BufferServiceImpl();
 	protected TransactionDetectingTransactionServer transactionService = new TransactionDetectingTransactionServer();
-	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl();
+	protected boolean waitForLoad;
+	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl() {
+		public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
+			if (waitForLoad) {
+				repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
+			}
+		};
+	};
 	protected LogonImpl logon;
 	private TeiidDriver driver = new TeiidDriver();
 	protected ConnectorManagerRepository cmr = new ProviderAwareConnectorManagerRepository();

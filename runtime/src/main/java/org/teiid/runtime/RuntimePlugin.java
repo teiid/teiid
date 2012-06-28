@@ -108,5 +108,7 @@ public class RuntimePlugin {
     	TEIID40093, //no sources
     	TEIID40094, //invalid metadata repso
     	TEIID40095, //deployment failed
+    	TEIID40096, //vdb deploy timeout
+    	TEIID40097, //vdb finish timeout  
     }
 }

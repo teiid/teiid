@@ -26,6 +26,7 @@ import java.util.HashMap;
 
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.SecurityHelper;
@@ -105,7 +106,8 @@ public class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	}
 	
 	@Override
-	public void waitForFinished(String vdbName, int vdbVersion) {
+	public void waitForFinished(String vdbName, int vdbVersion,
+			int timeOutMillis) throws ConnectionException {
 		
 	}
 	
