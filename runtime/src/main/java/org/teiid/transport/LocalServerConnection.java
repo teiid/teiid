@@ -40,7 +40,9 @@ import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
@@ -61,6 +63,22 @@ public class LocalServerConnection implements ServerConnection {
 	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry();
+		
+		String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
+		String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
+		int firstIndex = vdbName.indexOf('.');
+		int lastIndex = vdbName.lastIndexOf('.');
+		if (firstIndex != -1 && firstIndex == lastIndex) {
+			vdbVersion = vdbName.substring(firstIndex+1);
+			vdbName = vdbName.substring(0, firstIndex);
+		}
+		if (vdbVersion != null) {
+			int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, EmbeddedProfile.WAIT_FOR_LOAD, -1);
+			if (waitForLoad != 0) {
+				this.csr.waitForFinished(vdbName, Integer.valueOf(vdbVersion), waitForLoad);
+			}
+		}
+		
 		workContext.setSecurityHelper(csr.getSecurityHelper());
 		workContext.setUseCallingThread(useCallingThread);
 		authenticate();

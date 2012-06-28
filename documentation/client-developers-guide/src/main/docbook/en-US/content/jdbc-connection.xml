@@ -232,6 +232,15 @@
                             <code>boolean</code>
                         </entry>
                         <entry>Only applies to "local" connections. When this option is set to "true" (the default), then the calling thread will be used to process the query.  If false, then an engine thread will be used.</entry>
+                    </row>
+                    <row>
+                        <entry>
+                            <code>waitForLoad</code>
+                        </entry>
+                        <entry>
+                            <code>integer</code>
+                        </entry>
+                        <entry>Only applies to "local" connections. When this option is set to a non-negative value the connection will wait that number of milliseconds for the VDB to become active.  Setting to a negative number will use the system default setting.  Needs to be specified using AdditionalProperties if set via a DataSource property.</entry>
                     </row>                        
                     <row>
                     	<entry>

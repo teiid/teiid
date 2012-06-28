@@ -43,6 +43,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -332,6 +333,30 @@ public class TestLocalConnections {
     	if (handler.t != null) {
     		throw handler.t;
     	}
+	}
+	
+	@Test public void testWaitForLoad() throws Exception {
+		final ResultsFuture<Void> future = new ResultsFuture<Void>();
+		
+		Thread t = new Thread() {
+			public void run() {
+				try {
+					server.createConnection("jdbc:teiid:not_there.1");
+					future.getResultsReceiver().receiveResults(null);
+				} catch (Exception e) {
+					future.getResultsReceiver().exceptionOccurred(e);
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
+		assertFalse(future.isDone());
+		try {
+			server.deployVDB("not_there", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+			future.get(5000, TimeUnit.SECONDS);
+		} finally {
+			server.undeployVDB("not_there");
+		}
 	}
 	
 }

@@ -22,39 +22,26 @@
 package org.teiid.deployers;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.jboss.deployers.spi.DeploymentException;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadata.*;
+import org.teiid.net.ConnectionException;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.runtime.RuntimePlugin;
@@ -67,6 +54,7 @@ import org.teiid.vdb.runtime.VDBKey;
  */
 public class VDBRepository implements Serializable{
 	private static final long serialVersionUID = 312177538191772674L;
+	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
 	private MetadataStore systemStore;
@@ -75,15 +63,15 @@ public class VDBRepository implements Serializable{
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
 	private MetadataRepository metadataRepository;
+	private ReentrantLock lock = new ReentrantLock();
+	private Condition vdbAdded = lock.newCondition();
 	
 	public MetadataRepository getMetadataRepository() {
 		return metadataRepository;
 	}
 	
 	public void addVDB(VDBMetaData vdb, MetadataStoreGroup stores, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws DeploymentException {
-		if (getVDB(vdb.getName(), vdb.getVersion()) != null) {
-			throw new DeploymentException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
-		}
+		VDBKey key = vdbId(vdb);
 		
 		// get the system VDB metadata store
 		if (this.systemStore == null) {
@@ -99,6 +87,16 @@ public class VDBRepository implements Serializable{
 		}
 		else {
 			cvdb = new CompositeVDB(vdb, stores, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this.systemStore, odbcStore);
+		}
+		lock.lock();
+		try {
+			if (vdbRepo.containsKey(key)) {
+				throw new DeploymentException(RuntimePlugin.Util.getString("duplicate_vdb", vdb.getName(), vdb.getVersion())); //$NON-NLS-1$
+			}
+			this.vdbRepo.put(key, cvdb);
+			vdbAdded.signalAll();
+		} finally {
+			lock.unlock();
 		}
 		this.vdbRepo.put(vdbId(vdb), cvdb); 
 		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
@@ -187,6 +185,40 @@ public class VDBRepository implements Serializable{
 			}
 		}
 		metadataRepository.endLoadVdb(vdbName, vdbVersion);
+	}
+	
+	public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws InterruptedException, ConnectionException {
+		CompositeVDB cvdb = null;
+		VDBKey key = new VDBKey(vdbName, vdbVersion);
+		long timeOutNanos = 0;
+		if (timeOutMillis >= 0) {
+			timeOutNanos = TimeUnit.MILLISECONDS.toNanos(DEFAULT_TIMEOUT_MILLIS);
+		} else {
+			//TODO allow a configurable default
+			timeOutNanos = TimeUnit.MINUTES.toNanos(10);
+		}
+		lock.lock();
+		try {
+			while ((cvdb = this.vdbRepo.get(key)) == null) {
+				if (timeOutNanos <= 0) {
+					throw new ConnectionException(RuntimePlugin.Util.getString("VDBRepository.no_vdb", timeOutMillis, vdbName, vdbVersion)); //$NON-NLS-1$
+				}
+				timeOutNanos = this.vdbAdded.awaitNanos(timeOutNanos);
+			}
+		} finally {
+			lock.unlock();
+		}
+		VDBMetaData vdb = cvdb.getVDB();
+		long finishNanos = System.nanoTime() + timeOutNanos;
+		synchronized (vdb) {
+			while (vdb.getStatus() != Status.ACTIVE) {
+				if (timeOutNanos <= 0) {
+					throw new ConnectionException(RuntimePlugin.Util.getString("VDBRepository.no_vdb", timeOutMillis, vdbName, vdbVersion, vdb.getValidityErrors())); //$NON-NLS-1$
+				}
+				vdb.wait(timeOutNanos);
+				timeOutNanos = finishNanos - System.nanoTime();
+			}
+		}
 	}
 
 	public VDBMetaData getVDB(String name, int version) {

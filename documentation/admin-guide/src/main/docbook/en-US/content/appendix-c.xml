@@ -51,5 +51,10 @@
 			</para>
 			<note><para>For Teiid 8.x this property no longer exists and the default behavior is to add only the Warning root.</para></note>
 		</listitem>
+		<listitem>
+			<para><emphasis>org.teiid.clientVdbLoadTimeoutMillis</emphasis> - defaults to 5 minutes.  
+			The default amount of time a client (currently only local clients) will wait to make a connection to an active VDB before throwing an exception.  Clients may override this setting via the waitForLoad connection property.
+			</para>
+		</listitem>
 	</itemizedlist>
 </appendix>

@@ -23,6 +23,7 @@
 package org.teiid.transport;
 
 import org.teiid.core.ComponentNotFoundException;
+import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
 
@@ -38,5 +39,7 @@ public interface ClientServiceRegistry {
 	SecurityHelper getSecurityHelper();
 	
 	AuthenticationType getAuthenticationType();
+	
+	void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException;
 
 }

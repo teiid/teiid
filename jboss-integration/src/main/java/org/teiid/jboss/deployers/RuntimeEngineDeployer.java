@@ -113,6 +113,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.net.ConnectionException;
 import org.teiid.net.TeiidURL;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.query.ObjectReplicator;
@@ -882,5 +883,15 @@ public class RuntimeEngineDeployer extends DQPConfiguration implements DQPManage
 	@Override
 	public AuthenticationType getAuthenticationType() {
 		return this.sessionService.getAuthType();
+	}
+
+	@Override
+	public void waitForFinished(String vdbName, int vdbVersion,
+			int timeOutMillis) throws ConnectionException {
+		try {
+			vdbRepository.waitForFinished(vdbName, vdbVersion, timeOutMillis);
+		} catch (InterruptedException e) {
+			return; //just allow the thread to continue/error
+		}
 	}
 }

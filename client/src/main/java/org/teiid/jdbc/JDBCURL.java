@@ -71,6 +71,7 @@ public class JDBCURL {
     	        BaseDataSource.VDB_VERSION,
     	        BaseDataSource.USER_NAME,
     	        BaseDataSource.PASSWORD,
+    	        EmbeddedProfile.WAIT_FOR_LOAD,
     	        TeiidURL.CONNECTION.AUTO_FAILOVER,
     	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY,
     	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,

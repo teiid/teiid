@@ -299,4 +299,14 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
 		return new ConnectionImpl(conn, info, url);	
 	}
 	
+	@Override
+	public void waitForFinished(String vdbName, int vdbVersion,
+			int timeOutMillis) throws ConnectionException {
+		try {
+			repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
+		} catch (InterruptedException e) {
+			return;
+		}
+	}
+	
 }
