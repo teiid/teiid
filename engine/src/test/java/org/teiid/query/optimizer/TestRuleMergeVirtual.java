@@ -408,5 +408,28 @@ public class TestRuleMergeVirtual {
     
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
+    
+    @Test public void testSortOverUnion() throws Exception {
+        ProcessorPlan plan = TestOptimizer.helpPlan("select e1 from (select max(e1) as e1 from pm1.g1 having 1 = 0) as y union all select e2 from pm1.g1 union all select e1 from pm1.g1 order by e1", //$NON-NLS-1$
+                                      RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(),
+                                      new String[] {
+                                          "SELECT pm1.g1.e2 FROM pm1.g1", "SELECT pm1.g1.e1 FROM pm1.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                0,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                1,      // Sort
+                1       // UnionAll
+            });                                     
+    }
 
 }
