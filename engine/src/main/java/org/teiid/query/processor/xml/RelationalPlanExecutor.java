@@ -132,7 +132,7 @@ class RelationalPlanExecutor implements PlanExecutor {
 	        	insert.setTupleSource(new TempLoadTupleSource());
 	        	this.dataManager.registerRequest(this.internalProcessor.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
 	        	if (!doneLoading) {
-	        		throw BlockedException.block("Blocking on result set load"); //$NON-NLS-1$
+	        		throw BlockedException.block(resultInfo.getResultSetName(), "Blocking on result set load"); //$NON-NLS-1$
 	        	}
         		internalProcessor.closeProcessing();
 				AlterTempTable att = new AlterTempTable(tempTable);
