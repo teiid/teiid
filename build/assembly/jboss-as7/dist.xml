@@ -119,6 +119,13 @@
             <unpack>false</unpack>
             <dependencySets>
                 <dependencySet>
+                    <excludes>
+                        <exclude>javax.resource:connector-api</exclude>
+                        <exclude>javax.transaction:jta</exclude>
+                        <exclude>org.jboss.teiid:teiid-common-core</exclude>
+                        <exclude>org.jboss.teiid:teiid-api</exclude>
+                        <exclude>org.jboss.teiid:teiid-client</exclude>                        
+                    </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
                     <useTransitiveDependencies>true</useTransitiveDependencies>

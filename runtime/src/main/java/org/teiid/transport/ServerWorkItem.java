@@ -32,7 +32,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.crypto.SealedObject;
 
-import org.jboss.modules.Module;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ResultsFuture;
@@ -71,7 +70,7 @@ public class ServerWorkItem implements Runnable {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
         	try {
-        		Thread.currentThread().setContextClassLoader(Module.getCallerModule().getClassLoader());
+        		Thread.currentThread().setContextClassLoader(this.csr.getCallerClassloader());
         	} catch(Throwable t) {
         		// ignore
         	}

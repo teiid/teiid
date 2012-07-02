@@ -358,13 +358,11 @@
 				<groupId>javax.resource</groupId>
 				<artifactId>connector-api</artifactId>
 				<version>${version.connector-api}</version>
-				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>javax.transaction</groupId>
                 <artifactId>jta</artifactId>
 				<version>${version.jta}</version>
-				<scope>provided</scope>
 			</dependency>
 			<dependency>
 				<groupId>commons-logging</groupId>

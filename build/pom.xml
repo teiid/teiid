@@ -68,6 +68,7 @@
                 <descriptor>assembly/client-jar.xml</descriptor>
                 <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                 <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                <descriptor>assembly/embedded-dist.xml</descriptor>
               </descriptors>
             </configuration>
 
@@ -127,6 +128,7 @@
                   <descriptor>assembly/console-jar.xml</descriptor>    
                   <descriptor>assembly/jboss-as7/dist.xml</descriptor>
                   <descriptor>assembly/adminshell/adminshell-dist.xml</descriptor>
+                  <descriptor>assembly/embedded-dist.xml</descriptor>
                 </descriptors>
               </configuration>
             </plugin>

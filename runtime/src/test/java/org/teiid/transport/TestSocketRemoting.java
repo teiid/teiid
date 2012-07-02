@@ -160,7 +160,12 @@ public class TestSocketRemoting {
 	
 	@Test
 	public void testMethodInvocation() throws Exception {
-		ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();
+		ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl() {
+			@Override
+			public ClassLoader getCallerClassloader() {
+				return getClass().getClassLoader();
+			}
+		};
 		csr.registerClientService(ILogon.class, new ILogon() {
 
 				public ResultsFuture<?> logoff()

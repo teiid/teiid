@@ -89,7 +89,12 @@ public class TestFailover {
 	}
 
 	private SocketListener createListener(InetSocketAddress address, SSLConfiguration config) {
-		ClientServiceRegistryImpl server = new ClientServiceRegistryImpl();
+		ClientServiceRegistryImpl server = new ClientServiceRegistryImpl() {
+			@Override
+			public ClassLoader getCallerClassloader() {
+				return getClass().getClassLoader();
+			}
+		};
 		server.registerClientService(ILogon.class, new LogonImpl(mock(SessionService.class), "fakeCluster") { //$NON-NLS-1$
 			@Override
 			public LogonResult logon(Properties connProps)

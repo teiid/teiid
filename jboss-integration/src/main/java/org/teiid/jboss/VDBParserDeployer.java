@@ -99,10 +99,10 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			else if (file.getName().toLowerCase().endsWith(VdbConstants.MODEL_EXT)) {
 				UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 				if (udf == null) {
-					udf = new UDFMetaData();
+					udf = new FileUDFMetaData();
 					deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
 				}
-				udf.addModelFile(file);				
+				((FileUDFMetaData)udf).addModelFile(file);				
 			}
 		}
 	}
@@ -160,7 +160,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 						if (path == null) {
 							throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50075, model.getName()));
 						}
-						udf.buildFunctionModelFile(model.getName(), path);
+						((FileUDFMetaData)udf).buildFunctionModelFile(model.getName(), path);
 					}
 				}		
 			}

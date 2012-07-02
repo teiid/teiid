@@ -22,21 +22,9 @@
 
 package org.teiid.metadata.index;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
@@ -45,8 +33,8 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.index.IEntryResult;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.*;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -226,7 +214,7 @@ public class IndexMetadataStore extends MetadataStore {
 		synchronized (this) {
 			if (!this.loaded) {
 				if (systemDatatypes == null) {
-					loadSystemDatatypes(this);
+					SystemDataTypes.loadSystemDatatypes(this);
 				}
 		    	ArrayList<Index> tmp = new ArrayList<Index>();
 				for (VirtualFile f : indexFiles) {
@@ -271,30 +259,6 @@ public class IndexMetadataStore extends MetadataStore {
     		}
     	}
     }
-
-	public static void loadSystemDatatypes(MetadataStore ms) throws IOException {
-		InputStream is = IndexMetadataStore.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
-		try {
-			InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8")); //$NON-NLS-1$
-			BufferedReader br = new BufferedReader(isr);
-			String s = br.readLine();
-			String[] props = s.split("\\|"); //$NON-NLS-1$
-			while ((s = br.readLine()) != null) {
-				Datatype dt = new Datatype();
-				String[] vals = s.split("\\|"); //$NON-NLS-1$
-				Properties p = new Properties();
-				for (int i = 0; i < props.length; i++) {
-					if (vals[i].length() != 0) {
-						p.setProperty(props[i], new String(vals[i]));
-					}
-				}
-				PropertiesUtils.setBeanProperties(dt, p, null);
-				ms.addDatatype(dt);
-			}
-		} finally {
-			is.close();
-		}
-	}
 
     public void addIndexFile(VirtualFile f) {
     	this.indexFiles.add(f);

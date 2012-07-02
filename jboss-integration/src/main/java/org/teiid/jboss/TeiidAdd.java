@@ -71,7 +71,6 @@ import org.teiid.cache.CacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.deployers.SystemVDBDeployer;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;

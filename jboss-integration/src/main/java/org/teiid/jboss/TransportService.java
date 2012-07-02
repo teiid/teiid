@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
+import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
@@ -59,17 +60,11 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
+import org.teiid.transport.*;
 
 public class TransportService implements Service<ClientServiceRegistry>, ClientServiceRegistry {
 	private enum Protocol {teiid, pg};
-	private ClientServiceRegistryImpl csr = new ClientServiceRegistryImpl();
+	private ClientServiceRegistryImpl csr;
 	private transient ILogon logon;
 	private SocketConfiguration socketConfig;
 	final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
@@ -110,9 +105,20 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		VDBRepository repo = this.vdbRepositoryInjector.getValue();
 		repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
 	}
+	
+	@Override
+	public ClassLoader getCallerClassloader() {
+		return csr.getCallerClassloader();
+	}	
 
 	@Override
 	public void start(StartContext context) throws StartException {
+		this.csr = new ClientServiceRegistryImpl() {
+			@Override
+			public ClassLoader getCallerClassloader() {
+				return Module.getCallerModule().getClassLoader();
+			}
+		};
 		this.csr.setSecurityHelper(new JBossSecurityHelper());
 		
 		this.sessionService = new JBossSessionService(this.securityDomains);

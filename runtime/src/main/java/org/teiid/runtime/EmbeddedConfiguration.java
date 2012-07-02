@@ -43,6 +43,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private ObjectReplicator objectReplicator;
 	private WorkManager workManager;
 	private boolean useDisk = true;
+	private String bufferDirectory;
 	
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -111,5 +112,13 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	
 	public void setUseDisk(boolean useDisk) {
 		this.useDisk = useDisk;
+	}
+	
+	public void setBufferDirectory(String dir) {
+		this.bufferDirectory = dir;
+	}
+	
+	public String getBufferDirectory() {
+		return this.bufferDirectory;
 	}
 }

@@ -26,20 +26,11 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.transaction.RollbackException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import javax.transaction.*;
 
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
@@ -47,28 +38,21 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.BundleUtil.Event;
-import org.teiid.deployers.CompositeVDB;
-import org.teiid.deployers.UDFMetaData;
-import org.teiid.deployers.VDBLifeCycleListener;
-import org.teiid.deployers.VDBRepository;
-import org.teiid.deployers.VirtualDatabaseException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.datatypes.SystemDataTypes;
+import org.teiid.deployers.*;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ExecutionFactoryProvider;
-import org.teiid.dqp.internal.process.CachedResults;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.internal.process.TransactionServerImpl;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
@@ -84,7 +68,6 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.query.ObjectReplicator;
@@ -227,6 +210,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			if (waitForLoad) {
 				repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
 			}
+		}
+		@Override
+		public ClassLoader getCallerClassloader() {
+			return this.getClass().getClassLoader();
 		};
 	};
 	protected LogonImpl logon;
@@ -305,7 +292,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (dqpConfiguration.getSystemStore() == null) {
 			MetadataStore ms = new MetadataStore();
 			try {
-				IndexMetadataStore.loadSystemDatatypes(ms);
+				SystemDataTypes.loadSystemDatatypes(ms);
 			} catch (IOException e) {
 				throw new TeiidRuntimeException(e);
 			}
@@ -340,6 +327,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 		this.sessionService.setVDBRepository(repo);
 		this.bufferService.setUseDisk(dqpConfiguration.isUseDisk());
+		if (dqpConfiguration.isUseDisk()) {
+			if (dqpConfiguration.getBufferDirectory() == null) {
+				dqpConfiguration.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
+			}
+			this.bufferService.setDiskDirectory(dqpConfiguration.getBufferDirectory());
+		}
 		BufferService bs = getBufferService();
 		this.dqp.setBufferManager(bs.getBufferManager());
 

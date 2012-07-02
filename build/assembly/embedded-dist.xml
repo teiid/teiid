@@ -1,0 +1,111 @@
+<!--This script builds a zip for Teiid Server Installation -->
+<assembly>
+  
+  <id>embedded-dist</id>
+  
+  <formats>
+    <format>zip</format>
+  </formats>
+  
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <baseDirectory>teiid-${project.version}</baseDirectory>
+
+  <fileSets>
+    <fileSet>
+        <directory>target/kits/embedded</directory>
+        <outputDirectory>/</outputDirectory>      
+        <includes>
+          <include>**/*.sh</include>
+        </includes>   
+        <fileMode>755</fileMode>  
+        <directoryMode>0755</directoryMode>    
+    </fileSet> 
+          
+    <fileSet>
+        <directory>target/kits/embedded</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.sh</exclude>
+        </excludes>      
+        <fileMode>0644</fileMode>
+        <directoryMode>0755</directoryMode>
+    </fileSet>
+  </fileSets>
+  
+  <moduleSets>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-admin</include>
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>lib</outputDirectory>
+      </binaries>
+    </moduleSet>    
+            
+    <!-- These are Teiid internal dependencies; to make JCA work -->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid:teiid-runtime</include>            
+        </includes>
+
+        <binaries>
+            <includeDependencies>true</includeDependencies>
+            <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>true</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>
+            <outputDirectory>lib</outputDirectory>
+            <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
+   
+    <!-- **************************************************************************
+                        These are built in translators  
+         **************************************************************************-->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-jdbc</include>
+            <include>org.jboss.teiid.connectors:translator-loopback</include>
+            <include>org.jboss.teiid.connectors:translator-file</include>
+            <include>org.jboss.teiid.connectors:translator-ldap</include>
+            <include>org.jboss.teiid.connectors:translator-salesforce</include>
+            <include>org.jboss.teiid.connectors:salesforce-api</include>
+            <include>org.jboss.teiid.connectors:translator-ws</include>
+            <include>org.jboss.teiid.connectors:translator-olap</include>
+            <include>org.jboss.teiid.connectors:translator-hive</include>
+            <include>org.jboss.teiid.connectors:translator-jpa</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>optional</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
+       
+    </moduleSets>  
+</assembly>

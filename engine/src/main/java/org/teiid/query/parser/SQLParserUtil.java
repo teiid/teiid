@@ -384,7 +384,9 @@ public class SQLParserUtil {
     	}
 
     	v = props.remove("FIXED_LENGTH"); //$NON-NLS-1$
-    	c.setFixedLength(isTrue(v));
+    	if (v != null) {
+    		c.setFixedLength(isTrue(v));
+    	}
     	
     	v = props.remove("SEARCHABLE"); //$NON-NLS-1$
     	if (v != null) {

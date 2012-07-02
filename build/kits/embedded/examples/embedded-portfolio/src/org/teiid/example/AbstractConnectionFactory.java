@@ -19,33 +19,41 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.jboss;
+package org.teiid.example;
 
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import javax.naming.NamingException;
+import javax.naming.Reference;
+import javax.resource.ResourceException;
+import javax.resource.cci.*;
 
-class SystemVDBService implements Service<SystemVDBDeployer> {
-	private SystemVDBDeployer deployer;
-	
-	public SystemVDBService(SystemVDBDeployer deployer){
-		this.deployer = deployer;
-	}
-	
+public abstract class AbstractConnectionFactory<C extends javax.resource.cci.Connection> implements ConnectionFactory {
+	private static final long serialVersionUID = 4906165501503764939L;
+
 	@Override
-	public void start(StartContext context) throws StartException {
-		deployer.start();
+	public void setReference(Reference reference) {
 	}
 
 	@Override
-	public void stop(StopContext context) {
-		deployer.stop();
+	public Reference getReference() throws NamingException {
+		return null;
 	}
 
 	@Override
-	public SystemVDBDeployer getValue() throws IllegalStateException, IllegalArgumentException {
-		return deployer;
+	public abstract C getConnection() throws ResourceException;
+
+	@Override
+	public C getConnection(ConnectionSpec properties)
+			throws ResourceException {
+		return null;
 	}
 
+	@Override
+	public RecordFactory getRecordFactory() throws ResourceException {
+		return null;
+	}
+
+	@Override
+	public ResourceAdapterMetaData getMetaData() throws ResourceException {
+		return null;
+	}
 }

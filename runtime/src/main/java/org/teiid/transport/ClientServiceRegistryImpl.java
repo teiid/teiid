@@ -32,7 +32,7 @@ import org.teiid.runtime.RuntimePlugin;
 import org.teiid.security.SecurityHelper;
 
 
-public class ClientServiceRegistryImpl implements ClientServiceRegistry {
+public abstract class ClientServiceRegistryImpl implements ClientServiceRegistry {
 	
 	public static class ClientService {
 		private Object instance;

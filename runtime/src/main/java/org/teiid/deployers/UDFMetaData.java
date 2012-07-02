@@ -21,55 +21,18 @@
  */
 package org.teiid.deployers;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.xml.stream.XMLStreamException;
-
-import org.jboss.vfs.VirtualFile;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.metadata.FunctionMetadataReader;
-import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.report.ActivityReport;
-import org.teiid.query.report.ReportItem;
-import org.teiid.runtime.RuntimePlugin;
 
 
 public class UDFMetaData {
-	private HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();
-	private HashMap<String, VirtualFile> files = new HashMap<String, VirtualFile>();
+	protected HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();	
 	private ClassLoader classLoader;
-	
-	public void addModelFile(VirtualFile file) {
-		this.files.put(file.getPathName(), file);
-	}
-	
-	
-	public void buildFunctionModelFile(String name, String path) throws IOException, XMLStreamException {
-		for (String f:files.keySet()) {
-			if (f.endsWith(path)) {
-				path = f;
-				break;
-			}
-		}
-		VirtualFile file =this.files.get(path);
-		if (file == null) {
-			throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40075, name));
-		}
-		List<FunctionMethod> udfMethods = FunctionMetadataReader.loadFunctionMethods(file.openStream());
-		ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("UDF load"); //$NON-NLS-1$
-		FunctionMetadataValidator.validateFunctionMethods(udfMethods,report);
-		if(report.hasItems()) {
-		    throw new IOException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
-		}
-		this.methods.put(name, udfMethods);
-	}
-	
+		
 	public Map<String, Collection <FunctionMethod>> getFunctions(){
 		return this.methods;
 	}

@@ -19,33 +19,49 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.jboss;
+package org.teiid.example;
 
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.SQLException;
 
-class SystemVDBService implements Service<SystemVDBDeployer> {
-	private SystemVDBDeployer deployer;
+import javax.sql.DataSource;
+
+public abstract class AbstarctDataSource implements DataSource {
+
+	@Override
+	public PrintWriter getLogWriter() throws SQLException {
+		return null;
+	}
+
+	@Override
+	public void setLogWriter(PrintWriter out) throws SQLException {
+	}
+
+	@Override
+	public void setLoginTimeout(int seconds) throws SQLException {
+	}
+
+	@Override
+	public int getLoginTimeout() throws SQLException {
+		return 0;
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> iface) throws SQLException {
+		return null;
+	}
+
+	@Override
+	public boolean isWrapperFor(Class<?> iface) throws SQLException {
+		return false;
+	}
+
+	@Override
+	public abstract Connection getConnection() throws SQLException;
 	
-	public SystemVDBService(SystemVDBDeployer deployer){
-		this.deployer = deployer;
-	}
-	
 	@Override
-	public void start(StartContext context) throws StartException {
-		deployer.start();
+	public Connection getConnection(String username, String password) throws SQLException {
+		return null;
 	}
-
-	@Override
-	public void stop(StopContext context) {
-		deployer.stop();
-	}
-
-	@Override
-	public SystemVDBDeployer getValue() throws IllegalStateException, IllegalArgumentException {
-		return deployer;
-	}
-
 }
