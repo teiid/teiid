@@ -22,6 +22,8 @@
 
 package org.teiid.common.buffer;
 
+import java.util.Arrays;
+
 import org.teiid.core.TeiidComponentException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -45,9 +47,20 @@ public class BlockedException extends TeiidComponentException {
     
     public static BlockedException block(Object... msg) {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, msg);
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, msg); 
     	}
     	return INSTANCE;
     }
+
+	public static BlockedException blockWithTrace(Object... msg) {
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+    		BlockedException be = new BlockedException();
+    		if (be.getStackTrace().length > 0) {
+    			be.setStackTrace(Arrays.copyOfRange(be.getStackTrace(), 1, Math.max(0, Math.min(8, be.getStackTrace().length))));
+    		}    		
+    		LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, be, msg); 
+    	}
+    	return INSTANCE;
+	}
     
 }

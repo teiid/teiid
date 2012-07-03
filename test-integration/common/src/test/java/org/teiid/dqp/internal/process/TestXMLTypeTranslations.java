@@ -85,7 +85,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
                                                    })});
         
         
-        List[] expected = new List[] { Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><XSDTypesNS:test xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:XSDTypesNS=\"http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes\"><book><datetime>1903-04-04T11:06:10.006Z</datetime><double>-INF</double><float>INF</float><gday>---100</gday><gmonth>--100</gmonth><gmonthday>--04-04</gmonthday><gyear>0100</gyear><gyearmonth>1903-04Z</gyearmonth><string>1</string></book></XSDTypesNS:test>" })};                     //$NON-NLS-1$
+        List<?>[] expected = new List[] { Arrays.asList(new Object[] {"<?xml version=\"1.0\" encoding=\"UTF-8\"?><XSDTypesNS:test xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:XSDTypesNS=\"http://www.metamatrix.com/XMLSchema/DataSets/XSDTypes\"><book><datetime>1903-04-04T11:06:10.006Z</datetime><double>-INF</double><float>INF</float><gday>---100</gday><gmonth>--100</gmonth><gmonthday>--04-04</gmonthday><gyear>0100</gyear><gyearmonth>1903-04Z</gyearmonth><string>1</string></book></XSDTypesNS:test>" })};                     //$NON-NLS-1$
         doProcess(metadata,  
                 sql, 
                 finder, dataMgr , expected, DEBUG);

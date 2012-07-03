@@ -260,7 +260,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     				} else if (this.cwi.isDataAvailable()) {
     					continue; 
     				}
-    				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException"); //$NON-NLS-1$
+    				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException", aqr.getAtomicRequestID()); //$NON-NLS-1$
     			} 
     			receiveResults(results, partial);
     		}
@@ -311,7 +311,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			addWork();
 		}
 		if (!futureResult.isDone()) {
-			throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on source query"); //$NON-NLS-1$
+			throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on source query", aqr.getAtomicRequestID()); //$NON-NLS-1$
 		}
 		FutureWork<AtomicResultsMessage> currentResults = futureResult;
 		futureResult = null;

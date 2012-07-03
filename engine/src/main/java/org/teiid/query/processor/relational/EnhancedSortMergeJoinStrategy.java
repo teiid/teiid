@@ -37,6 +37,9 @@ import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -56,7 +59,7 @@ import org.teiid.query.sql.symbol.SingleElementSymbol;
  */
 public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
 	
-	private final class SingleTupleSource extends AbstractList<Object> implements TupleSource {
+	private static final class SingleTupleSource extends AbstractList<Object> implements TupleSource {
 		boolean returned;
 		private int[] indexes;
 		private List<?> keyTuple;
@@ -256,6 +259,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	if (this.processingSortLeft != SortOption.NOT_SORTED && this.processingSortRight != SortOption.NOT_SORTED) {
     		super.loadRight();
     		super.loadLeft();
+    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+    			LogManager.logDetail(LogConstants.CTX_DQP, "degrading to merged join", this.joinNode.getID()); //$NON-NLS-1$
+    		}
     		return; //degrade to merge join
     	}
         if (this.processingSortLeft == SortOption.NOT_SORTED) {
@@ -267,6 +273,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	} else {
         		super.loadRight(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
+        		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        			LogManager.logDetail(LogConstants.CTX_DQP, "performing single pass sort right", this.joinNode.getID()); //$NON-NLS-1$
+        		}
         	}
         } else if (this.processingSortRight == SortOption.NOT_SORTED) {
         	this.sortedSource = this.leftSource;
@@ -288,6 +297,9 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
         	} else {
         		super.loadLeft(); //sort if needed
         		this.notSortedSource.sort(SortOption.NOT_SORTED); //do a single sort pass
+        		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+        			LogManager.logDetail(LogConstants.CTX_DQP, "performing single pass sort left", this.joinNode.nodeToString()); //$NON-NLS-1$
+        		}
         	}
         }
     }
