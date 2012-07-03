@@ -40,6 +40,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.sql.lang.OrderBy;
@@ -177,10 +178,6 @@ public class SortUtility {
 		this(ts, new OrderBy(expressions, types).getOrderByItems(), mode, bufferManager, connectionID, schema);
 	}
 
-	public boolean isDone() {
-    	return this.doneReading && this.phase == DONE;
-    }
-    
     public TupleBuffer sort()
         throws TeiidComponentException, TeiidProcessingException {
 
@@ -204,11 +201,18 @@ public class SortUtility {
             initialSort();
         }
     	
+    	for (TupleBuffer tb : activeTupleBuffers) {
+			tb.close();
+		}
+    	
     	return activeTupleBuffers;
     }
 
 	private TupleBuffer createTupleBuffer() throws TeiidComponentException {
 		TupleBuffer tb = bufferManager.createTupleBuffer(this.schema, this.groupName, TupleSourceType.PROCESSOR);
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+			LogManager.logDetail(LogConstants.CTX_DQP, "Created intermediate sort buffer ", tb.getId()); //$NON-NLS-1$
+		}
 		tb.setForwardOnly(true);
 		return tb;
 	}

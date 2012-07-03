@@ -75,10 +75,10 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     }
     
     public void send(Message message, Serializable messageKey) {
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_TRANSPORT, " message: " + message + " for message:" + messageKey); //$NON-NLS-1$ //$NON-NLS-2$
-        }
     	message.setMessageKey(messageKey);
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)) {
+            LogManager.logDetail(LogConstants.CTX_TRANSPORT, "send message: " + message); //$NON-NLS-1$
+        }
     	objectSocket.write(message);
     }
     
