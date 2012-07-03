@@ -87,22 +87,23 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected TupleBatch nextBatchDirect() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		ArrayList<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
-		
 		Object array = getEvaluator(Collections.emptyMap()).evaluate(table.getArrayValue(), null);
-		
-		for (int output : projectionIndexes) {
-			ProjectedColumn col = table.getColumns().get(output);
-			try {
-				Object val = FunctionMethods.array_get(array, output + 1);
-				tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
-			} catch (TransformationException e) {
-				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
-			} catch (SQLException e) {
-				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
+
+		if (array != null) {
+			ArrayList<Object> tuple = new ArrayList<Object>(projectionIndexes.length);
+			for (int output : projectionIndexes) {
+				ProjectedColumn col = table.getColumns().get(output);
+				try {
+					Object val = FunctionMethods.array_get(array, output + 1);
+					tuple.add(DataTypeManager.transformValue(val, table.getColumns().get(output).getSymbol().getType()));
+				} catch (TransformationException e) {
+					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30190, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30190, col.getName()));
+				} catch (SQLException e) {
+					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30188, e);
+				}
 			}
+			addBatchRow(tuple);
 		}
-		addBatchRow(tuple);
 		terminateBatches();
 		return pullBatch();
 	}

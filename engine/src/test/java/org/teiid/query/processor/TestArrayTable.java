@@ -75,7 +75,7 @@ public class TestArrayTable {
 	
 	public static void process(String sql, List[] expectedResults) throws Exception {    
     	HardcodedDataManager dataManager = new HardcodedDataManager();
-    	dataManager.addData("SELECT bqt1.smalla.objectvalue FROM bqt1.smalla", new List[] {Collections.singletonList(new Object[] {"a", 1, 2}), Collections.singletonList(new Object[] {"b", 3, 6})} );
+    	dataManager.addData("SELECT bqt1.smalla.objectvalue FROM bqt1.smalla", new List[] {Collections.singletonList(new Object[] {"a", 1, 2}), Collections.singletonList(new Object[] {"b", 3, 6}), Collections.singletonList(null)} );
     	ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.exampleBQTCached());
         helpProcess(plan, createCommandContext(), dataManager, expectedResults);
     }
