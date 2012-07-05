@@ -180,4 +180,12 @@ public class PlanExecutionNode extends RelationalNode {
         return props;
     }
     
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+		if (Boolean.TRUE.equals(getProcessorPlan().requiresTransaction(transactionalReads))) {
+			return true;
+		}
+		return null;
+    }
+    
 }

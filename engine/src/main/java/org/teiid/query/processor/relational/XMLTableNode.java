@@ -23,6 +23,7 @@
 package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +55,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
@@ -338,6 +340,11 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 
 	private boolean hasNextBatch() {
 		return this.outputRow + this.buffer.getBatchSize() <= rowCount + 1;
+	}
+	
+	@Override
+	protected Collection<? extends LanguageObject> getObjects() {
+		return this.table.getPassing();
 	}
 
 }

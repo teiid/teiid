@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +46,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.TextTable;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.symbol.Expression;
@@ -481,6 +484,11 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 			beginIndex += col.getWidth();
 		}
 		return result;
+	}
+	
+	@Override
+	protected Collection<? extends LanguageObject> getObjects() {
+		return Arrays.asList(this.table.getFile());
 	}
 	
 }

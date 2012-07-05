@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.util.CommandContext;
@@ -329,5 +331,18 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     public DependentValueSource getDependentValueSource() {
 		return dvs;
 	}
+    
+    @Override
+    protected Collection<? extends LanguageObject> getObjects() {
+    	List<LanguageObject> all = new ArrayList<LanguageObject>();
+    	if (leftExpressions != null) {
+    		all.addAll(leftExpressions);
+    		all.addAll(rightExpressions);
+    	}
+    	if (joinCriteria != null) {
+    		all.add(joinCriteria);
+    	}
+    	return all;
+    }
 
 }

@@ -1547,7 +1547,10 @@ public class TestOptimizer {
             0,      // Select
             0,      // Sort
             0       // UnionAll
-        });                                    
+        });  
+        
+        assertTrue(plan.requiresTransaction(true));
+        assertFalse(plan.requiresTransaction(false));
     }
 
     @Test public void testCantPushJoin2() {

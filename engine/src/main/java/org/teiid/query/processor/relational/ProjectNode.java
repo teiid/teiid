@@ -26,6 +26,7 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.SymbolMap;
@@ -219,6 +221,11 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     	PlanNode props = super.getDescriptionProperties();
     	AnalysisRecord.addLanaguageObjects(props, PROP_SELECT_COLS, this.selectSymbols);
         return props;
+    }
+    
+    @Override
+    protected Collection<? extends LanguageObject> getObjects() {
+    	return this.selectSymbols;
     }
     
 }

@@ -283,4 +283,12 @@ public class ProjectIntoNode extends RelationalNode {
 		return modelName;
 	}
     
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+		if (getMode() != Mode.ITERATOR) {
+			return true;
+		}
+		return null;
+    }
+    
 }

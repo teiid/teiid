@@ -120,5 +120,10 @@ public class DependentProcedureAccessNode extends AccessNode {
     public Criteria getInputCriteria() {
         return this.inputCriteria;
     }
+    
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+    	return true; //TODO: check the underlying 
+    }
 
 }

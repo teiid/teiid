@@ -22,11 +22,13 @@
 
 package org.teiid.query.sql.lang;
 
+import org.teiid.query.sql.LanguageObject;
+
 /**
- * This interface defines a common interface for all MetaMatrix SQL objects 
+ * This interface defines a common interface for all SQL objects 
  * that contain subqueries. 
  */
-public interface SubqueryContainer<T extends Command> {
+public interface SubqueryContainer<T extends Command> extends LanguageObject {
 
     /**
      * Returns the subquery Command object

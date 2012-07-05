@@ -40,13 +40,12 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
-import org.teiid.query.processor.relational.ProjectIntoNode.Mode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.WithQueryCommand;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.util.CommandContext;
@@ -57,7 +56,7 @@ public class RelationalPlan extends ProcessorPlan {
 
 	// Initialize state - don't reset
 	private RelationalNode root;
-	private List outputCols;
+	private List<? extends Expression> outputCols;
 	private List<WithQueryCommand> with;
 	
 	private List<WithQueryCommand> withToProcess;
@@ -131,7 +130,7 @@ public class RelationalPlan extends ProcessorPlan {
      * Get list of resolved elements describing output columns for this plan.
      * @return List of SingleElementSymbol
      */
-    public List getOutputElements() {
+    public List<? extends Expression> getOutputElements() {
         return this.outputCols;
     }
 
@@ -244,7 +243,7 @@ public class RelationalPlan extends ProcessorPlan {
     /** 
      * @param outputCols The outputCols to set.
      */
-    public void setOutputElements(List outputCols) {
+    public void setOutputElements(List<? extends Expression> outputCols) {
         this.outputCols = outputCols;
     }
     
@@ -267,40 +266,32 @@ public class RelationalPlan extends ProcessorPlan {
 				}
 			}
     	}
-    	return requiresTransaction(transactionalReads, root);
+    	return Boolean.TRUE.equals(requiresTransaction(transactionalReads, root));
     }
     
-    /**
-     * Currently does not detect procedures in non-inline view subqueries
-     */
-    boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
-    	if (node instanceof DependentAccessNode) {
-			if (transactionalReads || !(((DependentAccessNode)node).getCommand() instanceof QueryCommand)) {
-				return true;
-			}
-			return false;
-		}
-    	if (node instanceof ProjectIntoNode) {
-    		if (((ProjectIntoNode)node).getMode() == Mode.ITERATOR) {
-    			return transactionalReads;
-    		}
+    static Boolean requiresTransaction(boolean transactionalReads, RelationalNode node) {
+    	Boolean requiresTxn = node.requiresTransaction(transactionalReads);
+    	if (Boolean.TRUE.equals(requiresTxn)) {
     		return true;
-    	} else if (node instanceof AccessNode) {
-			return false;
-		}
-		if (transactionalReads) {
-			return true;
-		}
-		if (node instanceof PlanExecutionNode) {
-			ProcessorPlan plan = ((PlanExecutionNode)node).getProcessorPlan();
-			return plan.requiresTransaction(transactionalReads);
-		}
+    	}
 		for (RelationalNode child : node.getChildren()) {
-			if (child != null && requiresTransaction(transactionalReads, child)) {
+			if (child == null) {
+				continue;
+			}
+			Boolean childRequires = requiresTransaction(transactionalReads, child);
+			if (Boolean.TRUE.equals(childRequires)) {
 				return true;
 			}
+			if (transactionalReads) {
+				if (childRequires == null) {
+					if (requiresTxn == null) {
+						return true;
+					}
+					requiresTxn = null;
+				}
+			}
 		}
-		return false;
+		return requiresTxn;
     }
     
     @Override

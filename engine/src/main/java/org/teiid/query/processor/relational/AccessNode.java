@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -45,13 +46,18 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
 
@@ -440,5 +446,38 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	public void setConnectorBindingId(String connectorBindingId) {
 		this.connectorBindingId = connectorBindingId;
 	}
-    
+	
+	@Override
+	protected Collection<? extends LanguageObject> getObjects() {
+		ArrayList<LanguageObject> list = new ArrayList<LanguageObject>();
+		if (projection != null) {
+			for (Object obj : projection) {
+				if (obj instanceof LanguageObject) {
+					list.add((LanguageObject)obj);
+				}
+			}
+		}
+		if (shouldEvaluate) {
+			//collect any evaluatable subqueries
+			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.command)) {
+				if (container instanceof ExistsCriteria && ((ExistsCriteria)container).shouldEvaluate()) {
+					list.add(container);
+				}
+				if (container instanceof ScalarSubquery && ((ScalarSubquery)container).shouldEvaluate()) {
+					list.add(container);
+				}
+			}
+		}
+		return list;
+	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+		Boolean required = super.requiresTransaction(transactionalReads);
+		if (Boolean.TRUE.equals(required)) {
+			return true;
+		}
+		return null;
+	}
+	
 }

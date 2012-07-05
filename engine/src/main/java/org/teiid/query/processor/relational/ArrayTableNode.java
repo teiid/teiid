@@ -24,6 +24,8 @@ package org.teiid.query.processor.relational;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -37,6 +39,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.ArrayTable;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.util.CommandContext;
@@ -106,6 +109,11 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 		}
 		terminateBatches();
 		return pullBatch();
+	}
+	
+	@Override
+	protected Collection<? extends LanguageObject> getObjects() {
+		return Arrays.asList(this.table.getArrayValue());
 	}
 
 }

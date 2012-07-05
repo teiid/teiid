@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.util.VariableContext;
@@ -176,6 +178,16 @@ public class BatchedUpdateNode extends SubqueryAwareRelationalNode {
         BatchedUpdateNode clonedNode = new BatchedUpdateNode(getID(), updateCommands, contexts, shouldEvaluate, modelName);
         super.copy(this, clonedNode);
         return clonedNode;
+    }
+    
+    @Override
+    protected Collection<? extends LanguageObject> getObjects() {
+    	return null;
+    }
+    
+    @Override
+    public Boolean requiresTransaction(boolean transactionalReads) {
+    	return true;
     }
 
 }

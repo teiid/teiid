@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.util.CommandContext;
 
@@ -97,7 +99,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         }
 
         while (currentRow <= currentBatch.getEndRow() && !isBatchFull()) {
-    		List tuple = currentBatch.getTuple(currentRow);
+    		List<?> tuple = currentBatch.getTuple(currentRow);
 
             if(getEvaluator(this.elementMap).evaluate(this.criteria, tuple)) {
                 addBatchRow(projectTuple(this.projectionIndexes, tuple));
@@ -137,6 +139,11 @@ public class SelectNode extends SubqueryAwareRelationalNode {
     	PlanNode props = super.getDescriptionProperties();
     	AnalysisRecord.addLanaguageObjects(props, PROP_CRITERIA, Arrays.asList(this.criteria));
         return props;
+    }
+    
+    @Override
+    protected Collection<? extends LanguageObject> getObjects() {
+    	return Arrays.asList(this.criteria);
     }
     
 }

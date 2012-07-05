@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +49,7 @@ import org.teiid.query.function.aggregate.AggregateFunction;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.GroupingNode.ProjectingTupleSource;
 import org.teiid.query.processor.relational.SortUtility.Mode;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -470,6 +472,11 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			List<? extends Expression> sourceElements = this.getChildren()[0].getElements();
 			this.elementMap = createLookupMap(sourceElements);
 		}
+	}
+	
+	@Override
+	protected Collection<? extends LanguageObject> getObjects() {
+		return getElements();
 	}
     
 }

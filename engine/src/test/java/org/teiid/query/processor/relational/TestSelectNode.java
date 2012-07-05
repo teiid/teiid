@@ -22,8 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,6 +53,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
+@SuppressWarnings("unchecked")
 public class TestSelectNode {
 
     public void helpTestSelect(List elements, Criteria criteria, List[] data, List childElements, ProcessorDataManager dataMgr, List[] expected) throws TeiidComponentException, TeiidProcessingException {

@@ -22,6 +22,7 @@
 
 package org.teiid.query.optimizer;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import org.junit.After;
@@ -142,6 +143,9 @@ public class TestSubqueryPushdown {
             null, capFinder,
             new String[] { "SELECT intkey FROM bqt1.smalla AS n WHERE intkey = (SELECT MAX(intkey) FROM bqt1.smallb AS s WHERE s.stringkey = n.stringkey)" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
         checkNodeTypes(plan, FULL_PUSHDOWN); 
+        
+        assertFalse(plan.requiresTransaction(true));
+        assertFalse(plan.requiresTransaction(false));
     }   
 
     @Test public void testPushCorrelatedSubquery2() {
@@ -276,6 +280,9 @@ public class TestSubqueryPushdown {
             0,      // Sort
             0       // UnionAll
         }); 
+        
+        assertTrue(plan.requiresTransaction(true));
+        assertFalse(plan.requiresTransaction(false));
     }
 
     @Test public void testCorrelatedSubquery2() {
@@ -749,6 +756,9 @@ public class TestSubqueryPushdown {
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 > (select e1 FROM pm2.g1 where e2 = 13)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 > (SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e2 = 13)" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN); 
+        
+        assertTrue(plan.requiresTransaction(true));
+        assertFalse(plan.requiresTransaction(false));
     }
     
     @Test public void testScalarSubquery1() throws TeiidComponentException, TeiidProcessingException {

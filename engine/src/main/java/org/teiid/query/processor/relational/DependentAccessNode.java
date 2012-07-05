@@ -33,6 +33,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.QueryCommand;
 
 
 /**
@@ -207,6 +208,14 @@ public class DependentAccessNode extends AccessNode {
 
 	public void setPushdown(boolean pushdown) {
 		this.pushdown = pushdown;
+	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+		if (transactionalReads || !(this.getCommand() instanceof QueryCommand)) {
+			return true;
+		}
+		return null;
 	}
 
 }

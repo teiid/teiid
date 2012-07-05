@@ -113,5 +113,10 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
 		this.batchRow = 1;
 		this.insertCount = 0;
 	}
+	
+	@Override
+	public Boolean requiresTransaction(boolean transactionalReads) {
+		return true;
+	}
 
 }
