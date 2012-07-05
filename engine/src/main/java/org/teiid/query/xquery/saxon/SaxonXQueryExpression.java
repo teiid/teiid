@@ -33,10 +33,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.ErrorListener;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.stax.StAXSource;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.expr.AxisExpression;
@@ -115,6 +117,20 @@ public class SaxonXQueryExpression {
 		public void close() {
 			for (Source source : sources) {
 				Util.closeSource(source);
+				if (source instanceof StAXSource) {
+					StAXSource ss = (StAXSource)source;
+					if (ss.getXMLEventReader() != null) {
+						try {
+							ss.getXMLEventReader().close();
+						} catch (XMLStreamException e) {
+						}
+					} else {
+						try {
+							ss.getXMLStreamReader().close();
+						} catch (XMLStreamException e) {
+						}
+					}
+				}
 			}
 			if (iter != null) {
 				iter.close();

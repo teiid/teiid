@@ -77,6 +77,7 @@ import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.WSConnection.Util;
 
 public class Evaluator {
@@ -872,7 +873,7 @@ public class Evaluator {
 			TeiidComponentException {
 		Object contextItem = null;
 		for (DerivedColumn passing : cols) {
-			Object value = this.evaluate(passing.getExpression(), tuple);
+			Object value = evaluateParameter(tuple, passing);
 			if (passing.getAlias() == null) {
 				contextItem = value;
 			} else {
@@ -880,6 +881,39 @@ public class Evaluator {
 			}
 		}
 		return contextItem;
+	}
+
+	private Object evaluateParameter(List<?> tuple, DerivedColumn passing)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
+		if (passing.getExpression() instanceof Function) {
+			Function f = (Function)passing.getExpression();
+			//narrow optimization of json based documents to allow for lower overhead streaming
+			if (f.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.JSONTOXML)) {
+				String rootName = (String)this.evaluate(f.getArg(0), tuple);
+				Object lob = this.evaluate(f.getArg(1), tuple);
+				if (rootName == null || lob == null) {
+					return null;
+				}
+				try {
+					if (lob instanceof Blob) {
+						return XMLSystemFunctions.jsonToXml(context, rootName, (Blob)lob, true);
+					}
+					return XMLSystemFunctions.jsonToXml(context, rootName, (Clob)lob, true);
+				} catch (IOException e) {
+					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName()));
+				} catch (SQLException e) {
+					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName()));
+				} catch (TeiidProcessingException e) {
+					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName()));
+				}
+			}
+		} else if (passing.getExpression() instanceof XMLParse) {
+			XMLParse xmlParse = (XMLParse)passing.getExpression();
+			xmlParse.setWellFormed(true);
+		}
+		Object value = this.evaluate(passing.getExpression(), tuple);
+		return value;
 	}
 
 	private Evaluator.NameValuePair<Object>[] getNameValuePairs(List<?> tuple, List<DerivedColumn> args, boolean xmlNames)

@@ -27,12 +27,16 @@ import java.io.InputStream;
 import java.sql.SQLXML;
 import java.util.Map;
 
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerException;
+import javax.xml.transform.stax.StAXSource;
 
 import net.sf.saxon.AugmentedSource;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.event.ProxyReceiver;
+import net.sf.saxon.evpull.PullEventSource;
+import net.sf.saxon.evpull.StaxToEventBridge;
 import net.sf.saxon.om.DocumentInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.query.DynamicQueryContext;
@@ -83,6 +87,7 @@ public class XQueryEvaluator {
 		            if(value instanceof SQLXML) {                    
 		            	value = XMLSystemFunctions.convertToSource(value);
 		            	result.sources.add((Source)value);
+		            	value = wrapStax((Source)value, xquery.getConfig());
 		            } else if (value instanceof java.util.Date) {
 		            	value = XMLSystemFunctions.convertToAtomicValue(value);
 		            }
@@ -94,6 +99,7 @@ public class XQueryEvaluator {
 	        if (context != null) {
 	        	Source source = XMLSystemFunctions.convertToSource(context);
 	        	result.sources.add(source);
+	        	source = wrapStax(source, xquery.getConfig());
 	            if (xquery.contextRoot != null) {
 	            	//create our own filter as this logic is not provided in the free saxon
 	                ProxyReceiver filter = new PathMapFilter(xquery.contextRoot);
@@ -156,6 +162,27 @@ public class XQueryEvaluator {
 	    		result.close();
 	    	}
 	    }
+	}
+
+	private static Source wrapStax(Source value, Configuration config) throws TeiidProcessingException {
+		if (value instanceof StAXSource) {
+			//saxon doesn't like staxsources
+			StaxToEventBridge sb = new StaxToEventBridge();
+			sb.setPipelineConfiguration(config.makePipelineConfiguration());
+			StAXSource staxSource = (StAXSource)value;
+			if (staxSource.getXMLEventReader() != null) {
+				try {
+					sb.setXMLStreamReader(new XMLEventStreamReader(staxSource.getXMLEventReader()));
+				} catch (XMLStreamException e) {
+					//should not happen as the StAXSource already peeked
+					throw new TeiidProcessingException(e);
+				}
+			} else {
+				sb.setXMLStreamReader(staxSource.getXMLStreamReader());
+			}
+			value = new PullEventSource(sb);
+		}
+		return value;
 	}
 
 	/**

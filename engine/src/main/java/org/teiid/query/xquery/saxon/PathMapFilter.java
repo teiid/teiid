@@ -86,7 +86,7 @@ class PathMapFilter extends ProxyReceiver {
 		}
 	}
 
-	
+	private boolean closed;
 	private LinkedList<MatchContext> matchContext = new LinkedList<MatchContext>();
 	
 	public PathMapFilter(PathMapRoot root) {
@@ -190,6 +190,14 @@ class PathMapFilter extends ProxyReceiver {
 		MatchContext context = matchContext.getLast();
 		if (context.matchedElement) {
 			super.startContent();
+		}
+	}
+	
+	@Override
+	public void close() throws XPathException {
+		if (!closed) {
+			super.close();
+			closed = true;
 		}
 	}
 

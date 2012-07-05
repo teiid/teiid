@@ -28,6 +28,7 @@
 <UL>
   <li><B>VDB Reuse</B> a vdb.xml can now declare imported vdbs to reuse metadata.
   <LI><B>Comparable Object</B> - the system property org.teiid.comparableObject can be set to use OBJECT values in comparison/sorting/grouping operations.  It is expected that the object values correctly implement Comparable.compareTo.
+  <LI><B>Admin Metadata</B> - you can now retrieve metadata in DDL from the admin api via the getSchema method.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -48,6 +49,7 @@
   <li>VDB.Status now has three states - LOADING, ACTIVE, REMOVED.  To check for validity use the isValid method, rather than checking for the VALID state.
   <li>The standalone and cli configuration files specify a setting for the teiid subsystem policy-decider-module.  If a module is not specified, then data roles will not be checked.
   <li>local connections specifying a VDB version will wait for their VDB to finish loading before allowing a connection.
+  <li>jsonToXml document elements will contain xsi:type attribute values of decimal and boolean respectively for number and boolean json values to allow for differentiation from string values.
 <ul>
 
 <h4>from 7.x</h4>

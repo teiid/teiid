@@ -27,6 +27,7 @@ import static org.teiid.query.processor.TestProcessor.*;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
@@ -514,5 +515,19 @@ public class TestSQLXMLProcessing {
     
         process(sql, expected);
     }
+    
+	@Test public void testJsonStreamingXmlTable() throws Exception {
+		String sql = "select * from xmltable('/Person/phoneNumber' passing jsontoxml('Person', cast(? as blob)) columns x string path 'type', y string path 'number') as x"; //$NON-NLS-1$
+
+		List<?>[] expected = new List<?>[] {
+        		Arrays.asList("home", "212 555-1234"),
+        		Arrays.asList("fax", "646 555-4567"),
+        };    
+    
+		Blob b = BlobType.createBlob(("{ \"firstName\": \"John\", \"lastName\": \"Smith\", \"age\": 25, \"address\": { \"streetAddress\": \"21 2nd Street\", \"city\": \"New York\", \"state\": \"NY\", "+
+        "\"postalCode\": \"10021\" }, \"phoneNumber\": [ { \"type\": \"home\", \"number\": \"212 555-1234\" }, { \"type\": \"fax\", \"number\": \"646 555-4567\" } ] }").getBytes(Charset.forName("UTF-8")));
+		
+		processPreparedStatement(sql, expected, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(b));
+	}
     
 }

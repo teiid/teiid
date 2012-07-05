@@ -47,18 +47,19 @@ import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
 import javax.xml.stream.EventFilter;
 import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.stream.Location;
 import javax.xml.stream.XMLEventFactory;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLEventWriter;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.xpath.XPathExpressionException;
@@ -83,6 +84,7 @@ import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
@@ -90,6 +92,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
@@ -110,50 +113,54 @@ public class XMLSystemFunctions {
 	private static final Charset UTF_16LE = Charset.forName("UTF-16LE"); //$NON-NLS-1$
 	private static final Charset UTF_8 = Charset.forName("UTF-8"); //$NON-NLS-1$
 
-	//TODO: this could be done fully streaming without holding the intermediate xml output
 	private static final class JsonToXmlContentHandler implements
-			ContentHandler {
-		private final XMLStreamWriter streamWriter;
-		private boolean rootArray;
+			ContentHandler, XMLEventReader {
+		private Reader reader;
+		private JSONParser parser;
+		private XMLEventFactory eventFactory;
+
 		private LinkedList<String> nameStack = new LinkedList<String>();
+		private LinkedList<XMLEvent> eventStack = new LinkedList<XMLEvent>();
+		
+		private boolean rootArray;
+		private boolean end;
+		private boolean declaredNs;
 
 		private JsonToXmlContentHandler(String rootName,
-				XMLStreamWriter streamWriter) {
-			this.streamWriter = streamWriter;
-			this.nameStack.push(rootName);
+				Reader reader, JSONParser parser, XMLEventFactory eventFactory) {
+			this.nameStack.push(escapeName(rootName, true));
+			this.reader = reader;
+			this.eventFactory = eventFactory;
+			this.parser = parser;
 		}
 
 		@Override
 		public boolean startObjectEntry(String key)
 				throws org.json.simple.parser.ParseException, IOException {
-			this.nameStack.push(key);
-			return true;
+			this.nameStack.push(escapeName(key, true));
+			return false;
 		}
 
 		@Override
 		public boolean startObject() throws org.json.simple.parser.ParseException,
 				IOException {
 			start();
-			return true;
+			return false;
 		}
 
-		private void start()
-				throws IOException {
-			try {
-				streamWriter.writeStartElement(escapeName(this.nameStack.peek(), true));
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
+		private void start() {
+			eventStack.add(eventFactory.createStartElement("", "", nameStack.peek())); //$NON-NLS-1$ //$NON-NLS-2$ 
+			if (!declaredNs) {
+				eventStack.add(eventFactory.createNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI)); //$NON-NLS-1$
+				declaredNs = true;
 			}
 		}
 
 		@Override
 		public void startJSON() throws org.json.simple.parser.ParseException,
 				IOException {
-			try {
-				streamWriter.writeStartDocument();
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
-			}
+			//specify the defaults, since different providers emit/omit differently
+			eventStack.add(eventFactory.createStartDocument("UTF-8", "1.0")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override
@@ -163,58 +170,55 @@ public class XMLSystemFunctions {
 				this.rootArray = true;
 				start();
 			}
-			return true;
+			return false;
 		}
 
 		@Override
 		public boolean primitive(Object value)
 				throws org.json.simple.parser.ParseException, IOException {
 			start();
-			try {
-				if (value != null) {
-					streamWriter.writeCharacters(value.toString());
-				} else {
-					streamWriter.writeNamespace("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI); //$NON-NLS-1$
-					streamWriter.writeAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			if (value != null) {
+				String type = "decimal"; //$NON-NLS-1$
+				if (value instanceof String) {
+					type = null;
+				} else if (value instanceof Boolean) {
+					type = "boolean"; //$NON-NLS-1$
 				}
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
+				if (type != null) {
+					//we need to differentiate boolean/decimal entries from their string counter parts
+					eventStack.add(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "type", type)); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				eventStack.add(eventFactory.createCharacters(value.toString()));
+			} else {
+				eventStack.add(eventFactory.createAttribute("xsi", XMLConstants.W3C_XML_SCHEMA_INSTANCE_NS_URI, "nil", "true")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			end();
-			return true;
+			return true; //return true, otherwise we don't get the endObjectEntry
 		}
 
-		private void end()
-				throws IOException {
-			try {
-				streamWriter.writeEndElement();
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
-			}
+		private void end() {
+			eventStack.add(eventFactory.createEndElement("", "", nameStack.peek())); //$NON-NLS-1$ //$NON-NLS-2$ 
 		}
 
 		@Override
 		public boolean endObjectEntry()
 				throws org.json.simple.parser.ParseException, IOException {
 			this.nameStack.pop();
-			return true;
+			return false;
 		}
 
 		@Override
 		public boolean endObject() throws org.json.simple.parser.ParseException,
 				IOException {
 			end();
-			return true;
+			return false;
 		}
 
 		@Override
 		public void endJSON() throws org.json.simple.parser.ParseException,
 				IOException {
-			try {
-				streamWriter.writeEndDocument();
-			} catch (XMLStreamException e) {
-				throw new IOException(e);
-			}
+			this.eventStack.add(eventFactory.createEndDocument());
+			end = true;
 		}
 
 		@Override
@@ -223,7 +227,75 @@ public class XMLSystemFunctions {
 			if (this.nameStack.size() == 1 && rootArray) {
 				end();
 			}
-			return true;
+			return false;
+		}
+
+		@Override
+		public void close() throws XMLStreamException {
+			try {
+				//this is explicitly against the javadoc, but
+				//it's our only chance to close the reader
+				this.reader.close();
+			} catch (IOException e) {
+			}
+		}
+
+		@Override
+		public String getElementText() throws XMLStreamException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Object getProperty(String name) throws IllegalArgumentException {
+			return null;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return !eventStack.isEmpty() || !end;
+		}
+
+		@Override
+		public XMLEvent nextEvent() throws XMLStreamException {
+			while (eventStack.isEmpty() && !end) {
+				try {
+					parser.parse(reader, this, true);
+				} catch (IOException e) {
+					throw new XMLStreamException(e);
+				} catch (ParseException e) {
+					throw new XMLStreamException(e);
+				}
+			}
+			return eventStack.remove();
+		}
+
+		@Override
+		public XMLEvent nextTag() throws XMLStreamException {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public XMLEvent peek() throws XMLStreamException {
+			if (hasNext()) {
+				XMLEvent next = next();
+				this.eventStack.push(next);
+				return next;
+			}
+			return null;
+		}
+
+		@Override
+		public XMLEvent next() {
+			try {
+				return nextEvent();
+			} catch (XMLStreamException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+
+		@Override
+		public void remove() {
+			throw new UnsupportedOperationException();			
 		}
 	}
 	
@@ -239,7 +311,12 @@ public class XMLSystemFunctions {
 	};
 	static ThreadLocal<XMLEventFactory> threadLocalEventtFactory = new ThreadLocal<XMLEventFactory>() {
 		protected XMLEventFactory initialValue() {
-			return XMLEventFactory.newInstance();
+			return XMLEventFactory.newFactory();
+		}
+		public XMLEventFactory get() {
+			XMLEventFactory eventFactory = super.get();
+			eventFactory.setLocation(null);
+			return eventFactory;
 		}
 	};
 	private static final String P_OUTPUT_VALIDATE_STRUCTURE = "com.ctc.wstx.outputValidateStructure"; //$NON-NLS-1$
@@ -436,7 +513,7 @@ public class XMLSystemFunctions {
 				fs.remove();
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30437, e);
 			}
-			eventFactory = XMLEventFactory.newInstance();
+			eventFactory = threadLocalEventtFactory.get();
 		}
 		
 		public void addValue(Object object) throws TeiidProcessingException {
@@ -712,6 +789,10 @@ public class XMLSystemFunctions {
 	}
 
     public static SQLXML jsonToXml(CommandContext context, final String rootName, final Blob json) throws TeiidComponentException, TeiidProcessingException, SQLException, IOException {
+    	return jsonToXml(context, rootName, json, false);
+    }
+    
+    public static SQLXML jsonToXml(CommandContext context, final String rootName, final Blob json, boolean stream) throws TeiidComponentException, TeiidProcessingException, SQLException, IOException {
 		InputStream is = json.getBinaryStream();
 		PushbackInputStream pStream = new PushbackInputStream(is, 4);
 		byte[] encoding = new byte[3];
@@ -734,32 +815,80 @@ public class XMLSystemFunctions {
 			}
 		}
 		Reader r = new InputStreamReader(pStream, charset);
-		return jsonToXml(context, rootName, r);
+		return jsonToXml(context, rootName, r, stream);
     }
-	
+    
     public static SQLXML jsonToXml(CommandContext context, final String rootName, final Clob json) throws TeiidComponentException, TeiidProcessingException, SQLException {
-		return jsonToXml(context, rootName, json.getCharacterStream());
+    	return jsonToXml(context, rootName, json, false);
     }
-
+    
+    public static SQLXML jsonToXml(CommandContext context, final String rootName, final Clob json, boolean stream) throws TeiidComponentException, TeiidProcessingException, SQLException {
+		return jsonToXml(context, rootName, json.getCharacterStream(), stream);
+    }
+    
 	private static SQLXML jsonToXml(CommandContext context,
-			final String rootName, final Reader r) throws TeiidComponentException,
+			final String rootName, final Reader r, boolean stream) throws TeiidComponentException,
 			TeiidProcessingException {
+    	JSONParser parser = new JSONParser();
+    	final JsonToXmlContentHandler reader = new JsonToXmlContentHandler(rootName, r, parser, threadLocalEventtFactory.get());
+
+		if (stream) {
+			//jre 1.7 event logic does not set a dummy location and throws an NPE in StAXSource, so we explicitly set a location
+			reader.eventFactory.setLocation(new Location() {
+				
+				@Override
+				public String getSystemId() {
+					return null;
+				}
+				
+				@Override
+				public String getPublicId() {
+					return null;
+				}
+				
+				@Override
+				public int getLineNumber() {
+					return -1;
+				}
+				
+				@Override
+				public int getColumnNumber() {
+					return -1;
+				}
+				
+				@Override
+				public int getCharacterOffset() {
+					return -1;
+				}
+			});
+			return new SQLXMLImpl() {
+				@SuppressWarnings("unchecked")
+				public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
+					if (sourceClass == null || sourceClass == StAXSource.class) {
+						StAXSource source;
+						try {
+							source = new StAXSource(reader);
+						} catch (XMLStreamException e) {
+							throw TeiidSQLException.create(e);
+						}
+						return (T) source;
+					}
+					throw new AssertionError("unsupported source type"); //$NON-NLS-1$
+				}
+			};
+		}
 		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
 			
 			@Override
 			public void translate(Writer writer) throws TransformerException,
 					IOException {
 		    	try {
-			    	JSONParser parser = new JSONParser();
 					XMLOutputFactory factory = getOutputFactory();
-					final XMLStreamWriter streamWriter = factory.createXMLStreamWriter(writer);
-			    	
-					parser.parse(r, new JsonToXmlContentHandler(escapeName(rootName, true), streamWriter));
-		    		
+					final XMLEventWriter streamWriter = factory.createXMLEventWriter(writer);
+
+			    	streamWriter.add(reader);
 					streamWriter.flush(); //woodstox needs a flush rather than a close
 				} catch (XMLStreamException e) {
-					throw new TransformerException(e);
-				} catch (ParseException e) {
 					throw new TransformerException(e);
 				} finally {
 		    		try {
