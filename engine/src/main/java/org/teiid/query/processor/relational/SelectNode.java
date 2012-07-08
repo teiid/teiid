@@ -39,15 +39,17 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
 
 
 public class SelectNode extends SubqueryAwareRelationalNode {
 
 	private Criteria criteria;
+	private List<Expression> projectedExpressions;
     
     // Derived element lookup map
-    private Map elementMap; 
+    private Map<Expression, Integer> elementMap; 
     private int[] projectionIndexes;
 	
     // State if blocked on evaluating a criteria
@@ -77,6 +79,10 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 		return this.criteria;
 	}
 	
+	public void setProjectedExpressions(List<Expression> projectedExpressions) {
+		this.projectedExpressions = projectedExpressions;
+	}
+	
 	@Override
 	public void initialize(CommandContext context, BufferManager bufferManager,
 			ProcessorDataManager dataMgr) {
@@ -84,7 +90,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
         // Create element lookup map for evaluating project expressions
         if(this.elementMap == null) {
             this.elementMap = createLookupMap(this.getChildren()[0].getElements());
-            this.projectionIndexes = getProjectionIndexes(this.elementMap, getElements());
+            this.projectionIndexes = getProjectionIndexes(this.elementMap, projectedExpressions!=null?projectedExpressions:getElements());
         }
 	}
 	
@@ -133,6 +139,7 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 		target.criteria = criteria;
 		target.elementMap = source.elementMap;
 		target.projectionIndexes = source.projectionIndexes;
+		target.projectedExpressions = source.projectedExpressions;
 	}
     
     public PlanNode getDescriptionProperties() {   

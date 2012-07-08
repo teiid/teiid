@@ -398,6 +398,8 @@ public class PlanToProcessConverter {
 
 				SelectNode selnode = new SelectNode(getID());
 				selnode.setCriteria(crit);
+				//in case the parent was a source
+				selnode.setProjectedExpressions((List<Expression>) node.getProperty(NodeConstants.Info.PROJECT_COLS));
 				processNode = selnode;
                 
 				break;
@@ -489,19 +491,12 @@ public class PlanToProcessConverter {
 				if(symbolMap != null) {
 					PlanNode child = node.getLastChild();
 
-                    if (node.getParent().getType() == NodeConstants.Types.PROJECT 
-                    		&& node.getParent().getProperty(NodeConstants.Info.INTO_GROUP) != null) {
-                    	return null;
-                    }
-                	if (child.getType() == NodeConstants.Types.PROJECT) {
+                	if (child.getType() == NodeConstants.Types.PROJECT
+                			|| child.getType() == NodeConstants.Types.SELECT) {
                 		//update the project cols based upon the original output
                 		child.setProperty(NodeConstants.Info.PROJECT_COLS, child.getProperty(NodeConstants.Info.OUTPUT_COLS));
-                        child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
-                        return null;
                 	}
-                	//TODO: vet the other node types for how they project, specifically select/join/windowfunctionproject nodes cannot have their elements modified
-                    processNode = new SourceNode(getID());
-                    break;
+                    child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
 				}
 				return null;
     		case NodeConstants.Types.SET_OP:
