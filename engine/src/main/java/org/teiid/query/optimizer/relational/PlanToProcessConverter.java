@@ -449,18 +449,6 @@ public class PlanToProcessConverter {
 				break;
 
 			case NodeConstants.Types.SOURCE:
-			    SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
-				if(symbolMap != null) {
-					PlanNode child = node.getLastChild();
-
-                    if (node.getParent().getType() != NodeConstants.Types.PROJECT || node.getParent().getProperty(NodeConstants.Info.INTO_GROUP) == null) {
-                    	if (child.getType() == NodeConstants.Types.PROJECT) {
-                    		//update the project cols based upon the original output
-                    		child.setProperty(NodeConstants.Info.PROJECT_COLS, child.getProperty(NodeConstants.Info.OUTPUT_COLS));
-                    	}
-                        child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
-                    }
-				}
 				Object source = node.getProperty(NodeConstants.Info.TABLE_FUNCTION);
 				if (source instanceof XMLTable) {
 					XMLTable xt = (XMLTable)source;
@@ -496,6 +484,24 @@ public class PlanToProcessConverter {
 					atn.setTable(at);
 					processNode = atn;
 					break;
+				}
+			    SymbolMap symbolMap = (SymbolMap) node.getProperty(NodeConstants.Info.SYMBOL_MAP);
+				if(symbolMap != null) {
+					PlanNode child = node.getLastChild();
+
+                    if (node.getParent().getType() == NodeConstants.Types.PROJECT 
+                    		&& node.getParent().getProperty(NodeConstants.Info.INTO_GROUP) != null) {
+                    	return null;
+                    }
+                	if (child.getType() == NodeConstants.Types.PROJECT) {
+                		//update the project cols based upon the original output
+                		child.setProperty(NodeConstants.Info.PROJECT_COLS, child.getProperty(NodeConstants.Info.OUTPUT_COLS));
+                        child.setProperty(NodeConstants.Info.OUTPUT_COLS, node.getProperty(NodeConstants.Info.OUTPUT_COLS));
+                        return null;
+                	}
+                	//TODO: vet the other node types for how they project, specifically select/join/windowfunctionproject nodes cannot have their elements modified
+                    processNode = new SourceNode(getID());
+                    break;
 				}
 				return null;
     		case NodeConstants.Types.SET_OP:

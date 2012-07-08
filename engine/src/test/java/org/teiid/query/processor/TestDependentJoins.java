@@ -97,6 +97,46 @@ public class TestDependentJoins {
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
    }
+    
+    @Test public void testDependentView() { 
+        String sql = "SELECT v.e1 FROM (select distinct e1 from pm1.g1) as v, pm2.g1 WHERE v.e1=pm2.g1.e1 order by v.e1 option makedep v"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
+        };    
+        
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+    
+    /**
+     * specific test for TEIID-2094
+     */
+    @Test public void testDependentView1() { 
+        String sql = "SELECT v.e1 FROM (select distinct e1 from pm1.g1) as v, pm2.g1 WHERE v.e1=pm2.g1.e1 order by v.e1 option makedep v"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+        };    
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+        dataManager.addData("SELECT g_0.e1 AS c_0 FROM g1 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a")});
+        dataManager.addData("SELECT v_0.c_0 FROM (SELECT DISTINCT g_0.e1 AS c_0 FROM g1 AS g_0) AS v_0 WHERE v_0.c_0 = 'a'", new List<?>[] {Arrays.asList("a")});
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps));
+
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
     @Test public void testMultiCritDepJoin2() { 
