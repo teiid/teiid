@@ -38,6 +38,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 import org.teiid.query.sql.util.SymbolMap;
 
 
@@ -66,55 +67,51 @@ public class AliasGenerator extends PreOrderNavigator {
                 this.parent = parent;
             }
             
-            public String getElementName(Expression symbol, boolean renameGroup) {
-            	String name = null;
-            	if (currentSymbols != null) {
-            		name = currentSymbols.get(symbol);
-                	if (name != null) {
-                		if (renameGroup && symbol instanceof ElementSymbol) {
-            				renameGroup(((ElementSymbol)symbol).getGroupSymbol());
-            			}
-                		return name;
-                	}
-            	}
+            public String getElementName(Expression symbol) {
             	if (!(symbol instanceof ElementSymbol)) {
             		return null;
             	}
             	ElementSymbol element = (ElementSymbol)symbol;
+            	String newGroupName = this.groupNames.get(element.getGroupSymbol().getName());
+            	if (newGroupName == null) {
+            		if (parent == null) {
+            			return null;
+            		}
+                	return parent.getElementName(symbol);
+            	}
+            	//check for inline view
             	Map<String, String> elements = this.elementMap.get(element.getGroupSymbol().getName());
             	if (elements != null) {
-            		name = elements.get(element.getShortName());
+            		String name = elements.get(element.getShortName());
             		if (name != null) {
-            			if (renameGroup) {
-            				renameGroup(element.getGroupSymbol());
-            			}
+            			renameGroup(element.getGroupSymbol(), newGroupName);
             			return name;
             		}
                 }
-                if (parent != null) {
-                	name = parent.getElementName(symbol, renameGroup);
-                	if (name != null) {
-                		return name;
-                	}
-                }
-            	if (renameGroup) {
-    				renameGroup(element.getGroupSymbol());
-    			}
+            	if (parent != null) {
+            		String name = parent.getElementName(symbol);
+            		if (name != null) {
+            			return name;
+            		}
+            	}
+            	renameGroup(element.getGroupSymbol(), newGroupName);
             	return null;
             }
             
-            public void renameGroup(GroupSymbol obj) {
+            public void renameGroup(GroupSymbol obj, String newAlias) {
                 if (aliasGroups) {
                     String definition = obj.getNonCorrelationName();
-                    String newAlias = getGroupName(obj.getName());
                     if (newAlias == null) {
                         return;
                     }
-                    obj.setOutputName(newAlias);
-                    obj.setOutputDefinition(definition);
+                    obj.setName(newAlias);
+                    obj.setDefinition(definition);
                 } else if(obj.getDefinition() != null) {
-                    obj.setOutputName(obj.getDefinition());
-                    obj.setOutputDefinition(null);
+                    obj.setName(obj.getDefinition());
+                    obj.setDefinition(null);
+                } else {
+                	obj.setOutputName(null);
+                	obj.setOutputDefinition(null);
                 }
             }
                     
@@ -146,14 +143,12 @@ public class AliasGenerator extends PreOrderNavigator {
             if(group == null) {
                 return;
             }
-            String newName = namingContext.getElementName(obj, true);
+            String newName = namingContext.getElementName(obj);
             
-            if (newName == null) {
-                newName = Symbol.getShortName(obj.getOutputName());
+            if (newName != null) {
+                obj.setShortName(newName);
             }
-            
-            obj.setOutputName(group.getOutputName() + Symbol.SEPARATOR + newName);
-            obj.setDisplayMode(ElementSymbol.DisplayMode.OUTPUT_NAME);
+            obj.setDisplayMode(ElementSymbol.DisplayMode.FULLY_QUALIFIED);
         }
         
         /** 
@@ -161,7 +156,7 @@ public class AliasGenerator extends PreOrderNavigator {
          */
         @Override
         public void visit(GroupSymbol obj) {
-        	this.namingContext.renameGroup(obj);
+        	this.namingContext.renameGroup(obj, this.namingContext.getGroupName(obj.getName()));
         }
         
         public void createChildNamingContext(boolean aliasColumns) {
@@ -205,12 +200,11 @@ public class AliasGenerator extends PreOrderNavigator {
     }
     
     public void visit(Select obj) {
-        super.visit(obj);
-        List<Expression> selectSymbols = obj.getSymbols();
+    	List<Expression> selectSymbols = obj.getSymbols();
         HashMap<Expression, String> symbols = new HashMap<Expression, String>(selectSymbols.size());                
         for (int i = 0; i < selectSymbols.size(); i++) {
             Expression symbol = selectSymbols.get(i);
-
+            visitNode(symbol);
             boolean needsAlias = visitor.namingContext.aliasColumns;
             
             String newAlias = "c_" + i; //$NON-NLS-1$
@@ -219,7 +213,7 @@ public class AliasGenerator extends PreOrderNavigator {
             
             if (newSymbol instanceof ElementSymbol) {
             	if (!needsAlias) {
-            		newAlias = ((ElementSymbol)newSymbol).getOutputName();
+            		newAlias = ((ElementSymbol)newSymbol).getShortName();
             	} else {
                     needsAlias &= needsAlias(newAlias, (ElementSymbol)newSymbol);
                 }
@@ -228,7 +222,7 @@ public class AliasGenerator extends PreOrderNavigator {
             symbols.put(symbol, newAlias);
             if (visitor.namingContext.aliasColumns && needsAlias) {
                 newSymbol = new AliasSymbol(Symbol.getShortName(symbol), newSymbol);
-                ((AliasSymbol)newSymbol).setOutputName(newAlias);
+                ((AliasSymbol)newSymbol).setShortName(newAlias);
             } 
             selectSymbols.set(i, newSymbol);
         }
@@ -238,7 +232,7 @@ public class AliasGenerator extends PreOrderNavigator {
 
     private boolean needsAlias(String newAlias,
                                ElementSymbol symbol) {
-        return !(symbol.getMetadataID() instanceof TempMetadataID) || !newAlias.equalsIgnoreCase(visitor.namingContext.getElementName(symbol, false));
+        return !(symbol.getMetadataID() instanceof TempMetadataID) || !newAlias.equalsIgnoreCase(symbol.getShortName());
     }
     
     /**
@@ -265,15 +259,17 @@ public class AliasGenerator extends PreOrderNavigator {
         }
         visitor.namingContext.parent.elementMap.put(obj.getName(), viewGroup);
         visitor.removeChildNamingContext();
-        obj.getGroupSymbol().setOutputName(recontextGroup(obj.getGroupSymbol(), true));
+        obj.getGroupSymbol().setName(recontextGroup(obj.getGroupSymbol(), true));
     }
     
     @Override
     public void visit(UnaryFromClause obj) {
+        GroupSymbol symbol = obj.getGroup();
         if (visitor.aliasGroups) {
-            GroupSymbol symbol = obj.getGroup();
             recontextGroup(symbol, false);
-        } 
+        } else {
+        	visitor.namingContext.groupNames.put(symbol.getName(), symbol.getNonCorrelationName());
+        }
         super.visit(obj);
     }
 
@@ -328,11 +324,17 @@ public class AliasGenerator extends PreOrderNavigator {
         for (int i = 0; i < obj.getVariableCount(); i++) {
             OrderByItem item = obj.getOrderByItems().get(i);
             Expression element = item.getSymbol();
+            visitNode(element);
             if (item.isUnrelated()) {
-            	visitNode(element);
             	continue;
             }
-            String name = visitor.namingContext.getElementName(element, false);
+            String name = null;
+            if (visitor.namingContext.currentSymbols != null) {
+        		name = visitor.namingContext.currentSymbols.get(element);
+        	}
+            if (name == null) {
+            	name = Symbol.getShortName(element);
+            }
             boolean needsAlias = visitor.namingContext.aliasColumns;
             if (name == null) {
 	            continue;
@@ -347,11 +349,13 @@ public class AliasGenerator extends PreOrderNavigator {
                 element = new AliasSymbol(Symbol.getShortName(element), expr);
             } else if (expr instanceof ElementSymbol) {
             	element = expr;
-            	visitNode(element);
+            	if (visitor.namingContext.aliasColumns) {
+            		((ElementSymbol)expr).setDisplayMode(DisplayMode.SHORT_OUTPUT_NAME);
+            	}
             }
             item.setSymbol(element);
             if (element instanceof Symbol) {
-            	((Symbol)element).setOutputName(name);
+            	((Symbol)element).setShortName(name);
             }
         }
     }

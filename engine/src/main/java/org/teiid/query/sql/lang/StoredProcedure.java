@@ -323,7 +323,10 @@ public class StoredProcedure extends ProcedureContainer {
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable() {
-		return Query.areResultsCachable(getProjectedSymbols());
+		if (getUpdateCount() > 0) {
+			return false;
+		}
+		return Query.areColumnsCachable(getProjectedSymbols());
 	}
     
     /** 

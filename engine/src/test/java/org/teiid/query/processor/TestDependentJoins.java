@@ -531,10 +531,10 @@ public class TestDependentJoins {
         });
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("SELECT g_0.stringkey FROM BQT1.SmallB AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.StringKey FROM BQT1.SmallB AS g_0",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { "1t" }), //$NON-NLS-1$
                                          Arrays.asList(new Object[] { "2" })}); //$NON-NLS-1$
-        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM BQT1.SmallA AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { "1", 1 })}); //$NON-NLS-1$
         
         
@@ -568,7 +568,7 @@ public class TestDependentJoins {
          
         // Plan query 
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                                    new String[] {"SELECT g_0.stringkey, g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.intkey IN (<dependent values>)", "SELECT g_0.stringkey, g_0.intkey FROM BQT2.SmallB AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (<dependent values>)", "SELECT g_0.StringKey, g_0.IntKey FROM BQT2.SmallB AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
  
         TestOptimizer.checkNodeTypes(plan, new int[] { 
             1,      // Access 
@@ -588,10 +588,10 @@ public class TestDependentJoins {
         });
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM BQT2.SmallB AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT2.SmallB AS g_0",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { "1t", 1 }), //$NON-NLS-1$
                                          Arrays.asList(new Object[] { "2t", 2 })}); //$NON-NLS-1$
-        dataManager.addData("SELECT g_0.stringkey, g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.intkey IN (1, 2)",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.StringKey, g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey IN (1, 2)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { "1", 1 })}); //$NON-NLS-1$
         
         

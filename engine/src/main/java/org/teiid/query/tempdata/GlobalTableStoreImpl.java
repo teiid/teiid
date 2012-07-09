@@ -334,12 +334,12 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
 		if (hint != null) {
-			table.setPreferMemory(hint.getPrefersMemory());
+			table.setPreferMemory(hint.isPrefersMemory());
 			if (hint.getTtl() != null) {
 				getMatTableInfo(tableName).setTtl(hint.getTtl());
 			}
 			if (pk != null) {
-				table.setUpdatable(hint.isUpdatable());
+				table.setUpdatable(hint.isUpdatable(false));
 			}
 		}
 		return table;

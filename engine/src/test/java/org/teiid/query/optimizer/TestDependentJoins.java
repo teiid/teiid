@@ -81,7 +81,7 @@ public class TestDependentJoins {
             Command depCommand = accessNode.getCommand();
             Collection<GroupSymbol> groupSymbols = GroupCollectorVisitor.getGroups(depCommand, true);
             for (GroupSymbol groupSymbol : groupSymbols) {
-        		depGroups.add(groupSymbol.getName().toUpperCase());
+        		depGroups.add(groupSymbol.getNonCorrelationName().toUpperCase());
             }
         }
         
@@ -713,7 +713,7 @@ public class TestDependentJoins {
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE g_0.StringKey IN (<dependent values>)", "SELECT g_0.STRINGKEY, g_0.STRINGNUM, g_0.IntKey FROM BQT2.SmallA AS g_0"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"SELECT g_0.StringKey, g_0.StringNum, g_0.IntKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE g_0.StringKey IN (<dependent values>)"}, //$NON-NLS-1$ //$NON-NLS-2$
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -757,7 +757,7 @@ public class TestDependentJoins {
             "SELECT table1comp.IntKey, table1comp.key1, BQT1.SmallA.StringKey FROM (SELECT t1.*, (STRINGKEY || STRINGNUM) AS key1 FROM BQT2.SmallA AS t1) AS table1comp, BQT1.SmallA WHERE table1comp.key1 = BQT1.SmallA.StringKey AND table1comp.key1 = BQT1.SmallA.StringNum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_0.STRINGKEY, g_0.STRINGNUM, g_0.IntKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.StringNum FROM BQT1.SmallA AS g_0 WHERE (g_0.StringNum = g_0.StringKey) AND (g_0.StringKey IN (<dependent values>)) AND (g_0.StringNum IN (<dependent values>))"}, //$NON-NLS-1$ //$NON-NLS-2$
+            new String[] {"SELECT g_0.StringKey, g_0.StringNum, g_0.IntKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.StringNum FROM BQT1.SmallA AS g_0 WHERE (g_0.StringNum = g_0.StringKey) AND (g_0.StringKey IN (<dependent values>)) AND (g_0.StringNum IN (<dependent values>))"}, //$NON-NLS-1$ //$NON-NLS-2$
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -802,7 +802,7 @@ public class TestDependentJoins {
             "SELECT max(a.stringkey) from bqt1.smalla a, bqt2.smalla a2, bqt1.smalla a1 where a.intnum = a2.intnum and a1.stringnum = a2.stringnum and a.floatnum = a1.floatnum",  //$NON-NLS-1$
             metadata,
             null, capFinder,
-            new String[] {"SELECT g_1.stringnum AS c_0, g_0.intnum AS c_1, MAX(g_0.stringkey) AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.floatnum = g_1.floatnum GROUP BY g_1.stringnum, g_0.intnum ORDER BY c_0, c_1", "SELECT DISTINCT g_0.stringnum AS c_0, g_0.intnum AS c_1 FROM BQT2.SmallA AS g_0 WHERE (g_0.stringnum IN (<dependent values>)) AND (g_0.intnum IN (<dependent values>)) ORDER BY c_0, c_1"},
+            new String[] {"SELECT DISTINCT g_0.StringNum AS c_0, g_0.IntNum AS c_1 FROM BQT2.SmallA AS g_0 WHERE (g_0.StringNum IN (<dependent values>)) AND (g_0.IntNum IN (<dependent values>)) ORDER BY c_0, c_1", "SELECT g_1.StringNum AS c_0, g_0.IntNum AS c_1, MAX(g_0.StringKey) AS c_2 FROM BQT1.SmallA AS g_0, BQT1.SmallA AS g_1 WHERE g_0.FloatNum = g_1.FloatNum GROUP BY g_1.StringNum, g_0.IntNum ORDER BY c_0, c_1"},
             TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {

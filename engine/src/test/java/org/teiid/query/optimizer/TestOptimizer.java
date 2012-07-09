@@ -2110,7 +2110,7 @@ public class TestOptimizer {
             "SELECT MAX(sa.datevalue) FROM bqt1.smalla AS sb " + //$NON-NLS-1$
             "WHERE (sb.intkey = sa.intkey) AND (sa.stringkey = sb.stringkey) ))"; //$NON-NLS-1$
 
-        String sqlOut = "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE (g_0.intkey = 46) AND (g_0.stringkey = '46') AND (g_0.datevalue = (SELECT MAX(g_0.datevalue) FROM BQT1.SmallA AS g_1 WHERE (g_1.intkey = g_0.intkey) AND (g_1.stringkey = g_0.stringkey)))"; //$NON-NLS-1$
+        String sqlOut = "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE (g_0.IntKey = 46) AND (g_0.StringKey = '46') AND (g_0.DateValue = (SELECT MAX(g_0.DateValue) FROM BQT1.SmallA AS g_1 WHERE (g_1.IntKey = g_0.IntKey) AND (g_1.StringKey = g_0.StringKey)))"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sqlIn, 
             RealMetadataFactory.exampleBQTCached(),
@@ -4272,7 +4272,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT g_1.longnum, g_2.datevalue, g_0.IntKEy, g_1.IntKEy, g_2.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1, BQT1.MediumA AS g_2 WHERE (g_0.StringKey = g_1.StringKey) AND (g_2.IntKey = g_0.IntKey) AND (convert(g_0.IntNum, long) > (SELECT SUM(g_3.IntNum) FROM BQT1.SmallA AS g_3))"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_1.LongNum, g_2.DateValue, g_0.IntKey, g_1.IntKey, g_2.IntKey FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1, BQT1.MediumA AS g_2 WHERE (g_0.StringKey = g_1.StringKey) AND (g_2.IntKey = g_0.IntKey) AND (convert(g_0.IntNum, long) > (SELECT SUM(g_3.IntNum) FROM BQT1.SmallA AS g_3))"}, //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, new int[] {
@@ -4496,7 +4496,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       RealMetadataFactory.exampleBQTCached(),
                                       null, capFinder,
-                                      new String[] {"SELECT g_2.intkey AS c_0, 'a' AS c_1 FROM BQT1.SmallA AS g_2 UNION ALL SELECT g_1.IntKey AS c_0, 'b' AS c_1 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, 'c' AS c_1 FROM BQT1.SmallA AS g_0"}, //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_2.IntKey AS c_0, 'a' AS c_1 FROM BQT1.SmallA AS g_2 UNION ALL SELECT g_1.IntKey AS c_0, 'b' AS c_1 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, 'c' AS c_1 FROM BQT1.SmallA AS g_0"}, //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);        
@@ -4542,7 +4542,7 @@ public class TestOptimizer {
         Set<String> actualQueries = getAtomicQueries(subplan);
         
         // Compare atomic queries
-        HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(new String[] { "SELECT BQT1.SmallA.datevalue FROM BQT1.SmallA WHERE (BQT1.SmallA.intkey = BQT1.SmallA.intkey) AND (BQT1.SmallA.stringkey = BQT1.SmallA.stringkey)"})); //$NON-NLS-1$
+        HashSet<String> expectedQueries = new HashSet<String>(Arrays.asList(new String[] { "SELECT BQT1.SmallA.DateValue FROM BQT1.SmallA WHERE (BQT1.SmallA.IntKey = sa.IntKey) AND (BQT1.SmallA.StringKey = sa.StringKey)"})); //$NON-NLS-1$
         assertEquals("Did not get expected atomic queries for subplan: ", expectedQueries, actualQueries); //$NON-NLS-1$
 
         checkNodeTypes(subplan, new int[] {
@@ -5280,7 +5280,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_0.intkey FROM BQT1.SmallA AS g_0 ORDER BY g_0.intkey"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 ORDER BY g_0.IntKey"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
 
         checkNodeTypes(plan, FULL_PUSHDOWN);
@@ -5400,7 +5400,7 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan(sql,  
                                       metadata,
                                       null, capFinder,
-                                      new String[] {"SELECT g_2.intkey FROM ((BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallA AS g_1) CROSS JOIN BQT1.MediumA AS g_2) LEFT OUTER JOIN BQT1.MediumB AS g_3 ON g_2.intkey = g_3.intkey"},  //$NON-NLS-1$
+                                      new String[] {"SELECT g_2.IntKey FROM ((BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallA AS g_1) CROSS JOIN BQT1.MediumA AS g_2) LEFT OUTER JOIN BQT1.MediumB AS g_3 ON g_2.IntKey = g_3.IntKey"},  //$NON-NLS-1$
                                       ComparisonMode.EXACT_COMMAND_STRING );
         
         checkNodeTypes(plan, FULL_PUSHDOWN);        
@@ -5496,8 +5496,8 @@ public class TestOptimizer {
                  null, 
                  capFinder, 
                  new String[] { 
-                     "SELECT bqt2.smallb.intkey, bqt2.smalla.intkey FROM bqt2.smalla, bqt2.smallb WHERE bqt2.smalla.stringkey = bqt2.smallb.stringkey ORDER BY bqt2.smallb.intkey, bqt2.smalla.intkey", //$NON-NLS-1$ 
-                     "SELECT bqt1.smalla.intkey FROM bqt1.smalla ORDER BY bqt1.smalla.intkey"}, //$NON-NLS-1$ 
+                     "SELECT BQT2.SmallB.IntKey, BQT2.SmallA.IntKey FROM BQT2.SmallA, BQT2.SmallB WHERE BQT2.SmallA.StringKey = BQT2.SmallB.StringKey ORDER BY BQT2.SmallB.IntKey, BQT2.SmallA.IntKey", 
+                     "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA ORDER BY BQT1.SmallA.IntKey"}, //$NON-NLS-1$ 
                  ComparisonMode.EXACT_COMMAND_STRING); 
              
     } 
@@ -5542,7 +5542,7 @@ public class TestOptimizer {
         helpPlan(sql,  
                                       metadata, 
                                       null, capFinder, 
-                                      new String[] {"SELECT g_0.intkey, g_1.IntKey FROM BQT2.SmallA AS g_0, BQT2.SmallA AS g_1 WHERE g_0.intkey = g_1.IntKey"},  //$NON-NLS-1$ 
+                                      new String[] {"SELECT g_0.IntKey, g_1.IntKey FROM BQT2.SmallA AS g_0, BQT2.SmallA AS g_1 WHERE g_0.IntKey = g_1.IntKey"},  //$NON-NLS-1$ 
                                       ComparisonMode.EXACT_COMMAND_STRING ); 
              
     } 
@@ -5594,7 +5594,7 @@ public class TestOptimizer {
         String sql = "SELECT env('soap_host') AS HOST, intkey from bqt2.smalla"; //$NON-NLS-1$
         
         helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(),
-                                      new String[] {"SELECT bqt2.smalla.intkey FROM bqt2.smalla"}, ComparisonMode.EXACT_COMMAND_STRING);  //$NON-NLS-1$      
+                                      new String[] {"SELECT BQT2.SmallA.IntKey FROM BQT2.SmallA"}, ComparisonMode.EXACT_COMMAND_STRING);  //$NON-NLS-1$      
     }
         
     /**
@@ -5606,8 +5606,8 @@ public class TestOptimizer {
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey <> 1",  //$NON-NLS-1$ 
-                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey <> 1", 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         2,      // Access
@@ -5637,7 +5637,7 @@ public class TestOptimizer {
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
                                       new String[] { 
-                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0 WHERE g_0.IntKey = 1" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
 
         checkNodeTypes(plan, new int[] {
                                         2,      // Access
@@ -6546,7 +6546,7 @@ public class TestOptimizer {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT intkey from bqt1.smalla where intkey = intnum", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
-                                          "SELECT bqt1.smalla.intkey, bqt1.smalla.intnum FROM bqt1.smalla"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT BQT1.SmallA.IntKey, BQT1.SmallA.IntNum FROM BQT1.SmallA"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
         checkNodeTypes(plan, new int[] {
                 1,      // Access
@@ -6614,7 +6614,7 @@ public class TestOptimizer {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT stringkey from bqt1.smalla where formattimestamp(timestampvalue, 'yyyy') = '1921' and parsebigdecimal(stringkey, '$') = 1 and formattimestamp(timestampvalue, 'yy') = '19'", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
-                                          "SELECT g_0.timestampvalue, g_0.stringkey FROM BQT1.SmallA AS g_0 WHERE (formattimestamp(g_0.timestampvalue, 'yyyy') = '1921') AND (parsebigdecimal(g_0.stringkey, '$') = 1)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT g_0.TimestampValue, g_0.StringKey FROM BQT1.SmallA AS g_0 WHERE (formattimestamp(g_0.TimestampValue, 'yyyy') = '1921') AND (parsebigdecimal(g_0.StringKey, '$') = 1)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
         checkNodeTypes(plan, new int[] {
                 1,      // Access

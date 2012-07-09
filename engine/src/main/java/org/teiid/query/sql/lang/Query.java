@@ -425,16 +425,11 @@ public class Query extends QueryCommand {
 		if (isXML) {
 			return true;
 		}
-		List projectedSymbols = getProjectedSymbols();
-		return areResultsCachable(projectedSymbols);
+		List<Expression> projectedSymbols = getProjectedSymbols();
+		return areColumnsCachable(projectedSymbols);
 	}
 
-	public static boolean areResultsCachable(Collection<? extends Expression> projectedSymbols) {
-		for (Expression projectedSymbol : projectedSymbols) {
-			if(projectedSymbol.getType() == DataTypeManager.DefaultDataClasses.OBJECT) {
-				return false;
-			}
-		}
+	public static boolean areColumnsCachable(Collection<? extends Expression> projectedSymbols) {
 		return true;
 	}
     

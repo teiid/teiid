@@ -530,7 +530,7 @@ public class TestLimit {
 
         String sql = "SELECT * FROM pm1.g1 UNION ALL SELECT * FROM PM1.g2 LIMIT 50, 100";//$NON-NLS-1$
         String[] expectedSql = new String[] {
-            "SELECT PM1.g2.e1 AS c_0, PM1.g2.e2 AS c_1, PM1.g2.e3 AS c_2, PM1.g2.e4 AS c_3 FROM PM1.g2 LIMIT 150", "SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1, pm1.g1.e3 AS c_2, pm1.g1.e4 AS c_3 FROM pm1.g1 LIMIT 150" //$NON-NLS-1$ //$NON-NLS-2$
+            "SELECT pm1.g1.e1 AS c_0, pm1.g1.e2 AS c_1, pm1.g1.e3 AS c_2, pm1.g1.e4 AS c_3 FROM pm1.g1 LIMIT 150", "SELECT pm1.g2.e1 AS c_0, pm1.g2.e2 AS c_1, pm1.g2.e3 AS c_2, pm1.g2.e4 AS c_3 FROM pm1.g2 LIMIT 150" //$NON-NLS-1$ //$NON-NLS-2$
             };
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
                                                     null, capFinder, expectedSql, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING);  

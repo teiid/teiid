@@ -295,7 +295,7 @@ public class TestLocalConnections {
 		    	Statement s;
 				try {
 					s = c.createStatement();
-			    	assertTrue(s.execute("select part_id from parts union all select part_id from parts"));
+			    	assertTrue(s.execute("select part_id from parts union all select part_name from parts"));
 			    	ResultSet r = s.getResultSet();
 			    	
 			    	//wake up the other source thread, should put the requestworkitem into the more work state 

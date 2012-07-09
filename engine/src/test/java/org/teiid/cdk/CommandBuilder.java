@@ -72,6 +72,7 @@ public class CommandBuilder {
             command = QueryRewriter.rewrite(command, metadata, null);
             expandAllSymbol(command);            
             if (generateAliases) {
+            	command = (Command)command.clone();
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
             return new LanguageBridgeFactory(metadata).translate(command);

@@ -42,8 +42,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -51,7 +51,14 @@ import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.mapping.relational.QueryNode;
-import org.teiid.query.mapping.xml.*;
+import org.teiid.query.mapping.xml.MappingAttribute;
+import org.teiid.query.mapping.xml.MappingDocument;
+import org.teiid.query.mapping.xml.MappingElement;
+import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.mapping.xml.MappingOutputter;
+import org.teiid.query.mapping.xml.MappingSequenceNode;
+import org.teiid.query.mapping.xml.MappingVisitor;
+import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -364,7 +371,7 @@ public class RealMetadataFactory {
         
         Table physGroup_virtSrc = createPhysicalGroup("MatSrc", physModel_virtSrc); //$NON-NLS-1$
         createElements(physGroup_virtSrc,
-                                      new String[] { "X" }, //$NON-NLS-1$
+                                      new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
         QueryNode virtTrans = new QueryNode("SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$

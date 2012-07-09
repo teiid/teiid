@@ -39,6 +39,7 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
@@ -64,12 +65,10 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
-import org.teiid.query.sql.visitor.ReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 
 
@@ -79,8 +78,8 @@ public class PlanToProcessConverter {
 	private AnalysisRecord analysisRecord;
 	private CapabilitiesFinder capFinder;
 	
-	private Map<List<Object>, AccessNode> sharedCommands = new HashMap<List<Object>, AccessNode>();
-	private Map<List<Object>, Integer> topCount = new HashMap<List<Object>, Integer>();
+	//state for detecting and reusing source queries
+	private Map<Command, AccessNode> sharedCommands = new HashMap<Command, AccessNode>();
 	private int sharedId;
 	
 	public static class SharedStateKey {
@@ -115,7 +114,6 @@ public class PlanToProcessConverter {
 	        return processPlan;
     	} finally {
     		sharedCommands.clear();
-    		topCount.clear();
     		sharedId = 0;
     	}
     }
@@ -351,43 +349,8 @@ public class PlanToProcessConverter {
                     }
                     setRoutingName(aNode, node);
                     //check if valid to share this with other nodes
-                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.returnsResultSet()) {
-                    	//create a top level key to avoid the full command toString
-                    	String modelName = aNode.getModelName();
-    					Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
-                    	List<Object> topKey = new ArrayList<Object>(groups.size() + 1);
-                    	topKey.add(modelName);
-                    	for (GroupSymbol groupSymbol : groups) {
-                    		topKey.add(groupSymbol.toString());
-                    	}
-                    	
-                    	AccessNode other = sharedCommands.get(topKey);
-                    	if (other == null) {
-                    		sharedCommands.put(topKey, aNode);
-                    		topCount.put(topKey, 1);
-                    	} else {
-                    		int count = topCount.get(topKey);
-                    		if (count == 1) {
-                            	Command c = other.getCommand();
-                            	List<Object> key = getCommandKey(c);
-                    			sharedCommands.put(key, other);
-                    		}
-                    		topCount.put(topKey, ++count);
-                        	Command c = aNode.getCommand();
-                        	List<Object> key = getCommandKey(c);
-                        	
-                        	AccessNode initial = this.sharedCommands.get(key);
-                        	if (initial != null) {
-                        		if (initial.info == null) {
-                        			initial.info = new RegisterRequestParameter.SharedAccessInfo();
-                        			initial.info.id = sharedId++;
-                        		}
-                        		initial.info.sharingCount++;
-                        		aNode.info = initial.info;
-                        	} else {
-                        		this.sharedCommands.put(key, aNode);
-                        	}
-                    	}
+                    if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
+                    	checkForSharedSourceCommand(aNode);
                     }
                 }
                 break;
@@ -550,13 +513,36 @@ public class PlanToProcessConverter {
 
 		return processNode;
 	}
-
-	private List<Object> getCommandKey(Command c) {
-		List<Reference> refs = ReferenceCollectorVisitor.getReferences(c);
-		List<Object> key = new ArrayList<Object>(2);
-		key.add(c.toString());
-		key.add(refs);
-		return key;
+	
+	private void checkForSharedSourceCommand(AccessNode aNode) {
+		//create a top level key to avoid the full command toString
+		String modelName = aNode.getModelName();
+		Command cmd = aNode.getCommand();
+		
+		//don't share full scans against internal sources, it's a waste of buffering
+		if (CoreConstants.SYSTEM_MODEL.equals(modelName) 
+				|| CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName) 
+				|| TempMetadataAdapter.TEMP_MODEL.getName().equals(modelName)) {
+			if (!(cmd instanceof Query)) {
+				return;
+			}
+			Query query = (Query)cmd;
+			if (query.getOrderBy() == null && query.getCriteria() == null) {
+				return;
+			}
+		}
+		
+		AccessNode other = sharedCommands.get(cmd);
+		if (other == null) {
+			sharedCommands.put(cmd, aNode);
+		} else {
+			if (other.info == null) {
+				other.info = new RegisterRequestParameter.SharedAccessInfo();
+				other.info.id = sharedId++;
+			}
+			other.info.sharingCount++;
+			aNode.info = other.info;
+		}
 	}
 
 	private void updateGroupName(PlanNode node, TableFunctionReference tt) {

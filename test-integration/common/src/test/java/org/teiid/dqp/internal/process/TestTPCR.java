@@ -63,7 +63,7 @@ public class TestTPCR extends BaseQueryTest {
                          Arrays.asList(new Object[] { new Double(3459808.0), new BigDecimal("405838.6989"), TimestampUtil.createDate(95, 2, 4), new Double(0.0) }), //$NON-NLS-1$
                          Arrays.asList(new Object[] { new Double(492164.0), new BigDecimal("390324.0610"), TimestampUtil.createDate(95, 1, 19), new Double(0.0) }) }; //$NON-NLS-1$
 
-        dataMgr.addData("SELECT g_2.l_orderkey AS c_0, SUM((g_2.l_extendedprice * (1 - g_2.l_discount))) AS c_1, g_1.o_orderdate AS c_2, g_1.o_shippriority AS c_3 FROM TPCR_Oracle_9i.CUSTOMER AS g_0, TPCR_Oracle_9i.ORDERS AS g_1, TPCR_Oracle_9i.LINEITEM AS g_2 WHERE (g_0.c_custkey = g_1.o_custkey) AND (g_2.l_orderkey = g_1.o_orderkey) AND (g_0.c_mktsegment = 'BUILDING') AND (g_1.o_orderdate < {d'1995-03-15'}) AND (g_2.l_shipdate > {ts'1995-03-15 00:00:00.0'}) GROUP BY g_2.l_orderkey, g_1.o_orderdate, g_1.o_shippriority ORDER BY c_1 DESC NULLS LAST, c_2 NULLS FIRST", //$NON-NLS-1$
+        dataMgr.addData("SELECT g_2.L_ORDERKEY AS c_0, SUM((g_2.L_EXTENDEDPRICE * (1 - g_2.L_DISCOUNT))) AS c_1, g_1.O_ORDERDATE AS c_2, g_1.O_SHIPPRIORITY AS c_3 FROM TPCR_Oracle_9i.CUSTOMER AS g_0, TPCR_Oracle_9i.ORDERS AS g_1, TPCR_Oracle_9i.LINEITEM AS g_2 WHERE (g_0.C_CUSTKEY = g_1.O_CUSTKEY) AND (g_2.L_ORDERKEY = g_1.O_ORDERKEY) AND (g_0.C_MKTSEGMENT = 'BUILDING') AND (g_1.O_ORDERDATE < {d'1995-03-15'}) AND (g_2.L_SHIPDATE > {ts'1995-03-15 00:00:00.0'}) GROUP BY g_2.L_ORDERKEY, g_1.O_ORDERDATE, g_1.O_SHIPPRIORITY ORDER BY c_1 DESC NULLS LAST, c_2 NULLS FIRST", //$NON-NLS-1$
                         expected);
 
         doProcess(METADATA,  

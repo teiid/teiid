@@ -50,6 +50,7 @@
   <li>The standalone and cli configuration files specify a setting for the teiid subsystem policy-decider-module.  If a module is not specified, then data roles will not be checked.
   <li>local connections specifying a VDB version will wait for their VDB to finish loading before allowing a connection.
   <li>jsonToXml document elements will contain xsi:type attribute values of decimal and boolean respectively for number and boolean json values to allow for differentiation from string values.
+  <li>Result set cache entries can now have updatable set to false to indicate that updates should not purge the entry.
 <ul>
 
 <h4>from 7.x</h4>

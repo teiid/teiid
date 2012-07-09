@@ -113,6 +113,33 @@ public class XMLSystemFunctions {
 	private static final Charset UTF_16LE = Charset.forName("UTF-16LE"); //$NON-NLS-1$
 	private static final Charset UTF_8 = Charset.forName("UTF-8"); //$NON-NLS-1$
 
+	private static final Location dummyLocation = new Location() {
+		@Override
+		public String getSystemId() {
+			return null;
+		}
+
+		@Override
+		public String getPublicId() {
+			return null;
+		}
+
+		@Override
+		public int getLineNumber() {
+			return -1;
+		}
+
+		@Override
+		public int getColumnNumber() {
+			return -1;
+		}
+
+		@Override
+		public int getCharacterOffset() {
+			return -1;
+		}
+	};
+
 	private static final class JsonToXmlContentHandler implements
 			ContentHandler, XMLEventReader {
 		private Reader reader;
@@ -834,33 +861,7 @@ public class XMLSystemFunctions {
 
 		if (stream) {
 			//jre 1.7 event logic does not set a dummy location and throws an NPE in StAXSource, so we explicitly set a location
-			reader.eventFactory.setLocation(new Location() {
-				
-				@Override
-				public String getSystemId() {
-					return null;
-				}
-				
-				@Override
-				public String getPublicId() {
-					return null;
-				}
-				
-				@Override
-				public int getLineNumber() {
-					return -1;
-				}
-				
-				@Override
-				public int getColumnNumber() {
-					return -1;
-				}
-				
-				@Override
-				public int getCharacterOffset() {
-					return -1;
-				}
-			});
+			reader.eventFactory.setLocation(dummyLocation);
 			return new SQLXMLImpl() {
 				@SuppressWarnings("unchecked")
 				public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {

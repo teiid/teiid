@@ -164,7 +164,7 @@ public class TestRuleRaiseNull {
         String sql = "select b.intkey, b.x from (select intkey, intnum as x from bqt1.smalla where 1 = 0 union all select 1 as z, intkey as b from bqt1.smallb) b inner join bqt1.smalla on b.intkey = bqt1.smalla.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(),  
-                                                    new String[]{"SELECT g_0.intkey FROM BQT1.SmallB AS g_0, BQT1.SmallA AS g_1 WHERE g_1.IntKey = 1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                                    new String[]{"SELECT g_0.IntKey FROM BQT1.SmallB AS g_0, BQT1.SmallA AS g_1 WHERE g_1.IntKey = 1"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
     

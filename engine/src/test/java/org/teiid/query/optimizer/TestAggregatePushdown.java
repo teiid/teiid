@@ -105,7 +105,7 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT a12.intkey, MAX(a12.stringkey), MIN(a11.intnum+a12.intnum) FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey GROUP BY a12.intkey"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0 GROUP BY g_0.stringkey, g_0.intkey, g_0.intnum", "SELECT g_0.stringkey, g_0.intnum FROM BQT1.SmallA AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.StringKey, g_0.IntKey, g_0.IntNum FROM BQT2.SmallA AS g_0 GROUP BY g_0.StringKey, g_0.IntKey, g_0.IntNum", "SELECT g_0.StringKey, g_0.IntNum FROM BQT1.SmallA AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -136,7 +136,7 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT a12.intkey, MAX(a12.stringkey), SUM(a11.intnum+a12.intnum) FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey GROUP BY a12.intkey"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0", "SELECT g_0.stringkey, g_0.intnum FROM BQT1.SmallA AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.StringKey, g_0.IntKey, g_0.IntNum FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.IntNum FROM BQT1.SmallA AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -203,7 +203,7 @@ public class TestAggregatePushdown {
         String sql = "select sum(a11.intnum) Profit, (sum(a11.intnum) / sum(a11.floatnum)) WJXBFS2 from bqt1.smalla a11 join bqt2.smallb a12 on a11.intkey=a12.intkey group by a12.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.intkey, SUM(g_0.intnum), SUM(g_0.floatnum) FROM BQT1.SmallA AS g_0 GROUP BY g_0.intkey", "SELECT g_0.intkey FROM BQT2.SmallB AS g_0"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT g_0.IntKey FROM BQT2.SmallB AS g_0", "SELECT g_0.IntKey, SUM(g_0.IntNum), SUM(g_0.FloatNum) FROM BQT1.SmallA AS g_0 GROUP BY g_0.IntKey"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -235,7 +235,7 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       metadata,
                                       null, getAggregatesFinder(),
-                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid, g_0.o_dealerid, SUM(g_0.o_amount) FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid"},  //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] {"SELECT g_0.O_ProductID, g_0.O_DealerID, SUM(g_0.O_Amount) FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.O_DealerID = g_1.D_DealerID) AND (g_1.D_State = 'CA') AND (g_0.O_ProductID IN (<dependent values>)) GROUP BY g_0.O_ProductID, g_0.O_DealerID", "SELECT g_0.P_ProductID AS c_0 FROM m2.product AS g_0 WHERE g_0.P_DivID = 100 ORDER BY c_0"},  //$NON-NLS-1$ //$NON-NLS-2$
                                                     TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -265,7 +265,7 @@ public class TestAggregatePushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
                                       metadata,
                                       null, getAggregatesFinder(),
-                                      new String[] {"SELECT g_0.p_productid AS c_0 FROM m2.product AS g_0 WHERE g_0.p_divid = 100 ORDER BY c_0", "SELECT g_0.o_productid, g_0.o_dealerid, MAX(g_0.o_amount), SUM(g_0.o_amount) FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.o_dealerid = g_1.d_dealerid) AND (g_1.d_state = 'CA') AND (g_0.o_productid IN (<dependent values>)) GROUP BY g_0.o_productid, g_0.o_dealerid"},  //$NON-NLS-1$ //$NON-NLS-2$
+                                      new String[] {"SELECT g_0.P_ProductID AS c_0 FROM m2.product AS g_0 WHERE g_0.P_DivID = 100 ORDER BY c_0", "SELECT g_0.O_ProductID, g_0.O_DealerID, MAX(g_0.O_Amount), SUM(g_0.O_Amount) FROM m1.\"order\" AS g_0, m1.dealer AS g_1 WHERE (g_0.O_DealerID = g_1.D_DealerID) AND (g_1.D_State = 'CA') AND (g_0.O_ProductID IN (<dependent values>)) GROUP BY g_0.O_ProductID, g_0.O_DealerID"},  //$NON-NLS-1$ //$NON-NLS-2$
                                                     TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
@@ -520,7 +520,7 @@ public class TestAggregatePushdown {
         String sql = "select a11.intkey ITEM_ID, sum(a11.intnum) WJXBFS1 from bqt1.smalla a11 join bqt2.smalla a12 on (a11.stringkey = a12.stringkey) join bqt2.smallb a13 on (a11.intkey = a13.intkey) where a13.intnum in (10) group by a11.intkey"; //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT g_0.stringkey, g_0.intkey, SUM(g_0.intnum) FROM BQT1.SmallA AS g_0 GROUP BY g_0.stringkey, g_0.intkey", "SELECT g_0.stringkey FROM BQT2.SmallA AS g_0", "SELECT g_0.intkey FROM BQT2.SmallB AS g_0 WHERE g_0.intnum = 10"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+                                      new String[] {"SELECT g_0.IntKey FROM BQT2.SmallB AS g_0 WHERE g_0.IntNum = 10", "SELECT g_0.StringKey FROM BQT2.SmallA AS g_0", "SELECT g_0.StringKey, g_0.IntKey, SUM(g_0.IntNum) FROM BQT1.SmallA AS g_0 GROUP BY g_0.StringKey, g_0.IntKey"}, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             3,      // Access
@@ -573,7 +573,7 @@ public class TestAggregatePushdown {
               "select stringkey, max(intkey) from bqt1.smalla group by stringkey having count(intkey) = 1",  //$NON-NLS-1$
               metadata, null, capFinder,
               new String[] { 
-                "SELECT COUNT(g_0.intkey), g_0.stringkey, MAX(g_0.intkey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.stringkey"},  //$NON-NLS-1$
+                "SELECT COUNT(g_0.IntKey), g_0.StringKey, MAX(g_0.IntKey) FROM BQT1.SmallA AS g_0 GROUP BY g_0.StringKey"},  //$NON-NLS-1$
                 ComparisonMode.EXACT_COMMAND_STRING); 
                   
         TestOptimizer.checkNodeTypes(plan, new int[] {

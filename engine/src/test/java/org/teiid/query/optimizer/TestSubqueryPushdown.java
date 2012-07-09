@@ -1036,7 +1036,7 @@ public class TestSubqueryPushdown {
     	BasicSourceCapabilities bsc = getTypicalCapabilities();
     	bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
     	bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-    	TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.shortvalue, g_0.intnum, g_0.intkey FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+    	TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT g_0.ShortValue, g_0.IntNum, g_0.IntKey FROM BQT1.SmallA AS g_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
     }
 
     @Test public void testInvalidGeneratedSemijoinQuery1() throws Exception {
@@ -1086,7 +1086,7 @@ public class TestSubqueryPushdown {
         ProcessorPlan plan = TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 INNER JOIN bqt1.smallb as AG5 ON 1 = 1 WHERE EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
-                                          "SELECT 1 FROM BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallB AS g_1 WHERE EXISTS (SELECT 'Y' FROM BQT1.MediumA AS g_2 WHERE (g_1.intkey = 1) AND (g_0.intkey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT 1 FROM BQT1.SmallA AS g_0 CROSS JOIN BQT1.SmallB AS g_1 WHERE EXISTS (SELECT 'Y' FROM BQT1.MediumA AS g_2 WHERE (g_1.IntKey = 1) AND (g_0.IntKey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, FULL_PUSHDOWN);
     }
     
@@ -1104,7 +1104,7 @@ public class TestSubqueryPushdown {
         TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 LEFT OUTER JOIN bqt1.smallb as AG5 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
-                                          "SELECT g_0.intkey FROM BQT1.SmallA AS g_0", "SELECT g_0.intkey FROM BQT1.SmallB AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT g_0.IntKey FROM BQT1.SmallA AS g_0", "SELECT g_0.IntKey FROM BQT1.SmallB AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
 
     /**
@@ -1122,7 +1122,7 @@ public class TestSubqueryPushdown {
         TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla as Y93 LEFT OUTER JOIN bqt1.smallb as AG5 ON EXISTS (SELECT 'Y' FROM bqt1.mediuma WHERE AG5.intkey = 1 AND Y93.intkey = 1 )", //$NON-NLS-1$
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       new String[] {
-                                          "SELECT 1 FROM BQT1.SmallA AS g_0 LEFT OUTER JOIN BQT1.SmallB AS g_1 ON EXISTS (SELECT 'Y' FROM BQT1.MediumA AS g_2 WHERE (g_1.intkey = 1) AND (g_0.intkey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+                                          "SELECT 1 FROM BQT1.SmallA AS g_0 LEFT OUTER JOIN BQT1.SmallB AS g_1 ON EXISTS (SELECT 'Y' FROM BQT1.MediumA AS g_2 WHERE (g_1.IntKey = 1) AND (g_0.IntKey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
     	
     }

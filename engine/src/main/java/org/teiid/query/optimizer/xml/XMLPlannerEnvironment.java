@@ -98,18 +98,20 @@ public final class XMLPlannerEnvironment{
      */
     private TempMetadataStore globalTempMetadata = new TempMetadataStore();
     
-    private Map stagingTableMap = new HashMap();
+    private Map<Object, Object> stagingTableMap = new HashMap<Object, Object>();
+    private Map<Object, QueryNode> queryNodeMap = new HashMap<Object, QueryNode>();
     
-    private Map queryNodeMap = new HashMap();
+    private TempMetadataAdapter tma;
     
     // ################## Output for processing -> XMLPlan ##################
     
     public XMLPlannerEnvironment(QueryMetadataInterface qmi) {
         this.metadata = qmi;
+        this.tma = new TempMetadataAdapter(metadata, this.globalTempMetadata, this.stagingTableMap, this.queryNodeMap); 
     }
 
     TempMetadataAdapter getGlobalMetadata() {
-        return new TempMetadataAdapter(metadata, this.globalTempMetadata, this.stagingTableMap, this.queryNodeMap);
+        return tma;
     }
 
     public ResultSetInfo getStagingTableResultsInfo(String groupName) {

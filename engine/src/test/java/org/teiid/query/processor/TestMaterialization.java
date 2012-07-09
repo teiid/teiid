@@ -68,9 +68,9 @@ public class TestMaterialization {
 	    globalStore = new GlobalTableStoreImpl(bm, actualMetadata);
 		metadata = new TempMetadataAdapter(actualMetadata, tempStore.getMetadataStore());
 		hdm = new HardcodedDataManager();
-		hdm.addData("SELECT matsrc.x FROM matsrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
-		hdm.addData("SELECT MATTABLE.INFO.E1, MATTABLE.INFO.E2 FROM MATTABLE.INFO", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
-		hdm.addData("SELECT MATTABLE.INFO.E2, MATTABLE.INFO.E1 FROM MATTABLE.INFO", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
+		hdm.addData("SELECT MatSrc.MatSrc.x FROM MatSrc.MatSrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});
+		hdm.addData("SELECT MatTable.info.e1, MatTable.info.e2 FROM MatTable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
+		hdm.addData("SELECT MatTable.info.e2, MatTable.info.e1 FROM MatTable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
 		
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
 	    cache.setTupleBufferCache(bm);

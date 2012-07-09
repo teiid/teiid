@@ -105,7 +105,7 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 
 		@Override
 		public void closeSource() {
-			if (--state.expectedReaders == 0) {
+			if (--state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
 				state.remove();
 				sharedStates.remove(state.id);
 			}

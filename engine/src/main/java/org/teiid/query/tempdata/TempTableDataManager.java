@@ -70,13 +70,11 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
 
@@ -366,28 +364,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 			return null;
 		}
 		final String tableName = group.getNonCorrelationName();
-		if (!tableName.equalsIgnoreCase(group.getName())) {
-			group = group.clone();
-			group.setName(tableName);
-			group.setDefinition(null);
-			query.getFrom().getClauses().clear();
-			query.getFrom().addClause(new UnaryFromClause(group));
-			final GroupSymbol newGroup = group;
-			//convert to the actual table symbols (this is typically handled by the languagebridgefactory
-			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
-				@Override
-				public Expression replaceExpression(Expression element) {
-					if (element instanceof ElementSymbol) {
-						ElementSymbol es = (ElementSymbol)element;
-						es = es.clone();
-						es.setGroupSymbol(newGroup);
-						return es;
-					}
-					return element;
-				}
-			};
-			PostOrderNavigator.doVisit(query, emv);
-		}
 		TempTable table = null;
 		if (group.isGlobalTable()) {
 			final GlobalTableStore globalStore = context.getGlobalTableStore();
@@ -485,7 +461,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			CacheHint hint = table.getCacheHint();
 			if (hint != null && table.getPkLength() > 0) {
-				table.setUpdatable(hint.isUpdatable());
+				table.setUpdatable(hint.isUpdatable(false));
 			}
 		} catch (TeiidComponentException e) {
 			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));

@@ -615,11 +615,16 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         cr.setResults(resultsBuffer, processor.getProcessorPlan());
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
-			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().getPrefersMemory());
+			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().isPrefersMemory());
         	if (originalCommand.getCacheHint().getDeterminism() != null) {
 				determinismLevel = originalCommand.getCacheHint().getDeterminism();
 				LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",processor.getContext().getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
-        	}		                
+        	}	
+        	//if not updatable, then remove the access info
+        	if (!originalCommand.getCacheHint().isUpdatable(true)) {
+        		cr.getAccessInfo().setSensitiveToMetadataChanges(false);
+        		cr.getAccessInfo().getObjectsAccessed().clear();
+        	}
         }            		
         
         if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {

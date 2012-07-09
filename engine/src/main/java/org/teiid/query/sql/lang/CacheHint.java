@@ -22,13 +22,11 @@
 
 package org.teiid.query.sql.lang;
 
-import java.io.Serializable;
-
-import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
+import org.teiid.translator.CacheDirective;
 
-public class CacheHint implements Serializable {
+public class CacheHint extends CacheDirective {
 
 	private static final long serialVersionUID = -4119606289701982511L;
 	
@@ -38,39 +36,20 @@ public class CacheHint implements Serializable {
 	public static final String CACHE = "cache"; //$NON-NLS-1$
 	public static final String SCOPE = "scope:"; //$NON-NLS-1$
 	
-	private static final String SESSION = "session"; //$NON-NLS-1$
-	private static final String VDB = "vdb"; //$NON-NLS-1$
-	private static final String USER = "user"; //$NON-NLS-1$
-	
-	private boolean prefersMemory;
-	private boolean updatable;
-	private Long ttl;
-	private String scope;
-	
 	public CacheHint() {
 	}
 	
-	public CacheHint(boolean prefersMemory, Long ttl) {
-		this.prefersMemory = prefersMemory;
-		this.ttl = ttl;
+	public CacheHint(Boolean prefersMemory, Long ttl) {
+		super(prefersMemory, ttl);
+	}
+	
+	public boolean isPrefersMemory() {
+		if (getPrefersMemory() != null) {
+			return getPrefersMemory();
+		}
+		return false;
 	}
 
-	public boolean getPrefersMemory() {
-		return prefersMemory;
-	}
-	
-	public void setPrefersMemory(boolean prefersMemory) {
-		this.prefersMemory = prefersMemory;
-	}
-	
-	public Long getTtl() {
-		return ttl;
-	}
-	
-	public void setTtl(Long ttl) {
-		this.ttl = ttl;
-	}
-	
 	@Override
 	public String toString() {
 		SQLStringVisitor ssv = new SQLStringVisitor();
@@ -78,52 +57,32 @@ public class CacheHint implements Serializable {
 		return ssv.getSQLString();
 	}
 	
-	public boolean isUpdatable() {
-		return updatable;
-	}
-	
-	public void setUpdatable(boolean updatable) {
-		this.updatable = updatable;
-	}
-	
 	public Determinism getDeterminism() {
-		if (this.scope == null) {
+		if (this.getScope() == null) {
 			return null;
 		}
-		
-		if (scope.equals(SESSION)) { 
+		switch (getScope()) {
+		case SESSION:
 			return Determinism.SESSION_DETERMINISTIC;
-		}
-		else if (this.scope.equals(VDB)) {
+		case VDB:
 			return Determinism.VDB_DETERMINISTIC;
 		}
-		else if (this.scope.equals(USER)) { 
-			return  Determinism.USER_DETERMINISTIC;
-		}
-		return null;
+		return Determinism.USER_DETERMINISTIC;
 	}
 	
-	public String getScope() {
-		return this.scope;
-	}
-
 	public void setScope(String scope) {
-		this.scope = scope;
+		if (scope == null) {
+			setScope((Scope)null);
+		} else {
+			setScope(Scope.valueOf(scope.toUpperCase()));
+		}
 	}
 	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == this) {
-			return true;
+	public boolean isUpdatable(boolean b) {
+		if (getUpdatable() != null) {
+			return getUpdatable();
 		}
-		if (!(obj instanceof CacheHint)) {
-			return false;
-		}
-		CacheHint other = (CacheHint)obj;
-		return this.prefersMemory == other.prefersMemory 
-		&& EquivalenceUtil.areEqual(this.ttl, other.ttl) 
-		&& this.updatable == other.updatable
-		&& EquivalenceUtil.areEqual(this.scope, other.scope);
+		return b;
 	}
 
 }

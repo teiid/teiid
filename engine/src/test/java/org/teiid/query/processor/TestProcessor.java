@@ -5759,9 +5759,9 @@ public class TestProcessor {
                        "WHERE SMALLA.INTKEY = SMALLB.INTKEY AND SMALLA.INTKEY = MEDIUMA.INTKEY) AS X " + //$NON-NLS-1$
                      "WHERE X.NEWFIELD = -3"; //$NON-NLS-1$
         
-        String expectedAtomic1 = "SELECT BQT1.SMALLB.INTKEY, BQT1.SMALLB.INTNUM FROM BQT1.SMALLB"; //$NON-NLS-1$
-        String expectedAtomic2 = "SELECT BQT1.MEDIUMA.INTKEY FROM BQT1.MEDIUMA"; //$NON-NLS-1$
-        String expectedAtomic3 = "SELECT BQT1.SMALLA.INTKEY, BQT1.SMALLA.STRINGNUM FROM BQT1.SMALLA"; //$NON-NLS-1$
+        String expectedAtomic1 = "SELECT BQT1.SmallB.IntKey, BQT1.SmallB.IntNum FROM BQT1.SmallB"; //$NON-NLS-1$
+        String expectedAtomic2 = "SELECT BQT1.MediumA.IntKey FROM BQT1.MediumA"; //$NON-NLS-1$
+        String expectedAtomic3 = "SELECT BQT1.SmallA.IntKey, BQT1.SmallA.StringNum FROM BQT1.SmallA"; //$NON-NLS-1$
         
         
         // Plan query
@@ -5853,14 +5853,14 @@ public class TestProcessor {
             Arrays.asList(new Object[] { "2", new Integer(2), new Integer(6) }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "3", new Integer(3), new Integer(7) }), //$NON-NLS-1$
         };        
-        dataManager.addData("SELECT BQT1.SmallA.stringkey, BQT1.SmallA.intkey, BQT1.SmallA.intnum FROM BQT1.SmallA", data1);  //$NON-NLS-1$
+        dataManager.addData("SELECT BQT1.SmallA.StringKey, BQT1.SmallA.IntKey, BQT1.SmallA.IntNum FROM BQT1.SmallA", data1);  //$NON-NLS-1$
 
         List[] data2 = new List[] {
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "2" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "3" }), //$NON-NLS-1$
         };        
-        dataManager.addData("SELECT BQT2.MediumB.stringkey FROM BQT2.MediumB", data2);  //$NON-NLS-1$
+        dataManager.addData("SELECT BQT2.MediumB.StringKey FROM BQT2.MediumB", data2);  //$NON-NLS-1$
 
         // Run query
         List[] expectedResults = new List[] { 
@@ -6245,9 +6245,9 @@ public class TestProcessor {
          
         // Construct data manager with data  
         HardcodedDataManager dataManager = new HardcodedDataManager();  
-        dataManager.addData("SELECT g_0.intkey, g_0.intnum FROM BQT2.SmallA AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_0.IntKey, g_0.IntNum FROM BQT2.SmallA AS g_0",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1), new Integer(1) })}); 
-        dataManager.addData("SELECT g_1.intnum AS c_0, 1 AS c_1 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0",  //$NON-NLS-1$ 
+        dataManager.addData("SELECT g_1.IntNum AS c_0, 1 AS c_1 FROM BQT1.SmallA AS g_1 UNION ALL SELECT g_0.IntKey AS c_0, g_0.IntNum AS c_1 FROM BQT1.SmallA AS g_0",  //$NON-NLS-1$ 
                 new List[] { Arrays.asList(new Object[] { new Integer(1), new Integer(1) }), 
                                  Arrays.asList(new Object[] { new Integer(1), new Integer(1) })}); 
         helpProcess(plan, dataManager, expected);  
@@ -7083,7 +7083,7 @@ public class TestProcessor {
         
         // Plan query
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), 
-                                                    new String[] {"SELECT b.intkey FROM bqt2.SMALLA AS b", "SELECT a.intkey FROM bqt1.smalla AS a"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+                                                    new String[] {"SELECT b.IntKey FROM bqt2.SMALLA AS b", "SELECT a.IntKey FROM bqt1.smalla AS a"}, new DefaultCapabilitiesFinder(), ComparisonMode.CORRECTED_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
 
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access

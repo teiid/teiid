@@ -98,9 +98,8 @@ public class UnaryFromClause extends FromClause {
         
         UnaryFromClause other = (UnaryFromClause)obj;
         
-        if( (this.getGroup().getDefinition() == null && other.getGroup().getDefinition() == null) ||
-        		(this.getGroup().getDefinition() != null && other.getGroup().getDefinition() != null) ) {
-        	return EquivalenceUtil.areEqual(getGroup(), other.getGroup()) &&
+        if( EquivalenceUtil.areEqual(group.getDefinition(), other.getGroup().getDefinition()) ) {
+        	return EquivalenceUtil.areEqual(getGroup().getNonCorrelationName(), other.getGroup().getNonCorrelationName()) &&
             other.isOptional() == this.isOptional();	
         }
         return false;

@@ -971,7 +971,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SPACE);
         append(CacheHint.CACHE);
         boolean addParens = false;
-        if (obj.getPrefersMemory()) {
+        if (obj.isPrefersMemory()) {
             append(Tokens.LPAREN);
             addParens = true;
             append(CacheHint.PREF_MEM);
@@ -986,7 +986,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(CacheHint.TTL);
             append(obj.getTtl());
         }
-        if (obj.isUpdatable()) {
+        if (obj.getUpdatable() != null) {
             if (!addParens) {
                 append(Tokens.LPAREN);
                 addParens = true;

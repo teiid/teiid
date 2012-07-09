@@ -58,8 +58,8 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public static final TempMetadataID TEMP_MODEL = new TempMetadataID("__TEMP__", Collections.EMPTY_LIST); //$NON-NLS-1$
 
     private TempMetadataStore tempStore;
-    private Map materializationTables;
-    private Map queryNodes;
+    private Map<Object, Object> materializationTables;
+    private Map<Object, QueryNode> queryNodes;
     private boolean session;
 	
 	public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore) {
@@ -67,7 +67,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         this.tempStore = tempStore;
 	}
     
-    public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore, Map materializationTables, Map queryNodes) {
+    public TempMetadataAdapter(QueryMetadataInterface metadata, TempMetadataStore tempStore, Map<Object, Object> materializationTables, Map<Object, QueryNode> queryNodes) {
     	super(metadata);
         this.tempStore = tempStore;
         this.materializationTables = materializationTables;
@@ -290,7 +290,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
 		
         if (this.queryNodes != null && this.queryNodes.containsKey(groupID)) {
-            return (QueryNode)this.queryNodes.get(groupID);
+            return this.queryNodes.get(groupID);
         }
         
         if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {

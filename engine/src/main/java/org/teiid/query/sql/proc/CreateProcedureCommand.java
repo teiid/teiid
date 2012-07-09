@@ -239,7 +239,7 @@ public class CreateProcedureCommand extends Command {
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */
 	public boolean areResultsCachable() {
-		return Query.areResultsCachable(getProjectedSymbols());
+		return Query.areColumnsCachable(getProjectedSymbols());
 	}
     
     public GroupSymbol getVirtualGroup() {

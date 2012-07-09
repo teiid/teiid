@@ -40,6 +40,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.MultipleElementSymbol;
 import org.teiid.query.sql.symbol.Reference;
+import org.teiid.translator.CacheDirective.Scope;
 
 @SuppressWarnings("nls")
 public class TestOptionsAndHints {
@@ -966,10 +967,10 @@ public class TestOptionsAndHints {
         ufc.setGroup(new GroupSymbol("t1")); //$NON-NLS-1$
         query.setFrom(from);           
         CacheHint hint = new CacheHint();
-        hint.setScope("session");
+        hint.setScope(Scope.SESSION);
         hint.setPrefersMemory(true);
         query.setCacheHint(hint);
-        TestParser.helpTest(sql, "/*+ cache(pref_mem scope:session) */ SELECT * FROM t1", query);         //$NON-NLS-1$
+        TestParser.helpTest(sql, "/*+ cache(pref_mem scope:SESSION) */ SELECT * FROM t1", query);         //$NON-NLS-1$
     }
     
     @Test public void testCache1() {
