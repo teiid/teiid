@@ -65,4 +65,9 @@ public final class ServiceInvocationStruct implements Externalizable {
 		out.writeObject(methodName);
 		ExternalizeUtil.writeArray(out, args);
 	}
+	
+	@Override
+	public String toString() {
+		return "Invoke " + targetClass + "." + methodName; //$NON-NLS-1$ //$NON-NLS-2$
+	}
 }

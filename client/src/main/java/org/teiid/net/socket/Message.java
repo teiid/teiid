@@ -35,7 +35,7 @@ public class Message implements Externalizable {
 	private Serializable messageKey;
 
 	public String toString() {
-		return "MessageHolder: contents=" + contents; //$NON-NLS-1$
+		return "MessageHolder: key=" + messageKey + " contents=" + contents; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	public void setContents(Object contents) {
