@@ -31,7 +31,11 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.ArchivePaths;
@@ -65,6 +69,17 @@ public class IntegrationTestDeployment {
 	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
+	}
+	
+	@Test public void testChainedDelegates() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
+		props.setProperty("user-name", "sa");
+		props.setProperty("password", "sa");
+		
+		AdminUtil.createDataSource(admin, "Oracle11_PushDS", "h2", props);
+		admin.deploy("fake.jar",new FileInputStream(UnitTestUtil.getTestDataFile("fake.jar")));
+		admin.deploy("chained-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("chained-vdb.xml")));
 	}
 	
 	@Test

@@ -43,6 +43,8 @@ import org.teiid.translator.TranslatorProperty;
 
 public class TranslatorUtil {
 	
+    public static final String DEPLOYMENT_NAME = "deployment-name"; //$NON-NLS-1$
+	
 	public static Map<Method, TranslatorProperty> getTranslatorProperties(Class<?> attachmentClass) {
 		Map<Method, TranslatorProperty> props = new HashMap<Method,  TranslatorProperty>();
 		buildTranslatorProperties(attachmentClass, props);
@@ -109,12 +111,13 @@ public class TranslatorUtil {
 	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
 		Map p = data.getProperties();
-		TreeMap<String, String> caseInsensitivProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-		caseInsensitivProps.putAll(p);
+		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		caseInsensitiveProps.putAll(p);
+		caseInsensitiveProps.remove(DEPLOYMENT_NAME);
 		for (Method method:props.keySet()) {
 			TranslatorProperty tp = props.get(method);
 			String propertyName = getPropertyName(method);
-			String value = caseInsensitivProps.remove(propertyName);
+			String value = caseInsensitiveProps.remove(propertyName);
 			
 			if (value != null) {
 				Method setterMethod = getSetter(ef.getClass(), method);
@@ -123,9 +126,9 @@ public class TranslatorUtil {
 				 throw new TeiidException(RuntimePlugin.Event.TEIID40027, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40027, tp.display()));
 			}
 		}
-		caseInsensitivProps.remove(Translator.EXECUTION_FACTORY_CLASS);
-		if (!caseInsensitivProps.isEmpty()) {
-			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40001, caseInsensitivProps.keySet(), data.getName()));
+		caseInsensitiveProps.remove(Translator.EXECUTION_FACTORY_CLASS);
+		if (!caseInsensitiveProps.isEmpty()) {
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40001, caseInsensitiveProps.keySet(), data.getName()));
 		}
 	}
 	

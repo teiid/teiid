@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<vdb version="1" name="Chorus">
+     <property name="UseConnectorMetadata" value="true"/>
+
+     <model type="PHYSICAL" visible="true" name="timeseries">
+         <property name="importer.useFullSchemaName" value="false"/>
+         <source name="timeseries" connection-jndi-name="java:Oracle11_PushDS" translator-name="timeseries.delegated-translator"/>
+     </model>
+
+     <translator name="timeseries.delegating-delegated-translator" type="fake">
+         <property name="DelegateName" value="timeseries.delegating-translator"/>
+     </translator>
+     <translator name="timeseries.delegating-translator" type="h2"/>
+     <translator name="timeseries.delegated-translator" type="fake">
+         <property name="DelegateName" value="timeseries.delegating-delegated-translator"/>
+     </translator>
+
+</vdb>

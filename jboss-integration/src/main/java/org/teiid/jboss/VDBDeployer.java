@@ -28,9 +28,21 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.naming.deployment.ContextNames;
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.Module;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
@@ -43,6 +55,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
@@ -56,7 +69,6 @@ import org.teiid.query.metadata.TransformationMetadata.Resource;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
-	private static final String DEPLOYMENT_NAME = "deployment-name"; //$NON-NLS-1$
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
@@ -76,7 +88,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			return;
 		}
 		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
-		deployment.addProperty(DEPLOYMENT_NAME, deploymentUnit.getName());
+		deployment.addProperty(TranslatorUtil.DEPLOYMENT_NAME, deploymentUnit.getName());
 		// check to see if there is old vdb already deployed.
         final ServiceController<?> controller = context.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
         if (controller != null) {
