@@ -56,9 +56,12 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
+import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.internal.process.TupleSourceCache.CachableVisitor;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.events.EventDistributor;
+import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
@@ -67,6 +70,7 @@ import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
@@ -75,12 +79,16 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.CacheDirective;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.CacheDirective.Scope;
 
 /**
  * Full {@link ProcessorDataManager} implementation that 
@@ -181,13 +189,51 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		if (parameterObject.limit > 0) {
 			aqr.setFetchSize(Math.min(parameterObject.limit, aqr.getFetchSize()));
 		}
+		Collection<GroupSymbol> accessedGroups = null;
 		if (context.getDataObjects() != null) {
-			for (GroupSymbol gs : GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false)) {
+			accessedGroups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
+			for (GroupSymbol gs : accessedGroups) {
 				context.accessedDataObject(gs.getMetadataID());
 			}
 		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
-		ConnectorWork work = cmr.getConnectorManager(aqr.getConnectorName()).registerRequest(aqr);
+		ConnectorManager connectorManager = cmr.getConnectorManager(aqr.getConnectorName());
+		ConnectorWork work = connectorManager.registerRequest(aqr);
+		CacheID cid = null;
+		CacheDirective cd = null;
+		if (workItem.getRsCache() != null && command.areResultsCachable()) {
+			CachableVisitor cv = new CachableVisitor();
+			PreOrPostOrderNavigator.doVisit(command, cv, PreOrPostOrderNavigator.PRE_ORDER, true);
+			if (cv.cacheable) {
+				try {
+					cd = work.getCacheDirective();
+				} catch (TranslatorException e) {
+					throw new TeiidProcessingException(QueryPlugin.Event.TEIID30504, e, aqr.getConnectorName() + ": " + e.getMessage()); //$NON-NLS-1$
+				}
+				if (cd != null) {
+					if (cd.getScope() == Scope.NONE) {
+						parameterObject.doNotCache = true;
+					} else {
+						String cmdString = command.toString();
+						if (cmdString.length() < 200000) { //TODO: this check won't be needed if keys aren't exclusively held in memory
+							cid = new CacheID(workItem.getDqpWorkContext(), ParseInfo.DEFAULT_INSTANCE, cmdString);
+							cid.setParameters(cv.parameters);
+							CachedResults cr = workItem.getRsCache().get(cid);
+							if (cr != null) {
+								parameterObject.doNotCache = true;
+								LogManager.logDetail(LogConstants.CTX_DQP, "Using cache entry for", cid); //$NON-NLS-1$
+								work.close();
+								return cr.getResults().createIndexedTupleSource();
+							}
+						}
+					}
+				} else {
+					LogManager.logTrace(LogConstants.CTX_DQP, aqr.getAtomicRequestID(), "no cache directive"); //$NON-NLS-1$
+				}
+			} else {
+				LogManager.logTrace(LogConstants.CTX_DQP, aqr.getAtomicRequestID(), "command not cachable"); //$NON-NLS-1$
+			}
+		}
 		work.setRequestWorkItem(workItem);
         return new DataTierTupleSource(aqr, workItem, work, this, parameterObject.limit);
 	}

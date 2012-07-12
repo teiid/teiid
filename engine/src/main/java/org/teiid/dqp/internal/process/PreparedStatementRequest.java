@@ -128,7 +128,8 @@ public class PreparedStatementRequest extends Request {
      * @throws TeiidProcessingException 
      * @see org.teiid.dqp.internal.process.Request#generatePlan()
      */
-    protected void generatePlan() throws TeiidComponentException, TeiidProcessingException {
+	@Override
+    protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
     	String sqlQuery = requestMsg.getCommands()[0];
     	CacheID id = new CacheID(this.workContext, Request.createParseInfo(this.requestMsg), sqlQuery);
         prepPlan = prepPlanCache.get(id);
@@ -151,21 +152,19 @@ public class PreparedStatementRequest extends Request {
             //if prepared plan does not exist, create one
             prepPlan = new PreparedPlan();
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
-            super.generatePlan();
-	        if (!this.addedLimit) { //TODO: this is a little problematic
-            	prepPlan.setCommand(this.userCommand);
-		        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
-		        prepPlan.setPlan(processPlan.clone(), this.context);
-		        prepPlan.setAnalysisRecord(analysisRecord);
-				
-		        Determinism determinismLevel = this.context.getDeterminismLevel();
-				if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
-					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
-					determinismLevel = userCommand.getCacheHint().getDeterminism();
-				}		        
-		        
-		        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
-	        }
+            super.generatePlan(false);
+        	prepPlan.setCommand(this.userCommand);
+	        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
+	        prepPlan.setPlan(processPlan.clone(), this.context);
+	        prepPlan.setAnalysisRecord(analysisRecord);
+			
+	        Determinism determinismLevel = this.context.getDeterminismLevel();
+			if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
+				LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+				determinismLevel = userCommand.getCacheHint().getDeterminism();
+			}		        
+	        
+	        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
         }
         
         if (requestMsg.isBatchedUpdate()) {

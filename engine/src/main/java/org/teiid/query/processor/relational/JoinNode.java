@@ -154,7 +154,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
      */
     public Object clone() {
         JoinNode clonedNode = new JoinNode(super.getID());
-        super.copy(this, clonedNode);
+        super.copyTo(clonedNode);
         
         clonedNode.joinType = this.joinType;
         clonedNode.joinStrategy = this.joinStrategy.clone();
@@ -186,7 +186,8 @@ public class JoinNode extends SubqueryAwareRelationalNode {
             this.joinStrategy.loadLeft();
             if (isDependent()) { 
                 TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
-                dvs = new DependentValueSource(buffer);
+                //the tuplebuffer may be from a lower node, so pass in the schema
+                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
                 dvs.setDistinct(this.joinStrategy.leftSource.isDistinct());
                 this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
             }

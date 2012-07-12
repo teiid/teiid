@@ -59,7 +59,7 @@ public class DependentProcedureAccessNode extends AccessNode {
         DependentProcedureAccessNode copy = new DependentProcedureAccessNode(getID(), inputCriteria,
                                                                                    inputReferences,
                                                                                    inputDefaults);
-        copy(this, copy);
+        copyTo(copy);
         return copy;
     }
     

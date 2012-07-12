@@ -162,7 +162,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	public TextTableNode clone() {
 		TextTableNode clone = new TextTableNode(getID());
-		this.copy(this, clone);
+		this.copyTo(clone);
 		clone.setTable(table);
 		return clone;
 	}

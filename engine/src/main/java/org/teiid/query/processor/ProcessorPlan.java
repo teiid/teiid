@@ -149,7 +149,7 @@ public abstract class ProcessorPlan implements Cloneable, BatchProducer {
      * @throws TeiidComponentException 
      * @throws BlockedException 
      */
-    public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	return null;
     }
     

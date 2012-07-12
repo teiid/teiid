@@ -411,22 +411,22 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public Object clone(){
 		AccessNode clonedNode = new AccessNode();
-		this.copy(this, clonedNode);
+		this.copyTo(clonedNode);
 		return clonedNode;
 	}
 
-	protected void copy(AccessNode source, AccessNode target){
-		super.copy(source, target);
-		target.modelName = source.modelName;
-		target.modelId = source.modelId;
-		target.connectorBindingId = source.connectorBindingId;
-		target.shouldEvaluate = source.shouldEvaluate;
-		if (!source.shouldEvaluate) {
-			target.projection = source.projection;
-			target.originalSelect = source.originalSelect;
+	protected void copyTo(AccessNode target){
+		super.copyTo(target);
+		target.modelName = modelName;
+		target.modelId = modelId;
+		target.connectorBindingId = connectorBindingId;
+		target.shouldEvaluate = shouldEvaluate;
+		if (!shouldEvaluate) {
+			target.projection = projection;
+			target.originalSelect = originalSelect;
 		}
-		target.command = source.command;
-		target.info = source.info;
+		target.command = command;
+		target.info = info;
 	}
 
     public PlanNode getDescriptionProperties() {

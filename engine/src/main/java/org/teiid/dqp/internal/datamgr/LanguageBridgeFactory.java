@@ -139,6 +139,10 @@ public class LanguageBridgeFactory {
         }
     }
     
+    public LanguageBridgeFactory(RuntimeMetadataImpl metadata) {
+    	this.metadataFactory = metadata;
+    }
+    
     public void setConvertIn(boolean convertIn) {
 		this.convertIn = convertIn;
 	}

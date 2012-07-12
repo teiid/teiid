@@ -433,4 +433,10 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsOnlyLiteralComparison() {
 		return delegate.supportsOnlyLiteralComparison();
 	}
+	@Override
+	public CacheDirective getCacheDirective(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata)
+			throws TranslatorException {
+		return delegate.getCacheDirective(command, executionContext, metadata);
+	}
 }

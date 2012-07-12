@@ -38,6 +38,7 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.CacheDirective;
 import org.teiid.translator.ExecutionContext;
 
 
@@ -63,6 +64,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private String generalHint;
 	private String hint;
 	private CommandContext commandContext;
+	private CacheDirective cacheDirective;
 	
 	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
@@ -268,5 +270,14 @@ public class ExecutionContextImpl implements ExecutionContext {
 	@Override
 	public int getVirtualDatabaseVersion() {
 		return getVdbVersion();
+	}
+	
+	@Override
+	public CacheDirective getCacheDirective() {
+		return cacheDirective;
+	}
+	
+	public void setCacheDirective(CacheDirective directive) {
+		this.cacheDirective = directive;
 	}
 }

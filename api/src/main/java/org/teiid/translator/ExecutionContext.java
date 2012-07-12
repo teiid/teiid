@@ -201,4 +201,10 @@ public interface ExecutionContext {
      * @return
      */
     CommandContext getCommandContext();
+
+    /**
+     * Get the {@link CacheDirective}
+     * @return
+     */
+    CacheDirective getCacheDirective();
 }

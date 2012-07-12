@@ -105,7 +105,7 @@ public class DependentAccessNode extends AccessNode {
         clonedNode.maxSetSize = this.maxSetSize;
         clonedNode.maxPredicates = this.maxPredicates;
         clonedNode.pushdown = this.pushdown;
-        super.copy(this, clonedNode);
+        super.copyTo(clonedNode);
         return clonedNode;
     }
 

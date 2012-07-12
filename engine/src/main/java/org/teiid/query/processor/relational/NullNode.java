@@ -49,7 +49,7 @@ public class NullNode extends RelationalNode {
         
 	public Object clone(){
 		NullNode clonedNode = new NullNode(super.getID());
-		super.copy(this, clonedNode);
+		super.copyTo(clonedNode);
 		return clonedNode;
 	}
     

@@ -229,13 +229,13 @@ public class Evaluator {
 	public Boolean evaluate(CompoundCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
-		List subCrits = criteria.getCriteria();
-		Iterator subCritIter = subCrits.iterator();
+		List<Criteria> subCrits = criteria.getCriteria();
+		Iterator<Criteria> subCritIter = subCrits.iterator();
 
 		boolean and = criteria.getOperator() == CompoundCriteria.AND;
         Boolean result = and?Boolean.TRUE:Boolean.FALSE;
 		while(subCritIter.hasNext()) {
-			Criteria subCrit = (Criteria) subCritIter.next();
+			Criteria subCrit = subCritIter.next();
 			Boolean value = evaluateTVL(subCrit, tuple);
             if (value == null) {
 				result = null;

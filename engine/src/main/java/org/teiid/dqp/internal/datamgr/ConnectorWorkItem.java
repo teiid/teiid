@@ -40,7 +40,6 @@ import org.teiid.language.Call;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.CommandLogMessage.Event;
-import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -49,6 +48,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.resource.spi.WrappedConnection;
+import org.teiid.translator.CacheDirective;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionFactory;
@@ -65,7 +65,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     private ConnectorManager manager;
     private AtomicRequestMessage requestMsg;
     private ExecutionFactory<Object, Object> connector;
-    private QueryMetadataInterface queryMetadata;
+    private RuntimeMetadataImpl queryMetadata;
     
     /* Created on new request */
     private Object connection;
@@ -81,6 +81,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     private boolean error;
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
+	private org.teiid.language.Command translatedCommand;
     
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) {
         this.id = message.getAtomicRequestID();
@@ -99,9 +100,13 @@ public class ConnectorWorkItem implements ConnectorWork {
         
         this.connector = manager.getExecutionFactory();
     	VDBMetaData vdb = requestMsg.getWorkContext().getVDB();
-    	this.queryMetadata = vdb.getAttachment(QueryMetadataInterface.class);
-        this.queryMetadata = new TempMetadataAdapter(this.queryMetadata, new TempMetadataStore());
+    	QueryMetadataInterface qmi = vdb.getAttachment(QueryMetadataInterface.class);
+        qmi = new TempMetadataAdapter(qmi, new TempMetadataStore());
+        this.queryMetadata = new RuntimeMetadataImpl(qmi);
 		this.securityContext.setTransactional(requestMsg.isTransactional());
+        LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
+        factory.setConvertIn(!this.connector.supportsInCriteria());
+        translatedCommand = factory.translate(message.getCommand());
     }
     
     @Override
@@ -154,12 +159,14 @@ public class ConnectorWorkItem implements ConnectorWork {
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
-        	try {
-        		this.connector.closeConnection(connection, connectionFactory);
-        	} catch (Throwable e) {
-        		LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
+        	if (this.connector.isSourceRequired() && this.connection != null) {
+	        	try {
+	        		this.connector.closeConnection(connection, connectionFactory);
+	        	} catch (Throwable e) {
+	        		LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
+	        	}
+			    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         	}
-		    LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed connection"}); //$NON-NLS-1$
         } 
     }
     
@@ -217,16 +224,12 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        if (command instanceof StoredProcedure) {
 	        	this.expectedColumns = ((StoredProcedure)command).getResultSetColumns().size();
 	        }
-	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
-	        factory.setConvertIn(!this.connector.supportsInCriteria());
-	        org.teiid.language.Command translatedCommand = factory.translate(command);
 
 			Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.securityContext.getPartIdentifier());
 			if (exec != null) {
 				((ReusableExecution)exec).reset(translatedCommand, this.securityContext, connection);
 			} else {
-		        RuntimeMetadata rmd = new RuntimeMetadataImpl(queryMetadata);
-		        exec = connector.createExecution(translatedCommand, this.securityContext, rmd, (unwrapped == null) ? this.connection:unwrapped);
+		        exec = connector.createExecution(translatedCommand, this.securityContext, queryMetadata, (unwrapped == null) ? this.connection:unwrapped);
 		        if (exec instanceof ReusableExecution<?>) {
 		        	this.requestMsg.getCommandContext().putReusableExecution(this.securityContext.getPartIdentifier(), (ReusableExecution<?>) exec);
 		        }
@@ -387,6 +390,13 @@ public class ConnectorWorkItem implements ConnectorWork {
 	@Override
 	public boolean copyLobs() {
 		return this.connector.isCopyLobs();
+	}
+	
+	@Override
+	public CacheDirective getCacheDirective() throws TranslatorException {
+		CacheDirective cd = connector.getCacheDirective(this.translatedCommand, this.securityContext, this.queryMetadata);
+		this.securityContext.setCacheDirective(cd);
+		return cd;
 	}
 
 }

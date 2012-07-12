@@ -33,6 +33,7 @@ public class RegisterRequestParameter {
 	public int nodeID = 0;
 	public int limit = -1;
 	public SharedAccessInfo info;
+	public boolean doNotCache;
 
 	public RegisterRequestParameter(String connectorBindingId, int nodeID,
 			int limit) {

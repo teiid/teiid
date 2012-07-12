@@ -104,7 +104,8 @@ public class ForEachRowPlan extends ProcessorPlan {
 			}
 			if (this.rowProcessor == null) {
 				rowProcedure.reset();
-				this.rowProcessor = new QueryProcessor(rowProcedure, getContext(), this.bufferMgr, this.dataMgr);
+				CommandContext context = getContext().clone();
+				this.rowProcessor = new QueryProcessor(rowProcedure, context, this.bufferMgr, this.dataMgr);
 				for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
 					Integer index = (Integer)this.lookupMap.get(entry.getValue());
 					if (index != null) {

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -80,7 +81,7 @@ public class PlanToProcessConverter {
 	
 	//state for detecting and reusing source queries
 	private Map<Command, AccessNode> sharedCommands = new HashMap<Command, AccessNode>();
-	private int sharedId;
+	private static AtomicInteger sharedId = new AtomicInteger();
 	
 	public static class SharedStateKey {
 		int id;
@@ -114,7 +115,6 @@ public class PlanToProcessConverter {
 	        return processPlan;
     	} finally {
     		sharedCommands.clear();
-    		sharedId = 0;
     	}
     }
 
@@ -538,7 +538,7 @@ public class PlanToProcessConverter {
 		} else {
 			if (other.info == null) {
 				other.info = new RegisterRequestParameter.SharedAccessInfo();
-				other.info.id = sharedId++;
+				other.info.id = sharedId.getAndIncrement();
 			}
 			other.info.sharingCount++;
 			aNode.info = other.info;

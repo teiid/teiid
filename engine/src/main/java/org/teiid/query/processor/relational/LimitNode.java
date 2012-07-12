@@ -30,6 +30,7 @@ import java.util.List;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
@@ -168,7 +169,7 @@ public class LimitNode extends RelationalNode {
     public Object clone() {
         LimitNode node = new LimitNode(getID(), limitExpr, offsetExpr);
         node.implicit = this.implicit;
-        copy(this, node);
+        copyTo(node);
         node.rowCounter = this.rowCounter;
         return node;
     }
@@ -187,6 +188,25 @@ public class LimitNode extends RelationalNode {
 	
 	public int getOffset() {
 		return offset;
+	}
+	
+	@Override
+	public boolean hasFinalBuffer() {
+		//TODO: support offset
+		return offsetExpr == null && this.getChildren()[0].hasFinalBuffer();
+	}
+	
+	@Override
+	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
+			TeiidComponentException, TeiidProcessingException {
+		if (maxRows >= 0) {
+			if (limit >= 0) {
+				maxRows = Math.min(maxRows, limit);
+			}
+		} else {
+			maxRows = limit;
+		}
+		return this.getChildren()[0].getFinalBuffer(maxRows);
 	}
 
 }

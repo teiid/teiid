@@ -46,6 +46,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.TypeFacility.RUNTIME_CODES;
 import org.teiid.translator.TypeFacility.RUNTIME_NAMES;
 
@@ -984,6 +985,20 @@ public class ExecutionFactory<F, C> {
 	 */
 	public boolean supportsSubqueryInOn() {
 		return true;
+	}
+
+	/**
+	 * Get the {@link CacheDirective} to control command caching.
+	 * <p>Use {@link Scope#NONE} to indicate to the engine that no caching should be performed by the engine.</p>
+	 * <p>If cache parameters on the {@link CacheDirective} will be changed by the {@link Execution}, then
+	 * a new instance of a {@link CacheDirective} should be set each time.</p>
+	 * @param command
+	 * @param executionContext
+	 * @param metadata
+	 * @throws TranslatorException
+	 */
+	public CacheDirective getCacheDirective(Command command, ExecutionContext executionContext, RuntimeMetadata metadata) throws TranslatorException {
+		return null;
 	}
 
 }

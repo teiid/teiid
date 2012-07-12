@@ -82,7 +82,7 @@ public class ArrayTableNode extends SubqueryAwareRelationalNode {
 	@Override
 	public ArrayTableNode clone() {
 		ArrayTableNode clone = new ArrayTableNode(getID());
-		this.copy(this, clone);
+		this.copyTo(clone);
 		clone.setTable(table);
 		return clone;
 	}

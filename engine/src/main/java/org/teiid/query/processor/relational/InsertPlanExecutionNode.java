@@ -92,13 +92,13 @@ public class InsertPlanExecutionNode extends PlanExecutionNode {
 	
 	public Object clone(){
 		InsertPlanExecutionNode clonedNode = new InsertPlanExecutionNode(super.getID(), this.metadata);
-		copy(this, clonedNode);
+		copyTo(clonedNode);
         return clonedNode;
 	}
 	
-	protected void copy(InsertPlanExecutionNode source, InsertPlanExecutionNode target) {
-		target.references = source.references;
-		super.copy(source, target);
+	protected void copyTo(InsertPlanExecutionNode target) {
+		target.references = references;
+		super.copyTo(target);
 	}
 	
 	@Override

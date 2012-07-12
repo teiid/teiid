@@ -22,35 +22,30 @@
 
 package org.teiid.query.processor;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
-import org.teiid.events.EventDistributor;
+import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
-import org.teiid.query.sql.lang.Command;
 import org.teiid.query.util.CommandContext;
 
 /**
  * Driver for plan processing.
  */
-public class QueryProcessor implements BatchProducer, ProcessorDataManager {
+public class QueryProcessor implements BatchProducer {
 
 	public static class ExpiredTimeSliceException extends TeiidRuntimeException {
 		private static final long serialVersionUID = 4585044674826578060L;
@@ -60,56 +55,6 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 	
 	public interface ProcessorFactory {
 		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException;
-	}
-	
-    private class SharedState {
-    	TupleBuffer tb;
-    	TupleSource ts;
-    	int id;
-    	int expectedReaders;
-    	
-    	private void remove() {
-    		ts.closeSource();
-			tb.remove();
-			tb = null;
-			ts = null;
-    	}
-    }
-    
-	private final class BufferedTupleSource implements TupleSource {
-		private int rowNumber = 1;
-		private SharedState state;
-		
-		private BufferedTupleSource(SharedState state) {
-			this.state = state;
-		}
-
-		@Override
-		public List<?> nextTuple() throws TeiidComponentException,
-				TeiidProcessingException {
-			if (rowNumber <= state.tb.getRowCount()) {
-				return state.tb.getBatch(rowNumber).getTuple(rowNumber++);
-			}
-			if (state.tb.isFinal()) {
-				return null;
-			}
-			List<?> row = state.ts.nextTuple();
-			if (row == null) {
-				state.tb.setFinal(true);
-			} else {
-				this.state.tb.addTuple(row);
-				rowNumber++;
-			}
-			return row;
-		}
-
-		@Override
-		public void closeSource() {
-			if (--state.expectedReaders == 0 && sharedStates != null && sharedStates.containsKey(state.id)) {
-				state.remove();
-				sharedStates.remove(state.id);
-			}
-		}
 	}
 	
     private CommandContext context;
@@ -123,11 +68,10 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
     private volatile boolean requestCanceled;
     private static final int DEFAULT_WAIT = 50;       
     private boolean processorClosed;
+    
     private boolean continuous;
     private int rowOffset = 1;
     
-    Map<Integer, SharedState> sharedStates;
-         
     /**
      * Construct a processor with all necessary information to process.
      * @param plan The plan to process
@@ -138,6 +82,7 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
      */
     public QueryProcessor(ProcessorPlan plan, CommandContext context, BufferManager bufferMgr, final ProcessorDataManager dataMgr) {
         this.context = context;
+        this.context.setTupleSourceCache(new TupleSourceCache());
         this.dataMgr = dataMgr;
 		this.processPlan = plan;
 		this.bufferMgr = bufferMgr;
@@ -203,6 +148,7 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 
 	        		if (result.getTerminationFlag()) {
 	        			result.setTerminationFlag(false);
+	        			this.context.getTupleSourceCache().close();
 		        		this.processPlan.close();
 		        		this.processPlan.reset();
 		        		this.context.incrementReuseCount();
@@ -245,7 +191,7 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 		// initialize if necessary
 		if(!initialized) {
 			reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
-			this.processPlan.initialize(context, this, bufferMgr);
+			this.processPlan.initialize(context, dataMgr, bufferMgr);
 			initialized = true;
 		}
 		
@@ -266,12 +212,7 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
     		LogManager.logDetail(LogConstants.CTX_DQP, "QueryProcessor: closing processor"); //$NON-NLS-1$
     	}
-    	if (sharedStates != null) {
-    		for (SharedState ss : sharedStates.values()) {
-				ss.remove();
-			}
-    		sharedStates = null;
-    	}
+		this.context.getTupleSourceCache().close();
 		this.bufferMgr.releaseBuffers(reserved);
 		reserved = 0;
         processorClosed = true;
@@ -309,12 +250,12 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 	}
 
 	@Override
-	public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		while (true) {
 	    	long wait = DEFAULT_WAIT;
 	    	try {
 	    		init();
-	    		return this.processPlan.getFinalBuffer();
+	    		return this.processPlan.getFinalBuffer(maxRows);
 	    	} catch (BlockedException e) {
 	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
@@ -345,41 +286,14 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 	
 	public void setContinuous(boolean continuous) {
 		this.continuous = continuous;
-	}
-
-	@Override
-	public Object lookupCodeValue(CommandContext ctx, String codeTableName,
-			String returnElementName, String keyElementName, Object keyValue)
-			throws BlockedException, TeiidComponentException,
-			TeiidProcessingException {
-		return dataMgr.lookupCodeValue(ctx, codeTableName, returnElementName, keyElementName, keyValue);
+		if (this.continuous) {
+			this.context.setContinuous();
+		}
 	}
 	
 	@Override
-	public EventDistributor getEventDistributor() {
-		return dataMgr.getEventDistributor();
+	public void close() throws TeiidComponentException {
+		closeProcessing();
 	}
 
-	@Override
-	public TupleSource registerRequest(CommandContext ctx, Command command,
-			String modelName, RegisterRequestParameter parameterObject)
-			throws TeiidComponentException, TeiidProcessingException {
-		if (parameterObject.info == null) {
-			return dataMgr.registerRequest(ctx, command, modelName, parameterObject);
-		}
-		//begin handling of shared commands
-		if (sharedStates == null) {
-			sharedStates = new HashMap<Integer, SharedState>();
-		}
-		SharedState state = sharedStates.get(parameterObject.info.id);
-		if (state == null) {
-			state = new SharedState();
-			state.expectedReaders = parameterObject.info.sharingCount;
-			state.tb = QueryProcessor.this.bufferMgr.createTupleBuffer(command.getProjectedSymbols(), ctx.getConnectionId(), TupleSourceType.PROCESSOR);
-			state.ts = dataMgr.registerRequest(ctx, command, modelName, new RegisterRequestParameter(parameterObject.connectorBindingId, 0, -1));
-			state.id = parameterObject.info.id;
-			sharedStates.put(parameterObject.info.id, state);
-		}
-		return new BufferedTupleSource(state);
-	}
 }

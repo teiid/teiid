@@ -80,7 +80,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		typeMapping.put(DataTypeManager.DefaultDataClasses.DOUBLE, BuiltInAtomicType.DOUBLE);
 	}
 	
-	private static RuntimeException EARLY_TERMINATION = new RuntimeException();
+	private static TeiidRuntimeException EARLY_TERMINATION = new TeiidRuntimeException();
 	
 	private XMLTable table;
 	private List<XMLColumn> projectedColumns;
@@ -101,6 +101,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	private volatile TeiidRuntimeException asynchException;
 	private int outputRow = 1;
 	private boolean usingOutput;
+	
+	private int rowLimit = -1;
 	
 	public XMLTableNode(int nodeID) {
 		super(nodeID);
@@ -132,6 +134,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		this.buffer = null;
 		this.state = State.BUILDING;
 		this.asynchException = null;
+		this.rowLimit = -1;
 	}
 	
 	public void setTable(XMLTable table) {
@@ -145,7 +148,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	@Override
 	public XMLTableNode clone() {
 		XMLTableNode clone = new XMLTableNode(getID());
-		this.copy(this, clone);
+		this.copyTo(clone);
 		clone.setTable(table);
 		clone.setProjectedColumns(projectedColumns);
 		return clone;
@@ -215,21 +218,23 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				public void run() {
 					try {
 						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, XMLTableNode.this, getContext());
-						synchronized (XMLTableNode.this) {
-							if (buffer != null) {
-								buffer.close();
-							}
-						}
 					} catch (TeiidException e) {
 						asynchException = new TeiidRuntimeException(e);
 					} catch (TeiidRuntimeException e) {
-						asynchException = e;
-					} catch (RuntimeException e) {
 						if (e != EARLY_TERMINATION) {
-							asynchException = new TeiidRuntimeException(e);
+							asynchException = e;
 						}
+					} catch (RuntimeException e) {
+						asynchException = new TeiidRuntimeException(e);
 					} finally {
 						synchronized (XMLTableNode.this) {
+							if (buffer != null) {
+								try {
+									buffer.close();
+								} catch (TeiidComponentException e) {
+									asynchException = new TeiidRuntimeException(e);
+								}
+							}
 							state = State.DONE;
 							XMLTableNode.this.notifyAll();
 						}
@@ -308,13 +313,14 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 	
 	@Override
-	public TupleBuffer getFinalBuffer() throws BlockedException,
+	public synchronized TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
+		this.rowLimit = maxRows;
 		evaluate(true);
 		usingOutput = true;
     	TupleBuffer finalBuffer = this.buffer;
     	if (!this.table.getXQueryExpression().isStreaming()) {
-			close();
+    		close();
     	}
 		return finalBuffer;
 	}
@@ -329,6 +335,9 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		rowCount++;
 		try {
 			this.buffer.addTuple(processRow());
+			if (this.buffer.getRowCount() == rowLimit) {
+				throw EARLY_TERMINATION;
+			}
 			if (state == State.BUILDING && hasNextBatch()) {
 				this.state = State.AVAILABLE;
 				this.notifyAll();

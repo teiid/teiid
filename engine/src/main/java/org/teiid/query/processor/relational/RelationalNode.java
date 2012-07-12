@@ -509,13 +509,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	 */
 	public abstract Object clone();
 
-	protected void copy(RelationalNode source, RelationalNode target){
-		target.data = source.data;
+	protected void copyTo(RelationalNode target){
+		target.data = this.data;
         
-        target.children = new RelationalNode[source.children.length];
-        for(int i=0; i<source.children.length; i++) {
-            if(source.children[i] != null) {
-                target.children[i] = (RelationalNode)source.children[i].clone();
+        target.children = new RelationalNode[this.children.length];
+        for(int i=0; i<this.children.length; i++) {
+            if(this.children[i] != null) {
+                target.children[i] = (RelationalNode)this.children[i].clone();
                 target.children[i].setParent(target);
             } else {
                 break;
@@ -619,7 +619,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	 * @throws TeiidComponentException 
 	 * @throws BlockedException 
      */
-	public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		return null;
 	}
 	

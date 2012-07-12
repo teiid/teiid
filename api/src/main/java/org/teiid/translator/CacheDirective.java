@@ -30,8 +30,9 @@ import org.teiid.core.util.HashCodeUtil;
 public class CacheDirective implements Serializable {
 	
 	public enum Scope {
-		USER,
+		NONE,
 		SESSION,
+		USER,
 		VDB
 	}
 
@@ -58,10 +59,18 @@ public class CacheDirective implements Serializable {
 		this.prefersMemory = prefersMemory;
 	}
 	
+	/**
+	 * Get the time to live in milliseconds
+	 * @return
+	 */
 	public Long getTtl() {
 		return ttl;
 	}
 	
+	/**
+	 * Set the time to live in milliseconds
+	 * @param ttl
+	 */
 	public void setTtl(Long ttl) {
 		this.ttl = ttl;
 	}

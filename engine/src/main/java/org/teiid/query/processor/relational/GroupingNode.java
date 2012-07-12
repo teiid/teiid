@@ -449,7 +449,7 @@ public class GroupingNode extends RelationalNode {
 
 	public Object clone(){
 		GroupingNode clonedNode = new GroupingNode(super.getID());
-		super.copy(this, clonedNode);
+		super.copyTo(clonedNode);
 		clonedNode.removeDuplicates = removeDuplicates;
 		clonedNode.outputMapping = outputMapping;
 		clonedNode.orderBy = orderBy;

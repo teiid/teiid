@@ -345,10 +345,7 @@ public class TestPreparedStatement {
 		helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
     }
     
-    /**
-     * TODO: there may be other ways of handling this situation in the future
-     */
-    @Test public void testLimitNoCache() throws Exception {
+    @Test public void testLimit() throws Exception {
         // Create query 
         String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
@@ -360,7 +357,7 @@ public class TestPreparedStatement {
 
 		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, RealMetadataFactory.example1VDB());
 		//make sure the plan wasn't reused
-		assertEquals(0, planCache.getCacheHitCount());
+		assertEquals(1, planCache.getCacheHitCount());
     }
     
     @Test public void testUpdateProcedureCriteria() throws Exception {

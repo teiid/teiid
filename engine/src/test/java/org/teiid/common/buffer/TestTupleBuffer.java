@@ -60,6 +60,32 @@ public class TestTupleBuffer {
 		assertEquals(2, batch.getBeginRow());
 	}
 	
+	@Test public void testTruncate() throws Exception {
+		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		List<ElementSymbol> schema = Arrays.asList(x);
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+		tb.setBatchSize(2);
+		for (int i = 0; i < 5; i++) {
+			tb.addTuple(Arrays.asList(1));
+		}
+		TupleBatch batch = tb.getBatch(1);
+		assertTrue(!batch.getTerminationFlag());
+		assertEquals(2, batch.getEndRow());
+		tb.close();
+		assertEquals(5, tb.getManagedRowCount());
+		tb.truncateTo(3);
+		assertEquals(3, tb.getManagedRowCount());
+		assertEquals(3, tb.getRowCount());
+		batch = tb.getBatch(3);
+		assertTrue(batch.getTerminationFlag());
+		tb.truncateTo(2);
+		assertEquals(2, tb.getManagedRowCount());
+		assertEquals(2, tb.getRowCount());
+		batch = tb.getBatch(2);
+		assertTrue(batch.getTerminationFlag());
+	}
+	
 	@Test public void testLobHandling() throws Exception {
 		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
 		x.setType(DataTypeManager.DefaultDataClasses.CLOB);

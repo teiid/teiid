@@ -90,9 +90,7 @@ class RelationalPlanExecutor implements PlanExecutor {
     private boolean executed;
     private boolean doneLoading;
     
-    public RelationalPlanExecutor (ResultSetInfo resultInfo, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) 
-        throws TeiidComponentException{
-        
+    public RelationalPlanExecutor (ResultSetInfo resultInfo, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {
         this.resultInfo = resultInfo;
         this.bufferMgr = bufferMgr;
         this.dataManager = dataMgr;

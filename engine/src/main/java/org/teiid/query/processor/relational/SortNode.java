@@ -49,6 +49,8 @@ public class SortNode extends RelationalNode {
     private TupleBuffer output;
     private TupleSource outputTs;
     private boolean usingOutput;
+    
+    private int rowLimit = -1;
 
     private static final int SORT = 2;
     private static final int OUTPUT = 3;
@@ -64,6 +66,7 @@ public class SortNode extends RelationalNode {
         output = null;
         outputTs = null;
         usingOutput = false;
+        rowLimit = -1;
     }
 
 	public void setSortElements(List<OrderByItem> items) {
@@ -99,6 +102,12 @@ public class SortNode extends RelationalNode {
 		this.output = this.sortUtility.sort();
 		if (this.outputTs == null) {
 			this.outputTs = this.output.createIndexedTupleSource();
+		}
+    	if (rowLimit >= 0) {
+			this.output.truncateTo(rowLimit);
+			if (!this.output.isFinal() && this.output.getRowCount() == rowLimit) {
+				this.output.close();
+			}
 		}
         this.phase = OUTPUT;
     }
@@ -149,15 +158,15 @@ public class SortNode extends RelationalNode {
 		}
 	}
 
-	protected void copy(SortNode source, SortNode target){
-		super.copy(source, target);
-		target.items = source.items;
-		target.mode = source.mode;
+	protected void copyTo(SortNode target){
+		super.copyTo(target);
+		target.items = items;
+		target.mode = mode;
 	}
 
 	public Object clone(){
 		SortNode clonedNode = new SortNode(super.getID());
-		this.copy(this, clonedNode);
+		this.copyTo(clonedNode);
 
 		return clonedNode;
 	}
@@ -175,14 +184,16 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public TupleBuffer getFinalBuffer() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	this.rowLimit = maxRows;
+    	//TODO: push limiting into the sort logic
     	if (this.output == null) {
     		sortPhase();
     	}
     	usingOutput = true;
     	TupleBuffer result = this.output;
     	if (this.output.isFinal()) {
-        	this.output = null;
+    		this.output = null;
     		close();
     	}
     	return result;

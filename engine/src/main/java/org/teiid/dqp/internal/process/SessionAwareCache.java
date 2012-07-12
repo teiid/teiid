@@ -38,7 +38,6 @@ import org.teiid.cache.DefaultCache;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
@@ -261,18 +260,13 @@ public class SessionAwareCache<T> {
 		 */
 		public boolean setParameters(List<?> parameters) {
 			if (parameters !=  null && !parameters.isEmpty()) {
-				this.parameters = new ArrayList<Serializable>();
+				this.parameters = new ArrayList<Serializable>(parameters.size());
 				for (Object obj:parameters) {
 					if (obj == null) {
 						this.parameters.add(null);
 						continue;
 					}
 					if (!(obj instanceof Serializable)) {
-						return false;
-					}
-					
-					Class<?> type = DataTypeManager.determineDataTypeClass(obj);
-					if (type == DataTypeManager.DefaultDataClasses.OBJECT) {
 						return false;
 					}
 					this.parameters.add((Serializable)obj);

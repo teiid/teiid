@@ -27,24 +27,22 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.util.CommandContext;
 
 
 public class ProjectNode extends SubqueryAwareRelationalNode {
@@ -52,7 +50,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 	private List<? extends Expression> selectSymbols;
 
     // Derived element lookup map
-    private Map elementMap;
+    private Map<Expression, Integer> elementMap;
     private boolean needsProject = true;
     private List<Expression> expressions;
     private int[] projectionIndexes;
@@ -86,45 +84,37 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 
 	public void setSelectSymbols(List<? extends Expression> symbols) {
 		this.selectSymbols = symbols;
-	}
-	
-	@Override
-	public void initialize(CommandContext context, BufferManager bufferManager,
-			ProcessorDataManager dataMgr) {
-		super.initialize(context, bufferManager, dataMgr);
-
-        // Do this lazily as the node may be reset and re-used and this info doesn't change
-        if(elementMap != null) {
-        	return;
-        }
-    	this.projectionIndexes = new int[this.selectSymbols.size()];
+		elementMap = Collections.emptyMap();
+		this.projectionIndexes = new int[this.selectSymbols.size()];
     	Arrays.fill(this.projectionIndexes, -1);
     	
     	this.expressions = new ArrayList<Expression>(this.selectSymbols.size());
     	for (Expression ses : this.selectSymbols) {
 			this.expressions.add(SymbolMap.getExpression(ses));
 		}
-        //in the case of select with no from, there is no child node
-        //simply return at this point
-        if(this.getChildren()[0] == null){
-            elementMap = new HashMap();
-            return;
-        }
-
+	}
+	
+	@Override
+	public void addChild(RelationalNode child) {
+		super.addChild(child);
+		init();
+	}
+	
+	void init() {
+		List<? extends Expression> childElements = getChildren()[0].getElements();
         // Create element lookup map for evaluating project expressions
-        List childElements = this.getChildren()[0].getElements();
         this.elementMap = createLookupMap(childElements);
 
         // Check whether project needed at all - this occurs if:
         // 1. outputMap == null (see previous block)
         // 2. project elements are either elements or aggregate symbols (no processing required)
         // 3. order of input values == order of output values
-        needsProject = childElements.size() != getElements().size();
+        needsProject = childElements.size() != selectSymbols.size();
         for(int i=0; i<selectSymbols.size(); i++) {
             Expression symbol = selectSymbols.get(i);
             
             if(symbol instanceof AliasSymbol) {
-                Integer index = (Integer) elementMap.get(symbol);
+                Integer index = elementMap.get(symbol);
                 if(index != null && index.intValue() == i) {
                 	projectionIndexes[i] = index;
                     continue;
@@ -132,7 +122,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
                 symbol = ((AliasSymbol)symbol).getSymbol();
             }
 
-            Integer index = (Integer) elementMap.get(symbol);
+            Integer index = elementMap.get(symbol);
             if(index == null || index.intValue() != i) {
                 // input / output element order is not the same
                 needsProject = true;
@@ -140,7 +130,7 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
             	projectionIndexes[i] = index;
             }
         }
-    }
+	}
 	
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
@@ -208,13 +198,17 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
 
 	public Object clone(){
 		ProjectNode clonedNode = new ProjectNode();
-        this.copy(this, clonedNode);
+        this.copyTo(clonedNode);
 		return clonedNode;
 	}
 
-    protected void copy(ProjectNode source, ProjectNode target){
-        super.copy(source, target);
+    protected void copyTo(ProjectNode target){
+        super.copyTo(target);
         target.selectSymbols = this.selectSymbols;
+        target.needsProject = needsProject;
+        target.elementMap = elementMap;
+        target.expressions = expressions;
+        target.projectionIndexes = projectionIndexes;
     }
 
     public PlanNode getDescriptionProperties() {
@@ -226,6 +220,17 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     @Override
     protected Collection<? extends LanguageObject> getObjects() {
     	return this.selectSymbols;
+    }
+    
+    @Override
+    public boolean hasFinalBuffer() {
+    	return !needsProject && this.getChildren()[0].hasFinalBuffer();
+    }
+    
+    @Override
+    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
+    		TeiidComponentException, TeiidProcessingException {
+    	return this.getChildren()[0].getFinalBuffer(maxRows);
     }
     
 }

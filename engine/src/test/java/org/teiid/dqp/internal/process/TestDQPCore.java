@@ -374,6 +374,7 @@ public class TestDQPCore {
         agds.sleep = 500;
         agds.setUseIntCounter(true);
         RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setRowLimit(11);
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
@@ -393,6 +394,8 @@ public class TestDQPCore {
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
         assertEquals(5, rm.getResultsList().size());
+        assertEquals(7, rm.getFirstRow());
+        assertEquals(11, rm.getFinalRow());
     }
     
     @Test public void testSourceConcurrency() throws Exception {
@@ -601,6 +604,14 @@ public class TestDQPCore {
         if (results.getException() != null) {
         	throw results.getException();
         }
+    }
+    
+    @Test public void testXmlTableStreamingWithLimit() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing xmlparse(document '<a x=''1''><b>foo</b><b>bar</b><b>zed</b></a>') columns y string path '.') as x limit 2"; //$NON-NLS-1$
+        
+        ResultsMessage rm = execute("A", 1, exampleRequestMessage(sql));
+        assertNull(rm.getException());
+        assertEquals(2, rm.getResultsList().size());
     }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {

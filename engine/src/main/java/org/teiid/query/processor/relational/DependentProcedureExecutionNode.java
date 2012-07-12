@@ -58,7 +58,7 @@ public class DependentProcedureExecutionNode extends PlanExecutionNode {
         DependentProcedureExecutionNode copy = new DependentProcedureExecutionNode(getID(), (Criteria)inputCriteria.clone(),
                                                                                    inputReferences,
                                                                                    inputDefaults);
-        copy(this, copy);
+        copyTo(copy);
         return copy;
     }
     

@@ -1161,9 +1161,13 @@ public class SQLStringVisitor extends LanguageVisitor {
             	constantParts = new String[] {"X'", obj.getValue().toString(), "'"}; //$NON-NLS-1$ //$NON-NLS-2$
             }
             if (constantParts == null) {
-                String strValue = obj.getValue().toString();
-                strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
-                constantParts = new String[] {"'", strValue, "'"}; //$NON-NLS-1$ //$NON-NLS-2$
+            	if (DataTypeManager.isLOB(type)) {
+            		constantParts = new String[] {"?"}; //$NON-NLS-1$
+            	} else {
+	                String strValue = obj.getValue().toString();
+	                strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
+	                constantParts = new String[] {"'", strValue, "'"}; //$NON-NLS-1$ //$NON-NLS-2$
+            	}
             }
         }
 

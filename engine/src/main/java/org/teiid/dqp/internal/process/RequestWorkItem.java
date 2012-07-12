@@ -581,6 +581,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 		};
+		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0) {
+        	this.collector.setRowLimit(this.requestMsg.getRowLimit());
+        }
 		this.resultsBuffer = collector.getTupleBuffer();
 		if (this.resultsBuffer == null) {
 			//This is just a dummy result it will get replaced by collector source
@@ -631,6 +634,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30008, originalCommand));
 		}
         dqpCore.getRsCache().put(cid, determinismLevel, cr, originalCommand.getCacheHint() != null?originalCommand.getCacheHint().getTtl():null);
+	}
+	
+	public SessionAwareCache<CachedResults> getRsCache() {
+		return dqpCore.getRsCache();
 	}
 
 	/**

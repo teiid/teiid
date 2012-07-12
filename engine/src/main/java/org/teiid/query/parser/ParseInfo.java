@@ -33,6 +33,11 @@ public class ParseInfo implements Serializable{
     private static final boolean ANSI_QUOTED_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.ansiQuotedIdentifiers", true); //$NON-NLS-1$
 
     public int referenceCount = 0;
+    
+    public static final ParseInfo DEFAULT_INSTANCE = new ParseInfo();
+    static {
+    	DEFAULT_INSTANCE.ansiQuotedIdentifiers = true;
+    }
 
     // treat a double quoted variable as variable instead of string 
     public boolean ansiQuotedIdentifiers=ANSI_QUOTED_DEFAULT;

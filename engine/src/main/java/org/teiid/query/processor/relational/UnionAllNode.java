@@ -147,7 +147,7 @@ public class UnionAllNode extends RelationalNode {
 
 	public Object clone(){
 		UnionAllNode clonedNode = new UnionAllNode(super.getID());
-		super.copy(this, clonedNode);
+		super.copyTo(clonedNode);
 		return clonedNode;
 	}
     

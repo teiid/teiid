@@ -49,6 +49,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.events.EventDistributor;
 import org.teiid.language.SQLConstants;
@@ -123,6 +124,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 		String modelName,
 		RegisterRequestParameter parameterObject)
 		throws TeiidComponentException, TeiidProcessingException {          
+
+ 		if (parameterObject.info != null) {
+ 			TupleSourceCache tsc = context.getTupleSourceCache();
+ 			if (tsc != null) {
+ 				return tsc.getSharedTupleSource(context, command, modelName, parameterObject, bufferManager, this);
+ 			}
+		}
 
 		TempTableStore tempTableStore = context.getTempTableStore();
         if(tempTableStore != null) {

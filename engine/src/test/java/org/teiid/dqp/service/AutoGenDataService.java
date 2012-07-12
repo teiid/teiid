@@ -49,6 +49,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.translator.CacheDirective;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 
@@ -178,6 +179,11 @@ public class AutoGenDataService extends ConnectorManager{
 			@Override
 			public boolean copyLobs() {
 				return copyLobs;
+			}
+
+			@Override
+			public CacheDirective getCacheDirective() {
+				return null;
 			}
 			
 		};

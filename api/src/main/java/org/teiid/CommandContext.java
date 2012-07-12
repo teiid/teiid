@@ -149,6 +149,7 @@ public interface CommandContext {
 	/**
 	 * Get the number of times this command has been reused.  Useful 
 	 * in continuous executions.
+	 * @see #isContinuous()
 	 * @return
 	 */
 	long getReuseCount();
@@ -165,5 +166,11 @@ public interface CommandContext {
      * @param ex
      */
     void addWarning(Exception ex);
+
+    /**
+     * 
+     * @return true if this is a continuous query
+     */
+	boolean isContinuous();
 
 }

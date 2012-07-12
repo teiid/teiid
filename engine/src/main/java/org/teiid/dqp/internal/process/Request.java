@@ -373,7 +373,7 @@ public class Request implements SecurityFunctionEvaluator {
      * @throws TeiidComponentException
      * @throws TeiidProcessingException 
      */
-    protected void generatePlan() throws TeiidComponentException, TeiidProcessingException {
+    protected void generatePlan(boolean addLimit) throws TeiidComponentException, TeiidProcessingException {
         Command command = parseCommand();
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
@@ -404,7 +404,7 @@ public class Request implements SecurityFunctionEvaluator {
          * Adds a row limit to a query if Statement.setMaxRows has been called and the command
          * doesn't already have a limit clause.
          */
-        if (requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
+        if (addLimit && requestMsg.getRowLimit() > 0 && command instanceof QueryCommand) {
             QueryCommand query = (QueryCommand)command;
             if (query.getLimit() == null) {
                 query.setLimit(new Limit(null, new Constant(new Integer(requestMsg.getRowLimit()), DataTypeManager.DefaultDataClasses.INTEGER)));
@@ -447,7 +447,7 @@ public class Request implements SecurityFunctionEvaluator {
     	
         initMetadata();
         
-        generatePlan();
+        generatePlan(true);
         
         postProcessXML();
         

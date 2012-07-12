@@ -164,14 +164,13 @@ public class PlanExecutionNode extends RelationalNode {
 
 	public Object clone(){
 		PlanExecutionNode clonedNode = new PlanExecutionNode();
-		copy(this, clonedNode);
+		copyTo(clonedNode);
         return clonedNode;
 	}
     
-    protected void copy(PlanExecutionNode source,
-                        PlanExecutionNode target) {
-        target.setProcessorPlan(source.plan.clone());
-        super.copy(source, target);
+    protected void copyTo(PlanExecutionNode target) {
+        target.setProcessorPlan(plan.clone());
+        super.copyTo(target);
     }
 
     public PlanNode getDescriptionProperties() {   

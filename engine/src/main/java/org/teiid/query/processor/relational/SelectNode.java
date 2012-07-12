@@ -130,16 +130,16 @@ public class SelectNode extends SubqueryAwareRelationalNode {
 	
 	public Object clone(){
 		SelectNode clonedNode = new SelectNode();
-		this.copy(this, clonedNode);
+		this.copyTo(clonedNode);
 		return clonedNode;
 	}
 	
-	protected void copy(SelectNode source, SelectNode target){
-		super.copy(source, target);
+	protected void copyTo(SelectNode target){
+		super.copyTo(target);
 		target.criteria = criteria;
-		target.elementMap = source.elementMap;
-		target.projectionIndexes = source.projectionIndexes;
-		target.projectedExpressions = source.projectedExpressions;
+		target.elementMap = elementMap;
+		target.projectionIndexes = projectionIndexes;
+		target.projectedExpressions = projectedExpressions;
 	}
     
     public PlanNode getDescriptionProperties() {   

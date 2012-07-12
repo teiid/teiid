@@ -45,6 +45,7 @@ import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
@@ -141,7 +142,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    Set<CommandListener> commandListeners = null;
 	    private LRUCache<String, DecimalFormat> decimalFormatCache;
 		private LRUCache<String, SimpleDateFormat> dateFormatCache;
-		private AtomicLong reuseCount = new AtomicLong();
+		private AtomicLong reuseCount = null;
 		private ClassLoader classLoader;
 		
 	    private List<Exception> warnings = null;
@@ -155,6 +156,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private boolean nonBlocking;
     private HashSet<Object> planningObjects;
     private HashSet<Object> dataObjects = this.globalState.dataObjects;
+    private TupleSourceCache tupleSourceCache;
 
     /**
      * Construct a new context.
@@ -228,6 +230,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
             clone.recursionStack = new LinkedList<String>(this.recursionStack);
         }
     	clone.setNonBlocking(this.nonBlocking);
+    	clone.tupleSourceCache = this.tupleSourceCache;
     	return clone;
     }
     
@@ -749,8 +752,20 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public long getReuseCount() {
+		if (globalState.reuseCount == null) {
+			return 0;
+		}
 		return globalState.reuseCount.get();
 	}	
+	
+	@Override
+	public boolean isContinuous() {
+		return globalState.reuseCount == null;
+	}
+	
+	public void setContinuous() {
+		this.globalState.reuseCount = new AtomicLong();
+	}
 
 	@Override
 	public ClassLoader getVDBClassLoader() {
@@ -791,5 +806,13 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		}
         LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31105, warning.getMessage()));
     }
+    
+    public TupleSourceCache getTupleSourceCache() {
+		return tupleSourceCache;
+	}
+    
+    public void setTupleSourceCache(TupleSourceCache tupleSourceCache) {
+		this.tupleSourceCache = tupleSourceCache;
+	}
 
 }

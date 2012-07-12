@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
@@ -47,12 +48,18 @@ public class DependentValueSource implements
                                  ValueIteratorSource {
 
     private TupleBuffer buffer;
+    private List<? extends Expression> schema;
     private Map<Expression, Set<Object>> cachedSets;
     private boolean unused; //TODO: use this value instead of the context
     private boolean distinct;
+
+    public DependentValueSource(TupleBuffer tb) {
+    	this(tb, tb.getSchema());
+    }
     
-    public DependentValueSource(TupleBuffer tupleSourceID) {
-        this.buffer = tupleSourceID;
+    public DependentValueSource(TupleBuffer tb, List<? extends Expression> schema) {
+        this.buffer = tb;
+        this.schema = schema;
     }
     
     public TupleBuffer getTupleBuffer() {
@@ -67,7 +74,7 @@ public class DependentValueSource implements
     	IndexedTupleSource its = buffer.createIndexedTupleSource();
     	int index = 0;
     	if (valueExpression != null) {
-    		index = buffer.getSchema().indexOf(valueExpression);
+    		index = schema.indexOf(valueExpression);
     		Assertion.assertTrue(index != -1);
     	}
         return new TupleSourceValueIterator(its, index);
@@ -85,10 +92,10 @@ public class DependentValueSource implements
 			IndexedTupleSource its = buffer.createIndexedTupleSource();
         	int index = 0;
         	if (valueExpression != null) {
-        		index = buffer.getSchema().indexOf(valueExpression);
+        		index = schema.indexOf(valueExpression);
         	}
         	Assertion.assertTrue(index != -1);
-        	Class<?> type = ((Expression)buffer.getSchema().get(index)).getType();
+        	Class<?> type = ((Expression)schema.get(index)).getType();
         	if (!DataTypeManager.isHashable(type)) {
         		result = new TreeSet<Object>(Constant.COMPARATOR);
     		} else {
