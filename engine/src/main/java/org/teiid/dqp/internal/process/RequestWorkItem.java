@@ -581,7 +581,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 		};
-		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0) {
+		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0 && !request.isReturingParams()) {
+			//covers maxrows for commands that already have a limit, are prepared, or are a stored procedure
+			//TODO: allow max rows to have an effect for callablestatements with out params
         	this.collector.setRowLimit(this.requestMsg.getRowLimit());
         }
 		this.resultsBuffer = collector.getTupleBuffer();

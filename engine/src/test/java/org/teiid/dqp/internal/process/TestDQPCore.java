@@ -614,6 +614,22 @@ public class TestDQPCore {
         assertEquals(2, rm.getResultsList().size());
     }
     
+    /**
+     * Ensure that the row limit is not misapplied.
+     * Note that it still could be applied in this example, but the
+     * resultset only returns a single row
+     */
+    @Test public void testProcedureMaxRows() throws Exception {
+    	String sql = "{? = call TEIIDSP9(1, ?)}"; //$NON-NLS-1$
+    	RequestMessage request = exampleRequestMessage(sql);
+    	request.setRowLimit(1);
+    	request.setStatementType(StatementType.CALLABLE);
+        ResultsMessage rm = execute("A", 1, request);
+        
+        assertNull(rm.getException());
+        assertEquals(2, rm.getResultsList().size());
+    }
+    
 	public void helpTestVisibilityFails(String sql) throws Exception {
         RequestMessage reqMsg = exampleRequestMessage(sql); 
         reqMsg.setTxnAutoWrapMode(RequestMessage.TXN_WRAP_OFF);

@@ -300,4 +300,20 @@ public class PreparedStatementRequest extends Request {
 	    
 	    context.setVariableContext(result);
 	}
+	
+	@Override
+	public boolean isReturingParams() {
+		if (userCommand instanceof StoredProcedure) {
+			StoredProcedure sp = (StoredProcedure)userCommand;
+			if (sp.isCallableStatement() && sp.returnsResultSet()) {
+				for (SPParameter param : sp.getMapOfParameters().values()) {
+					int type = param.getParameterType();
+					if (type == SPParameter.INOUT || type == SPParameter.OUT || type == SPParameter.RETURN_VALUE) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
 } 

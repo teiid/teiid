@@ -474,5 +474,9 @@ public class Request implements SecurityFunctionEvaluator {
 	public void setExecutor(Executor executor) {
 		this.executor = executor;
 	}
+
+	public boolean isReturingParams() {
+		return false;
+	}
 	
 }
