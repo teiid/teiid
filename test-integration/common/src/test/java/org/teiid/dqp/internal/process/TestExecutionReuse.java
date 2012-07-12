@@ -161,7 +161,7 @@ public class TestExecutionReuse {
 		Statement s = c.createStatement();
 		TeiidStatement ts = s.unwrap(TeiidStatement.class);
 		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select part_id from parts", new StatementCallback() {
+		ts.submitExecute("select part_id from parts order by part_id", new StatementCallback() {
 			int rowCount;
 			@Override
 			public void onRow(Statement stmt, ResultSet rs) throws SQLException {

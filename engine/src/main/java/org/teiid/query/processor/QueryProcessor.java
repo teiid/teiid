@@ -336,7 +336,7 @@ public class QueryProcessor implements BatchProducer, ProcessorDataManager {
 
 	@Override
 	public boolean hasFinalBuffer() {
-		return this.processPlan.hasFinalBuffer();
+		return !continuous && this.processPlan.hasFinalBuffer();
 	}
 	
 	public BufferManager getBufferManager() {
