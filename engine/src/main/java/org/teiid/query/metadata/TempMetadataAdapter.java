@@ -289,8 +289,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public QueryNode getVirtualPlan(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
 		
-        if (this.queryNodes != null && this.queryNodes.containsKey(groupID)) {
-            return this.queryNodes.get(groupID);
+        if (this.queryNodes != null) {
+        	QueryNode node = this.queryNodes.get(groupID);
+        	if (node != null) {
+        		return node;
+        	}
         }
         
         if(groupID instanceof TempMetadataID && !(actualMetadata instanceof TempMetadataAdapter)) {

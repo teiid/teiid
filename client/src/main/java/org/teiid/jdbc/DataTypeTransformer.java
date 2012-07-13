@@ -44,7 +44,6 @@ import java.sql.Timestamp;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.ReaderInputStream;
 
 
@@ -65,28 +64,68 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final BigDecimal getBigDecimal(Object value) throws SQLException {
-    	return transform(value, BigDecimal.class, "BigDecimal"); //$NON-NLS-1$
+    	return transform(value, BigDecimal.class); 
     }
     
-    private static final <T> T transform(Object value, Class<T> type, String typeName) throws SQLException {
-    	return transform(value, type, type, typeName);
-    }
-    
-    private static final <T> T transform(Object value, Class<T> targetType, Class<?> runtimeType, String typeName) throws SQLException {
+    static final <T> T transform(Object value, Class<T> targetType) throws SQLException {
     	if (value == null || targetType.isAssignableFrom(value.getClass())) {
     		return targetType.cast(value);
     	}
+    	if (targetType == byte[].class) {
+    		if (value instanceof Blob) {
+                Blob blob = (Blob)value;
+                long length = blob.length();
+                if (length > Integer.MAX_VALUE) {
+                    throw new TeiidSQLException(JDBCPlugin.Util.getString("DataTypeTransformer.blob_too_big")); //$NON-NLS-1$
+                }
+                return targetType.cast(blob.getBytes(1, (int)length));
+            } else if (value instanceof String) {
+            	return targetType.cast(((String)value).getBytes());
+            } else if (value instanceof BinaryType) {
+            	return targetType.cast(((BinaryType)value).getBytesDirect());
+            }
+    	} else if (targetType == String.class) {
+    		if (value instanceof SQLXML) {
+        		return targetType.cast(((SQLXML)value).getString());
+        	} else if (value instanceof Clob) {
+        		Clob c = (Clob)value;
+        		long length = c.length();
+        		if (length == 0) {
+        			//there is a bug in SerialClob with 0 length
+        			return targetType.cast(""); //$NON-NLS-1$ 
+        		}
+        		return targetType.cast(c.getSubString(1, length>Integer.MAX_VALUE?Integer.MAX_VALUE:(int)length));
+        	}
+    	}
     	try {
-    		return targetType.cast(DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), runtimeType));
+    		return targetType.cast(DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), getRuntimeType(targetType)));
     	} catch (TransformationException e) {
     		String valueStr = value.toString();
     		if (valueStr.length() > 20) {
     			valueStr = valueStr.substring(0, 20) + "..."; //$NON-NLS-1$
     		}
-    		String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", valueStr, typeName); //$NON-NLS-1$
+    		String msg = JDBCPlugin.Util.getString("DataTypeTransformer.Err_converting", valueStr, targetType.getSimpleName()); //$NON-NLS-1$
             throw TeiidSQLException.create(e, msg);
     	} 
     }
+    
+	static final <T> Class<?> getRuntimeType(Class<T> type) {
+		Class<?> runtimeType = type;
+		if (!DataTypeManager.getAllDataTypeClasses().contains(type)) {
+			if (type == Clob.class) {
+				runtimeType = DataTypeManager.DefaultDataClasses.CLOB;
+			} else if (type == Blob.class) {
+				runtimeType = DataTypeManager.DefaultDataClasses.BLOB;
+			} else if (type == SQLXML.class) {
+				runtimeType = DataTypeManager.DefaultDataClasses.XML;
+			} else if (type == byte[].class) {
+				runtimeType = DataTypeManager.DefaultDataClasses.VARBINARY;
+			} else {
+				runtimeType = DataTypeManager.DefaultDataClasses.OBJECT;
+			}
+		}
+		return runtimeType;
+	}
     
     /**
      * Gets an object value and transforms it into a boolean
@@ -98,7 +137,7 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return false;
     	}
-    	return transform(value, Boolean.class, "Boolean"); //$NON-NLS-1$
+    	return transform(value, Boolean.class); 
     }
 
     /**
@@ -111,31 +150,15 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return 0;
     	}
-    	return transform(value, Byte.class, "Byte"); //$NON-NLS-1$
+    	return transform(value, Byte.class); 
     }
     
     static final byte[] getBytes(Object value) throws SQLException {
-        if (value == null) {
-            return null;
-        } else if (value instanceof byte[]) {
-        	return (byte[])value;
-        } else if (value instanceof Blob) {
-            Blob blob = (Blob)value;
-            long length = blob.length();
-            if (length > Integer.MAX_VALUE) {
-                throw new TeiidSQLException(JDBCPlugin.Util.getString("DataTypeTransformer.blob_too_big")); //$NON-NLS-1$
-            }
-            return blob.getBytes(1, (int)length);
-        } else if (value instanceof String) {
-        	return ((String)value).getBytes();
-        } else if (value instanceof BinaryType) {
-        	return ((BinaryType)value).getBytesDirect();
-        }
-        throw new TeiidSQLException(JDBCPlugin.Util.getString("DataTypeTransformer.cannot_get_bytes")); //$NON-NLS-1$
+    	return transform(value, byte[].class);
     }
     
     static final Character getCharacter(Object value) throws SQLException {
-    	return transform(value, Character.class, "Character"); //$NON-NLS-1$
+    	return transform(value, Character.class); 
     }
 
     /**
@@ -146,7 +169,7 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final Date getDate(Object value) throws SQLException {
-    	return transform(value, Date.class, "Date"); //$NON-NLS-1$
+    	return transform(value, Date.class); 
     }
 
     /**
@@ -159,7 +182,7 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return 0;
     	}
-    	return transform(value, Double.class, "Double"); //$NON-NLS-1$
+    	return transform(value, Double.class); 
     }
 
     /**
@@ -172,7 +195,7 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return 0;
     	}
-    	return transform(value, Float.class, "Float"); //$NON-NLS-1$
+    	return transform(value, Float.class); 
     }
 
     /**
@@ -185,7 +208,7 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return 0;
     	}
-    	return transform(value, Integer.class, "Integer"); //$NON-NLS-1$
+    	return transform(value, Integer.class); 
     }
 
     /**
@@ -198,7 +221,7 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return 0;
     	}
-    	return transform(value, Long.class, "Long"); //$NON-NLS-1$
+    	return transform(value, Long.class); 
     }
 
     /**
@@ -211,7 +234,7 @@ final class DataTypeTransformer {
     	if (value == null) {
     		return 0;
     	}
-    	return transform(value, Short.class, "Short"); //$NON-NLS-1$
+    	return transform(value, Short.class); 
     }
 
     /**
@@ -222,7 +245,7 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final Time getTime(Object value) throws SQLException {
-    	return transform(value, Time.class, "Time"); //$NON-NLS-1$
+    	return transform(value, Time.class); 
     }
 
     /**
@@ -233,22 +256,11 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final Timestamp getTimestamp(Object value) throws SQLException {
-    	return transform(value, Timestamp.class, "Timestamp"); //$NON-NLS-1$
+    	return transform(value, Timestamp.class); 
     }
     
     static final String getString(Object value) throws SQLException {
-    	if (value instanceof SQLXML) {
-    		return ((SQLXML)value).getString();
-    	} else if (value instanceof Clob) {
-    		Clob c = (Clob)value;
-    		long length = c.length();
-    		if (length == 0) {
-    			//there is a bug in SerialClob with 0 length
-    			return ""; //$NON-NLS-1$ 
-    		}
-    		return c.getSubString(1, length>Integer.MAX_VALUE?Integer.MAX_VALUE:(int)length);
-    	}
-    	return transform(value, String.class, "String"); //$NON-NLS-1$
+    	return transform(value, String.class); 
     }
 
     /**
@@ -259,7 +271,7 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final Blob getBlob(Object value) throws SQLException {
-    	return transform(value, Blob.class, DefaultDataClasses.BLOB, "Blob"); //$NON-NLS-1$
+    	return transform(value, Blob.class); 
     }
 
     /**
@@ -270,7 +282,7 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */
     static final Clob getClob(Object value) throws SQLException {
-    	return transform(value, Clob.class, DefaultDataClasses.CLOB, "Clob"); //$NON-NLS-1$
+    	return transform(value, Clob.class); 
     }
 
     /**
@@ -280,7 +292,7 @@ final class DataTypeTransformer {
      * @throws SQLException if failed to transform to the desired datatype
      */    
     static final SQLXML getSQLXML(Object value) throws SQLException {
-    	return transform(value, SQLXML.class, DefaultDataClasses.XML, "SQLXML"); //$NON-NLS-1$
+    	return transform(value, SQLXML.class); 
     }
     
     static final Reader getCharacterStream(Object value) throws SQLException {
@@ -320,6 +332,9 @@ final class DataTypeTransformer {
 		final Clob clob = getClob(value);
 		if (clob == null) {
 			return null;
+		}
+		if (clob instanceof NClob) {
+			return (NClob)clob;
 		}
 		return (NClob) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[] {NClob.class}, new InvocationHandler() {
 			

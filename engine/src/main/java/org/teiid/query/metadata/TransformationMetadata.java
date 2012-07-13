@@ -487,10 +487,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         LiveTableQueryNode queryNode = new LiveTableQueryNode(tableRecord);
 
         // get any bindings and add them onto the query node
-        List bindings = tableRecord.getBindings();
+        List<String> bindings = tableRecord.getBindings();
         if(bindings != null) {
-            for(Iterator bindIter = bindings.iterator();bindIter.hasNext();) {
-                queryNode.addBinding((String)bindIter.next());
+            for(Iterator<String> bindIter = bindings.iterator();bindIter.hasNext();) {
+                queryNode.addBinding(bindIter.next());
             }
         }
 
@@ -624,16 +624,16 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return 0;
     }
 
-    public Collection getIndexesInGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
+    public Collection<KeyRecord> getIndexesInGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(Table.class, groupID);
         return ((Table)groupID).getIndexes();
     }
 
-    public Collection getUniqueKeysInGroup(final Object groupID)
+    public Collection<KeyRecord> getUniqueKeysInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	Table tableRecordImpl = (Table)groupID;
-    	ArrayList<ColumnSet> result = new ArrayList<ColumnSet>(tableRecordImpl.getUniqueKeys());
+    	ArrayList<KeyRecord> result = new ArrayList<KeyRecord>(tableRecordImpl.getUniqueKeys());
     	if (tableRecordImpl.getPrimaryKey() != null) {
 	    	result.add(tableRecordImpl.getPrimaryKey());
     	}
@@ -645,7 +645,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	return result;
     }
 
-    public Collection getForeignKeysInGroup(final Object groupID)
+    public Collection<ForeignKey> getForeignKeysInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getForeignKeys();
@@ -658,26 +658,26 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return fkRecord.getPrimaryKey();
     }
 
-    public Collection getAccessPatternsInGroup(final Object groupID)
+    public Collection<KeyRecord> getAccessPatternsInGroup(final Object groupID)
         throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(Table.class, groupID);
     	return ((Table)groupID).getAccessPatterns();
     }
 
-    public List getElementIDsInIndex(final Object index) throws TeiidComponentException, QueryMetadataException {
+    public List<Column> getElementIDsInIndex(final Object index) throws TeiidComponentException, QueryMetadataException {
     	ArgCheck.isInstanceOf(ColumnSet.class, index);
-    	return ((ColumnSet)index).getColumns();
+    	return ((ColumnSet<?>)index).getColumns();
     }
 
-    public List getElementIDsInKey(final Object key) throws TeiidComponentException, QueryMetadataException {
+    public List<Column> getElementIDsInKey(final Object key) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(ColumnSet.class, key);
-        return ((ColumnSet)key).getColumns();
+        return ((ColumnSet<?>)key).getColumns();
     }
 
-    public List getElementIDsInAccessPattern(final Object accessPattern)
+    public List<Column> getElementIDsInAccessPattern(final Object accessPattern)
         throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(ColumnSet.class, accessPattern);
-        return ((ColumnSet)accessPattern).getColumns();
+        return ((ColumnSet<?>)accessPattern).getColumns();
     }
 
     public boolean isXMLGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {

@@ -31,6 +31,7 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.sql.Clob;
+import java.sql.NClob;
 import java.sql.SQLException;
 
 import org.teiid.core.CorePlugin;
@@ -44,7 +45,7 @@ import org.teiid.core.util.ObjectConverterUtil;
  * This is wrapper on top of a "clob" object, which implements the "java.sql.Clob"
  * interface. This class also implements the Streamable interface
  */
-public final class ClobType extends Streamable<Clob> implements Clob, Sequencable, Comparable<ClobType> {
+public final class ClobType extends Streamable<Clob> implements Clob, NClob, Sequencable, Comparable<ClobType> {
 
 	private static final long serialVersionUID = 2753412502127824104L;
     

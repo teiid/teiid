@@ -424,7 +424,7 @@ public class QueryResolver {
 		QueryNode cachedNode = (QueryNode)qmi.getFromMetadataCache(virtualGroup.getMetadataID(), cacheString);
         if (cachedNode == null) {
         	Command result = qnode.getCommand();
-        	List bindings = null;
+        	List<String> bindings = null;
             if (result == null) {
                 try {
                 	result = QueryParser.getQueryParser().parseCommand(qnode.getQuery());
