@@ -26,9 +26,13 @@ import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
@@ -37,12 +41,24 @@ import org.teiid.core.util.UnitTestUtil;
 public class TestResultsCache {
 
 	private Connection conn;
+	private static FakeServer server;
+
+	@BeforeClass public static void oneTimeSetup() throws Exception {
+		server = new FakeServer(true);
+    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
+	}
+	
+	@AfterClass public static void oneTimeTeardown() {
+		server.stop();
+	}
 	
 	@Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
-    	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }
+	
+	@After public void teardown() throws SQLException {
+		conn.close();
+	}
 	
 	@Test public void testCacheHint() throws Exception {
 		Statement s = conn.createStatement();
@@ -54,6 +70,18 @@ public class TestResultsCache {
 		assertTrue(rs.next());
 		rs = s.executeQuery("select 1");
 		assertFalse(rs.next());
+	}
+	
+	@Test public void testCacheHintWithMaxRows() throws Exception {
+		Statement s = conn.createStatement();
+		s.setMaxRows(1);
+		ResultSet rs = s.executeQuery("/* cache */ select 1 union all select 2");
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		s.setMaxRows(2);
+		rs = s.executeQuery("/* cache */ select 1 union all select 2");
+		assertTrue(rs.next());
+		assertTrue(rs.next());
 	}
 	
 	@Test public void testCacheHintTtl() throws Exception {

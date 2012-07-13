@@ -379,14 +379,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			sendResultsIfNeeded(null);
 			this.resultsBuffer = collector.collectTuples();
 			if (!doneProducingBatches) {
-				doneProducingBatches();
-				//TODO: we could perform more tracking to know what source lobs are in use
-				if (this.resultsBuffer.getLobCount() == 0) {
-					for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-						connectorRequest.fullyCloseSource();
-				    }
-				}
-				addToCache();
+				done();
 			}
 		}
 		if (this.transactionState == TransactionState.ACTIVE) {
@@ -516,12 +509,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
 				if (cachable) {
 					CachedResults cr = rsCache.get(cacheId);
-					if (cr != null) {
+					//check that there are enough cached results
+					//TODO: possibly ignore max rows for caching
+					if (cr != null && (cr.getRowLimit() == 0 || (requestMsg.getRowLimit() != 0 && requestMsg.getRowLimit() <= cr.getRowLimit()))) {
 						this.resultsBuffer = cr.getResults();
 						request.initMetadata();
 						this.originalCommand = cr.getCommand(requestMsg.getCommandString(), request.metadata, pi);
 						if (!request.validateAccess(requestMsg.getCommands(), this.originalCommand, CommandType.CACHED)) {
-							this.doneProducingBatches();
+							doneProducingBatches();
 							return;
 						}
 						LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Cached result command to be modified, will not use the cached results", cacheId); //$NON-NLS-1$
@@ -551,8 +546,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					super.flushBatchDirect(batch, add);
 				}
 				if (batch.getTerminationFlag()) {
-					doneProducingBatches();
-					addToCache();
+					done();
 				}
 				synchronized (lobStreams) {
 					if (resultsBuffer.isLobs()) {
@@ -618,6 +612,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	CachedResults cr = new CachedResults();
     	cr.setCommand(originalCommand);
         cr.setResults(resultsBuffer, processor.getProcessorPlan());
+        if (requestMsg.getRowLimit() > 0 && resultsBuffer.getRowCount() == requestMsg.getRowLimit()) {
+        	cr.setRowLimit(resultsBuffer.getRowCount());
+        }
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$
 			resultsBuffer.setPrefersMemory(originalCommand.getCacheHint().isPrefersMemory());
@@ -971,6 +968,17 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		} catch (TeiidComponentException e) {
 			LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,requestID));
 		}
+	}
+
+	private void done() {
+		doneProducingBatches();
+		//TODO: we could perform more tracking to know what source lobs are in use
+		if (this.resultsBuffer.getLobCount() == 0) {
+			for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+				connectorRequest.fullyCloseSource();
+		    }
+		}
+		addToCache();
 	}
 
 	private void doneProducingBatches() {

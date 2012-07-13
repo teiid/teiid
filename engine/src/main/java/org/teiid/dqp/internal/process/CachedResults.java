@@ -53,6 +53,7 @@ public class CachedResults implements Serializable, Cachable {
 	private CacheHint hint;
 	private String uuid;
 	private boolean hasLobs;
+	private int rowLimit;
 	
 	private AccessInfo accessInfo = new AccessInfo();
 	
@@ -123,6 +124,14 @@ public class CachedResults implements Serializable, Cachable {
 	@Override
 	public AccessInfo getAccessInfo() {
 		return accessInfo;
+	}
+	
+	public int getRowLimit() {
+		return rowLimit;
+	}
+	
+	public void setRowLimit(int rowLimit) {
+		this.rowLimit = rowLimit;
 	}
 	
 }
