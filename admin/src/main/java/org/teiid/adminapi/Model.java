@@ -88,4 +88,10 @@ public interface Model extends AdminObject {
      * @return
      */
     String getSourceTranslatorName(String sourceName);
+    
+    /**
+     * Shows any validity errors present in the model
+     * @return
+     */
+    List<String> getValidityErrors();
 }

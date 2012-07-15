@@ -836,7 +836,7 @@ public class ExecutionFactory<F, C> {
      * Implement to provide metadata to the metadata for use by the engine.  This is the 
      * primary method of creating metadata for dynamic VDBs.
      * @param metadataFactory
-     * @param conn
+     * @param conn may be null if there was an error obtaining a connection
      * @throws TranslatorException
      */
     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {

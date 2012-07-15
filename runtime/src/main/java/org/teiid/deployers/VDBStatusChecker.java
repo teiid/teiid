@@ -26,10 +26,12 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.AdminProcessingException;
-import org.teiid.adminapi.Model;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -44,26 +46,30 @@ public abstract class VDBStatusChecker {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 	private TranslatorRepository translatorRepository;
 	
+	/**
+	 * @param translatorName  
+	 */
 	public void translatorAdded(String translatorName) {
-		resourceAdded(translatorName, true);
 	}
 	
+	/**
+	 * @param translatorName  
+	 */
 	public void translatorRemoved(String translatorName) {
-		resourceRemoved(translatorName, true);
 	}
 	
 	public void dataSourceAdded(String dataSourceName) {
 		if (dataSourceName.startsWith(JAVA_CONTEXT)) {
 			dataSourceName = dataSourceName.substring(5);
 		}
-		resourceAdded(dataSourceName, false);
+		resourceAdded(dataSourceName);
 	}
 	
 	public void dataSourceRemoved(String dataSourceName) {
 		if (dataSourceName.startsWith(JAVA_CONTEXT)) {
 			dataSourceName = dataSourceName.substring(5);
 		}
-		resourceRemoved(dataSourceName, false);
+		resourceRemoved(dataSourceName);
 	}	
 
 	public void dataSourceReplaced(String vdbName, int vdbVersion,
@@ -82,7 +88,7 @@ public abstract class VDBStatusChecker {
 			ExecutionFactory<Object, Object> ef = cm.getExecutionFactory();
 			
 			boolean dsReplaced = false;
-			if (!cm.getConnectionName().equals(dsName)){
+			if ((dsName != null && !dsName.equals(cm.getConnectionName())) || (dsName == null && cm.getConnectionName() != null)) {
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName));
 				cm = new ConnectorManager(translatorName, dsName); 
 				cm.setExecutionFactory(ef);
@@ -111,96 +117,103 @@ public abstract class VDBStatusChecker {
 			}
 			
 			if (dsReplaced) {
-				resourceAdded(dsName, false);
+				ArrayList<Runnable> runnables = new ArrayList<Runnable>(1);
+				checkStatus(runnables, vdb, model, cm);
+				updateVDB(runnables, vdb);
 			}
 		}
 	}
 
-	public void resourceAdded(String resourceName, boolean translator) {
+	public void resourceAdded(String resourceName) {
 		List<Runnable> runnables = new ArrayList<Runnable>();
 		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
 			synchronized (vdb) {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
-				
+				boolean usesResourse = false;
 				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 					if (!model.hasRuntimeErrors()) {
 						continue;
 					}
 	
-					String sourceName = getSourceName(resourceName, model, translator);
+					String sourceName = getSourceName(resourceName, model);
 					if (sourceName == null) {
 						continue;
 					}
 
+					usesResourse = true;
 					ConnectorManager cm = cmr.getConnectorManager(sourceName);
-					String status = cm.getStausMessage();
-					if (status != null && status.length() > 0) {
-						model.addRuntimeError(status);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, status);
-					} else {
-						//get the pending metadata load
-						Runnable r = model.removeAttachment(Runnable.class);
-						if (r != null) {
-							runnables.add(r);
-						} else {
-							model.clearRuntimeErrors();
-						}
-					}
+					checkStatus(runnables, vdb, model, cm);
 				}
 	
-				boolean valid = !vdb.hasErrors();
-				
-				if (!runnables.isEmpty()) {
-					//the task themselves will set the status on completion/failure
-					for (Runnable runnable : runnables) {						
-						getExecutor().execute(runnable);
-					}
-					runnables.clear();
-				} else if (valid) {
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
+				if (usesResourse) {
+					updateVDB(runnables, vdb);
 				}
 			}
 		}
 	}
+
+	private void updateVDB(List<Runnable> runnables, VDBMetaData vdb) {
+		if (!runnables.isEmpty()) {
+			//the task themselves will set the status on completion/failure
+			for (Runnable runnable : runnables) {						
+				getExecutor().execute(runnable);
+			}
+			runnables.clear();
+		} else if (vdb.hasErrors()) {
+			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
+		}
+	}
+
+	private void checkStatus(List<Runnable> runnables, VDBMetaData vdb,
+			ModelMetaData model, ConnectorManager cm) {
+		//get the pending metadata load
+		Runnable r = model.removeAttachment(Runnable.class);
+		if (r != null) {
+			runnables.add(r);
+		} else {
+			String status = cm.getStausMessage();
+			if (status != null && status.length() > 0) {
+				Severity severity = vdb.getStatus() == Status.LOADING?Severity.WARNING:Severity.ERROR;
+				model.addRuntimeError(severity, status);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, status);
+			} else if (vdb.getStatus() != Status.LOADING){
+				model.clearRuntimeErrors();
+			}
+		}
+	}
 	
-	public void resourceRemoved(String resourceName, boolean translator) {
+	public void resourceRemoved(String resourceName) {
 		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
 			synchronized (vdb) {
-				for (Model m:vdb.getModels()) {
-					ModelMetaData model = (ModelMetaData)m;
-					
-					String sourceName = getSourceName(resourceName, model, translator);
-					if (sourceName != null) {
-						String msg = null;
-						if (translator) {
-							msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40005, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName));
-						}
-						else {
-							msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
-						}
-						model.addRuntimeError(msg);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);					
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,vdb.getName(), vdb.getVersion(), vdb.getStatus()));
+				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
+					String sourceName = getSourceName(resourceName, model);
+					if (sourceName == null) {
+						continue;
+					}
+					ConnectorManager cm = cmr.getConnectorManager(sourceName);
+					if (cm.getExecutionFactory().isSourceRequired()) {
+						String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
+						Severity severity = vdb.getStatus() == Status.LOADING?Severity.WARNING:Severity.ERROR;
+						model.addRuntimeError(severity, msg);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 					}
 				}
 			}
 		}
 	}
 
-	private String getSourceName(String translatorName, ModelMetaData model, boolean translator) {
-		for (String sourceName:model.getSourceNames()) {
-			if (translator) {
-				if (translatorName.equals(model.getSourceTranslatorName(sourceName))) {
-					return sourceName;
-				}
-			} else {
-				String jndiName = model.getSourceConnectionJndiName(sourceName);
-				if (jndiName.startsWith(JAVA_CONTEXT)) {
-					jndiName = jndiName.substring(5);
-				}
-				if (translatorName.equals(jndiName)) {
-					return sourceName;
-				}
+	private String getSourceName(String factoryName, ModelMetaData model) {
+		for (SourceMappingMetadata source:model.getSources().values()) {
+			String jndiName = source.getConnectionJndiName();
+			if (jndiName == null) {
+				continue;
+			}
+			if (jndiName.startsWith(JAVA_CONTEXT)) {
+				jndiName = jndiName.substring(5);
+			}
+			if (factoryName.equals(jndiName)) {
+				return source.getName();
 			}
 		}
 		return null;

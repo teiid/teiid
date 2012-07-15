@@ -103,22 +103,22 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		
 		// make sure the translator defined exists in configuration; otherwise add as error
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
-			if (model.isSource() && !model.getSourceNames().isEmpty()) {
-				for (String source:model.getSourceNames()) {
-					
-					String translatorName = model.getSourceTranslatorName(source);
-					if (deployment.isOverideTranslator(translatorName)) {
-						VDBTranslatorMetaData parent = deployment.getTranslator(translatorName);
-						translatorName = parent.getType();
-					}
-					
-					Translator translator = this.translatorRepository.getTranslatorMetaData(translatorName);
-					if ( translator == null) {	
-						String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deployment.getName(), deployment.getVersion());
-						model.addRuntimeError(msg);
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, msg);
-					}	
+			if (!model.isSource() || model.getSourceNames().isEmpty()) {
+				continue;
+			}
+			for (String source:model.getSourceNames()) {
+				
+				String translatorName = model.getSourceTranslatorName(source);
+				if (deployment.isOverideTranslator(translatorName)) {
+					VDBTranslatorMetaData parent = deployment.getTranslator(translatorName);
+					translatorName = parent.getType();
 				}
+				
+				Translator translator = this.translatorRepository.getTranslatorMetaData(translatorName);
+				if ( translator == null) {	
+					String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50077, translatorName, deployment.getName(), deployment.getVersion());
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, msg);
+				}	
 			}
 		}
 		
@@ -256,6 +256,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 
 				// Need to make the data source service as dependency; otherwise dynamic vdbs will not work correctly.
 				String dsName = model.getSourceConnectionJndiName(sourceName);
+				if (dsName == null) {
+					continue;
+				}
 				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(getJndiName(dsName));
 				svcListener.dependentService(dsName, bindInfo.getBinderServiceName());				
 			}

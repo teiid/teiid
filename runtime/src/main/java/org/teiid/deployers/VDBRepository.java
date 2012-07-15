@@ -338,8 +338,8 @@ public class VDBRepository implements Serializable{
 					if (cm != null) {
 						String msg = cm.getStausMessage();
 						if (msg != null && msg.length() > 0) {
-							model.addRuntimeError(cm.getStausMessage());
-							LogManager.logInfo(LogConstants.CTX_RUNTIME, cm.getStausMessage());
+							model.addRuntimeError(msg);
+							LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 						}
 					}					
 				}

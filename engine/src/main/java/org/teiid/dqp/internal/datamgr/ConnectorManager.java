@@ -33,10 +33,10 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.logging.CommandLogMessage;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -72,7 +72,7 @@ public class ConnectorManager  {
     }
     
     public String getStausMessage() {
-    	StringBuilder sb = new StringBuilder();
+    	String msg = ""; //$NON-NLS-1$
     	ExecutionFactory<Object, Object> ef = getExecutionFactory();
 		
     	if(ef != null) {
@@ -86,14 +86,14 @@ public class ConnectorManager  {
 				}
 				
     			if (conn == null) {
-    				sb.append(QueryPlugin.Util.getString("datasource_not_found", this.connectionName)); //$NON-NLS-1$
+    				msg = QueryPlugin.Util.getString("datasource_not_found", this.connectionName); //$NON-NLS-1$
     			}
     		}
     	}
     	else {
-    		sb.append(QueryPlugin.Util.getString("translator_not_found", this.translatorName)); //$NON-NLS-1$
+    		msg = QueryPlugin.Util.getString("translator_not_found", this.translatorName); //$NON-NLS-1$
     	}
-    	return sb.toString();
+    	return msg;
     }
     
 	public List<FunctionMethod> getPushDownFunctions(){

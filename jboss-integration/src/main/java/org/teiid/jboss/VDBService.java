@@ -24,7 +24,14 @@ package org.teiid.jboss;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,7 +41,13 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.modules.ModuleLoader;
-import org.jboss.msc.service.*;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceContainer;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
@@ -42,13 +55,21 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
-import org.teiid.deployers.*;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.TranslatorUtil;
+import org.teiid.deployers.UDFMetaData;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
+import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -312,7 +333,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
     protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
 
     	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); 
-		model.addRuntimeError(msg); 
+		model.addRuntimeError(Severity.INFO, msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
 		Runnable job = new Runnable() {
@@ -321,7 +342,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				
 				boolean metadataLoaded = false;
 				boolean cached = false;
-				List<String> errorMessages = new ArrayList<String>();
+				Exception ex = null;
 				
 				final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 				MetadataFactory factory = getSerializer().loadSafe(cachedFile, MetadataFactory.class);
@@ -357,34 +378,26 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						metadataRepo.loadMetadata(factory, ef, cf);		
 						metadataLoaded = true;
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));					
-					} catch (TranslatorException e) {					
-						errorMessages.add(e.getMessage());
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), e.getMessage()));
+					} catch (Exception e) {					
+				    	ex = e;
 					}
 				}
 		    					
 				synchronized (vdb) {
 			    	if (metadataLoaded) {
-			    		
 			    		if (!cached) {
 				    		// cache the schema to disk
 							cacheMetadataStore(model, factory);
 			    		}
 						
 						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory);
-			    	} 
-			    	else {
-			    		for (String errorMsg:errorMessages) {
-					    	model.addRuntimeError(errorMsg); 
-					    	LogManager.logWarning(LogConstants.CTX_RUNTIME, errorMsg);
-			    		}			    		
+			    	} else {
+			    		model.addRuntimeError(ex.getMessage()); 
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), ex.getMessage()));
+						//defer the load to the status checker if/when a source is available/redeployed
+						model.addAttchment(Runnable.class, this);
 			    	}
 		    	}
-		    	
-				if (!metadataLoaded) {
-					//defer the load to the status checker if/when a source is available/redeployed
-					model.addAttchment(Runnable.class, this);
-				}	    				
 			}
 		};	    		
 		

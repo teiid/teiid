@@ -119,6 +119,10 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return new ArrayList<SourceMappingMetadata>(this.sources.values());
 	}
 	
+	public LinkedHashMap<String, SourceMappingMetadata> getSources() {
+		return sources;
+	}
+	
 	public SourceMappingMetadata getSourceMapping(String sourceName){
 		return this.sources.get(sourceName);
 	}	
@@ -211,7 +215,11 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}    
     
     public synchronized ValidationError addRuntimeError(String message) {
-        ValidationError ve = new ValidationError(Severity.ERROR, message);
+    	return addRuntimeError(Severity.ERROR, message);
+    }    
+    
+    public synchronized ValidationError addRuntimeError(Severity severity, String message) {
+        ValidationError ve = new ValidationError(severity, message);
         if (this.runtimeErrors == null) {
             this.runtimeErrors = new LinkedList<ValidationError>();
         }
@@ -220,7 +228,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         	this.runtimeErrors.remove(0);
         }
         return ve;
-    }    
+    } 
     
     public synchronized ValidationError addError(ValidationError ve) {
         if (this.validationErrors == null) {
@@ -239,7 +247,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     public static class ValidationError implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;
 
-		public enum Severity {ERROR, WARNING};
+		public enum Severity {ERROR, WARNING, INFO};
     	
         protected String value;
         protected Severity severity;
@@ -313,6 +321,20 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 	public void setSchemaText(String schemaText) {
 		this.schemaText = schemaText;
+	}
+	
+	@Override
+	public List<String> getValidityErrors() {
+		List<String> allErrors = new ArrayList<String>();
+		List<ValidationError> errors = getErrors();
+		if (errors != null && !errors.isEmpty()) {
+			for (ValidationError m:errors) {
+				if (m.getSeverity() == Severity.ERROR) {
+					allErrors.add(m.getValue());
+				}
+			}
+		}
+		return allErrors;
 	}
 	
 }

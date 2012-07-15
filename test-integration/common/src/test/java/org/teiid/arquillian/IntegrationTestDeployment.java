@@ -79,7 +79,11 @@ public class IntegrationTestDeployment {
 		
 		AdminUtil.createDataSource(admin, "Oracle11_PushDS", "h2", props);
 		admin.deploy("fake.jar",new FileInputStream(UnitTestUtil.getTestDataFile("fake.jar")));
-		admin.deploy("chained-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("chained-vdb.xml")));
+		try {
+			admin.deploy("chained-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("chained-vdb.xml")));
+		} finally {
+			admin.undeploy("fake.jar");
+		}
 	}
 	
 	@Test
