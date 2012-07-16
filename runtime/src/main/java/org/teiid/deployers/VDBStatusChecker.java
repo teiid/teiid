@@ -31,7 +31,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
@@ -131,7 +131,7 @@ public abstract class VDBStatusChecker {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 				boolean usesResourse = false;
 				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
-					if (!model.hasRuntimeErrors()) {
+					if (!model.hasRuntimeMessages()) {
 						continue;
 					}
 	
@@ -174,10 +174,10 @@ public abstract class VDBStatusChecker {
 			String status = cm.getStausMessage();
 			if (status != null && status.length() > 0) {
 				Severity severity = vdb.getStatus() == Status.LOADING?Severity.WARNING:Severity.ERROR;
-				model.addRuntimeError(severity, status);
+				model.addRuntimeMessage(severity, status);
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, status);
 			} else if (vdb.getStatus() != Status.LOADING){
-				model.clearRuntimeErrors();
+				model.clearRuntimeMessages();
 			}
 		}
 	}
@@ -195,7 +195,7 @@ public abstract class VDBStatusChecker {
 					if (cm.getExecutionFactory().isSourceRequired()) {
 						String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
 						Severity severity = vdb.getStatus() == Status.LOADING?Severity.WARNING:Severity.ERROR;
-						model.addRuntimeError(severity, msg);
+						model.addRuntimeMessage(severity, msg);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 					}
 				}

@@ -55,7 +55,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.CompositeVDB;
@@ -333,7 +333,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
     protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
 
     	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); 
-		model.addRuntimeError(Severity.INFO, msg); 
+		model.addRuntimeMessage(Severity.INFO, msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
 		Runnable job = new Runnable() {

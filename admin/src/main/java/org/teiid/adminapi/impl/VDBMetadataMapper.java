@@ -36,8 +36,8 @@ import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
+import org.teiid.adminapi.impl.ModelMetaData.Message;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
  
 public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String VDBNAME = "vdb-name"; //$NON-NLS-1$
@@ -298,10 +298,10 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				}
 			}
 			
-			List<ValidationError> errors = model.getErrors();
+			List<Message> errors = model.getMessages();
 			if (errors != null && !errors.isEmpty()) {
 				ModelNode errorsNode = node.get(VALIDITY_ERRORS);
-				for (ValidationError error:errors) {
+				for (Message error:errors) {
 					errorsNode.add(ValidationErrorMapper.INSTANCE.wrap(error, new ModelNode()));
 				}
 			}
@@ -359,9 +359,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.get(VALIDITY_ERRORS).isDefined()) {
 				List<ModelNode> errorNodes = node.get(VALIDITY_ERRORS).asList();
 				for(ModelNode errorNode:errorNodes) {
-					ValidationError error = ValidationErrorMapper.INSTANCE.unwrap(errorNode);
+					Message error = ValidationErrorMapper.INSTANCE.unwrap(errorNode);
 					if (error != null) {
-						model.addError(error);
+						model.addMessage(error);
 					}
 				}
 			}
@@ -458,7 +458,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	/**
 	 * validation error mapper
 	 */
-	public static class ValidationErrorMapper implements MetadataMapper<ValidationError>{
+	public static class ValidationErrorMapper implements MetadataMapper<Message>{
 		private static final String ERROR_PATH = "error-path"; //$NON-NLS-1$
 		private static final String SEVERITY = "severity"; //$NON-NLS-1$
 		private static final String MESSAGE = "message"; //$NON-NLS-1$
@@ -466,7 +466,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		
 		public static ValidationErrorMapper INSTANCE = new ValidationErrorMapper();
 		
-		public ModelNode wrap(ValidationError error, ModelNode node) {
+		public ModelNode wrap(Message error, ModelNode node) {
 			if (error == null) {
 				return null;
 			}
@@ -480,12 +480,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node;
 		}
 		
-		public ValidationError unwrap(ModelNode node) {
+		public Message unwrap(ModelNode node) {
 			if (node == null) {
 				return null;
 			}
 			
-			ValidationError error = new ValidationError();
+			Message error = new Message();
 			if (node.has(ERROR_PATH)) {
 				error.setPath(node.get(ERROR_PATH).asString());
 			}

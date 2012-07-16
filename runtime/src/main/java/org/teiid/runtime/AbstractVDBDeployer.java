@@ -157,7 +157,7 @@ public abstract class AbstractVDBDeployer {
 		factory.mergeInto(vdbMetadataStore);
 		
 		//TODO: this is not quite correct, the source may be missing
-		model.clearRuntimeErrors();				
+		model.clearRuntimeMessages();				
 		
 		if (loadCount.decrementAndGet() == 0) {
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());

@@ -60,10 +60,10 @@ public class TestModelMetaData {
 	
 	public void testErrors() {
 		ModelMetaData m = new ModelMetaData();
-		m.addError("ERROR", "I am Error");
-		m.addError("WARNING", "I am warning");
+		m.addMessage("ERROR", "I am Error");
+		m.addMessage("WARNING", "I am warning");
 		
-		assertFalse(m.getErrors().isEmpty());
-		assertEquals(1, m.getErrors().size());
+		assertFalse(m.getMessages().isEmpty());
+		assertEquals(1, m.getMessages().size());
 	}
 }

@@ -151,7 +151,7 @@ public class TestVDBMetaData {
 		modelOne.addProperty("model-prop", "model-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.addProperty("model-prop", "model-value-override"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setVisible(false);
-		modelOne.addError("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
+		modelOne.addMessage("ERROR", "There is an error in VDB"); //$NON-NLS-1$ //$NON-NLS-2$
 		modelOne.setDescription("model description");
 		
 		vdb.addModel(modelOne);

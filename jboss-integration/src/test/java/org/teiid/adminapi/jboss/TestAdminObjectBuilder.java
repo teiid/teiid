@@ -55,7 +55,7 @@ public class TestAdminObjectBuilder {
 		modelOne.addProperty("model-prop", "model-value");  
 		modelOne.addProperty("model-prop", "model-value-override");  
 		modelOne.setVisible(false);
-		modelOne.addError("ERROR", "There is an error in VDB");  
+		modelOne.addMessage("ERROR", "There is an error in VDB");  
 		modelOne.setDescription("model description");
 		
 		vdb.addModel(modelOne);

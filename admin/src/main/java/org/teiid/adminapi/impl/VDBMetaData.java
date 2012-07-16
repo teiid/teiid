@@ -33,8 +33,8 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
+import org.teiid.adminapi.impl.ModelMetaData.Message;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 
 
 public class VDBMetaData extends AdminObjectImpl implements VDB {
@@ -154,9 +154,9 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public List<String> getValidityErrors(){
 		List<String> allErrors = new ArrayList<String>();
 		for (ModelMetaData model:this.models.values()) {
-			List<ValidationError> errors = model.getErrors();
+			List<Message> errors = model.getMessages();
 			if (errors != null && !errors.isEmpty()) {
-				for (ValidationError m:errors) {
+				for (Message m:errors) {
 					if (m.getSeverity() == Severity.ERROR) {
 						allErrors.add(m.getValue());
 					}

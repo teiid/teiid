@@ -49,8 +49,8 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
+import org.teiid.adminapi.impl.ModelMetaData.Message;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.core.types.XMLType;
 import org.xml.sax.SAXException;
 
@@ -286,9 +286,9 @@ public class VDBMetadataParser {
 				String msg =  reader.getElementText();
 				String severity = validationProps.getProperty(Element.VALIDATION_SEVERITY_ATTR.getLocalName());
 				String path = validationProps.getProperty(Element.PATH.getLocalName());
-				ValidationError ve = new ValidationError(Severity.valueOf(severity), msg);
+				Message ve = new Message(Severity.valueOf(severity), msg);
 				ve.setPath(path);
-				model.addError(ve);
+				model.addMessage(ve);
 				break;
 			case METADATA:
 				Properties metdataProps = getAttributes(reader);
@@ -521,7 +521,7 @@ public class VDBMetadataParser {
 		}
 		
 		// model validation errors
-		for (ValidationError ve:model.getErrors(false)) {
+		for (Message ve:model.getMessages(false)) {
 			writer.writeStartElement(Element.VALIDATION_ERROR.getLocalName());
 			writer.writeAttribute(Element.VALIDATION_SEVERITY_ATTR.getLocalName(), ve.getSeverity().name());
 			if (ve.getPath() != null) {

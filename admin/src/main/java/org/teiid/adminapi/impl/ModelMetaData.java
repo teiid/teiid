@@ -30,7 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.impl.ModelMetaData.ValidationError.Severity;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
@@ -44,8 +44,8 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	protected String description;	
 	protected String path; 
     protected Boolean visible = true;
-    protected List<ValidationError> validationErrors;
-    protected transient List<ValidationError> runtimeErrors;
+    protected List<Message> messages;
+    protected transient List<Message> runtimeMessages;
     protected String schemaSourceType;
 	protected String schemaText;
 
@@ -166,18 +166,15 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	}
 	
 	public synchronized boolean hasErrors() {
-		if (this.validationErrors == null && this.runtimeErrors == null) {
-			return false;
-		}
-		if (this.validationErrors != null) {
-			for (ValidationError error : this.validationErrors) {
+		if (this.messages != null) {
+			for (Message error : this.messages) {
 				if (error.getSeverity() == Severity.ERROR) {
 					return true;
 				}
 			}
 		}
-		if (this.runtimeErrors != null) {
-			for (ValidationError error : this.runtimeErrors) {
+		if (this.runtimeMessages != null) {
+			for (Message error : this.runtimeMessages) {
 				if (error.getSeverity() == Severity.ERROR) {
 					return true;
 				}
@@ -186,65 +183,65 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		return false;	
 	}
 	
-	public synchronized List<ValidationError> getErrors(){
-		return getErrors(true);
+	public synchronized List<Message> getMessages(){
+		return getMessages(true);
 	}	
 	
-	public synchronized List<ValidationError> getErrors(boolean includeRuntime){
-		if (this.validationErrors == null && this.runtimeErrors == null) {
+	public synchronized List<Message> getMessages(boolean includeRuntime){
+		if (this.messages == null && this.runtimeMessages == null) {
 			return Collections.emptyList();
 		}
-		List<ValidationError> list = new ArrayList<ValidationError>();
-		if (this.validationErrors != null) {
-			list.addAll(validationErrors);
+		List<Message> list = new ArrayList<Message>();
+		if (this.messages != null) {
+			list.addAll(messages);
 		}
-		if (includeRuntime && this.runtimeErrors != null) {
-			list.addAll(runtimeErrors);
+		if (includeRuntime && this.runtimeMessages != null) {
+			list.addAll(runtimeMessages);
 		}
 		return list;
 	}
 	
-    public ValidationError addError(String severity, String message) {
-        ValidationError ve = new ValidationError(Severity.valueOf(severity), message);
-        addError(ve);
+    public Message addMessage(String severity, String message) {
+        Message ve = new Message(Severity.valueOf(severity), message);
+        addMessage(ve);
         return ve;
     }
     
-	public synchronized boolean hasRuntimeErrors(){
-		return this.runtimeErrors != null && !this.runtimeErrors.isEmpty();
+	public synchronized boolean hasRuntimeMessages(){
+		return this.runtimeMessages != null && !this.runtimeMessages.isEmpty();
 	}    
     
-    public synchronized ValidationError addRuntimeError(String message) {
-    	return addRuntimeError(Severity.ERROR, message);
+    public synchronized Message addRuntimeError(String message) {
+    	return addRuntimeMessage(Severity.ERROR, message);
     }    
     
-    public synchronized ValidationError addRuntimeError(Severity severity, String message) {
-        ValidationError ve = new ValidationError(severity, message);
-        if (this.runtimeErrors == null) {
-            this.runtimeErrors = new LinkedList<ValidationError>();
+    public synchronized Message addRuntimeMessage(Severity severity, String message) {
+        Message ve = new Message(severity, message);
+        if (this.runtimeMessages == null) {
+            this.runtimeMessages = new LinkedList<Message>();
         }
-        this.runtimeErrors.add(ve);
-        if (this.runtimeErrors.size() > DEFAULT_ERROR_HISTORY) {
-        	this.runtimeErrors.remove(0);
+        this.runtimeMessages.add(ve);
+        if (this.runtimeMessages.size() > DEFAULT_ERROR_HISTORY) {
+        	this.runtimeMessages.remove(0);
         }
         return ve;
     } 
     
-    public synchronized ValidationError addError(ValidationError ve) {
-        if (this.validationErrors == null) {
-            this.validationErrors = new LinkedList<ValidationError>();
+    public synchronized Message addMessage(Message ve) {
+        if (this.messages == null) {
+            this.messages = new LinkedList<Message>();
         }
-        this.validationErrors.add(ve);
+        this.messages.add(ve);
         return ve;
     }
     
-    public synchronized void clearRuntimeErrors() {
-    	if (runtimeErrors != null) {
-    		runtimeErrors = null;
+    public synchronized void clearRuntimeMessages() {
+    	if (runtimeMessages != null) {
+    		runtimeMessages = null;
     	}
     }    
 	
-    public static class ValidationError implements Serializable{
+    public static class Message implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;
 
 		public enum Severity {ERROR, WARNING, INFO};
@@ -253,9 +250,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         protected Severity severity;
         protected String path;
         
-		public ValidationError() {};
+		public Message() {};
         
-        public ValidationError(Severity severity, String msg) {
+        public Message(Severity severity, String msg) {
         	this.severity = severity;
         	this.value = msg;
         }
@@ -292,7 +289,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 				return false;
 			if (getClass() != obj.getClass())
 				return false;
-			ValidationError other = (ValidationError) obj;
+			Message other = (Message) obj;
 			if (severity == null) {
 				if (other.severity != null)
 					return false;
@@ -326,9 +323,9 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	@Override
 	public List<String> getValidityErrors() {
 		List<String> allErrors = new ArrayList<String>();
-		List<ValidationError> errors = getErrors();
+		List<Message> errors = getMessages();
 		if (errors != null && !errors.isEmpty()) {
-			for (ValidationError m:errors) {
+			for (Message m:errors) {
 				if (m.getSeverity() == Severity.ERROR) {
 					allErrors.add(m.getValue());
 				}
