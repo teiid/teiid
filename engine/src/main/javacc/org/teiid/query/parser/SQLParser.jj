@@ -487,23 +487,11 @@ Command designerCommand(ParseInfo info) :
 	Command command = null;
 }
 {
-	 (LOOKAHEAD(2) command = updateProcedure(info) |
-	  command = userCommand(info)	  
+	(LOOKAHEAD (2) command = createProcedure(info) |
+	 command = forEachRowTriggerAction(info) |
+	 command = userCommand(info)	  
 	)
 	[<SEMICOLON>]
-	<EOF>
-	{
-		return command;
-	}
-}
-
-Command updateProcedure(ParseInfo info) :
-{
-	Command command = null;
-}
-{
-	(command = createProcedure(info) |
-	 command = forEachRowTriggerAction(info))
 	<EOF>
 	{
 		return command;
@@ -1078,6 +1066,21 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
         return procCmd;        
     }    
 }   
+
+CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
+{
+    CreateProcedureCommand procCmd = 
+        new CreateProcedureCommand();
+    Statement stmt = null;  
+}
+{ 
+    [LOOKAHEAD(2) <CREATE> [<VIRTUAL>] <PROCEDURE>]
+    stmt = statement(info)
+    {        
+        procCmd.setBlock(asBlock(stmt));
+        return procCmd;        
+    }    
+} 
 
 /**
  * Parse error statement
@@ -4116,7 +4119,8 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 	String procName = null;
     CreateProcedureCommand procCmd = new CreateProcedureCommand();
     Statement stmt = null; 	
-    ParsedDataType returnDataType = null;    
+    ParsedDataType returnDataType = null;
+    Token comment = null;    
 }
 {
 	<CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}] (<PROCEDURE> | <FUNCTION> {function = true;})
@@ -4135,35 +4139,32 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		(<COMMA> procedureParameter(factory, proc))*	
 		<RPAREN>
 		
-		<RETURNS> (procedureReturn(factory, proc) | returnDataType = parseDataType())
-		
+		[<RETURNS> (([<TABLE>] <LPAREN>
+	        procedureRsColumn(factory, proc)
+	        (<COMMA> procedureRsColumn(factory, proc))*
+	    <RPAREN>)
+	     |
+	     returnDataType = parseDataType())
+	    ]
 	    [ optionsClause(proc, factory)
 		   {
 		      setProcedureOptions(proc);
 		   }
 		]
-		[<AS>
+		[<AS> { comment = getToken(1).specialToken; } 
 		stmt = statement(info)])
 		{
 			proc.setVirtual(virtual);
 			proc.setFunction(function);
 			if (stmt != null){
-				proc.setQueryPlan("CREATE VIRTUAL PROCEDURE "+asBlock(stmt).toString());
-			}
-			
-			if (!function) {
-				if (virtual && stmt == null){
-					throw new ParseException(QueryPlugin.Util.getString("SQLParser.virtual_proc_def", procName));
-				}
-				if (!virtual && stmt != null){
-					throw new ParseException(QueryPlugin.Util.getString("SQLParser.foreign_proc_def", procName));
-				}
-			} else if (stmt != null) {
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
+			    if (function || !virtual) {
+			         throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
+			    }
+				proc.setQueryPlan((comment != null?comment.image+" ":"") + stmt.toString());
 			}
 			
 	        if (returnDataType != null){
-				addProcReturnColumn(factory, proc, "return", returnDataType);
+				addProcColumn(factory, proc, "return", returnDataType, false);
 	        }
 	        if (function) {
 	        	replaceProcedureWithFunction(factory, proc);
@@ -4185,44 +4186,55 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	 |(<INOUT> {ppType = ProcedureParameter.Type.InOut;}))]
 	name = id()
 	type = parseDataType()
+	[nonReserved("RESULT")
+	  {
+	    if (ppType != ProcedureParameter.Type.Out) {
+	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.param_out", proc.getName(), name));
+	    }
+	    ppType = ProcedureParameter.Type.ReturnValue;
+	  }
+	]
 	{
 		try {
-			param = factory.addProcedureParameter(name, type.type, ppType, proc);
-			if (type.length != null){
-			   param.setLength(type.length);
-			}
-			if (type.scale != null){
-			   param.setScale(type.scale);
-			}
-			if (type.precision != null){
-				param.setPrecision(type.precision);
-			}			
+			param = factory.addProcedureParameter(validateElementName(name), type.type, ppType, proc);
+			setTypeInfo(type, param);
 		} catch (TranslatorException e){
 			throw new ParseException(e.getMessage());
 		}
-	}	
+	}
+	[optionsClause(param, factory)
+	   {
+	      setColumnOptions(param);
+	   }
+	]	
 }
 
-void procedureReturn(MetadataFactory factory, Procedure proc) :
+void procedureRsColumn(MetadataFactory factory, Procedure proc) :
 {
 	String name = null;
-	ParsedDataType type = null;
 }
 {
-	<LPAREN>
-	  name = id()
+	name = id()
+	procedureColumn(factory, proc, name, true)
+}
+
+void procedureColumn(MetadataFactory factory, Procedure proc, String name, boolean rs) :
+{
+	ParsedDataType type = null;
+	boolean notNull = false;
+	BaseColumn column = null; 
+}
+{
 	  type = parseDataType()
 	  {
-		addProcReturnColumn(factory, proc, name, type);	  	
+	  	column = addProcColumn(factory, proc, name, type, rs);
 	  }
-	  (<COMMA> 
-	  	name = id()
-	    type = parseDataType()
-		{
-			addProcReturnColumn(factory, proc, name, type);		
-		}
-	  )*
-	 <RPAREN> 
+	  [<NOT> <NULL> { notNull = true; }]	  
+	  [optionsClause(column, factory)
+	   {
+	      setColumnOptions(column);
+	   }
+	  ]
 }
 
 void createTable(MetadataFactory factory) :
@@ -4231,6 +4243,7 @@ void createTable(MetadataFactory factory) :
 	String tableName = null;
 	boolean view = false;
 	Command query = null;
+	Token comment = null;
 }
 {
 	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] nonReserved("VIEW") {view = true;}) 
@@ -4259,14 +4272,14 @@ void createTable(MetadataFactory factory) :
 	      setTableOptions(table);
 	   }
 	]
-	[<AS> query = queryExpression(new ParseInfo())]
+	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(new ParseInfo())]
 	{
-		if (view){
-		   if (query == null) {
-		      throw new ParseException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
+		if (query != null){
+		   if (!view) {
+     		   throw new ParseException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
 		   }
-		   table.setSelectTransformation(query.toString());	
-		}		
+		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
+		}
 		if (!table.supportsUpdate() && table.getColumns() != null) {
 			for (Column c : table.getColumns()) {
 				c.setUpdatable(false);
@@ -4419,15 +4432,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	  	try{
     		column = factory.addColumn(validateElementName(element), type.type, table);
     		column.setUpdatable(true);
-		    if (type.length != null){
-		    	column.setLength(type.length);
-		    }
-		    if (type.scale != null){
-		    	column.setScale(type.scale);
-		    }    	
-			if (type.precision != null){
-				column.setPrecision(type.precision);
-			}		    	
+		    setTypeInfo(type, column);		    	
     		columnName.add(element);
     	}catch(TranslatorException e){
     		throw new ParseException(e.getMessage());

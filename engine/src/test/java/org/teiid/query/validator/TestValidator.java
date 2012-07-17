@@ -910,7 +910,7 @@ public class TestValidator {
     
 	// valid variable declared
     @Test public void testCreateUpdateProcedure4() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -924,7 +924,7 @@ public class TestValidator {
 	// validating AssignmentStatement, more than one project symbol on the
 	// command
     @Test public void testCreateUpdateProcedure11() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2, pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
@@ -939,7 +939,7 @@ public class TestValidator {
 	// validating AssignmentStatement, more than one project symbol on the
 	// command
     @Test public void testCreateUpdateProcedure12() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2, pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
@@ -953,7 +953,7 @@ public class TestValidator {
     
     // using aggregate function within a procedure - defect #8394
     @Test public void testCreateUpdateProcedure31() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE string MaxTran;\n"; //$NON-NLS-1$
         procedure = procedure + "MaxTran = SELECT MAX(e1) FROM pm1.g1;\n";         //$NON-NLS-1$
@@ -967,7 +967,7 @@ public class TestValidator {
     
 	// assigning null values to known datatype variable
 	@Test public void testCreateUpdateProcedure32() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE string var;\n"; //$NON-NLS-1$
 		procedure = procedure + "var = null;\n";         //$NON-NLS-1$
@@ -980,7 +980,7 @@ public class TestValidator {
 	}
     
     @Test public void testDefect13643() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "LOOP ON (SELECT * FROM pm1.g1) AS myCursor\n"; //$NON-NLS-1$
@@ -1019,7 +1019,7 @@ public class TestValidator {
     }
     
     @Test public void testSelectIntoTempGroup() {
-        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "SELECT COUNT(*) FROM #myTempTable;\n"; //$NON-NLS-1$
@@ -1035,7 +1035,7 @@ public class TestValidator {
      * Defect 24346
      */
     @Test public void testInvalidSelectIntoTempGroup() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
@@ -1049,7 +1049,7 @@ public class TestValidator {
     }
     
     @Test public void testInvalidSelectIntoTempGroup1() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "create local temporary table #myTempTable (e1 integer);\n";         //$NON-NLS-1$
         procedure = procedure + "SELECT e1 INTO #myTempTable FROM pm1.g2;\n";         //$NON-NLS-1$
@@ -1066,7 +1066,7 @@ public class TestValidator {
     @Test public void testSelectIntoPhysicalGroup() {
         helpValidate("SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2", new String[] { }, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -1088,7 +1088,7 @@ public class TestValidator {
     @Test public void testInvalidSelectIntoTooManyElements() {
     	helpValidate("SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4, 'val' INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -1102,7 +1102,7 @@ public class TestValidator {
     @Test public void testInvalidSelectIntoTooFewElements() {
     	helpValidate("SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3 INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -1116,7 +1116,7 @@ public class TestValidator {
     @Test public void testInvalidSelectIntoIncorrectTypes() {
         helpValidate("SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2", new String[] {"SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, convert(e2, string), e3, e4 INTO pm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -1134,7 +1134,7 @@ public class TestValidator {
     @Test public void testInvalidSelectIntoWithStar() {
         helpValidate("SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1", new String[] {"SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
         
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT * INTO pm1.g1 FROM pm1.g2, pm1.g1;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -1148,7 +1148,7 @@ public class TestValidator {
     @Test public void testSelectIntoVirtualGroup() {
         helpValidate("SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "SELECT e1, e2, e3, e4 INTO vm1.g1 FROM pm1.g2;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$

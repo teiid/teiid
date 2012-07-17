@@ -118,6 +118,7 @@ public class SQLConstants {
 		public static final String DISABLED = "DISABLED"; //$NON-NLS-1$
 		
 		public static final String TRIM = "TRIM"; //$NON-NLS-1$
+		public static final String RESULT = "RESULT"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {
@@ -293,6 +294,7 @@ public class SQLConstants {
 	    public static final String OUTER = "OUTER"; //$NON-NLS-1$
 		public static final String OUTPUT = "OUTPUT"; //$NON-NLS-1$
 		public static final String OPTION = "OPTION"; //$NON-NLS-1$
+		public static final String OPTIONS = "OPTIONS"; //$NON-NLS-1$
 	    public static final String OVER = "OVER"; //$NON-NLS-1$
 	    public static final String OVERLAPS = "OVERLAPS"; //$NON-NLS-1$
 	    public static final String PARAMETER = "PARAMETER"; //$NON-NLS-1$

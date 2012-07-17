@@ -22,7 +22,9 @@
 package org.teiid.query.metadata;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -115,7 +117,21 @@ public class MetadataValidator {
 					}
 				}
 				
+				Set<String> names = new HashSet<String>();
 				for (Procedure p:schema.getProcedures().values()) {
+					boolean hasReturn = false;
+					names.clear();
+					for (ProcedureParameter param : p.getParameters()) {
+						if (param.getType() == ProcedureParameter.Type.ReturnValue) {
+							if (hasReturn) {
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31107, p.getFullName()));
+							}
+							hasReturn = true;
+						}
+						if (!names.add(param.getName())) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31106, p.getFullName(), param.getName()));
+						}
+					}
 					if (p.isVirtual() && model.isSource()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31076, p.getName(), model.getName()));
 					}
@@ -186,7 +202,7 @@ public class MetadataValidator {
     	try {
     		if (record instanceof Procedure) {
     			Procedure p = (Procedure)record;
-    			Command command = QueryParser.getQueryParser().parseCommand(p.getQueryPlan());
+    			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
     			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata);
     			resolverReport =  Validator.validate(command, metadata);
     		} else if (record instanceof Table) {

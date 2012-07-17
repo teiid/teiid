@@ -317,8 +317,8 @@ public class TestDDLParser {
 	}	
 	
 	@Test(expected=ParseException.class)
-	public void testViewWithoutPlan() throws Exception {
-		String ddl = "CREATE View G1( e1 integer, e2 varchar)";
+	public void testTableWithPlan() throws Exception {
+		String ddl = "CREATE foreign table G1 as select 1";
 		MetadataStore mds = new MetadataStore();
 		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
 		parser.parseDDL(mf,ddl);
@@ -347,7 +347,7 @@ public class TestDDLParser {
 		Map<String, Procedure> procedureMap = s.getProcedures();
 		Procedure p = procedureMap.get("FOO");
 		assertNotNull(p);
-		assertEquals("CREATE VIRTUAL PROCEDURE BEGIN\nSELECT * FROM PM1.G1;\nEND", p.getQueryPlan());
+		assertEquals("SELECT * FROM PM1.G1;", p.getQueryPlan());
 		
 	}		
 	
@@ -490,7 +490,7 @@ public class TestDDLParser {
 		assertTrue( fm.getInputParameters().get(0).isVarArg());
 	}
 	
-	@Test(expected=ParseException.class) public void testInvalidProcedurenBody() throws Exception {
+	@Test(expected=ParseException.class) public void testInvalidProcedureBody() throws Exception {
 		String ddl = "CREATE FOREIGN PROCEDURE SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
 
 		Schema s = helpParse(ddl, "model").getSchema();
@@ -504,7 +504,7 @@ public class TestDDLParser {
 		String ddl = "CREATE VIRTUAL PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
 				"RETURNS (r1 varchar, r2 decimal) " +
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2') " +
-				"AS BEGIN select * from foo; END";
+				"AS /*+ cache */ BEGIN select * from foo; END";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		
@@ -541,7 +541,7 @@ public class TestDDLParser {
 		assertEquals(2, proc.getUpdateCount());
 		assertEquals("any", proc.getProperties().get("RANDOM"));	
 		
-		assertEquals("CREATE VIRTUAL PROCEDURE BEGIN\nSELECT * FROM foo;\nEND", proc.getQueryPlan());	
+		assertEquals("/*+ cache */ BEGIN\nSELECT * FROM foo;\nEND", proc.getQueryPlan());	
 		
 	}	
 	

@@ -53,7 +53,7 @@ public class TestParseAlter {
 		AlterTrigger alterTrigger = new AlterTrigger();
 		alterTrigger.setTarget(new GroupSymbol("x"));
 		alterTrigger.setEvent(TriggerEvent.UPDATE);
-		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseUpdateProcedure("for each row begin end"));
+		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseProcedure("for each row begin end", true));
 		helpTest("alter trigger on x instead of update as for each row begin end", "ALTER TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nEND", alterTrigger);
 	}
 	
@@ -70,7 +70,7 @@ public class TestParseAlter {
 		alterTrigger.setCreate(true);
 		alterTrigger.setTarget(new GroupSymbol("x"));
 		alterTrigger.setEvent(TriggerEvent.UPDATE);
-		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseUpdateProcedure("for each row begin end"));
+		alterTrigger.setDefinition((TriggerAction) QueryParser.getQueryParser().parseProcedure("for each row begin end", true));
 		helpTest("create trigger on x instead of update as for each row begin end", "CREATE TRIGGER ON x INSTEAD OF UPDATE AS\nFOR EACH ROW\nBEGIN ATOMIC\nEND", alterTrigger);
 	}
 	

@@ -56,7 +56,7 @@ public class TestMetadataValidator {
 		this.vdb.addAttchment(TransformationMetadata.class, metadata);
 	}
 
-	private ModelMetaData buildModel(String modelName, boolean physical, VDBMetaData vdb, MetadataStore store, String ddl) throws Exception {
+	private static ModelMetaData buildModel(String modelName, boolean physical, VDBMetaData vdb, MetadataStore store, String ddl) throws Exception {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(modelName); 	
 		model.setModelType(physical?Model.Type.PHYSICAL:Model.Type.VIRTUAL);
@@ -127,6 +127,22 @@ public class TestMetadataValidator {
 		buildTransformationMetadata();
 		ValidatorReport report = new ValidatorReport();
 		new MetadataValidator.ResolveQueryPlans().execute(vdb, store, report, new MetadataValidator());
+		assertTrue(printError(report), report.hasItems());			
+	}
+	
+	@Test public void testProcWithMultipleReturn() throws Exception {
+		String ddl = "create foreign procedure x (out param1 string result, out param2 string result); ";
+		buildModel("pm1", true, this.vdb, this.store,ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new MetadataValidator().validate(vdb, store);
+		assertTrue(printError(report), report.hasItems());			
+	}
+	
+	@Test public void testProcWithDuplicateParam() throws Exception {
+		String ddl = "create foreign procedure x (out param1 string, out param1 string); ";
+		buildModel("pm1", true, this.vdb, this.store,ddl);
+		buildTransformationMetadata();
+		ValidatorReport report = new MetadataValidator().validate(vdb, store);
 		assertTrue(printError(report), report.hasItems());			
 	}
 	

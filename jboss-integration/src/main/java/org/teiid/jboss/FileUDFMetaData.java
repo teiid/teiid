@@ -34,8 +34,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.report.ActivityReport;
-import org.teiid.query.report.ReportItem;
+import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.RuntimePlugin;
 
 public class FileUDFMetaData extends UDFMetaData {
@@ -59,7 +58,7 @@ public class FileUDFMetaData extends UDFMetaData {
 			throw new IOException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40075, name));
 		}
 		List<FunctionMethod> udfMethods = FunctionMetadataReader.loadFunctionMethods(file.openStream());
-		ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("UDF load"); //$NON-NLS-1$
+		ValidatorReport report = new ValidatorReport("UDF load"); //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(udfMethods,report);
 		if(report.hasItems()) {
 		    throw new IOException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$

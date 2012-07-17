@@ -526,5 +526,7 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31103, 
     	TEIID31104, //recursion limit hit
     	TEIID31105, //warning
+    	TEIID31106, //duplicate param name
+    	TEIID31107, //too many result params
 	}
 }

@@ -43,15 +43,15 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.BaseColumn;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
@@ -175,12 +175,26 @@ public class JDBCMetdataProcessor {
 				BaseColumn record = null;
 				int precision = columns.getInt(8);
 				String runtimeType = getRuntimeType(sqlType, typeName, precision);
-				if (columnType == DatabaseMetaData.procedureColumnResult) {
+				switch (columnType) {
+				case DatabaseMetaData.procedureColumnResult:
 					Column column = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
 					record = column;
 					column.setNativeType(typeName);
-				} else {
-					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.values()[columnType], procedure);
+					break;
+				case DatabaseMetaData.procedureColumnIn:
+					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.In, procedure);
+					break;
+				case DatabaseMetaData.procedureColumnInOut:
+					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.InOut, procedure);
+					break;
+				case DatabaseMetaData.procedureColumnOut:
+					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.Out, procedure);
+					break;
+				case DatabaseMetaData.procedureColumnReturn:
+					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.ReturnValue, procedure);
+					break;
+				default:
+					continue; //shouldn't happen
 				}
 				record.setPrecision(columns.getInt(8));
 				record.setLength(columns.getInt(9));

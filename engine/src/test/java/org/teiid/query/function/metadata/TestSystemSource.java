@@ -22,29 +22,17 @@
 
 package org.teiid.query.function.metadata;
 
-import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.function.source.*;
-import org.teiid.query.report.*;
+import static org.junit.Assert.*;
 
-import junit.framework.*;
+import org.junit.Test;
+import org.teiid.query.function.source.SystemSource;
+import org.teiid.query.validator.ValidatorReport;
 
-public class TestSystemSource extends TestCase {
+public class TestSystemSource {
 
-	// ################################## FRAMEWORK ################################
-	
-	public TestSystemSource(String name) { 
-		super(name);
-	}	
-	
-	// ################################## TEST HELPERS ################################
-	
-
-	
-	// ################################## ACTUAL TESTS ################################
-	
-	public void testValidate() {
+	@Test public void testValidate() {
 	    SystemSource source = new SystemSource(false);
-	    ActivityReport report = new ActivityReport("Test Report");	    	     //$NON-NLS-1$
+	    ValidatorReport report = new ValidatorReport("Test Report");	    	     //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(source.getFunctionMethods(), report);
 
 		if(report.hasItems()) { 		    

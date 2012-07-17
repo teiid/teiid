@@ -28,8 +28,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.report.ActivityReport;
-import org.teiid.query.report.ReportItem;
+import org.teiid.query.validator.ValidatorReport;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -74,7 +73,7 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 				throw new TranslatorException(QueryPlugin.Event.TEIID30580, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30580, t.getFullName())); 
 			}
 		}
-    	ActivityReport<ReportItem> report = new ActivityReport<ReportItem>("Translator metadata load " + schema.getName()); //$NON-NLS-1$
+    	ValidatorReport report = new ValidatorReport("Translator metadata load " + schema.getName()); //$NON-NLS-1$
 		FunctionMetadataValidator.validateFunctionMethods(schema.getFunctions().values(),report);
 		if(report.hasItems()) {
 		    throw new TranslatorException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$

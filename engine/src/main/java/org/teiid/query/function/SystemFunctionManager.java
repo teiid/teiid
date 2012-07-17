@@ -27,7 +27,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.function.source.SystemSource;
-import org.teiid.query.report.ActivityReport;
+import org.teiid.query.validator.ValidatorReport;
 
 
 public class SystemFunctionManager {
@@ -42,7 +42,7 @@ public class SystemFunctionManager {
 	    	SystemSource systemSource = new SystemSource(this.allowEnvFunction);
 	
 			// Validate the system source - should never fail
-	        ActivityReport report = new ActivityReport("Function Validation"); //$NON-NLS-1$
+	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
 	        Collection functionMethods = systemSource.getFunctionMethods();
 	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report);
 			if(report.hasItems()) {

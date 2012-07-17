@@ -23,17 +23,15 @@
 package org.teiid.metadata;
 
 /**
- * ProcedureParameterRecordImpl
+ * Represents a procedure parameter
  */
 public class ProcedureParameter extends BaseColumn {
 
 	private static final long serialVersionUID = 3484281155208939073L;
 
 	public enum Type {
-		Unknown,
 		In,
 		InOut,
-		Result,
 		Out,
 		ReturnValue
 	}

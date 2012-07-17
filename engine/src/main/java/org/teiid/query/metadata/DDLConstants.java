@@ -26,15 +26,7 @@ public interface DDLConstants {
 	public static final String JAVA_CLASS = "JAVA_CLASS";//$NON-NLS-1$
 	public static final String DETERMINISM = "DETERMINISM";//$NON-NLS-1$
 	public static final String CATEGORY = "CATEGORY";//$NON-NLS-1$
-	public static final String FUNCTION2 = "FUNCTION";//$NON-NLS-1$
-	public static final String OUT = "OUT";//$NON-NLS-1$
-	public static final String INOUT = "INOUT";//$NON-NLS-1$
-	public static final String IN = "IN";//$NON-NLS-1$
 	public static final String UPDATECOUNT = "UPDATECOUNT";//$NON-NLS-1$
-	public static final String RETURNS = "RETURNS";//$NON-NLS-1$
-	public static final String PROCEDURE2 = "PROCEDURE";//$NON-NLS-1$
-	public static final String FOREIGN = "FOREIGN";//$NON-NLS-1$
-	public static final String VIRTUAL = "VIRTUAL";//$NON-NLS-1$
 	public static final String DISTINCT_VALUES = "DISTINCT_VALUES";//$NON-NLS-1$
 	public static final String NULL_VALUE_COUNT = "NULL_VALUE_COUNT";//$NON-NLS-1$
 	public static final String RADIX = "RADIX";//$NON-NLS-1$
@@ -48,13 +40,10 @@ public interface DDLConstants {
 	public static final String SIGNED = "SIGNED";//$NON-NLS-1$
 	public static final String SELECTABLE = "SELECTABLE";//$NON-NLS-1$
 	public static final String CASE_SENSITIVE = "CASE_SENSITIVE";//$NON-NLS-1$
-	public static final String DEFAULT = "DEFAULT";//$NON-NLS-1$
 	public static final String AUTO_INCREMENT = "AUTO_INCREMENT";//$NON-NLS-1$
 	public static final String NOT_NULL = "NOT NULL";//$NON-NLS-1$
-	public static final String REFERENCES = "REFERENCES";//$NON-NLS-1$
 	public static final String FOREIGN_KEY = "FOREIGN KEY";//$NON-NLS-1$
 	public static final String INDEX = "INDEX";//$NON-NLS-1$
-	public static final String UNIQUE = "UNIQUE";//$NON-NLS-1$
 	public static final String PRIMARY_KEY = "PRIMARY KEY";//$NON-NLS-1$
 	public static final String ACCESSPATTERN = "ACCESSPATTERN";//$NON-NLS-1$
 	public static final String NAMEINSOURCE = "NAMEINSOURCE";//$NON-NLS-1$
@@ -66,12 +55,5 @@ public interface DDLConstants {
 	public static final String MATERIALIZED = "MATERIALIZED";//$NON-NLS-1$
 	public static final String INSTEAD_OF = "INSTEAD OF";//$NON-NLS-1$
 	public static final String CREATE_TRIGGER_ON = "CREATE TRIGGER ON";//$NON-NLS-1$
-	public static final String DELETE = "DELETE";//$NON-NLS-1$
-	public static final String UPDATE = "UPDATE";//$NON-NLS-1$
-	public static final String INSERT = "INSERT";//$NON-NLS-1$
-	public static final String OPTIONS2 = "OPTIONS";//$NON-NLS-1$
-	public static final String CONSTRAINT = "CONSTRAINT";//$NON-NLS-1$
-	public static final String VIEW = "VIEW";//$NON-NLS-1$
 	public static final String FOREIGN_TABLE = "FOREIGN TABLE";//$NON-NLS-1$
-	public static final String CREATE = "CREATE";//$NON-NLS-1$
 }

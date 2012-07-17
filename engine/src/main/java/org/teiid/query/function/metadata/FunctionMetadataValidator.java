@@ -31,7 +31,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.report.ActivityReport;
+import org.teiid.query.validator.ValidatorReport;
 
 
 /**
@@ -56,7 +56,7 @@ public class FunctionMetadataValidator {
 	 * @param methods Collection of {@link FunctionMethod} objects
 	 * @param report Report to store validation errors
 	 */
-	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ActivityReport report) {
+	public static final void validateFunctionMethods(Collection<FunctionMethod> methods, ValidatorReport report) {
 	    if(methods != null) {
 	    	for (FunctionMethod method : methods) {
 	    		validateFunctionMethod(method, report);
@@ -77,7 +77,7 @@ public class FunctionMetadataValidator {
      * @param method The method to validate
      * @param report The report to update during validation
      */
-    public static final void validateFunctionMethod(FunctionMethod method, ActivityReport report) {
+    public static final void validateFunctionMethod(FunctionMethod method, ValidatorReport report) {
         if(method == null) {
             updateReport(report, method, QueryPlugin.Util.getString("ERR.015.001.0052", "FunctionMethod")); //$NON-NLS-1$ //$NON-NLS-2$
             return;  // can't validate
@@ -111,7 +111,7 @@ public class FunctionMetadataValidator {
 	 * @param method The function method
 	 * @param message The message about the validation failure
 	 */
-	private static final void updateReport(ActivityReport report, FunctionMethod method, String message) {
+	private static final void updateReport(ValidatorReport report, FunctionMethod method, String message) {
 	    report.addItem(new InvalidFunctionItem(method, message));
 	}
 

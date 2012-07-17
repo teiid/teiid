@@ -1104,7 +1104,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteWhile() throws Exception {
         
-        String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
         procedure = procedure + "while (1 = 1)\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1124,7 +1124,7 @@ public class TestQueryRewriter {
     
     @Test public void testRewriteWhile1() throws Exception {
         
-        String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
         procedure = procedure + "while (1 = 0)\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
@@ -1134,8 +1134,8 @@ public class TestQueryRewriter {
         
         String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
         
-        String rewritProc = "CREATE VIRTUAL PROCEDURE\n"; //$NON-NLS-1$
-        rewritProc = rewritProc + "BEGIN\n";         //$NON-NLS-1$
+        String rewritProc = "FOR EACH ROW\n"; //$NON-NLS-1$
+        rewritProc = rewritProc + "BEGIN ATOMIC\n";         //$NON-NLS-1$
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
         
         String procReturned = this.getRewritenProcedure(procedure, userQuery, 
@@ -1149,15 +1149,15 @@ public class TestQueryRewriter {
      */
     @Test public void testRewriteProcedureWithCount() throws Exception {
         
-        String procedure = "CREATE PROCEDURE\n"; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW\n"; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n";         //$NON-NLS-1$
         procedure = procedure + "Select count(*) from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
         
         String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
         
-        String rewritProc = "CREATE VIRTUAL PROCEDURE\n"; //$NON-NLS-1$
-        rewritProc = rewritProc + "BEGIN\n";         //$NON-NLS-1$
+        String rewritProc = "FOR EACH ROW\n"; //$NON-NLS-1$
+        rewritProc = rewritProc + "BEGIN ATOMIC\n";         //$NON-NLS-1$
         rewritProc = rewritProc + "SELECT COUNT(*) FROM pm1.g1;\n";         //$NON-NLS-1$
         rewritProc = rewritProc + "END"; //$NON-NLS-1$
         

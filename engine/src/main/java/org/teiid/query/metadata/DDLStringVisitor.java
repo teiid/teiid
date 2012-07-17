@@ -21,32 +21,22 @@
  */
 package org.teiid.query.metadata;
 
-import static org.teiid.language.SQLConstants.Tokens.COMMA;
-import static org.teiid.language.SQLConstants.Tokens.LPAREN;
-import static org.teiid.language.SQLConstants.Tokens.RPAREN;
-import static org.teiid.language.SQLConstants.Tokens.SPACE;
-import static org.teiid.language.SQLConstants.Tokens.TICK;
+import static org.teiid.language.SQLConstants.NonReserved.*;
+import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Tokens.*;
 import static org.teiid.query.metadata.DDLConstants.*;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.language.SQLConstants;
-import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
 
 public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
@@ -56,7 +46,7 @@ public class DDLStringVisitor {
 	private boolean includeTables = true;
 	private boolean includeProcedures = true;
 	private boolean includeFunctions = true;
-	private String filter;
+	private Pattern filter;
 	
     public static String getDDLString(Schema schema, EnumSet<SchemaObjectType> types, String regexPattern) {
     	DDLStringVisitor visitor = new DDLStringVisitor(types, regexPattern);
@@ -70,7 +60,9 @@ public class DDLStringVisitor {
     		this.includeProcedures = types.contains(SchemaObjectType.PROCEDURES);
     		this.includeFunctions = types.contains(SchemaObjectType.FUNCTIONS);
     	}
-    	this.filter = regexPattern;
+    	if (regexPattern != null) {
+    		this.filter = Pattern.compile(regexPattern);
+    	}
     }
     
 	private void visit(Schema schema) {
@@ -117,7 +109,7 @@ public class DDLStringVisitor {
 	}
 
 	private void visit(Table table) {
-		if (this.filter != null && !table.getName().matches(this.filter)) {
+		if (this.filter != null && !filter.matcher(table.getName()).matches()) {
 			return;
 		}
 		
@@ -159,7 +151,7 @@ public class DDLStringVisitor {
 		// options
 		String options = buildTableOptions(table);		
 		if (!options.isEmpty()) {
-			buffer.append(SPACE).append(OPTIONS2).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			buffer.append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}
 		
 		if (table.isVirtual()) {
@@ -194,13 +186,13 @@ public class DDLStringVisitor {
 		addCommonOptions(options, table);
 		
 		if (table.isMaterialized()) {
-			addOption(options, MATERIALIZED, String.valueOf(table.isMaterialized()));
+			addOption(options, MATERIALIZED, table.isMaterialized());
 			if (table.getMaterializedTable() != null) {
 				addOption(options, MATERIALIZED_TABLE, table.getMaterializedTable().getName());
 			}
 		}
 		if (table.supportsUpdate()) {
-			addOption(options, UPDATABLE, String.valueOf(table.supportsUpdate()));
+			addOption(options, UPDATABLE, table.supportsUpdate());
 		}
 		if (table.getCardinality() != -1) {
 			addOption(options, CARDINALITY, table.getCardinality());
@@ -299,58 +291,44 @@ public class DDLStringVisitor {
 		return options.toString();
 	}
 
-	private void addColumns(StringBuilder options, List<Column> columns, boolean includeType) {
-		options.append(LPAREN);
+	private void addColumns(StringBuilder builder, List<Column> columns, boolean includeType) {
+		builder.append(LPAREN);
 		boolean first = true;
 		for (Column c:columns) {
 			if (first) {
 				first = false;
 			}
 			else {
-				options.append(COMMA).append(SPACE);
+				builder.append(COMMA).append(SPACE);
 			}
-			options.append(c.getName());
+			appendColumn(builder, c, true, includeType);
 			if (includeType) {
-				options.append(SPACE).append(c.getDatatype().getName());
+				appendColumnOptions(builder, c);
 			}
 		}
-		options.append(RPAREN);
+		builder.append(RPAREN);
 	}
-	
-	private void addNames(StringBuilder options, List<String> columns) {
+
+	private void addNames(StringBuilder builder, List<String> columns) {
 		if (columns != null) {
-			options.append(LPAREN);
+			builder.append(LPAREN);
 			boolean first = true;
 			for (String c:columns) {
 				if (first) {
 					first = false;
 				}
 				else {
-					options.append(COMMA).append(SPACE);
+					builder.append(COMMA).append(SPACE);
 				}
-				options.append(c);
+				builder.append(c);
 			}
-			options.append(RPAREN);
+			builder.append(RPAREN);
 		}
 	}	
 	
 	private void visit(Column column, Table table) {
-		buffer.append(NEWLINE).append(TAB).append(column.getName()).append(SPACE).append(column.getDatatype().getName());
-		if (column.getLength() != 0) {
-			buffer.append(LPAREN).append(column.getLength()).append(RPAREN);
-		}
-		else if (column.getPrecision() != 0){
-			buffer.append(LPAREN).append(column.getPrecision());
-			if (column.getScale() != 0) {
-				buffer.append(COMMA).append(column.getScale());
-			}
-			buffer.append(RPAREN);
-		}
-		if (column.getNullType() != null) {
-			if (column.getNullType() == NullType.No_Nulls) {
-				buffer.append(SPACE).append(NOT_NULL);
-			}
-		}
+		buffer.append(NEWLINE).append(TAB);
+		appendColumn(buffer, column, true, true);
 		
 		if (column.isAutoIncremented()) {
 			buffer.append(SPACE).append(AUTO_INCREMENT);
@@ -387,32 +365,63 @@ public class DDLStringVisitor {
 		}
 		
 		// options
-		String options = buildColumnOptions(column, table);		
-		if (!options.isEmpty()) {
-			buffer.append(SPACE).append(OPTIONS2).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+		appendColumnOptions(buffer, column);
+	}
+
+	private void appendColumn(StringBuilder builder, BaseColumn column, boolean includeName, boolean includeType) {
+		if (includeName) {
+			builder.append(column.getName());
+		}
+		if (includeType) {
+			builder.append(SPACE).append(column.getDatatype().getName());
+			if (column.getLength() != 0) {
+				builder.append(LPAREN).append(column.getLength()).append(RPAREN);
+			}
+			else if (column.getPrecision() != 0){
+				builder.append(LPAREN).append(column.getPrecision());
+				if (column.getScale() != 0) {
+					builder.append(COMMA).append(column.getScale());
+				}
+				builder.append(RPAREN);
+			}
+			if (column.getNullType() == NullType.No_Nulls) {
+				builder.append(SPACE).append(NOT_NULL);
+			}
 		}
 	}	
 	
-	private String buildColumnOptions(Column column, Table table) {
+	private void appendColumnOptions(StringBuilder builder, BaseColumn column) {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
 		
+		// 10 is default assumed
+		if (column.getRadix() != column.getDatatype().getRadix()) {
+			addOption(options, RADIX, column.getRadix());
+		}
+		
+		if (column instanceof Column) {
+			buildColumnOptions((Column)column, options);
+		}
+		if (options.length() != 0) {
+			builder.append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+		}
+	}
+
+	private void buildColumnOptions(Column column, 
+			StringBuilder options) {
 		if (!column.isSelectable()) {
-			addOption(options, SELECTABLE, String.valueOf(column.isSelectable()));
+			addOption(options, SELECTABLE, column.isSelectable());
 		}		
 
 		// if table is already updatable, then columns are implicitly updatable.
-		if (table.supportsUpdate() && !column.isUpdatable()) {
-			addOption(options, UPDATABLE, String.valueOf(column.isUpdatable()));
+		if (!column.isUpdatable() && column.getParent() instanceof Table && ((Table)column.getParent()).supportsUpdate()) {
+			addOption(options, UPDATABLE, column.isUpdatable());
 		}
-		
-
 		
 		if (column.isCurrency()) {
-			addOption(options, CURRENCY, String.valueOf(column.isCurrency()));
+			addOption(options, CURRENCY, column.isCurrency());
 		}
 			
-		/* - designer uses this on all non-numeric just verbose, commenting for now
 		// only record if not default
 		if (column.isCaseSensitive() && !column.getDatatype().isCaseSensitive()) {
 			addOption(options, CASE_SENSITIVE, String.valueOf(column.isCaseSensitive()));
@@ -420,7 +429,7 @@ public class DDLStringVisitor {
 		
 		if (column.isSigned() && !column.getDatatype().isSigned()) {
 			addOption(options, SIGNED, String.valueOf(column.isSigned()));
-		}		 * 
+		}		  
 		if (column.isFixedLength()) {
 			addOption(options, FIXED_LENGTH, String.valueOf(column.isFixedLength()));
 		}
@@ -428,11 +437,6 @@ public class DDLStringVisitor {
 		if (column.getCharOctetLength() != 0 && column.getLength() != column.getCharOctetLength()) {
 			addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
 		}	
-		// 10 is default assumed
-		if (column.getRadix() != 0 && column.getRadix() != 10) {
-			addOption(options, RADIX, column.getRadix());
-		}
-		*/
 		
 		// by default the search type is default data type search, so avoid it.
 		if (column.getSearchType() != null && !column.getSearchType().equals(column.getDatatype().getSearchType())) {
@@ -447,8 +451,7 @@ public class DDLStringVisitor {
 			addOption(options, MAX_VALUE, column.getMaximumValue());
 		}
 		
-		// only set native type on the foreign tables, on view the data type is type
-		if (table.isPhysical() && column.getNativeType() != null) {
+		if (column.getNativeType() != null) {
 			addOption(options, NATIVE_TYPE, column.getNativeType());
 		}
 		
@@ -465,10 +468,9 @@ public class DDLStringVisitor {
 				addOption(options, key, column.getProperty(key, false));
 			}
 		}
-		return options.toString();
 	}	
 	
-	private void addOption(StringBuilder sb, String key, String value) {
+	private void addOption(StringBuilder sb, String key, Object value) {
 		if (sb.length() != 0) {
 			sb.append(COMMA).append(SPACE);
 		}
@@ -483,7 +485,7 @@ public class DDLStringVisitor {
 	}	
 
 	private void visit(Procedure procedure) {
-		if (this.filter != null && !procedure.getName().matches(this.filter)) {
+		if (this.filter != null && !filter.matcher(procedure.getName()).matches()) {
 			return;
 		}
 		
@@ -494,7 +496,7 @@ public class DDLStringVisitor {
 		else {
 			buffer.append(FOREIGN);
 		}
-		buffer.append(SPACE).append(PROCEDURE2).append(SPACE).append(procedure.getName());
+		buffer.append(SPACE).append(PROCEDURE).append(SPACE).append(procedure.getName());
 		buffer.append(LPAREN);
 		
 		boolean first = true;
@@ -512,19 +514,28 @@ public class DDLStringVisitor {
 		}
 		buffer.append(RPAREN);
 		
-		buffer.append(SPACE).append(RETURNS).append(SPACE);
-		buildProcedureReturn(procedure.getResultSet(), procedure.getParameters());
+		if (procedure.getResultSet() != null) {
+			buffer.append(SPACE).append(RETURNS).append(SPACE).append(TABLE).append(SPACE);
+			addColumns(buffer, procedure.getResultSet().getColumns(), true);
+		}
+		for (ProcedureParameter pp: procedure.getParameters()) {
+			if (pp.getType().equals(Type.ReturnValue)) {
+				buffer.append(SPACE).append(RETURNS).append(SPACE);
+				appendColumn(buffer, pp, false, true);
+				break;
+			}
+		}
 		
 		//options
 		String options = buildProcedureOptions(procedure);		
 		if (!options.isEmpty()) {
-			buffer.append(NEWLINE).append(OPTIONS2).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			buffer.append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}		
 		//block
 		if (procedure.isVirtual()) {
 			buffer.append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE);
 			String plan = procedure.getQueryPlan();
-			buffer.append(plan.substring("CREATE VIRTUAL PROCEDURE BEGIN ".length(), plan.length()-"END".length())); //$NON-NLS-1$ //$NON-NLS-2$
+			buffer.append(plan);
 		}
 	}
 	
@@ -546,35 +557,22 @@ public class DDLStringVisitor {
 		return options.toString();
 	}
 
-	private void buildProcedureReturn(ColumnSet<Procedure> resultSet, List<ProcedureParameter> parameters) {
-		if (resultSet != null) {
-			addColumns(buffer, resultSet.getColumns(), true);
-		}
-		else {
-			if (parameters != null) {
-				for (ProcedureParameter pp: parameters) {
-					if (pp.getType().equals(Type.ReturnValue)) {
-						buffer.append(pp.getDatatype().getName());
-					}
-				}
-			}
-		}
-		
-	}
-	
 	private void visit(ProcedureParameter param) {
 		Type type = param.getType();
-		if (type == Type.In || type == Type.InOut || type == Type.Out) {
-			String typeStr = null;
-			if (type == Type.In) typeStr = IN;
-			if (type == Type.InOut) typeStr = INOUT;
-			if (type == Type.Out) typeStr = OUT;
-			buffer.append(typeStr).append(SPACE).append(param.getName()).append(SPACE).append(param.getDatatype().getName());
+		String typeStr = type.name().toUpperCase();
+		if (type == Type.ReturnValue) {
+			typeStr = Type.Out.name().toUpperCase();
 		}
+		buffer.append(typeStr).append(SPACE);
+		appendColumn(buffer, param, true, true);
+		if (type == Type.ReturnValue) {
+			buffer.append(SPACE).append(NonReserved.RESULT);
+		}
+		appendColumnOptions(buffer, param);
 	}	
 
 	private void visit(FunctionMethod function) {
-		if (this.filter != null && !function.getName().matches(this.filter)) {
+		if (this.filter != null && !filter.matcher(function.getName()).matches()) {
 			return;
 		}		
 		buffer.append(CREATE).append(SPACE);
@@ -584,7 +582,7 @@ public class DDLStringVisitor {
 		else {
 			buffer.append(VIRTUAL);
 		}
-		buffer.append(SPACE).append(FUNCTION2).append(SPACE).append(function.getName());
+		buffer.append(SPACE).append(FUNCTION).append(SPACE).append(function.getName());
 		buffer.append(LPAREN);
 		
 		boolean first = true;
@@ -605,7 +603,7 @@ public class DDLStringVisitor {
 		//options
 		String options = buildFunctionOptions(function);		
 		if (!options.isEmpty()) {
-			buffer.append(NEWLINE).append(OPTIONS2).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+			buffer.append(NEWLINE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
 		}		
 		buffer.append(SQLConstants.Tokens.SEMICOLON);		
 	}

@@ -102,9 +102,12 @@ public class QueryParser {
 	    return parseCommand(sql, new ParseInfo());
 	}
 	
-	public Command parseUpdateProcedure(String sql) throws QueryParserException {
+	public Command parseProcedure(String sql, boolean update) throws QueryParserException {
 		try{
-            Command result = getSqlParser(sql).updateProcedure(new ParseInfo());
+			if (update) {
+				return getSqlParser(sql).forEachRowTriggerAction(new ParseInfo());
+			}
+			Command result = getSqlParser(sql).procedureBodyCommand(new ParseInfo());
             result.setCacheHint(SQLParserUtil.getQueryCacheOption(sql));
             return result;
         } catch(ParseException pe) {

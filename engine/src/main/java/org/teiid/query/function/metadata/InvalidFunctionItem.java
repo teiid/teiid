@@ -23,14 +23,16 @@
 package org.teiid.query.function.metadata;
 
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.query.report.ReportItem;
+import org.teiid.query.validator.ValidatorFailure;
 
 /**
  * This is a specialized report item for reporting invalid function methods during
  * function metadata validation.  It is overrides ReportItem and adds an additional
  * attribute with the method reference for the invalid method.
  */
-public class InvalidFunctionItem extends ReportItem {
+public class InvalidFunctionItem extends ValidatorFailure {
+	
+	private static final long serialVersionUID = 5679334286895174700L;
 
 	/**
 	 * Report item type

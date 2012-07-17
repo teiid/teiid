@@ -35,6 +35,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.BaseColumn;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
@@ -43,8 +44,10 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.metadata.DDLConstants;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
@@ -354,93 +357,99 @@ public class SQLParserUtil {
     	return new Block(stmt);
     }
     
-    void setColumnOptions(Column c){
+    void setColumnOptions(BaseColumn c){
     	Map<String, String> props = c.getProperties();
 		setCommonProperties(c, props);
+		
+    	String v = props.remove(DDLConstants.RADIX); 
+    	if (v != null) {
+    		c.setRadix(Integer.parseInt(v));
+    	}
     	
-        String v = props.remove("CASE_SENSITIVE"); //$NON-NLS-1$
+    	if (c instanceof Column) {
+    		setColumnOptions((Column)c, props);
+    	}
+    }
+
+	private void setColumnOptions(Column c, Map<String, String> props) {
+		String v = props.remove(DDLConstants.CASE_SENSITIVE); 
         if (v != null) {
         	c.setCaseSensitive(isTrue(v));
         }
     	
-    	v = props.remove("SELECTABLE"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.SELECTABLE);
     	if (v != null) {
     		c.setSelectable(isTrue(v));
     	}
     	
-    	v = props.remove("UPDATABLE"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.UPDATABLE); 
     	if (v != null) {
     		c.setUpdatable(isTrue(v));
     	}
     	
-    	v = props.remove("SIGNED"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.SIGNED);
     	if (v != null) {
     		c.setSigned(isTrue(v));
     	}
     	
-    	v = props.remove("CURRENCY"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.CURRENCY);
     	if (v != null) {
     		c.setSigned(isTrue(v));
     	}
 
-    	v = props.remove("FIXED_LENGTH"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.FIXED_LENGTH);
     	if (v != null) {
     		c.setFixedLength(isTrue(v));
     	}
     	
-    	v = props.remove("SEARCHABLE"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.SEARCHABLE);
     	if (v != null) {
     		c.setSearchType(SearchType.valueOf(v.toUpperCase()));
     	}
     	
-    	v = props.remove("MIN_VALUE"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.MIN_VALUE);
     	if (v != null) {
     		c.setMinimumValue(v);
     	}
     	
-    	v = props.remove("MAX_VALUE"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.MAX_VALUE);
     	if (v != null) {
     		c.setMaximumValue(v);
     	}
     	
-    	v = props.remove("CHAR_OCTET_LENGTH"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.CHAR_OCTET_LENGTH);
     	if (v != null) {
     		c.setCharOctetLength(Integer.parseInt(v));
     	}
         
-    	v = props.remove("NATIVE_TYPE"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.NATIVE_TYPE);
     	if (v != null) {
     		c.setNativeType(v);
     	}
 
-    	v = props.remove("RADIX"); //$NON-NLS-1$
-    	if (v != null) {
-    		c.setRadix(Integer.parseInt(v));
-    	}
-
-    	v = props.remove("NULL_VALUE_COUNT"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.NULL_VALUE_COUNT); 
     	if (v != null) {
     		c.setNullValues(Integer.parseInt(v));
     	}
     	
-    	v = props.remove("DISTINCT_VALUES"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.DISTINCT_VALUES); 
     	if (v != null) {
     		c.setDistinctValues(Integer.parseInt(v));
     	}
     }
 
 	void setCommonProperties(AbstractMetadataRecord c, Map<String, String> props) {
-		String v = props.remove("UUID"); //$NON-NLS-1$
+		String v = props.remove(DDLConstants.UUID); 
 		if (v != null) {
 			c.setUUID(v);
 		}
 		
-    	v = props.remove("ANNOTATION"); //$NON-NLS-1$
+    	v = props.remove(DDLConstants.ANNOTATION); 
     	if (v != null) {
     		c.setAnnotation(v);
     	}
 		
-		v = props.remove("NAMEINSOURCE"); //$NON-NLS-1$
+		v = props.remove(DDLConstants.NAMEINSOURCE); 
 		if (v != null) {
 			c.setNameInSource(v);
 		}
@@ -450,24 +459,24 @@ public class SQLParserUtil {
     	Map<String, String> props = table.getProperties();
     	setCommonProperties(table, props);
     	
-    	String value = props.remove("MATERIALIZED"); //$NON-NLS-1$
+    	String value = props.remove(DDLConstants.MATERIALIZED); 
     	if (value != null) {
     		table.setMaterialized(isTrue(value));
     	}
 		
-		value = props.remove("MATERIALIZED_TABLE"); //$NON-NLS-1$
+		value = props.remove(DDLConstants.MATERIALIZED_TABLE); 
 		if (value != null) {
     		Table mattable = new Table();
     		mattable.setName(value);
     		table.setMaterializedTable(mattable);
     	}
 		
-		value = props.remove("UPDATABLE"); //$NON-NLS-1$
+		value = props.remove(DDLConstants.UPDATABLE); 
 		if (value != null) {
 			table.setSupportsUpdate(isTrue(value));
 		}
 		
-    	value = props.remove("CARDINALITY"); //$NON-NLS-1$
+    	value = props.remove(DDLConstants.CARDINALITY); 
     	if (value != null) {
     		table.setCardinality(Integer.parseInt(value));
     	}
@@ -481,24 +490,22 @@ public class SQLParserUtil {
 		
 		ArrayList<FunctionParameter> ins = new ArrayList<FunctionParameter>();
 		for (ProcedureParameter pp:proc.getParameters()) {
-			if (pp.getType() != ProcedureParameter.Type.In) {
+			if (pp.getType() == ProcedureParameter.Type.InOut || pp.getType() == ProcedureParameter.Type.Out) {
 				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
 			}
 			
-			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getDatatype().getName());
-			fp.setVarArg(pp.isVarArg());
-			ins.add(fp);
+			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getDatatype().getName(), pp.getAnnotation());
+			if (pp.getType() == ProcedureParameter.Type.In) {
+				fp.setVarArg(pp.isVarArg());
+				ins.add(fp);
+			} else {
+				method.setOutputParameter(fp);
+			}
 		}
 		method.setInputParameters(ins);
 		
-		List<Column> returnCols = proc.getResultSet().getColumns();
-		if (returnCols != null && !returnCols.isEmpty()) {
-			if (returnCols.size() > 1) {
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_return", proc.getName())); //$NON-NLS-1$
-			}
-			Column c = returnCols.get(0);
-			FunctionParameter fp = new FunctionParameter(c.getName(), c.getDatatype().getName());
-			method.setOutputParameter(fp);
+		if (proc.getResultSet() != null || method.getOutputParameter() == null) {
+			throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_return", proc.getName())); //$NON-NLS-1$
 		}
 		
 		method.setAnnotation(proc.getAnnotation());
@@ -507,18 +514,18 @@ public class SQLParserUtil {
 		
 		Map<String, String> props = proc.getProperties();
 
-		String value = props.remove("CATEGORY"); //$NON-NLS-1$
+		String value = props.remove(DDLConstants.CATEGORY); 
 		method.setCategory(value);
 		
-		value = props.remove("DETERMINISM"); //$NON-NLS-1$
+		value = props.remove(DDLConstants.DETERMINISM); 
 		if (value != null) {
 			method.setDeterminism(FunctionMethod.Determinism.valueOf(value.toUpperCase()));
 		}
 		
-		value = props.remove("JAVA_CLASS"); //$NON-NLS-1$
+		value = props.remove(DDLConstants.JAVA_CLASS); 
 		method.setInvocationClass(value);
 		
-		value = props.remove("JAVA_METHOD"); //$NON-NLS-1$
+		value = props.remove(DDLConstants.JAVA_METHOD); 
 		method.setInvocationMethod(value);
 		
 		for (String key:props.keySet()) {
@@ -568,21 +575,43 @@ public class SQLParserUtil {
 		}
 	}
 	
-	void addProcReturnColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type) throws ParseException{
+	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws ParseException{
 		try {
-			Column column = factory.addProcedureResultSetColumn(name, type.type, proc);
-			if (type.length != null){
-				column.setLength(type.length);
+			name = validateElementName(name);
+			BaseColumn column = null;
+			if (rs) {
+				column = factory.addProcedureResultSetColumn(name, type.type, proc);
+			} else {
+				boolean added = false;
+				for (ProcedureParameter pp : proc.getParameters()) {
+					if (pp.getType() == Type.ReturnValue) {
+						added = true;
+						if (pp.getDatatype() != factory.getDataTypes().get(type.type)) {
+							throw new ParseException(QueryPlugin.Util.getString("SQLParser.proc_type_conflict", proc.getName(), pp.getDatatype(), type.type)); //$NON-NLS-1$
+						}
+					}
+				}
+				if (!added) {
+					column = factory.addProcedureParameter(name, type.type, ProcedureParameter.Type.ReturnValue, proc);
+				}
 			}
-			if (type.scale != null){
-				column.setScale(type.scale);
-			}	
-			if (type.precision != null){
-				column.setPrecision(type.precision);
-			}							
+			setTypeInfo(type, column);
+			return column;
 		} catch (TranslatorException e){
 			throw new ParseException(e.getMessage());
 		}	
+	}
+
+	void setTypeInfo(ParsedDataType type, BaseColumn column) {
+		if (type.length != null){
+			column.setLength(type.length);
+		}
+		if (type.scale != null){
+			column.setScale(type.scale);
+		}	
+		if (type.precision != null){
+			column.setPrecision(type.precision);
+		}
 	}	
 	
 	static String resolvePropertyKey(MetadataFactory factory, String key) {

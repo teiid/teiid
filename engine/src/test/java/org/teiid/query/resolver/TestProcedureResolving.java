@@ -46,6 +46,7 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
+import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
@@ -75,7 +76,7 @@ public class TestProcedureResolving {
 	}	
 	
     @Test public void testDefect13029_CorrectlySetUpdateProcedureTempGroupIDs() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
             .append("\nBEGIN") //$NON-NLS-1$
             .append("\nDECLARE string var1;") //$NON-NLS-1$
             .append("\nvar1 = '';") //$NON-NLS-1$
@@ -109,19 +110,19 @@ public class TestProcedureResolving {
         assertNull(tempIDs.get("LOOPCURSOR2")); //$NON-NLS-1$
     }
     
-	private CreateProcedureCommand helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
+	private TriggerAction helpResolveUpdateProcedure(String procedure, String userUpdateStr, Table.TriggerEvent procedureType) throws QueryParserException, QueryResolverException, TeiidComponentException {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleUpdateProc(procedureType, procedure);
-		return resolveProcedure(userUpdateStr, metadata);
+		return (TriggerAction) resolveProcedure(userUpdateStr, metadata);
 	}
 
-	private CreateProcedureCommand resolveProcedure(String userUpdateStr,
+	private Command resolveProcedure(String userUpdateStr,
 			QueryMetadataInterface metadata) throws QueryParserException,
 			QueryResolverException, TeiidComponentException,
 			QueryMetadataException {
 		ProcedureContainer userCommand = (ProcedureContainer)QueryParser.getQueryParser().parseCommand(userUpdateStr); 
         QueryResolver.resolveCommand(userCommand, metadata);
         metadata = new TempMetadataAdapter(metadata, userCommand.getTemporaryMetadata());
-        return (CreateProcedureCommand)QueryResolver.expandCommand(userCommand, metadata, null);
+        return QueryResolver.expandCommand(userCommand, metadata, null);
 	}
 
 	private void helpResolveException(String userUpdateStr, QueryMetadataInterface metadata, String msg) throws QueryParserException, TeiidComponentException {
@@ -133,7 +134,7 @@ public class TestProcedureResolving {
 		}
 	}
 
-	private CreateProcedureCommand helpResolve(String userUpdateStr, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
+	private Command helpResolve(String userUpdateStr, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
 		return resolveProcedure(userUpdateStr, metadata);
 	}
     
@@ -141,7 +142,7 @@ public class TestProcedureResolving {
      *  Constants will now auto resolve if they are consistently representable in the target type
      */
     @Test public void testDefect23257() throws Exception{
-    	CreateProcedureCommand command = helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    	CreateProcedureCommand command = (CreateProcedureCommand) helpResolve("EXEC pm6.vsp59()", RealMetadataFactory.example1Cached()); //$NON-NLS-1$
         
         CommandStatement cs = (CommandStatement)command.getBlock().getStatements().get(1);
         
@@ -151,7 +152,7 @@ public class TestProcedureResolving {
     } 
     
     @Test public void testProcedureScoping() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         //note that this declare takes presedense over the proc INPUTS.e1 and CHANGING.e1 variables
         .append("\n  declare integer e1 = 1;") //$NON-NLS-1$
@@ -165,7 +166,7 @@ public class TestProcedureResolving {
         
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
-        CreateProcedureCommand command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
+        TriggerAction command = helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
                                      Table.TriggerEvent.UPDATE);
         
         Block block = command.getBlock();
@@ -186,7 +187,7 @@ public class TestProcedureResolving {
 	// variable resolution, variable used in if statement, variable compared against
 	// different datatype element
     @Test public void testCreateUpdateProcedure4() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1);\n"; //$NON-NLS-1$
@@ -201,7 +202,7 @@ public class TestProcedureResolving {
     
 	// variable resolution, variable used in if statement, invalid operation on variable
     @Test public void testCreateUpdateProcedure5() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = var1 + var1;\n"; //$NON-NLS-1$
@@ -217,7 +218,7 @@ public class TestProcedureResolving {
 	// variable resolution, variables declared in different blocks local variables
 	// should not override
     @Test public void testCreateUpdateProcedure6() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
@@ -236,7 +237,7 @@ public class TestProcedureResolving {
 	// variable resolution, variables declared in different blocks local variables
 	// inner block using outer block variables
     @Test public void testCreateUpdateProcedure7() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
@@ -255,7 +256,7 @@ public class TestProcedureResolving {
 	// variable resolution, variables declared in different blocks local variables
 	// outer block cannot use inner block variables
     @Test public void testCreateUpdateProcedure8() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
@@ -275,7 +276,7 @@ public class TestProcedureResolving {
 	// variable resolution, variables declared in different blocks local variables
 	// should override, outer block variables still valid afetr inner block is declared
     @Test public void testCreateUpdateProcedure9() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
@@ -294,7 +295,7 @@ public class TestProcedureResolving {
     
 	// using declare variable that has parts
     @Test public void testCreateUpdateProcedure24() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var2.var1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -307,7 +308,7 @@ public class TestProcedureResolving {
     
 	// using declare variable is qualified
     @Test public void testCreateUpdateProcedure26() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer VARIABLES.var1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -320,7 +321,7 @@ public class TestProcedureResolving {
     
 	// using declare variable is qualified but has more parts
     @Test public void testCreateUpdateProcedure27() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer VARIABLES.var1.var2;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -333,7 +334,7 @@ public class TestProcedureResolving {
     
 	// using a variable that has not been declared in an assignment stmt
     @Test public void testCreateUpdateProcedure28() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -346,7 +347,7 @@ public class TestProcedureResolving {
     
 	// using a variable that has not been declared in an assignment stmt
     @Test public void testCreateUpdateProcedure29() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = 1;\n"; //$NON-NLS-1$
         procedure = procedure + "END\n"; //$NON-NLS-1$
@@ -359,7 +360,7 @@ public class TestProcedureResolving {
     
 	// using invalid function in assignment expr
     @Test public void testCreateUpdateProcedure30() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "Declare integer var1;\n";         //$NON-NLS-1$
         procedure = procedure + "var1 = 'x' + ROWS_UPDATED;\n"; //$NON-NLS-1$
@@ -373,7 +374,7 @@ public class TestProcedureResolving {
     
 	// using invalid function in assignment expr
     @Test public void testCreateUpdateProcedure31() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "Declare integer var1;\n";         //$NON-NLS-1$
         procedure = procedure + "var1 = 'x' + ROWS_UPDATED;\n"; //$NON-NLS-1$
@@ -387,7 +388,7 @@ public class TestProcedureResolving {
     
 	// using a variable being used inside a subcomand
     @Test public void testCreateUpdateProcedure32() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "Declare integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "Select var1 from pm1.g1;\n"; //$NON-NLS-1$
@@ -403,7 +404,7 @@ public class TestProcedureResolving {
 	// should override, outer block variables still valid afetr inner block is declared
 	// fails as variable being compared against incorrect type
     @Test public void testCreateUpdateProcedure33() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
@@ -422,7 +423,7 @@ public class TestProcedureResolving {
     
 	// physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure34() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(pm1.g1.e2 =1 and var1=1)\n"; //$NON-NLS-1$
@@ -439,7 +440,7 @@ public class TestProcedureResolving {
     
 	// physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure36() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(pm1.g1.e2 =1 and var1=1)\n"; //$NON-NLS-1$
@@ -456,7 +457,7 @@ public class TestProcedureResolving {
     
 	// physical elements used on criteria of the if statement
     @Test public void testCreateUpdateProcedure39() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(pm1.g1.e2 =1 and var1=1)\n"; //$NON-NLS-1$
@@ -474,7 +475,7 @@ public class TestProcedureResolving {
 	// resolving AssignmentStatement, variable type and assigned type 
 	// do not match and no implicit conversion available
 	@Test public void testCreateUpdateProcedure53() {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
 		procedure = procedure + "var1 = INPUTS.e4;"; //$NON-NLS-1$
@@ -490,7 +491,7 @@ public class TestProcedureResolving {
 	// resolving AssignmentStatement, variable type and assigned type 
 	// do not match, but implicit conversion available
 	@Test public void testCreateUpdateProcedure54() throws Exception {
-		String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+		String procedure = "FOR EACH ROW "; //$NON-NLS-1$
 		procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
 		procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
 		procedure = procedure + "var1 = 1+1;"; //$NON-NLS-1$
@@ -504,7 +505,7 @@ public class TestProcedureResolving {
     
     @Test public void testDefect14912_CreateUpdateProcedure57_FunctionWithElementParamInAssignmentStatement() {
         // Tests that the function params are resolved before the function for assignment statements
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE string var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = badFunction(badElement);"; //$NON-NLS-1$
@@ -519,7 +520,7 @@ public class TestProcedureResolving {
 	// addresses Cases 4624.  Before change to UpdateProcedureResolver,
     // this case failed with assertion exception.
     @Test public void testCase4624() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE boolean var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = {b'false'};\n"; //$NON-NLS-1$
@@ -581,7 +582,7 @@ public class TestProcedureResolving {
 
     //baseline test to ensure that a declare assignment cannot contain the declared variable
     @Test public void testDeclareStatement() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer VARIABLES.var1 = VARIABLES.var1;\n"; //$NON-NLS-1$
         procedure = procedure + "ROWS_UPDATED =0;\n"; //$NON-NLS-1$
@@ -595,7 +596,7 @@ public class TestProcedureResolving {
     @Test public void testDynamicIntoInProc() throws Exception {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        StringBuffer procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("execute string 'SELECT e1, e2, e3, e4 FROM pm1.g2' as e1 string, e2 string, e3 string, e4 string INTO #myTempTable;\n") //$NON-NLS-1$
                                 .append("select e1 from #myTempTable;\n") //$NON-NLS-1$
@@ -607,7 +608,7 @@ public class TestProcedureResolving {
     @Test public void testDynamicStatement() throws Exception {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        StringBuffer procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("execute string 'SELECT e1, e2, e3, e4 FROM pm1.g2';\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
@@ -618,7 +619,7 @@ public class TestProcedureResolving {
     @Test public void testDynamicStatementType() {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        StringBuffer procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("DECLARE object VARIABLES.X = null;\n") //$NON-NLS-1$
                                 .append("execute string VARIABLES.X;\n") //$NON-NLS-1$
@@ -629,7 +630,7 @@ public class TestProcedureResolving {
 
 	// variable resolution
     @Test public void testCreateUpdateProcedure1() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "var1 = Select pm1.g1.e2 from pm1.g1;\n"; //$NON-NLS-1$
@@ -644,7 +645,7 @@ public class TestProcedureResolving {
     
 	// variable resolution, variable used in if statement
     @Test public void testCreateUpdateProcedure3() throws Exception {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "if(var1 =1)\n"; //$NON-NLS-1$
@@ -659,7 +660,7 @@ public class TestProcedureResolving {
     }
 
     @Test public void testSelectIntoInProc() throws Exception {
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        StringBuffer procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                             .append("BEGIN\n") //$NON-NLS-1$
                                             .append("SELECT e1, e2, e3, e4 INTO pm1.g1 FROM pm1.g2;\n") //$NON-NLS-1$
                                             .append("END\n"); //$NON-NLS-1$
@@ -669,7 +670,7 @@ public class TestProcedureResolving {
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
                                      Table.TriggerEvent.UPDATE);
         
-        procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("SELECT e1, e2, e3, e4 INTO #myTempTable FROM pm1.g2;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
@@ -678,7 +679,7 @@ public class TestProcedureResolving {
     }
 
     @Test public void testSelectIntoInProcNoFrom() throws Exception {
-        StringBuffer procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        StringBuffer procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                             .append("BEGIN\n") //$NON-NLS-1$
                                             .append("SELECT 'a', 19, {b'true'}, 13.999 INTO pm1.g1;\n") //$NON-NLS-1$
                                             .append("END\n"); //$NON-NLS-1$
@@ -688,7 +689,7 @@ public class TestProcedureResolving {
         helpResolveUpdateProcedure(procedure.toString(), userUpdateStr,
                                      Table.TriggerEvent.UPDATE);
         
-        procedure = new StringBuffer("CREATE PROCEDURE  ") //$NON-NLS-1$
+        procedure = new StringBuffer("FOR EACH ROW ") //$NON-NLS-1$
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("SELECT 'a', 19, {b'true'}, 13.999 INTO #myTempTable;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
@@ -698,7 +699,7 @@ public class TestProcedureResolving {
     
     // validating INPUT element assigned
     @Test public void testAssignInput() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "INPUTS.e1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
@@ -713,7 +714,7 @@ public class TestProcedureResolving {
     
     // validating CHANGING element assigned
     @Test public void testAssignChanging() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "CHANGING.e1 = Select pm1.g1.e1 from pm1.g1;\n"; //$NON-NLS-1$
@@ -728,7 +729,7 @@ public class TestProcedureResolving {
     
     // variables cannot be used among insert elements
     @Test public void testVariableInInsert() {
-        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, var1) values (1, 2);\n"; //$NON-NLS-1$
@@ -743,7 +744,7 @@ public class TestProcedureResolving {
     
     // variables cannot be used among insert elements
     @Test public void testVariableInInsert2() {
-        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer var1;\n"; //$NON-NLS-1$
         procedure = procedure + "Insert into pm1.g1 (pm1.g1.e2, INPUTS.x) values (1, 2);\n"; //$NON-NLS-1$
@@ -758,7 +759,7 @@ public class TestProcedureResolving {
     
     //should resolve first to the table's column
     @Test public void testVariableInInsert3() throws Exception {
-        String procedure = "CREATE VIRTUAL PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW  "; //$NON-NLS-1$
         procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
         procedure = procedure + "DECLARE integer e2;\n"; //$NON-NLS-1$
         procedure = procedure + "Insert into pm1.g1 (e2) values (1);\n"; //$NON-NLS-1$
@@ -783,7 +784,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testLoopRedefinition() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  declare string var1;") //$NON-NLS-1$
         .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
@@ -802,7 +803,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  select 1 as a into #temp;") //$NON-NLS-1$
         .append("\n  select #temp.a from pm1.g1;") //$NON-NLS-1$
@@ -815,7 +816,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable1() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  select 1 as a into #temp;") //$NON-NLS-1$
         .append("\n  insert into #temp (a) values (#temp.a);") //$NON-NLS-1$
@@ -828,7 +829,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testProcedureCreate() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
         .append("\n  select e1 from t1;") //$NON-NLS-1$
@@ -845,7 +846,7 @@ public class TestProcedureResolving {
      * it is not ok to redefine the loopCursor 
      */
     @Test public void testProcedureCreate1() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  LOOP ON (SELECT pm1.g1.e1 FROM pm1.g1) AS loopCursor") //$NON-NLS-1$
         .append("\n  BEGIN") //$NON-NLS-1$
@@ -859,7 +860,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testProcedureCreateDrop() {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n drop table t1;") //$NON-NLS-1$
         .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
@@ -871,7 +872,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testProcedureCreateDrop1() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  create local temporary table t1 (e1 string);") //$NON-NLS-1$
         .append("\n  drop table t1;") //$NON-NLS-1$
@@ -883,7 +884,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testCreateAfterImplicitTempTable() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE VIRTUAL PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  select e1 into #temp from pm1.g1;") //$NON-NLS-1$
         .append("\n  create local temporary table #temp (e1 string);") //$NON-NLS-1$
@@ -895,7 +896,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testInsertAfterCreate() throws Exception {
-        StringBuffer proc = new StringBuffer("CREATE PROCEDURE") //$NON-NLS-1$
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
         .append("\nBEGIN") //$NON-NLS-1$
         .append("\n  create local temporary table #temp (e1 string, e2 string);") //$NON-NLS-1$
         .append("\n  insert into #temp (e1) values ('a');") //$NON-NLS-1$
@@ -928,7 +929,7 @@ public class TestProcedureResolving {
     // variable resolution, variable compared against
     // different datatype element for which there is no implicit transformation)
     @Test public void testCreateUpdateProcedure2() {
-        String procedure = "CREATE PROCEDURE  "; //$NON-NLS-1$
+        String procedure = "FOR EACH ROW "; //$NON-NLS-1$
         procedure += "BEGIN\n"; //$NON-NLS-1$
         procedure += "DECLARE boolean var1;\n"; //$NON-NLS-1$
         procedure += "ROWS_UPDATED = UPDATE pm1.g1 SET pm1.g1.e4 = convert(var1, string), pm1.g1.e1 = var1;\n"; //$NON-NLS-1$

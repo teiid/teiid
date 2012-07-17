@@ -38,6 +38,10 @@ public class ValidatorReport extends ActivityReport<ValidatorFailure> {
     public ValidatorReport() {
         super(VALIDATOR_REPORT);
     }
+    
+    public ValidatorReport(String name) {
+    	super(name);
+    }
 
     public void collectInvalidObjects(Collection<LanguageObject> invalidObjects) {
     	for (ValidatorFailure failure : getItems()) {

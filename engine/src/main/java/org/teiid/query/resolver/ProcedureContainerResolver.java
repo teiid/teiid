@@ -49,6 +49,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.GroupContext;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -93,7 +94,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         
         QueryParser parser = QueryParser.getQueryParser();
         try {
-            subCommand = parser.parseUpdateProcedure(plan);
+            subCommand = parser.parseProcedure(plan, !(procCommand instanceof StoredProcedure));
         } catch(QueryParserException e) {
              throw new QueryResolverException(QueryPlugin.Event.TEIID30060, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30060, group, procCommand.getClass().getSimpleName()));
         }

@@ -21,7 +21,7 @@
  */
 package org.teiid.query.metadata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -29,11 +29,11 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.parser.ParseException;
 import org.teiid.query.parser.TestDDLParser;
 
@@ -168,9 +168,9 @@ public class TestDDLStringVisitor {
 				"AS\n" + 
 				"SELECT * FROM PM1.G1;\n" + 
 				"\n" + 
-				"CREATE VIRTUAL PROCEDURE FOO(IN P1 integer) RETURNS (e1 integer, e2 string)\n" + 
+				"CREATE VIRTUAL PROCEDURE FOO(IN P1 integer) RETURNS TABLE (e1 integer, e2 string)\n" + 
 				"AS\n" + 
-				"SELECT * FROM PM1.G1;\n";
+				"SELECT * FROM PM1.G1;";
 		helpTest(ddl, expected);
 		
 	}	
@@ -217,7 +217,7 @@ public class TestDDLStringVisitor {
 				"RETURNS (r1 varchar, r2 decimal)" +
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');";
 		
-		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS (r1 string, r2 bigdecimal)\n" + 
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string, r2 bigdecimal)\n" + 
 				"OPTIONS (UUID 'uuid', ANNOTATION 'desc', NAMEINSOURCE 'nis', UPDATECOUNT 2, RANDOM 'any')";
 		helpTest(ddl, expected);		
 	}	
