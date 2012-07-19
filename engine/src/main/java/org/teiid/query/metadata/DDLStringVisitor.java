@@ -26,21 +26,40 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 import static org.teiid.language.SQLConstants.Tokens.*;
 import static org.teiid.query.metadata.DDLConstants.*;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import org.teiid.adminapi.Admin.SchemaObjectType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class DDLStringVisitor {
 	private static final String TAB = "\t"; //$NON-NLS-1$
 	private static final String NEWLINE = "\n";//$NON-NLS-1$
+	
+	private static final HashSet<String> LENGTH_DATATYPES = new HashSet<String>(
+			Arrays.asList(
+					DataTypeManager.DefaultDataTypes.CHAR,
+					DataTypeManager.DefaultDataTypes.CLOB,
+					DataTypeManager.DefaultDataTypes.BLOB,
+					DataTypeManager.DefaultDataTypes.OBJECT,
+					DataTypeManager.DefaultDataTypes.XML,
+					DataTypeManager.DefaultDataTypes.STRING,
+					DataTypeManager.DefaultDataTypes.VARBINARY,
+					DataTypeManager.DefaultDataTypes.BIG_INTEGER));
+	
+	private static final HashSet<String> PRECISION_DATATYPES = new HashSet<String>(
+			Arrays.asList(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
 
 	protected StringBuilder buffer = new StringBuilder();
 	private boolean includeTables = true;
@@ -206,7 +225,7 @@ public class DDLStringVisitor {
 	}
 
 	private void addCommonOptions(StringBuilder sb, AbstractMetadataRecord record) {
-		if (record.getUUID() != null && !record.getUUID().startsWith("mmuuid:")) { //$NON-NLS-1$
+		if (record.getUUID() != null && !record.getUUID().startsWith("tid:")) { //$NON-NLS-1$
 			addOption(sb, UUID, record.getUUID());
 		}
 		if (record.getAnnotation() != null) {
@@ -361,7 +380,7 @@ public class DDLStringVisitor {
 		}		
 		
 		if (column.getDefaultValue() != null) {
-			buffer.append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(column.getDefaultValue()).append(TICK);
+			buffer.append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
 		}
 		
 		// options
@@ -373,11 +392,17 @@ public class DDLStringVisitor {
 			builder.append(column.getName());
 		}
 		if (includeType) {
-			builder.append(SPACE).append(column.getDatatype().getName());
-			if (column.getLength() != 0) {
-				builder.append(LPAREN).append(column.getLength()).append(RPAREN);
+			String runtimeTypeName = column.getDatatype().getRuntimeTypeName();
+			if (includeName) {
+				builder.append(SPACE);
 			}
-			else if (column.getPrecision() != 0){
+			builder.append(runtimeTypeName);
+			if (LENGTH_DATATYPES.contains(runtimeTypeName)) {
+				if (column.getLength() != 0 && column.getLength() != column.getDatatype().getLength()) {
+					builder.append(LPAREN).append(column.getLength()).append(RPAREN);
+				}
+			} else if (PRECISION_DATATYPES.contains(runtimeTypeName) 
+					&& (column.getPrecision() != column.getDatatype().getPrecision() || column.getScale() != column.getDatatype().getScale())) {
 				builder.append(LPAREN).append(column.getPrecision());
 				if (column.getScale() != 0) {
 					builder.append(COMMA).append(column.getScale());
@@ -394,8 +419,11 @@ public class DDLStringVisitor {
 		StringBuilder options = new StringBuilder();
 		addCommonOptions(options, column);
 		
-		// 10 is default assumed
-		if (column.getRadix() != column.getDatatype().getRadix()) {
+		if (!column.getDatatype().isBuiltin()) {
+			addOption(options, UDT, column.getDatatype().getName() + "("+column.getLength()+ ", " +column.getPrecision()+", " + column.getScale()+ ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		}
+		
+		if (column.getDatatype().getRadix() != 0 && column.getRadix() != column.getDatatype().getRadix()) {
 			addOption(options, RADIX, column.getRadix());
 		}
 		
@@ -423,17 +451,18 @@ public class DDLStringVisitor {
 		}
 			
 		// only record if not default
-		if (column.isCaseSensitive() && !column.getDatatype().isCaseSensitive()) {
-			addOption(options, CASE_SENSITIVE, String.valueOf(column.isCaseSensitive()));
+		if (!column.isCaseSensitive() && column.getDatatype().isCaseSensitive()) {
+			addOption(options, CASE_SENSITIVE, column.isCaseSensitive());
 		}
 		
-		if (column.isSigned() && !column.getDatatype().isSigned()) {
-			addOption(options, SIGNED, String.valueOf(column.isSigned()));
+		if (!column.isSigned() && column.getDatatype().isSigned()) {
+			addOption(options, SIGNED, column.isSigned());
 		}		  
 		if (column.isFixedLength()) {
-			addOption(options, FIXED_LENGTH, String.valueOf(column.isFixedLength()));
+			addOption(options, FIXED_LENGTH, column.isFixedLength());
 		}
 		// length and octet length should be same. so this should be never be true.
+		//TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
 		if (column.getCharOctetLength() != 0 && column.getLength() != column.getCharOctetLength()) {
 			addOption(options, CHAR_OCTET_LENGTH, column.getCharOctetLength());
 		}	
@@ -474,16 +503,12 @@ public class DDLStringVisitor {
 		if (sb.length() != 0) {
 			sb.append(COMMA).append(SPACE);
 		}
-		sb.append(key).append(SPACE).append(TICK).append(value).append(TICK);
+		if (value instanceof String) {
+			value = TICK + StringUtil.replaceAll((String)value, TICK, TICK + TICK) + TICK;
+		}
+		sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
 	}
 	
-	private void addOption(StringBuilder sb, String key, int value) {
-		if (sb.length() != 0) {
-			sb.append(COMMA).append(SPACE);
-		}		
-		sb.append(key).append(SPACE).append(value);
-	}	
-
 	private void visit(Procedure procedure) {
 		if (this.filter != null && !filter.matcher(procedure.getName()).matches()) {
 			return;
@@ -501,16 +526,13 @@ public class DDLStringVisitor {
 		
 		boolean first = true;
 		for (ProcedureParameter pp:procedure.getParameters()) {
-			Type type = pp.getType();
-			if (type == Type.In || type == Type.InOut || type == Type.Out) {
-				if (first) {
-					first = false;
-				}
-				else {
-					buffer.append(COMMA).append(SPACE);
-				}
-				visit(pp);
+			if (first) {
+				first = false;
 			}
+			else {
+				buffer.append(COMMA).append(SPACE);
+			}
+			visit(pp);
 		}
 		buffer.append(RPAREN);
 		
@@ -518,13 +540,14 @@ public class DDLStringVisitor {
 			buffer.append(SPACE).append(RETURNS).append(SPACE).append(TABLE).append(SPACE);
 			addColumns(buffer, procedure.getResultSet().getColumns(), true);
 		}
-		for (ProcedureParameter pp: procedure.getParameters()) {
+		/* The parser treats the RETURN clause as optional for a procedure if using the RESULT param
+		  for (ProcedureParameter pp: procedure.getParameters()) {
 			if (pp.getType().equals(Type.ReturnValue)) {
 				buffer.append(SPACE).append(RETURNS).append(SPACE);
 				appendColumn(buffer, pp, false, true);
 				break;
 			}
-		}
+		}*/
 		
 		//options
 		String options = buildProcedureOptions(procedure);		
@@ -538,7 +561,6 @@ public class DDLStringVisitor {
 			buffer.append(plan);
 		}
 	}
-	
 
 	private String buildProcedureOptions(Procedure procedure) {
 		StringBuilder options = new StringBuilder();

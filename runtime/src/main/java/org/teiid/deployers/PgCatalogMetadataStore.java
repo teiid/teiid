@@ -22,15 +22,11 @@
 package org.teiid.deployers;
 
 import java.lang.reflect.Method;
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
-import java.util.UUID;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
@@ -48,11 +44,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
     public static final int PG_TYPE_CHARARRAY = 1002;
     public static final int PG_TYPE_TEXTARRAY = 1009;
 
-	private Random random;
-	
 	public PgCatalogMetadataStore(String modelName, Map<String, Datatype> dataTypes) throws TranslatorException {
 		super(modelName, 1, modelName, dataTypes, new Properties(), null); 
-		
 		add_pg_namespace();			
 		add_pg_class();			
 		add_pg_attribute();
@@ -69,23 +62,6 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
-	}
-	
-	@Override
-	protected void setUUID(AbstractMetadataRecord record) {
-        byte[] randomBytes = new byte[8];
-        if (random == null) {
-        	random = new Random(2010);
-        }
-        random.nextBytes(randomBytes);
-        randomBytes[6]  &= 0x0f;  /* clear version        */
-        randomBytes[6]  |= 0x40;  /* set to version 4     */
-        long msb = new BigInteger(randomBytes).longValue();
-        random.nextBytes(randomBytes);
-        randomBytes[0]  &= 0x3f;  /* clear variant        */
-        randomBytes[0]  |= 0x80;  /* set to IETF variant  */
-        long lsb = new BigInteger(randomBytes).longValue();
-        record.setUUID("mmuid:"+new UUID(msb, lsb)); //$NON-NLS-1$
 	}
 	
 	private Table createView(String name) throws TranslatorException {

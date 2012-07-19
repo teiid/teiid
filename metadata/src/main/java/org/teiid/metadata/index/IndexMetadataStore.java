@@ -24,7 +24,14 @@ package org.teiid.metadata.index;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
@@ -213,9 +220,7 @@ public class IndexMetadataStore extends MetadataStore {
 		// optimized for multi-thread loading this locking to sync will work
 		synchronized (this) {
 			if (!this.loaded) {
-				if (systemDatatypes == null) {
-					SystemDataTypes.loadSystemDatatypes(this);
-				}
+				
 		    	ArrayList<Index> tmp = new ArrayList<Index>();
 				for (VirtualFile f : indexFiles) {
 					Index index = new Index(f, true);
@@ -234,7 +239,7 @@ public class IndexMetadataStore extends MetadataStore {
 						uuidToRecord.put(datatype.getUUID(), datatype);
 					}
 				} else {
-					for (Datatype datatype : getDatatypes().values()) {
+					for (Datatype datatype : SystemDataTypes.getInstance().getDataTypes()) {
 						uuidToRecord.put(datatype.getUUID(), datatype);
 					}
 				}

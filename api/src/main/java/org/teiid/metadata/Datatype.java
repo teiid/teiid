@@ -53,17 +53,32 @@ public class Datatype extends AbstractMetadataRecord {
     private boolean isCaseSensitive;
     private Type type;
     private SearchType searchType;
-    private NullType nullType;
+    private NullType nullType = NullType.Nullable;
     private String javaClassName = DEFAULT_JAVA_CLASS_NAME;
     private String runtimeTypeName;
     private String basetypeName;
     private Variety varietyType;
 
+    /**
+     * Get the length of the type.
+     * 
+     * For string (binary or character) types, it is the number of characters.
+     * For all other types it is the byte storage size.
+     * @return
+     */
     public int getLength() {
         return this.length;
     }
-
+    
+    /**
+     * @deprecated
+     * @see #getPrecision()
+     */
     public int getPrecisionLength() {
+        return this.precisionLength;
+    }
+
+    public int getPrecision() {
         return this.precisionLength;
     }
 
@@ -171,6 +186,14 @@ public class Datatype extends AbstractMetadataRecord {
 
     /**
      * @param i
+     */
+    public void setPrecision(int i) {
+        precisionLength = i;
+    }
+    
+    /**
+     * @deprecated
+     * @see #setPrecision(int)
      */
     public void setPrecisionLength(int i) {
         precisionLength = i;

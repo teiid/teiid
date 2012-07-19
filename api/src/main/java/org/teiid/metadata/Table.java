@@ -382,10 +382,30 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
       if (this.attachments == null) {
     	  return null;
       }
-      Object result = this.attachments.get(type.getName());
+      Object result = this.attachments.get(type);
       if (result == null)
          return null;
       return type.cast(result);      
    }
+	
+   /**
+    * remove attachment
+    * 
+    * @param <T> the expected type
+    * @param type the type
+    * @return the attachment or null if not present
+    * @throws IllegalArgumentException for a null name or type
+    */
+	synchronized public <T> T removeAttachment(Class<T> type) {
+      if (type == null)
+          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+      if (this.attachments == null) {
+    	  return null;
+      }
+      Object result = this.attachments.remove(type);
+      if (result == null)
+         return null;
+      return type.cast(result);      
+   }	
 	
 }

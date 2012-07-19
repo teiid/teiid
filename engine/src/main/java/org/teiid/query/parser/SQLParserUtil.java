@@ -494,7 +494,7 @@ public class SQLParserUtil {
 				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
 			}
 			
-			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getDatatype().getName(), pp.getAnnotation());
+			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getRuntimeType(), pp.getAnnotation());
 			if (pp.getType() == ProcedureParameter.Type.In) {
 				fp.setVarArg(pp.isVarArg());
 				ins.add(fp);

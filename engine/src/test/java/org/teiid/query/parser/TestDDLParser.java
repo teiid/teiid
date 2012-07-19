@@ -24,7 +24,6 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -32,8 +31,8 @@ import java.util.Properties;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.MetadataValidator;
@@ -85,7 +84,7 @@ public class TestDDLParser {
 		Column e6 = columns.get(5);
 		
 		assertEquals("e1", e1.getName());
-		assertEquals("integer", e1.getDatatype().getName());
+		assertEquals("int", e1.getDatatype().getName());
 		assertEquals("primary key not same", e1, table.getPrimaryKey().getColumns().get(0));
 		
 		assertEquals("e2", e2.getName());
@@ -107,7 +106,7 @@ public class TestDDLParser {
 		assertEquals(3, e4.getScale());
 		
 		assertEquals("e5", e5.getName());
-		assertEquals("integer", e5.getDatatype().getName());
+		assertEquals("int", e5.getDatatype().getName());
 		assertEquals(true, e5.isAutoIncremented());
 		assertEquals("uuid", e5.getUUID());
 		assertEquals("nis", e5.getNameInSource());
@@ -630,20 +629,8 @@ public class TestDDLParser {
 		return mf;		
 	}
 	
-	//TODO: could elevate type logic out of metadata
 	public static Map<String, Datatype> getDataTypes() {
-		Map<String, Datatype> datatypes = new HashMap<String, Datatype>();
-		for (String name:DataTypeManager.getAllDataTypeNames()) {
-			Datatype dt = new Datatype();
-			dt.setName(name);
-			Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(name);
-			dt.setJavaClassName(dataTypeClass.getName());
-			dt.setRuntimeTypeName(DataTypeManager.getDataTypeName(dataTypeClass));
-			datatypes.put(name, dt);	
-		}
-		datatypes.put("varchar", datatypes.get(DataTypeManager.DefaultDataTypes.STRING));
-		datatypes.put("decimal", datatypes.get(DataTypeManager.DefaultDataTypes.BIG_DECIMAL));
-		return datatypes;
+		return SystemDataTypes.getInstance().getBuiltinTypeMap();
 	}
 	
 	@Test public void testKeyResolve() {

@@ -223,6 +223,16 @@ public abstract class MappingBaseNode extends MappingNode {
         }
         tables.add(tablename);
         setProperty(MappingNodeConstants.Properties.TEMP_GROUP_NAMES, tables);
-    }    
+    }  
+    
+    @Override
+    public MappingNode clone() {
+    	MappingBaseNode clone = (MappingBaseNode) super.clone();
+    	List<String> staging = getStagingTables();
+    	if (getStagingTables() != null && staging != MappingNodeConstants.Defaults.DEFAULT_VALUES.get(MappingNodeConstants.Properties.TEMP_GROUP_NAMES)) {
+    		clone.setStagingTables(new ArrayList<String>(staging));
+    	}
+    	return clone;
+    }
     
 }

@@ -48,7 +48,7 @@ public class TestDDLStringVisitor {
 				"	e2 string(10) UNIQUE,\n" + 
 				"	e3 date NOT NULL UNIQUE,\n" + 
 				"	e4 bigdecimal(12,3),\n" + 
-				"	e5 integer AUTO_INCREMENT INDEX OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE 'false'),\n" + 
+				"	e5 integer AUTO_INCREMENT INDEX OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE false),\n" + 
 				"	e6 string INDEX DEFAULT 'hello'\n" + 
 				") OPTIONS (ANNOTATION 'Test Table', CARDINALITY '12', FOO 'BAR', UPDATABLE 'true', UUID 'uuid2');";
 		

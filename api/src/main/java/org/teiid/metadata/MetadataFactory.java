@@ -30,7 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-import java.util.UUID;
 
 import org.teiid.connector.DataPlugin;
 import org.teiid.translator.TranslatorException;
@@ -54,16 +53,37 @@ public class MetadataFactory implements Serializable {
 	private String rawMetadata;
 	private Properties importProperties;
 	private Schema schema = new Schema();
+	private String idPrefix; 
+	private int count;
 	
 	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> dataTypes, Properties importProperties, String rawMetadata) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.dataTypes = dataTypes;
 		schema.setName(schemaName);
+		long msb = longHash(vdbName, 0);
+		msb = 31*msb + vdbVersion;
+		msb = longHash(schemaName, msb);
+		idPrefix = "tid:" + hex(msb, 12); //$NON-NLS-1$
 		setUUID(schema);	
 		this.importProperties = importProperties;
 		this.rawMetadata = rawMetadata;
 	}
+
+	private long longHash(String s, long h) {
+		if (s == null) {
+			return h;
+		}
+		for (int i = 0; i < s.length(); i++) {
+            h = 31*h + s.charAt(i);
+        }
+		return h;
+	}
+	
+	private static String hex(long val, int hexLength) {
+		long hi = 1L << (hexLength * 4);
+		return Long.toHexString(hi | (val & (hi - 1))).substring(1);
+    }
 		
 	public Properties getImportProperties() {
 		return importProperties;
@@ -72,9 +92,15 @@ public class MetadataFactory implements Serializable {
 	public String getRawMetadata() {
 		return this.rawMetadata;
 	}
-		
+	
 	protected void setUUID(AbstractMetadataRecord record) {
-		record.setUUID("mmuuid:" +UUID.randomUUID()); //$NON-NLS-1$
+		int lsb = 0;
+		if (record.getParent() != null) {
+			lsb  = record.getParent().getUUID().hashCode();
+		}
+		lsb = 31*lsb + record.getName().hashCode();
+		String uuid = idPrefix+"-"+hex(lsb, 8) + "-" + hex(count++, 8); //$NON-NLS-1$ //$NON-NLS-2$
+        record.setUUID(uuid); 
 	}
 	
 	public String getName() {
@@ -122,10 +148,7 @@ public class MetadataFactory implements Serializable {
 		column.setName(name);
 		table.addColumn(column);
 		column.setPosition(table.getColumns().size()); //1 based indexing
-		Datatype datatype = setColumnType(type, column);
-		column.setCaseSensitive(datatype.isCaseSensitive());
-		column.setAutoIncremented(datatype.isAutoIncrement());
-		column.setSigned(datatype.isSigned());		
+		setColumnType(type, column);
 		setUUID(column);
 		return column;
 	}
@@ -136,12 +159,7 @@ public class MetadataFactory implements Serializable {
 		if (datatype == null) {
 			 throw new TranslatorException(DataPlugin.Event.TEIID60009, DataPlugin.Util.gs(DataPlugin.Event.TEIID60009, type));
 		}
-		column.setDatatype(datatype);
-		column.setDatatypeUUID(datatype.getUUID());
-		column.setLength(datatype.getLength());
-		column.setPrecision(datatype.getPrecisionLength());
-		column.setRadix(datatype.getRadix());
-		column.setRuntimeType(datatype.getRuntimeTypeName());
+		column.setDatatype(datatype, true);
 		return datatype;
 	}
 	

@@ -26,15 +26,32 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.metadata.Datatype;
-import org.teiid.metadata.MetadataStore;
 
 public class SystemDataTypes {
-	public static void loadSystemDatatypes(MetadataStore ms) throws IOException {
-		InputStream is = SystemDataTypes.class.getClassLoader().getResourceAsStream("org/teiid/datatypes/types.dat"); //$NON-NLS-1$
+	
+	private static SystemDataTypes INSTANCE = new SystemDataTypes();
+	
+	public static SystemDataTypes getInstance() {
+		return INSTANCE;
+	}
+	
+	private List<Datatype> dataTypes = new ArrayList<Datatype>();
+	private Map<String, Datatype> typeMap = new HashMap<String, Datatype>();
+	
+	public SystemDataTypes() {
+		InputStream is = SystemDataTypes.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
 		try {
 			InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8")); //$NON-NLS-1$
 			BufferedReader br = new BufferedReader(isr);
@@ -50,10 +67,46 @@ public class SystemDataTypes {
 					}
 				}
 				PropertiesUtils.setBeanProperties(dt, p, null);
-				ms.addDatatype(dt);
+				dataTypes.add(dt);
+				if (dt.isBuiltin()) {
+					typeMap.put(dt.getRuntimeTypeName(), dt);
+				}
 			}
+		} catch (IOException e) {
+			throw new TeiidRuntimeException(e);
 		} finally {
-			is.close();
+			try {
+				is.close();
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			}
 		}
+		addAliasType(DataTypeManager.DataTypeAliases.BIGINT);
+		addAliasType(DataTypeManager.DataTypeAliases.DECIMAL);
+		addAliasType(DataTypeManager.DataTypeAliases.REAL);
+		addAliasType(DataTypeManager.DataTypeAliases.SMALLINT);
+		addAliasType(DataTypeManager.DataTypeAliases.TINYINT);
+		addAliasType(DataTypeManager.DataTypeAliases.VARCHAR);
+		for (String name : DataTypeManager.getAllDataTypeNames()) {
+			if (!name.equals(DefaultDataTypes.NULL)) {
+				Assertion.isNotNull(typeMap.get(name), name);
+			}
+		}
+	}
+	
+	private void addAliasType(String alias) {
+		Class<?> typeClass = DataTypeManager.getDataTypeClass(alias);
+		String primaryType = DataTypeManager.getDataTypeName(typeClass);
+		Datatype dt = typeMap.get(primaryType);
+		Assertion.isNotNull(dt, alias);
+		typeMap.put(alias, dt);
+	}
+	
+	public List<Datatype> getDataTypes() {
+		return dataTypes;
+	}
+	
+	public Map<String, Datatype> getBuiltinTypeMap() {
+		return typeMap;
 	}
 }

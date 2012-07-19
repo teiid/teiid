@@ -22,6 +22,7 @@
 
 package org.teiid.query.parser;
 
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,14 +78,17 @@ public class QueryParser {
     }
 	
 	/**
-	 * Helper method to get a SQLParser instace for given sql string.
+	 * Helper method to get a SQLParser instance for given sql string.
 	 */
 	private SQLParser getSqlParser(String sql) {
-		sql = sql != null ? sql : "";  //$NON-NLS-1$
+		return getSqlParser(new StringReader(sql));
+	}
+	
+	private SQLParser getSqlParser(Reader sql) {
 		if(parser == null) {
-			parser = new SQLParser(new StringReader(sql));
+			parser = new SQLParser(sql);
 		} else {
-			parser.ReInit(new StringReader(sql));	
+			parser.ReInit(sql);	
 		}
 		return parser;		
 	}
@@ -352,6 +356,10 @@ public class QueryParser {
     }
     
     public void parseDDL(MetadataFactory factory, String ddl) throws ParseException {
+    	parseDDL(factory, new StringReader(ddl));
+    }
+    
+    public void parseDDL(MetadataFactory factory, Reader ddl) throws ParseException {
     	getSqlParser(ddl).parseMetadata(factory);
     	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
     	for (FunctionMethod functionMethod : factory.getSchema().getFunctions().values()) {

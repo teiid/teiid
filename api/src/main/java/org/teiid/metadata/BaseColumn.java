@@ -139,10 +139,21 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 	}
     
     public void setDatatype(Datatype datatype) {
+    	setDatatype(datatype, false);
+    }
+    
+    public void setDatatype(Datatype datatype, boolean copyAttributes) {
 		this.datatype = datatype;
 		if (datatype != null) {
 			this.datatypeUUID = this.datatype.getUUID();
 			this.runtimeType = this.datatype.getRuntimeTypeName();
+			if (copyAttributes) {
+				this.radix = this.datatype.getRadix();
+				this.length = this.datatype.getLength();
+				this.precision = this.datatype.getPrecision();
+				this.scale = this.datatype.getScale();
+				this.nullType = this.datatype.getNullType();
+			}
 		}
 	}
     

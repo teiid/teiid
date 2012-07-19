@@ -65,12 +65,28 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private int nullValues = -1;
     private ColumnSet<?> parent;
     
+    
+    @Override
+    public void setDatatype(Datatype datatype, boolean copyAttributes) {
+    	super.setDatatype(datatype, copyAttributes);
+    	if (datatype != null && copyAttributes) {
+    		//if (DefaultDataTypes.STRING.equals(datatype.getRuntimeTypeName())) { 
+    		    //TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes
+    			//this.charOctetLength = datatype.getLength();
+    		//}
+    		this.signed = datatype.isSigned();
+    		this.autoIncremented = datatype.isAutoIncrement();
+    		this.caseSensitive = datatype.isCaseSensitive();
+    		this.signed = datatype.isSigned();
+    	}
+    }
+    
     public void setParent(ColumnSet<?> parent) {
 		this.parent = parent;
 	}
     
     @Override
-    public AbstractMetadataRecord getParent() {
+    public ColumnSet<?> getParent() {
     	return parent;
     }
 

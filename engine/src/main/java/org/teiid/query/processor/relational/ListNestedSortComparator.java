@@ -156,10 +156,10 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 					// param1 = null, so is less than a non-null
 					compare = -1;
 					NullOrdering no = getNullOrdering(k);
-					if (no != null) {
-						if (nullOrdering.get(k) == NullOrdering.FIRST) {
-							return -1;
-						} 
+					if (no == NullOrdering.FIRST) {
+						return -1;
+					} 
+					if (no == NullOrdering.LAST) {
 						return 1;
 					}
 				}
@@ -167,10 +167,10 @@ public class ListNestedSortComparator<T extends Comparable<? super T>> implement
 				// param1 != null, param2 == null
 				compare = 1;
 				NullOrdering no = getNullOrdering(k);
-				if (no != null) {
-					if (nullOrdering.get(k) == NullOrdering.FIRST) {
-						return 1;
-					} 
+				if (no == NullOrdering.FIRST) {
+					return 1;
+				} 
+				if (no == NullOrdering.LAST) {
 					return -1;
 				}
             } else  {

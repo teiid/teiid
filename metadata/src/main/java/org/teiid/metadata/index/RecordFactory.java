@@ -672,7 +672,7 @@ public class RecordFactory {
         dt.setLength( Integer.parseInt(tokens.get(tokenIndex++)) );
         
         // Append the precision length
-        dt.setPrecisionLength( Integer.parseInt(tokens.get(tokenIndex++)) );
+        dt.setPrecision( Integer.parseInt(tokens.get(tokenIndex++)) );
         
         // Append the scale
         dt.setScale( Integer.parseInt(tokens.get(tokenIndex++)) );

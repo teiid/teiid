@@ -23,8 +23,6 @@ package org.teiid.deployers;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +38,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
@@ -71,7 +69,7 @@ public class VDBRepository implements Serializable{
 	private boolean odbcEnabled = false;
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
-	private Map<String, Datatype> datatypeMap = new HashMap<String, Datatype>();
+	private Map<String, Datatype> datatypeMap = SystemDataTypes.getInstance().getBuiltinTypeMap();
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition vdbAdded = lock.newCondition();
 	
@@ -209,55 +207,14 @@ public class VDBRepository implements Serializable{
 	
 	public void setSystemStore(MetadataStore store) {
 		this.systemStore = store;
-		Collection<Datatype> datatypes = this.systemStore.getDatatypes().values();
-		
-		for (String typeName : DataTypeManager.getAllDataTypeNames()) {
-			
-			boolean found = false;
-			for (Datatype datatypeRecordImpl : datatypes) {
-				if (datatypeRecordImpl.getRuntimeTypeName().equalsIgnoreCase(typeName)) {
-					datatypeMap.put(typeName, datatypeRecordImpl);
-					found = true;
-					break;
-				}
-			}
-			
-			if (!found) {
-				for (Datatype datatypeRecordImpl : datatypes) {
-					if (datatypeRecordImpl.getJavaClassName().equals(DataTypeManager.getDataTypeClass(typeName))) {
-						datatypeMap.put(typeName, datatypeRecordImpl);
-						break;
-					}			
-				}
-			}
-		}
-		
-		// add alias types
-		addAliasType(datatypes, DataTypeManager.DataTypeAliases.BIGINT);
-		addAliasType(datatypes, DataTypeManager.DataTypeAliases.DECIMAL);
-		addAliasType(datatypes, DataTypeManager.DataTypeAliases.REAL);
-		addAliasType(datatypes, DataTypeManager.DataTypeAliases.SMALLINT);
-		addAliasType(datatypes, DataTypeManager.DataTypeAliases.TINYINT);
-		addAliasType(datatypes, DataTypeManager.DataTypeAliases.VARCHAR);
-		
 	}
 	
-	private void addAliasType(Collection<Datatype> datatypes, String alias) {
-		Class<?> typeClass = DataTypeManager.getDataTypeClass(alias);
-		for (Datatype datatypeRecordImpl : datatypes) {
-			if (datatypeRecordImpl.getJavaClassName().equals(typeClass.getName())) {
-				datatypeMap.put(alias, datatypeRecordImpl);
-				break;
-			}
-		}
-	}
-
 	private MetadataStore getODBCMetadataStore() {
 		try {
 			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getBuiltinDatatypes());
 			return pg.asMetadataStore();
 		} catch (TranslatorException e) {
-			LogManager.logError(LogConstants.CTX_DQP, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));
+			LogManager.logError(LogConstants.CTX_DQP, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));
 		}
 		return null;
 	}

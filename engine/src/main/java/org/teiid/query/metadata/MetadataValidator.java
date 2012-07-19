@@ -21,15 +21,14 @@
  */
 package org.teiid.query.metadata;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -170,7 +169,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
 						}
 						else {
-							metadataValidator.validate(vdb, model, t, store, report);
+							metadataValidator.validate(vdb, model, t, report);
 						}
 					}						
 				}
@@ -181,7 +180,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
 						}
 						else {
-							metadataValidator.validate(vdb, model, p, store, report);
+							metadataValidator.validate(vdb, model, p, report);
 						}
 					}
 				}					
@@ -195,7 +194,7 @@ public class MetadataValidator {
 		report.handleValidationError(msg);
 	}
 	
-    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, MetadataStore store, ValidatorReport report) {
+    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report) {
     	QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
     	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore()); //TODO: optimize this
     	ValidatorReport resolverReport = null;
@@ -214,9 +213,10 @@ public class MetadataValidator {
     				resolverReport =  Validator.validate(command, metadata);
     				if(!resolverReport.hasItems()) {
     					List<Expression> symbols = command.getProjectedSymbols();
+    					MetadataFactory mf = t.removeAttachment(MetadataFactory.class);
     					for (Expression column:symbols) {
     						try {
-								addColumn(Symbol.getShortName(column), getDataType(store.getDatatypes().values(), column.getType()), t);
+								addColumn(Symbol.getShortName(column), column.getType(), t, mf);
 							} catch (TranslatorException e) {
 								log(report, model, e.getMessage());
 							}
@@ -242,37 +242,12 @@ public class MetadataValidator {
 		}
     }
 
-	private Datatype getDataType(Collection<Datatype> dataTypes, Class<?> clazz) {
-		for (Datatype type:dataTypes) {
-			if (type.getJavaClassName().equals(clazz.getName())) {
-				return type;
-			}
-		}
-		return null;
-	}
-	
-	private Column addColumn(String name, Datatype type, Table table) throws TranslatorException {
-		Column column = new Column();
-		column.setName(name);
-		if (table.getColumnByName(name) != null) {
-			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31087, name, table.getFullName()));
-		}
-		column.setUpdatable(table.supportsUpdate());
-		table.addColumn(column);
-		column.setPosition(table.getColumns().size()); //1 based indexing
+	private Column addColumn(String name, Class<?> type, Table table, MetadataFactory mf) throws TranslatorException {
 		if (type == null) {
 			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31086, name, table.getFullName()));
 		}
-		column.setDatatype(type);
-		column.setDatatypeUUID(type.getUUID());
-		column.setLength(type.getLength());
-		column.setPrecision(type.getPrecisionLength());
-		column.setRadix(type.getRadix());
-		column.setRuntimeType(type.getRuntimeTypeName());
-		column.setCaseSensitive(type.isCaseSensitive());
-		column.setAutoIncremented(type.isAutoIncrement());
-		column.setSigned(type.isSigned());		
-		column.setUUID("mmuuid:" +UUID.randomUUID()); //$NON-NLS-1$
+		Column column = mf.addColumn(name, DataTypeManager.getDataTypeName(type), table);
+		column.setUpdatable(table.supportsUpdate());
 		return column;		
 	}
 	

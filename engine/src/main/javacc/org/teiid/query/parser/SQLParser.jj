@@ -3920,18 +3920,18 @@ ParsedDataType parseDataType() :
 		(typeToken = <STRING> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) |
 		(typeToken = <VARCHAR> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
 		typeToken = <BOOLEAN> | 
-		(typeToken = <BYTE> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
-		(typeToken = <TINYINT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) |
-		(typeToken = <SHORT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) | 
-		(typeToken = <SMALLINT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) |
+		typeToken = <BYTE> | 
+		typeToken = <TINYINT> |
+		typeToken = <SHORT> | 
+		typeToken = <SMALLINT> |
 		(typeToken = <CHAR> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
-		(typeToken = <INTEGER> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) | 
-		(typeToken = <LONG> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>] ) | 
-		(typeToken = <BIGINT> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) |
+		typeToken = <INTEGER> | 
+		typeToken = <LONG> | 
+		typeToken = <BIGINT> |
 		(typeToken = <BIGINTEGER> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) | 
-		(typeToken = <FLOAT> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>]) |
-		(typeToken = <REAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
-		(typeToken = <DOUBLE> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
+		typeToken = <FLOAT> |
+		typeToken = <REAL> | 
+		typeToken = <DOUBLE> | 
 		(typeToken = <BIGDECIMAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])|
 		(typeToken = <DECIMAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
 		typeToken = <DATE> | 
@@ -4280,7 +4280,9 @@ void createTable(MetadataFactory factory) :
 		   }
 		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
 		}
-		if (!table.supportsUpdate() && table.getColumns() != null) {
+		if (table.getColumns() == null) {
+			table.addAttchment(MetadataFactory.class, factory);
+		} else if (!table.supportsUpdate()) {
 			for (Column c : table.getColumns()) {
 				c.setUpdatable(false);
 			}

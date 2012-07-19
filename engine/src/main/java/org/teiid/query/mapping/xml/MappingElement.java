@@ -333,6 +333,19 @@ public class MappingElement extends MappingBaseNode {
         }
         return super.getSourceNode();
     }
+    
+    @Override
+    public MappingNode clone() {
+    	MappingElement node = (MappingElement)super.clone();
+    	if (namespace != null) {
+    		node.namespace = new Namespace(namespace.getPrefix(), namespace.getUri());
+    	}
+    	Properties p = (Properties)getProperty(MappingNodeConstants.Properties.NAMESPACE_DECLARATIONS);
+    	if (p != null) {
+    		node.setProperty(MappingNodeConstants.Properties.NAMESPACE_DECLARATIONS, p.clone());
+    	}
+    	return node;
+    }
 }
 
 

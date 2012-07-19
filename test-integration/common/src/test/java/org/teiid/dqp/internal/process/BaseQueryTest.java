@@ -56,14 +56,16 @@ public abstract class BaseQueryTest extends TestCase {
         
     protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
     	CommandContext context = createCommandContext();
-    	context.setMetadata(metadata);
+    	if (context.getMetadata() == null) {
+    		context.setMetadata(metadata);
+    	}
         Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
 
         // plan
         AnalysisRecord analysisRecord = new AnalysisRecord(false, debug);
         ProcessorPlan plan = null;
         try {
-            plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, createCommandContext());
+            plan = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);
         } finally {
             if(debug) {
                 System.out.println(analysisRecord.getDebugLog());
