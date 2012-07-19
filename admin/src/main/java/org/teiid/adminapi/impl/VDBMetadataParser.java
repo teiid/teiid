@@ -391,11 +391,11 @@ public class VDBMetadataParser {
 
 	public static void marshell(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
 		XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(out);
-        
+		
 		writer.writeStartDocument();
 		writer.writeStartElement(Element.VDB.getLocalName());
-		writer.writeAttribute(Element.NAME.getLocalName(), vdb.getName());
-		writer.writeAttribute(Element.VERSION.getLocalName(), String.valueOf(vdb.getVersion()));
+		writeAttribute(writer, Element.NAME.getLocalName(), vdb.getName());
+		writeAttribute(writer, Element.VERSION.getLocalName(), String.valueOf(vdb.getVersion()));
 		
 		if (vdb.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, vdb.getDescription());
@@ -404,9 +404,9 @@ public class VDBMetadataParser {
 
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
 			writer.writeStartElement(Element.IMPORT_VDB.getLocalName());
-			writer.writeAttribute(Element.NAME.getLocalName(), vdbImport.getName());
-			writer.writeAttribute(Element.VERSION.getLocalName(), String.valueOf(vdbImport.getVersion()));
-			writer.writeAttribute(Element.IMPORT_POLICIES.getLocalName(), String.valueOf(vdbImport.isImportDataPolicies()));
+			writeAttribute(writer, Element.NAME.getLocalName(), vdbImport.getName());
+			writeAttribute(writer, Element.VERSION.getLocalName(), String.valueOf(vdbImport.getVersion()));
+			writeAttribute(writer, Element.IMPORT_POLICIES.getLocalName(), String.valueOf(vdbImport.isImportDataPolicies()));
 			writer.writeEndElement();
 		}
 		
@@ -438,9 +438,9 @@ public class VDBMetadataParser {
 	private static void writeDataPolicy(XMLStreamWriter writer, DataPolicy dp)  throws XMLStreamException {
 		writer.writeStartElement(Element.DATA_ROLE.getLocalName());
 		
-		writer.writeAttribute(Element.NAME.getLocalName(), dp.getName());
-		writer.writeAttribute(Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName(), String.valueOf(dp.isAnyAuthenticated()));
-		writer.writeAttribute(Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
+		writeAttribute(writer, Element.NAME.getLocalName(), dp.getName());
+		writeAttribute(writer, Element.DATA_ROLE_ANY_ATHENTICATED_ATTR.getLocalName(), String.valueOf(dp.isAnyAuthenticated()));
+		writeAttribute(writer, Element.DATA_ROLE_ALLOW_TEMP_TABLES_ATTR.getLocalName(), String.valueOf(dp.isAllowCreateTemporaryTables()));
 
 		writeElement(writer, Element.DESCRIPTION, dp.getDescription());
 		
@@ -480,9 +480,11 @@ public class VDBMetadataParser {
 	private static void writeTranslator(final XMLStreamWriter writer, Translator translator)  throws XMLStreamException  {
 		writer.writeStartElement(Element.TRANSLATOR.getLocalName());
 		
-		writer.writeAttribute(Element.NAME.getLocalName(), translator.getName());
-		writer.writeAttribute(Element.TYPE.getLocalName(), translator.getType());
-		writer.writeAttribute(Element.DESCRIPTION.getLocalName(), translator.getDescription());
+		writeAttribute(writer, Element.NAME.getLocalName(), translator.getName());
+		writeAttribute(writer, Element.TYPE.getLocalName(), translator.getType());
+		if (translator.getDescription() != null) {
+			writeAttribute(writer, Element.DESCRIPTION.getLocalName(), translator.getDescription());
+		}
 		
 		writeProperties(writer, translator.getProperties());
 		
@@ -491,12 +493,12 @@ public class VDBMetadataParser {
 
 	private static void writeModel(final XMLStreamWriter writer, ModelMetaData model) throws XMLStreamException {
 		writer.writeStartElement(Element.MODEL.getLocalName());
-		writer.writeAttribute(Element.NAME.getLocalName(), model.getName());
-		writer.writeAttribute(Element.TYPE.getLocalName(), model.getModelType().name());
+		writeAttribute(writer, Element.NAME.getLocalName(), model.getName());
+		writeAttribute(writer, Element.TYPE.getLocalName(), model.getModelType().name());
 
-		writer.writeAttribute(Element.VISIBLE.getLocalName(), String.valueOf(model.isVisible()));
+		writeAttribute(writer, Element.VISIBLE.getLocalName(), String.valueOf(model.isVisible()));
 		if (model.getPath() != null) {
-			writer.writeAttribute(Element.PATH.getLocalName(), model.getPath());
+			writeAttribute(writer, Element.PATH.getLocalName(), model.getPath());
 		}
 
 		if (model.getDescription() != null) {
@@ -507,15 +509,15 @@ public class VDBMetadataParser {
 		// source mappings
 		for (SourceMappingMetadata source:model.getSourceMappings()) {
 			writer.writeStartElement(Element.SOURCE.getLocalName());
-			writer.writeAttribute(Element.NAME.getLocalName(), source.getName());
-			writer.writeAttribute(Element.SOURCE_TRANSLATOR_NAME_ATTR.getLocalName(), source.getTranslatorName());
-			writer.writeAttribute(Element.SOURCE_CONNECTION_JNDI_NAME_ATTR.getLocalName(), source.getConnectionJndiName());
+			writeAttribute(writer, Element.NAME.getLocalName(), source.getName());
+			writeAttribute(writer, Element.SOURCE_TRANSLATOR_NAME_ATTR.getLocalName(), source.getTranslatorName());
+			writeAttribute(writer, Element.SOURCE_CONNECTION_JNDI_NAME_ATTR.getLocalName(), source.getConnectionJndiName());
 			writer.writeEndElement();
 		}
 		
 		if (model.getSchemaSourceType() != null) {
 			writer.writeStartElement(Element.METADATA.getLocalName());
-			writer.writeAttribute(Element.TYPE.getLocalName(), model.getSchemaSourceType());
+			writeAttribute(writer, Element.TYPE.getLocalName(), model.getSchemaSourceType());
 			writer.writeCData(model.getSchemaText());
 			writer.writeEndElement();
 		}
@@ -523,9 +525,9 @@ public class VDBMetadataParser {
 		// model validation errors
 		for (Message ve:model.getMessages(false)) {
 			writer.writeStartElement(Element.VALIDATION_ERROR.getLocalName());
-			writer.writeAttribute(Element.VALIDATION_SEVERITY_ATTR.getLocalName(), ve.getSeverity().name());
+			writeAttribute(writer, Element.VALIDATION_SEVERITY_ATTR.getLocalName(), ve.getSeverity().name());
 			if (ve.getPath() != null) {
-				writer.writeAttribute(Element.PATH.getLocalName(), ve.getPath());
+				writeAttribute(writer, Element.PATH.getLocalName(), ve.getPath());
 			}
 			writer.writeCharacters(ve.getValue());
 			writer.writeEndElement();
@@ -539,13 +541,20 @@ public class VDBMetadataParser {
 	        writer.writeStartElement(Element.PROPERTY.getLocalName());
 			String key = (String)keys.nextElement();
 			String value = props.getProperty(key);
-			writer.writeAttribute(Element.NAME.getLocalName(), key);
-			writer.writeAttribute(Element.VALUE.getLocalName(), value);
+			writeAttribute(writer, Element.NAME.getLocalName(), key);
+			writeAttribute(writer, Element.VALUE.getLocalName(), value);
 			writer.writeEndElement();
 		}
 	}
 	
-    private static void writeElement(final XMLStreamWriter writer, final Element element, String value) throws XMLStreamException {
+    private static void writeAttribute(XMLStreamWriter writer,
+			String localName, String value) throws XMLStreamException {
+		if (value != null) {
+			writer.writeAttribute(localName, value);
+		}
+	}
+
+	private static void writeElement(final XMLStreamWriter writer, final Element element, String value) throws XMLStreamException {
         writer.writeStartElement(element.getLocalName());
         writer.writeCharacters(value);
         writer.writeEndElement();
