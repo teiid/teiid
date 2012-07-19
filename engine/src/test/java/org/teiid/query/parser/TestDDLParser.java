@@ -32,10 +32,10 @@ import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.validator.ValidatorReport;
 
 //import static org.junit.Assert.*;
@@ -630,7 +630,7 @@ public class TestDDLParser {
 	}
 	
 	public static Map<String, Datatype> getDataTypes() {
-		return SystemDataTypes.getInstance().getBuiltinTypeMap();
+		return SystemMetadata.getInstance().getBuiltinTypeMap();
 	}
 	
 	@Test public void testKeyResolve() {

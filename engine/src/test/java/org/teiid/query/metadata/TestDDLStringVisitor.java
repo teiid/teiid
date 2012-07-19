@@ -122,14 +122,14 @@ public class TestDDLStringVisitor {
 	
 	@Test
 	public void testFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n" +
+		String ddl = "CREATE FOREIGN TABLE G1(\"g1-e1\" integer, g1e2 varchar CONSTRAINT PRIMARY KEY(\"g1-e1\", g1e2));\n" +
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT " +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
 		
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
-				"	g1e1 integer,\n" + 
+				"	\"g1-e1\" integer,\n" + 
 				"	g1e2 string\n" + 
-				"	CONSTRAINT PRIMARY KEY(g1e1, g1e2)\n" + 
+				"	CONSTRAINT PRIMARY KEY(\"g1-e1\", g1e2)\n" + 
 				");\n" + 
 				"\n" + 
 				"CREATE FOREIGN TABLE G2 (\n" + 
@@ -143,10 +143,10 @@ public class TestDDLStringVisitor {
 	
 	@Test
 	public void testOptionalFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n" +
+		String ddl = "CREATE FOREIGN TABLE \"G1+\"(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n" +
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2)," +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
-		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
+		String expected = "CREATE FOREIGN TABLE \"G1+\" (\n" + 
 				"	g1e1 integer,\n" + 
 				"	g1e2 string\n" + 
 				"	CONSTRAINT PRIMARY KEY(g1e1, g1e2)\n" + 

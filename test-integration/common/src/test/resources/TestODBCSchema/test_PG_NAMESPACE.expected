@@ -1,8 +1,8 @@
 integer      string                                                           
 oid          nspname                                                          
 1            PartsSupplier                                                    
-2            SYSADMIN                                                         
-3            SYS                                                              
+2            SYS                                                              
+3            SYSADMIN                                                         
 4            pg_catalog                                                       
 Row Count : 4
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  

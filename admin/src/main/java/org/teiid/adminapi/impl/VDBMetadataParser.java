@@ -482,9 +482,7 @@ public class VDBMetadataParser {
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), translator.getName());
 		writeAttribute(writer, Element.TYPE.getLocalName(), translator.getType());
-		if (translator.getDescription() != null) {
-			writeAttribute(writer, Element.DESCRIPTION.getLocalName(), translator.getDescription());
-		}
+		writeAttribute(writer, Element.DESCRIPTION.getLocalName(), translator.getDescription());
 		
 		writeProperties(writer, translator.getProperties());
 		
@@ -497,9 +495,7 @@ public class VDBMetadataParser {
 		writeAttribute(writer, Element.TYPE.getLocalName(), model.getModelType().name());
 
 		writeAttribute(writer, Element.VISIBLE.getLocalName(), String.valueOf(model.isVisible()));
-		if (model.getPath() != null) {
-			writeAttribute(writer, Element.PATH.getLocalName(), model.getPath());
-		}
+		writeAttribute(writer, Element.PATH.getLocalName(), model.getPath());
 
 		if (model.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, model.getDescription());
@@ -526,9 +522,7 @@ public class VDBMetadataParser {
 		for (Message ve:model.getMessages(false)) {
 			writer.writeStartElement(Element.VALIDATION_ERROR.getLocalName());
 			writeAttribute(writer, Element.VALIDATION_SEVERITY_ATTR.getLocalName(), ve.getSeverity().name());
-			if (ve.getPath() != null) {
-				writeAttribute(writer, Element.PATH.getLocalName(), ve.getPath());
-			}
+			writeAttribute(writer, Element.PATH.getLocalName(), ve.getPath());
 			writer.writeCharacters(ve.getValue());
 			writer.writeEndElement();
 		}

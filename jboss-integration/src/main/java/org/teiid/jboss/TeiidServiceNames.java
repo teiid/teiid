@@ -34,7 +34,6 @@ public class TeiidServiceNames {
 	public static ServiceName DATA_DIR = ServiceName.JBOSS.append("teiid", "data.dir");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName BUFFER_MGR = ServiceName.JBOSS.append("teiid", "buffer-mgr");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName TUPLE_BUFFER = ServiceName.JBOSS.append("teiid", "tuple_buffer");//$NON-NLS-1$ //$NON-NLS-2$
-	public static ServiceName SYSTEM_VDB = ServiceName.JBOSS.append("teiid", "system.vdb");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName AUTHORIZATION_VALIDATOR = ServiceName.JBOSS.append("teiid", "authorization-validator");//$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb"); //$NON-NLS-1$ //$NON-NLS-2$
 	private static ServiceName VDB_FINISHED_SVC_BASE = ServiceName.JBOSS.append("teiid", "vdb-finished"); //$NON-NLS-1$ //$NON-NLS-2$

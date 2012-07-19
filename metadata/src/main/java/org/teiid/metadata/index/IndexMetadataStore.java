@@ -41,7 +41,6 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.util.StringUtil;
-import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.internal.core.index.Index;
 import org.teiid.metadata.*;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -236,10 +235,6 @@ public class IndexMetadataStore extends MetadataStore {
 				Map<String, AbstractMetadataRecord> uuidToRecord = getByType(MetadataConstants.RECORD_TYPE.DATATYPE);
 				if (systemDatatypes != null) {
 					for (Datatype datatype : systemDatatypes) {
-						uuidToRecord.put(datatype.getUUID(), datatype);
-					}
-				} else {
-					for (Datatype datatype : SystemDataTypes.getInstance().getDataTypes()) {
 						uuidToRecord.put(datatype.getUUID(), datatype);
 					}
 				}

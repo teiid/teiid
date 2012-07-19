@@ -41,7 +41,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
@@ -73,7 +72,6 @@ public class TestDynamicImportedMetaData {
 
 	private MetadataFactory createMetadataFactory(String schema, Properties importProperties) {
 		VDBRepository vdbRepository = new VDBRepository();
-    	vdbRepository.setSystemStore(VDBMetadataFactory.getSystem());
     	return new MetadataFactory("vdb", 1, schema, vdbRepository.getBuiltinDatatypes(), importProperties, null);
 	}
 	

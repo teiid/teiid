@@ -30,7 +30,6 @@ import javax.transaction.TransactionManager;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
-import org.teiid.metadata.MetadataStore;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.security.SecurityHelper;
 
@@ -39,7 +38,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private SecurityHelper securityHelper;
 	private List<String> securityDomains;
 	private TransactionManager transactionManager;
-	private MetadataStore systemStore;
 	private ObjectReplicator objectReplicator;
 	private WorkManager workManager;
 	private boolean useDisk = true;
@@ -69,12 +67,6 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}
 	public void setTransactionManager(TransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
-	}
-	public MetadataStore getSystemStore() {
-		return systemStore;
-	}
-	public void setSystemStore(MetadataStore systemStore) {
-		this.systemStore = systemStore;
 	}
 	public ObjectReplicator getObjectReplicator() {
 		return objectReplicator;

@@ -100,9 +100,6 @@ public class FakeServer extends EmbeddedServer {
 	}
 
 	public void start(EmbeddedConfiguration config, boolean realBufferMangaer) {
-		if (config.getSystemStore() == null) {
-			config.setSystemStore(VDBMetadataFactory.getSystem());
-		}
 		if (config.getTransactionManager() == null) {
 			config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 			this.transactionService.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));

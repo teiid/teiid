@@ -39,7 +39,6 @@ import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
@@ -49,6 +48,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.net.ConnectionException;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.RuntimePlugin;
@@ -64,12 +64,12 @@ public class VDBRepository implements Serializable{
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
-	private MetadataStore systemStore;
+	private MetadataStore systemStore = SystemMetadata.getInstance().getSystemStore();
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
-	private Map<String, Datatype> datatypeMap = SystemDataTypes.getInstance().getBuiltinTypeMap();
+	private Map<String, Datatype> datatypeMap = SystemMetadata.getInstance().getBuiltinTypeMap();
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition vdbAdded = lock.newCondition();
 	

@@ -24,7 +24,7 @@ CREATE FOREIGN TABLE Columns (
 	Format string(255),
 	DefaultValue string(255),
 	JavaClass string(500) NOT NULL,
-	Precision integer NOT NULL,
+	"Precision" integer NOT NULL,
 	CharOctetLength integer,
 	Radix integer NOT NULL,
 	UID string(50) NOT NULL,
@@ -44,7 +44,7 @@ CREATE FOREIGN TABLE DataTypes (
 	IsSigned boolean NOT NULL,
 	IsAutoIncremented boolean NOT NULL,
 	IsCaseSensitive boolean NOT NULL,
-	Precision integer NOT NULL,
+	"Precision" integer NOT NULL,
 	Radix integer,
 	SearchType string(20) NOT NULL,
 	UID string(50) NOT NULL,
@@ -90,7 +90,7 @@ CREATE FOREIGN TABLE ProcedureParams (
 	Position integer NOT NULL,
 	Type string(100) NOT NULL,
 	Optional boolean NOT NULL,
-	Precision integer NOT NULL,
+	"Precision" integer NOT NULL,
 	TypeLength integer NOT NULL,
 	Scale integer NOT NULL,
 	Radix integer NOT NULL,
@@ -113,7 +113,7 @@ CREATE FOREIGN TABLE Procedures (
 
 CREATE FOREIGN TABLE Properties (
 	Name string(255) NOT NULL,
-	Value string(255) NOT NULL,
+	"Value" string(255) NOT NULL,
 	UID string(50) NOT NULL,
 	OID integer NOT NULL,
 	ClobValue clob(2097152)

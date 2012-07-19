@@ -38,7 +38,6 @@ import org.teiid.jdbc.FakeServer;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.index.VDBMetadataFactory;
 
 @SuppressWarnings("nls")
 public class TestMatViewAliasing {
@@ -51,7 +50,6 @@ public class TestMatViewAliasing {
     	server = new FakeServer(true);
     	
     	VDBRepository vdbRepository = new VDBRepository();
-    	vdbRepository.setSystemStore(VDBMetadataFactory.getSystem());
     	MetadataFactory mf = new MetadataFactory(null, 1, "foo", vdbRepository.getBuiltinDatatypes(), new Properties(), null);
     	mf.getSchema().setPhysical(false);
     	Table mat = mf.addTable("mat");

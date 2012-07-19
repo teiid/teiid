@@ -140,7 +140,8 @@ public class DDLStringVisitor {
 			buffer.append(VIEW);
 		}
 		buffer.append(SPACE);
-		buffer.append(table.getName());
+		String name = SQLStringVisitor.escapeSinglePart(table.getName());
+		buffer.append(name);
 		
 		if (table.getColumns() != null) {
 			buffer.append(SPACE);
@@ -179,15 +180,15 @@ public class DDLStringVisitor {
 		buffer.append(SQLConstants.Tokens.SEMICOLON);
 		
 		if (table.isInsertPlanEnabled()) {
-			buildTrigger(table.getName(), INSERT, table.getInsertPlan());
+			buildTrigger(name, INSERT, table.getInsertPlan());
 		}
 		
 		if (table.isUpdatePlanEnabled()) {
-			buildTrigger(table.getName(), UPDATE, table.getUpdatePlan());
+			buildTrigger(name, UPDATE, table.getUpdatePlan());
 		}	
 		
 		if (table.isDeletePlanEnabled()) {
-			buildTrigger(table.getName(), DELETE, table.getDeletePlan());
+			buildTrigger(name, DELETE, table.getDeletePlan());
 		}			
 	}
 
@@ -379,17 +380,21 @@ public class DDLStringVisitor {
 			}
 		}		
 		
-		if (column.getDefaultValue() != null) {
-			buffer.append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
-		}
+		appendDefault(column);
 		
 		// options
 		appendColumnOptions(buffer, column);
 	}
 
+	private void appendDefault(BaseColumn column) {
+		if (column.getDefaultValue() != null) {
+			buffer.append(SPACE).append(DEFAULT).append(SPACE).append(TICK).append(StringUtil.replaceAll(column.getDefaultValue(), TICK, TICK + TICK)).append(TICK);
+		}
+	}
+
 	private void appendColumn(StringBuilder builder, BaseColumn column, boolean includeName, boolean includeType) {
 		if (includeName) {
-			builder.append(column.getName());
+			builder.append(SQLStringVisitor.escapeSinglePart(column.getName()));
 		}
 		if (includeType) {
 			String runtimeTypeName = column.getDatatype().getRuntimeTypeName();
@@ -521,7 +526,7 @@ public class DDLStringVisitor {
 		else {
 			buffer.append(FOREIGN);
 		}
-		buffer.append(SPACE).append(PROCEDURE).append(SPACE).append(procedure.getName());
+		buffer.append(SPACE).append(PROCEDURE).append(SPACE).append(SQLStringVisitor.escapeSinglePart(procedure.getName()));
 		buffer.append(LPAREN);
 		
 		boolean first = true;
@@ -590,6 +595,7 @@ public class DDLStringVisitor {
 		if (type == Type.ReturnValue) {
 			buffer.append(SPACE).append(NonReserved.RESULT);
 		}
+		appendDefault(param);
 		appendColumnOptions(buffer, param);
 	}	
 
@@ -604,7 +610,7 @@ public class DDLStringVisitor {
 		else {
 			buffer.append(VIRTUAL);
 		}
-		buffer.append(SPACE).append(FUNCTION).append(SPACE).append(function.getName());
+		buffer.append(SPACE).append(FUNCTION).append(SPACE).append(SQLStringVisitor.escapeSinglePart(function.getName()));
 		buffer.append(LPAREN);
 		
 		boolean first = true;
@@ -660,7 +666,7 @@ public class DDLStringVisitor {
 	}
 
 	private void visit(FunctionParameter param) {
-		buffer.append(param.getName()).append(SPACE).append(param.getType());
+		buffer.append(SQLStringVisitor.escapeSinglePart(param.getName())).append(SPACE).append(param.getType());
 	}
 
     public String toString() {

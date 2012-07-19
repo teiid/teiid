@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.datatypes;
+package org.teiid.query.metadata;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -32,26 +32,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Table;
+import org.teiid.query.parser.ParseException;
+import org.teiid.query.parser.QueryParser;
+import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.TranslatorException;
 
-public class SystemDataTypes {
+public class SystemMetadata {
 	
-	private static SystemDataTypes INSTANCE = new SystemDataTypes();
+	private static SystemMetadata INSTANCE = new SystemMetadata();
 	
-	public static SystemDataTypes getInstance() {
+	public static SystemMetadata getInstance() {
 		return INSTANCE;
 	}
 	
 	private List<Datatype> dataTypes = new ArrayList<Datatype>();
 	private Map<String, Datatype> typeMap = new HashMap<String, Datatype>();
+	private MetadataStore systemStore;
 	
-	public SystemDataTypes() {
-		InputStream is = SystemDataTypes.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
+	public SystemMetadata() {
+		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/types.dat"); //$NON-NLS-1$
 		try {
 			InputStreamReader isr = new InputStreamReader(is, Charset.forName("UTF-8")); //$NON-NLS-1$
 			BufferedReader br = new BufferedReader(isr);
@@ -72,6 +82,7 @@ public class SystemDataTypes {
 					typeMap.put(dt.getRuntimeTypeName(), dt);
 				}
 			}
+			is.close();
 		} catch (IOException e) {
 			throw new TeiidRuntimeException(e);
 		} finally {
@@ -92,6 +103,46 @@ public class SystemDataTypes {
 				Assertion.isNotNull(typeMap.get(name), name);
 			}
 		}
+		
+		VDBMetaData vdb = new VDBMetaData();
+		vdb.setName("System");  //$NON-NLS-1$
+		vdb.setVersion(1);
+		Properties p = new Properties();
+		systemStore = loadSchema(vdb, p, "SYS").asMetadataStore(); //$NON-NLS-1$
+		systemStore.addDataTypes(dataTypes);
+		loadSchema(vdb, p, "SYSADMIN").mergeInto(systemStore); //$NON-NLS-1$
+		MetadataValidator validator = new MetadataValidator();
+		ValidatorReport report = validator.validate(vdb, systemStore);
+		if (report.hasItems()) {
+			throw new TeiidRuntimeException(report.getFailureMessage());
+		}
+	}
+
+	private MetadataFactory loadSchema(VDBMetaData vdb, Properties p, String name) {
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName(name);
+		vdb.addModel(mmd);
+		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/"+name+".sql"); //$NON-NLS-1$ //$NON-NLS-2$
+		try {
+			MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), name, typeMap, p, null) {
+				@Override
+				public Table addTable(String name) throws TranslatorException {
+					Table t = super.addTable(name);
+					t.setSystem(true);
+					return t;
+				}
+			};
+			QueryParser.getQueryParser().parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+			return factory;
+		} catch (ParseException e) {
+			throw new TeiidRuntimeException(e);
+		} finally {
+			try {
+				is.close();
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
 	}
 	
 	private void addAliasType(String alias) {
@@ -102,11 +153,23 @@ public class SystemDataTypes {
 		typeMap.put(alias, dt);
 	}
 	
+	/**
+	 * List of all "built-in" datatypes.  Note that the datatype names do not necessarily match the corresponding runtime type names i.e. int vs. integer
+	 * @return
+	 */
 	public List<Datatype> getDataTypes() {
 		return dataTypes;
 	}
 	
+	/**
+	 * Map of runtime types and aliases to built-in datatypes
+	 * @return
+	 */
 	public Map<String, Datatype> getBuiltinTypeMap() {
 		return typeMap;
+	}
+	
+	public MetadataStore getSystemStore() {
+		return systemStore;
 	}
 }

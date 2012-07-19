@@ -54,7 +54,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.BundleUtil.Event;
-import org.teiid.datatypes.SystemDataTypes;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -305,13 +304,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.replicator = dqpConfiguration.getObjectReplicator();
-		if (dqpConfiguration.getSystemStore() == null) {
-			MetadataStore ms = new MetadataStore();
-			ms.addDataTypes(SystemDataTypes.getInstance().getDataTypes());
-			this.repo.setSystemStore(ms);
-		} else {
-			this.repo.setSystemStore(dqpConfiguration.getSystemStore());
-		}
 		if (dqpConfiguration.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
