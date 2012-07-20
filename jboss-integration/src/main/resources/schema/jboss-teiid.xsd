@@ -338,13 +338,13 @@
                             </xs:complexType>                        
                         </xs:element>                                                
                     </xs:sequence>
-                    <xs:attribute name="mode" default="disabled">
+                    <xs:attribute name="mode" default="login">
                         <xs:annotation>
                             <xs:documentation>can be one of disabled, login, or enabled
                                 disabled = no transport or message level security will be used
                                 login = only the login traffic will be encrypted at a message level
                                 using 128 bit AES with an ephemerial DH key exchange.
-                                No other config values are needed in this mode
+                                No other config values are needed in this mode; and it only applies to the JDBC transport
                                 enabled = traffic will be secured using this configuration</xs:documentation>
                         </xs:annotation>
                         <xs:simpleType>
@@ -355,7 +355,7 @@
                             </xs:restriction>
                         </xs:simpleType>                
                     </xs:attribute>
-                    <xs:attribute name="authentication-mode" default="anonymous">
+                    <xs:attribute name="authentication-mode" default="1-way">
                         <xs:annotation>
                             <xs:documentation>1-way, 2-way, anonymous</xs:documentation>
                         </xs:annotation>
@@ -367,7 +367,7 @@
                             </xs:restriction>
                         </xs:simpleType>                                
                     </xs:attribute>
-                    <xs:attribute name="ssl-protocol" type="xs:string"/>
+                    <xs:attribute name="ssl-protocol" type="xs:string" default="TLSv1"/>
                     <xs:attribute name="keymanagement-algorithm" type="xs:string"/>
                     <xs:attribute name="enable" type="xs:boolean"/>
                 </xs:complexType>

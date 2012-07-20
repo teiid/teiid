@@ -126,7 +126,6 @@ public class TestTeiidConfiguration extends AbstractSubsystemTest {
 
 	private void validate(String marshalled) throws SAXException, IOException {
 		URL xsdURL = Thread.currentThread().getContextClassLoader().getResource("schema/jboss-teiid.xsd");
-		System.out.println(marshalled);
 		
 		SchemaFactory factory = SchemaFactory.newInstance("http://www.w3.org/2001/XMLSchema");
 		Schema schema = factory.newSchema(xsdURL);

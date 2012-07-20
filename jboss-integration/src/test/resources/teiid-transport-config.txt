@@ -66,13 +66,13 @@
         "type" => STRING,
         "description" => "Authentication Mode (1-way, 2-way, anonymous)             ",
         "required" => false,
-        "default" => "anonymous"
+        "default" => "1-way"
     },
     "ssl-ssl-protocol" => {
         "type" => STRING,
         "description" => "SSL protocol used",
         "required" => false,
-        "default" => "SSLv3"
+        "default" => "TLSv1"
     },
     "ssl-keymanagement-algorithm" => {
         "type" => STRING,
