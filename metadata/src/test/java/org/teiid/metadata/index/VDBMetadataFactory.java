@@ -39,6 +39,7 @@ import org.jboss.vfs.VirtualFile;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
@@ -91,9 +92,10 @@ public class VDBMetadataFactory {
     }
 
 	public static IndexMetadataStore loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException, URISyntaxException {
-		VirtualFile root = VFS.getChild(vdbName);
+		String fileName = PropertiesUtils.toHex(url.toExternalForm().getBytes());
+		VirtualFile root = VFS.getChild(fileName);
     	if (!root.exists()) {
-    		VFS.mountZip(url.openStream(), vdbName, root, TempFileProvider.create("vdbs", Executors.newScheduledThreadPool(2)));
+    		VFS.mountZip(url.openStream(), fileName, root, TempFileProvider.create("vdbs", Executors.newScheduledThreadPool(2)));
     		// once done this mount should be closed, since this class is only used testing
     		// it is hard to event when the test is done, otherwise we need to elevate the VFS to top
     	}
