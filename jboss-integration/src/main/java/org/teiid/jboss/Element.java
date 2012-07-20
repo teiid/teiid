@@ -32,6 +32,8 @@ import java.util.Set;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.net.socket.SocketUtil;
+import org.teiid.transport.SSLConfiguration;
 
 @SuppressWarnings("nls")
 enum Element {
@@ -108,9 +110,9 @@ enum Element {
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes", ModelType.INT, false, "5242880"), //$NON-NLS-1$ //$NON-NLS-2$
 	
 	SSL_ELEMENT("ssl"),
-	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, "login"),
-	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, "anonymous"),
-	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, "SSLv3"),
+	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, SSLConfiguration.LOGIN),
+	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, SSLConfiguration.ONEWAY),
+	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, SocketUtil.DEFAULT_PROTOCOL),
 	SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE("keymanagement-algorithm", "ssl-keymanagement-algorithm", ModelType.STRING, false, null),
 	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites", ModelType.STRING, false, null),
 	SSL_KETSTORE_ELEMENT("keystore"),
