@@ -341,6 +341,14 @@ public class AdminShell {
 			@Doc(text = "models") String... models)
 			throws AdminException {
 		getAdmin().restartVDB(vdbName, vdbVersion, models);
+	}
+	
+	@Doc(text = "Get query execution plan for the given execution id")
+	public static String getQueryPlan(
+			@Doc(text = "Session Id") String sessionId, 
+			@Doc(text = "Execution Id") int executionId) 
+			throws AdminException {
+		return getAdmin().getQueryPlan(sessionId, executionId);
 	}	
 	
 	@Doc(text = "Get the current org.teiid.adminapi.Admin instance for direct use. Note: Used for advanced usecases to bypass AdminShell methods")

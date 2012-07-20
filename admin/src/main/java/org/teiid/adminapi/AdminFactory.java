@@ -1374,6 +1374,23 @@ public class AdminFactory {
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
 	        }
+		}
+
+		@Override
+		public String getQueryPlan(String sessionId, int executionId)  throws AdminException {
+			final ModelNode request = buildRequest("teiid", "get-plan", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
+			if (request == null) {
+				return null;
+			}
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70021, Util.getFailureDescription(outcome));
+	            }
+	            return outcome.get(RESULT).asString();
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70022, e);
+	        }
 		}		
     }
 }

@@ -307,4 +307,12 @@ public interface Admin {
      * @param typeNamePattern RegEx pattern to filter to names of tables, procedures that are being read. Null means no filter.  
      */
     String getSchema(String vdbName, int vdbVersion, String modelName, EnumSet<SchemaObjectType> allowedTypes, String typeNamePattern) throws AdminException;
+    
+    /**
+     * Get the Query Plan for the given session with provided execution id.
+     * @param sessionId
+     * @param executionId
+     * @return
+     */
+    String getQueryPlan(String sessionId, int executionId) throws AdminException;
 }

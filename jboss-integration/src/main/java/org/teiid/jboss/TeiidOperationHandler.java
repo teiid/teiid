@@ -229,10 +229,21 @@ class ListRequestsPerSession extends TeiidOperationHandler{
 		if (!operation.hasDefined(OperationsConstants.SESSION)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SESSION+MISSING)));
 		}
+		boolean includeSourceQueries = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SOURCE)) {
+			includeSourceQueries = operation.get(OperationsConstants.INCLUDE_SOURCE).asBoolean();
+		}		
 		ModelNode result = context.getResult();
 		List<RequestMetadata> requests = engine.getRequestsForSession(operation.get(OperationsConstants.SESSION).asString());
 		for (RequestMetadata request:requests) {
-			VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+			if (request.sourceRequest()) {
+				if (includeSourceQueries) {
+					VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+				}
+			}
+			else {
+				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+			}			
 		}
 	}
 	
@@ -240,6 +251,10 @@ class ListRequestsPerSession extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, TYPE).set(ModelType.STRING);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.SESSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.SESSION));
+
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, TYPE).set(ModelType.BOOLEAN);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.INCLUDE_SOURCE)); 
 		
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.LIST);		
@@ -253,13 +268,30 @@ class ListRequests extends TeiidOperationHandler{
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
+		boolean includeSourceQueries = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SOURCE)) {
+			includeSourceQueries = operation.get(OperationsConstants.INCLUDE_SOURCE).asBoolean();
+		}	
+		
 		ModelNode result = context.getResult();
 		List<RequestMetadata> requests = engine.getRequests();
 		for (RequestMetadata request:requests) {
-			VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+			if (request.sourceRequest()) {
+				if (includeSourceQueries) {
+					VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+				}
+			}
+			else {
+				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+			}			
 		}
 	}
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, TYPE).set(ModelType.BOOLEAN);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.INCLUDE_SOURCE)); 
+		
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.LIST);		
 		VDBMetadataMapper.RequestMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
@@ -279,13 +311,25 @@ class ListRequestsPerVDB extends TeiidOperationHandler{
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.VDB_VERSION+MISSING)));
 		}
 		
+		boolean includeSourceQueries = true;
+		if (operation.hasDefined(OperationsConstants.INCLUDE_SOURCE)) {
+			includeSourceQueries = operation.get(OperationsConstants.INCLUDE_SOURCE).asBoolean();
+		}		
+		
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 			for (TransportService t: this.transports) {
 			List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
 			for (RequestMetadata request:requests) {
-				VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+				if (request.sourceRequest()) {
+					if (includeSourceQueries) {
+						VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+					}
+				}
+				else {
+					VDBMetadataMapper.RequestMetadataMapper.INSTANCE.wrap(request, result.add());
+				}
 			}
 		}
 	}
@@ -298,6 +342,11 @@ class ListRequestsPerVDB extends TeiidOperationHandler{
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, TYPE).set(ModelType.INT);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(true);
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION)); 
+
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, TYPE).set(ModelType.BOOLEAN);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.INCLUDE_SOURCE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.INCLUDE_SOURCE)); 
+		
 		
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.LIST);		
@@ -383,7 +432,7 @@ class CancelRequest extends TeiidOperationHandler{
 
 class GetPlan extends TeiidOperationHandler{
 	protected GetPlan() {
-		super("get-plan"); //$NON-NLS-1$
+		super("get-query-plan"); //$NON-NLS-1$
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{

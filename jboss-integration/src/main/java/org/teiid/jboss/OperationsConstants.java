@@ -47,4 +47,6 @@ class OperationsConstants {
 
 	public static final String ENTITY_TYPE = "entity-type"; //$NON-NLS-1$
 	public static final String ENTITY_PATTERN = "entity-pattern"; //$NON-NLS-1$
+	
+	public static final String INCLUDE_SOURCE = "include-source"; //$NON-NLS-1$
 }

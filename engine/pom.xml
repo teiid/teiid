@@ -98,13 +98,6 @@
             <artifactId>xom</artifactId>
             <version>1.2</version>
         </dependency>
-        
-        <dependency>
-            <groupId>org.jboss.logging</groupId>
-            <artifactId>jboss-logging</artifactId>
-            <scope>test</scope>        
-        </dependency>
-
 	</dependencies>
 
 </project>

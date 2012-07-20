@@ -236,7 +236,10 @@ enum Element {
     }
     
     public boolean isDefined(ModelNode node) {
-    	return node.hasDefined(getModelName());
+    	if ( node.hasDefined(getModelName())) {
+    		return !asString(node).isEmpty();
+    	}
+    	return false;
     }
     
     public int asInt(ModelNode node) {
