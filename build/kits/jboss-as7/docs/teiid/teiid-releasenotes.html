@@ -29,6 +29,7 @@
   <li><B>VDB Reuse</B> a vdb.xml can now declare imported vdbs to reuse metadata.
   <LI><B>Comparable Object</B> - the system property org.teiid.comparableObject can be set to use OBJECT values in comparison/sorting/grouping operations.  It is expected that the object values correctly implement Comparable.compareTo.
   <LI><B>Admin Metadata</B> - you can now retrieve metadata in DDL from the admin api via the getSchema method.
+  <LI><B>Improved VDB loading</B> - vdb loading logic was refined to make administration easier.  ExecutionFactory now has is/setSourceRequiredForMetadata() to indicate whether a source connection is needed for the getMetadata call.
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -46,7 +47,7 @@
   <li>DDL functions/procedures defined without the VIRTUAL keyword are by default VIRTUAL.  Use the FOREIGN keyword to indicate that they are source specific.
   <li>FunctionMethod.getFullName returns the proper schema, not category qualified name.
   <li>VDB.getUrl has been removed.
-  <li>VDB.Status now has three states - LOADING, ACTIVE, REMOVED.  To check for validity use the isValid method, rather than checking for the VALID state.
+  <li>VDB.Status now has four states - LOADING, ACTIVE, FAILED, REMOVED.  To check for validity use the isValid method, rather than checking for the VALID state.  FAILED deployments will still be accessible via the admin getVDB methods.
   <li>The standalone and cli configuration files specify a setting for the teiid subsystem policy-decider-module.  If a module is not specified, then data roles will not be checked.
   <li>local connections specifying a VDB version will wait for their VDB to finish loading before allowing a connection, see the waitForLoad connection property for more.
   <li>jsonToXml document elements will contain xsi:type attribute values of decimal and boolean respectively for number and boolean json values to allow for differentiation from string values.
@@ -54,6 +55,8 @@
   <li>Datatype default values have been corrected for Teiid built-in types.  All datatypes are now nullable by default, only character string types are case sensitive, numeric types have radix 10, and length/precision/scale have been set appropriately.
   <li>pg catalog and dynamic vdb created metadata will use a generated Teiid id rather than a random UUID.
   <li>transport ssl config no longer uses the enabled attribute.  Use mode=disabled to disable the usage of encryption.
+  <li>If a MetadataRepository throws a RuntimeException during load, that will be treated as a non-recoverable error and the VDB will have a FAILED status.
+  <li>It was an undocumented behavior that is a source did not specify a jndi connection that "java:/name" would be assumed.  That is no longer the case.  It the source needs a connection, then one must be specified.
 <ul>
 
 <h4>from 7.x</h4>

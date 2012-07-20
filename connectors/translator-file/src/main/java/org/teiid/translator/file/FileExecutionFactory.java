@@ -147,6 +147,10 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	private Charset encoding = Charset.defaultCharset();
 	private boolean exceptionIfFileNotFound;
 	
+	public FileExecutionFactory() {
+		setSourceRequired(false);
+	}
+	
 	@TranslatorProperty(display="File Encoding",advanced=true)
 	public String getEncoding() {
 		return encoding.name();

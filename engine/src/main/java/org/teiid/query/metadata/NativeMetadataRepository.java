@@ -24,11 +24,7 @@ package org.teiid.query.metadata;
 import javax.resource.ResourceException;
 
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.metadata.FunctionMetadataValidator;
-import org.teiid.query.validator.ValidatorReport;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -42,7 +38,7 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 			throw new TranslatorException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30591, factory.getName()));
 		}
 		
-		if (connectionFactory == null && executionFactory.isSourceRequired()) {
+		if (connectionFactory == null && executionFactory.isSourceRequiredForMetadata()) {
 			throw new TranslatorException(QueryPlugin.Event.TEIID31097, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31097));
 		}
 		
@@ -53,7 +49,10 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 			try {
 				unwrapped = ((WrappedConnection)connection).unwrap();
 			} catch (ResourceException e) {
-				 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+				if (executionFactory.isSourceRequiredForMetadata()) {
+					throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+				}
+				connection = null;
 			}	
 		}
 		
@@ -62,21 +61,7 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
-		validateMetadata(factory.getSchema());
-		
 		super.loadMetadata(factory, executionFactory, connectionFactory);		
 	}
 	
-    private void validateMetadata(Schema schema) throws TranslatorException {
-    	for (Table t : schema.getTables().values()) {
-			if (t.getColumns() == null || t.getColumns().size() == 0) {
-				throw new TranslatorException(QueryPlugin.Event.TEIID30580, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30580, t.getFullName())); 
-			}
-		}
-    	ValidatorReport report = new ValidatorReport("Translator metadata load " + schema.getName()); //$NON-NLS-1$
-		FunctionMetadataValidator.validateFunctionMethods(schema.getFunctions().values(),report);
-		if(report.hasItems()) {
-		    throw new TranslatorException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
-		}
-	}	
 }

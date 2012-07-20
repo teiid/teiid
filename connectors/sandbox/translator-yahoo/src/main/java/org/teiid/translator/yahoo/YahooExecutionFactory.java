@@ -44,6 +44,7 @@ public class YahooExecutionFactory extends ExecutionFactory<Object, Object> {
 	
 	public YahooExecutionFactory() {
 		setMaxInCriteriaSize(YAHOO_MAX_SET_SIZE);
+		setSourceRequiredForMetadata(false);
 	}
 	
     @Override

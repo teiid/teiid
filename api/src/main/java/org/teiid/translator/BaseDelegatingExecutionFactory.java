@@ -439,4 +439,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 			throws TranslatorException {
 		return delegate.getCacheDirective(command, executionContext, metadata);
 	}
+	@Override
+	public boolean isSourceRequiredForMetadata() {
+		return delegate.isSourceRequiredForMetadata();
+	}
 }

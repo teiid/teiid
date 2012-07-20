@@ -48,6 +48,10 @@ import org.teiid.translator.TypeFacility;
 public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connection> {
 	private static final String INVOKE_MDX = "invokeMdx"; //$NON-NLS-1$
 	
+	public OlapExecutionFactory() {
+		setSourceRequiredForMetadata(false);
+	}
+	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
 		Procedure p = metadataFactory.addProcedure(INVOKE_MDX);

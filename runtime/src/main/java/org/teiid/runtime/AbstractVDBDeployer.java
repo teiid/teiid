@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -152,12 +153,16 @@ public abstract class AbstractVDBDeployer {
 	protected void metadataLoaded(final VDBMetaData vdb,
 			final ModelMetaData model,
 			final MetadataStore vdbMetadataStore,
-			final AtomicInteger loadCount, MetadataFactory factory) {
-		// merge into VDB metadata
-		factory.mergeInto(vdbMetadataStore);
+			final AtomicInteger loadCount, MetadataFactory factory, boolean success) {
+		if (success) {
+			// merge into VDB metadata
+			factory.mergeInto(vdbMetadataStore);
 		
-		//TODO: this is not quite correct, the source may be missing
-		model.clearRuntimeMessages();				
+			//TODO: this is not quite correct, the source may be missing
+			model.clearRuntimeMessages();
+		} else {
+			vdb.setStatus(Status.FAILED);
+		}
 		
 		if (loadCount.decrementAndGet() == 0) {
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());

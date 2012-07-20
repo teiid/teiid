@@ -143,6 +143,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			indexRepo = new IndexMetadataRepository(indexFactory);
 			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
+		VDBRepository repo = vdbStatusChecker.getVDBRepository();
+		repo.addPendingDeployment(deployment);
 		// build a VDB service
 		final VDBService vdb = new VDBService(deployment, visibilityMap);
 		if (indexRepo != null) {
@@ -325,6 +327,8 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 			}		
 		}
+		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
+		this.vdbStatusChecker.getVDBRepository().removeVDB(deployment.getName(), deployment.getVersion());
 	}
 	
 }

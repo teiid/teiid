@@ -214,6 +214,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		ModelNode statusAllowed = new ModelNode();
 		statusAllowed.add(Status.ACTIVE.toString());
 		statusAllowed.add(Status.LOADING.toString());
+		statusAllowed.add(Status.FAILED.toString());
 		statusAllowed.add(Status.REMOVED.toString());
 		addAttribute(node, STATUS, ModelType.STRING, true);
 		node.get(STATUS).get(ALLOWED).set(statusAllowed);
@@ -522,7 +523,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			
 			node.get(SOURCE_NAME).set(source.getName());
-			node.get(JNDI_NAME).set(source.getConnectionJndiName());
+			if (source.getConnectionJndiName() != null) {
+				node.get(JNDI_NAME).set(source.getConnectionJndiName());
+			}
 			node.get(TRANSLATOR_NAME).set(source.getTranslatorName());
 			return node;
 		}

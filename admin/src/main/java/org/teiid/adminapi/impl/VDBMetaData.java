@@ -77,10 +77,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return this.status;
 	}
 	
-	public boolean isLoading() {
-		return this.status == Status.LOADING;
-	}
-	
 	public synchronized void setStatus(Status s) {
 		this.notifyAll();
 		this.status = s;

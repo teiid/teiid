@@ -34,8 +34,10 @@ public interface MetadataRepository<F,C> {
 	/**
 	 * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
 	 * @param factory
+	 * @param executionFactory may be null if loading a virtual source
+	 * @param connectionFactory may be null if source is not available
 	 * @return
-	 * @throws TranslatorException
+	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
 	 */
 	void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException;
 
@@ -112,5 +114,5 @@ public interface MetadataRepository<F,C> {
 	 * Implementation class must delegete the call to 'next' instance after it is done with the processing of the call.
 	 * @param next
 	 */
-	void setNext(MetadataRepository next);
+	void setNext(MetadataRepository<?, ?> next);
 }

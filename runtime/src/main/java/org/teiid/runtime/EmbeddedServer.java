@@ -509,16 +509,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectorManager cm = getConnectorManager(model, cmr);
 			if (cm != null) {
 				ef = cm.getExecutionFactory();
-				if (ef.isSourceRequired()) {
-					cf = cm.getConnectionFactory();
-				}
+				cf = cm.getConnectionFactory();
 			}
-		} catch (TranslatorException e1) {
-			//ignore data source not availability, it may not be required.
+		} catch (TranslatorException e) {
+			//cf not available
 		}
 		
 		metadataRepository.loadMetadata(factory, ef, cf);		
-		metadataLoaded(vdb, model, store, loadCount, factory);
+		metadataLoaded(vdb, model, store, loadCount, factory, true);
 	}
 	
 	public void undeployVDB(String vdbName) {

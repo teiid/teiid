@@ -98,6 +98,7 @@ public class ExecutionFactory<F, C> {
 	 */
 	private boolean immutable;
 	private boolean sourceRequired = true;
+	private Boolean sourceRequiredForMetadata;
 	
 	/*
 	 * Support properties
@@ -221,6 +222,23 @@ public class ExecutionFactory<F, C> {
 	
 	public void setSourceRequired(boolean value) {
 		this.sourceRequired = value;
+	}
+	
+	/**
+     * Flag that indicates if a underlying source connection required for this execution factory to return metadata 
+     * @return {@link Boolean#TRUE} if required, null if possibly required, or {@link Boolean#FALSE} if not required
+     */
+	public boolean isSourceRequiredForMetadata() {
+		if (sourceRequiredForMetadata == null) {
+			//matches pre 8.1 behavior
+			return sourceRequired; 
+		}
+		//TODO we could also consider making this an annotation of the getMetadata call
+		return sourceRequiredForMetadata;
+	}
+	
+	public void setSourceRequiredForMetadata(boolean sourceRequiredForMetadata) {
+		this.sourceRequiredForMetadata = sourceRequiredForMetadata;
 	}
 	
     /**
@@ -836,8 +854,9 @@ public class ExecutionFactory<F, C> {
      * Implement to provide metadata to the metadata for use by the engine.  This is the 
      * primary method of creating metadata for dynamic VDBs.
      * @param metadataFactory
-     * @param conn may be null if there was an error obtaining a connection
-     * @throws TranslatorException
+     * @param conn may be null if the source is not required 
+     * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
+     * @see #isSourceRequiredForMetadata()
      */
     public void getMetadata(MetadataFactory metadataFactory, C conn) throws TranslatorException {
     	

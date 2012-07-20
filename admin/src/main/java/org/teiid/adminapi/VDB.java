@@ -48,7 +48,11 @@ public interface VDB extends AdminObject, DomainAware {
     	/**
     	 * In the vdb repository and querable, but not necessarily valid
     	 */
-    	ACTIVE,      
+    	ACTIVE,  
+    	/**
+    	 * A invalid vdb that cannot transition to active
+    	 */
+    	FAILED,
     	REMOVED
     };
     

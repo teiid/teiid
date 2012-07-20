@@ -43,6 +43,7 @@ import javax.transaction.xa.Xid;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.RequestMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
@@ -318,7 +319,7 @@ public class DQPCore implements DQP {
 
 	public ResultsFuture<ResultsMessage> executeRequest(long reqID,RequestMessage requestMsg) throws TeiidProcessingException {
     	DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-    	checkLoading(workContext);
+    	checkActive(workContext);
 		RequestID requestID = workContext.getRequestID(reqID);
 		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), this.config.getMaxRowsFetchSize()));
 		Request request = null;
@@ -874,14 +875,14 @@ public class DQPCore implements DQP {
 			boolean allowDoubleQuotedVariable)
 			throws TeiidComponentException, TeiidProcessingException {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		checkLoading(workContext);
+		checkActive(workContext);
 		MetaDataProcessor processor = new MetaDataProcessor(this, this.prepPlanCache, workContext.getVdbName(), workContext.getVdbVersion());
 		return processor.processMessage(workContext.getRequestID(requestID), workContext, preparedSql, allowDoubleQuotedVariable);
 	}
 
-	private void checkLoading(DQPWorkContext workContext)
+	private void checkActive(DQPWorkContext workContext)
 			throws TeiidProcessingException {
-		if (workContext.getVDB().isLoading()) {
+		if (workContext.getVDB().getStatus() != Status.ACTIVE) {
 			throw new TeiidProcessingException(QueryPlugin.Event.TEIID31099, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31099, workContext.getVDB()));
 		}
 	}

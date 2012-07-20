@@ -28,16 +28,16 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.metadata.TableStats;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class BaseMetadataRepository<F, C> implements MetadataRepository {
+public class BaseMetadataRepository<F, C> implements MetadataRepository<F, C> {
 	protected MetadataRepository nextRepository;
 	
 	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException {
 		if (this.nextRepository != null) {
 			this.nextRepository.loadMetadata(factory, executionFactory, connectionFactory);
 		}		

@@ -27,6 +27,7 @@
         "allowed" : [
             "ACTIVE",
             "LOADING",
+            "FAILED",
             "REMOVED"
         ]
     },

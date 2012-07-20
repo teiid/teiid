@@ -29,8 +29,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidException;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.translator.ExecutionFactory;
 
@@ -80,13 +82,13 @@ public class ConnectorManagerRepository implements Serializable{
 			if (sourceNames.size() > 1 && !model.isSupportsMultiSourceBindings()) {
 				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31102, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
-			for (String source:sourceNames) {
-				ConnectorManager cm = getConnectorManager(source);
-				String name = model.getSourceTranslatorName(source);
-				String connection = model.getSourceConnectionJndiName(source);
+			for (SourceMappingMetadata source : model.getSourceMappings()) {
+				ConnectorManager cm = getConnectorManager(source.getName());
+				String name = source.getTranslatorName();
+				String connection = source.getConnectionJndiName();
 				if (cm != null) {
 					if (!cm.getTranslatorName().equals(name)
-							|| !cm.getConnectionName().equals(connection)) {
+							|| !EquivalenceUtil.areEqual(cm.getConnectionName(), connection)) {
 						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, source, deployment.getName(), deployment.getVersion()));
 					}
 					continue;
@@ -94,7 +96,7 @@ public class ConnectorManagerRepository implements Serializable{
 				cm = createConnectorManager(name, connection);
 				ExecutionFactory<Object, Object> ef = provider.getExecutionFactory(name);
 				cm.setExecutionFactory(ef);
-				addConnectorManager(source, cm);
+				addConnectorManager(source.getName(), cm);
 			}
 		}
 	}

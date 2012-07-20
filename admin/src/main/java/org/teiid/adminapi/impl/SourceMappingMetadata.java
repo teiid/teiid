@@ -47,11 +47,11 @@ public class SourceMappingMetadata implements Serializable {
 		this.name = name;
 	}
 
+	/**
+	 * 
+	 * @return the jndi name or null if no connection factory is defined
+	 */
 	public String getConnectionJndiName() {
-		// this default could be controlled if needed.
-		if (this.jndiName == null) {
-			return "java:"+name; //$NON-NLS-1$
-		}
 		return jndiName;
 	}
 
@@ -68,6 +68,6 @@ public class SourceMappingMetadata implements Serializable {
 	}	
 	
 	public String toString() {
-		return getName()+"/"+getTranslatorName()+"/"+getConnectionJndiName(); //$NON-NLS-1$ //$NON-NLS-2$
+		return getName()+", "+getTranslatorName()+", "+getConnectionJndiName(); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }

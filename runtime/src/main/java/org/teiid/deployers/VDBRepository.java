@@ -23,6 +23,7 @@ package org.teiid.deployers;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,8 @@ public class VDBRepository implements Serializable{
 	private static final int DEFAULT_TIMEOUT_MILLIS = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.clientVdbLoadTimeoutMillis", 300000); //$NON-NLS-1$
 	
 	private NavigableMap<VDBKey, CompositeVDB> vdbRepo = new ConcurrentSkipListMap<VDBKey, CompositeVDB>();
+	private NavigableMap<VDBKey, VDBMetaData> pendingDeployments = new ConcurrentSkipListMap<VDBKey, VDBMetaData>();
+
 	private MetadataStore systemStore = SystemMetadata.getInstance().getSystemStore();
 	private MetadataStore odbcStore;
 	private boolean odbcEnabled = false;
@@ -99,6 +102,7 @@ public class VDBRepository implements Serializable{
 				 throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40035, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40035, vdb.getName(), vdb.getVersion()));
 			}
 			this.vdbRepo.put(key, cvdb);
+			this.pendingDeployments.remove(key);
 			vdbAdded.signalAll();
 		} finally {
 			lock.unlock();
@@ -151,7 +155,13 @@ public class VDBRepository implements Serializable{
 		return this.vdbRepo.get(new VDBKey(name, version));
 	}
 	
-	public VDBMetaData getVDB(String name, int version) {
+	/**
+	 * A live vdb may be loading or active
+	 * @param name
+	 * @param version
+	 * @return
+	 */
+	public VDBMetaData getLiveVDB(String name, int version) {
 		CompositeVDB v = getCompositeVDB(name, version);
 		if (v != null) {
 			return v.getVDB();
@@ -164,14 +174,26 @@ public class VDBRepository implements Serializable{
 		for(CompositeVDB cVDB:this.vdbRepo.values()) {
 			vdbs.add(cVDB.getVDB());
 		}
+		//there is a minor chance of a duplicate entry
+		//but we're not locking to prevent that
+		vdbs.addAll(pendingDeployments.values());
 		return vdbs;
+	}
+	
+	Collection<CompositeVDB> getCompositeVDBs() {
+		return vdbRepo.values();
 	}
 	
     protected VDBKey vdbId(VDBMetaData vdb) {
         return new VDBKey(vdb.getName(), vdb.getVersion());
     } 	
 		
-	public VDBMetaData getVDB(String vdbName) {
+    /**
+     * A live vdb may be loading or active
+     * @param vdbName
+     * @return
+     */
+	public VDBMetaData getLiveVDB(String vdbName) {
     	int latestVersion = 0;
     	VDBMetaData result = null;
         for (Map.Entry<VDBKey, CompositeVDB> entry:this.vdbRepo.tailMap(new VDBKey(vdbName, 0)).entrySet()) {
@@ -229,6 +251,7 @@ public class VDBRepository implements Serializable{
 	}
 
 	private VDBMetaData removeVDB(VDBKey key) {
+		this.pendingDeployments.remove(key);
 		CompositeVDB removed = this.vdbRepo.remove(key);
 		if (removed == null) {
 			return null;
@@ -255,8 +278,11 @@ public class VDBRepository implements Serializable{
 		if (v == null) {
 			return;
 		}
-		v.metadataLoadFinished();
 		VDBMetaData metadataAwareVDB = v.getVDB();			
+		if (metadataAwareVDB.getStatus() == Status.FAILED) {
+			return;
+		}
+		v.metadataLoadFinished();
 		synchronized (metadataAwareVDB) {
 			ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
 
@@ -264,9 +290,9 @@ public class VDBRepository implements Serializable{
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
 				if (!v.getVDB().isPreview()) {
 					processMetadataValidatorReport(key, report);
-					if (v.getVDB().getStatus() == Status.REMOVED) {
-						return;
-					}
+					v.getVDB().setStatus(Status.FAILED);
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
+					return;
 				}
 			} 
 			validateDataSources(metadataAwareVDB);
@@ -281,7 +307,6 @@ public class VDBRepository implements Serializable{
 	 * @param report  
 	 */
 	protected void processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
-		this.removeVDB(key);
 	}
 
 	void validateDataSources(VDBMetaData vdb) {
@@ -333,5 +358,19 @@ public class VDBRepository implements Serializable{
 	
 	public void setSystemFunctionManager(SystemFunctionManager mgr) {
 		this.systemFunctionManager = mgr;
+	}
+
+	public void addPendingDeployment(VDBMetaData deployment) {
+		VDBKey key = vdbId(deployment);
+		this.pendingDeployments.put(key, deployment);
+	}
+
+	public VDBMetaData getVDB(String vdbName, int vdbVersion) {
+		VDBKey key = new VDBKey(vdbName, vdbVersion);
+		CompositeVDB cvdb = this.vdbRepo.get(key);
+		if (cvdb != null) {
+			return cvdb.getVDB();
+		}
+		return this.pendingDeployments.get(key);
 	}	
 }

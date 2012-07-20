@@ -79,7 +79,10 @@ public abstract class VDBStatusChecker {
 			dsName = dsName.substring(5);
 		}		
 		
-		VDBMetaData vdb = getVDBRepository().getVDB(vdbName, vdbVersion);
+		VDBMetaData vdb = getVDBRepository().getLiveVDB(vdbName, vdbVersion);
+		if (vdb.getStatus() == Status.FAILED) {
+			return;
+		}
 		ModelMetaData model = vdb.getModel(modelName);
 
 		synchronized (vdb) {
@@ -126,7 +129,11 @@ public abstract class VDBStatusChecker {
 
 	public void resourceAdded(String resourceName) {
 		List<Runnable> runnables = new ArrayList<Runnable>();
-		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
+		for (CompositeVDB cvdb:getVDBRepository().getCompositeVDBs()) {
+			VDBMetaData vdb = cvdb.getVDB();
+			if (vdb.getStatus() == Status.FAILED) {
+				continue;
+			}
 			synchronized (vdb) {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 				boolean usesResourse = false;
@@ -183,7 +190,11 @@ public abstract class VDBStatusChecker {
 	}
 	
 	public void resourceRemoved(String resourceName) {
-		for (VDBMetaData vdb:getVDBRepository().getVDBs()) {
+		for (CompositeVDB cvdb:getVDBRepository().getCompositeVDBs()) {
+			VDBMetaData vdb = cvdb.getVDB();
+			if (vdb.getStatus() == Status.FAILED) {
+				continue;
+			}
 			synchronized (vdb) {
 				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
 				for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
@@ -191,13 +202,14 @@ public abstract class VDBStatusChecker {
 					if (sourceName == null) {
 						continue;
 					}
+					Severity severity = Severity.WARNING;
 					ConnectorManager cm = cmr.getConnectorManager(sourceName);
-					if (cm.getExecutionFactory().isSourceRequired()) {
-						String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
-						Severity severity = vdb.getStatus() == Status.LOADING?Severity.WARNING:Severity.ERROR;
-						model.addRuntimeMessage(severity, msg);
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
+					if (cm.getExecutionFactory().isSourceRequired() && vdb.getStatus() == Status.ACTIVE) {
+						severity = Severity.ERROR;
 					}
+					String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40012, vdb.getName(), vdb.getVersion(), resourceName); 
+					model.addRuntimeMessage(severity, msg);
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 				}
 			}
 		}

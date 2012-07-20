@@ -29,7 +29,11 @@ import org.teiid.language.Command;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.*;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.Execution;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.loopback.LoopbackExecution;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
@@ -42,6 +46,8 @@ public class SampleExecutionFactory extends LoopbackExecutionFactory {
 		setSupportsSelectDistinct(true);
 		setWaitTime(10);
 		setRowCount(200);
+		setSourceRequiredForMetadata(false);
+		setSourceRequired(false);
 	}
 	
 	@Override

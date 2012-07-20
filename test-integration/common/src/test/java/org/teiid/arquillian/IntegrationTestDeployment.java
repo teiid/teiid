@@ -498,10 +498,22 @@ public class IntegrationTestDeployment {
 		String ddl = admin.getSchema(vdbName, 1, "loopy", null, null);
 
 		String expected = "CREATE FOREIGN TABLE Matadata (\n" + 
-				"	execCount int OPTIONS (SEARCHABLE 'Searchable')\n" + 
+				"	execCount integer\n" + 
 				");";
 		assertEquals(expected, ddl);
 		
 		admin.undeploy("loopy.jar");
 	}	
+	
+	@Test public void testErrorDeployment() throws Exception {
+		Collection<?> vdbs = admin.getVDBs();
+		assertTrue(vdbs.isEmpty());
+		
+		admin.deploy("error-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("error-vdb.xml")));
+		
+		AdminUtil.waitForVDBLoad(admin, "error", 1, 3);
+		VDB vdb = admin.getVDB("error", 1);
+		assertEquals(Status.FAILED, vdb.getStatus());
+	}
+
 }

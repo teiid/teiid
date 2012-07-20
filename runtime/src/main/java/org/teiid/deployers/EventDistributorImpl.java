@@ -50,7 +50,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
 			String viewName, List<?> tuple, boolean delete) {
-		VDBMetaData metadata = getVdbRepository().getVDB(vdbName, vdbVersion);
+		VDBMetaData metadata = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		if (metadata != null) {
 			GlobalTableStore gts = metadata.getAttachment(GlobalTableStore.class);
 			if (gts != null) {
@@ -124,7 +124,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 	}
 
 	private Schema getSchema(String vdbName, int vdbVersion, String schemaName) {
-		VDBMetaData vdb = getVdbRepository().getVDB(vdbName, vdbVersion);
+		VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return null;
 		}
@@ -143,7 +143,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		DdlPlan.alterInsteadOfTrigger(getVdbRepository().getVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent);
+		DdlPlan.alterInsteadOfTrigger(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, triggerDefinition, enabled, triggerEvent);
 	}
 	
 	@Override
@@ -156,7 +156,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (p == null) {
 			return;
 		}
-		DdlPlan.alterProcedureDefinition(getVdbRepository().getVDB(vdbName, vdbVersion), p, definition);
+		DdlPlan.alterProcedureDefinition(getVdbRepository().getLiveVDB(vdbName, vdbVersion), p, definition);
 	}
 	
 	@Override
@@ -165,13 +165,13 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (t == null) {
 			return;
 		}
-		DdlPlan.alterView(getVdbRepository().getVDB(vdbName, vdbVersion), t, definition);
+		DdlPlan.alterView(getVdbRepository().getLiveVDB(vdbName, vdbVersion), t, definition);
 	}
 	
 	@Override
 	public void setProperty(String vdbName, int vdbVersion, String uuid,
 			String name, String value) {
-		VDBMetaData vdb = getVdbRepository().getVDB(vdbName, vdbVersion);
+		VDBMetaData vdb = getVdbRepository().getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {
 			return;
 		}

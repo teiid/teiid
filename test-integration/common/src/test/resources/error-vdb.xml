@@ -1,0 +1,8 @@
+<vdb name="error" version= "1">
+    <model visible = "true" type = "VIRTUAL" name = "x">
+         <metadata type = "DDL"><![CDATA[
+              i'm not valid
+         ]]>
+         </metadata>
+    </model>
+</vdb>

@@ -34,7 +34,7 @@ public class TestBaseDelegatingExecutionFactory {
 		Method[] methods = ExecutionFactory.class.getDeclaredMethods();
 		Method[] proxyMethods = BaseDelegatingExecutionFactory.class.getDeclaredMethods();
 		//excluding the setter methods the counts should be equal
-		assertEquals(methods.length - 9, proxyMethods.length);
+		assertEquals(methods.length - 10, proxyMethods.length);
 	}
 	
 }

@@ -247,10 +247,10 @@ public class SessionServiceImpl implements SessionService {
 		try {
 			if (vdbVersion == null) {
 				vdbVersion = "latest"; //$NON-NLS-1$
-				vdb = this.vdbRepository.getVDB(vdbName);
+				vdb = this.vdbRepository.getLiveVDB(vdbName);
 			}
 			else {
-				vdb = this.vdbRepository.getVDB(vdbName, Integer.parseInt(vdbVersion));
+				vdb = this.vdbRepository.getLiveVDB(vdbName, Integer.parseInt(vdbVersion));
 			}         
 		} catch (NumberFormatException e) {
 			 throw new SessionServiceException(RuntimePlugin.Event.TEIID40045, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40045, vdbVersion));

@@ -73,6 +73,10 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	private Mode defaultServiceMode = Mode.PAYLOAD;
 	private Binding defaultBinding = Binding.SOAP12;
 	private String xmlParamName;
+	
+	public WSExecutionFactory() {
+		setSourceRequiredForMetadata(false);
+	}
 
 	@TranslatorProperty(description="Contols request/response message wrapping - set to MESSAGE for full control over SOAP messages.", display="Default Service Mode")
 	public Mode getDefaultServiceMode() {

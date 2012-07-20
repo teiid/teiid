@@ -21,15 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE_TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -37,7 +29,12 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -56,7 +53,10 @@ import org.jboss.jca.common.api.metadata.ra.ResourceAdapter;
 import org.jboss.jca.common.api.metadata.ra.ResourceAdapter1516;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
-import org.teiid.adminapi.*;
+import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.AdminException;
+import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.CacheStatisticsMetadata;
@@ -65,10 +65,10 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataMapper;
-import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
-import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
+import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.plan.PlanNode;
@@ -697,7 +697,7 @@ class ExecuteQuery extends TeiidOperationHandler{
 		String user = "CLI ADMIN"; //$NON-NLS-1$
 		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
 		
-        VDBMetaData vdb = this.vdbRepo.getVDB(vdbName, version);
+        VDBMetaData vdb = this.vdbRepo.getLiveVDB(vdbName, version);
         if (vdb == null) {
         	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("wrong_vdb")));//$NON-NLS-1$
         }
@@ -894,7 +894,7 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 		String modelName = operation.get(OperationsConstants.MODEL_NAME).asString();
 
-		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
+		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("no_vdb_found", vdbName, vdbVersion))); //$NON-NLS-1$
 		}
@@ -972,9 +972,6 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 		ModelNode result = context.getResult();
 		List<VDBMetaData> vdbs = repo.getVDBs();
 		for (VDBMetaData vdb:vdbs) {
-			if (vdb == null) {
-				continue; // when vdb deployed but metadata is still being loaded this reports as null
-			}			
 			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add());
 		}
 	}

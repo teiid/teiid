@@ -41,13 +41,13 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getVDB("name")).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name")).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name", null);
 		
-		Mockito.verify(repo, Mockito.times(1)).getVDB("name");
+		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name");
 	}
 	
 	@Test
@@ -59,13 +59,13 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name", "1");
 		
-		Mockito.verify(repo, Mockito.times(1)).getVDB("name", 1);
+		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", 1);
 	}
 	
 	
@@ -78,13 +78,13 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
 		ssi.getActiveVDB("name.1", null);
 		
-		Mockito.verify(repo, Mockito.times(1)).getVDB("name", 1);
+		Mockito.verify(repo, Mockito.times(1)).getLiveVDB("name", 1);
 	}
 	
 	@Test
@@ -96,7 +96,7 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		
@@ -116,7 +116,7 @@ public class TestSessionServiceImpl {
 		vdb.setStatus(Status.ACTIVE);
 		
 		
-		Mockito.stub(repo.getVDB("name", 1)).toReturn(vdb);
+		Mockito.stub(repo.getLiveVDB("name", 1)).toReturn(vdb);
 		
 		ssi.setVDBRepository(repo);
 		

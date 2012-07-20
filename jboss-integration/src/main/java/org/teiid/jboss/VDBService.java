@@ -366,20 +366,17 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						ConnectorManager cm = getConnectorManager(model, cmr);
 						if (cm != null) {
 							ef = cm.getExecutionFactory();
-							if (ef.isSourceRequired()) {
-								cf = cm.getConnectionFactory();
-							}
+							cf = cm.getConnectionFactory();
 						}
-					} catch (TranslatorException e1) {
-						//ignore data source not availability, it may not be required.
+					} catch (TranslatorException e) {
+						//cf not available
 					}
-					
 					try {
 						metadataRepo.loadMetadata(factory, ef, cf);		
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
 						metadataLoaded = true;
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));					
-					} catch (Exception e) {					
-				    	ex = e;
+					} catch (Exception e) {
+						ex = e;
 					}
 				}
 		    					
@@ -390,12 +387,16 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							cacheMetadataStore(model, factory);
 			    		}
 						
-						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory);
+						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true);
 			    	} else {
 			    		model.addRuntimeError(ex.getMessage()); 
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), ex.getMessage()));
-						//defer the load to the status checker if/when a source is available/redeployed
-						model.addAttchment(Runnable.class, this);
+						if (ex instanceof RuntimeException) {
+							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false);
+						} else {
+							//defer the load to the status checker if/when a source is available/redeployed
+							model.addAttchment(Runnable.class, this);
+						}
 			    	}
 		    	}
 			}
