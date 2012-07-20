@@ -242,7 +242,6 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	}		   
     	
     	SSLConfiguration ssl = new SSLConfiguration();
-    	ssl.setMode(SSLConfiguration.DISABLED);
 
     	if (Element.SSL_MODE_ATTRIBUTE.isDefined(node)) {
     		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node));

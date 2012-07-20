@@ -272,7 +272,6 @@
             
             <transport name="embedded"/>
             <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">
-                <ssl mode="login"/>
                 <authentication security-domain="teiid-security"/>
             </transport>
             <transport name="odbc" protocol="pg" socket-binding="teiid-odbc">
