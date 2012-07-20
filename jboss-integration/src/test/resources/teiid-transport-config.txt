@@ -56,15 +56,9 @@
         "required" => false,
         "default" => 5242880
     },
-    "ssl-enable" => {
-        "type" => BOOLEAN,
-        "description" => "Enable SSL.",
-        "required" => false,
-        "default" => false
-    },
     "ssl-mode" => {
         "type" => STRING,
-        "description" => "can be one of disabled, login, or enabled disabled = no transport or message level security will be used; login = only the login traffic will be encrypted at a message level using 128 bit AES with an ephemerial DH key exchange. No other config values are needed in this mode; enabled = traffic will be secured using this configuration,if the client supports SSL",
+        "description" => "can be one of disabled, login, or enabled disabled = no transport or message level security will be used; login = only the login traffic will be encrypted at a message level using 128 bit AES with an ephemerial DH key exchange. No other config values are needed in this mode; and it only applies to the JDBC transport enabled = traffic will be secured using this configuration, if the client supports SSL",
         "required" => false,
         "default" => "login"
     },

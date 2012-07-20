@@ -41,7 +41,7 @@ public class SSLConfiguration {
     public static final String TWOWAY = "2-way"; //$NON-NLS-1$
     public static final String ANONYMOUS = "anonymous"; //$NON-NLS-1$
     
-    public static final String LOGIN = "logIn"; //$NON-NLS-1$
+    public static final String LOGIN = "login"; //$NON-NLS-1$
     public static final String DISABLED = "disabled"; //$NON-NLS-1$
     public static final String ENABLED = "enabled"; //$NON-NLS-1$
 
@@ -100,11 +100,11 @@ public class SSLConfiguration {
     }
 
     public boolean isClientEncryptionEnabled() {
-        return LOGIN.equals(mode);
+        return LOGIN.equalsIgnoreCase(mode);
     }
     
     public boolean isSslEnabled() {
-    	return ENABLED.equals(mode);
+    	return ENABLED.equalsIgnoreCase(mode);
     }
     
     public String getMode() {

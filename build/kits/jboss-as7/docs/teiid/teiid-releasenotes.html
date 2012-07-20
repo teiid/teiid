@@ -53,6 +53,7 @@
   <li>Result set cache entries can now have updatable set to false to indicate that updates should not purge the entry.
   <li>Datatype default values have been corrected for Teiid built-in types.  All datatypes are now nullable by default, only character string types are case sensitive, numeric types have radix 10, and length/precision/scale have been set appropriately.
   <li>pg catalog and dynamic vdb created metadata will use a generated Teiid id rather than a random UUID.
+  <li>transport ssl config no longer uses the enabled attribute.  Use mode=disabled to disable the usage of encryption.
 <ul>
 
 <h4>from 7.x</h4>

@@ -21,11 +21,8 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.parsing.ParseUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -160,7 +157,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     	if (like(node, Element.SSL_ELEMENT)) {
 			writer.writeStartElement(Element.SSL_ELEMENT.getLocalName());
 			
-			writeAttribute(writer, Element.SSL_ENABLE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_MODE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_AUTH_MODE_ATTRIBUTE, node);
 			writeAttribute(writer, Element.SSL_SSL_PROTOCOL_ATTRIBUTE, node);
@@ -496,7 +492,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			Element element = Element.forName(attrName, Element.SSL_ELEMENT);
     			
     			switch(element) {
-    			case SSL_ENABLE_ATTRIBUTE:
     			case SSL_MODE_ATTRIBUTE:
     			case SSL_AUTH_MODE_ATTRIBUTE:
     			case SSL_SSL_PROTOCOL_ATTRIBUTE:

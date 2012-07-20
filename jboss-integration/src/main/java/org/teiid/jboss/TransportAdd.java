@@ -21,11 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -83,7 +79,6 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 		
 		Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
-		Element.SSL_ENABLE_ATTRIBUTE,
 		Element.SSL_MODE_ATTRIBUTE,
 		Element.SSL_AUTH_MODE_ATTRIBUTE,
 		Element.SSL_SSL_PROTOCOL_ATTRIBUTE,
@@ -246,15 +241,9 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     		socket.setOutputBufferSize(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.asInt(node));
     	}		   
     	
-    	boolean sslEnabled = false;
     	SSLConfiguration ssl = new SSLConfiguration();
-    	ssl.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
+    	ssl.setMode(SSLConfiguration.DISABLED);
 
-    	if (Element.SSL_ENABLE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setMode(Element.SSL_ENABLE_ATTRIBUTE.asString(node));
-    		sslEnabled = true;
-    	}    	
-    	
     	if (Element.SSL_MODE_ATTRIBUTE.isDefined(node)) {
     		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node));
     	}
@@ -293,9 +282,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	if (Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
     		ssl.setTruststorePassword(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node));
     	}
-    	if (sslEnabled) {
-    		socket.setSSLConfiguration(ssl);
-    	}
+		socket.setSSLConfiguration(ssl);
 		return socket;
 	}
 

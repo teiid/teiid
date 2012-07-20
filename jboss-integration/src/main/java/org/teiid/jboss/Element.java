@@ -22,10 +22,7 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -111,7 +108,6 @@ enum Element {
 	PG_MAX_LOB_SIZE_ALLOWED_ELEMENT("max-lob-size-in-bytes", "pg-max-lob-size-in-bytes", ModelType.INT, false, "5242880"), //$NON-NLS-1$ //$NON-NLS-2$
 	
 	SSL_ELEMENT("ssl"),
-	SSL_ENABLE_ATTRIBUTE("enable", "ssl-enable", ModelType.BOOLEAN, false, "false"),
 	SSL_MODE_ATTRIBUTE("mode", "ssl-mode", ModelType.STRING, false, "login"),
 	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode", ModelType.STRING, false, "anonymous"),
 	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol", ModelType.STRING, false, "SSLv3"),
