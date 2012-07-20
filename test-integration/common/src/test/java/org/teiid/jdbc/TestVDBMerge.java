@@ -70,7 +70,7 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
        vdbImport.setName(VDB2);
        param.vdbImports = Arrays.asList(vdbImport);
        server.removeVDB(VDB1);
-       server.deployVDB(VDB1, UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb", param);
+       server.deployVDB(VDB1, UnitTestUtil.getTestDataPath()+"/PartsSupplier.vdb", param);
        
        this.internalConnection = server.createConnection("jdbc:teiid:"+VDB1);
        executeTest("select * from tables where schemaname='BQT1' order by name", expectedAfter); //$NON-NLS-1$

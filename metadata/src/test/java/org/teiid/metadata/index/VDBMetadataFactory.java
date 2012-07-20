@@ -39,7 +39,6 @@ import org.jboss.vfs.VirtualFile;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.SystemFunctionManager;
@@ -92,7 +91,7 @@ public class VDBMetadataFactory {
     }
 
 	public static IndexMetadataStore loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException, URISyntaxException {
-		String fileName = PropertiesUtils.toHex(url.toExternalForm().getBytes());
+		String fileName = String.valueOf(vdbName + "-" + url.toExternalForm().hashCode());
 		VirtualFile root = VFS.getChild(fileName);
     	if (!root.exists()) {
     		VFS.mountZip(url.openStream(), fileName, root, TempFileProvider.create("vdbs", Executors.newScheduledThreadPool(2)));
