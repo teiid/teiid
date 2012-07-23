@@ -10,7 +10,7 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>8.1.0.Alpha3-SNAPSHOT</version>
+	<version>8.1.0.Beta1</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<ant.version>1.7.0</ant.version>
@@ -37,9 +37,9 @@
         <version.junit>4.10</version.junit>
 	</properties>
 	<scm>
-        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
-		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
-		<url>http://anonsvn.jboss.org/repos/teiid/trunk</url>
+        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/tags/teiid-parent-8.1.0.Beta1</connection>
+		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/tags/teiid-parent-8.1.0.Beta1</developerConnection>
+		<url>http://anonsvn.jboss.org/repos/teiid/tags/teiid-parent-8.1.0.Beta1</url>
 	</scm>
 	<licenses>
 		<license>
