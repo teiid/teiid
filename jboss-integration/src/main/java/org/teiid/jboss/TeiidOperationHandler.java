@@ -204,16 +204,41 @@ class ListSessions extends TeiidOperationHandler{
 	}
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
+		String vdbName = null;
+		int version = -1;
+		boolean filter = false;
+		
+		if (operation.hasDefined(OperationsConstants.VDB_VERSION) && operation.hasDefined(OperationsConstants.VDB_NAME)) {
+			vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
+			version = operation.get(OperationsConstants.VDB_VERSION).asInt();
+			filter = true;
+		}
+		
 		ModelNode result = context.getResult();
 		for (TransportService t: this.transports) {
 			Collection<SessionMetadata> sessions = t.getActiveSessions();
 			for (SessionMetadata session:sessions) {
-				VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
+				if (filter) {
+					if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == version) {
+						VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
+					}
+				}
+				else {
+					VDBMetadataMapper.SessionMetadataMapper.INSTANCE.wrap(session, result.add());
+				}
 			}
 		}			
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, TYPE).set(ModelType.STRING);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_NAME, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_NAME));
+		
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, TYPE).set(ModelType.INT);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, REQUIRED).set(false);
+		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.VDB_VERSION, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.VDB_VERSION)); 
+		
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.LIST);		
 		VDBMetadataMapper.SessionMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
@@ -523,7 +548,7 @@ class ClearCache extends BaseCachehandler {
 	
 	@Override
 	protected void executeOperation(OperationContext context, SessionAwareCache cache, ModelNode operation) throws OperationFailedException {
-		if (operation.hasDefined(OperationsConstants.CACHE_TYPE)) {
+		if (!operation.hasDefined(OperationsConstants.CACHE_TYPE)) {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.CACHE_TYPE+MISSING)));
 		}
 
