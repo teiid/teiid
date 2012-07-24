@@ -144,7 +144,7 @@
                           <configuration>
                               <artifacts>
                                   <artifact>
-                                      <file>target/teiid-7.7.1-client-jdk15.jar</file>
+                                      <file>target/teiid-${project.version}-client-jdk15.jar</file>
                                       <type>jar</type>
                                       <classifier>client-jdk15</classifier>
                                   </artifact>
