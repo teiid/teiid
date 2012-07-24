@@ -45,7 +45,7 @@ public final class DoNothingSecurityHelper implements SecurityHelper {
 	}
 
 	@Override
-	public Object getSecurityContext(String securityDomain) {
+	public Object getSecurityContext() {
 		return new Object();
 	}
 
@@ -62,6 +62,11 @@ public final class DoNothingSecurityHelper implements SecurityHelper {
 
 	@Override
 	public Object associateSecurityContext(Object context) {
+		return null;
+	}
+
+	@Override
+	public String getSecurityDomain(Object context) {
 		return null;
 	}
 }

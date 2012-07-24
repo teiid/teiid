@@ -198,7 +198,7 @@ public class SessionServiceImpl implements SessionService {
 		for (String domain:getDomainsForUser(domains, userName)) {
 			Subject existing = this.securityHelper.getSubjectInContext(domain);
 			if (existing != null) {
-				return new TeiidLoginContext(getUserName(existing, userName)+AT+domain, existing, domain, this.securityHelper.getSecurityContext(domain));
+				return new TeiidLoginContext(getUserName(existing, userName)+AT+domain, existing, domain, this.securityHelper.getSecurityContext());
 			}
 		}
 		throw new LoginException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40087));

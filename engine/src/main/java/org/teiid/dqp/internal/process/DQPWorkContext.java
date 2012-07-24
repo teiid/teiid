@@ -220,6 +220,10 @@ public class DQPWorkContext implements Serializable {
 		return session.getSecurityContext();
 	}
 	
+	public void setSecurityContext(Object securityContext) {
+		session.setSecurityContext(securityContext);
+	}	
+	
 	public VDBMetaData getVDB() {
 		return session.getVdb();
 	}

@@ -101,7 +101,7 @@ public class TestDQPWorkContext {
 				return null;
 			}
 			@Override
-			public Object getSecurityContext(String securityDomain) {
+			public Object getSecurityContext() {
 				return this.mycontext;
 			}
 			@Override
@@ -117,6 +117,10 @@ public class TestDQPWorkContext {
 				Object old = mycontext;
 				this.mycontext = context;
 				return old;
+			}
+			@Override
+			public String getSecurityDomain(Object context) {
+				return null;
 			}
 		};	
 		Object previousSC = sc.createSecurityContext("test", null, null, null); //$NON-NLS-1$
@@ -135,13 +139,13 @@ public class TestDQPWorkContext {
 		Runnable r = new Runnable() {
 			@Override
 			public void run() {
-				assertEquals(currentSC, sc.getSecurityContext(null));
+				assertEquals(currentSC, sc.getSecurityContext());
 			}
 		};
 		
 		message.runInContext(r);
 		
-		assertEquals(previousSC, sc.getSecurityContext(null));
+		assertEquals(previousSC, sc.getSecurityContext());
 	}	
 	
 	
