@@ -129,7 +129,30 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>              
+            </plugin>   
+              
+              <plugin>
+                  <groupId>org.codehaus.mojo</groupId>
+                  <artifactId>build-helper-maven-plugin</artifactId>
+                  <version>1.5</version>
+                  <executions>
+                      <execution>
+                          <phase>package</phase>
+                          <goals>
+                              <goal>attach-artifact</goal>
+                          </goals>
+                          <configuration>
+                              <artifacts>
+                                  <artifact>
+                                      <file>target/teiid-7.7.1-client-jdk15.jar</file>
+                                      <type>jar</type>
+                                      <classifier>client-jdk15</classifier>
+                                  </artifact>
+                          </artifacts>
+                      </configuration>
+                  </execution>
+              </executions>
+            </plugin>            
           </plugins>
         </build>
       </profile>
