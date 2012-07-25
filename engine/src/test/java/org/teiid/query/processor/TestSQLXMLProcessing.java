@@ -37,6 +37,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
@@ -192,6 +193,12 @@ public class TestSQLXMLProcessing {
         };    
     
         process(sql, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testXmlTableAsynchError() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x blob path '@x', val string path '/.') as x"; //$NON-NLS-1$
+        
+        process(sql, null);
     }
     
     @Test public void testXmlTableDateTime() throws Exception {

@@ -233,7 +233,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						asynchException = new TeiidRuntimeException(e);
 					} finally {
 						synchronized (XMLTableNode.this) {
-							if (buffer != null) {
+							if (buffer != null && asynchException == null) {
 								try {
 									buffer.close();
 								} catch (TeiidComponentException e) {
