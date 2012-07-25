@@ -5064,7 +5064,7 @@ public class TestParser {
     }
     
     @Test public void testTextTableColumns() throws Exception {
-        helpException("SELECT * from texttable(foo x string)", "TEIID31100 Parsing error: Expected non-reserved word [COLUMNS], but was x.");
+        helpException("SELECT * from texttable(foo x string)");
     }
     
     @Test public void testXMLTable() throws Exception {

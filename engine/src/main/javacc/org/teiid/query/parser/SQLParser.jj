@@ -382,6 +382,77 @@ TOKEN : /* SQL/MED Reserved words */
 |   <IMPORT: "import">
 }
 
+TOKEN : /* NonReserved words */
+{
+    <INSTEAD: "instead">
+|   <ENABLED: "enabled">
+|   <DISABLED: "disabled">
+|   <VIEW: "view">
+|   <KEY: "key">
+|   <SERIAL: "serial">
+|   <TEXTAGG: "textagg">
+|   <COUNT: "count">
+|   <ROW_NUMBER: "row_number">
+|   <RANK: "rank">
+|   <DENSE_RANK: "dense_rank">
+|   <SUM: "sum">
+|   <AVG: "avg">
+|   <MIN: "min">
+|   <MAX: "max">
+|   <EVERY: "every">
+|   <STDDEV_POP: "stddev_pop">
+|   <STDDEV_SAMP: "stddev_samp">
+|   <VAR_SAMP: "var_samp">
+|   <VAR_POP: "var_pop">
+|   <DOCUMENT: "document">
+|   <CONTENT: "content">
+|   <TRIM: "trim">
+|   <EMPTY: "empty">
+|   <ORDINALITY: "ordinality">
+|   <PATH: "path">
+|   <FIRST: "first">
+|   <LAST: "last">
+|   <NEXT: "next">
+|   <FN: "fn">
+|   <SUBSTRING: "substring">
+|   <EXTRACT: "extract">
+|   <TO_CHARS: "to_chars">
+|   <TO_BYTES: "to_bytes">
+|   <TIMESTAMPADD: "timestampadd">
+|   <TIMESTAMPDIFF: "timestampdiff">
+|   <QUERYSTRING: "querystring">
+|   <NAMESPACE: "namespace">
+|   <RESULT: "result">
+|   <INDEX: "index">
+|   <ACCESSPATTERN: "accesspattern">
+|   <AUTO_INCREMENT: "auto_increment">
+|   <WELLFORMED: "wellformed">
+|   <SQL_TSI_FRAC_SECOND: "sql_tsi_frac_second">
+|   <SQL_TSI_SECOND: "sql_tsi_second">
+|   <SQL_TSI_MINUTE: "sql_tsi_minute">
+|   <SQL_TSI_HOUR: "sql_tsi_hour">
+|   <SQL_TSI_DAY: "sql_tsi_day">
+|   <SQL_TSI_WEEK: "sql_tsi_week">
+|   <SQL_TSI_MONTH: "sql_tsi_month">
+|   <SQL_TSI_QUARTER: "sql_tsi_quarter">
+|   <SQL_TSI_YEAR: "sql_tsi_year">
+|   <TEXTTABLE: "texttable">
+|   <ARRAYTABLE: "arraytable">
+|   <SELECTOR: "selector">
+|   <SKIP_KEYWORD: "skip">
+|   <WIDTH: "width">
+|   <PASSING: "passing">
+|   <NAME: "name">
+|   <ENCODING: "encoding">
+|   <OJ: "oj">
+|   <COLUMNS: "columns">
+|   <DELIMITER: "delimiter">
+|   <QUOTE: "quote">
+|   <HEADER: "header">
+|   <NULLS: "nulls">
+
+}
+
 TOKEN : /* User variables and literals */
 {
     < ALL_IN_GROUP: <ID> <PERIOD> <STAR> >
@@ -434,7 +505,6 @@ TOKEN : /* Punctuation */
 |	<CONCAT_OP: "||">
 }
 
-
 //----------------------------------------------------
 //----------------------------------------------------
 
@@ -449,14 +519,23 @@ String stringVal() :
   	}
 }
 
-String id() :
+Token nonReserved() :
 {
-	Token t = null;
 }
 {
-  	(t = <ID>)
+    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>|<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<FN>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>|<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>|<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<OJ>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>)
+    {
+    	return getToken(0);
+    }	
+}
+
+String id() :
+{
+}
+{
+  	(<ID>|nonReserved())
   	{
-  		return normalizeId(t.image);
+  		return normalizeId(getToken(0).image);
   	}
 }
 
@@ -506,7 +585,7 @@ Command createTrigger(ParseInfo info) :
   	
 }
 {
-	<CREATE> <TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> 
+	<CREATE> <TRIGGER> <ON> target = id() <INSTEAD> <OF> 
 	(event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 	<AS> triggerAction = forEachRowTriggerAction(info)
 	{
@@ -527,12 +606,12 @@ Command alter(ParseInfo info) :
   	TriggerAction triggerAction = null;
   	Token comment = null;
   	Token event = null;
-  	String enabled = null;
+  	Boolean enabled = null;
 }
 {
 	<ALTER>
 	(
-	 	(nonReserved("VIEW") target = id() <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)) 
+	 	(<VIEW> target = id() <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)) 
 	 	{
 	 	    if (comment != null) {
 		 	    command.setCacheHint(getQueryCacheOption(comment.image));
@@ -553,17 +632,17 @@ Command alter(ParseInfo info) :
 			alterProc.setDefinition(cup);
 			return alterProc;
 		}
-		| (<TRIGGER> <ON> target = id() nonReserved("INSTEAD") <OF> 
+		| (<TRIGGER> <ON> target = id() <INSTEAD> <OF> 
 		  (event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 		  ((<AS> triggerAction = forEachRowTriggerAction(info))
-		  |enabled = nonReserved("ENABLED","DISABLED")))
+		  |<ENABLED> {enabled=true;}| <DISABLED> {enabled=false;}))
 		{
 			AlterTrigger alterTrigger = new AlterTrigger();
 			alterTrigger.setTarget(new GroupSymbol(target));
 			alterTrigger.setDefinition(triggerAction);
 			alterTrigger.setEvent(Table.TriggerEvent.valueOf(event.image.toUpperCase()));
 			if (enabled != null) {
-				alterTrigger.setEnabled(enabled.equalsIgnoreCase("ENABLED"));
+				alterTrigger.setEnabled(enabled);
 			}
 			return alterTrigger;				
 		}
@@ -687,7 +766,7 @@ Command createTempTable(ParseInfo info) :
         create.getColumns().add(col);
       }
     )*	
-	[<COMMA> <PRIMARY> nonReserved("KEY") <LPAREN>
+	[<COMMA> <PRIMARY> <KEY> <LPAREN>
 	  pkId = id()
 	  {
 	    create.getPrimaryKey().add(new ElementSymbol(validateElementName(pkId)));
@@ -717,7 +796,7 @@ Column tableElement(ParseInfo info) :
 	 (
 	  type = parseDataType()
 	  |
-	  nonReserved("SERIAL")
+	  <SERIAL>
 	  {
 	    type = new ParsedDataType("INTEGER");
 	    autoIncrement = true;
@@ -944,7 +1023,7 @@ DeclareStatement declareStatement(ParseInfo info) :
     {
         variableID = new ElementSymbol(var);
     }
-    [(nonReserved(":=")|<EQ>)
+    [[<COLON>]<EQ>
      value = assignStatementOperand(info)
     ]
     
@@ -974,7 +1053,7 @@ AssignmentStatement assignStatement(ParseInfo info) :
     {
         elementID = new ElementSymbol(var);              
     } 
-    (nonReserved(":=")|<EQ>)
+    [<COLON>]<EQ>
     value = assignStatementOperand(info)
         
     {   
@@ -1037,7 +1116,7 @@ CommandStatement sqlStatement(ParseInfo info) :
 	    storedProcedure.setParameter(parameter);  
 	    storedProcedure.setCalledWithReturn(true);            
       } 
-      (nonReserved(":=")|<EQ>)
+     [<COLON>]<EQ>
       cmd = storedProcedure(info, storedProcedure) 
      )
     )
@@ -1272,7 +1351,7 @@ StoredProcedure storedProcedure(ParseInfo info, StoredProcedure storedProcedure)
 		<LPAREN>
 		
 		(
-		 LOOKAHEAD(<ID> <EQ>)
+		 LOOKAHEAD(2)
 		 storedProcedure = executeNamedParams(info, storedProcedure)
 		 | 		
 		 storedProcedure = executeUnnamedParams(info, storedProcedure, storedProcedure.getParameters().size() + 1)
@@ -1383,7 +1462,7 @@ Insert insert(ParseInfo info) :
 	<INSERT> <INTO>
 	group = id()
 
-	[LOOKAHEAD(<LPAREN><ID>) columns = columnList(false) {
+	[LOOKAHEAD(<LPAREN> id()) columns = columnList(false) {
 	  insert.setVariables(columns);
 	}]
 
@@ -1815,7 +1894,6 @@ AggregateSymbol orderedAgg(ParseInfo info) :
     Token t = null;
 	Expression expression = null;
 	OrderBy orderBy = null;
-	Expression condition = null;
 }
 {
 	(t=<XMLAGG>|t=<ARRAY_AGG>)
@@ -1823,12 +1901,10 @@ AggregateSymbol orderedAgg(ParseInfo info) :
 	expression = expression(info)
 	[ orderBy = orderby(info) ]
 	<RPAREN>
-	condition = filterClause(info)
 	{
 		String aggName = t.image.toUpperCase();
 		AggregateSymbol	agg = new AggregateSymbol(aggName, false, expression);
 		agg.setOrderBy(orderBy);
-		agg.setCondition(condition);
 		return agg;
 	}
 }
@@ -1842,11 +1918,10 @@ AggregateSymbol textAgg(ParseInfo info) :
 	List<DerivedColumn> expressions = new ArrayList<DerivedColumn>();
 	OrderBy orderBy = null;
 	String encoding = null;
-	Expression condition = null;
 }
 {
-	nonReserved("TEXTAGG") <LPAREN>
-	<FOR> expression = derivedColumn(info)
+	<TEXTAGG> <LPAREN>
+	[<FOR>] expression = derivedColumn(info)
 	{
 		expressions.add(expression);
 	}
@@ -1857,26 +1932,25 @@ AggregateSymbol textAgg(ParseInfo info) :
 		}
 	)* 		
 	[
-	  LOOKAHEAD(<ID>, { "delimiter".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  <DELIMITER>
 	  delimiter = charVal(info, "DELMITER")
 	]
 	[
-	  LOOKAHEAD(<ID>, { "quote".equalsIgnoreCase(getToken(1).image) })
-	  ( <ID> quote = charVal(info, "QUOTE") )
+	  <QUOTE>
+	  quote = charVal(info, "QUOTE")
 	]
 	[
-	  LOOKAHEAD(<ID>, { "header".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  <HEADER>
 	  { header = true; }
 	]	
 	[
-	  LOOKAHEAD(<ID>, { "encoding".equalsIgnoreCase(getToken(1).image) })
-	  ( <ID> encoding = id() )
+	  <ENCODING>
+	  encoding = id() 
 	]
 	[
 		orderBy = orderby(info)
 	]	
 	<RPAREN>
-	condition = filterClause(info)
 	{
 		TextLine tf = new TextLine();
 		tf.setDelimiter(delimiter);
@@ -1886,64 +1960,66 @@ AggregateSymbol textAgg(ParseInfo info) :
 		tf.setEncoding(encoding);
 		AggregateSymbol agg = new AggregateSymbol("TEXTAGG", false, tf);
 		agg.setOrderBy(orderBy);
-		agg.setCondition(condition);
 		return agg;		
 	}
 }
 
 AggregateSymbol aggregateSymbol(ParseInfo info) :
 {
-	String func = null;
+	Token func = null;
 	Token starToken = null;
 	AggregateSymbol agg = null;
 	boolean isDistinct = false;
 	Expression expression = null;
-	Expression condition = null;
 }
 {
 	(
 		// COUNT(*)
-		(LOOKAHEAD(3) (
-			func = nonReserved("COUNT")
+		LOOKAHEAD(3) (func = <COUNT>
 			<LPAREN>
 			starToken = <STAR>
-			<RPAREN> )	|
-		LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "rank", "dense_rank", "row_number") != null}) (func = nonReserved("row_number", "rank", "dense_rank", "percent_rank", "cume_dist")
-			<LPAREN> <RPAREN>) |
+			<RPAREN> )	
+		| 
 		// Remaining aggregates
-		(	(func = nonReserved("COUNT", "SUM", "AVG", "MIN", "MAX", "EVERY", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") 
-				|
-				<ANY> { func = "ANY"; }
-				|
-				<SOME> { func = "SOME"; }
-			)
+		(	(<COUNT> | <SUM> | <AVG> | <MIN> | <MAX> | <EVERY> | <STDDEV_POP> | <STDDEV_SAMP> | <VAR_SAMP> | <VAR_POP> | <SOME> | <ANY>) {func = getToken(0);}
 			<LPAREN>
 			[ <DISTINCT> {isDistinct=true;} | <ALL>]
 			expression = expression(info)
 			<RPAREN>
-		)) 
-		condition = filterClause(info)
+		)
 	)
 	{
-		func = func.toUpperCase();
+		String name = func.image.toUpperCase();
 		if(starToken == null) { 
 			// Aggregate
-			agg = new AggregateSymbol(func, isDistinct, expression);
+			agg = new AggregateSymbol(name, isDistinct, expression);
 		} else {
 			// COUNT(*)			
-			agg = new AggregateSymbol(func, false, null);
+			agg = new AggregateSymbol(name, false, null);
 		}
-		agg.setCondition(condition);
 		return agg;
 	}
 }
+
+AggregateSymbol analyticAggregateSymbol(ParseInfo info) :
+{
+	Token func = null;
+}
+{
+	(<ROW_NUMBER> | <RANK> | <DENSE_RANK>) {func = getToken(0);}
+	<LPAREN> <RPAREN>
+	{
+		return new AggregateSymbol(func.image.toUpperCase(), false, null);	
+	}
+}
+
 
 Expression filterClause(ParseInfo info) :
 {
 	Expression condition = null;
 }
 {
-	[ <FILTER> <LPAREN> <WHERE> condition = booleanPrimary(info) <RPAREN> ]
+	<FILTER> <LPAREN> <WHERE> condition = booleanPrimary(info) <RPAREN>
 	{
 		return condition;	
 	}
@@ -1998,7 +2074,7 @@ FromClause tableReference(ParseInfo info) :
 {	
 	(
 		(	
-			<LBRACE> nonReserved("OJ")
+			<LBRACE> <OJ>
 			result=joinedTable(info)
 			<RBRACE>
 		) 
@@ -2074,9 +2150,9 @@ FromClause tablePrimary(ParseInfo info) :
 	Token lparen = null;
 }
 {
-	(	LOOKAHEAD(<ID> <LPAREN>, { "texttable".equalsIgnoreCase(getToken(1).image) }) clause = textTable(info)
+	(	LOOKAHEAD(2) clause = textTable(info)
 	    |
-	    LOOKAHEAD(<ID> <LPAREN>, { "arraytable".equalsIgnoreCase(getToken(1).image) }) clause = arrayTable(info)
+	    LOOKAHEAD(2) clause = arrayTable(info)
 	    |
 	    clause = xmlTable(info)
 	    |
@@ -2102,12 +2178,12 @@ FromClause tablePrimary(ParseInfo info) :
 XMLSerialize xmlSerialize(ParseInfo info) :
 {
 	Expression expr = null;
-	String doc = null;
+	Boolean doc = null;
 	Token t = null;
 }
 {
 	<XMLSERIALIZE> <LPAREN>
-	[LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "document", "content") != null}) doc = nonReserved("DOCUMENT", "CONTENT")]
+	[LOOKAHEAD(1) (<DOCUMENT> {doc = true;}| <CONTENT> {doc = false;})]
 	expr = expression(info)
 	[
 		<AS> (t = <STRING> | t = <VARCHAR> | t = <CLOB>)
@@ -2117,27 +2193,12 @@ XMLSerialize xmlSerialize(ParseInfo info) :
 		XMLSerialize result = new XMLSerialize();
 		result.setExpression(expr);
 		if (doc != null) {
-			result.setDocument("document".equalsIgnoreCase(doc));
+			result.setDocument(doc);
 		}
 		if (t != null) {
 			result.setTypeString(t.image);
 		}
 		return result;
-	}
-}
-
-String nonReserved(String... expected) :
-{
-	Token t = null;
-}
-{
-	t = <ID> 
-	{
-		String result = matchesAny(t.image, expected);
-		if (result != null) {
-			return result;
-		}
-		throw new ParseException(QueryPlugin.Util.getString("SQLParser.expected_non_reserved", Arrays.toString(expected), t.image));
 	}
 }
 
@@ -2148,8 +2209,8 @@ ArrayTable arrayTable(ParseInfo info) :
 	String aliasID = null;
 }
 {
- 	<ID> <LPAREN> array = expression(info)
- 	nonReserved("COLUMNS")
+ 	<ARRAYTABLE> <LPAREN> array = valueExpressionPrimary(info)
+ 	<COLUMNS>
  	columns = createElementsWithTypes(info) 
  	<RPAREN>
  	[<AS>] aliasID=id()
@@ -2177,12 +2238,12 @@ TextTable textTable(ParseInfo info) :
 	String aliasID = null;
 }
 {
- 	<ID> <LPAREN> file = expression(info)
+ 	<TEXTTABLE> <LPAREN> file = commonValueExpression(info)
  	[
-	  LOOKAHEAD(<ID>, { "selector".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  <SELECTOR>
 	  selector = stringVal()
 	]
- 	nonReserved("COLUMNS")
+ 	<COLUMNS>
  	column = textColumn(info)
 	{
 		columns.add(column);
@@ -2194,23 +2255,22 @@ TextTable textTable(ParseInfo info) :
 		}
 	)* 
 	[
-	  <NO> <ROW> nonReserved("DELIMITER")
+	  <NO> <ROW> <DELIMITER>
 	  {
 	    useRowDelimiter = false;
 	  }
 	]
 	[
-	  LOOKAHEAD(<ID>, { "delimiter".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  <DELIMITER>
 	  delimiter = charVal(info, "DELMITER")
 	]
 	[
 	  (<ESCAPE> quote = charVal(info, "ESCAPE") ) { escape = true; }
 	  |
-	  LOOKAHEAD(<ID>, { "quote".equalsIgnoreCase(getToken(1).image) })
-	  ( <ID> quote = charVal(info, "QUOTE") )
+	  (<QUOTE> quote = charVal(info, "QUOTE") )
 	]
 	[
-	  LOOKAHEAD(<ID>, { "header".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  <HEADER>
 	  [
 	  	header = intVal()
 	  ]
@@ -2221,7 +2281,7 @@ TextTable textTable(ParseInfo info) :
 	  }
 	]
 	[
-	  LOOKAHEAD(<ID>, { "skip".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  <SKIP_KEYWORD>
 	  skip = intVal()
 	]
  	<RPAREN>
@@ -2255,17 +2315,17 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	name = id()
 	datatype = dataType()
 	[ 
-	  	LOOKAHEAD(<ID>, { "width".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  	<WIDTH>
 	  	width = intVal() 
 	  	[ LOOKAHEAD(2)
-		  	<NO> nonReserved("TRIM")
+		  	<NO> <TRIM>
 		  	{
 				noTrim = true;	  	
 		  	}
 		]
 	]
 	[ 
-	  	LOOKAHEAD(<ID>, { "selector".equalsIgnoreCase(getToken(1).image) }) <ID>
+	  	<SELECTOR>
 	    selector = stringVal()
 	  	position = intVal() 
 	]
@@ -2291,7 +2351,7 @@ XMLQuery xmlQuery(ParseInfo info) :
  	[ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
  	xquery = stringVal()
  	[ 
- 	  LOOKAHEAD(<ID>, { "passing".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  <PASSING>
  	  passing = derivedColumn(info)
  	  {
  	  	passingValues.add(passing);
@@ -2316,9 +2376,9 @@ XMLQuery xmlQuery(ParseInfo info) :
  	[
  	  (<NULL> { empty = false; }
  	   |
- 	   nonReserved("EMPTY") { empty = true; }
+ 	   <EMPTY> { empty = true; }
  	  )
- 	  <ON> nonReserved("EMPTY")
+ 	  <ON> <EMPTY>
  	]
  	<RPAREN>
  	{
@@ -2346,7 +2406,7 @@ XMLTable xmlTable(ParseInfo info) :
  	[ xmlNamespaces = xmlNamespaces(info) <COMMA> ]
  	xquery = stringVal()
  	[ 
- 	  LOOKAHEAD(<ID>, { "passing".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  <PASSING>
  	  passing = derivedColumn(info)
  	  {
  	  	passingValues.add(passing);
@@ -2362,7 +2422,7 @@ XMLTable xmlTable(ParseInfo info) :
  	]
  	
  	[
- 	  LOOKAHEAD(<ID>, { "columns".equalsIgnoreCase(getToken(1).image) }) <ID>
+ 	  <COLUMNS>
  	  column = xmlColumn(info)
  	  {
  	    columns.add(column);
@@ -2398,7 +2458,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	name = id()
 	
 	((
-	  <FOR> nonReserved("ORDINALITY") 
+	  <FOR> <ORDINALITY> 
 	  {
 	    return new XMLTable.XMLColumn(name); 
 	  }	
@@ -2408,7 +2468,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
 	  ]
       [ 
-	    nonReserved("PATH") path = stringVal()
+	    <PATH> path = stringVal()
 	  ]
 	  {
 		return new XMLTable.XMLColumn(name, (String)datatype.getValue(), path, defaultExpr);
@@ -2471,20 +2531,21 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
 UnaryFromClause unaryFromClause(ParseInfo info) :
 {
 	GroupSymbol group = null;
-	Token groupID = null;
+	String groupID = null;
+	Token groupToken = null;
     String aliasID = null;
 	UnaryFromClause clause = null;
 }
 {	
-	(groupID=<ID> [[<AS>] aliasID=id()])
+	(groupID=id() {groupToken = getToken(0);} [[<AS>] aliasID=id()])
 	{
     	if(aliasID != null) {		
-            group = new GroupSymbol(validateAlias(aliasID), normalizeId(groupID.image));
+            group = new GroupSymbol(validateAlias(aliasID), groupID);
         } else {
-			group = new GroupSymbol(normalizeId(groupID.image));
+			group = new GroupSymbol(groupID);
         }
         clause = new UnaryFromClause(group);
-        setFromClauseOptions(groupID, clause);
+        setFromClauseOptions(groupToken, clause);
 		return clause;
     }	
 }		
@@ -2531,16 +2592,17 @@ Criteria criteria(ParseInfo info) :
  */
 Criteria compoundCritOr(ParseInfo info) :
 {
-    ArrayList logicList = new ArrayList(2);
+    ArrayList logicList = null;
     Criteria logicPart = null;
+    Criteria logicPart1 = null;
 }
 {
-	logicPart=compoundCritAnd(info) 				{ logicList.add(logicPart); }
-	(<OR> logicPart=compoundCritAnd(info) 			{ logicList.add(logicPart); } )*
+	logicPart=compoundCritAnd(info) 
+	(<OR> logicPart1=compoundCritAnd(info) 			{ if (logicList == null) { logicList = new ArrayList(2); logicList.add(logicPart); } logicList.add(logicPart1); } )*
 
 	{
-		if(logicList.size() == 1) {
-			return (Criteria) logicList.get(0);
+		if(logicList == null) {
+			return logicPart;
 		} else {
          	return new CompoundCriteria(CompoundCriteria.OR,logicList);
 		}
@@ -2554,16 +2616,17 @@ Criteria compoundCritOr(ParseInfo info) :
  */
 Criteria compoundCritAnd(ParseInfo info) :
 {
-    ArrayList logicList = new ArrayList(2);
+    ArrayList logicList = null;
     Criteria logicPart = null;
+    Criteria logicPart1 = null;
 }
 {
-	logicPart=notCrit(info) 			{ logicList.add(logicPart); }
-	(<AND> logicPart=notCrit(info) 		{ logicList.add(logicPart); } )*
+	logicPart=notCrit(info) 		
+	(<AND> logicPart1=notCrit(info) 		{ if (logicList == null) { logicList = new ArrayList(2); logicList.add(logicPart); } logicList.add(logicPart1); } )*
 
 	{
-   		if(logicList.size() == 1) {
-			return (Criteria) logicList.get(0);
+   		if(logicList == null) {
+			return logicPart;
 		} else {	
          	return new CompoundCriteria(CompoundCriteria.AND,logicList);
 		}	
@@ -2992,16 +3055,16 @@ OrderByItem sortSpecification(ParseInfo info) :
 {
     Expression ex = null;
     boolean ascending = true;
-    String nullOrdering = null;    
+    org.teiid.language.SortSpecification.NullOrdering nullOrdering = null;    
 }
 {
 	ex=sortKey(info) 
 	[<ASC> | <DESC> {ascending=false;}]
-	[nonReserved("NULLS") nullOrdering = nonReserved("FIRST", "LAST")] 
+	[<NULLS> (<FIRST> {nullOrdering=org.teiid.language.SortSpecification.NullOrdering.FIRST;} | <LAST> {nullOrdering=org.teiid.language.SortSpecification.NullOrdering.LAST;})] 
 	{
     	OrderByItem item = new OrderByItem(ex, ascending);
     	if (nullOrdering != null) {
-    		item.setNullOrdering(org.teiid.language.SortSpecification.NullOrdering.valueOf(nullOrdering.toUpperCase()));
+    		item.setNullOrdering(nullOrdering);
     	}
     	return item;
 	}
@@ -3082,7 +3145,7 @@ Expression fetchLimit(ParseInfo info) :
     Expression limit = null;
 }
 {
-    <FETCH> nonReserved("FIRST", "NEXT") [limit = intParam(info)] (<ROW>|<ROWS>) <ONLY>
+    <FETCH> (<FIRST> | <NEXT>) [limit = intParam(info)] (<ROW>|<ROWS>) <ONLY>
     {
       if (limit == null) {
         return new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER); 
@@ -3297,6 +3360,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	Constant literal = null;	
 	QueryCommand subquery = null;
 	Integer arrayIndex = null;
+	Expression condition = null;
 }
 {
         (
@@ -3309,37 +3373,27 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		literal=literal()
 		|
 		// Escaped function
-		(	<LBRACE> nonReserved("FN")
+		(	<LBRACE> <FN>
 			expression=function(info)
 			<RBRACE>
 		)
-		|
-		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "textagg") != null}) 
-		(expression=textAgg(info) [expression = windowSpecification(expression, info)])				
 		|		
 		// Aggregate function
-		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "count", "min", "max", "sum", "avg", "every", "STDDEV_POP", "STDDEV_SAMP", "VAR_SAMP", "VAR_POP") != null}) 
-		(expression=aggregateSymbol(info) [expression = windowSpecification(expression, info)])
+		LOOKAHEAD(2) ((expression=textAgg(info) | expression=aggregateSymbol(info) | expression=orderedAgg(info)) [condition = filterClause(info)] [expression = windowSpecification(expression, info)])
 		|
-		LOOKAHEAD(<ANY>|<SOME>) (expression=aggregateSymbol(info) [expression = windowSpecification(expression, info)])
-		|
-		expression=orderedAgg(info) [expression = windowSpecification(expression, info)]
-		|
-		LOOKAHEAD(<ID> <LPAREN>, {matchesAny(getToken(1).image, "rank", "dense_rank", "row_number") != null}) 
-		(expression=aggregateSymbol(info) expression = windowSpecification(expression, info))
+		LOOKAHEAD(2) (expression=analyticAggregateSymbol(info) [condition = filterClause(info)] expression = windowSpecification(expression, info))
 		|
 		// Function
 		LOOKAHEAD(2) (expression=function(info) [expression = windowSpecification(expression, info)])
 		|
 		// ElementSymbol
-		(symbol=<ID> 
-			{
+		((symbol=<ID> {
 				String symbolImage = symbol.image;
 				if(isStringLiteral(symbolImage, info)) {
 				    literal = new Constant(normalizeStringLiteral(symbolImage));
 				    symbol = null;
 				}  
-			}
+			} | symbol=nonReserved()) 
 			(<LSBRACE> arrayIndex = intVal() <RSBRACE>)?
 		)
 		|
@@ -3370,6 +3424,9 @@ Expression valueExpressionPrimary(ParseInfo info) :
 			expression = literal;		// may be null literal
 		} else if (subquery != null){
 			expression = new ScalarSubquery(subquery);
+		}
+		if (condition != null) {
+			((AggregateSymbol)expression).setCondition(condition);
 		}
 		if (arrayIndex != null) {
 			expression = new Function("array_get", new Expression[] {expression, new Constant(arrayIndex)});		
@@ -3517,8 +3574,8 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)
 	|
-	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("SUBSTRING")}) (
-	   funcName = nonReserved("SUBSTRING")
+	LOOKAHEAD(2) (
+	   funcToken = <SUBSTRING>
 	   <LPAREN>
 	   expression = expression(info)
 	   {
@@ -3536,8 +3593,8 @@ Expression function(ParseInfo info) :
 	   <RPAREN>
 	)
 	|
-	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("EXTRACT")}) (
-	   nonReserved("EXTRACT")
+	LOOKAHEAD(2) (
+	   funcToken = <EXTRACT>
 	   <LPAREN>
 	   (funcToken = <YEAR> | 
 	    funcToken = <MONTH> |
@@ -3555,10 +3612,10 @@ Expression function(ParseInfo info) :
 	   <RPAREN>
 	)
 	|
-	LOOKAHEAD(2, {getToken(1).image.equalsIgnoreCase("TRIM")}) (
-	   funcName= nonReserved("TRIM")
+	LOOKAHEAD(2) (
+	   funcToken = <TRIM>
 	   <LPAREN>
-	   { funcToken = null; expression = null;}
+	   { funcName = funcToken.image; funcToken = null; expression = null;}
 	   [
 	    LOOKAHEAD(2) (((funcToken = <LEADING>|
 	      funcToken = <TRAILING>|
@@ -3593,8 +3650,8 @@ Expression function(ParseInfo info) :
 	   <RPAREN>
 	)
 	|
-	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "to_chars", "to_bytes") != null}) (	
-		funcName = nonReserved("TO_CHARS", "TO_BYTES")
+	LOOKAHEAD(2) (	
+		(funcToken = <TO_CHARS> | funcToken = <TO_BYTES>)
 		<LPAREN>
 		expression = expression(info) 
 		{		
@@ -3608,8 +3665,8 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)
 	|
-	LOOKAHEAD(<ID>, {matchesAny(getToken(1).image, "timestampadd", "timestampdiff") != null}) (	
-		funcName = nonReserved("TIMESTAMPADD", "TIMESTAMPDIFF")
+	LOOKAHEAD(2) (	
+		(funcToken = <TIMESTAMPADD> | funcToken = <TIMESTAMPDIFF>)
 		<LPAREN>
 		expression = intervalType() 
 		{		
@@ -3628,7 +3685,7 @@ Expression function(ParseInfo info) :
 		<RPAREN>				
 	)
 	|
-	LOOKAHEAD(<ID>, {getToken(1).image.equalsIgnoreCase("querystring")}) expression = queryString(info)
+	LOOKAHEAD(2) expression = queryString(info)
 	  {
 		return expression;
 	  }		
@@ -3660,9 +3717,7 @@ Expression function(ParseInfo info) :
 	| ( funcToken = <XMLPI>
 		<LPAREN>
 		(
-		 LOOKAHEAD(<ID>, { "name".equalsIgnoreCase(getToken(1).image) }) <ID> expression = idExpression()
-		 |
-		 expression = idExpression()
+		 [LOOKAHEAD(1) <NAME>] expression = idExpression()
 		)
 		{
 			args.add(expression);	
@@ -3694,7 +3749,7 @@ Expression function(ParseInfo info) :
 		[ args = expressionList(info) ]
 		[ orderBy = orderby(info) ]
 		<RPAREN>
-		condition = filterClause(info)
+		[condition = filterClause(info)]
 	))		
 	{
 		if(funcName == null) { 
@@ -3723,14 +3778,14 @@ Constant stringConstant() :
 XMLParse xmlParse(ParseInfo info) :
 {
 	Expression expr = null;
-	String doc = null;
+	boolean doc = false;
 	boolean wellformed = false;
 }
 {
 	<XMLPARSE><LPAREN>
-	doc = nonReserved("DOCUMENT", "CONTENT")
+	(<DOCUMENT> {doc = true;}| <CONTENT> {doc = false;})
 	expr = expression(info)
-	[nonReserved("WELLFORMED")
+	[<WELLFORMED>
 	 {
 	   wellformed = true;
 	 }
@@ -3738,7 +3793,7 @@ XMLParse xmlParse(ParseInfo info) :
 	<RPAREN>
 	{
 		XMLParse result = new XMLParse();
-		result.setDocument("document".equalsIgnoreCase(doc));
+		result.setDocument(doc);
 		result.setExpression(expr);
 		result.setWellFormed(wellformed);
 		return result;
@@ -3752,7 +3807,7 @@ QueryString queryString(ParseInfo info) :
 	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
- 	nonReserved("QUERYSTRING") <LPAREN>
+ 	<QUERYSTRING> <LPAREN>
  	path = expression(info)
 	(<COMMA> arg=derivedColumn(info)
 	 {
@@ -3777,9 +3832,7 @@ XMLElement xmlElement(ParseInfo info) :
 {
 	<XMLELEMENT> <LPAREN>
 	(
-	 LOOKAHEAD(<ID>, { "name".equalsIgnoreCase(getToken(1).image) }) <ID> name = id()
-	 |
-	 name = id()
+	 [LOOKAHEAD(1) <NAME>] name = id()
 	)
 	[
 		LOOKAHEAD(2) <COMMA> xmlNamespaces = xmlNamespaces(info)
@@ -3975,14 +4028,22 @@ Constant dataType() :
  */
 Constant intervalType() : 
 {
-	String type = null;
+	Token type = null;
 }
 {
 	(
-		type = nonReserved("SQL_TSI_FRAC_SECOND", "SQL_TSI_SECOND", "SQL_TSI_MINUTE", "SQL_TSI_HOUR", "SQL_TSI_DAY", "SQL_TSI_WEEK", "SQL_TSI_MONTH", "SQL_TSI_QUARTER", "SQL_TSI_YEAR")
+		type = <SQL_TSI_FRAC_SECOND>
+	   |type = <SQL_TSI_SECOND>
+	   |type = <SQL_TSI_MINUTE>
+	   |type = <SQL_TSI_HOUR>
+	   |type = <SQL_TSI_DAY>
+	   |type = <SQL_TSI_WEEK>
+	   |type = <SQL_TSI_MONTH>
+	   |type = <SQL_TSI_QUARTER>
+	   |type = <SQL_TSI_YEAR>
 	)
 	{
-		return new Constant(type);
+		return new Constant(type.image);
 	}
 }
 /**
@@ -4101,7 +4162,7 @@ void createNameSpace(MetadataFactory factory) :
 	String prefix = null;
 }
 { 
-	<SET> nonReserved ("NAMESPACE") uri = stringVal() <AS> prefix = id()
+	<SET> <NAMESPACE> uri = stringVal() <AS> prefix = id()
 	{
 		factory.addNamespace(prefix, uri);
 	}
@@ -4189,7 +4250,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	name = id()
 	type = parseDataType()
 	[<NOT> <NULL> {notNull = true;}]
-	[nonReserved("RESULT")
+	[<RESULT>
 	  {
 	    if (ppType != ProcedureParameter.Type.Out) {
 	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.param_out", proc.getName(), name));
@@ -4253,7 +4314,7 @@ void createTable(MetadataFactory factory) :
 	Token comment = null;
 }
 {
-	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] nonReserved("VIEW") {view = true;}) 
+	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
 	tableName = id()
 	{
 		try{
@@ -4308,7 +4369,7 @@ void foreignKeys(MetadataFactory factory, Table table) :
 	KeyRecord key = null;
 }
 {
-	<FOREIGN> nonReserved("KEY")
+	<FOREIGN> <KEY>
 	columnNames = getColumnNames()
     {
 	    for (String col: columnNames) {
@@ -4339,7 +4400,7 @@ void primaryKeys(MetadataFactory factory, Table table) :
 	KeyRecord key = null;
 }
 {
-	<PRIMARY> nonReserved("KEY")
+	<PRIMARY> <KEY>
     {
     	columnNames = getColumnNames();
 	    for (String col: columnNames) {
@@ -4366,24 +4427,24 @@ void constraints(MetadataFactory factory, Table table) :
 	KeyRecord keyrecord = null;
 	Column column = null;
 	List<String> columnNames = null;
-	String type = null;
+	Token type = null;
 	KeyRecord key = null;
 }
 {
-	( <UNIQUE> { type = "UNIQUE"; } | type = nonReserved("INDEX","ACCESSPATTERN"))
+	( type = <UNIQUE> | type = <INDEX> | type = <ACCESSPATTERN>)
     {
 	    columnNames = getColumnNames();	    
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
 	    }
 	    try{
-	    	if (type.equalsIgnoreCase("INDEX")) { 
+	    	if (type.image.equalsIgnoreCase("INDEX")) { 
 	    		key = factory.addIndex("INDEX"+table.getIndexes().size(), true, columnNames, table);
 	    	}
-	    	if (type.equalsIgnoreCase("UNIQUE")) { 
+	    	if (type.image.equalsIgnoreCase("UNIQUE")) { 
 	    		key = factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnNames, table);
 	    	}	    
-	    	if (type.equalsIgnoreCase("ACCESSPATTERN")) { 
+	    	if (type.image.equalsIgnoreCase("ACCESSPATTERN")) { 
 	    		key = factory.addAccessPattern("AP"+table.getAccessPatterns().size(), columnNames, table);
 	    	}
     	}catch(TranslatorException e){
@@ -4431,7 +4492,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	boolean index = false;
 	boolean unique = false;
 	boolean pk = false;
-	String word = null;
+	Token word = null;
 }
 {
 	 element = id()
@@ -4450,11 +4511,11 @@ void createColumn(MetadataFactory factory, Table table) :
 	 )
 	 [<NOT> <NULL> { notNull = true; }]
 	 ([(<UNIQUE> { unique = true;  })
-	  |(word=nonReserved("INDEX", "AUTO_INCREMENT")  
-	    { if (word.equalsIgnoreCase("INDEX")) index = true;
-	      else if (word.equalsIgnoreCase("AUTO_INCREMENT")) autoIncrement = true; 
+	  |((word = <INDEX> | word = <AUTO_INCREMENT>)  
+	    { if (word.image.equalsIgnoreCase("INDEX")) index = true;
+	      else if (word.image.equalsIgnoreCase("AUTO_INCREMENT")) autoIncrement = true; 
 	    })+	 
-	  |(<PRIMARY> nonReserved("KEY") { pk = true; })	 
+	  |(<PRIMARY> <KEY> { pk = true; })	 
 	  ])
 	 [<DEFAULT_KEYWORD> defalt = stringVal() {column.setDefaultValue(defalt);}]
 	 [optionsClause(column, factory)
