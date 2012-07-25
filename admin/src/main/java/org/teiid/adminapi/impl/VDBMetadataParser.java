@@ -132,7 +132,9 @@ public class VDBMetadataParser {
 				ignoreTillEnd(reader);
 				break;
 			case ENTRY:
-				// this is designer specific.
+				EntryMetaData entry = new EntryMetaData();
+				parseEntry(reader, entry);
+				vdb.getEntries().add(entry);
 				break;
              default: 
             	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element5",reader.getName(), 
@@ -255,6 +257,26 @@ public class VDBMetadataParser {
             			 Element.PROPERTY.getLocalName()), reader.getLocation()); 
             }
         }		
+	}	
+
+	private static void parseEntry(XMLStreamReader reader, EntryMetaData entry) throws XMLStreamException {
+		Properties props = getAttributes(reader);
+		entry.setPath(props.getProperty(Element.PATH.getLocalName()));
+        while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT)) {
+            Element element = Element.forName(reader.getLocalName());
+            switch (element) {
+			case DESCRIPTION:
+				entry.setDescription(reader.getElementText());
+				break;
+			case PROPERTY:
+				parseProperty(reader, entry);
+				break;
+            default: 
+           	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element2",reader.getName(), 
+           			 Element.DESCRIPTION.getLocalName(),
+           			 Element.PROPERTY.getLocalName())); 
+           }
+       }		
 	}	
 	
 	private static void parseModel(XMLStreamReader reader, ModelMetaData model) throws XMLStreamException {
@@ -428,6 +450,15 @@ public class VDBMetadataParser {
 		
 		// entry
 		// designer only 
+		for (EntryMetaData em:vdb.getEntries()) {
+			writer.writeStartElement(Element.ENTRY.getLocalName());
+			writeAttribute(writer, Element.PATH.getLocalName(), em.getPath());
+			if (em.getDescription() != null) {
+				writeElement(writer, Element.DESCRIPTION, em.getDescription());
+			}
+			writeProperties(writer, em.getProperties());			
+			writer.writeEndElement();
+		}
 		
 		writer.writeEndElement();
 		writer.writeEndDocument();

@@ -113,4 +113,10 @@ public interface VDB extends AdminObject, DomainAware {
      * @return
      */
     public List<? extends VDBImport> getVDBImports();
+    
+    /**
+     * Get the list of other resources included in the VDB
+     * @return
+     */
+    public List<? extends Entry> getEntries();
 }

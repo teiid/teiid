@@ -47,6 +47,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private LinkedHashMap<String, VDBTranslatorMetaData> translators = new LinkedHashMap<String, VDBTranslatorMetaData>(); 
 	private LinkedHashMap<String, DataPolicyMetadata> dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>(); 
 	private List<VDBImportMetadata> imports = new ArrayList<VDBImportMetadata>(2);
+	private List<EntryMetaData> entries = new ArrayList<EntryMetaData>(2);
+	
 	private int version = 1;
 	private String description;
 	private boolean dynamic = false;
@@ -261,5 +263,14 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public void setImportedModels(Set<String> importedModels) {
 		this.importedModels = importedModels;
+	}
+
+	@Override
+	public List<EntryMetaData> getEntries() {
+		return this.entries;
+	}
+	
+	public void setEntries(List<EntryMetaData> entries) {
+		this.entries = entries;
 	}
 }

@@ -36,5 +36,10 @@
         <mapped-role-name>ROLE1</mapped-role-name>
         <mapped-role-name>ROLE2</mapped-role-name>
     </data-role>
+    <entry path="/path-one">
+        <description>path one description</description>
+        <property name="entryone" value="1"></property>
+    </entry>
+    <entry path="/path-two"/>
 </vdb>
 

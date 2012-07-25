@@ -52,6 +52,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String DYNAMIC = "dynamic"; //$NON-NLS-1$
 	private static final String DATA_POLICIES = "data-policies"; //$NON-NLS-1$
 	private static final String DESCRIPTION = "description"; //$NON-NLS-1$
+	private static final String ENTRIES = "entries"; //$NON-NLS-1$
 	
 	public static VDBMetadataMapper INSTANCE = new VDBMetadataMapper();
 	
@@ -86,6 +87,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				importNodes.add(VDBImportMapper.INSTANCE.wrap(vdbImport, new ModelNode()));
 			}
 		}
+		
+		// ENTRIES
+		List<EntryMetaData> entries = vdb.getEntries();
+		if (entries != null && !entries.isEmpty()) {
+			ModelNode entryNodes = node.get(ENTRIES);		
+			for(EntryMetaData entry:entries) {
+				entryNodes.add(EntryMapper.INSTANCE.wrap(entry, new ModelNode()));
+			}
+		}		
 		
 		// MODELS
 		Map<String, ModelMetaData> models = vdb.getModelMetaDatas();
@@ -163,6 +173,17 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				}
 			}
 		}
+		
+		// ENTRIES
+		if (node.get(ENTRIES).isDefined()) {
+			List<ModelNode> modelNodes = node.get(ENTRIES).asList();
+			for(ModelNode modelNode:modelNodes) {
+				EntryMetaData entry = EntryMapper.INSTANCE.unwrap(modelNode);
+				if (entry != null) {
+					vdb.getEntries().add(entry);	
+				}
+			}
+		}		
 		
 		// MODELS
 		if (node.get(MODELS).isDefined()) {
@@ -675,6 +696,75 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		public ModelNode describe(ModelNode node) {
 			addAttribute(node, PROPERTY_NAME, ModelType.STRING, true);
 			addAttribute(node, PROPERTY_VALUE, ModelType.STRING, true);
+			return node; 
+		}
+	}		
+	
+	
+	/**
+	 * Entry Mapper
+	 */
+	public static class EntryMapper implements MetadataMapper<EntryMetaData>{
+		private static final String PATH = "path"; //$NON-NLS-1$
+		
+		public static EntryMapper INSTANCE = new EntryMapper();
+		
+		@Override
+		public ModelNode wrap(EntryMetaData obj, ModelNode node) {
+			if (obj == null) {
+				return null;
+			}
+			
+			node.get(PATH).set(obj.getPath());
+			if (obj.getDescription() != null) {
+				node.get(DESCRIPTION).set(obj.getDescription());
+			}
+			
+			//PROPERTIES
+			Properties properties = obj.getProperties();
+			if (properties!= null && !properties.isEmpty()) {
+				ModelNode propsNode = node.get(PROPERTIES);
+				for (String key:properties.stringPropertyNames()) {
+					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
+				}
+			}
+			return node;
+		}
+		
+		public EntryMetaData unwrap(ModelNode node) {
+			if (node == null) {
+				return null;
+			}
+			
+			EntryMetaData entry = new EntryMetaData();
+			if (node.has(PATH)) {
+				entry.setPath(node.get(PATH).asString());
+			}
+			
+			if (node.has(DESCRIPTION)) {
+				entry.setDescription(node.get(DESCRIPTION).asString());
+			}
+			
+			//PROPERTIES
+			if (node.get(PROPERTIES).isDefined()) {
+				List<ModelNode> propNodes = node.get(PROPERTIES).asList();
+				for (ModelNode propNode:propNodes) {
+					String[] prop = PropertyMetaDataMapper.INSTANCE.unwrap(propNode);
+					if (prop != null) {
+						entry.addProperty(prop[0], prop[1]);
+					}
+				}
+			}
+			return entry;
+		}
+		
+		public ModelNode describe(ModelNode node) {
+			addAttribute(node, PATH, ModelType.STRING, true);
+			
+			ModelNode props = node.get(PROPERTIES);
+			props.get(TYPE).set(ModelType.LIST);
+			props.get(DESCRIPTION).set(AdminPlugin.Util.getString(PROPERTIES+DOT_DESC));
+			PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 			return node; 
 		}
 	}		

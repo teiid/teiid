@@ -194,6 +194,16 @@ public class TestVDBMetaData {
 		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		vdb.addDataPolicy(roleOne);
+		
+		EntryMetaData em = new EntryMetaData();
+		em.setPath("/path-one");
+		em.setDescription("entry one");
+		em.addProperty("entryone", "1");
+		vdb.getEntries().add(em);
+		
+		EntryMetaData em2 = new EntryMetaData();
+		em2.setPath("/path-two");
+		vdb.getEntries().add(em2);
 		return vdb;
 	}
 	
