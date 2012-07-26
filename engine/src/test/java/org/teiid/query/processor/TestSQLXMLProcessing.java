@@ -38,6 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.DataTypeManager;
@@ -190,6 +191,17 @@ public class TestSQLXMLProcessing {
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(null, "first"),
         		Arrays.asList("attr", "second"),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlTableBinary() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:type=\"xs:hexBinary\">0FAB</b><b>1F1C</b></a>', xml) columns val varbinary path '/.') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(new BinaryType(new byte[] {0xf, (byte)0xab})),
+        		Arrays.asList(new BinaryType(new byte[] {0x1F, 0x1C})),
         };    
     
         process(sql, expected);

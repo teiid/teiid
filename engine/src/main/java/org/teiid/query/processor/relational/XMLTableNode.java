@@ -83,6 +83,8 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		typeMapping.put(DataTypeManager.DefaultDataClasses.DATE, BuiltInAtomicType.DATE);
 		typeMapping.put(DataTypeManager.DefaultDataClasses.FLOAT, BuiltInAtomicType.FLOAT);
 		typeMapping.put(DataTypeManager.DefaultDataClasses.DOUBLE, BuiltInAtomicType.DOUBLE);
+		typeMapping.put(DataTypeManager.DefaultDataClasses.BLOB, BuiltInAtomicType.HEX_BINARY);
+		typeMapping.put(DataTypeManager.DefaultDataClasses.VARBINARY, BuiltInAtomicType.HEX_BINARY);
 	}
 	
 	private static TeiidRuntimeException EARLY_TERMINATION = new TeiidRuntimeException();
