@@ -121,7 +121,7 @@
                           <configuration>
                               <artifacts>
                                   <artifact>
-                                      <file>target/teiid-${project.version}-client-jdk15.jar</file>
+                                      <file>target/teiid-${project.version}-jdbc-jdk15.jar</file>
                                       <type>jar</type>
                                       <classifier>client-jdk15</classifier>
                                   </artifact>
