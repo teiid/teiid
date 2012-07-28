@@ -32,7 +32,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
-import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.FakeRelationalNode;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -89,6 +88,23 @@ public class TestBatchIterator {
 		bi.hasNext();
 		assertEquals(1, bi.getCurrentIndex());
 		assertEquals(1, bi.nextTuple().get(0));
+	}
+	
+	@Test public void testBatchReadDuringMark() throws Exception {
+		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
+			Arrays.asList(1),
+			Arrays.asList(1),
+		}, 1));
+		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+		bi.setBuffer(bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR), true);  //$NON-NLS-1$
+		bi.mark();
+		assertNotNull(bi.nextTuple());
+		assertNotNull(bi.nextTuple());
+		assertNull(bi.nextTuple());
+		bi.reset();
+		assertNotNull(bi.nextTuple());
+		assertNotNull(bi.nextTuple());
+		assertNull(bi.nextTuple());
 	}
 	
 }
