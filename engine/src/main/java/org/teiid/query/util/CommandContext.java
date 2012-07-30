@@ -760,7 +760,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public boolean isContinuous() {
-		return globalState.reuseCount == null;
+		return globalState.reuseCount != null;
 	}
 	
 	public void setContinuous() {

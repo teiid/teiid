@@ -99,6 +99,7 @@ public class TestExecutionReuse {
 	
 	@Before public void setup() throws DataNotAvailableException, TranslatorException {
 		execution = Mockito.mock(FakeReusableExecution.class);
+		ec = null;
 		OngoingStubbing stubbing = Mockito.stub(execution.next()).toReturn((List) Arrays.asList((Object)null)).toReturn(null);
 		for (int i = 1; i < EXEC_COUNT; i++) {
 			stubbing.toReturn((List<Object>) Arrays.asList((Object)null)).toReturn(null);
@@ -114,7 +115,9 @@ public class TestExecutionReuse {
 			}
 		}).when(execution).dispose();
 	}
-    
+
+	private static ExecutionContext ec;
+
     @BeforeClass public static void oneTimeSetUp() throws Exception {
     	EmbeddedConfiguration config = new EmbeddedConfiguration();
     	config.setUserRequestSourceConcurrency(1);
@@ -129,6 +132,7 @@ public class TestExecutionReuse {
 							ExecutionContext executionContext,
 							RuntimeMetadata metadata, Object connection)
 							throws TranslatorException {
+						ec = executionContext;
 						return execution;
 					};
 				};
@@ -187,6 +191,7 @@ public class TestExecutionReuse {
 			}
 		}
 		assertEquals(EXEC_COUNT, result.get().intValue());
+		assertTrue(ec.getCommandContext().isContinuous());
 		Mockito.verify(execution, Mockito.times(1)).dispose();
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).execute();
 		Mockito.verify(execution, Mockito.times(EXEC_COUNT)).close();
