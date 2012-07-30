@@ -276,6 +276,10 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, mcf.getAuthPassword());
 		}
 		
+		if (mcf.getRequestTimeout() != -1L){
+			dispatch.getRequestContext().put("javax.xml.ws.client.receiveTimeout", mcf.getRequestTimeout()); //$NON-NLS-1$
+		}		
+		
 		if (HTTPBinding.HTTP_BINDING.equals(binding)) {
 	        Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
 	        if(httpHeaders == null) {

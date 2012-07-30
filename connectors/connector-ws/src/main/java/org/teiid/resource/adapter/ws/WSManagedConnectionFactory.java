@@ -54,6 +54,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private Bus bus;
 	private QName portQName;
 	private List<? extends Interceptor> outInterceptors;
+	private Long requestTimeout = -1L;
 
 	@SuppressWarnings("serial")
 	@Override
@@ -102,6 +103,14 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	public void setEndPoint(String endPoint) {
 		this.endPoint = endPoint;
+	}
+	
+	public Long getRequestTimeout() {
+		return this.requestTimeout;
+	}
+
+	public void setRequestTimeout(Long timeout) {
+		this.requestTimeout = timeout;
 	}	
 	
 	public SecurityType getAsSecurityType() {
