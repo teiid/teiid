@@ -68,6 +68,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.CacheDirective.Scope;
 
 
 /**
@@ -109,6 +110,9 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     
     private volatile FutureWork<AtomicResultsMessage> futureResult;
     private volatile boolean running;
+    
+    boolean errored;
+	Scope scope; //this is to avoid synchronization
     
     public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
         this.aqr = aqr;
@@ -158,7 +162,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
 					convertToRuntimeType[i] = false;
 				} else {
-					if (isLob[i] && !cwi.copyLobs() && !arm.supportsCloseWithLobs() && DataTypeManager.isLOB(value.getClass())) {
+					if (isLob[i] && !cwi.copyLobs() && !cwi.areLobsUsableAfterClose() && DataTypeManager.isLOB(value.getClass())) {
 						explicitClose = true;
 					}				
 					row.set(i, result);
@@ -224,8 +228,13 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {
     	while (true) {
     		if (arm == null) {
+    			if (isDone()) {
+    				//sanity check
+    				return null; //TODO: could throw an illegal state exception
+    			}
     			boolean partial = false;
     			AtomicResultsMessage results = null;
+    			boolean dna = false;
     			try {
 	    			if (futureResult != null || !aqr.isSerial()) {
 	    				results = asynchGet();
@@ -248,9 +257,11 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    				}
 	    			}
     			} catch (TranslatorException e) {
-    				results = exceptionOccurred(e, true);
+    				errored = true;
+    				results = exceptionOccurred(e);
     				partial = true;
     			} catch (DataNotAvailableException e) {
+    				dna = true;
     				if (e.getRetryDelay() >= 0) {
 	    				workItem.scheduleWork(new Runnable() {
 	    					@Override
@@ -262,7 +273,11 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     					continue; 
     				}
     				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException", aqr.getAtomicRequestID()); //$NON-NLS-1$
-    			} 
+    			} finally {
+    				if (!dna && results == null) {
+    					errored = true;
+    				}
+    			}
     			receiveResults(results, partial);
     		}
 	    	if (index < arm.getResults().length) {
@@ -412,16 +427,14 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     	}
     }
 
-    AtomicResultsMessage exceptionOccurred(TranslatorException exception, boolean removeState) throws TeiidComponentException, TeiidProcessingException {
-    	if (removeState) {
-			fullyCloseSource();
-		}
+    AtomicResultsMessage exceptionOccurred(TranslatorException exception) throws TeiidComponentException, TeiidProcessingException {
     	if(workItem.requestMsg.supportsPartialResults()) {
 			AtomicResultsMessage emptyResults = new AtomicResultsMessage(new List[0]);
 			emptyResults.setWarnings(Arrays.asList((Exception)exception));
 			emptyResults.setFinalRow(this.rowsProcessed);
 			return emptyResults;
 		} 
+		fullyCloseSource();
 		if (exception.getCause() instanceof TeiidComponentException) {
 			throw (TeiidComponentException)exception.getCause();
 		}
@@ -433,6 +446,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 
 	void receiveResults(AtomicResultsMessage response, boolean partial) {
 		this.arm = response;
+		this.scope = response.getScope();
 		explicitClose |= !arm.supportsImplicitClose();
         rowsProcessed += response.getResults().length;
         index = 0;

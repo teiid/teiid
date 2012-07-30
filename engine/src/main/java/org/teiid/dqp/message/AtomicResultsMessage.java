@@ -24,10 +24,12 @@ package org.teiid.dqp.message;
 
 import java.util.List;
 
+import org.teiid.translator.CacheDirective.Scope;
+
 
 public class AtomicResultsMessage {
 
-	private List[] results;
+	private List<?>[] results;
 
     // Final row index in complete result set, if known
     private int finalRow = -1;
@@ -35,31 +37,21 @@ public class AtomicResultsMessage {
     // by default we support implicit close.
     private boolean supportsImplicitClose = true;
     
-    private boolean supportsCloseWithLobs;
-
-    private boolean isTransactional;
-    
     private List<Exception> warnings;
+    
+    private Scope scope;
 
     // to honor the externalizable contract
 	public AtomicResultsMessage() {
 	}
 	
-	public AtomicResultsMessage(List[] results) {
+	public AtomicResultsMessage(List<?>[] results) {
         this.results = results;
 	}
 	
     public boolean supportsImplicitClose() {
         return this.supportsImplicitClose;
     }
-    
-    public boolean supportsCloseWithLobs() {
-		return supportsCloseWithLobs;
-	}
-    
-    public void setSupportsCloseWithLobs(boolean supportsCloseWithLobs) {
-		this.supportsCloseWithLobs = supportsCloseWithLobs;
-	}
     
     public void setSupportsImplicitClose(boolean supportsImplicitClose) {
         this.supportsImplicitClose = supportsImplicitClose;
@@ -77,19 +69,19 @@ public class AtomicResultsMessage {
 		return results;
 	}
 
-	public boolean isTransactional() {
-		return isTransactional;
-	}
-
-	public void setTransactional(boolean isTransactional) {
-		this.isTransactional = isTransactional;
-	}   
-	
 	public void setWarnings(List<Exception> warnings) {
 		this.warnings = warnings;
 	}
 	
 	public List<Exception> getWarnings() {
 		return warnings;
+	}
+	
+	public void setScope(Scope scope) {
+		this.scope = scope;
+	}
+	
+	public Scope getScope() {
+		return scope;
 	}
 }

@@ -40,6 +40,7 @@ public class CacheDirective implements Serializable {
 	
 	private Boolean prefersMemory;
 	private Boolean updatable;
+	private Boolean readAll;
 	private Long ttl;
 	private Scope scope;
 	
@@ -75,6 +76,10 @@ public class CacheDirective implements Serializable {
 		this.ttl = ttl;
 	}
 	
+	/**
+	 * Get whether the result is updatable and therefore sensitive to data changes.
+	 * @return
+	 */
 	public Boolean getUpdatable() {
 		return updatable;
 	}
@@ -91,6 +96,18 @@ public class CacheDirective implements Serializable {
 		this.scope = scope;
 	}
 	
+	/**
+	 * Whether the engine should read and cache the entire results.
+	 * @return
+	 */
+	public Boolean getReadAll() {
+		return readAll;
+	}
+	
+	public void setReadAll(Boolean readAll) {
+		this.readAll = readAll;
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == this) {
@@ -100,7 +117,8 @@ public class CacheDirective implements Serializable {
 			return false;
 		}
 		CacheDirective other = (CacheDirective)obj;
-		return EquivalenceUtil.areEqual(this.prefersMemory, other.prefersMemory) 
+		return EquivalenceUtil.areEqual(this.prefersMemory, other.prefersMemory)
+		&& EquivalenceUtil.areEqual(this.readAll, other.readAll) 
 		&& EquivalenceUtil.areEqual(this.ttl, other.ttl) 
 		&& EquivalenceUtil.areEqual(this.updatable, other.updatable)
 		&& EquivalenceUtil.areEqual(this.scope, other.scope);

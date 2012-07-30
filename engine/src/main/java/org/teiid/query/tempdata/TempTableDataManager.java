@@ -269,7 +269,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 		TupleBuffer tb = bc.collectTuples();
 		CachedResults cr = new CachedResults();
 		cr.setResults(tb, qp.getProcessorPlan());
-		cr.setHint(hint);
 		if (hint != null && hint.getDeterminism() != null) {
 			LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",determinismLevel, " to ", hint.getDeterminism() }); //$NON-NLS-1$ //$NON-NLS-2$
 			determinismLevel = hint.getDeterminism();

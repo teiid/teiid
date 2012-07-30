@@ -144,8 +144,6 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     
     /**
      * Create an index of the smaller size
-     *  
-     * TODO: reuse existing temp table indexes
      */
     public void createIndex(SourceState state, boolean sorted) throws TeiidComponentException, TeiidProcessingException {
     	int[] expressionIndexes = state.getExpressionIndexes();

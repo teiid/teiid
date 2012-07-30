@@ -566,7 +566,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						if (!dqpCore.hasWaitingPlans(RequestWorkItem.this)) {
 							//requestMore will trigger more processing
 							throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
-									this.getTupleBuffer().getId(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
+									this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
 						} 
 						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans."); //$NON-NLS-1$

@@ -210,7 +210,7 @@ public class SortUtility {
 	private TupleBuffer createTupleBuffer() throws TeiidComponentException {
 		TupleBuffer tb = bufferManager.createTupleBuffer(this.schema, this.groupName, TupleSourceType.PROCESSOR);
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Created intermediate sort buffer ", tb.getId()); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_DQP, "Created intermediate sort buffer ", tb); //$NON-NLS-1$
 		}
 		tb.setForwardOnly(true);
 		return tb;

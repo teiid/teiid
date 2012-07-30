@@ -86,9 +86,9 @@ public class TupleSourceCache {
     }
 	
 	public abstract static class BufferedTupleSource implements TupleSource {
-		private int rowNumber = 1;
-		private TupleBuffer tb;
-		private TupleSource ts;
+		int rowNumber = 1;
+		TupleBuffer tb;
+		TupleSource ts;
 		
 		protected BufferedTupleSource(TupleBuffer tb, TupleSource ts) {
 			this.tb = tb;

@@ -72,6 +72,7 @@ public class AutoGenDataService extends ConnectorManager{
     private boolean useIntCounter;
 	public boolean addWarning;
 	public boolean copyLobs;
+	public CacheDirective cacheDirective;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -117,6 +118,11 @@ public class AutoGenDataService extends ConnectorManager{
         	@Override
         	public boolean isDataAvailable() {
         		return true;
+        	}
+        	
+        	@Override
+        	public boolean areLobsUsableAfterClose() {
+        		return false;
         	}
         	
         	@Override
@@ -183,7 +189,7 @@ public class AutoGenDataService extends ConnectorManager{
 
 			@Override
 			public CacheDirective getCacheDirective() {
-				return null;
+				return cacheDirective;
 			}
 			
 		};

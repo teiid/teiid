@@ -91,6 +91,13 @@ public class AccessInfo implements Serializable {
 		return externalNames;
 	}
 	
+	public void addAccessedObject(Object id) {
+		if (this.objectsAccessed == null) {
+			this.objectsAccessed = new HashSet<Object>();
+		}
+		this.objectsAccessed.add(id);
+	}
+	
 	public Set<Object> getObjectsAccessed() {
 		return objectsAccessed;
 	}

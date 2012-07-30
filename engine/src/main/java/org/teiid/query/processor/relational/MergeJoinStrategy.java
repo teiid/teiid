@@ -224,8 +224,8 @@ public class MergeJoinStrategy extends JoinStrategy {
                         outerState = this.leftSource;
                         innerState = this.rightSource;
                         outerMatched = false;
-                        this.leftSource.getIterator().setPosition(this.leftSource.getMaxProbeMatch());
-                        this.rightSource.getIterator().setPosition(this.rightSource.getMaxProbeMatch());
+                        this.leftSource.setMaxProbePosition();
+                        this.rightSource.setMaxProbePosition();
                         this.mergeState = MergeState.SCAN;
                         this.matchState = MatchState.MATCH_LEFT;
                         break;

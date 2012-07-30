@@ -238,5 +238,10 @@ class SourceState {
 		this.currentTuple = null;
 		this.maxProbeMatch = 1;
 	}
+	
+	public void setMaxProbePosition() throws TeiidComponentException {
+		this.getIterator().setPosition(this.getMaxProbeMatch());
+		this.currentTuple = null;
+	}
     
 }

@@ -29,11 +29,15 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
@@ -46,20 +50,20 @@ import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.CacheDirective;
 
 @SuppressWarnings("nls")
 public class TestDataTierManager {
     
+	private VDBMetaData vdb = RealMetadataFactory.exampleBQTVDB();
     private DQPCore rm;
     private DataTierManagerImpl dtm;
     private CommandContext context;
-    private AtomicRequestMessage request;
-    private Command command;
-    private DataTierTupleSource info;
     private AutoGenDataService connectorManager = new AutoGenDataService();
     private RequestWorkItem workItem;
     private int limit = -1;
@@ -75,28 +79,21 @@ public class TestDataTierManager {
         return command;
     }
     
-    private void helpSetup(int nodeId) throws Exception {
-        helpSetup("SELECT * FROM BQT1.SmallA", nodeId); //$NON-NLS-1$
+    private DataTierTupleSource helpSetup(int nodeId) throws Exception {
+        return helpSetup("SELECT * FROM BQT1.SmallA", nodeId); //$NON-NLS-1$
     }
     
-    private void helpSetup(String sql, int nodeId) throws Exception {
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, RealMetadataFactory.exampleBQTVDB());
-        
-        rm = new DQPCore();
-        rm.setTransactionService(new FakeTransactionService());
-        rm.setBufferManager(new FakeBufferService().getBufferManager());
-        rm.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
-        rm.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
-        rm.start(new DQPConfiguration());
-        FakeBufferService bs = new FakeBufferService();
+    private DataTierTupleSource helpSetup(String sql, int nodeId) throws Exception {
+        helpSetupDataTierManager();
+        AtomicRequestMessage request = helpSetupRequest(sql, nodeId);
+        return new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
+    }
 
-        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
-        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
+	private AtomicRequestMessage helpSetupRequest(String sql, int nodeId) throws Exception {
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
         
-        
-        dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
-        command = helpGetCommand(sql, metadata);
+        Command command = helpGetCommand(sql, metadata);
         
         RequestMessage original = new RequestMessage();
         original.setExecutionId(1);
@@ -104,21 +101,38 @@ public class TestDataTierManager {
         RequestID requestID = workContext.getRequestID(original.getExecutionId());
         
         context = new CommandContext();
+        context.setSession(workContext.getSession());
         context.setProcessorID(requestID);
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion(1);
-        context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bs.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
+        context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(dtm.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
         
-        request = new AtomicRequestMessage(original, workContext, nodeId);
+        AtomicRequestMessage request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
-        info = new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
-    }
+        return request;
+	}
+
+	private void helpSetupDataTierManager() {
+        FakeBufferService bs = new FakeBufferService();
+		rm = new DQPCore();
+        rm.setTransactionService(new FakeTransactionService());
+        rm.setBufferManager(bs.getBufferManager());
+        rm.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
+        rm.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
+        rm.start(new DQPConfiguration());
+
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(connectorManager);
+        vdb.addAttchment(ConnectorManagerRepository.class, repo);
+        
+        dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
+	}
     
     @Test public void testCopyLobs() throws Exception {
     	connectorManager.copyLobs = true;
-    	helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
+    	DataTierTupleSource info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
     	for (int i = 0; i < 10;) {
 	    	try {
 	    		List<?> tuple = info.nextTuple();
@@ -130,7 +144,7 @@ public class TestDataTierManager {
 	    	}
     	}
     	connectorManager.copyLobs = false;
-    	helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
+    	info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
     	for (int i = 0; i < 10;) {
 	    	try {
 	    		List<?> tuple = info.nextTuple();
@@ -144,60 +158,58 @@ public class TestDataTierManager {
     }
     
     @Test public void testDataTierTupleSource() throws Exception {
-    	helpSetup(1);
-    	for (int i = 0; i < 10;) {
-	    	try {
-	    		info.nextTuple();
-	    		i++;
-	    	} catch (BlockedException e) {
-	    		Thread.sleep(50);
-	    	}
-    	}
-        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+    	DataTierTupleSource info = helpSetup(1);
+    	assertEquals(10, pullTuples(info, 10));
+        assertNotNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
         assertNull(info.nextTuple());
         info.closeSource();
-        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+        assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
     }
     
     @Test public void testDataTierTupleSourceWarnings() throws Exception {
-    	helpSetup(1);
+    	DataTierTupleSource info = helpSetup(1);
     	connectorManager.addWarning = true;
-    	for (int i = 0; i < 10;) {
-	    	try {
-	    		info.nextTuple();
-	    		i++;
-	    	} catch (BlockedException e) {
-	    		Thread.sleep(50);
-	    	}
-    	}
-        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+    	assertEquals(10, pullTuples(info, 10));
+        assertNotNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
         assertNull(info.nextTuple());
         assertEquals(1, workItem.getWarnings().size());
         SourceWarning warning = (SourceWarning) workItem.getWarnings().get(0);
 		assertFalse(warning.isPartialResultsError());
         info.closeSource();
-        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
+        assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
     }
     
     @Test public void testDataTierTupleSourceLimit() throws Exception {
     	limit = 1;
-    	helpSetup(1);
-    	for (int i = 0; i < 1;) {
+    	DataTierTupleSource info = helpSetup(1);
+    	assertEquals(1, pullTuples(info, 1));
+        assertNotNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
+        assertNull(info.nextTuple());
+        info.closeSource();
+        assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
+    }
+
+	private int pullTuples(TupleSource info, int limit)
+			throws TeiidComponentException, TeiidProcessingException,
+			InterruptedException {
+		int i = 0;
+		while (true) {
 	    	try {
-	    		info.nextTuple();
-	    		i++;
+	    		if (info.nextTuple() == null) {
+	    			break;
+	    		}
+	    		if (++i == limit) {
+	    			break;
+	    		}
 	    	} catch (BlockedException e) {
 	    		Thread.sleep(50);
 	    	}
     	}
-        assertNotNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
-        assertNull(info.nextTuple());
-        info.closeSource();
-        assertNull(workItem.getConnectorRequest(request.getAtomicRequestID()));
-    }
+		return i;
+	}
     
     @Test public void testPartialResults() throws Exception {
-    	helpSetup(1);
+    	DataTierTupleSource info = helpSetup(1);
     	connectorManager.throwExceptionOnExecute = true;
     	for (int i = 0; i < 10; i++) {
 	    	try {
@@ -214,7 +226,7 @@ public class TestDataTierManager {
     
     @Test public void testNoRowsException() throws Exception {
     	this.connectorManager.setRows(0);
-    	helpSetup(3);
+    	DataTierTupleSource info = helpSetup(3);
     	while (true) {
 	    	try {
 	        	assertNull(info.nextTuple());
@@ -228,7 +240,7 @@ public class TestDataTierManager {
     @Test public void testAsynch() throws Exception {
     	this.connectorManager.dataNotAvailable = 10;
     	this.connectorManager.setRows(0);
-    	helpSetup(3);
+    	DataTierTupleSource info = helpSetup(3);
     	boolean blocked = false;
     	while (true) {
 	    	try {
@@ -240,6 +252,43 @@ public class TestDataTierManager {
 	    	}
     	}
     	assertTrue(blocked);
+    }
+    
+    @Test public void testCaching() throws Exception {
+    	assertEquals(0, connectorManager.getExecuteCount().get());
+
+    	CacheDirective cd = new CacheDirective();
+    	this.connectorManager.cacheDirective = cd;
+    	helpSetupDataTierManager();
+    	Command command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();
+    	RegisterRequestParameter rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	TupleSource ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertTrue(ts instanceof CachingTupleSource);
+    	assertEquals(10, pullTuples(ts, -1));
+    	assertEquals(1, connectorManager.getExecuteCount().get());
+    	assertFalse(rrp.doNotCache);
+    	
+    	//same session, should be cached
+    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();
+    	rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertFalse(ts instanceof CachingTupleSource);
+    	assertEquals(10, pullTuples(ts, -1));
+    	assertEquals(1, connectorManager.getExecuteCount().get());
+    	assertTrue(rrp.doNotCache);
+    	
+    	//switch sessions
+    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();
+    	this.context.getSession().setSessionId("different");
+    	rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertTrue(ts instanceof CachingTupleSource);
+    	assertEquals(10, pullTuples(ts, -1));
+    	assertEquals(2, connectorManager.getExecuteCount().get());
+    	assertFalse(rrp.doNotCache);
     }
     
 }

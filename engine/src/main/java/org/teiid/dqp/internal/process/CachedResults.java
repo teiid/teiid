@@ -40,7 +40,6 @@ import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.resolver.QueryResolver;
-import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 
 
@@ -50,7 +49,6 @@ public class CachedResults implements Serializable, Cachable {
 	private transient Command command;
 	private transient TupleBuffer results;
 
-	private CacheHint hint;
 	private String uuid;
 	private boolean hasLobs;
 	private int rowLimit;
@@ -69,20 +67,13 @@ public class CachedResults implements Serializable, Cachable {
 		this.results = results;
 		this.uuid = results.getId();
 		this.hasLobs = results.isLobs();
-		this.accessInfo.populate(plan.getContext(), true);
+		if (plan != null) {
+			this.accessInfo.populate(plan.getContext(), true);
+		}
 	}
 	
 	public void setCommand(Command command) {
 		this.command = command;
-		this.hint = command.getCacheHint();
-	}
-	
-	public void setHint(CacheHint hint) {
-		this.hint = hint;
-	}
-	
-	public CacheHint getHint() {
-		return hint;
 	}
 	
 	public synchronized Command getCommand(String sql, QueryMetadataInterface metadata, ParseInfo info) throws QueryParserException, QueryResolverException, TeiidComponentException {

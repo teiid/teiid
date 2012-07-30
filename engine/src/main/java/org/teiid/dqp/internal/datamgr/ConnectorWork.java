@@ -49,5 +49,7 @@ public interface ConnectorWork {
 	boolean copyLobs();
 
 	CacheDirective getCacheDirective() throws TranslatorException;
+
+	boolean areLobsUsableAfterClose();
 	
 }

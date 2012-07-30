@@ -41,7 +41,9 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.RequestMessage;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -149,7 +151,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	}
 	
 	// Resources
-	private DQPCore requestMgr;
+	DQPCore requestMgr;
     private BufferManager bufferManager;
     private EventDistributor eventDistributor;
     private boolean detectChangeEvents;
@@ -172,7 +174,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return eventDistributor;
 	}
     
-	public TupleSource registerRequest(CommandContext context, Command command, String modelName, RegisterRequestParameter parameterObject) throws TeiidComponentException, TeiidProcessingException {
+	public TupleSource registerRequest(CommandContext context, Command command, String modelName, final RegisterRequestParameter parameterObject) throws TeiidComponentException, TeiidProcessingException {
 		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)context.getProcessorID());
 		
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)) {
@@ -215,11 +217,11 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						parameterObject.doNotCache = true;
 					} else {
 						String cmdString = command.toString();
-						if (cmdString.length() < 200000) { //TODO: this check won't be needed if keys aren't exclusively held in memory
+						if (cmdString.length() < 100000) { //TODO: this check won't be needed if keys aren't exclusively held in memory
 							cid = new CacheID(workItem.getDqpWorkContext(), ParseInfo.DEFAULT_INSTANCE, cmdString);
 							cid.setParameters(cv.parameters);
 							CachedResults cr = workItem.getRsCache().get(cid);
-							if (cr != null) {
+							if (cr != null && (cr.getRowLimit() == 0 || (parameterObject.limit > 0 && cr.getRowLimit() >= parameterObject.limit))) {
 								parameterObject.doNotCache = true;
 								LogManager.logDetail(LogConstants.CTX_DQP, "Using cache entry for", cid); //$NON-NLS-1$
 								work.close();
@@ -235,7 +237,12 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			}
 		}
 		work.setRequestWorkItem(workItem);
-        return new DataTierTupleSource(aqr, workItem, work, this, parameterObject.limit);
+		DataTierTupleSource dtts = new DataTierTupleSource(aqr, workItem, work, this, parameterObject.limit);
+        if (cid != null) {
+        	TupleBuffer tb = getBufferManager().createTupleBuffer(aqr.getCommand().getProjectedSymbols(), aqr.getCommandContext().getConnectionId(), TupleSourceType.PROCESSOR);
+        	return new CachingTupleSource(this, tb, dtts, cid, parameterObject, cd, accessedGroups);
+        }
+		return dtts;
 	}
 
 	/**

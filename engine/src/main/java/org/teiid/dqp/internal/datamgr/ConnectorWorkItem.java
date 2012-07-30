@@ -359,15 +359,21 @@ public class ConnectorWorkItem implements ConnectorWork {
 		
 		// if we need to keep the execution alive, then we can not support implicit close.
 		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
-		response.setTransactional(this.securityContext.isTransactional());
 		response.setWarnings(this.securityContext.getWarnings());
-		response.setSupportsCloseWithLobs(this.connector.areLobsUsableAfterClose());
+		if (this.securityContext.getCacheDirective() != null) {
+			response.setScope(this.securityContext.getCacheDirective().getScope());
+		}
 
 		if ( lastBatch ) {
 		    response.setFinalRow(rowCount);
 		} 
 		return response;
 	}
+    
+    @Override
+    public boolean areLobsUsableAfterClose() {
+    	return this.connector.areLobsUsableAfterClose();
+    }
 
     public static AtomicResultsMessage createResultsMessage(List<?>[] batch) {
         return new AtomicResultsMessage(batch);
