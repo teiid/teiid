@@ -69,7 +69,7 @@ public class BatchIterator extends AbstractTupleSource {
 			}
 			batch = source.nextBatch();
 			done = batch.getTerminationFlag();
-			if (buffer != null && !saveOnMark) {
+			if (buffer != null && (!saveOnMark || mark)) {
             	buffer.addTupleBatch(batch, true);
             }
 		}
