@@ -94,14 +94,18 @@ public class TestBatchIterator {
 		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
 			Arrays.asList(1),
 			Arrays.asList(1),
-		}, 1));
+			Arrays.asList(1),
+			Arrays.asList(1),
+		}, 2));
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 		bi.setBuffer(bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR), true);  //$NON-NLS-1$
 		bi.mark();
 		assertNotNull(bi.nextTuple());
 		assertNotNull(bi.nextTuple());
-		assertNull(bi.nextTuple());
+		assertNotNull(bi.nextTuple());
 		bi.reset();
+		assertNotNull(bi.nextTuple());
+		assertNotNull(bi.nextTuple());
 		assertNotNull(bi.nextTuple());
 		assertNotNull(bi.nextTuple());
 		assertNull(bi.nextTuple());
