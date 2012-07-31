@@ -317,6 +317,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			return;
 		}	
 		
+		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		if (!this.shutdownListener.isShutdownInProgress()) {
 			final VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 			
@@ -327,8 +328,21 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 			}		
 		}
-		final VDBMetaData deployment = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		this.vdbStatusChecker.getVDBRepository().removeVDB(deployment.getName(), deployment.getVersion());
-	}
 	
+		for (Model model:deployment.getModels()) {
+			List<String> sourceNames = model.getSourceNames();
+			for (String sourceName:sourceNames) {
+				String dsName = model.getSourceConnectionJndiName(sourceName);
+				if (dsName == null) {
+					continue;
+				}
+		        
+				final ServiceController<?> dsService = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName));
+				if (dsService != null) {
+					dsService.setMode(ServiceController.Mode.REMOVE);
+				}
+			}
+		}
+	}
 }
