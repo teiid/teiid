@@ -22,6 +22,7 @@
 package org.teiid.jboss;
 
 import org.jboss.msc.service.ServiceName;
+import org.teiid.deployers.VDBStatusChecker;
 
 public class TeiidServiceNames {
 	public static ServiceName ENGINE = ServiceName.JBOSS.append("teiid", "query-engine"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -75,6 +76,6 @@ public class TeiidServiceNames {
 	}	
 	
 	public static ServiceName dsListenerServiceName(String vdbName, int version, String name) {
-		return ServiceName.of(DS_LISTENER_BASE, vdbName, String.valueOf(version), name);
+		return ServiceName.of(DS_LISTENER_BASE, vdbName, String.valueOf(version), VDBStatusChecker.stripContext(name));
 	}
 }

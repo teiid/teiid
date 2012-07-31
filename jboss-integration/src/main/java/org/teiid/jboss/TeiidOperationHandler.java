@@ -53,6 +53,7 @@ import org.jboss.jca.common.api.metadata.ra.ResourceAdapter;
 import org.jboss.jca.common.api.metadata.ra.ResourceAdapter1516;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
@@ -78,6 +79,7 @@ import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.RuntimeVDB;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
+import org.teiid.deployers.RuntimeVDB.ReplaceResult;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -89,6 +91,7 @@ import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.tempdata.TempTableDataManager;
+import org.teiid.vdb.runtime.VDBKey;
 
 abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	List<TransportService> transports = new ArrayList<TransportService>();
@@ -639,7 +642,7 @@ class MarkDataSourceAvailable extends TeiidOperationHandler{
 		String dsName = operation.get(OperationsConstants.DS_NAME).asString();
 		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
 		VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
-		vsc.dataSourceAdded(dsName);
+		vsc.dataSourceAdded(dsName, null);
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -1383,7 +1386,22 @@ class AssignDataSource extends VDBOperations {
 		String dsName = operation.get(OperationsConstants.DS_NAME).asString();
 		
 		try {
-			vdb.assignDatasource(modelName, sourceName, translatorName, dsName);			
+			synchronized (vdb.getVdb()) {
+				ReplaceResult rr = vdb.assignDatasource(modelName, sourceName, translatorName, dsName);
+				if (rr.isNew) {
+					ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
+					VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
+					VDBDeployer.addDataSourceListener(context.getServiceTarget(), new VDBKey(vdb.getVdb().getName(), vdb.getVdb().getVersion()), dsName, vsc);
+				}
+				if (rr.removedDs != null) {
+					final ServiceRegistry registry = context.getServiceRegistry(true);
+			        final ServiceName serviceName = TeiidServiceNames.dsListenerServiceName(vdb.getVdb().getName(), vdb.getVdb().getVersion(), rr.removedDs);
+			        final ServiceController<?> controller = registry.getService(serviceName);
+			        if (controller != null) {
+			        	context.removeService(serviceName);
+			        }
+				}
+			}
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}

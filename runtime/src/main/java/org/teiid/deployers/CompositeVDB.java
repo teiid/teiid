@@ -125,7 +125,7 @@ public class CompositeVDB {
 		this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
-			CompositeVDB importedVDB = vdbRepository.getCompositeVDB(vdbImport.getName(), vdbImport.getVersion());
+			CompositeVDB importedVDB = vdbRepository.getCompositeVDB(new VDBKey(vdbImport.getName(), vdbImport.getVersion()));
 			if (importedVDB == null) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40083, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40083, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion()));
 			}

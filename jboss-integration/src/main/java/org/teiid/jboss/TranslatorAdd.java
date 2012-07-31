@@ -21,11 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.List;
 import java.util.Locale;
@@ -43,13 +39,10 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.modules.ModuleLoader;
-import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceTarget;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.deployers.TranslatorUtil;
-import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionFactory;
@@ -117,11 +110,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
         		if (translatorName.equalsIgnoreCase(metadata.getName())) {
 	        		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
 	        		
-	        		TranslatorService translatorService = new TranslatorService(metadata);
-	        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
-	        		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
-	        		builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
-	        		newControllers.add(builder.setInitialMode(ServiceController.Mode.ACTIVE).install());
+	        		TranslatorDeployer.buildService(target, metadata);
 	                added = true;
 	                break;
         		}

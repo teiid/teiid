@@ -65,7 +65,7 @@ public class TestCompositeVDB {
 		return cvdb;
 	}
 
-	private static VDBMetaData createVDBMetadata(MetadataStore metadataStore,
+	static VDBMetaData createVDBMetadata(MetadataStore metadataStore,
 			String vdbName) {
 		VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$

@@ -2,4 +2,7 @@
     <model name="example">
         <source name="jdbc-connector" translator-name="h2" connection-jndi-name="java:/ServiceDS"/>
     </model>
+    <model name="example1">
+        <source name="jdbc-connector" translator-name="h2" connection-jndi-name="java:/ServiceDS"/>
+    </model>
 </vdb>

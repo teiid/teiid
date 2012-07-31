@@ -21,8 +21,10 @@
  */
 package org.teiid.jboss;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
@@ -51,6 +53,7 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
@@ -66,6 +69,7 @@ import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.vdb.runtime.VDBKey;
 
 
 class VDBDeployer implements DeploymentUnitProcessor {
@@ -154,15 +158,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		
 		// add dependencies to data-sources
-		dataSourceDependencies(deployment, new DependentServices() {
-			@Override
-			public void dependentService(final String dsName, final ServiceName svcName) {
-				DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbStatusChecker);									
-				ServiceBuilder<DataSourceListener> sb = context.getServiceTarget().addService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName), dsl);
-				sb.addDependency(svcName);
-				sb.setInitialMode(Mode.PASSIVE).install();
-			}
-		});
+		dataSourceDependencies(deployment, context.getServiceTarget());
 		
 		for (VDBImport vdbImport : deployment.getVDBImports()) {
 			vdbService.addDependency(TeiidServiceNames.vdbFinishedServiceName(vdbImport.getName(), vdbImport.getVersion()));
@@ -246,8 +242,22 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		svc.install();
 	}	
 	
-	private void dataSourceDependencies(VDBMetaData deployment, DependentServices svcListener) {
-		
+	static void addDataSourceListener(
+			final ServiceTarget serviceTarget,
+			final VDBKey vdbKey,
+			final String dsName, VDBStatusChecker vdbStatusChecker) {
+		final String jndiName = getJndiName(dsName);
+		final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
+		final ServiceName svcName = bindInfo.getBinderServiceName();
+		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbStatusChecker, vdbKey);									
+		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(TeiidServiceNames.dsListenerServiceName(vdbKey.getName(), vdbKey.getVersion(), dsName), dsl);
+		sb.addDependency(svcName);
+		sb.setInitialMode(Mode.PASSIVE).install();
+	}
+	
+	private void dataSourceDependencies(VDBMetaData deployment, ServiceTarget serviceTarget) {
+		final VDBKey vdbKey = new VDBKey(deployment.getName(), deployment.getVersion());
+		Set<String> dataSources = new HashSet<String>();
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
 				String translatorName = model.getSourceTranslatorName(sourceName);
@@ -261,25 +271,25 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				if (dsName == null) {
 					continue;
 				}
-				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(getJndiName(dsName));
-				svcListener.dependentService(dsName, bindInfo.getBinderServiceName());				
+				if (!dataSources.add(VDBStatusChecker.stripContext(dsName))) {
+					continue; //already listening
+				}
+				addDataSourceListener(serviceTarget, vdbKey, dsName, vdbStatusChecker);				
 			}
 		}
-	}
-	
-	interface DependentServices {
-		void dependentService(String dsName, ServiceName svc);
 	}
 	
 	static class DataSourceListener implements Service<DataSourceListener>{
 		private VDBStatusChecker vdbStatusChecker;
 		private String dsName;
 		private ServiceName svcName;
+		private VDBKey vdb;
 		
-		public DataSourceListener(String dsName, ServiceName svcName, VDBStatusChecker checker) {
+		public DataSourceListener(String dsName, ServiceName svcName, VDBStatusChecker checker, VDBKey vdb) {
 			this.dsName = dsName;
 			this.svcName = svcName;
 			this.vdbStatusChecker = checker;
+			this.vdb = vdb;
 		}
 		
 		public DataSourceListener getValue() throws IllegalStateException,IllegalArgumentException {
@@ -290,7 +300,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		public void start(StartContext context) throws StartException {
 			ServiceController<?> s = context.getController().getServiceContainer().getService(this.svcName);
 			if (s != null) {
-				this.vdbStatusChecker.dataSourceAdded(this.dsName);
+				this.vdbStatusChecker.dataSourceAdded(this.dsName, vdb);
 			}
 		}
 
@@ -298,12 +308,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		public void stop(StopContext context) {
 			ServiceController<?> s = context.getController().getServiceContainer().getService(this.svcName);
 			if (s.getMode().equals(Mode.REMOVE) || s.getState().equals(State.STOPPING)) {
-				this.vdbStatusChecker.dataSourceRemoved(this.dsName);
+				this.vdbStatusChecker.dataSourceRemoved(this.dsName, vdb);
 			}
 		}		
 	}
 
-	private String getJndiName(String name) {
+	public static String getJndiName(String name) {
 		String jndiName = name;
 		if (!name.startsWith(JAVA_CONTEXT)) {
 			jndiName = JAVA_CONTEXT + jndiName;
@@ -330,10 +340,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}
 		this.vdbStatusChecker.getVDBRepository().removeVDB(deployment.getName(), deployment.getVersion());
 	
-		for (Model model:deployment.getModels()) {
-			List<String> sourceNames = model.getSourceNames();
-			for (String sourceName:sourceNames) {
-				String dsName = model.getSourceConnectionJndiName(sourceName);
+		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
+			for (SourceMappingMetadata smm:model.getSources().values()) {
+				String dsName = smm.getConnectionJndiName();
 				if (dsName == null) {
 					continue;
 				}
@@ -344,5 +353,10 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				}
 			}
 		}
+		
+        final ServiceController<?> controller = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()));
+        if (controller != null) {
+            controller.setMode(ServiceController.Mode.REMOVE);
+        }
 	}
 }

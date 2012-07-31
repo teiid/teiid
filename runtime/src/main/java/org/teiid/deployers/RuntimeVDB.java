@@ -29,12 +29,19 @@ import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.dqp.internal.datamgr.ConnectorManager;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.runtime.RuntimePlugin;
 
 public abstract class RuntimeVDB {
 	private VDBMetaData vdb;
 	private VDBModificationListener listener;
 	private boolean restartInProgress = false;
+	
+	public static class ReplaceResult {
+		public boolean isNew;
+		public String removedDs;
+	}
 	
 	public interface VDBModificationListener {
 		void dataRoleChanged(String policyName) throws AdminProcessingException;
@@ -117,7 +124,7 @@ public abstract class RuntimeVDB {
 		}
 	}
 	
-	public void assignDatasource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
+	public ReplaceResult assignDatasource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
 		synchronized (this.vdb) {
 			ModelMetaData model = this.vdb.getModel(modelName);
 			
@@ -138,13 +145,32 @@ public abstract class RuntimeVDB {
 			
 			try {
 				this.listener.dataSourceChanged(modelName, sourceName, translatorName, dsName);
-				getVDBStatusChecker().dataSourceReplaced(vdb.getName(), vdb.getVersion(), modelName, sourceName, translatorName, dsName);
+				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+				ReplaceResult rr = new ReplaceResult();
+				if (dsName != null) {
+					rr.isNew = !dsExists(dsName, cmr);
+				}
+				boolean replaced = getVDBStatusChecker().dataSourceReplaced(vdb.getName(), vdb.getVersion(), modelName, sourceName, translatorName, dsName);
+				if (replaced && previousDsName != null && !dsExists(previousDsName, cmr)) {
+					rr.removedDs = previousDsName;
+				}
+				return rr;
 			} catch(AdminProcessingException e) {
 				source.setTranslatorName(previousTranslatorName);
 				source.setConnectionJndiName(previousDsName);
 				throw e;
 			}			
 		}
+	}
+
+	private boolean dsExists(String dsName, ConnectorManagerRepository cmr) {
+		String baseDsName = VDBStatusChecker.stripContext(dsName);
+		for (ConnectorManager cm : cmr.getConnectorManagers().values()) {
+			if (baseDsName.equals(VDBStatusChecker.stripContext(cm.getConnectionName()))) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	public void restart(List<String> modelNames) throws AdminProcessingException {
@@ -166,6 +192,10 @@ public abstract class RuntimeVDB {
 	
 	public boolean isRestartInProgress() {
 		return this.restartInProgress;
+	}
+	
+	public VDBMetaData getVdb() {
+		return vdb;
 	}
 	
 	protected abstract VDBStatusChecker getVDBStatusChecker();

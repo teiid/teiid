@@ -150,8 +150,8 @@ public class VDBRepository implements Serializable{
 		}
 	}
 
-	CompositeVDB getCompositeVDB(String name, int version) {
-		return this.vdbRepo.get(new VDBKey(name, version));
+	CompositeVDB getCompositeVDB(VDBKey key) {
+		return this.vdbRepo.get(key);
 	}
 	
 	/**
@@ -161,7 +161,7 @@ public class VDBRepository implements Serializable{
 	 * @return
 	 */
 	public VDBMetaData getLiveVDB(String name, int version) {
-		CompositeVDB v = getCompositeVDB(name, version);
+		CompositeVDB v = this.vdbRepo.get(new VDBKey(name, version));
 		if (v != null) {
 			return v.getVDB();
 		}

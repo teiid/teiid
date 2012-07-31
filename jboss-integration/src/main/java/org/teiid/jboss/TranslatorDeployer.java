@@ -32,7 +32,10 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.Module;
 import org.jboss.msc.service.ServiceBuilder;
 import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceRegistry;
 import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.ServiceController.Mode;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.deployers.TranslatorUtil;
 import org.teiid.deployers.VDBStatusChecker;
@@ -66,21 +69,40 @@ public final class TranslatorDeployer implements DeploymentUnitProcessor {
         		if (metadata == null) {
         			throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50070, moduleName)); 
         		}
-        		metadata.addProperty(TranslatorUtil.DEPLOYMENT_NAME, deploymentUnit.getName());
+        		deploymentUnit.putAttachment(TeiidAttachments.TRANSLATOR_METADATA, metadata);
+        		metadata.addProperty(TranslatorUtil.DEPLOYMENT_NAME, moduleName);
         		metadata.addAttchment(ClassLoader.class, translatorLoader);
         		
         		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50006, metadata.getName()));
         		
-        		TranslatorService translatorService = new TranslatorService(metadata);
-        		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
-        		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
-        		builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
-        		builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
+        		buildService(target, metadata);
         	}
         }
     }
 
+	static void buildService(final ServiceTarget target,
+			VDBTranslatorMetaData metadata) {
+		TranslatorService translatorService = new TranslatorService(metadata);
+		ServiceBuilder<VDBTranslatorMetaData> builder = target.addService(TeiidServiceNames.translatorServiceName(metadata.getName()), translatorService);
+		builder.addDependency(TeiidServiceNames.TRANSLATOR_REPO, TranslatorRepository.class, translatorService.repositoryInjector);
+		builder.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, translatorService.statusCheckerInjector);
+		builder.setInitialMode(ServiceController.Mode.ACTIVE).install();
+	}
+
     @Override
     public void undeploy(final DeploymentUnit context) {
+    	if (!TeiidAttachments.isTranslator(context)) {
+        	return;
+        }
+    	VDBTranslatorMetaData metadata = context.getAttachment(TeiidAttachments.TRANSLATOR_METADATA);
+    	if (metadata == null) {
+    		return;
+    	}
+    	final ServiceRegistry registry = context.getServiceRegistry();
+        final ServiceName serviceName = TeiidServiceNames.translatorServiceName(metadata.getName());
+        final ServiceController<?> controller = registry.getService(serviceName);
+        if (controller != null) {
+        	controller.setMode(Mode.REMOVE);
+        }
     }
 }
