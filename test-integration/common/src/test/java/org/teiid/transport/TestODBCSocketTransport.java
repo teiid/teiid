@@ -372,4 +372,16 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(rs.next());
 		assertEquals("", rs.getString(1));
 	}
+	
+	@Test public void testColons() throws Exception {
+		Statement s = conn.createStatement();
+		//make sure that we aren't mishandling the ::
+		ResultSet rs = s.executeQuery("select 'a::b'");
+		assertTrue(rs.next());
+		assertEquals("a::b", rs.getString(1));
+		
+		rs = s.executeQuery("select name::varchar from tables where name = 'Columns'");
+		assertTrue(rs.next());
+		assertEquals("Columns", rs.getString(1));
+	}
 }
