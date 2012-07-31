@@ -136,9 +136,6 @@ public abstract class AbstractVDBDeployer {
 			}
 			else {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " skipped being loaded because of its type ", model.getModelType()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				if (loadCount.decrementAndGet() == 0) {
-					getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
-				}
 			}
 		}
 	}
@@ -162,9 +159,10 @@ public abstract class AbstractVDBDeployer {
 			model.clearRuntimeMessages();
 		} else {
 			vdb.setStatus(Status.FAILED);
+			//TODO: abort the other loads
 		}
 		
-		if (loadCount.decrementAndGet() == 0) {
+		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 		}
 	}

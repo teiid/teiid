@@ -94,8 +94,7 @@ public class VDBRepository implements Serializable{
 		} else {
 			stores = new MetadataStore[] {this.systemStore, odbcStore};
 		}
-		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, stores);
-		cvdb.buildCompositeState(this);
+		CompositeVDB cvdb = new CompositeVDB(vdb, metadataStore, visibilityMap, udf, this.systemFunctionManager.getSystemFunctions(), cmr, this, stores);
 		lock.lock();
 		try {
 			if (vdbRepo.containsKey(key)) {
@@ -279,7 +278,10 @@ public class VDBRepository implements Serializable{
 			return;
 		}
 		VDBMetaData metadataAwareVDB = v.getVDB();			
-		if (metadataAwareVDB.getStatus() == Status.FAILED) {
+		if (v.getOriginalVDB().getStatus() == Status.FAILED) {
+			if (v.getOriginalVDB() != metadataAwareVDB && metadataAwareVDB.getStatus() == Status.LOADING) {
+				metadataAwareVDB.setStatus(Status.FAILED);
+			}
 			return;
 		}
 		v.metadataLoadFinished();

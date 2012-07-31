@@ -62,8 +62,9 @@ public class CompositeVDB {
 	private FunctionTree systemFunctions;
 	private boolean metadataloadFinished = false;
 	private VDBMetaData mergedVDB;
+	private VDBMetaData originalVDB;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, MetadataStore... additionalStores) {
+	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
 		this.vdb = vdb;
 		this.store = metadataStore;
 		this.visibilityMap = visibilityMap;
@@ -72,6 +73,8 @@ public class CompositeVDB {
 		this.cmr = cmr;
 		this.additionalStores = additionalStores;
 		this.mergedVDB = vdb;
+		this.originalVDB = vdb;
+		buildCompositeState(vdbRepository);
 	}
 	
 	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
@@ -101,7 +104,7 @@ public class CompositeVDB {
 		return this.mergedVDB;
 	}
 	
-	void buildCompositeState(VDBRepository vdbRepository) throws VirtualDatabaseException {
+	private void buildCompositeState(VDBRepository vdbRepository) throws VirtualDatabaseException {
 		if (vdb.getVDBImports().isEmpty()) {
 			this.vdb.addAttchment(ConnectorManagerRepository.class, this.cmr);
 			return;
@@ -308,7 +311,11 @@ public class CompositeVDB {
 		metadataRepository.endLoadVdb(vdbName, vdbVersion);
 	}	
 	
-	public synchronized void metadataLoadFinished() {
+	VDBMetaData getOriginalVDB() {
+		return originalVDB;
+	}
+	
+	public void metadataLoadFinished() {
 		if (this.metadataloadFinished) {
 			return;
 		}
