@@ -155,4 +155,20 @@ public class ExternalizeUtil {
         return map;
     }
     
+    public static void writeEnum(ObjectOutput out, Enum<?> value) throws IOException {
+    	if (value == null) {
+    		out.writeObject(null);
+    	} else {
+    		out.writeUTF(value.name());
+    	}
+    }
+    
+    public static <T extends Enum<T>> T readEnum(ObjectInput in, Class<T> clazz) throws IOException {
+    	String name = in.readUTF();
+    	if (name == null) {
+    		return null;
+    	}
+		return Enum.valueOf(clazz, name);
+    }
+    
 }

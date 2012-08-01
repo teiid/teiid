@@ -41,6 +41,8 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 
+import org.teiid.core.util.ExternalizeUtil;
+
 /**
  * This class represents the SQLXML object along with the Streamable interface.
  * 
@@ -144,6 +146,11 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	@Override
 	public void readExternal(ObjectInput in) throws IOException,
 			ClassNotFoundException {
+		readExternal(in, (byte)0);
+	}
+	
+	public void readExternal(ObjectInput in, byte version) throws IOException,
+		ClassNotFoundException {
 		super.readExternal(in);
 		try {
 			this.encoding = (String)in.readObject();
@@ -151,7 +158,15 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			this.encoding = Streamable.ENCODING;
 		}
 		try {
-			this.type = (Type)in.readObject();
+			if (version > 0) {
+				try {
+					this.type = ExternalizeUtil.readEnum(in, Type.class);
+				} catch (IllegalArgumentException e) {
+					this.type = Type.UNKNOWN;
+				}
+			} else {
+				this.type = (Type)in.readObject();
+			}
 		} catch (OptionalDataException e) {
 			this.type = Type.UNKNOWN;
 		} catch(IOException e) {
@@ -163,12 +178,20 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
+		writeExternal(out, (byte)0);
+	}
+	
+	public void writeExternal(ObjectOutput out, byte version) throws IOException {
 		super.writeExternal(out);
 		if (this.encoding == null) {
 			this.encoding = getEncoding(this);
 		}
 		out.writeObject(this.encoding);
-		out.writeObject(this.type);
+		if (version > 0) {
+			ExternalizeUtil.writeEnum(out, this.type);
+		} else {
+			out.writeObject(this.type);
+		}
 	}
 
 	/**

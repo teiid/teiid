@@ -234,11 +234,11 @@ public class BatchSerializer {
 
     private static class XmlColumnSerializer1 extends ColumnSerializer {
         protected void writeObject(ObjectOutput out, Object obj) throws IOException {
-        	((Externalizable)obj).writeExternal(out);
+        	((XMLType)obj).writeExternal(out, (byte)1);
         }
         protected Object readObject(ObjectInput in) throws IOException, ClassNotFoundException {
         	XMLType xt = new XMLType();
-        	xt.readExternal(in);
+        	xt.readExternal(in, (byte)1);
             return xt;
         }
     }
