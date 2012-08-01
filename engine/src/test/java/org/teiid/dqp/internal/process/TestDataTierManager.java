@@ -119,8 +119,10 @@ public class TestDataTierManager {
 		rm = new DQPCore();
         rm.setTransactionService(new FakeTransactionService());
         rm.setBufferManager(bs.getBufferManager());
-        rm.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
-        rm.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
+        CacheConfiguration config = new CacheConfiguration();
+        config.setMaxAgeInSeconds(-1);
+		rm.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, config));
+        rm.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, config));
         rm.start(new DQPConfiguration());
 
         ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);

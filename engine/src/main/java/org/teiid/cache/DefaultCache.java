@@ -74,7 +74,7 @@ public class DefaultCache<K, V> implements Cache<K, V>, Serializable {
 	protected Set<ExpirationEntry<K, V>> expirationQueue;
 	
 	public DefaultCache(String name) {
-		this(name, DEFAULT_MAX_SIZE_TOTAL, DEFAULT_MAX_SIZE_TOTAL);
+		this(name, DEFAULT_MAX_SIZE_TOTAL, -1);
 	}
 	
 	public DefaultCache(String name, int maxEntries, long ttl) {
