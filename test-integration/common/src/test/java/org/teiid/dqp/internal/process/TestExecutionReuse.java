@@ -135,6 +135,10 @@ public class TestExecutionReuse {
 						ec = executionContext;
 						return execution;
 					};
+					
+					public boolean isSourceRequired() {
+						return false;
+					};
 				};
 				@Override
 				public ExecutionFactory<Object, Object> getExecutionFactory() {
@@ -146,6 +150,7 @@ public class TestExecutionReuse {
 						throws TranslatorException {
 					return null;
 				}
+				
 			};
 			@Override
 			public ConnectorManager getConnectorManager(String connectorName) {

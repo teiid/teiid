@@ -124,6 +124,20 @@ public class TestConnectorWorkItem {
 		AtomicResultsMessage results = helpExecuteUpdate();
 		assertEquals(1, results.getWarnings().size());
 	}
+	
+	@Test public void testSourceNotRequired() throws Exception {
+		Command command = helpGetCommand("update bqt1.smalla set stringkey = 1 where stringkey = 2", EXAMPLE_BQT); //$NON-NLS-1$
+		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
+		arm.setCommand(command);
+		ConnectorManager cm = TestConnectorManager.getConnectorManager();
+		cm.getExecutionFactory().setSourceRequired(false);
+		ConnectorWorkItem synchConnectorWorkItem = (ConnectorWorkItem) cm.registerRequest(arm);
+		synchConnectorWorkItem.execute();
+		synchConnectorWorkItem.close();
+		FakeConnector fc = (FakeConnector)cm.getExecutionFactory();
+		assertEquals(1, fc.getConnectionCount());
+		assertEquals(1, fc.getCloseCount());
+	}
 
 	@Ignore    
 	@Test public void testIsImmutablePropertySucceeds() throws Exception {

@@ -527,5 +527,6 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31105, //warning
     	TEIID31106, //duplicate param name
     	TEIID31107, //too many result params
+    	TEIID31108, //datasource not available
 	}
 }

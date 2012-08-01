@@ -148,7 +148,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	private boolean exceptionIfFileNotFound;
 	
 	public FileExecutionFactory() {
-		setSourceRequired(false);
+		setSourceRequiredForMetadata(false);
 	}
 	
 	@TranslatorProperty(display="File Encoding",advanced=true)

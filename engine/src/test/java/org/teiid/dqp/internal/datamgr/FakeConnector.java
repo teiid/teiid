@@ -40,6 +40,7 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     
     private int connectionCount;
     private int executionCount;
+    private int closeCount;
 
     public int getConnectionCount() {
 		return connectionCount;
@@ -63,7 +64,12 @@ public class FakeConnector extends ExecutionFactory<Object, Object> {
     
     @Override
     public void closeConnection(Object connection, Object factory) {
+    	closeCount++;
     }
+    
+    public int getCloseCount() {
+		return closeCount;
+	}
     
     public final class FakeExecution implements ResultSetExecution, UpdateExecution {
         private int rowCount;

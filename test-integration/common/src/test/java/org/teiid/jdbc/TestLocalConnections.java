@@ -107,6 +107,12 @@ public class TestLocalConnections {
     				@Override
     				public ExecutionFactory<Object, Object> getExecutionFactory() {
     					return new ExecutionFactory<Object, Object>() {
+    						
+    						@Override
+    						public boolean isSourceRequired() {
+    							return false;
+    						}
+    						
     						@Override
     						public Execution createExecution(Command command,
     								ExecutionContext executionContext,

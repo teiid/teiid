@@ -159,7 +159,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
         } finally {
-        	if (this.connector.isSourceRequired() && this.connection != null) {
+        	if (this.connection != null) {
 	        	try {
 	        		this.connector.closeConnection(connection, connectionFactory);
 	        	} catch (Throwable e) {
@@ -204,10 +204,19 @@ public class ConnectorWorkItem implements ConnectorWork {
         
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
-    		if (this.connector.isSourceRequired()) {
-		    	this.connectionFactory = this.manager.getConnectionFactory();
-		        this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
+    		try {
+    			this.connectionFactory = this.manager.getConnectionFactory();
+    		} catch (TranslatorException e) {
+    			if (this.connector.isSourceRequired()) {
+    				throw e;
+    			}
     		}
+	    	if (this.connectionFactory != null) {
+	    		this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
+	    	} 
+	    	if (this.connection == null && this.connector.isSourceRequired()) {
+	    		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", this.manager.getConnectionName())); //$NON-NLS-1$);
+	    	}
 
 	        Object unwrapped = null;
 			if (connection instanceof WrappedConnection) {
