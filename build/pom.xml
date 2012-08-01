@@ -89,6 +89,7 @@
                 <version>1.1.1</version>
                 <executions>
                     <execution>
+                        <id>jdbc-15</id>
                         <phase>package</phase>
                         <goals>
                             <goal>java</goal>
@@ -101,13 +102,34 @@
                                 <argument>-destjar</argument>
                                 <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk15.jar</argument>            
                                 <argument>-embed</argument>
-                                <argument>org.teiid.retroruntime</argument>                    
+                                <argument>org.teiid</argument>
+                                <argument>-target</argument>
+                                <argument>1.5</argument>    
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>jdbc-14</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>net.sf.retrotranslator.transformer.Retrotranslator</mainClass>
+                            <arguments>                     
+                                <argument>-srcjar</argument>
+                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc.jar</argument>
+                                <argument>-destjar</argument>
+                                <argument>${project.basedir}/target/teiid-${project.version}-jdbc-jdk14.jar</argument>            
+                                <argument>-embed</argument>
+                                <argument>org.teiid</argument>
+                                <argument>-target</argument>
+                                <argument>1.4</argument>    
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-          
+            </plugin>          
           <plugin>
                   <groupId>org.codehaus.mojo</groupId>
                   <artifactId>build-helper-maven-plugin</artifactId>
@@ -123,7 +145,12 @@
                                   <artifact>
                                       <file>target/teiid-${project.version}-jdbc-jdk15.jar</file>
                                       <type>jar</type>
-                                      <classifier>client-jdk15</classifier>
+                                      <classifier>jdbc-jdk15</classifier>
+                                  </artifact>
+                                  <artifact>
+                                      <file>target/teiid-${project.version}-jdbc-jdk14.jar</file>
+                                      <type>jar</type>
+                                      <classifier>jdbc-jdk14</classifier>
                                   </artifact>
                           </artifacts>
                       </configuration>
