@@ -30,7 +30,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.Expression;
 import org.teiid.language.Function;
+import org.teiid.language.Literal;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -50,6 +53,34 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 				return Arrays.asList("char(", function.getParameters().get(0), " USING ASCII)"); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 		});
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPADD, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				Literal intervalType = (Literal)function.getParameters().get(0);
+				String interval = ((String)intervalType.getValue()).toUpperCase();
+				if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
+					intervalType.setValue("MICROSECOND"); //$NON-NLS-1$
+					Expression[] args = new Expression[] {function.getParameters().get(1), getLanguageFactory().createLiteral(1000, TypeFacility.RUNTIME_TYPES.INTEGER)};
+					function.getParameters().set(1, getLanguageFactory().createFunction("/", args, TypeFacility.RUNTIME_TYPES.INTEGER)); //$NON-NLS-1$
+				}
+				return null;
+			}
+		}); 
+		
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
+			
+			@Override
+			public List<?> translate(Function function) {
+				Literal intervalType = (Literal)function.getParameters().get(0);
+				String interval = ((String)intervalType.getValue()).toUpperCase();
+				if (interval.equals(NonReserved.SQL_TSI_FRAC_SECOND)) {
+					intervalType.setValue("MICROSECOND"); //$NON-NLS-1$
+					return Arrays.asList(function, " * 1000"); //$NON-NLS-1$
+				}
+				return null;
+			}
+		}); 
 	}
 	
 	@Override
