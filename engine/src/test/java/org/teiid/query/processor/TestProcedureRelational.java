@@ -116,7 +116,10 @@ public class TestProcedureRelational {
         FakeDataManager dataManager = new FakeDataManager();
         TestProcessor.sampleData1(dataManager);   
         // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());       
+        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());  
+        
+        assertFalse(plan.requiresTransaction(false));
+        assertTrue(plan.requiresTransaction(true)); //TODO: this should be false as there is only a single execution possible
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected); 
     }

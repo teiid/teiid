@@ -52,6 +52,7 @@ import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
@@ -474,7 +475,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	@Override
 	public Boolean requiresTransaction(boolean transactionalReads) {
 		Boolean required = super.requiresTransaction(transactionalReads);
-		if (Boolean.TRUE.equals(required)) {
+		if (Boolean.TRUE.equals(required) || (command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
 			return true;
 		}
 		return null;
