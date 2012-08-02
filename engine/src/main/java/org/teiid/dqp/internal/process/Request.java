@@ -294,6 +294,9 @@ public class Request implements SecurityFunctionEvaluator {
     }
     
     private Command parseCommand() throws QueryParserException {
+    	if (requestMsg.getQueryCommand() != null) {
+    		return (Command)requestMsg.getQueryCommand();
+    	}
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = createParseInfo(this.requestMsg);
         if (requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || !requestMsg.isBatchedUpdate()) {

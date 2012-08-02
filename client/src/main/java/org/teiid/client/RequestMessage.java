@@ -313,6 +313,10 @@ public class RequestMessage implements Externalizable {
 	public void setCommands(String... batchedCommands) {
 		this.commands = batchedCommands;
 	}
+	
+	public Object getQueryCommand() {
+		return null;
+	}
 
 	public void setExecutionPayload(Serializable executionPayload) {
 		this.executionPayload = executionPayload;
