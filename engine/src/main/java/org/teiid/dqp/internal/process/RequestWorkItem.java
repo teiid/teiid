@@ -32,6 +32,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledFuture;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
@@ -1020,8 +1021,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	return work;
     }
     
-    void scheduleWork(Runnable r, int priority, long delay) {
-    	dqpCore.scheduleWork(r, priority, delay);
+    ScheduledFuture<?> scheduleWork(Runnable r, int priority, long delay) {
+    	return dqpCore.scheduleWork(r, priority, delay);
     }
     
     public void setCancelTask(Task cancelTask) {

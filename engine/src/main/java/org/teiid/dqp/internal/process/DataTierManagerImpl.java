@@ -201,6 +201,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorManager connectorManager = cmr.getConnectorManager(aqr.getConnectorName());
 		ConnectorWork work = connectorManager.registerRequest(aqr);
+		if (!work.isForkable()) {
+    		aqr.setSerial(true);
+    	}
 		CacheID cid = null;
 		CacheDirective cd = null;
 		if (workItem.getRsCache() != null && command.areResultsCachable()) {

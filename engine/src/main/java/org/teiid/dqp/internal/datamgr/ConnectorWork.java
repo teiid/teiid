@@ -40,7 +40,7 @@ public interface ConnectorWork {
 
 	void close();
 
-	AtomicResultsMessage execute() throws TranslatorException, BlockedException;
+	void execute() throws TranslatorException, BlockedException;
 	
 	void setRequestWorkItem(RequestWorkItem item);
 	
@@ -51,5 +51,7 @@ public interface ConnectorWork {
 	CacheDirective getCacheDirective() throws TranslatorException;
 
 	boolean areLobsUsableAfterClose();
+	
+	boolean isForkable();
 	
 }

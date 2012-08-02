@@ -30,12 +30,12 @@ import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.index.VDBMetadataFactory;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 /**
@@ -138,11 +138,13 @@ public class ConnectorHost {
 	    		}
 	    		break;
 	    	} catch (DataNotAvailableException e) {
-	    		try {
-					Thread.sleep(e.getRetryDelay());
-				} catch (InterruptedException e1) {
-					throw new TranslatorException(e1);
-				}
+	    		if (e.getRetryDelay() > 0) {
+		    		try {
+						Thread.sleep(e.getRetryDelay());
+					} catch (InterruptedException e1) {
+						throw new TranslatorException(e1);
+					}
+	    		}
 	    	}
     	}
     	return results;

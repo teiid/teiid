@@ -65,7 +65,8 @@ public class AutoGenDataService extends ConnectorManager{
     private int rows = 10;
     private SourceCapabilities caps;
 	public boolean throwExceptionOnExecute;
-	public int dataNotAvailable = -2;
+	public Integer dataNotAvailable;
+	public boolean strict;
 	public int sleep;
     private final AtomicInteger executeCount = new AtomicInteger();
     private final AtomicInteger closeCount = new AtomicInteger();
@@ -73,6 +74,7 @@ public class AutoGenDataService extends ConnectorManager{
 	public boolean addWarning;
 	public boolean copyLobs;
 	public CacheDirective cacheDirective;
+	public boolean dataAvailable;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -117,7 +119,7 @@ public class AutoGenDataService extends ConnectorManager{
         	
         	@Override
         	public boolean isDataAvailable() {
-        		return true;
+        		return dataAvailable;
         	}
         	
         	@Override
@@ -132,20 +134,25 @@ public class AutoGenDataService extends ConnectorManager{
 			
 			@Override
 			public AtomicResultsMessage more() throws TranslatorException {
-				if (dataNotAvailable == -1) {
-					dataNotAvailable = -2; 
-					item.moreWork(); //this alone is not sufficient, we have to call the data available method to prevent
-					                 //timing issues
-					throw DataNotAvailableException.NO_POLLING;
+				if (dataNotAvailable != null) {
+					int delay = dataNotAvailable;
+					dataNotAvailable = null;
+					DataNotAvailableException dnae = new DataNotAvailableException(delay);
+					dnae.setStrict(strict);
+					throw dnae;
 				}
-				if (returnedInitial) {
+				if (addWarning) {
+					msg.setWarnings(Arrays.asList(new Exception()));
+				}
+				if (!returnedInitial) {
+					returnedInitial = true;
 					return msg;
 				}
 				throw new RuntimeException("Should not be called"); //$NON-NLS-1$
 			}
 			
 			@Override
-			public AtomicResultsMessage execute() throws TranslatorException {
+			public void execute() throws TranslatorException {
 				executeCount.incrementAndGet();
 				if (sleep > 0) {
 					try {
@@ -157,19 +164,6 @@ public class AutoGenDataService extends ConnectorManager{
 				if (throwExceptionOnExecute) {
 		    		throw new TranslatorException("Connector Exception"); //$NON-NLS-1$
 		    	}
-				if (dataNotAvailable > -2) {
-					int delay = dataNotAvailable;
-					if (delay == -1 && !returnedInitial) {
-						returnedInitial = true;
-						return ConnectorWorkItem.createResultsMessage(new List[0]);
-					}
-					dataNotAvailable = -2;
-					throw new DataNotAvailableException(delay);
-				}
-				if (addWarning) {
-					msg.setWarnings(Arrays.asList(new Exception()));
-				}
-				return msg;
 			}
 			
 			@Override
@@ -190,6 +184,11 @@ public class AutoGenDataService extends ConnectorManager{
 			@Override
 			public CacheDirective getCacheDirective() {
 				return cacheDirective;
+			}
+
+			@Override
+			public boolean isForkable() {
+				return true;
 			}
 			
 		};

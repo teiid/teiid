@@ -443,4 +443,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean isSourceRequiredForMetadata() {
 		return delegate.isSourceRequiredForMetadata();
 	}
+	@Override
+	public boolean isForkable() {
+		return delegate.isForkable();
+	}
 }

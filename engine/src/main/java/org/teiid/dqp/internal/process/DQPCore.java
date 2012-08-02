@@ -35,6 +35,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.FutureTask;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.resource.spi.work.Work;
@@ -452,8 +453,8 @@ public class DQPCore implements DQP {
 		this.processWorkerPool.execute(work);
     }
     
-    void scheduleWork(final Runnable r, int priority, long delay) {
-		this.processWorkerPool.schedule(new FutureWork<Void>(new Callable<Void>() {
+    ScheduledFuture<?> scheduleWork(final Runnable r, int priority, long delay) {
+		return this.processWorkerPool.schedule(new FutureWork<Void>(new Callable<Void>() {
 			@Override
 			public Void call() throws Exception {
 				r.run();

@@ -1019,5 +1019,13 @@ public class ExecutionFactory<F, C> {
 	public CacheDirective getCacheDirective(Command command, ExecutionContext executionContext, RuntimeMetadata metadata) throws TranslatorException {
 		return null;
 	}
+	
+	/**
+	 * When forkable the engine may use a separate thread to interact with returned {@link Execution}.
+	 * @return true if {@link Execution}s can be called in separate threads from the processing thread
+	 */
+	public boolean isForkable() {
+		return true;
+	}
 
 }

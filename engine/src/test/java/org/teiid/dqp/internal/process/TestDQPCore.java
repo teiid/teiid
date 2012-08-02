@@ -599,6 +599,7 @@ public class TestDQPCore {
     
     @Test public void testDataAvailable() throws Exception {
     	agds.dataNotAvailable = -1;
+    	agds.dataAvailable = true;
     	RequestMessage reqMsg = exampleRequestMessage("select * FROM BQT1.SmallA"); 
         ResultsMessage results = execute("A", 1, reqMsg);
         if (results.getException() != null) {

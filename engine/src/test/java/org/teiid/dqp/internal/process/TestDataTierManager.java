@@ -67,10 +67,12 @@ public class TestDataTierManager {
     private AutoGenDataService connectorManager = new AutoGenDataService();
     private RequestWorkItem workItem;
     private int limit = -1;
+    private boolean serial = false;
     
     @Before public void setUp() {
     	limit = -1;
     	connectorManager = new AutoGenDataService();
+    	serial = false;
     }
     
     private static Command helpGetCommand(String sql, QueryMetadataInterface metadata) throws Exception {
@@ -86,6 +88,7 @@ public class TestDataTierManager {
     private DataTierTupleSource helpSetup(String sql, int nodeId) throws Exception {
         helpSetupDataTierManager();
         AtomicRequestMessage request = helpSetupRequest(sql, nodeId);
+        request.setSerial(serial);
         return new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
     }
 
@@ -191,7 +194,7 @@ public class TestDataTierManager {
         assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
     }
 
-	private int pullTuples(TupleSource info, int limit)
+	private int pullTuples(TupleSource info, int l)
 			throws TeiidComponentException, TeiidProcessingException,
 			InterruptedException {
 		int i = 0;
@@ -200,7 +203,7 @@ public class TestDataTierManager {
 	    		if (info.nextTuple() == null) {
 	    			break;
 	    		}
-	    		if (++i == limit) {
+	    		if (++i == l) {
 	    			break;
 	    		}
 	    	} catch (BlockedException e) {
@@ -241,6 +244,7 @@ public class TestDataTierManager {
     
     @Test public void testAsynch() throws Exception {
     	this.connectorManager.dataNotAvailable = 10;
+    	this.serial = true;
     	this.connectorManager.setRows(0);
     	DataTierTupleSource info = helpSetup(3);
     	boolean blocked = false;
@@ -250,7 +254,37 @@ public class TestDataTierManager {
 	    		break;
 	    	} catch (BlockedException e) {
 	    		blocked = true;
+	    		try {
+		    		info.nextTuple();
+	    		} catch (BlockedException be) {
+		    		fail();
+	    		}
 	    		Thread.sleep(50);
+	    	}
+    	}
+    	assertTrue(blocked);
+    }
+    
+    @Test public void testAsynchStrict() throws Exception {
+    	this.connectorManager.dataNotAvailable = 1000;
+    	this.serial = true;
+    	this.connectorManager.strict = true;
+    	this.connectorManager.setRows(0);
+    	DataTierTupleSource info = helpSetup(3);
+    	boolean blocked = false;
+    	while (true) {
+	    	try {
+	        	assertNull(info.nextTuple());
+	    		break;
+	    	} catch (BlockedException e) {
+	    		blocked = true;
+	    		try {
+		    		info.nextTuple();
+		    		fail();
+	    		} catch (BlockedException be) {
+	    			//we won't bother to wait the full second
+	    		}
+	    		break;
 	    	}
     	}
     	assertTrue(blocked);
@@ -270,6 +304,8 @@ public class TestDataTierManager {
     	assertEquals(10, pullTuples(ts, -1));
     	assertEquals(1, connectorManager.getExecuteCount().get());
     	assertFalse(rrp.doNotCache);
+    	
+    	assertEquals(1, this.rm.getRsCache().getTotalCacheEntries());
     	
     	//same session, should be cached
     	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();

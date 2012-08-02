@@ -23,10 +23,12 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.activation.DataSource;
@@ -81,7 +83,24 @@ import org.teiid.translator.CacheDirective.Scope;
  */
 public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
 	
-    // Construction state
+    private static final class MoreWorkTask implements Runnable {
+
+		WeakReference<RequestWorkItem> ref;
+
+    	public MoreWorkTask(RequestWorkItem workItem) {
+    		ref = new WeakReference<RequestWorkItem>(workItem);
+		}
+
+		@Override
+		public void run() {
+			RequestWorkItem item = ref.get();
+			if (item != null) {
+				item.moreWork();
+			}
+		}
+	}
+
+	// Construction state
     private final AtomicRequestMessage aqr;
     private final RequestWorkItem workItem;
     private final ConnectorWork cwi;
@@ -113,6 +132,9 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     
     boolean errored;
 	Scope scope; //this is to avoid synchronization
+	
+	private long waitUntil;
+	private ScheduledFuture<?> scheduledFuture;
     
     public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
         this.aqr = aqr;
@@ -226,6 +248,12 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	}
 
     public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {
+    	if (waitUntil > 0 && waitUntil > System.currentTimeMillis()) {
+    		if (!this.cwi.isDataAvailable()) {
+    			throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking until", waitUntil); //$NON-NLS-1$
+    		}
+    		this.waitUntil = 0;
+    	}
     	while (true) {
     		if (arm == null) {
     			if (isDone()) {
@@ -262,17 +290,8 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     				partial = true;
     			} catch (DataNotAvailableException e) {
     				dna = true;
-    				if (e.getRetryDelay() >= 0) {
-	    				workItem.scheduleWork(new Runnable() {
-	    					@Override
-	    					public void run() {
-								workItem.moreWork();
-	    					}
-	    				}, 10, e.getRetryDelay());
-    				} else if (this.cwi.isDataAvailable()) {
-    					continue; 
-    				}
-    				throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException", aqr.getAtomicRequestID()); //$NON-NLS-1$
+    				handleDataNotAvailable(e);
+    				continue;
     			} finally {
     				if (!dna && results == null) {
     					errored = true;
@@ -294,6 +313,39 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	    	}
     	}
     }
+
+	private void handleDataNotAvailable(DataNotAvailableException e)
+			throws BlockedException {
+		if (e.getWaitUntil() != null) {
+			long timeDiff = e.getWaitUntil().getTime() - System.currentTimeMillis();
+			if (timeDiff <= 0) {
+				//already met the time
+				return;
+			}
+			if (e.isStrict()) {
+				this.waitUntil = e.getWaitUntil().getTime();
+			}
+			scheduleMoreWork(timeDiff);
+		} else if (e.getRetryDelay() >= 0) {
+			if (e.isStrict()) {
+				this.waitUntil = System.currentTimeMillis() + e.getRetryDelay();
+			}
+			scheduleMoreWork(e.getRetryDelay());
+		} else if (this.cwi.isDataAvailable()) {
+			return; //no polling, but data is already available
+		} else if (e.isStrict()) {
+			//no polling, wait indefinitely
+			this.waitUntil = Long.MAX_VALUE;
+		}
+		throw BlockedException.block(aqr.getAtomicRequestID(), "Blocking on DataNotAvailableException", aqr.getAtomicRequestID()); //$NON-NLS-1$
+	}
+
+	private void scheduleMoreWork(long timeDiff) {
+		if (scheduledFuture != null) {
+			this.scheduledFuture.cancel(false);
+		}
+		scheduledFuture = workItem.scheduleWork(new MoreWorkTask(workItem), 10, timeDiff);
+	}
 
 	private void checkForUpdates(AtomicResultsMessage results, Command command,
 			EventDistributor distributor, int commandIndex, long ts) {
@@ -367,11 +419,10 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		}
 		running = true;
 		if (!executed) {
-			results = cwi.execute();
+			cwi.execute();
 			executed = true;
-		} else {
-			results = cwi.more();
 		}
+		results = cwi.more();
 		return results;
 	}
     
@@ -419,6 +470,10 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
      * @see TupleSource#closeSource()
      */
     public void closeSource() {
+    	if (this.scheduledFuture != null) {
+    		this.scheduledFuture.cancel(true);
+    		this.scheduledFuture = null;
+    	}
     	lobBuffer = null;
     	lobStore = null; //can still be referenced by lobs and will be cleaned-up by reference
     	cancelAsynch = true;

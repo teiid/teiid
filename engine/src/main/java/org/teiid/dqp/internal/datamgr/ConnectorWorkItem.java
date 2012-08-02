@@ -82,6 +82,8 @@ public class ConnectorWorkItem implements ConnectorWork {
     
     private AtomicBoolean isCancelled = new AtomicBoolean();
 	private org.teiid.language.Command translatedCommand;
+	
+	private DataNotAvailableException dnae;
     
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) {
         this.id = message.getAtomicRequestID();
@@ -134,6 +136,12 @@ public class ConnectorWorkItem implements ConnectorWork {
     }
     
     public AtomicResultsMessage more() throws TranslatorException {
+    	if (this.dnae != null) {
+    		//clear the exception if it has been set
+    		DataNotAvailableException e = this.dnae;
+    		this.dnae = null;
+    		throw e;
+    	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
     	try {
     		return handleBatch();
@@ -197,7 +205,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return new TranslatorException(t);
     }
     
-	public AtomicResultsMessage execute() throws TranslatorException {
+	public void execute() throws TranslatorException {
         if(isCancelled()) {
     		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
     	}
@@ -252,8 +260,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        // Execute query
 	    	this.execution.execute();
 	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Executed command"}); //$NON-NLS-1$
-	
-	        return handleBatch();
     	} catch (Throwable t) {
     		throw handleError(t);
     	}
@@ -339,9 +345,14 @@ public class ConnectorWorkItem implements ConnectorWork {
 	            }
 	        }
     	} catch (DataNotAvailableException e) {
-    		if (rows.size() == 0 && this.rowCount != 0) {
+    		if (rows.size() == 0) {
     			throw e;
     		}
+    		if (e.getWaitUntil() != null) {
+    			//we have an await until that we need to enforce 
+    			this.dnae = e;
+    		}
+    		//else we can just ignore the delay
     	}
                 
         if (lastBatch) {
@@ -412,6 +423,11 @@ public class ConnectorWorkItem implements ConnectorWork {
 		CacheDirective cd = connector.getCacheDirective(this.translatedCommand, this.securityContext, this.queryMetadata);
 		this.securityContext.setCacheDirective(cd);
 		return cd;
+	}
+
+	@Override
+	public boolean isForkable() {
+		return this.connector.isForkable();
 	}
 
 }

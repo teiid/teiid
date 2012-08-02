@@ -40,9 +40,9 @@ import org.teiid.language.QueryExpression;
 import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 
@@ -81,7 +81,9 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             // then just say we don't have results instead
             if(randomTimeToWait > this.config.getPollIntervalInMilli()) {
             	waited = true;
-                throw new DataNotAvailableException(randomTimeToWait);
+                DataNotAvailableException dnae = new DataNotAvailableException(randomTimeToWait);
+                dnae.setStrict(true);
+                throw dnae;
             } 
             try {
                 Thread.sleep(randomTimeToWait);

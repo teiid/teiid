@@ -117,7 +117,8 @@ public class TestConnectorWorkItem {
 		AtomicRequestMessage arm = createNewAtomicRequestMessage(1, 1);
 		arm.setCommand(command);
 		ConnectorWorkItem synchConnectorWorkItem = new ConnectorWorkItem(arm, TestConnectorManager.getConnectorManager());
-		return synchConnectorWorkItem.execute();
+		synchConnectorWorkItem.execute();
+		return synchConnectorWorkItem.more();
 	}
 	
 	@Test public void testExecutionWarning() throws Throwable {

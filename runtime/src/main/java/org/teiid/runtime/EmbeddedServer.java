@@ -159,6 +159,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			return new ConnectorManager(translatorName, connectionName) {
 				@Override
 				public Object getConnectionFactory() throws TranslatorException {
+					if (getConnectionName() == null) {
+						return null;
+					}
 					ConnectionFactoryProvider<?> connectionFactoryProvider = connectionFactoryProviders.get(getConnectionName());
 					if (connectionFactoryProvider != null) {
 						return connectionFactoryProvider.getConnectionFactory();
