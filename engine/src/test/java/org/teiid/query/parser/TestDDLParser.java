@@ -129,6 +129,22 @@ public class TestDDLParser {
 	}
 	
 	@Test
+	public void testUDT() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar OPTIONS (UDT 'NMTOKENS(12,13,14)'))";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		assertTrue("Table not found", tableMap.containsKey("G1"));
+		Table table = tableMap.get("G1");
+		
+		assertEquals("NMTOKENS", table.getColumns().get(1).getDatatype().getName());
+		assertEquals(12, table.getColumns().get(1).getLength());
+		assertEquals(13, table.getColumns().get(1).getPrecision());
+		assertEquals(14, table.getColumns().get(1).getScale());		
+	}	
+	
+	@Test
 	public void testMultiKeyPK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT PRIMARY KEY (e1, e2))";
 

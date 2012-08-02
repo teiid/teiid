@@ -34,20 +34,13 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants.Reserved;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.metadata.DDLConstants;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
@@ -56,6 +49,8 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.translator.TranslatorException;
 
 public class SQLParserUtil {
+	
+    static Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
 	
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
 	
@@ -357,7 +352,7 @@ public class SQLParserUtil {
     	return new Block(stmt);
     }
     
-    void setColumnOptions(BaseColumn c){
+    void setColumnOptions(BaseColumn c)  throws ParseException {
     	Map<String, String> props = c.getProperties();
 		setCommonProperties(c, props);
 		
@@ -371,7 +366,7 @@ public class SQLParserUtil {
     	}
     }
 
-	private void setColumnOptions(Column c, Map<String, String> props) {
+	private void setColumnOptions(Column c, Map<String, String> props) throws ParseException {
 		String v = props.remove(DDLConstants.CASE_SENSITIVE); 
         if (v != null) {
         	c.setCaseSensitive(isTrue(v));
@@ -435,6 +430,21 @@ public class SQLParserUtil {
     	v = props.remove(DDLConstants.DISTINCT_VALUES); 
     	if (v != null) {
     		c.setDistinctValues(Integer.parseInt(v));
+    	}
+
+    	v = props.remove(DDLConstants.UDT); 
+    	if (v != null) {
+    		Matcher matcher = udtPattern.matcher(v);
+    		Map<String, Datatype> datatypes = SystemMetadata.getInstance().getSystemStore().getDatatypes();
+    		if (matcher.matches() && datatypes.get(matcher.group(1)) != null) {
+    			c.setDatatype(datatypes.get(matcher.group(1)));
+    			c.setLength(Integer.parseInt(matcher.group(2)));
+    			c.setPrecision(Integer.parseInt(matcher.group(3)));
+    			c.setScale(Integer.parseInt(matcher.group(4)));
+    		}
+    		else {
+    			throw new ParseException(QueryPlugin.Util.getString("udt_format_wrong", c.getName())); //$NON-NLS-1$
+    		}
     	}
     }
 
