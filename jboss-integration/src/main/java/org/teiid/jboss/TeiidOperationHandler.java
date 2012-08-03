@@ -606,7 +606,7 @@ class CacheStatistics extends BaseCachehandler {
 		
 		ModelNode result = context.getResult();
 		CacheStatisticsMetadata stats = buildCacheStats(cacheType, cache);
-		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.wrap(stats, result.add());
+		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
 	}
 	
 	private CacheStatisticsMetadata buildCacheStats(String name, SessionAwareCache cache) {
@@ -624,7 +624,7 @@ class CacheStatistics extends BaseCachehandler {
 		operationNode.get(REQUEST_PROPERTIES, OperationsConstants.CACHE_TYPE, DESCRIPTION).set(getParameterDescription(bundle, OperationsConstants.CACHE_TYPE));
 		
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
-		reply.get(TYPE).set(ModelType.LIST);		
+		reply.get(TYPE).set(ModelType.OBJECT);		
 		VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
 	}	
 }
