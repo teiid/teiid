@@ -262,7 +262,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     			}
     			boolean partial = false;
     			AtomicResultsMessage results = null;
-    			boolean dna = false;
+    			boolean noResults = false;
     			try {
 	    			if (futureResult != null || !aqr.isSerial()) {
 	    				results = asynchGet();
@@ -288,12 +288,15 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     				errored = true;
     				results = exceptionOccurred(e);
     				partial = true;
+    			} catch (BlockedException e) {
+    				noResults = true;
+    				throw e;
     			} catch (DataNotAvailableException e) {
-    				dna = true;
+    				noResults = true;
     				handleDataNotAvailable(e);
     				continue;
     			} finally {
-    				if (!dna && results == null) {
+    				if (!noResults && results == null) {
     					errored = true;
     				}
     			}

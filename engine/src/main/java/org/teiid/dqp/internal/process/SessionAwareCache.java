@@ -67,6 +67,7 @@ public class SessionAwareCache<T> {
 	
 	private AtomicInteger cacheHit = new AtomicInteger();
 	private AtomicInteger totalRequests = new AtomicInteger();
+	private AtomicInteger cachePuts = new AtomicInteger();
 	
 	private TupleBufferCache bufferManager;
 	
@@ -152,6 +153,10 @@ public class SessionAwareCache<T> {
 		return this.totalRequests.get();
 	}
 	
+	public int getCachePutCount() {
+		return cachePuts.get();
+	}
+	
 	public int getTotalCacheEntries() {
 		if (this.localCache == this.distributedCache) {
 			return this.localCache.size();
@@ -160,6 +165,7 @@ public class SessionAwareCache<T> {
 	}
 	
 	public void put(CacheID id, Determinism determinismLevel, T t, Long ttl){
+		cachePuts.incrementAndGet();
 		if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
 			id.setSessionId(id.originalSessionId);
 			LogManager.logTrace(LogConstants.CTX_DQP, "Adding to session/local cache", id); //$NON-NLS-1$
@@ -197,8 +203,9 @@ public class SessionAwareCache<T> {
 	public void clearAll(){
 		this.localCache.clear();
 		this.distributedCache.clear();
-		this.totalRequests = new AtomicInteger();
-		this.cacheHit = new AtomicInteger();
+		this.totalRequests.set(0);
+		this.cacheHit.set(0);
+		this.cachePuts.set(0);
 	}	
 	
 	public void clearForVDB(String vdbName, int version) {

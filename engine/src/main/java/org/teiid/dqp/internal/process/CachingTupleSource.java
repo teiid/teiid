@@ -50,8 +50,7 @@ final class CachingTupleSource extends
 	private final RegisterRequestParameter parameterObject;
 	private final CacheDirective cd;
 	private final Collection<GroupSymbol> accessedGroups;
-	private boolean cached = false;
-	private DataTierTupleSource dtts;
+	DataTierTupleSource dtts;
 
 	CachingTupleSource(DataTierManagerImpl dataTierManagerImpl, TupleBuffer tb, DataTierTupleSource ts, CacheID cid,
 			RegisterRequestParameter parameterObject, CacheDirective cd,
@@ -74,13 +73,12 @@ final class CachingTupleSource extends
 		}
 		//TODO: the cache directive object needs synchronized for consistency
 		List<?> tuple = super.nextTuple();
-		if (tuple == null && !cached && !dtts.errored) {
+		if (tuple == null && !dtts.errored) {
 			synchronized (cd) {
 				if (dtts.scope == Scope.NONE) {
 					removeTupleBuffer();
 					return tuple;
 				}
-				cached = true;
 				CachedResults cr = new CachedResults();
 		        cr.setResults(tb, null);
 		        if (!Boolean.FALSE.equals(cd.getUpdatable())) {
@@ -108,6 +106,7 @@ final class CachingTupleSource extends
 		    		}
 		    	}
 		        this.dataTierManagerImpl.requestMgr.getRsCache().put(cid, determinismLevel, cr, cd.getTtl()); 
+		        tb = null;
 			}
 		}
 		return tuple;
@@ -123,7 +122,7 @@ final class CachingTupleSource extends
 	@Override
 	public void closeSource() {
 		try {
-			if (tb != null && !cached && !dtts.errored) {
+			if (tb != null && !dtts.errored) {
 				boolean readAll = true;
 				synchronized (cd) {
 					readAll = !Boolean.FALSE.equals(cd.getReadAll()); 
@@ -154,9 +153,7 @@ final class CachingTupleSource extends
 				}
 			}
 		} finally {
-			if (!cached) {
-				removeTupleBuffer();
-			}
+			removeTupleBuffer();
 			ts.closeSource();
 		}
 	}

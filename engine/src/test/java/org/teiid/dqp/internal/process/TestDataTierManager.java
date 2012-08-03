@@ -304,7 +304,10 @@ public class TestDataTierManager {
     	assertEquals(10, pullTuples(ts, -1));
     	assertEquals(1, connectorManager.getExecuteCount().get());
     	assertFalse(rrp.doNotCache);
-    	
+    	assertFalse(((CachingTupleSource)ts).dtts.errored);
+    	assertNull(((CachingTupleSource)ts).dtts.scope);
+    	ts.closeSource();
+    	assertEquals(1, this.rm.getRsCache().getCachePutCount());
     	assertEquals(1, this.rm.getRsCache().getTotalCacheEntries());
     	
     	//same session, should be cached
@@ -324,9 +327,15 @@ public class TestDataTierManager {
     	rrp.connectorBindingId = "x";
     	ts = dtm.registerRequest(context, command, "foo", rrp);
     	assertTrue(ts instanceof CachingTupleSource);
-    	assertEquals(10, pullTuples(ts, -1));
+    	assertEquals(9, pullTuples(ts, 9));
     	assertEquals(2, connectorManager.getExecuteCount().get());
     	assertFalse(rrp.doNotCache);
+    	ts.closeSource(); //should force read all
+    	assertFalse(((CachingTupleSource)ts).dtts.errored);
+    	assertNull(((CachingTupleSource)ts).dtts.scope);
+    	
+    	assertEquals(2, this.rm.getRsCache().getCachePutCount());
+    	assertEquals(2, this.rm.getRsCache().getTotalCacheEntries());
     }
     
 }
