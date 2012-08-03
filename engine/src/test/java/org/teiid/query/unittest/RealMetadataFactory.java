@@ -216,6 +216,10 @@ public class RealMetadataFactory {
         createElements(vqtg2589i, elemNames, elemTypes);
         createElements(bvqtg1, elemNames, elemTypes);        
         createElements(bvqt2g1, elemNames, elemTypes);        
+        
+        ProcedureParameter rsp1 = createParameter("ret", ParameterInfo.RETURN_VALUE, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
+        ProcedureParameter rsp2 = createParameter("inkey", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER); //$NON-NLS-1$
+        createVirtualProcedure("v_spTest9", bvqt, Arrays.asList(rsp1, rsp2), new QueryNode("ret = call pm4.spTest9(inkey);")); //$NON-NLS-1$ //$NON-NLS-2$
 
      // Add stored procedure
         Schema pm1 = createPhysicalModel("pm1", metadataStore); //$NON-NLS-1$

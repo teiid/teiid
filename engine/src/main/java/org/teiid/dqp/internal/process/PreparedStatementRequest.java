@@ -154,17 +154,23 @@ public class PreparedStatementRequest extends Request {
             LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query does not exist in cache: ", sqlQuery}); //$NON-NLS-1$
             super.generatePlan(false);
         	prepPlan.setCommand(this.userCommand);
+        	
+        	//there's no need to cache the plan if it's a stored procedure, since we already do that in the optimizer
+        	boolean cache = !(this.userCommand instanceof StoredProcedure);
+        	
 	        // Defect 13751: Clone the plan in its current state (i.e. before processing) so that it can be used for later queries
-	        prepPlan.setPlan(processPlan.clone(), this.context);
+	        prepPlan.setPlan(cache?processPlan.clone():processPlan, this.context);
 	        prepPlan.setAnalysisRecord(analysisRecord);
 			
-	        Determinism determinismLevel = this.context.getDeterminismLevel();
-			if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
-				LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
-				determinismLevel = userCommand.getCacheHint().getDeterminism();
-			}		        
-	        
-	        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
+	        if (cache) {
+		        Determinism determinismLevel = this.context.getDeterminismLevel();
+				if (userCommand.getCacheHint() != null && userCommand.getCacheHint().getDeterminism() != null) {
+					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",this.context.getDeterminismLevel(), " to ", determinismLevel }); //$NON-NLS-1$ //$NON-NLS-2$
+					determinismLevel = userCommand.getCacheHint().getDeterminism();
+				}		        
+		        
+		        this.prepPlanCache.put(id, determinismLevel, prepPlan, userCommand.getCacheHint() != null?userCommand.getCacheHint().getTtl():null);
+	        }
         }
         
         if (requestMsg.isBatchedUpdate()) {

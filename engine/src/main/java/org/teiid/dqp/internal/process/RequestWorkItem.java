@@ -74,6 +74,7 @@ import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
@@ -499,7 +500,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		boolean cachable = false;
 		CacheID cacheId = null;
 		boolean canUseCached = !requestMsg.getRequestOptions().isContinuous() && (requestMsg.useResultSetCache() || 
-				QueryParser.getQueryParser().parseCacheHint(requestMsg.getCommandString()) != null);
+				getCacheHint() != null);
 		
 		if (rsCache != null) {
 			if (!canUseCached) {
@@ -603,6 +604,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			throw new IllegalStateException("Continuous requests are not allowed to be updates."); //$NON-NLS-1$
 	    }
 		request = null;
+	}
+
+	private CacheHint getCacheHint() {
+		if (requestMsg.getCommand() != null) {
+			return ((Command)requestMsg.getCommand()).getCacheHint();
+		}
+		return QueryParser.getQueryParser().parseCacheHint(requestMsg.getCommandString());
 	}
 	
 	private void addToCache() {

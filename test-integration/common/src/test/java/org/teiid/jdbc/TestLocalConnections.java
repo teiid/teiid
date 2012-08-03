@@ -249,6 +249,10 @@ public class TestLocalConnections {
     		fail();
     	}
     	
+    	for (int i = 0; !server.getDqp().getRequests().isEmpty() && i < 40; i++) {
+    		//the concurrent modification may not be seen initially
+    		Thread.sleep(50);
+    	}
     	assertTrue(server.getDqp().getRequests().isEmpty());
     	
     	if (handler.t != null) {

@@ -84,18 +84,8 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     private ParameterMetaDataImpl parameterMetaData;
     
     private Calendar serverCalendar;
+    private Object command;
 
-    /**
-     * Factory Constructor 
-     * @param connection
-     * @param sql
-     * @param resultSetType
-     * @param resultSetConcurrency
-     */
-    static PreparedStatementImpl newInstance(ConnectionImpl connection, String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new PreparedStatementImpl(connection, sql, resultSetType, resultSetConcurrency);        
-    }
-    
     /**
      * <p>MMPreparedStatement constructor.
      * @param Driver's connection object.
@@ -235,6 +225,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
     	message.setStatementType(StatementType.PREPARED);
     	message.setParameterValues(isBatchedCommand?getParameterValuesList(): getParameterValues());
     	message.setBatchedUpdate(isBatchedCommand);
+    	message.setCommand(this.command);
     	return message;
     }
 
@@ -709,5 +700,9 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length)
 			throws SQLException {
 		throw SqlUtil.createFeatureNotSupportedException();
+	}
+	
+	public void setCommand(Object command) {
+		this.command = command;
 	}
 }

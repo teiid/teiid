@@ -294,8 +294,8 @@ public class Request implements SecurityFunctionEvaluator {
     }
     
     private Command parseCommand() throws QueryParserException {
-    	if (requestMsg.getQueryCommand() != null) {
-    		return (Command)requestMsg.getQueryCommand();
+    	if (requestMsg.getCommand() != null) {
+    		return (Command)requestMsg.getCommand();
     	}
         String[] commands = requestMsg.getCommands();
         ParseInfo parseInfo = createParseInfo(this.requestMsg);

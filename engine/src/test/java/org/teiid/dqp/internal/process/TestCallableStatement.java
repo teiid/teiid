@@ -31,7 +31,11 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -48,6 +52,21 @@ public class TestCallableStatement {
 		}
 	}
 	
+	@Test public void testProcedurePlanCaching() throws Exception {
+		String sql = "{? = call BQT_V.v_spTest9(?)}"; //$NON-NLS-1$
+
+		List values = new ArrayList();
+		values.add(1);
+		
+		List[] expected = new List[1];
+		expected[0] = Arrays.asList(1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("ret = EXEC pm4.spTest9(1)", expected);
+		
+		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, RealMetadataFactory.exampleBQTCached(), true, RealMetadataFactory.exampleBQTVDB());
+	}
+	
 	@Test public void testReturnParameter() throws Exception {
 		String sql = "{? = call pm4.spTest9(?)}"; //$NON-NLS-1$
 
@@ -60,13 +79,23 @@ public class TestCallableStatement {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("? = EXEC pm4.spTest9(1)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, RealMetadataFactory.exampleBQTCached(), true, RealMetadataFactory.exampleBQTVDB());
+        helpProcess(sql, values, expected, dataManager);
+	}
+
+	/**
+	 * help process a physical callable statement
+	 */
+	private void helpProcess(String sql, List values, List[] expected,
+			HardcodedDataManager dataManager) throws TeiidComponentException,
+			TeiidProcessingException, Exception {
+		SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>();
+		PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(sql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.exampleBQTCached(), planCache, 1, true, false, RealMetadataFactory.exampleBQTVDB());
+        TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
+        
+        TestPreparedStatement.helpGetProcessorPlan(sql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.exampleBQTCached(), planCache, 1, true, false, RealMetadataFactory.exampleBQTVDB());
+        assertEquals(0, planCache.getCacheHitCount());
 	}
 	
-	/**
-	 * same result as above, but the return parameter is not specified
-	 * TODO: it would be best if the return parameter were not actually returned here, since it wasn't specified in the initial sql
-	 */
 	@Test public void testNoReturnParameter() throws Exception {
 		String sql = "{call pm4.spTest9(?)}"; //$NON-NLS-1$
 
@@ -79,7 +108,7 @@ public class TestCallableStatement {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm4.spTest9(1)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, RealMetadataFactory.exampleBQTCached(), true, RealMetadataFactory.exampleBQTVDB());
+		helpProcess(sql, values, expected, dataManager);
 	}
 		
 	@Test public void testOutParameter() throws Exception {
@@ -94,7 +123,7 @@ public class TestCallableStatement {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm2.spTest8(2)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, values, expected, dataManager, RealMetadataFactory.exampleBQTCached(), true, RealMetadataFactory.exampleBQTVDB());
+		helpProcess(sql, values, expected, dataManager);
 	}
 	
 	@Test(expected=QueryResolverException.class) public void testInvalidReturn() throws Exception {
@@ -117,7 +146,7 @@ public class TestCallableStatement {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("EXEC pm2.spTest8(1)", expected);
 		
-		TestPreparedStatement.helpTestProcessing(sql, null, expected, dataManager, RealMetadataFactory.exampleBQTCached(), true, RealMetadataFactory.exampleBQTVDB());
+		helpProcess(sql, null, expected, dataManager);
 	}
 
 }

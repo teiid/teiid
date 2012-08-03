@@ -95,8 +95,9 @@ public class RequestMessage implements Externalizable {
      * Used by embedded connections, could change if we add support
      * for an asynch socket transport
      */
-    private transient boolean sync;
+    private boolean sync;
     private RequestOptions requestOptions;
+    private Object command;
     
     public RequestMessage() {
     }
@@ -314,8 +315,12 @@ public class RequestMessage implements Externalizable {
 		this.commands = batchedCommands;
 	}
 	
-	public Object getQueryCommand() {
-		return null;
+	public Object getCommand() {
+		return command;
+	}
+	
+	public void setCommand(Object command) {
+		this.command = command;
 	}
 
 	public void setExecutionPayload(Serializable executionPayload) {

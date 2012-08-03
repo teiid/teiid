@@ -249,16 +249,12 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     	return this.serverConn.getLogonResult().getSessionID();
     }
     
-    long currentRequestId() {
-        return requestIDGenerator;
-    }
-    
     /**
      * Generate the next unique requestID for matching up requests with responses.
      * These IDs should be unique only in the context of a ServerConnection instance.
      * @return Request ID
      */
-    long nextRequestID() {
+    protected synchronized long nextRequestID() {
         return requestIDGenerator++;
     }
 
@@ -388,17 +384,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @return Statement object.
      */
     public StatementImpl createStatement(int resultSetType, int resultSetConcurrency) throws SQLException {
-        //Check to see the connection is open
-        checkConnection();
-
-        validateResultSetType(resultSetType);
-        validateResultSetConcurrency(resultSetConcurrency);
-
-        // add the statement object to the map
-        StatementImpl newStatement = StatementImpl.newInstance(this, resultSetType, resultSetConcurrency);
-        statements.add(newStatement);
-
-        return newStatement;
+    	return createStatement(resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     /** 
@@ -559,7 +545,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @return CallableStatement object that can be used to execute the storedProcedure
      * @throws SQLException if there is an error creating the callable statement object
      */
-    public CallableStatement prepareCall(String sql) throws SQLException {
+    public CallableStatementImpl prepareCall(String sql) throws SQLException {
     	//there is a problem setting the result set type to be non-scrollable
     	//See defect 17768
         return prepareCall(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -575,18 +561,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @param intValue indicating the ResultSet's concurrency
      * @return CallableStatement object that can be used to execute the storedProcedure
      */
-    public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
-        //Check to see the connection is open
-        checkConnection();
-        
-        validateResultSetType(resultSetType);
-        validateResultSetConcurrency(resultSetConcurrency);
-        validateSQL(sql);
-        
-        // add the statement object to the map
-        CallableStatementImpl newStatement = CallableStatementImpl.newInstance(this, sql, resultSetType, resultSetConcurrency);
-        statements.add(newStatement);
-        return newStatement;
+    public CallableStatementImpl prepareCall(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+    	return prepareCall(sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
     }
 
     /** 
@@ -615,6 +591,11 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * @return a PreparedStatement object
      */
     public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
+    	return prepareStatement(sql, resultSetType, resultSetConcurrency, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+    }
+
+    public PreparedStatementImpl prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
+        int resultSetHoldability ) throws SQLException {
         //Check to see the connection is open
         checkConnection();
         
@@ -623,14 +604,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         validateSQL(sql);
         
         // add the statement object to the map
-        PreparedStatementImpl newStatement = PreparedStatementImpl.newInstance(this, sql, resultSetType, resultSetConcurrency);
+        PreparedStatementImpl newStatement = new PreparedStatementImpl(this, sql, resultSetType, resultSetConcurrency);
         statements.add(newStatement);
         return newStatement;
-    }
-
-    public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,
-        int resultSetHoldability ) throws SQLException {
-    	throw SqlUtil.createFeatureNotSupportedException();
     }
 
     public void rollback() throws SQLException {
@@ -896,11 +872,21 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public Statement createStatement(int resultSetType,
+	public StatementImpl createStatement(int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+        //Check to see the connection is open
+        checkConnection();
 
+        validateResultSetType(resultSetType);
+        validateResultSetConcurrency(resultSetConcurrency);
+        //TODO: implement close cursors at commit
+
+        // add the statement object to the map
+        StatementImpl newStatement = new StatementImpl(this, resultSetType, resultSetConcurrency);
+        statements.add(newStatement);
+
+        return newStatement;
 	}
 
 	public Struct createStruct(String typeName, Object[] attributes)
@@ -908,11 +894,21 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		throw SqlUtil.createFeatureNotSupportedException();
 	}
 
-	public CallableStatement prepareCall(String sql, int resultSetType,
+	public CallableStatementImpl prepareCall(String sql, int resultSetType,
 			int resultSetConcurrency, int resultSetHoldability)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
-
+        //Check to see the connection is open
+        checkConnection();
+        
+        validateResultSetType(resultSetType);
+        validateResultSetConcurrency(resultSetConcurrency);
+        validateSQL(sql);
+        //TODO: implement close cursors at commit
+        
+        // add the statement object to the map
+        CallableStatementImpl newStatement = new CallableStatementImpl(this, sql, resultSetType, resultSetConcurrency);
+        statements.add(newStatement);
+        return newStatement;
 	}
 
 	public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys)

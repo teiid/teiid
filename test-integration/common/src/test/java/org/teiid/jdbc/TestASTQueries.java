@@ -21,11 +21,13 @@
  */
 package org.teiid.jdbc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -39,8 +41,9 @@ import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.EmbeddedConnection;
+import org.teiid.runtime.EmbeddedRequestOptions;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.runtime.EmbeddedServer.ExecutionResults;
 import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @SuppressWarnings("nls")
@@ -73,11 +76,14 @@ public class TestASTQueries {
 	}
 
 	@Test public void testAST() throws Exception {
-		ExecutionResults rs = server.executeQuery("test", 1, sampleQuery(), -1);
+		TeiidDriver td = server.getDriver();
+		Connection c = td.connect("jdbc:teiid:test", new Properties());
+		EmbeddedConnection ec = c.unwrap(EmbeddedConnection.class);
+		TeiidPreparedStatement tps = ec.prepareStatement(sampleQuery(), new EmbeddedRequestOptions());
+		ResultSet rs = tps.executeQuery();
 		assertNotNull(rs);
 		int count = 0;
-		while (rs.hasNext()) {
-			rs.next();
+		while (rs.next()) {
 			count++;
 		}
 		assertEquals(10, count);

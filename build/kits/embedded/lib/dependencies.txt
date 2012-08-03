@@ -1,3 +1,3 @@
 If you are not using XQuery, there is no need to include "saxonhe-9.2.1.5.jar" jar file in the class path. All other files need 
 to be included in your applications's classpath. Depending upon which sources you use with the Teiid embedded, you also need 
-to add translators jar files from optional directory. 
+to add translators jar files from the optional directory. 

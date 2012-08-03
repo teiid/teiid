@@ -55,13 +55,6 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
     private Object parameterValue;
 
     /**
-     * Factory Constructor (be sure to cast it to  MMCallableStatement)
-     */
-    static CallableStatementImpl newInstance(ConnectionImpl connection, String procedureCall, int resultSetType, int resultSetConcurrency) throws SQLException {
-        return new CallableStatementImpl(connection, procedureCall, resultSetType, resultSetConcurrency);        
-    }
-    
-    /**
      * <p>MMCallableStatement constructor that sets the procedureName, IN parameters
      * and OUT parameters on this object.
      * @param Driver's connection object which creates this object.

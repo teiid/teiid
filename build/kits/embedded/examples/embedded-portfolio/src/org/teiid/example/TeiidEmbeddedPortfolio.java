@@ -23,20 +23,25 @@
 package org.teiid.example;
 
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.StringTokenizer;
 
 import javax.resource.ResourceException;
 import javax.resource.cci.ConnectionFactory;
 import javax.sql.DataSource;
 
+import org.h2.jdbcx.JdbcDataSource;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.resource.adapter.file.FileConnectionImpl;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.FileConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.file.FileExecutionFactory;
@@ -49,7 +54,7 @@ import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
  * view layer using DDL. 
  * 
  * Note that this example shows how to integrate the traditional sources like jdbc, file, web-service etc, however you are 
- * not limited to only those sources. As long as you can extended and provide implementaions for
+ * not limited to only those sources. As long as you can extended and provide implementations for
  *  - ConnectionfactoryProvider
  *  - Translator
  *  - Metadata Repository
@@ -61,54 +66,17 @@ public class TeiidEmbeddedPortfolio {
 	
 	/**
 	 * If you are trying to use per-built translators in Teiid framework, then the connection semantics for that
-	 * source already defined in a interface. The below examples show how you can define connection interfaces that translator
-	 * can understands. If you are writing a custom translator and then you define the connection interface and 
-	 * connection provider based on that.  
+	 * source already defined in a interface. The below examples show how you use the connection interface that translator
+	 * understands, in this case by using the default implementation with default values. If you are writing a custom translator
+	 *  then can you define the connection interface and connection provider based on that.  
 	 */
-	private static EmbeddedServer.ConnectionFactoryProvider<ConnectionFactory> getFileConnectionProvider(){
-		return new ConnectionFactoryProvider<ConnectionFactory>() {
-			@Override
-			public ConnectionFactory getConnectionFactory() throws TranslatorException {
-				return new AbstractConnectionFactory<FileConnection>() {
-					@Override
-					public FileConnection getConnection() throws ResourceException {
-						return new FileConnectionImpl();
-					}
-				};
-			}
-		};
-	}
-	
-	private static EmbeddedServer.ConnectionFactoryProvider<DataSource> getJDBCProvider(){
-		return new ConnectionFactoryProvider<DataSource>() {
-			@Override
-			public DataSource getConnectionFactory() throws TranslatorException {
-				return new AbstarctDataSource() {
-					
-					@Override
-					public Connection getConnection() throws SQLException {
-						try {
-							String url = "jdbc:h2:accounts";
-							Class.forName("org.h2.Driver");
-							return DriverManager.getConnection(url);
-						} catch (ClassNotFoundException e) {
-							e.printStackTrace();
-						}
-						return null;
-					}
-				};
-			}
-		};
-	}	
-	
-	static class FileConnectionImpl extends AbstractConnection implements FileConnection {
+	@SuppressWarnings("serial")
+	private static final class FileConnectionFactory extends
+			AbstractConnectionFactory<FileConnection> {
 		@Override
-		public File getFile(String path) throws ResourceException {
-			return new File(path);
+		public FileConnection getConnection() throws ResourceException {
+			return new FileConnectionImpl(".", null, false);
 		}
-		@Override
-		public void close() throws ResourceException {
-		}		
 	}
 	
 	/**
@@ -177,7 +145,15 @@ public class TeiidEmbeddedPortfolio {
 	public static void main(String[] args) throws Exception {
 		// setup accounts database (if you already have external database this is not needed)
 		// for schema take look at "data/customer-schema.sql" file.
-		EmbeddedServer.ConnectionFactoryProvider<DataSource> jdbcProvider = getJDBCProvider();
+		final JdbcDataSource h2ds = new JdbcDataSource();
+    	h2ds.setURL("jdbc:h2:accounts");
+
+		EmbeddedServer.ConnectionFactoryProvider<DataSource> jdbcProvider = new EmbeddedServer.ConnectionFactoryProvider<DataSource>() {
+			@Override
+			public DataSource getConnectionFactory() throws TranslatorException {
+				return h2ds;
+			}
+		};
 		Connection conn = jdbcProvider.getConnectionFactory().getConnection();
 		String schema = ObjectConverterUtil.convertFileToString(new File("data/customer-schema.sql"));
 		StringTokenizer st = new StringTokenizer(schema, ";");
@@ -198,7 +174,13 @@ public class TeiidEmbeddedPortfolio {
 		// configure the connection provider and translator for file based source. 
 		// NOTE: every source that is being integrated, needs its connection provider and its translator 
 		// check out https://docs.jboss.org/author/display/TEIID/Built-in+Translators prebuit translators
-		teiidServer.addConnectionFactoryProvider("source-file", getFileConnectionProvider());
+		final ConnectionFactory cf = new FileConnectionFactory();;
+		teiidServer.addConnectionFactoryProvider("source-file", new EmbeddedServer.ConnectionFactoryProvider<ConnectionFactory>() {
+			@Override
+			public ConnectionFactory getConnectionFactory() throws TranslatorException {
+				return cf;
+			}
+		});
 		teiidServer.addTranslator(new FileExecutionFactory());
 
 		// configure the connection provider and translator for jdbc based source

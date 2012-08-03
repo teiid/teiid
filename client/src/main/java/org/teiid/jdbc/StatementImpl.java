@@ -158,15 +158,6 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:([a-zA-Z]\\w*)|((?:'[^']*')+));?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*);?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    /**
-     * Factory Constructor 
-     * @param driverConnection
-     * @param resultSetType
-     * @param resultSetConcurrency
-     */
-    static StatementImpl newInstance(ConnectionImpl driverConnection, int resultSetType, int resultSetConcurrency) {
-        return new StatementImpl(driverConnection, resultSetType, resultSetConcurrency);        
-    }
     
     /**
      * MMStatement Constructor.

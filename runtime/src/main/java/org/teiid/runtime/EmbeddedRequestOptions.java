@@ -19,49 +19,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.example;
 
-import java.io.PrintWriter;
-import java.sql.Connection;
-import java.sql.SQLException;
+package org.teiid.runtime;
 
-import javax.sql.DataSource;
+import java.sql.ResultSet;
 
-public abstract class AbstarctDataSource implements DataSource {
+public class EmbeddedRequestOptions {
+	private int resultSetType = ResultSet.TYPE_FORWARD_ONLY;
 
-	@Override
-	public PrintWriter getLogWriter() throws SQLException {
-		return null;
+	public EmbeddedRequestOptions() {
 	}
-
-	@Override
-	public void setLogWriter(PrintWriter out) throws SQLException {
-	}
-
-	@Override
-	public void setLoginTimeout(int seconds) throws SQLException {
-	}
-
-	@Override
-	public int getLoginTimeout() throws SQLException {
-		return 0;
-	}
-
-	@Override
-	public <T> T unwrap(Class<T> iface) throws SQLException {
-		return null;
-	}
-
-	@Override
-	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		return false;
-	}
-
-	@Override
-	public abstract Connection getConnection() throws SQLException;
 	
-	@Override
-	public Connection getConnection(String username, String password) throws SQLException {
-		return null;
+	public int getResultSetType() {
+		return resultSetType;
 	}
+	
+	public void setResultSetType(int resultSetType) {
+		this.resultSetType = resultSetType;
+	}
+	
+	public EmbeddedRequestOptions resultSetType(int r) {
+		this.resultSetType = r;
+		return this;
+	}
+	
 }
