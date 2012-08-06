@@ -103,6 +103,10 @@ public class AdminFactory {
         return null;
     }
     
+    public Admin createAdmin(ModelControllerClient connection) {
+    	return new AdminImpl(connection);
+    }
+    
     private class AuthenticationCallbackHandler implements CallbackHandler {
         private boolean realmShown = false;
         private String userName = null;
