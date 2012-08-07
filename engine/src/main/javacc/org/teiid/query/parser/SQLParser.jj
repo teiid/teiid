@@ -1310,23 +1310,24 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 {
 	SetClauseList using = new SetClauseList();
 	String element = null;
+	Expression value = null;
 }
 {
 	element = id()
     <EQ>
+    value = expression(info)
     {
     	String symbolName = shortName?validateElementName(element):element;
         ElementSymbol symbol = new ElementSymbol(symbolName);
-        Expression value = expression(info);
         using.addClause(symbol, value);
     }
 	(<COMMA>
 	 element = id()
      <EQ>
+     value = expression(info)
      {
 	      symbolName = shortName?validateElementName(element):element;
           symbol = new ElementSymbol(symbolName);
-          value = expression(info);
           using.addClause(symbol, value);
      }
 	)*
