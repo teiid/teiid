@@ -23,12 +23,17 @@
 package org.teiid.query.sql.visitor;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 
 
 /**
@@ -79,11 +84,29 @@ public class CorrelatedReferenceCollectorVisitor extends LanguageVisitor {
      * that the client (outer query) is interested in references to from the correlated subquery
      * @param correlatedReferences List of References collected
      */
-    public static final void collectReferences(LanguageObject obj, Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences){
-
+    public static final void collectReferences(final LanguageObject obj, final Collection<GroupSymbol> groupSymbols, List<Reference> correlatedReferences){
+    	final Set<GroupSymbol> groups = new HashSet<GroupSymbol>(groupSymbols);
         CorrelatedReferenceCollectorVisitor visitor =
-            new CorrelatedReferenceCollectorVisitor(groupSymbols, correlatedReferences);
-        DeepPreOrderNavigator.doVisit(obj, visitor);
+            new CorrelatedReferenceCollectorVisitor(groups, correlatedReferences);
+        obj.acceptVisitor(new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.PRE_ORDER, true) {
+
+        	@Override
+        	public void visit(Query query) {
+        		//don't allow confusion with deep nesting by removing intermediate groups
+        		List<GroupSymbol> fromGroups = null;
+				if (query != obj && query.getFrom() != null) {
+					fromGroups = query.getFrom().getGroups();
+        			if (!groups.removeAll(fromGroups)) {
+        				fromGroups = null;
+        			}
+        		}
+    			super.visit(query);
+    			if (fromGroups != null) {
+    				fromGroups.retainAll(groupSymbols);
+    				groups.addAll(fromGroups);
+    			}
+        	}
+        });
     }
 
 }
