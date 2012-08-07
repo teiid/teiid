@@ -32,6 +32,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.metadata.Schema;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -220,7 +221,7 @@ public class CapabilitiesUtil {
     public static boolean supportsScalarFunction(Object modelID, Function function, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
         
-        if (metadata.isVirtualModel(modelID)){
+        if (metadata.isVirtualModel(modelID) || function.getFunctionDescriptor().getMethod().getPushdown() == PushDown.CANNOT_PUSHDOWN){
             return false;
         }
 
@@ -244,7 +245,7 @@ public class CapabilitiesUtil {
                 return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
             }
         } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
-        	return false; //not the right schema
+        	return caps.supportsFunction(function.getFunctionDescriptor().getMethod().getFullName());
         }
         
         return true;

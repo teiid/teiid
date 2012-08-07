@@ -107,10 +107,6 @@ public class MetadataValidator {
 			for (Schema schema:store.getSchemaList()) {
 				ModelMetaData model = vdb.getModel(schema.getName());
 				for (Table t:schema.getTables().values()) {
-					if (t.isVirtual() && model.isSource()) {
-						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31074, t.getName(), model.getName()));
-					}
-					
 					if (t.isPhysical() && !model.isSource()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31075, t.getName(), model.getName()));
 					}
@@ -131,10 +127,6 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31106, p.getFullName(), param.getName()));
 						}
 					}
-					if (p.isVirtual() && model.isSource()) {
-						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31076, p.getName(), model.getName()));
-					}
-
 					if (!p.isVirtual() && !model.isSource()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31077, p.getName(), model.getName()));
 					}

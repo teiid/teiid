@@ -492,7 +492,7 @@ public class QueryResolver {
 	public static boolean isView(GroupSymbol virtualGroup,
 			QueryMetadataInterface qmi) throws TeiidComponentException,
 			QueryMetadataException {
-		return !virtualGroup.isTempGroupSymbol() && qmi.isVirtualGroup(virtualGroup.getMetadataID()) && qmi.isVirtualModel(qmi.getModelID(virtualGroup.getMetadataID()));
+		return !(virtualGroup.getMetadataID() instanceof TempMetadataID) && qmi.isVirtualGroup(virtualGroup.getMetadataID());// && qmi.isVirtualModel(qmi.getModelID(virtualGroup.getMetadataID()));
 	}
 	
 	private static UpdateType determineType(String plan) {

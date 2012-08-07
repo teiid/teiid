@@ -76,7 +76,7 @@ public class TestMetadataValidator {
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		ValidatorReport report = new ValidatorReport();
 		new MetadataValidator.SourceModelArtifacts().execute(vdb, store, report, new MetadataValidator());
-		assertTrue(printError(report), report.hasItems());
+		assertFalse(printError(report), report.hasItems());
 	}
 
 	private String printError(ValidatorReport report) {

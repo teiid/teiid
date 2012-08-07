@@ -146,7 +146,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	private String getPlan(QueryMetadataInterface metadata, ProcedureContainer procCommand)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException {
-		if(!procCommand.getGroup().isTempGroupSymbol() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
+		if(!procCommand.getGroup().isTempTable() && metadata.isVirtualGroup(procCommand.getGroup().getMetadataID())) {
             String plan = getPlan(metadata, procCommand.getGroup());
             if (plan == null && !metadata.isProcedure(procCommand.getGroup().getMetadataID())) {
             	int type = procCommand.getType();

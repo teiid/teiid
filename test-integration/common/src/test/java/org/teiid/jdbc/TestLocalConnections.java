@@ -67,7 +67,7 @@ public class TestLocalConnections {
 	
 	private final class SimpleUncaughtExceptionHandler implements
 			UncaughtExceptionHandler {
-		Throwable t;
+		volatile Throwable t;
 
 		@Override
 		public void uncaughtException(Thread arg0, Throwable arg1) {
@@ -248,16 +248,14 @@ public class TestLocalConnections {
     	if (t.isAlive()) {
     		fail();
     	}
-    	
+    	if (handler.t != null) {
+    		throw handler.t;
+    	}    	
     	for (int i = 0; !server.getDqp().getRequests().isEmpty() && i < 40; i++) {
     		//the concurrent modification may not be seen initially
     		Thread.sleep(50);
     	}
     	assertTrue(server.getDqp().getRequests().isEmpty());
-    	
-    	if (handler.t != null) {
-    		throw handler.t;
-    	}
 	}
 	
 	@Test public void testWait() throws Throwable {
