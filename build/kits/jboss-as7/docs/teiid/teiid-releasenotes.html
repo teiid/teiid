@@ -61,6 +61,8 @@ and the BNF documentation was dramatically improved.
   <li>transport ssl config no longer uses the enabled attribute.  Use mode=disabled to disable the usage of encryption.
   <li>TEIID-2105 If a MetadataRepository throws a RuntimeException during load, that will be treated as a non-recoverable error and the VDB will have a FAILED status.
   <li>TEIID-2105 It was an undocumented behavior that is a source did not specify a jndi connection that "java:/name" would be assumed.  That is no longer the case.  It the source needs a connection, then one must be specified.
+  <li>TEIID-2127 if ExecutionFactory.isSourceRequired returns true (the default) then not obtaining a connection will for an Execution will result in an error.  If an ExecutionFactory does not use a source, then no connection-jndi-name should be
+specified and isSourceRequired should return false (see setSourceRequired).  If isSourceRequired returns false and a connection-jndi-name is specified, then Teiid will still attempt to obtain a connection, but no exception will be thrown if a connection isn't available.
 <ul>
 
 <h4>from 7.x</h4>
