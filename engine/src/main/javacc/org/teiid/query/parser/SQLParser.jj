@@ -1459,7 +1459,7 @@ StoredProcedure storedProcedure(ParseInfo info, StoredProcedure storedProcedure)
 /*
 name=named parameter list
 description=A list of named parameters.
-example={code:sql}param1 := 'x', param2 := 1{code}
+example={code:sql}param1 => 'x', param2 => 1{code}
 */
 void executeNamedParams(ParseInfo info, StoredProcedure storedProcedure) :
 {
