@@ -1367,14 +1367,6 @@ public class TestValidator {
     	helpValidate("select group2.e1, group3.e2 from group2, group3 WHERE group2.e0 = group3.e0 OPTION MAKEDEP group2 MAKENOTDEP group2, group3", new String[] {"OPTION MAKEDEP group2 MAKENOTDEP group2, group3"}, exampleMetadata()); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testInvalidLimit() {
-        helpValidate("SELECT * FROM pm1.g1 LIMIT -5", new String[] {"LIMIT -5"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testInvalidLimit_Offset() {
-    	helpValidate("SELECT * FROM pm1.g1 LIMIT -1, 100", new String[] {"LIMIT -1, 100"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     /**
      * Test case 4237.  This test simulates the way the modeler transformation 
      * panel uses the query resolver and validator to validate a transformation for
@@ -1535,10 +1527,6 @@ public class TestValidator {
         String userSql = "SELECT xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"; //$NON-NLS-1$
         helpValidate(userSql, new String[] {"xpathValue('<?xml version=\"1.0\" encoding=\"utf-8\" ?><a><b><c>test</c></b></a>', '//*[local-name()=''bookName\"]')"}, RealMetadataFactory.exampleBQTCached());
     }
-    
-    @Test public void testTextTableNegativeWidth() {        
-        helpValidate("SELECT * from texttable(null columns x string width -1) as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH -1) AS x"}, RealMetadataFactory.exampleBQTCached()); 
-	}
     
     @Test public void testTextTableNoWidth() {        
         helpValidate("SELECT * from texttable(null columns x string width 1, y integer) as x", new String[] {"TEXTTABLE(null COLUMNS x string WIDTH 1, y integer) AS x"}, RealMetadataFactory.exampleBQTCached()); 

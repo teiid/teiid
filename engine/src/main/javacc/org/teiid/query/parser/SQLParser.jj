@@ -16,6 +16,7 @@ package org.teiid.query.parser;
 import java.math.BigInteger;
 import java.util.*;
 import org.teiid.core.types.*;
+import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
@@ -413,7 +414,6 @@ TOKEN : /* NonReserved words */
 |   <FIRST: "first">
 |   <LAST: "last">
 |   <NEXT: "next">
-|   <FN: "fn">
 |   <SUBSTRING: "substring">
 |   <EXTRACT: "extract">
 |   <TO_CHARS: "to_chars">
@@ -444,7 +444,6 @@ TOKEN : /* NonReserved words */
 |   <PASSING: "passing">
 |   <NAME: "name">
 |   <ENCODING: "encoding">
-|   <OJ: "oj">
 |   <COLUMNS: "columns">
 |   <DELIMITER: "delimiter">
 |   <QUOTE: "quote">
@@ -452,32 +451,54 @@ TOKEN : /* NonReserved words */
 |   <NULLS: "nulls">
 
 }
+/*
+name=all in group identifier
+*/
+TOKEN : { < ALL_IN_GROUP: <ID> <PERIOD> <STAR> > }
+/*
+name=identifier
+*/
+TOKEN : { < ID: <QUOTED_ID> (<PERIOD> <QUOTED_ID>)* > }
+TOKEN : { < #QUOTED_ID: <ID_PART> | ("\"" (("\"\"") | ~["\""] )+ "\"") >  }     
+TOKEN : { < #ID_PART: (("@" | "#" | <LETTER>) (<LETTER> | "_" | <DIGIT>)*) > }
+/*
+name=escaped function
+*/
+TOKEN : { < ESCAPEDFUNCTION: "{" "fn" > }
+/*
+name=escaped join
+*/
+TOKEN : { < ESCAPEDJOIN: "{" "oj" > }
+/*
+name=escaped type
+*/
+TOKEN : { < ESCAPEDTYPE: "{" ("d" | "t" | "ts" | "b") > }
+/*
+name=decimal numeric literal
+*/
+TOKEN : { < DECIMALVAL: (<DIGIT>)* <PERIOD> <UNSIGNEDINTEGER> > }
+/*
+name=approximate numeric literal
+*/
+TOKEN : { < FLOATVAL: <DIGIT> <PERIOD> <UNSIGNEDINTEGER> 
+				["e", "E"] (<PLUS>|<MINUS>)? <UNSIGNEDINTEGER> > }
+/*
+name=string literal
+*/				
+TOKEN : { < STRINGVAL: (("N"|"E")? "'" ( ("''") | ~["'"] )* "'") > }
+TOKEN : { < #LETTER: (["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]) > }
+TOKEN : { < #DIGIT: ["0"-"9"] > }
+/*
+name=unsigned integer literal
+*/
+TOKEN : { < UNSIGNEDINTEGER: (<DIGIT>)+ > }
+/*
+name=binary string literal
+*/
+TOKEN : { < BINARYSTRINGVAL: ("X"|"x" "'" ( <HEXIT><HEXIT> )+ "'") > }
+TOKEN : { < #HEXIT: (["a"-"f","A"-"F"] | <DIGIT> ) > }
 
-TOKEN : /* User variables and literals */
-{
-    < ALL_IN_GROUP: <ID> <PERIOD> <STAR> >
-
-|   < ID: <QUOTED_ID> (<PERIOD> <QUOTED_ID>)* >
-|	< #QUOTED_ID: <ID_PART> | ("\"" (("\"\"") | ~["\""] )+ "\"") >           
-|   < #ID_PART: (("@" | "#" | <LETTER>) (<LETTER> | "_" | <DIGIT>)*) >               
-
-| 	< DATETYPE: "{" "d" >
-| 	< TIMETYPE: "{" "t" >
-| 	< TIMESTAMPTYPE: "{" "ts" >
-| 	< BOOLEANTYPE: "{" "b" >
-|   < POS_REF: ["$"] (<DIGIT>)+ >
-|	< INTEGERVAL: (<MINUS>)?(<DIGIT>)+ >
-|   < DECIMALVAL: (<MINUS>)? (<DIGIT>)* <PERIOD> (<DIGIT>)+ >
-|   < FLOATVAL: (<MINUS>)? <DIGIT> <PERIOD> (<DIGIT>)+ 
-				["e", "E"] (["+","-"])? (<DIGIT>)+  >
-|   < STRINGVAL: (("N"|"E")? "'" ( ("''") | ~["'"] )* "'") >
-|	< #LETTER: (["a"-"z","A"-"Z"] | ["\u0153"-"\ufffd"]) >
-|	< #DIGIT: ["0"-"9"] >
-|   < BINARYSTRINGVAL: ("X"|"x" "'" ( <HEXIT><HEXIT> )+ "'") >
-|	< #HEXIT: (["a"-"f","A"-"F"] | <DIGIT> ) >
-}
-
-TOKEN : /* Punctuation */
+TOKEN :
 {
 	<COMMA: ",">
 |	<PERIOD: ".">
@@ -505,30 +526,42 @@ TOKEN : /* Punctuation */
 |	<CONCAT_OP: "||">
 }
 
-//----------------------------------------------------
-//----------------------------------------------------
-
+/*
+name=string
+description=A string literal value.  Use '' to escape ' in the string.  
+example={code:sql}'a string'{code}\n{code:sql}'it''s a string'{code}
+*/
 String stringVal() :
 {
 	Token t = null;	
 }
 {
-  	(t = <STRINGVAL>)
+  	t = <STRINGVAL>
   	{
   		return normalizeStringLiteral(t.image);
   	}
 }
 
+/*
+name=non-reserved identifier
+description=Allows non-reserved keywords to be parsed as identifiers  
+example=SELECT *COUNT* FROM ...
+*/
 Token nonReserved() :
 {
 }
 {
-    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>|<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<FN>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>|<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>|<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<OJ>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>)
+    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>|<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>|<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>|<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>)
     {
     	return getToken(0);
     }	
 }
 
+/*
+name=identifier
+description=Partial or full name of a single entity.
+example={code:sql}tbl.col{code}\n{code:sql}"tbl"."col"{code}
+*/
 String id() :
 {
 }
@@ -539,12 +572,9 @@ String id() :
   	}
 }
 
-/** 
- * Parse any of several command types - this is the main parser entry point. 
- * @param info instructions to parse the command
- * @return Parsed command
- * @throws ParseException if parsing failed
- */
+/* TODO: createProcedure should not be here, but is due to all of the legacy tests
+unused=true
+*/
 Command command(ParseInfo info) :
 {
 	Command command = null;
@@ -561,6 +591,9 @@ Command command(ParseInfo info) :
 	}
 }
 
+/*
+unused=true
+*/
 Command designerCommand(ParseInfo info) :
 {
 	Command command = null;
@@ -577,6 +610,11 @@ Command designerCommand(ParseInfo info) :
 	}
 }
 
+/*
+name=create trigger
+description=Creates a trigger action on the given target.
+example={code:sql}CREATE TRIGGER ON vw INSTEAD OF INSERT AS FOR EACH ROW BEGIN ATOMIC ... END{code}
+*/
 Command createTrigger(ParseInfo info) :
 {
   	String target = null;
@@ -598,6 +636,11 @@ Command createTrigger(ParseInfo info) :
 	}
 }
 
+/*
+name=alter
+description=Alter the given target.
+example={code:sql}ALTER VIEW vw AS SELECT col FROM tbl{code}
+*/
 Command alter(ParseInfo info) :
 {
   	String target = null;
@@ -649,6 +692,11 @@ Command alter(ParseInfo info) :
 	)
 }
 
+/*
+name=for each row trigger action
+description=Defines an action to perform on each row.
+example={code:sql}FOR EACH ROW BEGIN ATOMIC ... END{code}
+*/
 TriggerAction forEachRowTriggerAction(ParseInfo info) :
 {
 	Block b = new Block();
@@ -679,6 +727,12 @@ TriggerAction forEachRowTriggerAction(ParseInfo info) :
 	}
 }
 
+/*
+name=directly executable statement
+description=A statement that can be executed at runtime.
+example={code:sql}SELECT * FROM tbl{code}
+index=true
+*/
 Command userCommand(ParseInfo info) :
 {
 	Command command = null;
@@ -716,12 +770,11 @@ Command userCommand(ParseInfo info) :
 	}
 }
 
-/** 
- * Parse drop table command. 
- * @param info instructions to parse the command
- * @return Parsed command
- * @throws ParseException if parsing failed
- */
+/*
+name=drop table
+description=Creates a trigger action on the given target.
+example={code:sql}CREATE TRIGGER ON vw INSTEAD OF INSERT AS FOR EACH ROW BEGIN ATOMIC ... END{code}
+*/
 Command dropTable(ParseInfo info) :
 {
 	Drop drop = new Drop();
@@ -736,12 +789,11 @@ Command dropTable(ParseInfo info) :
 	}
 }
 	
-/** 
- * Parse create temp table command. 
- * @param info instructions to parse the command
- * @return Parsed command
- * @throws ParseException if parsing failed
- */
+/*
+name=create temporary table
+description=Creates a temporary table.
+example={code:sql}CREATE LOCAL TEMPORARY TABLE tmp (col integer){code}
+*/
 Command createTempTable(ParseInfo info) :
 {
 	Create create = new Create();
@@ -784,6 +836,11 @@ Command createTempTable(ParseInfo info) :
 	}
 }
 
+/*
+name=temporary table element
+description=Defines a temporary table column.
+example={code:sql}col string NOT NULL{code}
+*/
 Column tableElement(ParseInfo info) :
 {
 	String element = null;
@@ -814,10 +871,11 @@ Column tableElement(ParseInfo info) :
 	 }
 }
 
-/**
- * Parse error statement
- * @throws ParseException if parsing failed
- */
+/*
+name=raise error statement
+description=Raises an error with the given message.
+example={code:sql}ERROR 'something went wrong'{code}
+*/
 RaiseErrorStatement errorStatement(ParseInfo info) :
 {
     Expression errMsg = null;           
@@ -832,10 +890,11 @@ RaiseErrorStatement errorStatement(ParseInfo info) :
     }
 }
 
-/**
- * Parse statement
- * @throws ParseException if parsing failed
- */
+/*
+name=statement
+description=A procedure statement.
+example={code:sql}IF (x = 5) BEGIN ... END{code}
+*/
 Statement statement(ParseInfo info) :
 {
     Statement stmt = null;
@@ -865,6 +924,11 @@ Statement statement(ParseInfo info) :
     }
 }
 
+/*
+name=delimited statement
+description=A procedure statement terminated by ;.
+example={code:sql}SELECT * FROM tbl;{code}
+*/
 Statement delimitedStatement(ParseInfo info) :
 {
     Statement stmt = null;
@@ -882,6 +946,11 @@ Statement delimitedStatement(ParseInfo info) :
 	 }
 }
 
+/*
+name=compound statement
+description=A procedure statement block contained in BEGIN END.
+example={code:sql}BEGIN NOT ATOMIC ... END{code}
+*/
 Block compoundStatement(ParseInfo info) :
 {
     Statement stmt = null;  
@@ -905,10 +974,11 @@ Block compoundStatement(ParseInfo info) :
     }
 }        
 
-/**
- * Parse break statement 
- * @throws ParseException if parsing failed
- */
+/*
+name=branching statement
+description=A procedure branching control statement, which typically specifies a label to return control to.
+example={code:sql}BREAK x{code}
+*/
 BranchingStatement branchingStatement(ParseInfo info) :
 {
     BranchingStatement breakStmt = new BranchingStatement();
@@ -930,10 +1000,11 @@ BranchingStatement branchingStatement(ParseInfo info) :
  	}
 } 	
 
-/**
- * Parse while statement 
- * @throws ParseException if parsing failed
- */
+/*
+name=while statement
+description=A procedure while statement that executes until its condition is false.
+example={code:sql}WHILE (var) BEGIN ... END{code}
+*/
 WhileStatement whileStatement(ParseInfo info) :
 {
     WhileStatement whileStmt = null;    
@@ -952,10 +1023,11 @@ WhileStatement whileStatement(ParseInfo info) :
     }    
 }    
 
-/**
- * Parse loop statement 
- * @throws ParseException if parsing failed
- */
+/*
+name=loop statement
+description=A procedure loop statement that executes over the given cursor.
+example={code:sql}LOOP ON (SELECT * FROM tbl) AS x BEGIN ... END{code}
+*/
 LoopStatement loopStatement(ParseInfo info) :
 {
     LoopStatement loopStmt = null;    
@@ -978,10 +1050,11 @@ LoopStatement loopStatement(ParseInfo info) :
     }    
 }   
 
-/**
- * Parse if statement 
- * @throws ParseException if parsing failed
- */
+/*
+name=if statement
+description=A procedure loop statement that executes over the given cursor.
+example={code:sql}LOOP ON (SELECT * FROM tbl) AS x BEGIN ... END{code}
+*/
 IfStatement ifStatement(ParseInfo info) :
 {
     IfStatement ifStmt = null;    
@@ -1004,21 +1077,22 @@ IfStatement ifStatement(ParseInfo info) :
     }    
 }    
             
-/**
- * Parse declare statement
- * @throws ParseException if parsing failed
- */
+/*
+name=declare statement
+description=A procedure declaration statement that creates a variable and optionally assigns a value.
+example={code:sql}DECLARE STRING x := 'a'{code}
+*/
 DeclareStatement declareStatement(ParseInfo info) :
 {
     DeclareStatement declStmt = null;
     String var = null;    
-    Constant type = null;  
+    ParsedDataType type = null;  
     ElementSymbol variableID = null;
     LanguageObject value = null;
 }
 {
     <DECLARE>
-    type = dataType()
+    type = parseDataType()
     var = id()
     {
         variableID = new ElementSymbol(var);
@@ -1029,19 +1103,20 @@ DeclareStatement declareStatement(ParseInfo info) :
     
     {
         if (value instanceof Expression) {
-    		return new DeclareStatement(variableID, (String)type.getValue(), (Expression)value);
+    		return new DeclareStatement(variableID, type.type, (Expression)value);
     	}
     	if (value instanceof QueryCommand) {
-    		return new DeclareStatement(variableID, (String)type.getValue(), new ScalarSubquery((QueryCommand)value));
+    		return new DeclareStatement(variableID, type.type, new ScalarSubquery((QueryCommand)value));
     	}
-    	return new DeclareStatement(variableID, (String)type.getValue(), (Command)value);
+    	return new DeclareStatement(variableID, type.type, (Command)value);
     }           
 }
 
-/**
- * Parse assignment statement
- * @throws ParseException if parsing failed
- */
+/*
+name=assignment statement
+description=Assigns a variable a value in a procedure.
+example={code:sql}x := 'b'{code}
+*/
 AssignmentStatement assignStatement(ParseInfo info) :
 {
     LanguageObject value = null;
@@ -1067,11 +1142,10 @@ AssignmentStatement assignStatement(ParseInfo info) :
     }    
 }
 
-/**
- * Parse operand of assignment statement, which can be nested
- * arbitrarily deeply in parentheses.
- * @throws ParseException if parsing failed
- */
+/*
+name=assignment statement operand
+description=A value or command that can be used in an assignment.  {note}All assigments except for expression are deprecated.{note}
+*/
 LanguageObject assignStatementOperand(ParseInfo info) :
 {
     LanguageObject value = null;
@@ -1091,10 +1165,10 @@ LanguageObject assignStatementOperand(ParseInfo info) :
     }    
 }
 
-/**
- * Parse sql statement 
- * @throws ParseException if parsing failed
- */
+/*
+name=data statement
+description=A procedure statement that executes a SQL statement.  An update statement can have its update count accessed via the ROWS_UPDATED variable. 
+*/
 CommandStatement sqlStatement(ParseInfo info) :
 {
     CommandStatement cmdStmt = null;
@@ -1127,10 +1201,9 @@ CommandStatement sqlStatement(ParseInfo info) :
     }   
 }
  
-/**
- * Parse create update procedure command
- * @throws ParseException if parsing failed
- */
+/*
+unused=true
+*/
 CreateProcedureCommand  createProcedure(ParseInfo info) :
 {
     CreateProcedureCommand procCmd = 
@@ -1146,6 +1219,12 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
     }    
 }   
 
+/*
+name=procedure body definition
+description=Defines a procedure body on a Procedure metadata object.
+example={code:sql}CREATE VIRTUAL PROCEDURE BEGIN ... END{code}
+index=true
+*/
 CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
 {
     CreateProcedureCommand procCmd = 
@@ -1161,17 +1240,17 @@ CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :
     }    
 } 
 
-/**
- * Parse error statement
- * @throws ParseException if parsing failed
- */
+/*
+name=dynamic data statement
+description=A procedure statement that can execute arbitrary sql.
+example={code:sql}EXECUTE IMMEDIATE 'SELECT * FROM tbl' AS x STRING INTO #temp{code}
+*/
 DynamicCommand dynamicCommand(ParseInfo info) :
 {
     Expression sql = null;           
     String groupID = null;
 	GroupSymbol group = null;
 	int updateCount = 0;
-	Token updateToken = null;
 	List<TableFunctionReference.ProjectedColumn> elements = null;
 	SetClauseList using = null;
 	DynamicCommand dcStmt = new DynamicCommand();
@@ -1209,12 +1288,9 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 	 }
     ]
     [<UPDATE>
-     ((updateToken = <INTEGERVAL>) 
-     {
-        updateCount = Integer.parseInt(updateToken.image);
-     }
+     (updateCount = intVal()
      |
-     (<STAR>) 
+     <STAR> 
      {	
         updateCount = 2;
      })
@@ -1225,6 +1301,11 @@ DynamicCommand dynamicCommand(ParseInfo info) :
     }
 }
 
+/*
+name=set clause list
+description=A list of value assignments.
+example={code:sql}col1 = 'x', col2 = 'y' ...{code}
+*/
 SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 {
 	SetClauseList using = new SetClauseList();
@@ -1254,10 +1335,11 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 	}
 }
 
-/**
- * Create elements with datatypes
- * @throws ParseException if parsing failed
- */
+/*
+name=typed element list
+description=A list of typed elements.
+example={code:sql}col1 string, col2 integer ...{code}
+*/
 List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo info) :
 {
 	String element = null;
@@ -1284,15 +1366,21 @@ List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo i
 	 }
 }
 
+/*
+name=callable statement
+description=A callable statement defined using JDBC escape syntax.
+example={code:sql}{? = CALL proc}{code}
+index=true
+*/
 StoredProcedure callableStatement(ParseInfo info) :
 {
 	StoredProcedure storedProcedure = new StoredProcedure();
 	storedProcedure.setCallableStatement(true);
-	Token call = null;
 	String procName = null;
 	Option option = null;
 	SPParameter parameter = null;
 	int parameterIndex = 1;
+	List<Expression> values = null;
 }
 {
 	<LBRACE>
@@ -1311,10 +1399,7 @@ StoredProcedure callableStatement(ParseInfo info) :
 	//parameters
 		
 	[<LPAREN>
-		
-	 (
-		  storedProcedure = executeUnnamedParams(info, storedProcedure, parameterIndex)
-	 ) 
+	 [values = expressionList(info) { convertToParameters(values, storedProcedure); }]
 	 <RPAREN>
 	]
 	<RBRACE>			
@@ -1329,15 +1414,16 @@ StoredProcedure callableStatement(ParseInfo info) :
 	}
 }
 
-
-/**
- * * Parse stored query command
- * @throws ParseException if parsing failed
- */
+/*
+name=call statement
+description=Executes the procedure with the given parameters.
+example={code:sql}CALL proc('a', 1){code}
+*/
 StoredProcedure storedProcedure(ParseInfo info, StoredProcedure storedProcedure) :
 {
 	String procName = null;
 	Option option = null;
+	List<Expression> values = null;
 }
 {
 	(
@@ -1352,9 +1438,9 @@ StoredProcedure storedProcedure(ParseInfo info, StoredProcedure storedProcedure)
 		
 		(
 		 LOOKAHEAD(2)
-		 storedProcedure = executeNamedParams(info, storedProcedure)
+		 executeNamedParams(info, storedProcedure)
 		 | 		
-		 storedProcedure = executeUnnamedParams(info, storedProcedure, storedProcedure.getParameters().size() + 1)
+		 [values = expressionList(info) { convertToParameters(values, storedProcedure); }]
 		)
 		
 		<RPAREN>
@@ -1369,42 +1455,12 @@ StoredProcedure storedProcedure(ParseInfo info, StoredProcedure storedProcedure)
 	}
 }
 
-/**
- * <p>Parse an exec statement with unnamed parameters</p>
- * @throws ParseException if parsing failed
- */
-StoredProcedure executeUnnamedParams(ParseInfo info, StoredProcedure storedProcedure, int parameterIndex) :
-{
-	SPParameter parameter = null;
-    Expression value = null;	
-}
-{
-
-	(value = expression(info)
-		{
-				parameter = new SPParameter(parameterIndex++, value);
-				parameter.setParameterType(SPParameter.IN);
-				storedProcedure.setParameter(parameter);
-		}
-		(	<COMMA>
-			value = expression(info)
-			{
-					parameter = new SPParameter(parameterIndex++, value);
-					parameter.setParameterType(SPParameter.IN);
-					storedProcedure.setParameter(parameter);
-			}
-		)*
-	)?
-	{
-		return storedProcedure;
-	}
-}
-
-/**
- * <p>Parse an exec statement with named parameters</p>
- * @throws ParseException if parsing failed
- */
-StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedure) :
+/*
+name=named parameter list
+description=A list of named parameters.
+example={code:sql}param1 := 'x', param2 := 1{code}
+*/
+void executeNamedParams(ParseInfo info, StoredProcedure storedProcedure) :
 {
 	String name = null;
     Expression value = null;
@@ -1438,17 +1494,13 @@ StoredProcedure executeNamedParams(ParseInfo info, StoredProcedure storedProcedu
 			}
 		)*
 	)
-	{
-		
-		return storedProcedure;
-	}
 }
 
-/**
- * Parse an INSERT command
- * @return Parsed insert statement
- * @throws ParseException if parsing failed
- */
+/*
+name=insert statement
+description=Inserts values into the given target.
+example={code:sql}INSERT INTO tbl (col1, col2) VALUES ('a', 1){code}
+*/
 Insert insert(ParseInfo info) :
 {
 	Insert insert = new Insert();
@@ -1497,6 +1549,11 @@ Insert insert(ParseInfo info) :
 	}
 }
 
+/*
+name=column list
+description=A list of column references.
+example={code:sql}(col1, col2, ...){code}
+*/
 List<ElementSymbol> columnList(boolean validate) :
 {
 	String element = null;
@@ -1526,11 +1583,11 @@ List<ElementSymbol> columnList(boolean validate) :
 	}
 }
 
-/**
- * Parse row values - this is a comma separated list of values.
- * @return List of values, never null
- * @throws ParseException if parsing failed
- */
+/*
+name=expression list
+description=A list of expressions.
+example={code:sql}col1, 'a', ...{code}
+*/
 ArrayList<Expression> expressionList(ParseInfo info) :
 {
 	ArrayList<Expression> rowVals = new ArrayList<Expression>(4);
@@ -1552,11 +1609,11 @@ ArrayList<Expression> expressionList(ParseInfo info) :
 	}
 }
 
-/**
- * Parse an UPDATE command
- * @return Parsed update statement
- * @throws ParseException if parsing failed
- */
+/*
+name=update statement
+description=Update values in the given target.
+example={code:sql}UPDATE tbl SET (col1 = 'a') WHERE col2 = 1{code}
+*/
 Update update(ParseInfo info) :
 {
 	Update update = new Update();
@@ -1592,12 +1649,11 @@ Update update(ParseInfo info) :
 	}
 }
 
-
-/**
- * Parse a DELETE command
- * @return Parsed delete statement
- * @throws ParseException if parsing failed
- */
+/*
+name=delete statement
+description=Delete rows from the given target.
+example={code:sql}DELETE FROM tbl WHERE col2 = 1{code}
+*/
 Delete delete(ParseInfo info) :
 {
 	String group = null;
@@ -1622,6 +1678,11 @@ Delete delete(ParseInfo info) :
 	}
 }
 
+/*
+name=query expression
+description=A declarative query for data.
+example={code:sql}SELECT * FROM tbl WHERE col2 = 1{code}
+*/
 QueryCommand queryExpression(ParseInfo info) :
 {
 	QueryCommand query = null;
@@ -1648,6 +1709,11 @@ QueryCommand queryExpression(ParseInfo info) :
 	}
 }
 
+/*
+name=with list element
+description=A query expression for use in the enclosing query. 
+example={code:sql}X (Y, Z) AS (SELECT 1, 2){code}
+*/
 WithQueryCommand withListElement(ParseInfo info) :
 {
    String name = null;
@@ -1663,6 +1729,11 @@ WithQueryCommand withListElement(ParseInfo info) :
 	}
 }
 
+/*
+name=query expression body
+description=The body of a query expression, which can optionally be ordered and limited.
+example={code:sql}SELECT * FROM tbl ORDER BY col1 LIMIT 1{code}
+*/
 QueryCommand queryExpressionBody(ParseInfo info) :
 {
     QueryCommand query = null;
@@ -1691,6 +1762,11 @@ QueryCommand queryExpressionBody(ParseInfo info) :
     }    
 }
 
+/*
+name=query term
+description=Used to establish INTERSECT precedence.
+example={code:sql}SELECT * FROM tbl{code}\n{code:sql}SELECT * FROM tbl1 INTERSECT SELECT * FROM tbl2{code}
+*/
 QueryCommand queryTerm(ParseInfo info) : 
 {
     QueryCommand query = null;
@@ -1712,6 +1788,11 @@ QueryCommand queryTerm(ParseInfo info) :
     }
 }    
 
+/*
+name=query primary
+description=A declarative source of rows.
+example={code:sql}TABLE tbl{code}\n{code:sql}SELECT * FROM tbl1{code}
+*/
 QueryCommand queryPrimary(ParseInfo info) : 
 {
     QueryCommand query = null;
@@ -1733,11 +1814,11 @@ QueryCommand queryPrimary(ParseInfo info) :
     }
 }    
 
-/**
- * Parse a SELECT query
- * @return Parsed query
- * @throws ParseException if parsing failed
- */
+/*
+name=query
+description=A SELECT query.
+example={code:sql}SELECT col1, max(col2) FROM tbl GROUP BY col1{code}
+*/
 Query query(ParseInfo info) :
 {
 	Select   select         = null;
@@ -1770,6 +1851,11 @@ Query query(ParseInfo info) :
   	}
 }
 
+/*
+name=into clause
+description=Used to direct the query into a table.  {note}This is deprecated.  Use INSERT INTO with a query expression instead.{note}
+example={code:sql}INTO tbl{code}
+*/
 Into into(ParseInfo info) :
 {
 	String groupID = null;
@@ -1784,18 +1870,10 @@ Into into(ParseInfo info) :
     }	
 }
 
-/**
- * <p>Parse a SELECT clause.  The select must handle elements, aliased elements
- * (x AS y), group.*, and *.  It also must handle an optional DISTINCT at the
- * beginning of the select list.  It also must handle a scalar subquery expression
- * in parentheses.</p>
- * <p>Example:  "SELECT group.element, group2.element2 AS x, group3.*". </p>
- * <p>Example:  "SELECT *". </p>
- * <p>Example:  "SELECT DISTINCT a, b, c".</p>
- * <p>Example:  "SELECT a, (SELECT b FROM groupC)".</p>
- * <p>Example:  "SELECT a, (SELECT b FROM groupC) as d".</p>
- * @return Parsed select
- * @throws ParseException if parsing failed
+/*
+name=select clause
+description=The columns returned by a query.  Can optionally be distinct.
+example={code:sql}SELECT *{code}\n{code:sql}"SELECT DISTINCT a, b, c{code}
  */
 Select select(ParseInfo info) :
 {
@@ -1823,6 +1901,11 @@ Select select(ParseInfo info) :
 	}
 }
 
+/*
+name=select sublist
+description=An element in the select clause
+example={code:sql}tbl.*{code}\n{code:sql}tbl.col AS x{code}
+*/
 Expression selectSymbol(ParseInfo info) :
 {
 	Expression symbol = null;	
@@ -1838,6 +1921,11 @@ Expression selectSymbol(ParseInfo info) :
 	}
 }
 
+/*
+name=select derived column
+description=A select clause item that selects a single column. {note}This is slightly different than a derived column in that the AS keyword is optional.{note}
+example={code:sql}tbl.col AS x{code}
+*/
 Expression selectExpression(ParseInfo info) :
 {
 	Expression expression = null;
@@ -1858,6 +1946,11 @@ Expression selectExpression(ParseInfo info) :
 	}
 }
 
+/*
+name=derived column
+description=An optionally named expression.
+example={code:sql}tbl.col AS x{code}
+*/
 DerivedColumn derivedColumn(ParseInfo info) :
 {
 	Expression expression = null;
@@ -1877,6 +1970,11 @@ DerivedColumn derivedColumn(ParseInfo info) :
 	}
 }
 
+/*
+name=all in group 
+description=A select sublist that can select all columns from the given group.
+example={code:sql}tbl.*{code}
+*/
 MultipleElementSymbol allInGroupSymbol() :
 {
 	Token allInGroupToken = null;
@@ -1889,6 +1987,11 @@ MultipleElementSymbol allInGroupSymbol() :
 	}
 }
 
+/*
+name=ordered aggreate function
+description=An aggregate function that can optionally be ordered.
+example={code:sql}XMLAGG(col1) ORDER BY col2{code}\n{code:sql}ARRAY_AGG(col1){code}
+*/
 AggregateSymbol orderedAgg(ParseInfo info) :
 {
     Token t = null;
@@ -1909,6 +2012,11 @@ AggregateSymbol orderedAgg(ParseInfo info) :
 	}
 }
 
+/*
+name=text aggreate function
+description=An aggregate function for creating separated value clobs.
+example={code:sql}TEXTAGG (col1 as t1, col2 as t2 DELIMITER ',' HEADER){code}
+*/
 AggregateSymbol textAgg(ParseInfo info) :
 {
 	DerivedColumn expression = null;
@@ -1964,6 +2072,11 @@ AggregateSymbol textAgg(ParseInfo info) :
 	}
 }
 
+/*
+name=standard aggregate function
+description=A standard aggregate function.
+example={code:sql}COUNT(*){code}
+*/
 AggregateSymbol aggregateSymbol(ParseInfo info) :
 {
 	Token func = null;
@@ -2001,6 +2114,11 @@ AggregateSymbol aggregateSymbol(ParseInfo info) :
 	}
 }
 
+/*
+name=analytic aggregate function
+description=An analytic aggregate function.
+example={code:sql}ROW_NUMBER(){code}
+*/
 AggregateSymbol analyticAggregateSymbol(ParseInfo info) :
 {
 	Token func = null;
@@ -2013,7 +2131,11 @@ AggregateSymbol analyticAggregateSymbol(ParseInfo info) :
 	}
 }
 
-
+/*
+name=filter clause
+description=An aggregate filter clause applied prior to accumulating the value.
+example={code:sql}FILTER (WHERE col1='a'){code}
+*/
 Expression filterClause(ParseInfo info) :
 {
 	Expression condition = null;
@@ -2025,16 +2147,11 @@ Expression filterClause(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a FROM.  The from must handle groups, aliased groups or
- * joined groups. This also handles JDBC escape processinf syntax for outer joins.</p>
- * <p>Example:  "FROM a, b". </p>
- * <p>Example:  "FROM a AS x, b as Y". </p>
- * <p>Example:  "FROM a right outer join b, c, d join e".</p>
- * @param from object which is to be updated with the details in the from clause.
- * @return list containing criteria objects.
- * @throws ParseException if parsing failed
- */
+/*
+name=from clause
+description=A query from clause containing a list of table references.
+example={code:sql}FROM a, b{code}\n{code:sql}FROM a right outer join b, c, d join e".</p>{code}
+*/
 From from(ParseInfo info) :
 {
 	FromClause clause = null;
@@ -2061,12 +2178,11 @@ From from(ParseInfo info) :
 	}
 }					
 
-/**
- * <p>Parse a join predicate clause, which occurs as an element in the FROM clause.  
- * The join predicate combines two from clauses with a join.</p>
- * @return Join predicate
- * @throws ParseException if parsing failed
- */
+/*
+name=table reference
+description=An optionally escaped joined table.
+example={code:sql}a{code}\n{code:sql}a inner join b{code}
+*/
 FromClause tableReference(ParseInfo info) :
 {
 	FromClause result = null;
@@ -2074,7 +2190,7 @@ FromClause tableReference(ParseInfo info) :
 {	
 	(
 		(	
-			<LBRACE> <OJ>
+			<ESCAPEDJOIN>
 			result=joinedTable(info)
 			<RBRACE>
 		) 
@@ -2086,6 +2202,11 @@ FromClause tableReference(ParseInfo info) :
 	}
 }	
 
+/*
+name=joined table
+description=A table or join.
+example={code:sql}a{code}\n{code:sql}a inner join b{code}
+*/
 FromClause joinedTable(ParseInfo info) :
 {
 	FromClause result = null;
@@ -2107,6 +2228,11 @@ FromClause joinedTable(ParseInfo info) :
 	}
 }
 
+/*
+name=cross join
+description=A cross join.
+example={code:sql}a CROSS JOIN b{code}
+*/
 JoinPredicate crossJoin(ParseInfo info) :
 {
 	JoinPredicate result = new JoinPredicate();
@@ -2122,6 +2248,11 @@ JoinPredicate crossJoin(ParseInfo info) :
 	}
 }
 
+/*
+name=qualified table
+description=An INNER or OUTER join.
+example={code:sql}a inner join b{code}
+*/
 JoinPredicate qualifiedJoin(ParseInfo info) :
 {
 	JoinPredicate result = new JoinPredicate();
@@ -2144,6 +2275,11 @@ JoinPredicate qualifiedJoin(ParseInfo info) :
 	}
 }
 
+/*
+name=table primary
+description=A single source of rows.
+example={code:sql}a{code}
+*/
 FromClause tablePrimary(ParseInfo info) :
 {
 	FromClause clause = null;
@@ -2175,6 +2311,11 @@ FromClause tablePrimary(ParseInfo info) :
 	}
 }
 
+/*
+name=xml serialize
+description=Serializes an XML value.
+example={code:sql}XMLSERIALIZE(col1 AS CLOB){code}
+*/
 XMLSerialize xmlSerialize(ParseInfo info) :
 {
 	Expression expr = null;
@@ -2202,6 +2343,11 @@ XMLSerialize xmlSerialize(ParseInfo info) :
 	}
 }
 
+/*
+name=array table
+description=The ARRAYTABLE table function creates tabular results from arrays.  It can be used as a nested table reference.
+example={code:sql}ARRAYTABLE (col1 COLUMNS x STRING) AS y{code}
+*/
 ArrayTable arrayTable(ParseInfo info) :
 {
 	Expression array = null;
@@ -2223,6 +2369,11 @@ ArrayTable arrayTable(ParseInfo info) :
  	}
 }
 
+/*
+name=text table
+description=The TEXTTABLE table function creates tabular results from text.  It can be used as a nested table reference.
+example={code:sql}TEXTTABLE (file COLUMNS x STRING) AS y{code}
+*/
 TextTable textTable(ParseInfo info) :
 {
 	Expression file = null;
@@ -2302,10 +2453,15 @@ TextTable textTable(ParseInfo info) :
  	}
 }
 
+/*
+name=text table column
+description=A text table column.
+example={code:sql}x INTEGER WIDTH 6{code}
+*/
 TextTable.TextColumn textColumn(ParseInfo info):
 {
 	String name = null;
-	Constant datatype = null;
+	ParsedDataType datatype = null;
 	Integer width = null;
 	boolean noTrim = false;
 	String selector = null;
@@ -2313,7 +2469,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 }
 {
 	name = id()
-	datatype = dataType()
+	datatype = parseDataType()
 	[ 
 	  	<WIDTH>
 	  	width = intVal() 
@@ -2330,13 +2486,18 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	  	position = intVal() 
 	]
 	{
-		TextTable.TextColumn result = new TextTable.TextColumn(validateElementName(name), (String)datatype.getValue(), width, noTrim);
+		TextTable.TextColumn result = new TextTable.TextColumn(validateElementName(name), datatype.type, width, noTrim);
 		result.setSelector(selector);
 		result.setPosition(position);
 		return result;
 	}
 }
 
+/*
+name=xml query
+description=Executes an XQuery to return an XML result.
+example={code:sql}XMLQUERY('<a>...</a>' PASSING doc){code}
+*/
 XMLQuery xmlQuery(ParseInfo info) :
 {
 	String xquery = null;
@@ -2391,6 +2552,11 @@ XMLQuery xmlQuery(ParseInfo info) :
  	}
 }
 
+/*
+name=xml table
+description=Returns table results by processing an XQuery.
+example={code:sql}XMLTABLE('/a/b' PASSING doc COLUMNS col XML PATH '.') AS X{code}
+*/
 XMLTable xmlTable(ParseInfo info) :
 {
 	String xquery = null;
@@ -2420,7 +2586,6 @@ XMLTable xmlTable(ParseInfo info) :
  	    }
  	  )*
  	]
- 	
  	[
  	  <COLUMNS>
  	  column = xmlColumn(info)
@@ -2447,10 +2612,15 @@ XMLTable xmlTable(ParseInfo info) :
  	}
 }
 
+/*
+name=xml table column
+description=XML table column.
+example={code:sql}y FOR ORDINALITY{code}
+*/
 XMLTable.XMLColumn xmlColumn(ParseInfo info):
 {
 	String name = null;
-	Constant datatype = null;
+	ParsedDataType datatype = null;
 	String path = null;
 	Expression defaultExpr = null;
 }
@@ -2463,7 +2633,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	    return new XMLTable.XMLColumn(name); 
 	  }	
 	) | (
-      datatype = dataType()
+      datatype = parseDataType()
       [
 	    <DEFAULT_KEYWORD> defaultExpr = expression(info)
 	  ]
@@ -2471,17 +2641,22 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	    <PATH> path = stringVal()
 	  ]
 	  {
-		return new XMLTable.XMLColumn(name, (String)datatype.getValue(), path, defaultExpr);
+		return new XMLTable.XMLColumn(name, datatype.type, path, defaultExpr);
 	  }
 	))
 }
 
+/*
+name=unsigned integer
+description=An unsigned interger value.
+example={code:sql}12345{code}
+*/
 int intVal() :
 {
 	Token t;
 }
 {
-	t = <INTEGERVAL>
+	t = <UNSIGNEDINTEGER>
 	{
 		try { 
 			return Integer.valueOf(t.image); 				
@@ -2491,12 +2666,11 @@ int intVal() :
 	}
 }
 
-
-/**
- * Parse a unary from clause, which is just a single group name and an optional alias.
- * @return Unary from clause containing the group
- * @throws ParseException if parsing failed
- */
+/*
+name=table subquery
+description=A table defined by a subquery.
+example={code:sql}(SELECT * FROM tbl) AS x{code}
+*/
 SubqueryFromClause subqueryFromClause(ParseInfo info) :
 {
     String aliasID = null;
@@ -2506,7 +2680,7 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
 }
 {	
 	[
-		<TABLE> { table = true; }
+		(<TABLE>|<LATERAL>) { table = true; }
 	]
 	lparen = <LPAREN> 
 	( command = queryExpression(info) |
@@ -2523,11 +2697,11 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
     }	
 }	
 		
-/**
- * Parse a unary from clause, which is just a single group name and an optional alias.
- * @return Unary from clause containing the group
- * @throws ParseException if parsing failed
- */
+/*
+name=table name
+description=A table named in the FROM clause.
+example={code:sql}tbl AS x{code}
+*/
 UnaryFromClause unaryFromClause(ParseInfo info) :
 {
 	GroupSymbol group = null;
@@ -2550,11 +2724,11 @@ UnaryFromClause unaryFromClause(ParseInfo info) :
     }	
 }		
 
-/**
- * <p>Parse a WHERE clause.  The where clause holds a criteria.
- * @return Parsed where
- * @throws ParseException if parsing failed
- */
+/*
+name=where clause
+description=Specifies a search condition
+example={code:sql}WHERE x = 'a'{code}
+*/
 Criteria where(ParseInfo info) :
 {
     Criteria criteria = null;
@@ -2568,11 +2742,10 @@ Criteria where(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a criteria.  This will parse any criteria expression.</p>
- * @return Parsed criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=condition
+description=A boolean expression.
+*/
 Criteria criteria(ParseInfo info) :
 {
 	Criteria criteria = null;
@@ -2585,11 +2758,10 @@ Criteria criteria(ParseInfo info) :
 	}
 }
 
-/** 
- * <p>Parse a compound logical OR criteria.</p>
- * @return Parsed OR criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=boolean value expression
+description=An optionally ORed boolean expression.
+*/
 Criteria compoundCritOr(ParseInfo info) :
 {
     ArrayList logicList = null;
@@ -2609,11 +2781,10 @@ Criteria compoundCritOr(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a compound logical AND criteria.</p>
- * @return Parsed AND criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=boolean term
+description=An optional ANDed boolean factor.
+*/
 Criteria compoundCritAnd(ParseInfo info) :
 {
     ArrayList logicList = null;
@@ -2633,11 +2804,11 @@ Criteria compoundCritAnd(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a logical NOT criteria.</p>
- * @return Parsed NOT criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=boolean factor
+description=A boolean factor.
+example={code:sql}NOT x = 'a'{code}
+*/
 Criteria notCrit(ParseInfo info) :
 {
     Expression ex = null;
@@ -2662,11 +2833,11 @@ Criteria notCrit(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a boolean primary.</p>
- * @return criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=boolean primary
+description=A boolean predicate or simple expression.
+example={code:sql}col LIKE 'a%'{code}
+*/
 Expression booleanPrimary(ParseInfo info) :
 {
     Expression ex = null;
@@ -2692,6 +2863,11 @@ Expression booleanPrimary(ParseInfo info) :
 	}
 }
 
+/*
+name=comparison operator
+description=A comparison operator.
+example={code:sql}={code}
+*/
 Token operator() :
 {
 	Token operator = null;
@@ -2710,12 +2886,11 @@ Token operator() :
     }
 }
 
-
-/**
- * <p>Parse a compare criteria.</p>
- * @return Parsed compare criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=comparison predicate
+description=A value comparison.
+example={code:sql}x = 'a'{code}
+*/
 CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 {
     Expression value = null;
@@ -2740,6 +2915,11 @@ CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 	}
 }
 
+/*
+name=subquery
+description=A subquery.
+example={code:sql}(SELECT * FROM tbl){code}
+*/
 QueryCommand subquery(ParseInfo info) :
 {
     QueryCommand subquery = null;
@@ -2761,24 +2941,11 @@ QueryCommand subquery(ParseInfo info) :
 	}
 }
 
-Object[] subqueryAndHint(ParseInfo info) :
-{
-    QueryCommand subquery = null;
-    Token lparen = null;
-}
-{
-	{lparen = getToken(1);}
-	subquery = subquery(info)
-	{
-		return new Object[] {subquery, getSubqueryHint(lparen)};
-	}
-}
-
-/** 
- * <p>Parse a subquery compare criteria.</p>
- * @return Parsed subquery compare criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=quantified comparison predicate
+description=A subquery comparison.
+example={code:sql}= ANY (SELECT col FROM tbl){code}
+*/
 SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expression) :
 {
     SubqueryCompareCriteria subqueryCrit = null;
@@ -2816,11 +2983,11 @@ SubqueryCompareCriteria subqueryCompareCriteria(ParseInfo info, Expression expre
    	}
 }
 
-/**
- * <p>Parse a match criteria. Also parses JDBC escape syntax for match criteria.</p>
- * @return Parsed match criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=match predicate
+description=Matches based upon a pattern.
+example={code:sql}LIKE 'a_'{code}
+*/
 MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 {
     Character esc = null;
@@ -2846,6 +3013,11 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
    	}
 }
 
+/*
+name=like regex predicate
+description=A regular expression match.
+example={code:sql}LIKE_REGEX 'a.*b'{code}
+*/
 MatchCriteria regexMatchCrit(ParseInfo info, Expression expression) :
 {
 	Expression value = null;
@@ -2863,6 +3035,11 @@ MatchCriteria regexMatchCrit(ParseInfo info, Expression expression) :
    	}
 }
 
+/*
+name=character
+description=A single character.
+example={code:sql}'a'{code}
+*/
 Character charVal(ParseInfo info, String type) :
 {
 	String escStr = null;
@@ -2877,11 +3054,11 @@ Character charVal(ParseInfo info, String type) :
 	}
 }
 
-/**
- * <p>Parse an [NOT] BETWEEN criteria.</p>
- * @return Parsed BETWEEN criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=between predicate
+description=A comparison between two values.
+example={code:sql}BETWEEN 1 AND 5{code}
+*/
 BetweenCriteria betweenCrit(ParseInfo info, Expression expression) :
 {
 	Expression lowerExpression = null, upperExpression = null;
@@ -2901,11 +3078,11 @@ BetweenCriteria betweenCrit(ParseInfo info, Expression expression) :
 	}
 }
 
-/**
- * <p>Parse an IS [NOT] NULL criteria.</p>
- * @return Parsed IS NULL criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=is null predicate
+description=A null test.
+example={code:sql}IS NOT NULL{code}
+*/
 IsNullCriteria isNullCrit(ParseInfo info, Expression expression) :
 {
 	boolean negated = false;
@@ -2923,16 +3100,17 @@ IsNullCriteria isNullCrit(ParseInfo info, Expression expression) :
 	}
 }
 
-/** 
- * <p>Parse a set criteria.</p>
- * @return Parsed set criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=in predicate
+description=A comparison with multiple values.
+example={code:sql}IN (1, 5){code}
+*/
 AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 {
 	Expression value = null;
 	List setList = new ArrayList();
-	Object[] command = null;
+	QueryCommand command = null;
+	ExistsCriteria.SubqueryHint hint = null;
 	boolean negated = false;
 	AbstractSetCriteria criteria = null;
 }
@@ -2940,7 +3118,7 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 	[<NOT> {negated = true;}]
 	<IN>
 	(
-		LOOKAHEAD(subquery(info)) (command = subqueryAndHint(info)) |
+		LOOKAHEAD(subquery(info)) { hint = getSubqueryHint(getToken(1)); } (command = subquery(info)) |
 		(
 			<LPAREN>
 			value = commonValueExpression(info)
@@ -2958,8 +3136,8 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
 	)
 	{
 	    if (command != null) {
-			SubquerySetCriteria ssc = new SubquerySetCriteria(expression, (QueryCommand)command[0]);
-			ssc.setSubqueryHint((ExistsCriteria.SubqueryHint)command[1]);
+			SubquerySetCriteria ssc = new SubquerySetCriteria(expression, command);
+			ssc.setSubqueryHint(hint);
 			criteria = ssc;
 		} else {
 		    criteria = new SetCriteria(expression, setList);
@@ -2969,31 +3147,32 @@ AbstractSetCriteria setCrit(ParseInfo info, Expression expression) :
    	}
 }
 
-/** 
- * <p>Parse an exists criteria.</p>
- * @return Parsed exists criteria
- * @throws ParseException if parsing failed
- */
+/*
+name=exists predicate
+description=A test if rows exist.
+example={code:sql}EXISTS (SELECT col FROM tbl){code}
+*/
 ExistsCriteria existsCriteria(ParseInfo info) :
 {
-    Object[] subquery = null;
+    QueryCommand subquery = null;
+    ExistsCriteria.SubqueryHint hint = null;
 }
 {
-	<EXISTS>
-	subquery = subqueryAndHint(info)
+	<EXISTS> { hint = getSubqueryHint(getToken(1)); } 
+	subquery = subquery(info)
 
 	{
-		ExistsCriteria existsCrit = new ExistsCriteria((QueryCommand)subquery[0]);
-		existsCrit.setSubqueryHint((ExistsCriteria.SubqueryHint)subquery[1]);
+		ExistsCriteria existsCrit = new ExistsCriteria(subquery);
+		existsCrit.setSubqueryHint(hint);
 	    return existsCrit;
    	}
 }
 
-/**
- * <p>Parse a GROUP BY clause.  </p>
- * @return Parsed group by
- * @throws ParseException if parsing failed
- */
+/*
+name=group by clause
+description=Defines the grouping columns
+example={code:sql}GROUP BY col1, col2{code}
+*/
 GroupBy groupBy(ParseInfo info) :
 {
 	List<Expression> expressions = null;
@@ -3006,11 +3185,11 @@ GroupBy groupBy(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a HAVING clause.  </p>
- * @return Parsed having
- * @throws ParseException if parsing failed
- */
+/*
+name=having clause
+description=Search condition applied after grouping.
+example={code:sql}HAVING max(col1) = 5{code}
+*/
 Criteria having(ParseInfo info) :
 {
     Criteria criteria = null;
@@ -3023,12 +3202,11 @@ Criteria having(ParseInfo info) :
 	}
 }
 
-	
-/** 
- * <p>Parse an ORDER BY clause.</p>
- * @return Parsed ORDER BY
- * @throws ParseException if parsing failed
- */
+/*
+name=order by clause
+description=Specifices row ordering.
+example={code:sql}ORDER BY x, y DESC{code}
+*/
 OrderBy orderby(ParseInfo info) :
 {
     OrderBy orderby = new OrderBy();
@@ -3051,6 +3229,11 @@ OrderBy orderby(ParseInfo info) :
 	}
 }
 
+/*
+name=sort specification
+description=Defines how to sort on a particular expression
+example={code:sql}col1 NULLS FIRST{code}
+*/
 OrderByItem sortSpecification(ParseInfo info) :
 {
     Expression ex = null;
@@ -3070,6 +3253,11 @@ OrderByItem sortSpecification(ParseInfo info) :
 	}
 }
 
+/*
+name=sort key
+description=A sort expression.
+example={code:sql}col1{code}
+*/
 Expression sortKey(ParseInfo info) :
 {
     Expression ex = null;
@@ -3093,6 +3281,11 @@ Expression sortKey(ParseInfo info) :
     }
 }
 
+/*
+name=integer parameter
+description=A literal integer or parameter reference to an integer.
+example={code:sql}?{code}
+*/
 Expression intParam(ParseInfo info) :
 {
    Integer val = null;
@@ -3107,11 +3300,11 @@ Expression intParam(ParseInfo info) :
    }
 }
 
-/** 
- * <p>Parse an LIMIT clause.</p>
- * @return Parsed LIMIT
- * @throws ParseException if parsing failed
- */
+/*
+name=limit clause
+description=Limits and/or offsets the resultant rows.
+example={code:sql}LIMIT 2{code}
+*/
 Limit limit(ParseInfo info) :
 {
 	Expression limit = null;
@@ -3140,6 +3333,11 @@ Limit limit(ParseInfo info) :
 	}
 }
 
+/*
+name=fetch clause
+description=ANSI limit.
+example={code:sql}FETCH FIRST 1 ROWS ONLY{code}
+*/
 Expression fetchLimit(ParseInfo info) :
 {
     Expression limit = null;
@@ -3154,11 +3352,11 @@ Expression fetchLimit(ParseInfo info) :
     }
 }
 
-/** 
- * <p>Parse an OPTION clause.</p>
- * @return Parsed OPTION clause
- * @throws ParseException if parsing failed
- */
+/*
+name=option clause
+description=Specifies query options.
+example={code:sql}OPTION MAKEDEP tbl{code}
+*/
 Option option(ParseInfo info) :
 {
 	String id = null;
@@ -3210,11 +3408,11 @@ Option option(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse an expression - made up of literals and functions.</p>
- * @return Expression
- * @throws ParseException if parsing failed
- */
+/*
+name=expression
+description=A value.
+example={code:sql}col1{code}
+*/
 Expression expression(ParseInfo info) :
 {
 	Expression expression = null;
@@ -3229,6 +3427,11 @@ Expression expression(ParseInfo info) :
 	}
 }
 
+/*
+name=common value expression
+description=Establishes the precedence of concat.
+example={code:sql}'a' || 'b'{code}
+*/
 Expression commonValueExpression(ParseInfo info) :
 {
 	Expression leftExpression = null;
@@ -3251,11 +3454,10 @@ Expression commonValueExpression(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse an expression - made up of literals and functions.</p>
- * @return Expression
- * @throws ParseException if parsing failed
- */
+/*
+name=numeric value expression
+example={code:sql}1 + 2{code}
+*/
 Expression plusExpression(ParseInfo info) :
 {
 	Expression leftExpression = null;
@@ -3265,7 +3467,7 @@ Expression plusExpression(ParseInfo info) :
 {
 	(	leftExpression=timesExpression(info)
 		(
-			operator=plusOperator()
+			operator=plusMinus()
 			rightExpression=timesExpression(info)
 			{
 				leftExpression = new Function(operator, new Expression[] { leftExpression, rightExpression });
@@ -3280,30 +3482,26 @@ Expression plusExpression(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse the add/subtract operators.</p>
- * @return "+" or "-"
- * @throws ParseException if parsing failed
- */
-String plusOperator() :
+/*
+name=plus or minus
+description=The + or - operator.
+example={code:sql}+{code}
+*/
+String plusMinus() :
 {
-	Token operator = null;
 }
 {
-	(	operator = <PLUS> |
-		operator = <MINUS>
-	)
-
+	(<PLUS> | <MINUS>)
 	{
-		return operator.image;
+		return getToken(0).image;
 	}
 }
 
-/**
- * <p>Parse an expression - made up of literals and functions.</p>
- * @return Expression
- * @throws ParseException if parsing failed
- */
+/*
+name=term
+description=A numeric term
+example={code:sql}1 * 2{code}
+*/
 Expression timesExpression(ParseInfo info) :
 {
 	Expression leftExpression = null;
@@ -3328,11 +3526,11 @@ Expression timesExpression(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse the multiply/divide operator.</p>
- * @return "*" or "/"
- * @throws ParseException if parsing failed
- */
+/*
+name=star or slash
+description=The * or / operator.
+example={code:sql}/{code}
+*/
 String timesOperator() :
 {
 	Token operator = null;
@@ -3347,33 +3545,56 @@ String timesOperator() :
 	}
 }
 
-/**
- * <p>Parse a basic expression.</p>
- * @return Expression
- * @throws ParseException if parsing failed
- */
+/*
+name=value expression primary
+description=A simple value expression.
+example={code:sql}+col1{code}
+*/
 Expression valueExpressionPrimary(ParseInfo info) :
 {
-	Token refToken = null;
+	String strVal = null;
+	Expression ex = null;
+}
+{
+	// Literal
+	(ex=nonNumericLiteral()
+	| [strVal = plusMinus()] 
+	  (ex = unsignedNumericLiteral(strVal)
+	   |
+	   ex = unsignedValueExpressionPrimary(info) {
+	     if (strVal != null && strVal.charAt(0) == '-') {
+	     	ex = new Function("*", new Expression[] { new Constant(-1), ex });
+	     }
+	    }
+	   )
+	 )
+	 {
+		return ex;	 
+	 }  
+}
+
+/*
+name=unsigned value expression primary
+description=An unsigned simple value expression.
+example={code:sql}col1{code}
+*/
+Expression unsignedValueExpressionPrimary(ParseInfo info) :
+{
 	Expression expression = null;
 	Token symbol = null;
-	Constant literal = null;	
 	QueryCommand subquery = null;
-	Integer arrayIndex = null;
+	Integer index = null;
 	Expression condition = null;
 }
 {
         (
 		// Reference
-		refToken=<QMARK>
+		<QMARK> {return new Reference(info.referenceCount++);}
 		|
-		refToken=<POS_REF>
-		|
-		// Literal
-		literal=literal()
+		(<DOLLAR> index = intVal() {return new Reference(index -1); })
 		|
 		// Escaped function
-		(	<LBRACE> <FN>
+		(	<ESCAPEDFUNCTION>
 			expression=function(info)
 			<RBRACE>
 		)
@@ -3390,11 +3611,10 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		((symbol=<ID> {
 				String symbolImage = symbol.image;
 				if(isStringLiteral(symbolImage, info)) {
-				    literal = new Constant(normalizeStringLiteral(symbolImage));
-				    symbol = null;
+				    return new Constant(normalizeStringLiteral(symbolImage));
 				}  
 			} | symbol=nonReserved()) 
-			(<LSBRACE> arrayIndex = intVal() <RSBRACE>)?
+			(<LSBRACE> index = intVal() <RSBRACE>)?
 		)
 		|
 		LOOKAHEAD(subquery(info)) subquery = subquery(info)
@@ -3402,7 +3622,7 @@ Expression valueExpressionPrimary(ParseInfo info) :
 		( <LPAREN> 
  			expression = expression(info)
 		  <RPAREN>
-		  (<LSBRACE> arrayIndex = intVal() <RSBRACE>)?
+		  (<LSBRACE> index = intVal() <RSBRACE>)?
 		)
 		|
 		// Searched CASE expressions
@@ -3413,28 +3633,26 @@ Expression valueExpressionPrimary(ParseInfo info) :
 	)						
 		
 	{
-		if(refToken != null) {
-		    if (refToken.image.charAt(0) == '$') {
-				return new Reference(Integer.parseInt(refToken.image.substring(1)) -1);
-		    }
-			expression = new Reference(info.referenceCount++);
-		} else if(symbol != null) {
+		if(symbol != null) {
 			expression = new ElementSymbol(normalizeId(symbol.image));
-		} else if(literal != null) {
-			expression = literal;		// may be null literal
 		} else if (subquery != null){
 			expression = new ScalarSubquery(subquery);
 		}
 		if (condition != null) {
 			((AggregateSymbol)expression).setCondition(condition);
 		}
-		if (arrayIndex != null) {
-			expression = new Function("array_get", new Expression[] {expression, new Constant(arrayIndex)});		
+		if (index != null) {
+			expression = new Function("array_get", new Expression[] {expression, new Constant(index)});		
 		}
 		return expression;
 	}
 }
 
+/*
+name=window specification
+description=The window specification for an analytical or windowed aggregate function.
+example={code:sql}OVER (PARTION BY col1){code}
+*/
 Expression windowSpecification(Expression agg, ParseInfo info) :
 {
 	List<Expression> partitionList = null;
@@ -3460,11 +3678,11 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     }
 }
 
-/**
- * Parse a non-searched CASE expression.
- * @return CaseExpression
- * @throws ParseException if parsing failed
- */
+/*
+name=case expression
+description=If/then/else chain using a common search predicand.
+example={code:sql}CASE col1 WHEN 'a' THEN 1 ELSE 2{code}
+*/
 CaseExpression caseExpression(ParseInfo info) :
 {
 	Expression expression = null, whenExpression = null, thenExpression = null, elseExpression = null;
@@ -3493,11 +3711,11 @@ CaseExpression caseExpression(ParseInfo info) :
 	}
 }
 
-/**
- * Parse a searched CASE expression.
- * @return SearchedCaseExpression
- * @throws ParseException if parsing failed
- */
+/*
+name=searched case expression
+description=If/then/else chain using multiple search conditions.
+example={code:sql}CASE WHEN x = 'a' THEN 1 WHEN y = 'b' THEN 2{code}
+*/
 SearchedCaseExpression searchedCaseExpression(ParseInfo info) :
 {
 	Expression thenExpression = null, elseExpression = null;
@@ -3527,11 +3745,11 @@ SearchedCaseExpression searchedCaseExpression(ParseInfo info) :
 	}
 }
 
-/**
- * <p>Parse a function. </p>
- * @return Parsed function
- * @throws ParseException if parsing failed
- */
+/*
+name=function
+description=Calls a scalar function.
+example={code:sql}func('1', col1){code}
+*/
 Expression function(ParseInfo info) :
 {
 	String funcName = null;
@@ -3543,6 +3761,8 @@ Expression function(ParseInfo info) :
 	Boolean distinct = null;
 	OrderBy orderBy = null;
 	Expression condition = null;
+	String literal = null;
+	ParsedDataType type = null;
 }
 {
 	((	funcToken = <CONVERT>
@@ -3552,9 +3772,9 @@ Expression function(ParseInfo info) :
 			args.add(expression);
 		}
 		<COMMA>
-		expression = dataType()	
+		type = parseDataType()	
 		{
-			args.add(expression);
+			args.add(new Constant(type.type));
 		}
 		<RPAREN> 
 	)
@@ -3567,9 +3787,9 @@ Expression function(ParseInfo info) :
 			args.add(expression);
 		} 
 		<AS>
-		expression = dataType()
+		type = parseDataType()
 		{
-			args.add(expression);
+			args.add(new Constant(type.type));
 		}
 		<RPAREN>				
 	)
@@ -3658,9 +3878,9 @@ Expression function(ParseInfo info) :
 			args.add(expression);
 		}
 		<COMMA>
-		expression = stringConstant()
+		literal = stringVal()
 		{
-			args.add(expression);
+			args.add(new Constant(literal));
 		} 
 		<RPAREN>				
 	)
@@ -3717,10 +3937,10 @@ Expression function(ParseInfo info) :
 	| ( funcToken = <XMLPI>
 		<LPAREN>
 		(
-		 [LOOKAHEAD(1) <NAME>] expression = idExpression()
+		 [LOOKAHEAD(1) <NAME>] literal = id()
 		)
 		{
-			args.add(expression);	
+			args.add(new Constant(literal));	
 		}
 		[
 			<COMMA> expression = expression(info)
@@ -3764,17 +3984,11 @@ Expression function(ParseInfo info) :
 	}
 }
 
-Constant stringConstant() :
-{
-	String val = null;
-}
-{
-	val = stringVal()
-	{
-		return new Constant(val);
-	}
-}
-
+/*
+name=xml parse
+description=Parses the given value as XML.
+example={code:sql}XMLPARSE(DOCUMENT doc WELLFORMED){code}
+*/
 XMLParse xmlParse(ParseInfo info) :
 {
 	Expression expr = null;
@@ -3800,6 +4014,11 @@ XMLParse xmlParse(ParseInfo info) :
 	}
 }
 
+/*
+name=querystring function
+description=Produces a URL query string from the given arguments.
+example={code:sql}QUERYSTRING(col1 AS opt, col2 AS val){code}
+*/
 QueryString queryString(ParseInfo info) :
 {
 	Expression path = null;
@@ -3821,6 +4040,11 @@ QueryString queryString(ParseInfo info) :
 	}
 }
 
+/*
+name=xml element
+description=Creates an XML element.
+example={code:sql}XMLELEMENT(NAME "root", child){code}
+*/
 XMLElement xmlElement(ParseInfo info) :
 {
 	String name = null;
@@ -3854,6 +4078,11 @@ XMLElement xmlElement(ParseInfo info) :
 	}
 }	
 
+/*
+name=xml attributes
+description=Creates attributes for the containing element.
+example={code:sql}XMLATTRIBUTES(col1 AS attr1, col2 AS attr2){code}
+*/
 XMLAttributes xmlAttributes(ParseInfo info) :
 {
 	DerivedColumn expression = null;
@@ -3876,6 +4105,11 @@ XMLAttributes xmlAttributes(ParseInfo info) :
 	}
 }
 
+/*
+name=xml forest
+description=Produces an element for each derived column.
+example={code:sql}XMLFOREST(col1 AS ELEM1, col2 AS ELEM2){code}
+*/
 XMLForest xmlForest(ParseInfo info) :
 {
 	DerivedColumn expression = null;
@@ -3904,6 +4138,11 @@ XMLForest xmlForest(ParseInfo info) :
 	}
 }		
 		
+/*
+name=xml namespaces
+description=Defines XML namespace URI/prefix combinations
+example={code:sql}XMLNAMESPACES('http://foo' AS foo){code}
+*/
 XMLNamespaces xmlNamespaces(ParseInfo info) :
 {
 	ArrayList namespaces = new ArrayList(2);
@@ -3926,6 +4165,11 @@ XMLNamespaces xmlNamespaces(ParseInfo info) :
 	}
 }
 
+/*
+name=xml namespace element
+description=An xml namespace
+example={code:sql}NO DEFAULT{code}
+*/
 XMLNamespaces.NamespaceItem namespaceItem() :
 {
 	String uri = null;
@@ -3950,82 +4194,64 @@ XMLNamespaces.NamespaceItem namespaceItem() :
 	)
 }
 
-Constant idExpression() :
-{
-	String id = null;
-}
-{
-	id = id()
-	{
-		return new Constant(id);
-	}
-}
-
+/*
+name=data type
+description=A data type.
+example={code:sql}STRING{code}
+*/
 ParsedDataType parseDataType() :
 {
 	Token typeToken = null;
-	Token lengthToken = null;
-	Token scaleToken = null; 
+	Integer length = null;
+	Integer scale = null; 
 	boolean precision = true;
 }
 {
 	(
-		(typeToken = <STRING> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) |
-		(typeToken = <VARCHAR> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
+		(typeToken = <STRING> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
+		(typeToken = <VARCHAR> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) | 
 		typeToken = <BOOLEAN> | 
 		typeToken = <BYTE> | 
 		typeToken = <TINYINT> |
 		typeToken = <SHORT> | 
 		typeToken = <SMALLINT> |
-		(typeToken = <CHAR> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) | 
+		(typeToken = <CHAR> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) | 
 		typeToken = <INTEGER> | 
 		typeToken = <LONG> | 
 		typeToken = <BIGINT> |
-		(typeToken = <BIGINTEGER> [<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) | 
+		(typeToken = <BIGINTEGER> [<LPAREN>length=intVal()<RPAREN>]) | 
 		typeToken = <FLOAT> |
 		typeToken = <REAL> | 
 		typeToken = <DOUBLE> | 
-		(typeToken = <BIGDECIMAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])|
-		(typeToken = <DECIMAL> [<LPAREN>lengthToken=<INTEGERVAL>[<COMMA>scaleToken=<INTEGERVAL>]<RPAREN>])| 
+		(typeToken = <BIGDECIMAL> [<LPAREN>length=intVal()[<COMMA>scale=intVal()]<RPAREN>])|
+		(typeToken = <DECIMAL> [<LPAREN>length=intVal()[<COMMA>scale=intVal()]<RPAREN>])| 
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
 		typeToken = <TIMESTAMP> |
 		typeToken = <OBJECT> |
-		(typeToken = <BLOB> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} )|
-		(typeToken = <CLOB> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} )|
-		(typeToken = <VARBINARY> ([<LPAREN>lengthToken=<INTEGERVAL><RPAREN>]) {precision = false;} ) |
+		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
+		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
+		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
 		typeToken = <XML>
 		
 	)
 	
 	{
-		if (scaleToken != null){
-			return new ParsedDataType(typeToken.image, Integer.parseInt(lengthToken.image), Integer.parseInt(scaleToken.image), precision);
+		if (scale != null){
+			return new ParsedDataType(typeToken.image, length, scale, precision);
 		}
-		else if (scaleToken == null && lengthToken != null){
-			return new ParsedDataType(typeToken.image, Integer.parseInt(lengthToken.image), precision);
+		else if (length != null){
+			return new ParsedDataType(typeToken.image, length, precision);
 		}
 		return new ParsedDataType(typeToken.image);
 	}
 }
 
-
-Constant dataType() : 
-{
-	ParsedDataType type = null;
-}
-{
-	type = parseDataType()	
-	{
-		return new Constant(type.type);
-	}
-}
-
-/**
- * Parse an interval type name - used only in TIMESTAMPADD and TIMESTAMPDIFF functions.
- * @return Interval type parsed into a constant string object
- * @throws ParseException if parsing failed
- */
+/*
+name=time interval
+description=A time interval keyword.
+example={code:sql}SQL_TSI_HOUR{code}
+*/
 Constant intervalType() : 
 {
 	Token type = null;
@@ -4046,16 +4272,16 @@ Constant intervalType() :
 		return new Constant(type.image);
 	}
 }
-/**
- * <p>Parse a literal - strings must be wrapped in either '' or "".
- * JDBC escape syntax is parsed for Date, Time and Timestamp value.</p>
- * @return Parsed literal
- * @throws ParseException if parsing failed
- */
-Constant literal() :
+
+/*
+name=non numeric literal
+description=An escaped or simple non numeric literal.
+example={code:sql}'a'{code}
+*/
+Constant nonNumericLiteral() :
 {
     Token t = null;
-    String strVal = null;
+    String strVal = "";
     Class escapeType = null;
     Constant constant = null;
 }
@@ -4064,57 +4290,24 @@ Constant literal() :
 		strVal=stringVal()	{ 
 			constant = new Constant(strVal, DataTypeManager.DefaultDataClasses.STRING);
 		} |
-		
-		t=<INTEGERVAL> 	{ 
-			try { 
-				// First try as integer - this should nearly always work
-				constant = new Constant(Integer.valueOf(t.image), DataTypeManager.DefaultDataClasses.INTEGER); 				
-			} catch(NumberFormatException e1) { 
-				try { 
-					// Second try as a long
-					constant = new Constant(Long.valueOf(t.image), DataTypeManager.DefaultDataClasses.LONG);
-				} catch(NumberFormatException e2) {
-					try {
-						// Third try as a biginteger
-						constant = new Constant(new BigInteger(t.image), DataTypeManager.DefaultDataClasses.BIG_INTEGER);
-					} catch(NumberFormatException e3) {
-						Object[] params = new Object[] { t.image };
-						throw new ParseException(QueryPlugin.Util.getString("SQLParser.Integer_parse", params)); //$NON-NLS-1$
-					}
-				}
-			}			
-		}	|
-		
-		t=<FLOATVAL>	{ 
-			try { 
-				constant = new Constant(Double.valueOf(t.image), DataTypeManager.DefaultDataClasses.DOUBLE); 
-			} catch(NumberFormatException e) {
-				Object[] params = new Object[] { t.image };
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.Float_parse", params)); //$NON-NLS-1$
-			}
-		}   |
-		t=<DECIMALVAL>	{ 
-			try { 
-			    if (DECIMAL_AS_DOUBLE) {
-			    	constant = new Constant(Double.valueOf(t.image), DataTypeManager.DefaultDataClasses.DOUBLE); 
-				} else {
-			    	constant = new Constant(new java.math.BigDecimal(t.image), DataTypeManager.DefaultDataClasses.BIG_DECIMAL); 
-				}
-			} catch(NumberFormatException e) {
-				Object[] params = new Object[] { t.image };
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.decimal_parse", params)); //$NON-NLS-1$
-			}
-		}   |
 		t=<BINARYSTRINGVAL> { constant = new Constant(new BinaryType(javax.xml.bind.DatatypeConverter.parseHexBinary(t.image.substring(2, t.image.length() - 1))), DataTypeManager.DefaultDataClasses.VARBINARY); } |
 		t=<FALSE>    { constant = new Constant(Boolean.FALSE, DataTypeManager.DefaultDataClasses.BOOLEAN); } |
 		t=<TRUE>     { constant = new Constant(Boolean.TRUE, DataTypeManager.DefaultDataClasses.BOOLEAN); }  |
         t=<UNKNOWN>  { constant = new Constant(null, DataTypeManager.DefaultDataClasses.BOOLEAN); }       |
         t=<NULL>     { constant = new Constant(null); }          |
         
-        ( (<BOOLEANTYPE>   { escapeType=DataTypeManager.DefaultDataClasses.BOOLEAN; } |
-          <TIMESTAMPTYPE> { escapeType=DataTypeManager.DefaultDataClasses.TIMESTAMP; } | 
-          <DATETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.DATE; } |
-          <TIMETYPE>      { escapeType=DataTypeManager.DefaultDataClasses.TIME; }) strVal=stringVal() { 
+        ( <ESCAPEDTYPE> { 
+            String image = getToken(0).image; 
+        	if (StringUtil.endsWithIgnoreCase(image, "b")) {
+        		escapeType=DataTypeManager.DefaultDataClasses.BOOLEAN;
+        	} else if (StringUtil.endsWithIgnoreCase(image, "ts")) {
+        		escapeType=DataTypeManager.DefaultDataClasses.TIMESTAMP;
+        	} else if (StringUtil.endsWithIgnoreCase(image, "d")) {
+        		escapeType=DataTypeManager.DefaultDataClasses.DATE;
+        	} else {
+        		escapeType=DataTypeManager.DefaultDataClasses.TIME;
+        	}
+		  } strVal=stringVal() { 
 	        	try {
 	        		constant = new Constant(DataTypeManager.transformValue(strVal, escapeType), escapeType);
 	        	} catch (TransformationException e) {
@@ -4128,20 +4321,76 @@ Constant literal() :
 	}
 }
 
+/*
+name=unsigned numeric literal
+description=An unsigned numeric literal value.
+example={code:sql}1.234{code}
+*/
+Constant unsignedNumericLiteral(String strVal) :
+{
+    Token t = null;
+}
+{
+		(t=<UNSIGNEDINTEGER> 	{ 
+			try { 
+			    strVal = prependSign(strVal, t.image);
+				// First try as integer - this should nearly always work
+				return new Constant(Integer.valueOf(strVal), DataTypeManager.DefaultDataClasses.INTEGER); 				
+			} catch(NumberFormatException e1) { 
+				try { 
+					// Second try as a long
+					return new Constant(Long.valueOf(strVal), DataTypeManager.DefaultDataClasses.LONG);
+				} catch(NumberFormatException e2) {
+					try {
+						// Third try as a biginteger
+						return new Constant(new BigInteger(strVal), DataTypeManager.DefaultDataClasses.BIG_INTEGER);
+					} catch(NumberFormatException e3) {
+						Object[] params = new Object[] { strVal };
+						throw new ParseException(QueryPlugin.Util.getString("SQLParser.Integer_parse", params)); //$NON-NLS-1$
+					}
+				}
+			}			
+		}	| t=<FLOATVAL>	{ 
+		    strVal = prependSign(strVal, t.image);
+			try { 
+				return new Constant(Double.valueOf(strVal), DataTypeManager.DefaultDataClasses.DOUBLE); 
+			} catch(NumberFormatException e) {
+				Object[] params = new Object[] { strVal };
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.Float_parse", params)); //$NON-NLS-1$
+			}
+		}  | t=<DECIMALVAL>	{ 
+     		strVal = prependSign(strVal, t.image);
+			try { 
+			    if (DECIMAL_AS_DOUBLE) {
+			    	return new Constant(Double.valueOf(strVal), DataTypeManager.DefaultDataClasses.DOUBLE); 
+				} else {
+			    	return new Constant(new java.math.BigDecimal(strVal), DataTypeManager.DefaultDataClasses.BIG_DECIMAL); 
+				}
+			} catch(NumberFormatException e) {
+				Object[] params = new Object[] { t.image };
+				throw new ParseException(QueryPlugin.Util.getString("SQLParser.decimal_parse", params)); //$NON-NLS-1$
+			}
+		} )
+}
 
-
-/*   
- * DDL specific parser
- */
-
+/*
+unused=true
+*/
  void parseMetadata(MetadataFactory factory) :
 {
 }
 {
-    ddlStmts(factory) [<SEMICOLON>] (ddlStmts(factory) [<SEMICOLON>])*     
+    (ddlStmt(factory))*
+    <EOF>     
 }
 
-void ddlStmts(MetadataFactory factory) :
+/*
+name=ddl statement
+description=A data definition statement.
+example={code:sql}CREATE FOREIGN TABLE X (Y STRING){code}
+index=true
+*/
+void ddlStmt(MetadataFactory factory) :
 {
 	Command command = null; 
 }
@@ -4154,8 +4403,14 @@ void ddlStmts(MetadataFactory factory) :
 	 	createDDLTrigger(factory, (AlterTrigger)command);
 	 }
 	)
+	[<SEMICOLON>]
 }
 
+/*
+name=option namespace
+description=A namespace used to shorten the full name of an option key.
+example={code:sql}SET NAMESPACE 'http://foo' AS foo{code}
+*/
 void createNameSpace(MetadataFactory factory) :
 {
 	String uri = null;
@@ -4164,14 +4419,15 @@ void createNameSpace(MetadataFactory factory) :
 { 
 	<SET> <NAMESPACE> uri = stringVal() <AS> prefix = id()
 	{
-		factory.addNamespace(prefix, uri);
+		factory.addNamespace(validateAlias(prefix), uri);
 	}
 }
 
-/**
- * Parse create update procedure command
- * @throws ParseException if parsing failed
- */
+/*
+name=create procedure
+description=Defines a procedure or function invocation.
+example={code:sql}CREATE FOREIGN PROCEDURE proc (param STRING) RETURNS STRING{code}
+*/
 CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo info) :
 {
 	boolean virtual = true;
@@ -4234,6 +4490,11 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		}
 }
 
+/*
+name=procedure parameter
+description=A procedure or function parameter
+example={code:sql}OUT x INTEGER{code}
+*/
 void procedureParameter(MetadataFactory factory, Procedure proc) :
 {
 	String name = null;
@@ -4277,25 +4538,23 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	]	
 }
 
+/*
+name=procedure result column
+description=A procedure result column.
+example={code:sql}x INTEGER{code}
+*/
 void procedureRsColumn(MetadataFactory factory, Procedure proc) :
 {
 	String name = null;
-}
-{
-	name = id()
-	procedureColumn(factory, proc, name, true)
-}
-
-void procedureColumn(MetadataFactory factory, Procedure proc, String name, boolean rs) :
-{
 	ParsedDataType type = null;
 	boolean notNull = false;
 	BaseColumn column = null; 
 }
 {
+      name = id()
 	  type = parseDataType()
 	  {
-	  	column = addProcColumn(factory, proc, name, type, rs);
+	  	column = addProcColumn(factory, proc, name, type, true);
 	  }
 	  [<NOT> <NULL> {column.setNullType(Column.NullType.No_Nulls);}]	  
 	  [optionsClause(column, factory)
@@ -4305,6 +4564,11 @@ void procedureColumn(MetadataFactory factory, Procedure proc, String name, boole
 	  ]
 }
 
+/*
+name=create table
+description=Defines a table or view.
+example={code:sql}CREATE VIEW vw AS SELECT 1{code}
+*/
 void createTable(MetadataFactory factory) :
 {
 	Table table = null;
@@ -4358,6 +4622,11 @@ void createTable(MetadataFactory factory) :
 	}
 }
 
+/*
+name=foreign key
+description=Defines the foreign key referential constraint.
+example={code:sql}FOREIGN KEY (a, b) REFERENCES tbl (x, y){code}
+*/
 void foreignKeys(MetadataFactory factory, Table table) :
 {
 	List<String> columnNames = null;
@@ -4393,6 +4662,11 @@ void foreignKeys(MetadataFactory factory, Table table) :
 	]
 }
 
+/*
+name=primary key
+description=Defines the primary key.
+example={code:sql}PRIMARY KEY (a, b){code}
+*/
 void primaryKeys(MetadataFactory factory, Table table) :
 {
 	List<String> columnNames = null;
@@ -4422,6 +4696,11 @@ void primaryKeys(MetadataFactory factory, Table table) :
 	]    
 }
 
+/*
+name=other constraints
+description=Defines ACCESSPATTERN and UNIQUE constraints and INDEXes. 
+example={code:sql}UNIQUE (a){code}
+*/
 void constraints(MetadataFactory factory, Table table) :
 {
 	KeyRecord keyrecord = null;
@@ -4458,6 +4737,11 @@ void constraints(MetadataFactory factory, Table table) :
 	]    
 }
 
+/*
+name=column name list
+description=A list of column names.
+example={code:sql}(a, b){code}
+*/
 ArrayList<String> getColumnNames() :
 {
 	ArrayList list = new ArrayList<String>();
@@ -4480,6 +4764,11 @@ ArrayList<String> getColumnNames() :
 	 }
 }
 
+/*
+name=table element
+description=Defines a table column.
+example={code:sql}x INTEGER NOT NULL{code}
+*/
 void createColumn(MetadataFactory factory, Table table) :
 {
 	String element = null;
@@ -4548,6 +4837,11 @@ void createColumn(MetadataFactory factory, Table table) :
 	 }
 }
 
+/*
+name=options clause
+description=A list of statement options.
+example={code:sql}OPTIONS ('x' 'y', 'a' 'b'){code}
+*/
 void optionsClause(AbstractMetadataRecord record, MetadataFactory factory) :
 {
 }
@@ -4557,28 +4851,28 @@ void optionsClause(AbstractMetadataRecord record, MetadataFactory factory) :
   <RPAREN> 
 }
 
+/*
+name=option pair
+description=An option key/value pair.
+example={code:sql}'key' 'value'{code}
+*/
 void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 {
-	String value = null;
+	Constant value = null;
 	String key = null;
 	Token t = null;
+	String strVal = null;
 }
 {
 	 key = id()
-	 (value = stringVal() 
- 	 |
- 	 t = <INTEGERVAL>
- 	 |
- 	 t = <DECIMALVAL>
- 	 |
- 	 t = <TRUE>
- 	 |
- 	 t = <FALSE>)
+	 (value = nonNumericLiteral()
+	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 
-	 	if (t != null) {
-	 		value = t.image;
-	 	}
 	 	key = resolvePropertyKey(factory, key);
-	 	record.setProperty(key, value); 
+	 	String val = null;
+	 	if (!value.isNull()) {
+	 		val = value.getValue().toString();
+	 	}
+	 	record.setProperty(key, val); 
 	 } 
 }

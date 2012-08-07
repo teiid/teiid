@@ -170,10 +170,9 @@ public class TestDynamicImportedMetaData {
     	QueryParser.getQueryParser().parseDDL(mf, ddl);
     	MetadataStore ms = mf.asMetadataStore();
     
-    	String ddl2 = "CREATE VIEW stock (symbol string, price bigdecimal) " +
+    	String ddl2 = "CREATE VIEW stock (symbol string, price bigdecimal) OPTIONS (UUID 'uuid')" +
     			"AS select stock.* from (call MarketData.getTextFiles('*.txt')) f, " +
-    			"TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock " +
-    			"OPTIONS (UUID 'uuid')";    	
+    			"TEXTTABLE(f.file COLUMNS symbol string, price bigdecimal HEADER) stock;";    	
     	MetadataFactory m2 = createMetadataFactory("portfolio", new Properties());
 
     	QueryParser.getQueryParser().parseDDL(m2, ddl2);

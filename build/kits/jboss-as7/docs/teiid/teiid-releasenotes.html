@@ -32,6 +32,8 @@
   <LI>TEIID-2105 <B>Improved VDB loading</B> - vdb loading logic was refined to make administration easier.  ExecutionFactory now has is/setSourceRequiredForMetadata() to indicate whether a source connection is needed for the getMetadata call.
   <LI>TEIID-1598 <B>Translator Result Caching</B> - translators can interact with the result set caching facility via a CacheDirective.  See the Developer's Guide for more.
   <LI>TEIID-2077 <B>Result reuse</B> - the engine will automatically detect if the same source query is used multiple times in a plan and reuse the result rather than issuing another query.
+  <LI>TEIID-2113 <B>Misc parser improvements</B> - the parser will now accept the LATERAL keyword for defining a LATERAL join (previously we just used the TABLE keyword), unary negation is now supported i.e. -col1, the FOR keyword is optional for TEXTAGG,
+and the BNF documentation was dramatically improved. 
 </UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

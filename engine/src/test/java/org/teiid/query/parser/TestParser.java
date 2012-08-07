@@ -558,6 +558,25 @@ public class TestParser {
 				 "SELECT (5 + length(concat(a, 'x'))) FROM g",  //$NON-NLS-1$
 				 query);
 	}
+	
+	@Test public void testSignedExpression() {
+		GroupSymbol g = new GroupSymbol("g"); //$NON-NLS-1$
+		From from = new From();
+		from.addGroup(g);
+
+		Function f = new Function("*", new Expression[] {new Constant(-1), new ElementSymbol("x")});
+		Select select = new Select();
+		select.addSymbol(f);
+		select.addSymbol(new ElementSymbol("x"));
+		select.addSymbol(new Constant(5));
+
+		Query query = new Query();
+		query.setSelect(select);
+		query.setFrom(from);
+		helpTest("SELECT -x, +x, +5 FROM g",  //$NON-NLS-1$
+				 "SELECT (-1 * x), x, 5 FROM g",  //$NON-NLS-1$
+				 query);
+	}
 
 	/** SELECT REPLACE(a, 'x', 'y') AS y FROM g */
 	@Test public void testAliasedFunction() {
@@ -1472,52 +1491,18 @@ public class TestParser {
 
 		Select select = new Select();
 		select.addSymbol(new Constant(new Double(1.3e8))); //$NON-NLS-1$
-						
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-		helpTest("SELECT 1.3e8 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT 1.3E8 FROM a.g1",  //$NON-NLS-1$
-				 query);		    
-	}	
-	
-	/** SELECT -1.3e-6 FROM a.g1 */
-	@Test public void testFloatWithMinusE() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
-		select.addSymbol(new Constant(new Double(-1.3e-6))); //$NON-NLS-1$
-						
-		Query query = new Query();
-		query.setSelect(select);
-		query.setFrom(from);
-		
-		helpTest("SELECT -1.3e-6 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT -1.3E-6 FROM a.g1",  //$NON-NLS-1$
-				 query);		    
-	}	
-	
-	/** SELECT -1.3e+8 FROM a.g1 */
-	@Test public void testFloatWithPlusE() {
-		GroupSymbol g = new GroupSymbol("a.g1"); //$NON-NLS-1$
-		From from = new From();
-		from.addGroup(g);
-
-		Select select = new Select();
 		select.addSymbol(new Constant(new Double(-1.3e+8))); //$NON-NLS-1$
+		select.addSymbol(new Constant(new Double(+1.3e-8))); //$NON-NLS-1$
 						
 		Query query = new Query();
 		query.setSelect(select);
 		query.setFrom(from);
 		
-		helpTest("SELECT -1.3e+8 FROM a.g1",  //$NON-NLS-1$
-				 "SELECT -1.3E8 FROM a.g1",  //$NON-NLS-1$
+		helpTest("SELECT 1.3e8, -1.3e+8, +1.3e-8 FROM a.g1",  //$NON-NLS-1$
+				 "SELECT 1.3E8, -1.3E8, 1.3E-8 FROM a.g1",  //$NON-NLS-1$
 				 query);		    
 	}	
-
+	
     /** SELECT {d'2002-10-02'} FROM m.g1 */
     @Test public void testDateLiteral1() {
         GroupSymbol g = new GroupSymbol("m.g1"); //$NON-NLS-1$
@@ -5232,5 +5217,17 @@ public class TestParser {
 		Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT foo(distinct x, y) over ()", new ParseInfo());
 		assertEquals("SELECT foo(DISTINCT x, y) OVER ()", actualCommand.toString());
     }
+    
+    @Test public void testInvalidLimit() {
+        helpException("SELECT * FROM pm1.g1 LIMIT -5");
+    }
+
+    @Test public void testInvalidLimit_Offset() {
+    	helpException("SELECT * FROM pm1.g1 LIMIT -1, 100");
+    }
+    
+    @Test public void testTextTableNegativeWidth() {        
+        helpException("SELECT * from texttable(null columns x string width -1) as x"); 
+	}
 
 }

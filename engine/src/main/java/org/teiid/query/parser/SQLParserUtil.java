@@ -45,6 +45,7 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.translator.TranslatorException;
 
@@ -53,6 +54,21 @@ public class SQLParserUtil {
     static Pattern udtPattern = Pattern.compile("(\\w+)\\s*\\(\\s*(\\d+),\\s*(\\d+),\\s*(\\d+)\\)"); //$NON-NLS-1$
 	
 	public static final boolean DECIMAL_AS_DOUBLE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.decimalAsDouble", false); //$NON-NLS-1$
+	
+	String prependSign(String sign, String literal) {
+		if (sign != null && sign.charAt(0) == '-') {
+			return sign + literal;
+		}
+		return literal;
+	}
+	
+	void convertToParameters(List<Expression> values, StoredProcedure storedProcedure) {
+		for (Expression value : values) {
+			SPParameter parameter = new SPParameter(storedProcedure.getParameters().size() + 1, value);
+			parameter.setParameterType(SPParameter.IN);
+			storedProcedure.setParameter(parameter);
+		}
+	}
 	
 	String matchesAny(String arg, String ... expected) {
 		for (String string : expected) {
