@@ -392,13 +392,9 @@ public final class FunctionMethods {
 	public static int dayOfWeek(Date x) {
 		int result = getField(x, Calendar.DAY_OF_WEEK);
 		if (TimestampWithTimezone.ISO8601_WEEK) {
-			result -= 1;
-			if (result == 0) {
-				return 7;
-			}
-			return result;
+			return (result + 6) % 7;
 		}
-		return getField(x, Calendar.DAY_OF_WEEK);
+		return result;
 	}
 
 	// ================== Function = dayofyear =====================

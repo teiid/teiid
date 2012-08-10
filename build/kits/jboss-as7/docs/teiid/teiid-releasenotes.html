@@ -64,6 +64,7 @@ and the BNF documentation was dramatically improved.
   <li>TEIID-2105 It was an undocumented behavior that is a source did not specify a jndi connection that "java:/name" would be assumed.  That is no longer the case.  It the source needs a connection, then one must be specified.
   <li>TEIID-2127 if ExecutionFactory.isSourceRequired returns true (the default) then not obtaining a connection will for an Execution will result in an error.  If an ExecutionFactory does not use a source, then no connection-jndi-name should be
 specified and isSourceRequired should return false (see setSourceRequired).  If isSourceRequired returns false and a connection-jndi-name is specified, then Teiid will still attempt to obtain a connection, but no exception will be thrown if a connection isn't available.
+  <li>TEIID-2138 the odbc layer will report standard_conforming_strings as on, rather than off to better reflect the string literal handling of Teiid.
 <ul>
 
 <h4>from 7.x</h4>
