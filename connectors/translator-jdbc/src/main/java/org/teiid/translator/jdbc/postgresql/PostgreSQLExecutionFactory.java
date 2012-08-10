@@ -542,4 +542,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	return OracleFormatFunctionModifier.supportsLiteral(literal);
     }
     
+    @Override
+    public boolean supportsArrayType() {
+    	return true;
+    }
+    
 }
