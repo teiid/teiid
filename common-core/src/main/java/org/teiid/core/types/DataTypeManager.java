@@ -901,7 +901,8 @@ public class DataTypeManager {
 		}
 		return !(type == DataTypeManager.DefaultDataClasses.BIG_DECIMAL
 				|| type == DataTypeManager.DefaultDataClasses.BLOB
-				|| type == DataTypeManager.DefaultDataClasses.CLOB);
+				|| type == DataTypeManager.DefaultDataClasses.CLOB
+				|| type == DataTypeManager.DefaultDataClasses.OBJECT);
 	}
 
 }

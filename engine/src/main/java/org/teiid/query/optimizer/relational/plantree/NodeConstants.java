@@ -143,7 +143,6 @@ public final class NodeConstants {
         EST_CARDINALITY,     // Float represents the estimated cardinality (amount of rows) produced by this node
         EST_COL_STATS,
         EST_SELECTIVITY,     // Float that represents the selectivity of a criteria node
-        MAX_NDV,			 // The max NDV before the dependent join will be aborted
         
         // Tuple limit and offset
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated

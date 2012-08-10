@@ -20,10 +20,43 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.sql.symbol;
+package org.teiid.language;
 
-public interface ContextReference {
+import java.util.List;
 
-	public String getContextSymbol();
+import org.teiid.language.visitor.LanguageObjectVisitor;
+import org.teiid.translator.TypeFacility;
+
+public class Array implements Expression {
+
+	private Class<?> baseType;
+	private List<Expression> expressions;
 	
+	public Array(Class<?> baseType, List<Expression> expresssions) {
+		this.baseType = baseType;
+		this.expressions = expresssions;
+	}
+	
+	@Override
+	public Class<?> getType() {
+		return TypeFacility.RUNTIME_TYPES.OBJECT;
+	}
+
+	@Override
+	public void acceptVisitor(LanguageObjectVisitor visitor) {
+		visitor.visit(this);
+	}
+	
+	public Class<?> getBaseType() {
+		return baseType;
+	}
+	
+	public void setBaseType(Class<?> baseType) {
+		this.baseType = baseType;
+	}
+	
+	public List<Expression> getExpressions() {
+		return expressions;
+	}
+
 }

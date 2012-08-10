@@ -41,6 +41,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ExecutionContextImpl;
 import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
+import org.teiid.language.Array;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Literal;
@@ -59,6 +60,7 @@ import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCProcedureExecution;
 import org.teiid.translator.jdbc.JDBCQueryExecution;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
@@ -953,6 +955,19 @@ public class TestOracleTranslator {
                
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
+    }
+    
+    @Test public void testArrayComparison() throws Exception {
+        String input = "select intkey from bqt1.smalla where intkey = 5"; //$NON-NLS-1$
+        String output = "SELECT g_0.IntKey FROM SmallA g_0 WHERE (g_0.IntKey, g_0.IntKey) = ((5, 2))"; //$NON-NLS-1$
+               
+		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        Select obj = (Select)commandBuilder.getCommand(input, true, true);
+        Comparison comp = (Comparison)obj.getWhere();
+        //modify to an array comparison, since there is not yet parsing support
+        comp.setLeftExpression(new Array(comp.getLeftExpression().getType(), Arrays.asList(comp.getLeftExpression(), comp.getLeftExpression())));
+        comp.setRightExpression(new Array(comp.getLeftExpression().getType(), Arrays.asList(comp.getRightExpression(), new Literal(2, TypeFacility.RUNTIME_TYPES.INTEGER))));
         TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
     }
 

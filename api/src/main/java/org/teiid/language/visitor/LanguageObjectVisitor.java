@@ -66,4 +66,5 @@ public interface LanguageObjectVisitor {
 	public void visit(WindowFunction windowFunction);
 	public void visit(WindowSpecification windowSpecification);
 	public void visit(Parameter obj);
+	public void visit(Array array);
 }

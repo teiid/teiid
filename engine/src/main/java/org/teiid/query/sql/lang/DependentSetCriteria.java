@@ -22,11 +22,16 @@
 
 package org.teiid.query.sql.lang;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
 import org.teiid.query.processor.relational.DependentValueSource;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ContextReference;
 import org.teiid.query.sql.symbol.Expression;
 
@@ -40,6 +45,13 @@ import org.teiid.query.sql.symbol.Expression;
  */
 public class DependentSetCriteria extends AbstractSetCriteria implements ContextReference {
 	
+	public static class AttributeComparison {
+		public Expression dep; 
+		public Expression ind;
+		public float ndv;
+		public float maxNdv;
+	}
+	
     /**
      * Specifies the expression whose values we want to return in the iterator
      */
@@ -50,6 +62,9 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
      */
     private float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
     private float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+    
+    private float[] ndvs;
+    private float[] maxNdvs;
     
     /**
      * set only for dependent pushdown
@@ -62,9 +77,47 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
     public DependentSetCriteria(Expression expr, String id) {
         setExpression(expr);
         this.id = id;
-    }    
+    }  
+    
+    public void setAttributes(List<AttributeComparison> attributes) {
+		this.ndvs = new float[attributes.size()];
+		this.maxNdvs = new float[attributes.size()];
+		for (int i = 0; i < attributes.size(); i++) {
+			AttributeComparison comp = attributes.get(i);
+			this.ndvs[i] = comp.ndv;
+			this.maxNdvs[i] = comp.maxNdv;
+		}
+	}
+    
+    /**
+     * There is a mismatch between the expression form and the more convenient attribute comparison,
+     * so we reconstruct when needed
+     */
+    public List<AttributeComparison> getAttributes() {
+		if (!hasMultipleAttributes()) {
+			AttributeComparison comp = new AttributeComparison();
+			comp.dep = getExpression();
+			comp.ind = getValueExpression();
+			comp.ndv = ndv;
+			comp.maxNdv = maxNdv;
+			return Arrays.asList(comp);
+		}
+		ArrayList<AttributeComparison> result = new ArrayList<AttributeComparison>();
+		for (int i = 0; i < ndvs.length; i++) {
+			AttributeComparison comp = new AttributeComparison();
+			comp.dep = ((Array)getExpression()).getExpressions().get(i);
+			comp.ind = ((Array)getValueExpression()).getExpressions().get(i);
+			comp.ndv = ndv;
+			comp.maxNdv = maxNdv;
+			result.add(comp);
+		}
+		return result;
+	}
+    
+    public boolean hasMultipleAttributes() {
+    	return this.ndvs != null && this.ndvs.length > 1;
+    }
         
-    @Override
     public String getContextSymbol() {
     	return id;
     }
@@ -161,6 +214,8 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
         criteriaCopy.id = this.id;
         criteriaCopy.ndv = this.ndv;
         criteriaCopy.maxNdv = this.maxNdv;
+        criteriaCopy.maxNdvs = this.maxNdvs;
+        criteriaCopy.ndvs = this.ndvs;
         return criteriaCopy;
     }
     

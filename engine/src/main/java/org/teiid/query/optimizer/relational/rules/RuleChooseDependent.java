@@ -25,13 +25,13 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -44,6 +44,8 @@ import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.DependentCostAnalysis;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.SymbolMap;
@@ -274,14 +276,9 @@ public final class RuleChooseDependent implements OptimizerRule {
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
 
-        List<PlanNode> crits = getDependentCriteriaNodes(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata, dca);
+        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata, dca);
         
-        PlanNode newRoot = sourceNode;
-        
-        for (PlanNode crit : crits) {
-            newRoot.addAsParent(crit);
-            newRoot = crit;
-        }
+        sourceNode.addAsParent(crit);
               
         if (isLeft) {
             JoinUtil.swapJoinChildren(joinNode);
@@ -297,47 +294,92 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @throws QueryMetadataException 
      * @since 4.3
      */
-    private List<PlanNode> getDependentCriteriaNodes(String id, List independentExpressions,
-                                           List dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca) throws QueryMetadataException, TeiidComponentException {
-        
-        List<PlanNode> result = new LinkedList<PlanNode>();
+    private PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
+                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca) throws QueryMetadataException, TeiidComponentException {
         
         Float cardinality = null;
         
+        List<DependentSetCriteria.AttributeComparison> expressions = new ArrayList<DependentSetCriteria.AttributeComparison>(dependentExpressions.size());
+        
         for (int i = 0; i < dependentExpressions.size(); i++) {
-            Expression depExpr = (Expression) dependentExpressions.get(i);
-            Expression indepExpr = (Expression) independentExpressions.get(i);
-            DependentSetCriteria crit = new DependentSetCriteria(SymbolMap.getExpression(depExpr), id);
-            float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
-            Float maxNdv = null;
+            Expression depExpr = dependentExpressions.get(i);
+            Expression indExpr = independentExpressions.get(i);
+
+            DependentSetCriteria.AttributeComparison comp = new DependentSetCriteria.AttributeComparison();
             if (dca != null && dca.expectedNdv[i] != null) {
             	if (dca.expectedNdv[i] > 4*dca.maxNdv[i]) {
             		continue; //not necessary to use
             	}
-            	ndv = dca.expectedNdv[i];
-            	maxNdv = dca.maxNdv[i];
-            	crit.setMaxNdv(dca.maxNdv[i]);
+            	comp.ndv = dca.expectedNdv[i];
+            	comp.maxNdv = dca.maxNdv[i];
             } else { 
-	            Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indepExpr, true);
-	            if (cardinality == null) {
-	            	cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
-	            }
-	            ndv = NewCalculateCostUtil.getNDVEstimate(indNode, metadata, cardinality, elems, true);
+                Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(indExpr, true);
+                if (cardinality == null) {
+                	cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
+                }
+                comp.ndv = NewCalculateCostUtil.getNDVEstimate(indNode, metadata, cardinality, elems, true);
             }
-            crit.setNdv(ndv);
-            crit.setValueExpression(indepExpr);
-            
-            PlanNode selectNode = RelationalPlanner.createSelectNode(crit, false);
-            
-            selectNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
-            if (maxNdv != null) {
-            	selectNode.setProperty(NodeConstants.Info.MAX_NDV, maxNdv);
-            }
-            result.add(selectNode);
+            comp.ind = indExpr;
+            comp.dep = SymbolMap.getExpression(depExpr);
+            expressions.add(comp);
+        }
+
+        return createDependentSetNode(id, expressions);
+
+    }
+
+	static PlanNode createDependentSetNode(String id, List<DependentSetCriteria.AttributeComparison> expressions) {
+		DependentSetCriteria crit = createDependentSetCriteria(id, expressions);
+		
+        PlanNode selectNode = RelationalPlanner.createSelectNode(crit, false);
+        
+        selectNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+        return selectNode;
+	}
+
+	static DependentSetCriteria createDependentSetCriteria(String id, List<DependentSetCriteria.AttributeComparison> expressions) {
+		if (expressions.isEmpty()) {
+			return null;
+		}
+		
+		Expression indEx = null;
+        Expression depEx = null;
+        float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+        float ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
+        if (expressions.size() == 1) {
+        	AttributeComparison attributeComparison = expressions.get(0);
+			indEx = attributeComparison.ind;
+        	depEx = attributeComparison.dep;
+        	maxNdv = attributeComparison.maxNdv;
+        	ndv = attributeComparison.ndv;
+        } else {
+        	List<Expression> indExprs = new ArrayList<Expression>(expressions.size());
+        	List<Expression> depExprs = new ArrayList<Expression>(expressions.size());
+        	boolean unknown = false;
+        	for (DependentSetCriteria.AttributeComparison comp : expressions) {
+				indExprs.add(comp.ind);
+				depExprs.add(comp.dep);
+				if (comp.ndv == NewCalculateCostUtil.UNKNOWN_VALUE) {
+					ndv = NewCalculateCostUtil.UNKNOWN_VALUE;
+					maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
+					unknown = true;
+				} else if (!unknown) {
+					ndv = Math.max(ndv, comp.ndv);
+		        	maxNdv = Math.max(maxNdv, comp.maxNdv);
+				}
+			}
+        	//TODO: detect a base type
+        	indEx = new Array(DefaultDataClasses.OBJECT, indExprs);
+        	depEx = new Array(DefaultDataClasses.OBJECT, depExprs);
         }
         
-        return result;
-    }
+        DependentSetCriteria crit = new DependentSetCriteria(depEx, id);
+        crit.setValueExpression(indEx);
+        crit.setAttributes(expressions);
+        crit.setMaxNdv(maxNdv);
+        crit.setNdv(ndv);
+		return crit;
+	}
     
     public String toString() {
         return "ChooseDependent"; //$NON-NLS-1$

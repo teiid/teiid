@@ -31,27 +31,20 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.SetCriteria;
-import org.teiid.query.sql.symbol.AggregateSymbol;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.TestCaseExpression;
-import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.translator.SourceSystemFunctions;
 
 
-
+@SuppressWarnings("nls")
 public class TestExpressionMappingVisitor {
 
-    public void helpTest(LanguageObject original, Map map, LanguageObject expected) {
+    public void helpTest(LanguageObject original, Map<Expression, Expression> map, LanguageObject expected) {
         ExpressionMappingVisitor.mapExpressions(original, map);
         
         assertEquals("Did not get expected mapped expression", expected, original);     //$NON-NLS-1$
@@ -60,7 +53,7 @@ public class TestExpressionMappingVisitor {
     @Test public void testCompareCriteria1() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         Function f = new Function("+", new Expression[] { new Constant(new Integer(2)), new Constant(new Integer(5)) }); //$NON-NLS-1$
-        Map map = new HashMap();
+        Map<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(e1, f);
         CompareCriteria before = new CompareCriteria(e1, CompareCriteria.EQ, new Constant("xyz")); //$NON-NLS-1$
         CompareCriteria after = new CompareCriteria(f, CompareCriteria.EQ, new Constant("xyz")); //$NON-NLS-1$
@@ -70,7 +63,7 @@ public class TestExpressionMappingVisitor {
     @Test public void testCompareCriteria2() {
         ElementSymbol e1 = new ElementSymbol("e1"); //$NON-NLS-1$
         Function f = new Function("+", new Expression[] { new Constant(new Integer(2)), new Constant(new Integer(5)) }); //$NON-NLS-1$
-        Map map = new HashMap();
+        Map<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(e1, f);
         CompareCriteria before = new CompareCriteria(new Constant("xyz"), CompareCriteria.EQ, e1); //$NON-NLS-1$
         CompareCriteria after = new CompareCriteria(new Constant("xyz"), CompareCriteria.EQ, f); //$NON-NLS-1$
@@ -91,7 +84,7 @@ public class TestExpressionMappingVisitor {
         ElementSymbol e7 = new ElementSymbol("e7"); //$NON-NLS-1$
         Function f4 = new Function("*", new Expression[] { e5, e6 }); //$NON-NLS-1$
                         
-        Map map = new HashMap();
+        Map<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(e3, f4);
         map.put(e2, e7);
         
@@ -107,14 +100,14 @@ public class TestExpressionMappingVisitor {
         Constant c1 = new Constant("xyz"); //$NON-NLS-1$
         Constant c2 = new Constant("abc"); //$NON-NLS-1$
         Constant c3 = new Constant("def"); //$NON-NLS-1$
-        List values = new ArrayList();
+        List<Expression> values = new ArrayList<Expression>();
         values.add(c1);
         values.add(c2);
-        List mappedValues = new ArrayList();
+        List<Expression> mappedValues = new ArrayList<Expression>();
         mappedValues.add(c1);
         mappedValues.add(c3);
         
-        Map map = new HashMap();
+        Map<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(e1, e2);
         map.put(c2, c3);
         
@@ -129,11 +122,11 @@ public class TestExpressionMappingVisitor {
         Constant a = new Constant(String.valueOf('a'));
         Constant z = new Constant(String.valueOf('z'));
         
-        HashMap map = new HashMap();
+        HashMap<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(x, y);
         map.put(a, z);
         
-        ArrayList whens = new ArrayList(), thens = new ArrayList();
+        ArrayList<Expression> whens = new ArrayList<Expression>(), thens = new ArrayList<Expression>();
         whens.add(new Constant(String.valueOf('z')));
         thens.add(new Constant(new Integer(0)));
         whens.add(new Constant(String.valueOf('b')));
@@ -150,10 +143,10 @@ public class TestExpressionMappingVisitor {
         ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("y"); //$NON-NLS-1$
         
-        HashMap map = new HashMap();
+        HashMap<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(x, y);
         
-        ArrayList whens = new ArrayList(), thens = new ArrayList();
+        ArrayList<Expression> whens = new ArrayList<Expression>(), thens = new ArrayList<Expression>();
         whens.add(new CompareCriteria(y, CompareCriteria.EQ, new Constant(new Integer(0))));
         thens.add(new Constant(new Integer(0)));
         whens.add(new CompareCriteria(y, CompareCriteria.EQ, new Constant(new Integer(1))));
@@ -170,7 +163,7 @@ public class TestExpressionMappingVisitor {
         ElementSymbol x = new ElementSymbol("y.x"); //$NON-NLS-1$
         ElementSymbol y = new ElementSymbol("z.X"); //$NON-NLS-1$
         
-        HashMap map = new HashMap();
+        HashMap<Expression, Expression> map = new HashMap<Expression, Expression>();
         map.put(x, y);
         
         LanguageObject toMap = new Select(Arrays.asList(x));
@@ -213,6 +206,16 @@ public class TestExpressionMappingVisitor {
     	map.put(a1, new AggregateSymbol(NonReserved.SUM, false, a1));
     	ExpressionMappingVisitor.mapExpressions(f, map);
         assertEquals("(SUM(SUM(g1.e1)) + SUM(SUM(g1.e1)))", f.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testArray() {
+    	Expression e1 = new ElementSymbol("g1.e1"); //$NON-NLS-1$
+    	Expression e2 = new ElementSymbol("g1.e2"); //$NON-NLS-1$
+    	Map<Expression, ElementSymbol> map = new HashMap<Expression, ElementSymbol>();
+    	map.put(e1, new ElementSymbol("foo"));
+    	Array a = new Array(DataTypeManager.DefaultDataClasses.OBJECT, Arrays.asList(e1, e2));
+    	ExpressionMappingVisitor.mapExpressions(a, map);
+        assertEquals("(foo, g1.e2)", a.toString()); //$NON-NLS-1$
     }
     
 }

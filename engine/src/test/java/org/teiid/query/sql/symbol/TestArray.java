@@ -22,8 +22,34 @@
 
 package org.teiid.query.sql.symbol;
 
-public interface ContextReference {
+import static org.junit.Assert.*;
 
-	public String getContextSymbol();
+import java.util.Arrays;
+
+import org.junit.Test;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
+
+@SuppressWarnings("nls")
+public class TestArray {
+
+	@Test public void testArrayValueCompare() {
+		ArrayValue a1 = new ArrayValue(new Object[] {1, 2, 3});
+		
+		UnitTestUtil.helpTestEquivalence(0, a1, a1);
+		
+		ArrayValue a2 = new ArrayValue(new Object[] {1, 2});
+		
+		UnitTestUtil.helpTestEquivalence(1, a1, a2);
+	}
+	
+	@Test public void testArrayClone() {
+		Array array = new Array(DataTypeManager.DefaultDataClasses.OBJECT, Arrays.asList((Expression)new ElementSymbol("e1")));
+		
+		Array a1 = array.clone();
+		
+		assertNotSame(a1, array);
+		assertNotSame(a1.getExpressions().get(0), array.getExpressions().get(0));
+	}
 	
 }

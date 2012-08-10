@@ -47,6 +47,7 @@ import org.teiid.query.sql.proc.DeclareStatement;
 import org.teiid.query.sql.proc.RaiseErrorStatement;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.TypeFacility;
 
 @SuppressWarnings("nls")
 public class TestSQLStringVisitor {
@@ -1695,6 +1696,11 @@ public class TestSQLStringVisitor {
     @Test public void testTextTable() throws Exception {
     	String sql = "SELECT * from texttable(file columns x string WIDTH 1 NO TRIM NO ROW DELIMITER) as x"; //$NON-NLS-1$
         helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT * FROM TEXTTABLE(file COLUMNS x string WIDTH 1 NO TRIM NO ROW DELIMITER) AS x");
+    }
+    
+    @Test public void testArray() {
+    	Array array = new Array(TypeFacility.RUNTIME_TYPES.INTEGER, Arrays.asList(new ElementSymbol("e1"), new Constant(1)));
+        helpTest(array, "(e1, 1)");             //$NON-NLS-1$
     }
 
 }

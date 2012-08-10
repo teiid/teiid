@@ -163,6 +163,32 @@ public class TestDependentJoins {
        // Run query
        TestProcessor.helpProcess(plan, dataManager, expected);
    }
+    
+    @Test public void testMultiCritDepJoin2a() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b" }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "c" }) //$NON-NLS-1$
+        };    
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.ARRAY_TYPE, true);
+        ProcessorPlan plan = helpGetPlan(sql);
+
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
 
     /** SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2=pm2.g1.e2 */
     @Test public void testMultiCritDepJoin3() { 
@@ -1034,7 +1060,12 @@ public class TestDependentJoins {
     }
     
     @Test public void testMakeIndHintPushdown() { 
-        // Create query 
+    	helpTestPushdown(true);
+    	helpTestPushdown(false);
+    }
+
+	private void helpTestPushdown(boolean supportsArrayType) {
+		// Create query 
         String sql = "SELECT pm1.g1.e1 FROM /*+ MAKEIND */ pm1.g1, pm2.g1 WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
         
         // Create expected results
@@ -1045,9 +1076,14 @@ public class TestDependentJoins {
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
         dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
-        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e1 = ? AND g_0.e2 = ? ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        if (supportsArrayType) {
+        	dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE (g_0.e1, g_0.e2) = ? ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        } else {
+        	dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e1 = ? AND g_0.e2 = ? ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        }
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.DEPENDENT_JOIN, true);
+        bsc.setCapabilitySupport(Capability.ARRAY_TYPE, supportsArrayType);
         DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
         // Plan query
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
@@ -1060,6 +1096,6 @@ public class TestDependentJoins {
         assertEquals(1, s.getDependentValues().size());
         List<? extends List<?>> vals = s.getDependentValues().values().iterator().next();
         assertEquals(1, vals.size());
-    }
+	}
     
 }

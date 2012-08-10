@@ -92,11 +92,6 @@ public class Reference implements Expression, ContextReference {
     	return "$param/pos" + this.refIndex; //$NON-NLS-1$
     }
     
-    @Override
-    public Expression getValueExpression() {
-    	return this.expression;
-    }
-
     public ElementSymbol getExpression() {
         return this.expression;    
     }

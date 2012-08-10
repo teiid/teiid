@@ -90,11 +90,6 @@ implements SubqueryContainer<QueryCommand>, ContextReference {
     	return id;
     }
     
-    @Override
-    public Expression getValueExpression() {
-    	return null;
-    }
-
     /**
      * Get the predicate quantifier - returns one of the following:
      * <ul><li>{@link #NO_QUANTIFIER}</li>

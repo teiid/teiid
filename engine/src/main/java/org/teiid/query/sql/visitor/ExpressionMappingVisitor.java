@@ -426,4 +426,12 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     	}
     }
     
+    @Override
+    public void visit(Array array) {
+    	List<Expression> exprs = array.getExpressions();
+		for (int i = 0; i < exprs.size(); i++) {
+    		exprs.set(i, replaceExpression(exprs.get(i)));
+    	}
+    }
+    
 }

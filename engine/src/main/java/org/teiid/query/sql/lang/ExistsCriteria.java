@@ -29,7 +29,6 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.symbol.ContextReference;
-import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -130,11 +129,6 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
     	return id;
     }
     
-    @Override
-    public Expression getValueExpression() {
-    	return null;
-    }
-
     public QueryCommand getCommand() {
         return this.command;
     }

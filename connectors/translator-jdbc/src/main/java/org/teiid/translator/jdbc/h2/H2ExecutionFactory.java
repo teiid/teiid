@@ -210,4 +210,9 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public String getLikeRegexString() {
     	return "REGEXP"; //$NON-NLS-1$
     }
+    
+    @Override
+    public boolean supportsArrayType() {
+    	return true;
+    }
 }

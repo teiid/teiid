@@ -1324,7 +1324,7 @@ public class NewCalculateCostUtil {
 				break;
 			}
 			case NodeConstants.Types.GROUP: {
-				if (rpsc.pushAcrossGroupBy(sourceNode, critNode, metadata, false)) {
+				if (rpsc.pushAcrossGroupBy(sourceNode, critNode, metadata, false, capFinder)) {
 					critNodes.add(critNode);
 					initialTargets.add(sourceNode.getFirstChild());
 				}

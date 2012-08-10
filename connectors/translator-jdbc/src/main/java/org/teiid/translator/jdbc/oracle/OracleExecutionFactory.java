@@ -506,6 +506,18 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     			super.visit(obj);
     		}
+    		
+    		@Override
+    		protected void appendRightComparison(Comparison obj) {
+    			if (obj.getRightExpression() instanceof Array) {
+    				//oracle needs rhs arrays nested in extra parens
+    				buffer.append(SQLConstants.Tokens.LPAREN);
+        			super.appendRightComparison(obj);
+        			buffer.append(SQLConstants.Tokens.RPAREN);
+    			} else {
+    				super.appendRightComparison(obj);
+    			}
+    		}
 
 			private boolean isChar(Expression obj) {
 				if (!(obj instanceof ColumnReference)) {
@@ -736,6 +748,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		return false;
     	}
     	return OracleFormatFunctionModifier.supportsLiteral(literal);
+    }
+    
+    @Override
+    public boolean supportsArrayType() {
+    	return true;
     }
     
 }

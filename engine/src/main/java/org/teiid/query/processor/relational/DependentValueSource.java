@@ -35,9 +35,10 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.sql.symbol.Array;
+import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.sql.util.ValueIteratorSource;
 
 
@@ -70,15 +71,42 @@ public class DependentValueSource implements
      * @throws TeiidComponentException 
      * @see org.teiid.query.sql.util.ValueIteratorSource#getValueIterator(org.teiid.query.sql.symbol.Expression)
      */
-    public ValueIterator getValueIterator(Expression valueExpression) throws  TeiidComponentException {
+    public TupleSourceValueIterator getValueIterator(Expression valueExpression) throws  TeiidComponentException {
     	IndexedTupleSource its = buffer.createIndexedTupleSource();
     	int index = 0;
     	if (valueExpression != null) {
-    		index = schema.indexOf(valueExpression);
-    		Assertion.assertTrue(index != -1);
+    		if (valueExpression instanceof Array) {
+    			Array array = (Array)valueExpression;
+    			List<Expression> exprs = array.getExpressions();
+    			final int[] indexes = new int[exprs.size()];
+    			for (int i = 0; i < exprs.size(); i++) {
+					indexes[i] = getIndex(exprs.get(i));
+				}
+    	        return new TupleSourceValueIterator(its, index) {
+    	        	@Override
+    	        	public Object next() throws TeiidComponentException {
+    	        		List<?> tuple = super.nextTuple();
+    	        		Object[] a = new Object[indexes.length];
+    	        		for (int i = 0; i < indexes.length; i++) {
+    	        			a[i] = tuple.get(indexes[i]);
+    	        			if (a[i] == null) {
+    	        				return null; //TODO: this is a hack
+    	        			}
+    	        		}
+    	        		return new ArrayValue(a);
+    	        	}
+    	        };
+    		} 
+    		index = getIndex(valueExpression);
     	}
         return new TupleSourceValueIterator(its, index);
     }
+
+	private int getIndex(Expression valueExpression) {
+		int index = schema.indexOf(valueExpression);
+		Assertion.assertTrue(index != -1);
+		return index;
+	}
     
     public Set<Object> getCachedSet(Expression valueExpression) throws TeiidComponentException, TeiidProcessingException {
     	Set<Object> result = null;
@@ -89,25 +117,31 @@ public class DependentValueSource implements
 			if (buffer.getRowCount() > buffer.getBatchSize()) {
 				return null;
 			}
-			IndexedTupleSource its = buffer.createIndexedTupleSource();
+			TupleSourceValueIterator ve = getValueIterator(valueExpression);
         	int index = 0;
-        	if (valueExpression != null) {
-        		index = schema.indexOf(valueExpression);
+        	Class<?> type = null;
+        	if (valueExpression instanceof Array) {
+        		type = ((Array)valueExpression).getBaseType();
+        	} else { 	
+        		if (valueExpression != null) {
+	        		index = schema.indexOf(valueExpression);
+	            	Assertion.assertTrue(index != -1);
+        		}
+            	type = ((Expression)schema.get(index)).getType();
         	}
-        	Assertion.assertTrue(index != -1);
-        	Class<?> type = ((Expression)schema.get(index)).getType();
+
         	if (!DataTypeManager.isHashable(type)) {
         		result = new TreeSet<Object>(Constant.COMPARATOR);
     		} else {
     			result = new HashSet<Object>();
     		}
-        	while (its.hasNext()) {
-        		Object value = its.nextTuple().get(index);
+        	while (ve.hasNext()) {
+        		Object value = ve.next();
         		if (value != null) {
         			result.add(value);
         		}
         	}
-        	its.closeSource();
+        	ve.close();
         	if (cachedSets == null) {
         		cachedSets = new HashMap<Expression, Set<Object>>();
         	}

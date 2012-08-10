@@ -43,6 +43,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SetCriteria;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.ValueIterator;
@@ -65,6 +66,13 @@ public class DependentCriteriaProcessor {
         float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
         
         boolean overMax;
+        
+        long replacementSize() {
+    		return replacement.size() * valueCount;
+    	}
+        
+        long valueCount = 1;
+
     }
 
     class TupleState {
@@ -86,11 +94,17 @@ public class DependentCriteriaProcessor {
                 if (!originalVs.isDistinct()) {
 	            	if (sortUtility == null) {
 	            		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
-		                List<Boolean> sortDirection = new ArrayList<Boolean>(sortSymbols.size());
 		                for (int i = 0; i < dependentSetStates.size(); i++) {
-		                    sortDirection.add(Boolean.valueOf(OrderBy.ASC));
-		                    sortSymbols.add(dependentSetStates.get(i).valueExpression);
+		                    if (dependentSetStates.get(i).valueExpression instanceof Array) {
+		                    	Array array = (Array)dependentSetStates.get(i).valueExpression;
+		                    	for (Expression ex : array.getExpressions()) {
+		                    		sortSymbols.add(ex);
+		                    	}
+		                    } else {
+		                    	sortSymbols.add(dependentSetStates.get(i).valueExpression);
+		                    }
 		                }
+		                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
 		                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
 	            	}
 	            	dvs = new DependentValueSource(sortUtility.sort());
@@ -221,6 +235,9 @@ public class DependentCriteriaProcessor {
                 SetState state = new SetState();
                 setStates.put(i, state);
                 state.valueExpression = dsc.getValueExpression();
+                if (dsc.hasMultipleAttributes()) {
+                	state.valueCount = ((Array)dsc.getExpression()).getExpressions().size();
+                }
                 TupleState ts = dependentState.get(source);
                 if (ts == null) {
                 	ts = new TupleState(source);
@@ -357,7 +374,7 @@ public class DependentCriteriaProcessor {
 		                    }
 		
 		                    isNull |= state.isNull;
-		                    lessThanMax &= state.replacement.size() < maxSize * (run + 1);
+		                    lessThanMax &= state.replacementSize() < maxSize * (run + 1);
 		                }
 		
 		                if (doneCount == source.size()) {
@@ -383,7 +400,7 @@ public class DependentCriteriaProcessor {
 	        	}
 	            
 	            for (SetState setState : source) {
-	            	currentPredicates += setState.replacement.size()/maxSize+(setState.replacement.size()%maxSize!=0?1:0);
+	            	currentPredicates += setState.replacementSize()/maxSize+(setState.replacementSize()%maxSize!=0?1:0);
 				}
 	        }
 	        
@@ -417,7 +434,7 @@ public class DependentCriteriaProcessor {
     	int numberOfSets = 1;
     	int maxSize = Integer.MAX_VALUE;
     	if (this.maxSetSize > 0) {
-    		maxSize = this.maxSetSize;
+    		maxSize = (int) Math.max(1, this.maxSetSize/state.valueCount);
     		numberOfSets = state.replacement.size()/maxSize + (state.replacement.size()%maxSize!=0?1:0);
     	}
     	Iterator<Object> iter = state.replacement.iterator();

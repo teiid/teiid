@@ -331,7 +331,8 @@ public interface SourceCapabilities {
         WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"), //$NON-NLS-1$
         QUERY_ONLY_SINGLE_TABLE_GROUP_BY,
         ONLY_FORMAT_LITERALS,
-        CRITERIA_ON_SUBQUERY;
+        CRITERIA_ON_SUBQUERY,
+        ARRAY_TYPE;
         
         private final String toString;
         

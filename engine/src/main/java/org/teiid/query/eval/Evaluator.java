@@ -398,7 +398,7 @@ public class Evaluator {
         	}
         	valueIter = new CollectionValueIterator(((SetCriteria)criteria).getValues());
         } else if (criteria instanceof DependentSetCriteria){
-        	ContextReference ref = (ContextReference)criteria;
+        	DependentSetCriteria ref = (DependentSetCriteria)criteria;
         	VariableContext vc = getContext(criteria).getVariableContext();
     		ValueIteratorSource vis = (ValueIteratorSource)vc.getGlobalValue(ref.getContextSymbol());
     		Set<Object> values;
@@ -639,6 +639,17 @@ public class Evaluator {
 		   return evaluateQueryString(tuple, (QueryString)expression);
 	   } else if (expression instanceof XMLParse){
 		   return evaluateXMLParse(tuple, (XMLParse)expression);
+	   } else if (expression instanceof Array) {
+		   Array array = (Array)expression;
+		   List<Expression> exprs = array.getExpressions();
+		   Object[] result = new Object[exprs.size()];
+		   for (int i = 0; i < exprs.size(); i++) {
+			   result[i] = internalEvaluate(exprs.get(i), tuple);
+			   if (result[i] == null) {
+				   return null; //TODO: this is a hack
+			   }
+		   }
+		   return new ArrayValue(result);
 	   } else {
 	        throw new TeiidComponentException(QueryPlugin.Event.TEIID30329, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30329, expression.getClass().getName()));
 	   }

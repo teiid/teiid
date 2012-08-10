@@ -34,6 +34,8 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
+import org.teiid.query.sql.symbol.Array;
+import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Reference;
@@ -77,8 +79,8 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
 
         boolean validRow = true;
 
-        for (Iterator i = Criteria.separateCriteriaByAnd(critInProgress).iterator(); i.hasNext();) {
-            Criteria crit = (Criteria)i.next();
+        for (Iterator<Criteria> i = Criteria.separateCriteriaByAnd(critInProgress).iterator(); i.hasNext() && validRow;) {
+            Criteria crit = i.next();
 
             Object value = null;
             boolean nullAllowed = false;
@@ -90,31 +92,30 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
             } else if (crit instanceof CompareCriteria) {
                 CompareCriteria compare = (CompareCriteria)crit;
                 value = compare.getRightExpression();
+                if (compare.getLeftExpression() instanceof Array) {
+                	Array array = (Array)compare.getLeftExpression();
+                	if (value instanceof Expression) {
+            		    value = eval.evaluate((Expression)value, null);
+            		}
+                	if (value == null) {
+                		validRow = false;
+                		break;
+                	}
+                	ArrayValue valueArray = (ArrayValue)value;
+                	for (int j = 0; j < array.getExpressions().size(); j++) {
+                		validRow = setParam(context, valueArray.getValues()[j], nullAllowed, (Reference) array.getExpressions().get(j));
+                		if (!validRow) {
+                			break;
+                		}
+                	}
+                	continue;
+                }
                 parameter = (Reference)compare.getLeftExpression();
             } else {
                 Assertion.failed("Unknown predicate type"); //$NON-NLS-1$
             }
 
-            if (value instanceof Expression) {
-                value = eval.evaluate((Expression)value, null);
-            }
-
-            if (value == null && !nullAllowed) {
-                validRow = false;
-                break;
-            }
-
-            ElementSymbol parameterSymbol = parameter.getExpression();
-            if (context.containsVariable(parameterSymbol)) {
-	            Object existingValue = context.getValue(parameterSymbol);
-	
-	            if ((value != null && !value.equals(existingValue)) || (value == null && existingValue != null)) {
-	                validRow = false;
-	                break;
-	            }
-            }
-
-            context.setValue(parameterSymbol, value);
+            validRow = setParam(context, value, nullAllowed, parameter);
         }
 
         critInProgress = null;
@@ -136,5 +137,30 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
 
         return true;
     }
+
+	private boolean setParam(VariableContext context,
+			Object value, boolean nullAllowed, Reference parameter)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
+		if (value instanceof Expression) {
+		    value = eval.evaluate((Expression)value, null);
+		}
+
+		if (value == null && !nullAllowed) {
+		    return false;
+		}
+
+		ElementSymbol parameterSymbol = parameter.getExpression();
+		if (context.containsVariable(parameterSymbol)) {
+		    Object existingValue = context.getValue(parameterSymbol);
+
+		    if ((value != null && !value.equals(existingValue)) || (value == null && existingValue != null)) {
+		        return false;
+		    }
+		}
+
+		context.setValue(parameterSymbol, value);
+		return true;
+	}
     
 }

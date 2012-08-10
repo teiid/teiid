@@ -32,6 +32,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.DerivedColumn;
 import org.teiid.language.Select;
@@ -56,6 +57,7 @@ import org.teiid.query.sql.lang.SetClause;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -416,10 +418,7 @@ public class LanguageBridgeFactory {
 
     Condition translate(SetCriteria criteria) {
         Collection expressions = criteria.getValues();
-        List<org.teiid.language.Expression> translatedExpressions = new ArrayList<org.teiid.language.Expression>();
-        for (Iterator i = expressions.iterator(); i.hasNext();) {
-            translatedExpressions.add(translate((Expression)i.next()));
-        }
+        List<org.teiid.language.Expression> translatedExpressions = translateExpressionList(expressions);
         org.teiid.language.Expression expr = translate(criteria.getExpression());
         if (convertIn) {
         	Condition condition = null;
@@ -545,8 +544,14 @@ public class LanguageBridgeFactory {
         	return translate((Criteria)expr);
         } else if (expr instanceof WindowFunction) {
         	return translate((WindowFunction)expr);
+        } else if (expr instanceof Array) {
+        	return translate((Array)expr);
         }
         throw new AssertionError();
+    }
+    
+    org.teiid.language.Array translate(Array array) {
+    	return new org.teiid.language.Array(array.getBaseType(), translateExpressionList(array.getExpressions()));
     }
     
     org.teiid.language.WindowFunction translate(WindowFunction windowFunction) {
@@ -556,17 +561,23 @@ public class LanguageBridgeFactory {
     	ws.setOrderBy(translate(windowFunction.getWindowSpecification().getOrderBy(), false));
     	List<Expression> partition = windowFunction.getWindowSpecification().getPartition();
     	if (partition != null) {
-	    	ArrayList<org.teiid.language.Expression> partitionList = new ArrayList<org.teiid.language.Expression>(partition.size());
-	    	for (Expression ex : partition) {
-	    		partitionList.add(translate(ex));
-	    	}
+	    	ArrayList<org.teiid.language.Expression> partitionList = translateExpressionList(partition);
 	    	ws.setPartition(partitionList);
     	}
     	result.setWindowSpecification(ws);
     	return result;
     }
+
+	private ArrayList<org.teiid.language.Expression> translateExpressionList(
+			Collection<? extends Expression> list) {
+		ArrayList<org.teiid.language.Expression> result = new ArrayList<org.teiid.language.Expression>(list.size());
+		for (Expression ex : list) {
+			result.add(translate(ex));
+		}
+		return result;
+	}
     
-    org.teiid.language.Expression translate(Constant constant) {
+	org.teiid.language.Expression translate(Constant constant) {
     	if (constant.isMultiValued()) {
     		Parameter result = new Parameter();
     		result.setType(constant.getType());
@@ -574,6 +585,33 @@ public class LanguageBridgeFactory {
     		allValues.add(values);
     		result.setValueIndex(valueIndex++);
     		return result;
+    	}
+    	if (constant.getValue() instanceof ArrayValue) {
+    		//TODO: we could check if there is a common base type (also needs to be in the dependent logic)
+    		// and expand binding options in the translators
+
+    		//we currently support the notion of a mixed type array, since we consider object a common base type
+    		//that will not work for all sources, so instead of treating this a single array (as commented out below),
+    		//we just turn it into an array of parameters
+    		//Literal result = new Literal(av.getValues(), org.teiid.language.Array.class);
+    		//result.setBindEligible(constant.isBindEligible());
+            //return result;
+
+    		ArrayValue av = (ArrayValue)constant.getValue();
+    		List<Constant> vals = new ArrayList<Constant>();
+    		Class<?> baseType = null;
+    		for (Object o : av.getValues()) {
+    			Constant c = new Constant(o);
+    			c.setBindEligible(constant.isBindEligible());
+    			vals.add(c);
+    			if (baseType == null) {
+    				baseType = c.getType();
+    			} else if (!baseType.equals(c.getType())) {
+					baseType = DataTypeManager.DefaultDataClasses.OBJECT;
+				}
+    		}
+    		return new org.teiid.language.Array(baseType, translateExpressionList(vals));
+    		
     	}
         Literal result = new Literal(constant.getValue(), constant.getType());
         result.setBindEligible(constant.isBindEligible());

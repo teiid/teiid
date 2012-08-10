@@ -50,6 +50,7 @@ import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Reference;
@@ -185,9 +186,23 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
                 
                 public void visit(DependentSetCriteria obj) {
-                    if (!obj.isNegated() && checkForInput(obj.getExpression())) {
-                        addInputNode((Reference)obj.getExpression());
+                    if (obj.isNegated()) {
+                    	return; //just a sanity check
                     }
+                	if (obj.hasMultipleAttributes()) {
+                		for (AttributeComparison comp : obj.getAttributes()) {
+                			if (!checkForInput(comp.dep)) {
+                				return;
+                			}
+                		}
+                		for (AttributeComparison comp : obj.getAttributes()) {
+                			params.add(((Reference)comp.dep).getExpression());
+                		}
+                		conjuncts.add(crit);
+                        NodeEditor.removeChildNode(currentNode.getParent(), currentNode);
+                	} else if (checkForInput(obj.getExpression())) {
+                		addInputNode((Reference)obj.getExpression());
+                	}
                 }
                 
                 boolean checkForInput(Expression expr) {
@@ -218,7 +233,9 @@ public class RulePlanProcedures implements OptimizerRule {
                 }
                 
             };
-            crit.acceptVisitor(visitor);
+            for (Criteria conjunct : Criteria.separateCriteriaByAnd(crit)) {
+                conjunct.acceptVisitor(visitor);
+            }
         }
     }
     

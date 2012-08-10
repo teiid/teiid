@@ -447,4 +447,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean isForkable() {
 		return delegate.isForkable();
 	}
+	@Override
+	public boolean supportsArrayType() {
+		return delegate.supportsArrayType();
+	}
 }

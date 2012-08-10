@@ -22,10 +22,11 @@
 
 package org.teiid.query.processor.relational;
 
+import java.util.List;
+
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.util.ValueIterator;
 
 
@@ -63,11 +64,19 @@ class TupleSourceValueIterator implements ValueIterator{
 	 * @see java.util.Iterator#next()
 	 */
 	public Object next() throws TeiidComponentException{
-	    try {
-            return tupleSourceIterator.nextTuple().get(columnIndex);
+	    return nextTuple().get(columnIndex);
+	}
+
+	protected List<?> nextTuple() throws TeiidComponentException {
+		try {
+            return tupleSourceIterator.nextTuple();
         } catch (TeiidProcessingException e) {
              throw new TeiidComponentException(e);
         }
+	}
+	
+	public void close() {
+		this.tupleSourceIterator.closeSource();
 	}
     
 	/**

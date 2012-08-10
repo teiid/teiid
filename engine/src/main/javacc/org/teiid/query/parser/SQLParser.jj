@@ -1874,7 +1874,7 @@ Into into(ParseInfo info) :
 /*
 name=select clause
 description=The columns returned by a query.  Can optionally be distinct.
-example={code:sql}SELECT *{code}\n{code:sql}"SELECT DISTINCT a, b, c{code}
+example={code:sql}SELECT *{code}\n{code:sql}SELECT DISTINCT a, b, c{code}
  */
 Select select(ParseInfo info) :
 {

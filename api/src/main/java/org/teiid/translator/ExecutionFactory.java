@@ -1027,5 +1027,13 @@ public class ExecutionFactory<F, C> {
 	public boolean isForkable() {
 		return true;
 	}
+	
+	/**
+	 * The engine currently uses array types for dependent joins.
+	 * @return true if an array type is supported.
+	 */
+	public boolean supportsArrayType() {
+		return false;
+	}
 
 }

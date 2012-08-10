@@ -2041,6 +2041,13 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
     	append(Tokens.RPAREN);	
     }
+    
+    @Override
+    public void visit(Array array) {
+    	append(Tokens.LPAREN);
+    	registerNodes(array.getExpressions(), 0);
+    	append(Tokens.RPAREN);
+    }
 
     public static String escapeSinglePart( String part ) {
         if (isReservedWord(part)) {

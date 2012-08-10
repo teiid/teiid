@@ -22,6 +22,8 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -37,6 +39,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
@@ -47,8 +50,10 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -56,6 +61,7 @@ import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 
@@ -111,19 +117,23 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     deadNodes.add(critNode);
 	                continue;
 	            }
-	            pushTowardOriginatingNode(sourceNode, critNode, metadata, capFinder);
-	            
-                boolean moved = false;
+	            boolean moved = pushTowardOriginatingNode(sourceNode, critNode, metadata, capFinder);
                 
                 if(critNode.hasBooleanProperty(Info.IS_PUSHED) || (critNode.getGroups().isEmpty() && critNode.getSubqueryContainers().isEmpty()) || !atBoundary(critNode, sourceNode)) {
                     deadNodes.add(critNode);
+                    movedAnyNode |= moved;
                     continue;
                 }
                
                 switch (sourceNode.getType()) {
                     case NodeConstants.Types.SOURCE:
                     {
-                        moved = pushAcrossFrame(sourceNode, critNode, metadata);
+                        Boolean acrossFrame = pushAcrossFrame(sourceNode, critNode, metadata);
+                        if (acrossFrame != null) {
+                        	moved = acrossFrame;
+                        } else {
+                        	movedAnyNode = true; //new nodes created
+                        }
                         break;
                     }
                     case NodeConstants.Types.JOIN:
@@ -136,7 +146,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     }
                     case NodeConstants.Types.GROUP:
                     {
-                    	moved = pushAcrossGroupBy(sourceNode, critNode, metadata, true);
+                    	moved = pushAcrossGroupBy(sourceNode, critNode, metadata, true, capFinder);
                     }
                 }
                 
@@ -152,23 +162,24 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	}
 
 	boolean pushAcrossGroupBy(PlanNode sourceNode,
-			PlanNode critNode, QueryMetadataInterface metadata, boolean inPlan)
-			throws QueryPlannerException {
+			PlanNode critNode, QueryMetadataInterface metadata, boolean inPlan, CapabilitiesFinder capFinder)
+			throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+		if (critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
+			return false;
+		}
 		boolean moved = false;
-		if (!critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
-			SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
-			FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);
-			if (inPlan) {
-				NodeEditor.removeChildNode(critNode.getParent(), critNode);
-			    sourceNode.getFirstChild().addAsParent(critNode);
-			}
-			moved = true;
-			if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
-				PlanNode accessNode = NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS);
-				if (accessNode != null) {
-					markDependent(critNode, accessNode);
-					moved = false; //terminal position
-				}
+		SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+		FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);
+		if (inPlan) {
+			NodeEditor.removeChildNode(critNode.getParent(), critNode);
+		    sourceNode.getFirstChild().addAsParent(critNode);
+		}
+		moved = true;
+		if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
+			PlanNode accessNode = NodeEditor.findParent(critNode, NodeConstants.Types.ACCESS);
+			if (accessNode != null) {
+				markDependent(critNode, accessNode, metadata, capFinder);
+				moved = false; //terminal position
 			}
 		}
 		return moved;
@@ -230,14 +241,13 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             if (jt == JoinType.JOIN_CROSS) {
                 joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_INNER);
             }
+            return moveCriteriaIntoOnClause(critNode, joinNode);
+        }
+        JoinType optimized = JoinUtil.optimizeJoinType(critNode, joinNode, metadata);
+        
+        if (optimized == JoinType.JOIN_INNER) {
             moveCriteriaIntoOnClause(critNode, joinNode);
-        } else {
-            JoinType optimized = JoinUtil.optimizeJoinType(critNode, joinNode, metadata);
-            
-            if (optimized == JoinType.JOIN_INNER) {
-                moveCriteriaIntoOnClause(critNode, joinNode);
-                return true; //return true since the join type has changed
-            }
+            return true; //return true since the join type has changed
         }
         return false;
     }
@@ -246,8 +256,10 @@ public final class RulePushSelectCriteria implements OptimizerRule {
      * @param critNode
      * @param joinNode
      */
-    private void moveCriteriaIntoOnClause(PlanNode critNode,
+    private boolean moveCriteriaIntoOnClause(PlanNode critNode,
                                           PlanNode joinNode) {
+        NodeEditor.removeChildNode(critNode.getParent(), critNode);
+
         List joinCriteria = (List)joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
         Criteria criteria = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
         
@@ -257,13 +269,52 @@ public final class RulePushSelectCriteria implements OptimizerRule {
             joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
         }
         
-        if (!joinCriteria.contains(criteria)) {
-            joinCriteria.add(criteria);
-            if(critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
-                joinNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
-            }
+        if (joinCriteria.contains(criteria)) {
+        	return false;
         }
-        NodeEditor.removeChildNode(critNode.getParent(), critNode);
+        boolean moved = false;
+    	if(critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
+    		if (criteria instanceof DependentSetCriteria) {
+    			DependentSetCriteria dsc = (DependentSetCriteria)criteria;
+    			if (dsc.hasMultipleAttributes()) {
+    				//split the array based upon the join children.
+    				List<DependentSetCriteria.AttributeComparison> joinExprs = new ArrayList<DependentSetCriteria.AttributeComparison>();
+    				List<DependentSetCriteria.AttributeComparison> leftExprs = new ArrayList<DependentSetCriteria.AttributeComparison>();
+    				List<DependentSetCriteria.AttributeComparison> rightExprs = new ArrayList<DependentSetCriteria.AttributeComparison>();
+    				PlanNode leftJoinSource = FrameUtil.findJoinSourceNode(joinNode.getFirstChild());
+    				PlanNode rightJoinSource = FrameUtil.findJoinSourceNode(joinNode.getLastChild());
+    				for (int i = 0; i < dsc.getAttributes().size(); i++) {
+    					DependentSetCriteria.AttributeComparison comp = dsc.getAttributes().get(i);
+    					Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(comp.dep);
+    					if (leftJoinSource.getGroups().containsAll(groups)) {
+    						leftExprs.add(comp);
+    					} else if (rightJoinSource.getGroups().containsAll(groups)){
+    						rightExprs.add(comp);
+    					} else {
+    						joinExprs.add(comp);
+    					}
+    				}
+    				criteria = RuleChooseDependent.createDependentSetCriteria(dsc.getContextSymbol(), joinExprs);
+    				PlanNode left = RuleChooseDependent.createDependentSetNode(dsc.getContextSymbol(), leftExprs);
+    				if (left != null) {
+    					moved = true;
+    					joinNode.getFirstChild().addAsParent(left);
+    				}
+    				PlanNode right = RuleChooseDependent.createDependentSetNode(dsc.getContextSymbol(), rightExprs);
+    				if (right != null) {
+    					moved = true;
+    					joinNode.getLastChild().addAsParent(right);
+    				}
+    			}
+    		}
+    		if (criteria != null) {
+    			joinNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+    		}
+        }
+    	if (criteria != null) {
+    		joinCriteria.add(criteria);
+    	}
+        return moved;
     }
 
     /**
@@ -275,7 +326,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
      * @throws QueryMetadataException
      * @throws TeiidComponentException
      */
-    void pushTowardOriginatingNode(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder)
+    boolean pushTowardOriginatingNode(PlanNode sourceNode, PlanNode critNode, final QueryMetadataInterface metadata, final CapabilitiesFinder capFinder)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
     	boolean groupSelects = sourceNode.getParent().getType() == NodeConstants.Types.SELECT && sourceNode.getChildCount() == 0;
@@ -284,18 +335,74 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         while (sourceNode.getParent().getType() == NodeConstants.Types.SELECT) {
             sourceNode = sourceNode.getParent();
             if (sourceNode == critNode) {
-                return;
+                return false;
             }
         }
 
 		// See how far we can move it towards the SOURCE node
-		PlanNode destination = examinePath(critNode, sourceNode, metadata, capFinder);
+		final PlanNode destination = examinePath(critNode, sourceNode, metadata, capFinder);
+		boolean result = false;
+		if (createdNodes == null & destination.getType() == NodeConstants.Types.ACCESS && isDependentFinalDestination(critNode, destination)) {
+    		Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+    		if (isMultiAttributeDependentSet(crit)) {
+    			result = splitSet(critNode, new DependentNodeTest() {
+					
+					@Override
+					public boolean isValid(PlanNode copyNode) throws QueryMetadataException,
+							QueryPlannerException, TeiidComponentException {
+						return RuleRaiseAccess.canRaiseOverSelect(destination, metadata, capFinder, copyNode, null);
+					}
+				}, (DependentSetCriteria)crit, destination); 
+    		}
+		}
+		
         NodeEditor.removeChildNode(critNode.getParent(), critNode);
         destination.addAsParent(critNode);
         if (groupSelects && destination == sourceNode) {
         	//Help with the detection of composite keys in pushed criteria
         	RuleMergeCriteria.mergeChain(critNode, metadata);
         }
+        
+        return result;
+	}
+    
+    private interface DependentNodeTest {
+    	boolean isValid(PlanNode copyNode) throws QueryMetadataException, QueryPlannerException, TeiidComponentException;
+    }
+
+	private boolean splitSet(PlanNode critNode, DependentNodeTest test, DependentSetCriteria dscOrig, PlanNode destination)
+			throws QueryMetadataException, TeiidComponentException,
+			QueryPlannerException {
+		boolean result = false;
+		List<DependentSetCriteria> dscList = splitDependentSetCriteria(dscOrig);
+		List<DependentSetCriteria.AttributeComparison> pushable = new ArrayList<AttributeComparison>();
+		List<DependentSetCriteria.AttributeComparison> nonPushable = new ArrayList<AttributeComparison>();
+		for (DependentSetCriteria dsc : dscList) {
+			PlanNode copyNode = copyNode(critNode);
+			setCriteria(dsc, copyNode);
+			if (test.isValid(copyNode)) {
+				pushable.add(dsc.getAttributes().get(0));
+		   } else {
+		    	nonPushable.add(dsc.getAttributes().get(0));
+		    }
+		}
+		if (!pushable.isEmpty()) {
+			result = true; //signal that we should run again
+			if (nonPushable.isEmpty()) {
+				throw new AssertionError("should not be completely pushed"); //$NON-NLS-1$
+			}
+			setCriteria(RuleChooseDependent.createDependentSetCriteria(dscOrig.getContextSymbol(), nonPushable), critNode);
+			PlanNode copyNode = copyNode(critNode);
+			setCriteria(RuleChooseDependent.createDependentSetCriteria(dscOrig.getContextSymbol(), pushable), copyNode);
+			destination.addAsParent(copyNode); //it should be pushed in the next run
+		}
+		return result;
+	}
+
+	private void setCriteria(DependentSetCriteria dsc, PlanNode copyNode) {
+		copyNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, dsc);
+		copyNode.getGroups().clear();
+		copyNode.addGroups(GroupsUsedByElementsVisitor.getGroups(dsc));
 	}
 
     /**
@@ -329,12 +436,10 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     	satisfyAccessPatterns(critNode, currentNode);
                     }
 
-                    if (critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)
-                    		&& NodeEditor.findNodePreOrder(currentNode.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE) == null) {
+                    if (isDependentFinalDestination(critNode, currentNode)) {
                         //once a dependent crit node is pushed, don't bother pushing it further into the command
                         //dependent access node will use this as an assumption for where dependent sets can appear in the command
-                        critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
-                        currentNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+                    	markDependent(critNode,currentNode, metadata, capFinder);
                         return currentNode.getFirstChild();
                     } 
 				} catch(QueryMetadataException e) {
@@ -373,17 +478,45 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		return sourceNode;
 	}
 
-	private void markDependent(PlanNode critNode, PlanNode accessNode) {
+	private boolean isMultiAttributeDependentSet(Criteria crit) {
+		return crit instanceof DependentSetCriteria && ((DependentSetCriteria)crit).hasMultipleAttributes();
+	}
+
+	private boolean isDependentFinalDestination(PlanNode critNode,
+			PlanNode currentNode) {
+		return critNode.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)
+				&& NodeEditor.findNodePreOrder(currentNode.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE) == null;
+	}
+
+	private void markDependent(PlanNode critNode, PlanNode accessNode, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
 		//once a dependent crit node is pushed, don't bother pushing it further into the command
 		//dependent access node will use this as an assumption for where dependent sets can appear in the command
 		critNode.setProperty(NodeConstants.Info.IS_PUSHED, Boolean.TRUE);
-		if (createdNodes == null) {
-			accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+		if (createdNodes != null) {
+			return; //this is during a planning run and should not cause additional side-effects
+		}
+		accessNode.setProperty(NodeConstants.Info.IS_DEPENDENT_SET, Boolean.TRUE);
+		Criteria crit = (Criteria) critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+		if (isMultiAttributeDependentSet(crit) 
+				&& !CapabilitiesUtil.supports(Capability.ARRAY_TYPE, RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata), metadata, capFinder)) {
+			//split the criteria into individual predicates
+			List<DependentSetCriteria> crits = splitDependentSetCriteria((DependentSetCriteria) crit);
+			critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompoundCriteria(crits));
 		}
 	}
 
-	boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata)
-		throws QueryPlannerException {
+	private List<DependentSetCriteria> splitDependentSetCriteria(DependentSetCriteria dsc) {
+		List<AttributeComparison> attributes = dsc.getAttributes();
+		List<DependentSetCriteria> crits = new ArrayList<DependentSetCriteria>(attributes.size());
+		for (int i = 0; i < attributes.size(); i++) {
+			DependentSetCriteria.AttributeComparison comp = attributes.get(i);
+			crits.add(RuleChooseDependent.createDependentSetCriteria(dsc.getContextSymbol(), Arrays.asList(comp)));
+		}
+		return crits;
+	}
+
+	Boolean pushAcrossFrame(PlanNode sourceNode, PlanNode critNode, QueryMetadataInterface metadata)
+		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         //ensure that the criteria can be pushed further
         if (sourceNode.getChildCount() == 1 && FrameUtil.isOrderedOrStrictLimit(sourceNode.getFirstChild())) {
@@ -427,26 +560,42 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		return true;
 	}
 
-	boolean moveNodeAcrossFrame(PlanNode critNode, PlanNode sourceNode, QueryMetadataInterface metadata)
-		throws QueryPlannerException {
+	Boolean moveNodeAcrossFrame(PlanNode critNode, PlanNode sourceNode, final QueryMetadataInterface metadata)
+		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
 	      // Check that sourceNode has a child to push across
         if(sourceNode.getChildCount() == 0) {
             return false;
         }
 
-        PlanNode projectNode = NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+        final PlanNode projectNode = NodeEditor.findNodePreOrder(sourceNode.getFirstChild(), NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
         if(FrameUtil.isProcedure(projectNode)) {
             return false;
         }
         
-        SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
+        final SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
         
-        if (!createConvertedSelectNode(critNode, sourceNode.getGroups().iterator().next(), projectNode, symbolMap, metadata)) {
+        final GroupSymbol sourceGroup = sourceNode.getGroups().iterator().next();
+		if (!placeConvertedSelectNode(critNode, sourceGroup, projectNode, symbolMap, metadata)) {
+        	if (createdNodes == null) {
+        		Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+        		if (isMultiAttributeDependentSet(crit) && splitSet(critNode, new DependentNodeTest() {
+        					
+        					@Override
+        					public boolean isValid(PlanNode copyNode) throws QueryMetadataException,
+        							QueryPlannerException, TeiidComponentException {
+        						return createConvertedSelectNode(copyNode, sourceGroup, projectNode, symbolMap, metadata) != null;
+        					}
+        				}, (DependentSetCriteria)crit, sourceNode)) {
+        			return null;
+        		}
+        	}
             return false;
         }
 		
-        satisfyAccessPatterns(critNode, sourceNode);
+        if (createdNodes == null) {
+        	satisfyAccessPatterns(critNode, sourceNode);
+        }
         
 		// Mark critNode as a "phantom"
 		critNode.setProperty(NodeConstants.Info.IS_PHANTOM, Boolean.TRUE);
@@ -537,7 +686,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         // Find source node above union and grab the symbol map
         PlanNode sourceNode = NodeEditor.findParent(setOp, NodeConstants.Types.SOURCE);
         GroupSymbol virtualGroup = sourceNode.getGroups().iterator().next();
-        satisfyAccessPatterns(critNode, sourceNode);
+        if (createdNodes == null) {
+        	satisfyAccessPatterns(critNode, sourceNode);
+        }
         
         SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
         SymbolMap childMap = symbolMap;
@@ -557,7 +708,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	        }
 		    
 			// Move the node
-			if(createConvertedSelectNode(critNode, virtualGroup, projectNode, childMap, metadata)) {
+			if(placeConvertedSelectNode(critNode, virtualGroup, projectNode, childMap, metadata)) {
                 movedCount++;
             }
 			
@@ -584,14 +735,32 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
 	}
 
-    private boolean createConvertedSelectNode(PlanNode critNode,
+    private boolean placeConvertedSelectNode(PlanNode critNode,
     							   GroupSymbol sourceGroup,
                                    PlanNode projectNode,
                                    SymbolMap symbolMap,
                                    QueryMetadataInterface metadata) throws QueryPlannerException {
-        // If projectNode has children, then it is from a SELECT without a FROM and the criteria should not be pushed
+        PlanNode copyNode = createConvertedSelectNode(critNode, sourceGroup,
+				projectNode, symbolMap, metadata);
+        if (copyNode == null) {
+        	return false;
+        }
+        
+        PlanNode intermediateParent = NodeEditor.findParent(projectNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
+        if (intermediateParent != null) {
+            intermediateParent.addAsParent(copyNode);
+        } else {
+        	projectNode.getFirstChild().addAsParent(copyNode);
+        }
+		return true;
+    }
+
+	private PlanNode createConvertedSelectNode(PlanNode critNode,
+			GroupSymbol sourceGroup, PlanNode projectNode, SymbolMap symbolMap,
+			QueryMetadataInterface metadata) throws QueryPlannerException {
+		// If projectNode has children, then it is from a SELECT without a FROM and the criteria should not be pushed
         if(projectNode.getChildCount() == 0) {
-            return false;
+            return null;
         }
         List<WindowFunction> windowFunctions = null;
         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
@@ -603,12 +772,12 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         Boolean conversionResult = checkConversion(symbolMap, ElementCollectorVisitor.getElements(crit, true), windowFunctions);
         
         if (conversionResult == Boolean.FALSE) {
-        	return false; //not convertable
+        	return null; //not convertable
         }
         
         if (!critNode.getSubqueryContainers().isEmpty() 
         		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements(), windowFunctions) != null) {
-    		return false; //not convertable, or has an aggregate for a correlated reference
+    		return null; //not convertable, or has an aggregate for a correlated reference
         }
         
         PlanNode copyNode = copyNode(critNode);
@@ -624,17 +793,10 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         	if (this.createdNodes != null) {
         		this.createdNodes.remove(this.createdNodes.size() - 1);
         	}
-        	return false;
+        	return null;
         }
-        
-        PlanNode intermediateParent = NodeEditor.findParent(projectNode, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE | NodeConstants.Types.SET_OP);
-        if (intermediateParent != null) {
-            intermediateParent.addAsParent(copyNode);
-        } else {
-        	projectNode.getFirstChild().addAsParent(copyNode);
-        }
-		return true;
-    }
+		return copyNode;
+	}
 
 	private Boolean checkConversion(SymbolMap symbolMap,
 			Collection<ElementSymbol> elements, List<WindowFunction> windowFunctions) {

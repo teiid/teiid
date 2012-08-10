@@ -160,8 +160,12 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         buffer.append(Tokens.SPACE);
         buffer.append(obj.getOperator());
         buffer.append(Tokens.SPACE);
-        append(obj.getRightExpression());
+        appendRightComparison(obj);
     }
+
+	protected void appendRightComparison(Comparison obj) {
+		append(obj.getRightExpression());
+	}
 
     public void visit(AndOr obj) {
         String opString = obj.getOperator().toString();
@@ -941,6 +945,13 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     		append(windowSpecification.getOrderBy());
     	}
     	buffer.append(Tokens.RPAREN);    	
+    }
+    
+    @Override
+    public void visit(Array array) {
+    	buffer.append(Tokens.LPAREN);
+    	append(array.getExpressions());
+    	buffer.append(Tokens.RPAREN);
     }
  
     /**

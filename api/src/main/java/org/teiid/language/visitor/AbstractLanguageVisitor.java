@@ -121,4 +121,6 @@ public abstract class AbstractLanguageVisitor implements LanguageObjectVisitor {
     public void visit(With obj) {}
     @Override
     public void visit(WithItem obj) {}
+    @Override
+    public void visit(Array array) {}
 }

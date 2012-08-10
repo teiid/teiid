@@ -70,11 +70,6 @@ public class SubquerySetCriteria extends AbstractSetCriteria implements Subquery
     	return id;
     }
     
-    @Override
-    public Expression getValueExpression() {
-    	return null;
-    }
-
     /**
      * Set the subquery command (either a SELECT or a procedure execution).
      * @param command Command to execute to get the values for the criteria

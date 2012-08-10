@@ -72,11 +72,6 @@ public class ScalarSubquery implements Expression, SubqueryContainer<QueryComman
     	return id;
     }
     
-    @Override
-    public Expression getValueExpression() {
-    	return null;
-    }
-
     /**
      * @see org.teiid.query.sql.symbol.Expression#getType()
      */
