@@ -149,6 +149,9 @@ public class SSLConfiguration {
     
 	public void setEnabledCipherSuites(String enabledCipherSuites) {
 		this.enabledCipherSuites = enabledCipherSuites.split(","); //$NON-NLS-1$
+		for (int i = 0; i < this.enabledCipherSuites.length; i++) {
+			this.enabledCipherSuites[i] = this.enabledCipherSuites[i].trim();
+		}
 	}    
 	
 	public String[] getEnabledCipherSuitesAsArray() {
