@@ -56,7 +56,7 @@ public class TestMetadataValidator {
 		this.vdb.addAttchment(TransformationMetadata.class, metadata);
 	}
 
-	private static ModelMetaData buildModel(String modelName, boolean physical, VDBMetaData vdb, MetadataStore store, String ddl) throws Exception {
+	public static ModelMetaData buildModel(String modelName, boolean physical, VDBMetaData vdb, MetadataStore store, String ddl) throws Exception {
 		ModelMetaData model = new ModelMetaData();
 		model.setName(modelName); 	
 		model.setModelType(physical?Model.Type.PHYSICAL:Model.Type.VIRTUAL);

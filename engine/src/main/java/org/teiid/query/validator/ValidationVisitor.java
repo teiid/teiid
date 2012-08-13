@@ -52,6 +52,7 @@ import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.SupportConstants;
+import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
@@ -137,6 +138,9 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	validateNoXMLUpdates(obj);
         GroupSymbol group = obj.getGroup();
         validateGroupSupportsUpdate(group);
+        if (obj.getUpdateInfo() != null && obj.getUpdateInfo().isInherentDelete()) {
+        	validateUpdate(obj, Command.TYPE_DELETE, obj.getUpdateInfo());
+        }
     }
 
     public void visit(GroupBy obj) {
@@ -172,6 +176,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	validateMultisourceInsert(obj.getGroup());
         }
         if (obj.getUpdateInfo() != null && obj.getUpdateInfo().isInherentInsert()) {
+        	validateUpdate(obj, Command.TYPE_INSERT, obj.getUpdateInfo());
         	try {
 				if (obj.getUpdateInfo().findInsertUpdateMapping(obj, false) == null) {
 					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30376, obj.getVariables()), obj);
@@ -711,6 +716,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 } 
 		    }
             if (info != null && info.isInherentUpdate()) {
+            	validateUpdate(update, Command.TYPE_UPDATE, info);
             	Set<ElementSymbol> updateCols = update.getChangeList().getClauseMap().keySet();
             	if (!info.hasValidUpdateMapping(updateCols)) {
             		handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30376, updateCols), update);
@@ -722,6 +728,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         
         validateSetClauseList(update.getChangeList());
     }
+
+	private void validateUpdate(TargetedCommand update, int type, UpdateInfo info) {
+		String error = ProcedureContainerResolver.validateUpdateInfo(update.getGroup(), type, info);
+		if (error != null) {
+			handleValidationError(error, update.getGroup());
+		}
+	}
     
     /**
      * Validates SELECT INTO queries.

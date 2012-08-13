@@ -140,7 +140,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         
         resolveProceduralCommand(procCommand, metadata);
         
-        getPlan(metadata, procCommand);
+        //getPlan(metadata, procCommand);
     }
 
 	private String getPlan(QueryMetadataInterface metadata, ProcedureContainer procCommand)
@@ -151,32 +151,43 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
             if (plan == null && !metadata.isProcedure(procCommand.getGroup().getMetadataID())) {
             	int type = procCommand.getType();
             	//force validation
-            	getUpdateInfo(procCommand.getGroup(), metadata, type);
+            	getUpdateInfo(procCommand.getGroup(), metadata, type, true);
             }
             return plan;
         }
 		return null;
 	}
 	
-	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
+	public static UpdateInfo getUpdateInfo(GroupSymbol group, QueryMetadataInterface metadata, int type, boolean validate) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 		UpdateInfo info = getUpdateInfo(group, metadata);
 		
 		if (info == null) {
 			return null;
 		}
-    	
-    	if ((info.isDeleteValidationError() && type == Command.TYPE_DELETE) 
-				|| (info.isUpdateValidationError() && type == Command.TYPE_UPDATE) 
-				|| (info.isInsertValidationError() && type == Command.TYPE_INSERT)) {
-    		String name = "Delete"; //$NON-NLS-1$
-    		if (type == Command.TYPE_UPDATE) {
-    			name = "Update"; //$NON-NLS-1$
-    		} else if (type == Command.TYPE_INSERT) {
-    			name = "Insert"; //$NON-NLS-1$
+    	if (validate) {
+    		String error = validateUpdateInfo(group, type, info);
+    		if (error != null) {
+    			throw new QueryResolverException(QueryPlugin.Event.TEIID30061, error);
     		}
-			 throw new QueryResolverException(QueryPlugin.Event.TEIID30061, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30061, group, name));
-		}
+    	}
     	return info;
+	}
+
+	public static String validateUpdateInfo(GroupSymbol group, int type,
+			UpdateInfo info) {
+		String error = info.getDeleteValidationError();
+		String name = "Delete"; //$NON-NLS-1$
+		if (type == Command.TYPE_UPDATE) {
+			error = info.getUpdateValidationError();
+			name = "Update"; //$NON-NLS-1$
+		} else if (type == Command.TYPE_INSERT) {
+			error = info.getInsertValidationError();
+			name = "Insert"; //$NON-NLS-1$
+		}
+		if (error != null) {
+			return QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30061, group, name, error);
+		}
+		return null;
 	}
 
 	public static UpdateInfo getUpdateInfo(GroupSymbol group,
@@ -204,7 +215,7 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
         ResolverUtil.resolveGroup(group, metadata);
-        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType()));
+        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
     }
 
     public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols) {

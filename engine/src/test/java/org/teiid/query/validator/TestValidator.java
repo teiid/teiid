@@ -1724,5 +1724,23 @@ public class TestValidator {
 	@Test public void testInvalidCorrelation() {
 		helpValidate("SELECT XMLELEMENT(NAME metadata, XMLFOREST(e1 AS objectName), (SELECT XMLAGG(XMLELEMENT(NAME subTypes, XMLFOREST(e1))) FROM pm1.g2 AS b WHERE b.e2 = a.e2)) FROM pm1.g1 AS a GROUP BY e1", new String[] {"a.e2"}, RealMetadataFactory.example1Cached());
 	}
+    
+    @Test public void testUpdateError() {
+        String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{"vm1.g2", "UPDATE vm1.g2 SET e1 = 'x'"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testInsertError() {
+        String userUpdateStr = "INSERT into vm1.g2 (e1) values ('x')"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{"vm1.g2", "INSERT INTO vm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testDeleteError() {
+        String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{"vm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
 	
 }

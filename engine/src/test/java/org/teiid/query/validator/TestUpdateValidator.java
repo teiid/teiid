@@ -72,9 +72,9 @@ public class TestUpdateValidator {
 			ResolverUtil.resolveGroup(gs, md);
 			uv.validate(command, ResolverUtil.resolveElementsInGroup(gs, md));
 			UpdateInfo info = uv.getUpdateInfo();
-			assertEquals(uv.getReport().getFailureMessage(), failInsert, info.isInsertValidationError());
-			assertEquals(uv.getReport().getFailureMessage(), failUpdate, info.isUpdateValidationError());
-			assertEquals(uv.getReport().getFailureMessage(), failDelete, info.isDeleteValidationError());
+			assertEquals(uv.getReport().getFailureMessage(), failInsert, info.getInsertValidationError() != null);
+			assertEquals(uv.getReport().getFailureMessage(), failUpdate, info.getUpdateValidationError() != null);
+			assertEquals(uv.getReport().getFailureMessage(), failDelete, info.getDeleteValidationError() != null);
 			return uv;
 		} catch (TeiidException e) {
 			throw new RuntimeException(e);

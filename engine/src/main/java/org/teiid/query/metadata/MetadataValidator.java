@@ -27,11 +27,13 @@ import java.util.Set;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
@@ -179,11 +181,21 @@ public class MetadataValidator {
 			}
 		}
 	}	
-	
+
 	public void log(ValidatorReport report, ModelMetaData model, String msg) {
-		model.addRuntimeError(msg);
-		LogManager.logWarning(LogConstants.CTX_QUERY_RESOLVER, msg);
-		report.handleValidationError(msg);
+		log(report, model, Severity.ERROR, msg);
+	}
+	
+	public void log(ValidatorReport report, ModelMetaData model, Severity severity, String msg) {
+		model.addRuntimeMessage(severity, msg);
+		int messageLevel = MessageLevel.WARNING;
+		if (severity == Severity.ERROR) {
+			report.handleValidationError(msg);
+		} else {
+			messageLevel = MessageLevel.INFO;
+			report.handleValidationWarning(msg);
+		}
+		LogManager.log(messageLevel, LogConstants.CTX_QUERY_RESOLVER, msg);
 	}
 	
     private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report) {
@@ -224,9 +236,7 @@ public class MetadataValidator {
     		}
 			if(resolverReport != null && resolverReport.hasItems()) {
 				for (ValidatorFailure v:resolverReport.getItems()) {
-					if (v.getStatus() == ValidatorFailure.Status.ERROR) {
-						log(report, model, v.getMessage());
-					}
+					log(report, model, v.getStatus() == ValidatorFailure.Status.ERROR?Severity.ERROR:Severity.WARNING, v.getMessage());
 				}
 			}
 		} catch (TeiidException e) {

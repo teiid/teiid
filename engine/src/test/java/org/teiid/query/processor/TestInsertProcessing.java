@@ -3,16 +3,20 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TestMetadataValidator;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -54,7 +58,7 @@ public class TestInsertProcessing {
         Command command = helpParse(sql); 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
-        List[] expected = new List[] {   
+        List<?>[] expected = new List[] {   
             Arrays.asList(new Object[] { new Integer(1) }), 
         }; 
         
@@ -69,7 +73,6 @@ public class TestInsertProcessing {
         assertEquals(DataTypeManager.DefaultDataClasses.BIG_INTEGER, value0.getValue().getClass());
         assertEquals(DataTypeManager.DefaultDataClasses.FLOAT, value1.getValue().getClass());
     }
-    
     
     @Test public void testSelectInto_Case5569a_BATCH_NO_BULK_NO() {
         boolean doBatching  = false;
@@ -130,7 +133,7 @@ public class TestInsertProcessing {
 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
-        List[] expected = new List[] {   
+        List<?>[] expected = new List[] {   
             Arrays.asList(new Object[] { new Integer(2) }), 
         }; 
         
@@ -139,7 +142,7 @@ public class TestInsertProcessing {
         // if not doBulkInsert and is doBatching,
         //    check the command hist to ensure it contains the expected commands
         if ( !doBulkInsert && doBatching ) {
-            BatchedUpdateCommand bu = (BatchedUpdateCommand)new ArrayList(dataManager.getCommandHistory()).get(1);
+            BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(1);
             assertEquals(2, bu.getUpdateCommands().size());
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
@@ -174,7 +177,7 @@ public class TestInsertProcessing {
         Command command = helpParse(sql); 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
-        List[] expected = new List[] {   
+        List<?>[] expected = new List[] {   
             Arrays.asList(new Object[] { new Integer(1) }), 
         }; 
         
@@ -208,7 +211,7 @@ public class TestInsertProcessing {
         Command command = helpParse(sql); 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
-        List[] expected = new List[] {   
+        List<?>[] expected = new List[] {   
             Arrays.asList(new Object[] { new Integer(1) }), 
         }; 
         
@@ -285,7 +288,7 @@ public class TestInsertProcessing {
 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
-        List[] expected = new List[] {   
+        List<?>[] expected = new List[] {   
             Arrays.asList(new Object[] { new Integer(2) }), 
         }; 
         
@@ -294,7 +297,7 @@ public class TestInsertProcessing {
         // if not doBulkInsert and is doBatching,
         //    check the command hist to ensure it contains the expected commands
         if ( cap == Capability.BATCHED_UPDATES ) {
-            BatchedUpdateCommand bu = (BatchedUpdateCommand)new ArrayList(dataManager.getCommandHistory()).get(1);
+            BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(1);
             assertEquals(2, bu.getUpdateCommands().size());
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
             assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
@@ -361,7 +364,7 @@ public class TestInsertProcessing {
 
         ProcessorPlan plan = helpGetPlan(command, metadata, capFinder); 
         
-        List[] expected = new List[] {   
+        List<?>[] expected = new List[] {   
             Arrays.asList(new Object[] { new Integer(4) }), 
         }; 
         
@@ -380,7 +383,7 @@ public class TestInsertProcessing {
     @Test public void testInsertIntoVirtualWithQueryExpression() { 
         String sql = "insert into vm1.g1 (e1, e2, e3, e4) select * from pm1.g1"; //$NON-NLS-1$
         
-        List[] expected = new List[] { 
+        List<?>[] expected = new List[] { 
             Arrays.asList(6),
         };    
     
@@ -427,6 +430,29 @@ public class TestInsertProcessing {
         HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
 		dataManager.addData("INSERT INTO g1 (e1) SELECT g2.e1 FROM g2", expected);
+        helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testAutoIncrementView() throws Exception {
+    	VDBMetaData vdb = new VDBMetaData();
+    	MetadataStore store = new MetadataStore();
+    	String ddl = "create foreign table t1 (x integer options (auto_increment true), y string) options (updatable true); \n"
+    		+ "create view v1 (x integer options (auto_increment true), y string) options (updatable true) as select * from t1;";
+    	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
+    	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
+    	vdb.addAttchment(TransformationMetadata.class, tm);
+    	vdb.addAttchment(QueryMetadataInterface.class, tm);
+    	new MetadataValidator().validate(vdb, store);
+    	
+        String sql = "insert into v1 (y) values ('a')"; //$NON-NLS-1$
+        
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, new DefaultCapabilitiesFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List<?>[] expected = new List<?>[] {Arrays.asList(1)};
+		dataManager.addData("INSERT INTO t1 (y) VALUES ('a')", expected);
         helpProcess(plan, dataManager, expected);
     }
 

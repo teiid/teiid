@@ -2470,7 +2470,7 @@ public class QueryRewriter {
 			}
 			insert.setVariables(mappedSymbols);
 			insert.setGroup(mapping.getGroup().clone());
-			insert.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(insert.getGroup(), metadata, Command.TYPE_INSERT));
+			insert.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(insert.getGroup(), metadata, Command.TYPE_INSERT, true));
 			return rewriteInsert(insert);
 		}
 
@@ -2630,7 +2630,7 @@ public class QueryRewriter {
 				update.setCriteria(Criteria.combineCriteria(update.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
 			}
 			//resolve
-			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE));
+			update.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(update.getGroup(), metadata, Command.TYPE_UPDATE, true));
 			return rewriteUpdate(update);
 		} 
 		Query query = (Query)info.getViewDefinition().clone();
@@ -2767,7 +2767,7 @@ public class QueryRewriter {
 			delete.setGroup(mapping.getGroup().clone());
 			//TODO: properly handle correlated references
 			DeepPostOrderNavigator.doVisit(delete, new ExpressionMappingVisitor(mapping.getUpdatableViewSymbols(), true));
-			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE));
+			delete.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(delete.getGroup(), metadata, Command.TYPE_DELETE, true));
 			if (info.getViewDefinition().getCriteria() != null) {
 				delete.setCriteria(Criteria.combineCriteria(delete.getCriteria(), (Criteria)info.getViewDefinition().getCriteria().clone()));
 			}

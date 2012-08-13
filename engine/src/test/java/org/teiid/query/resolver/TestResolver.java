@@ -2416,24 +2416,6 @@ public class TestResolver {
         
         helpResolve(sql);
     }
-    
-    @Test public void testUpdateError() {
-        String userUpdateStr = "UPDATE vm1.g2 SET e1='x'"; //$NON-NLS-1$
-        
-        helpResolveException(userUpdateStr, metadata, "TEIID30061 Update is not allowed on the view vm1.g2: a procedure must be defined to handle the Update."); //$NON-NLS-1$
-    }
-    
-    @Test public void testInsertError() {
-        String userUpdateStr = "INSERT into vm1.g2 (e1) values ('x')"; //$NON-NLS-1$
-        
-        helpResolveException(userUpdateStr, metadata, "TEIID30061 Insert is not allowed on the view vm1.g2: a procedure must be defined to handle the Insert."); //$NON-NLS-1$
-    }
-    
-    @Test public void testDeleteError() {
-        String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
-        
-        helpResolveException(userUpdateStr, metadata, "TEIID30061 Delete is not allowed on the view vm1.g2: a procedure must be defined to handle the Delete."); //$NON-NLS-1$
-    }
                 
     @Test public void testResolveXMLSelect() {
         String procedure = "CREATE VIRTUAL PROCEDURE "; //$NON-NLS-1$

@@ -102,11 +102,11 @@ public class UpdateValidator {
 		private boolean isSimple = true;
 		private UpdateMapping deleteTarget;
 		private UpdateType updateType;
-		private boolean updateValidationError;
+		private String updateValidationError;
 		private UpdateType deleteType;
-		private boolean deleteValidationError;
+		private String deleteValidationError;
 		private UpdateType insertType;
-		private boolean insertValidationError;
+		private String insertValidationError;
 		private Query view;
 		private Map<ElementSymbol, List<Set<Constant>>> partitionInfo;
 		private List<UpdateInfo> unionBranches = new LinkedList<UpdateInfo>();
@@ -221,20 +221,38 @@ public class UpdateValidator {
 			return view;
 		}
 		
-		public boolean isDeleteValidationError() {
+		public String getDeleteValidationError() {
 			return deleteValidationError;
 		}
 		
-		public boolean isInsertValidationError() {
+		public String getInsertValidationError() {
 			return insertValidationError;
 		}
 		
-		public boolean isUpdateValidationError() {
+		public String getUpdateValidationError() {
 			return updateValidationError;
 		}
 		
 		public List<UpdateInfo> getUnionBranches() {
 			return unionBranches;
+		}
+
+		private void setUpdateValidationError(String updateValidationError) {
+			if (this.updateValidationError == null) {
+				this.updateValidationError = updateValidationError;
+			}
+		}
+
+		private void setInsertValidationError(String insertValidationError) {
+			if (this.insertValidationError == null) {
+				this.insertValidationError = insertValidationError;
+			}
+		}
+
+		private void setDeleteValidationError(String deleteValidationError) {
+			if (this.deleteValidationError == null) {
+				this.deleteValidationError = deleteValidationError;
+			}
 		}
 		
 	}
@@ -277,20 +295,23 @@ public class UpdateValidator {
 	private void handleValidationError(String error, boolean update, boolean insert, boolean delete) {
 		if (update && insert && delete) {
 			report.handleValidationError(error);
+			updateInfo.setUpdateValidationError(error);
+			updateInfo.setInsertValidationError(error);
+			updateInfo.setDeleteValidationError(error);
 		} else {
 			if (update) {
 				updateReport.handleValidationError(error);
+				updateInfo.setUpdateValidationError(error);
 			}
 			if (insert) {
 				insertReport.handleValidationError(error);
+				updateInfo.setInsertValidationError(error);
 			}
 			if (delete) {
 				deleteReport.handleValidationError(error);
+				updateInfo.setDeleteValidationError(error);
 			}
 		}
-		updateInfo.updateValidationError |= update;
-		updateInfo.insertValidationError |= insert;
-		updateInfo.deleteValidationError |= delete;
 	}
 	
     public void validate(Command command, List<ElementSymbol> viewSymbols) throws QueryMetadataException, TeiidComponentException {
@@ -324,9 +345,15 @@ public class UpdateValidator {
         		}
             	internalValidate(query, viewSymbols);
         		//accumulate the errors on the first branch - will be checked at resolve time
-        		ui.deleteValidationError |= this.updateInfo.deleteValidationError;
-        		ui.updateValidationError |= this.updateInfo.updateValidationError;
-        		ui.insertValidationError |= this.updateInfo.insertValidationError;
+            	if (this.updateInfo.getDeleteValidationError() != null) {
+            		ui.setDeleteValidationError(this.updateInfo.getDeleteValidationError());
+            	}
+            	if (this.updateInfo.getUpdateValidationError() != null) {
+            		ui.setUpdateValidationError(this.updateInfo.getUpdateValidationError());
+            	}
+            	if (this.updateInfo.getInsertValidationError() != null) {
+            		ui.setInsertValidationError(this.updateInfo.getInsertValidationError());
+            	}
         		if (!first) {
         			ui.unionBranches.add(this.updateInfo);
         			this.updateInfo = ui;
@@ -339,12 +366,15 @@ public class UpdateValidator {
     	internalValidate(command, viewSymbols);
     	if (this.updateInfo.deleteType != UpdateType.INHERENT) {
     		this.deleteReport.getItems().clear();
+    		this.updateInfo.deleteValidationError = null;
     	}
     	if (this.updateInfo.updateType != UpdateType.INHERENT) {
     		this.updateReport.getItems().clear();
+    		this.updateInfo.updateValidationError = null;
     	}
     	if (this.updateInfo.insertType != UpdateType.INHERENT) {
     		this.insertReport.getItems().clear();
+    		this.updateInfo.insertValidationError = null;
     	}
     }
 	
