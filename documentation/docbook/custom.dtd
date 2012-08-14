@@ -1,9 +1,0 @@
-<!ENTITY versionNumber "7.7">
-<!ENTITY copyrightYear "2012">
-<!ENTITY copyrightHolder "Red Hat, Inc.">
-<!ENTITY url "http://www.jboss.org/teiid/">
-<!ENTITY docUrl "&url;/docs.html">
-<!ENTITY javaDocUrl "http://docs.jboss.org/teiid/&versionNumber;/apidocs">
-<!ENTITY desDocUrl "http://www.jboss.org/teiiddesigner/docs.html">
-<!ENTITY jboss-beans "<code>&lt;jboss-install&gt;/standalone/configuration/standalone-teiid.xml</code>">
-<!ENTITY metadata-update-note "<note><para>A <code>MetadataRepository</code> must be configured to make a non-temporary metadata update persistent. See the Developers Guide Runtime Metadata Updates section for more.</para></note>">
