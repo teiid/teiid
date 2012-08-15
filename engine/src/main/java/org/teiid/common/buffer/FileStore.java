@@ -42,6 +42,7 @@ public abstract class FileStore implements Removable {
 		private int count;
 		private boolean bytesWritten;
 		private boolean closed;
+		private byte[] singleByte = new byte[1];
 		
 		public FileStoreOutputStream(int size) {
 			this.buffer = new byte[size];
@@ -49,7 +50,8 @@ public abstract class FileStore implements Removable {
 		
 		@Override
 		public void write(int b) throws IOException {
-			write(new byte[b], 0, 1);
+			singleByte[0] = (byte)b;
+			write(singleByte, 0, 1);
 		}
 
 		@Override

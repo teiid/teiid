@@ -90,12 +90,13 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 
 	@Override
 	public void free() throws IOException {
+		fsos = null;
 		lobBuffer.remove();
 	}
 	
 	@Override
 	public StorageMode getStorageMode() {
-		if (fsos == null) {
+		if (fsos == null || fsos.bytesWritten()) {
 			return StorageMode.PERSISTENT;
 		}
 		return StorageMode.MEMORY;

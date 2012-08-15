@@ -31,12 +31,14 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -65,12 +67,25 @@ public class TestLobManager {
 				return new ReaderInputStream(new StringReader("Blob contents Two"),  Charset.forName(Streamable.ENCODING));
 			}
 			
-		}));		
+		}));
 		
-		LobManager lobManager = new LobManager(new int[] {0, 1}, fs);
+		FileStore fs1 = buffMgr.createFileStore("blob");
+		FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs1, Streamable.ENCODING);
+		FileStoreOutputStream fsos = fsisf.getOuputStream();
+		byte[] b = new byte[DataTypeManager.MAX_LOB_MEMORY_BYTES + 1];
+		fsos.write(b);
+		fsos.close();
+		BlobType blob1 = new BlobType(new BlobImpl(fsisf));		
+		
+		assertNotNull(blob1.getReferenceStreamId());
+		
+		LobManager lobManager = new LobManager(new int[] {0, 1, 2}, fs);
 		lobManager.setMaxMemoryBytes(4);
-		List<?> tuple = Arrays.asList(clob, blob);
+		List<?> tuple = Arrays.asList(clob, blob, blob1);
 		lobManager.updateReferences(tuple, ReferenceMode.CREATE);
+		
+		assertNotNull(blob1.getReferenceStreamId());
+		
 		lobManager.persist();
 		
 		Streamable<?>lob = lobManager.getLobReference(clob.getReferenceStreamId());
