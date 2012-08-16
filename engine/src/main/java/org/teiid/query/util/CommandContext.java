@@ -146,6 +146,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private ClassLoader classLoader;
 		
 	    private List<Exception> warnings = null;
+	    
+	    private Options options = null;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -814,5 +816,16 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public void setTupleSourceCache(TupleSourceCache tupleSourceCache) {
 		this.tupleSourceCache = tupleSourceCache;
 	}
+    
+    public Options getOptions() {
+    	if (this.globalState.options == null) {
+    		this.globalState.options = new Options();
+    	}
+    	return this.globalState.options;
+    }
+    
+    public void setOptions(Options options) {
+    	this.globalState.options = options;
+    }
 
 }

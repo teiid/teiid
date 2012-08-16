@@ -113,6 +113,17 @@ public class QueryRewriter {
     		DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.LONG, 
     		DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.DOUBLE));
     
+    // Constants used in simplifying mathematical criteria
+    private final static Integer INTEGER_ZERO = new Integer(0);
+    private final static Double DOUBLE_ZERO = new Double(0);
+    private final static Float FLOAT_ZERO = new Float(0);
+    private final static Long LONG_ZERO = new Long(0);
+    private final static BigInteger BIG_INTEGER_ZERO = new BigInteger("0"); //$NON-NLS-1$
+    private final static BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
+    private final static Short SHORT_ZERO = new Short((short)0);
+    private final static Byte BYTE_ZERO = new Byte((byte)0);
+	private boolean rewriteAggs = true;
+    
     private QueryMetadataInterface metadata;
     private CommandContext context;
     
@@ -425,7 +436,7 @@ public class QueryRewriter {
 			names.add(gs.getName());
 		}
 		for (Iterator<Criteria> crits = current.iterator(); crits.hasNext();) {
-			PlannedResult plannedResult = rmc.findSubquery(crits.next());
+			PlannedResult plannedResult = rmc.findSubquery(crits.next(), context!=null?context.getOptions().isSubqueryUnnestDefault():false);
 			if (plannedResult.not || plannedResult.query == null || plannedResult.query.getProcessorPlan() != null 
 					|| plannedResult.query.getWith() != null) {
 				continue;
@@ -1288,17 +1299,6 @@ public class QueryRewriter {
         // fall through - not simple mathematical
         return false;
     }
-
-    // Constants used in simplifying mathematical criteria
-    private Integer INTEGER_ZERO = new Integer(0);
-    private Double DOUBLE_ZERO = new Double(0);
-    private Float FLOAT_ZERO = new Float(0);
-    private Long LONG_ZERO = new Long(0);
-    private BigInteger BIG_INTEGER_ZERO = new BigInteger("0"); //$NON-NLS-1$
-    private BigDecimal BIG_DECIMAL_ZERO = new BigDecimal("0"); //$NON-NLS-1$
-    private Short SHORT_ZERO = new Short((short)0);
-    private Byte BYTE_ZERO = new Byte((byte)0);
-	private boolean rewriteAggs = true;
 
     /**
      * @param criteria

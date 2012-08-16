@@ -256,7 +256,7 @@ public class XMLStagaingQueryPlanner {
             }
             ExistsCriteria ec = new ExistsCriteria();
             ec.setSubqueryHint(new ExistsCriteria.SubqueryHint());
-            ec.getSubqueryHint().setDepJoin(true);
+            ec.getSubqueryHint().setDepJoin();
             ec.setCommand(query);
             Criteria existing = stagableQuery.getCriteria();
             stagableQuery.setCriteria(Criteria.combineCriteria(existing, ec));

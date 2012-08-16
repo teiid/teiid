@@ -219,7 +219,7 @@ public class SQLParserUtil {
             } else if (parts[i].equalsIgnoreCase(SubqueryHint.NOUNNEST)) {
             	hint.setNoUnnest(true);
             } else if (parts[i].equalsIgnoreCase(SubqueryHint.DJ)) {
-                hint.setDepJoin(true);
+                hint.setDepJoin();
             }
         }
     	return hint;

@@ -64,8 +64,8 @@ implements SubqueryContainer<QueryCommand>, ContextReference, Negatable {
 			return noUnnest;
 		}
 	    
-	    public void setDepJoin(boolean depJoin) {
-			this.depJoin = depJoin;
+	    public void setDepJoin() {
+			this.depJoin = true;
 			this.mergeJoin = true;
 		}
 	    

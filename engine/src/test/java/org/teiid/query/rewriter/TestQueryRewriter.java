@@ -173,9 +173,13 @@ public class TestQueryRewriter {
     }
     
     public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata) throws TeiidException { 
-        Command command = QueryParser.getQueryParser().parseCommand(original);            
+        return helpTestRewriteCommand(original, expected, metadata, null);
+    }
+    
+    public static Command helpTestRewriteCommand(String original, String expected, QueryMetadataInterface metadata, CommandContext cc) throws TeiidException {
+    	Command command = QueryParser.getQueryParser().parseCommand(original);            
         QueryResolver.resolveCommand(command, metadata);
-        Command rewriteCommand = QueryRewriter.rewrite(command, metadata, null);
+        Command rewriteCommand = QueryRewriter.rewrite(command, metadata, cc);
         assertEquals("Rewritten command was not expected", expected, rewriteCommand.toString()); //$NON-NLS-1$
         return rewriteCommand;
     }

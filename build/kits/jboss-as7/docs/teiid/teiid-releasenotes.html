@@ -10,7 +10,7 @@
 <P><A HREF="http://www.teiid.org/"><IMG SRC="https://www.jboss.org/dms/teiid/images/teiid-banner.png" NAME="graphics1" ALT="Teiid" ALIGN=BOTTOM WIDTH=800></A>
 
 <H1>Teiid ${project.version} Release Notes</H1>
-<P>Teiid ${project.version} adds metadata and integration features. 
+<P>Teiid ${project.version} adds performance and integration features. 
 
 <H2>Overview</H2>
 <UL>
@@ -25,8 +25,6 @@
 	<LI><A HREF="#About">About JBoss</A> 
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
-<UL>
-</UL>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
 <ul>
@@ -34,6 +32,12 @@
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
 </ul>
+
+<h4>from 8.1</h4>
+<ul>
+  <li>TEIID-2149 <B>Subquery Unnesting</B> - the optimizer will not consult the subqueryUnnestDefault property if it can make a cost based decision to replace a subquery with a merge join.
+Use the subquery hints, DJ, MJ, and NO_UNNEST to override this behavior if needed.
+<ul>
 
 <h4>from 8.0</h4>
 <ul>

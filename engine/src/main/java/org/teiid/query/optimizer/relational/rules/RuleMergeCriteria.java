@@ -74,9 +74,6 @@ import org.teiid.query.util.CommandContext;
 
 public final class RuleMergeCriteria implements OptimizerRule {
 	
-	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$ 
-	private final boolean UNNEST = Boolean.getBoolean(UNNEST_DEFAULT); 
-	
 	/**
 	 * Used to replace correlated references
 	 */
@@ -246,7 +243,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		float sourceCost = NewCalculateCostUtil.computeCostForTree(current.getFirstChild(), metadata);
 		Criteria crit = (Criteria)current.getProperty(NodeConstants.Info.SELECT_CRITERIA);
 		
-		PlannedResult plannedResult = findSubquery(crit);
+		PlannedResult plannedResult = findSubquery(crit, true);
 		if (plannedResult.query == null) {
 			return current;
 		}
@@ -338,7 +335,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 	}
 
-	public PlannedResult findSubquery(Criteria crit) throws TeiidComponentException, QueryMetadataException {
+	public PlannedResult findSubquery(Criteria crit, boolean unnest) throws TeiidComponentException, QueryMetadataException {
 		PlannedResult result = new PlannedResult();
 		if (crit instanceof SubquerySetCriteria) {
 			//convert to the quantified form
@@ -350,12 +347,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			result.type = crit.getClass();
 			result.mergeJoin = ssc.getSubqueryHint().isMergeJoin();
 			result.makeInd = ssc.getSubqueryHint().isDepJoin();
-			if (!UNNEST && !result.mergeJoin) {
+			if (!unnest && !result.mergeJoin) {
 				return result;
 			}
 			crit = new SubqueryCompareCriteria(ssc.getExpression(), ssc.getCommand(), SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.SOME);
 		} else if (crit instanceof CompareCriteria) {
-			if (!UNNEST) {
+			if (!unnest) {
 				return result;
 			}
 			//convert to the quantified form
@@ -406,7 +403,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 			//the correlations can only be in where (if no group by or aggregates) or having
 			result.mergeJoin = exists.getSubqueryHint().isMergeJoin();
 			result.makeInd = exists.getSubqueryHint().isDepJoin();
-			if (!UNNEST && !result.mergeJoin) {
+			if (!unnest && !result.mergeJoin) {
 				return result;
 			}
 			result.query = (Query)exists.getCommand();

@@ -25,7 +25,6 @@ package org.teiid.query.optimizer;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
-import org.junit.After;
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -37,10 +36,11 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
+import org.teiid.query.util.Options;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -392,9 +392,9 @@ public class TestSubqueryPushdown {
     }
     
     /**
-     * Check that subquery is not pushed if the subquery cannot all be pushed to the source.
+     * Check that subquery is not pushed if the subquery cannot all be pushed to the source.  Automatically converted to a merge join
      */
-    @Test public void testNoPushSubqueryInWhereClause1() {
+    @Test public void testNoPushSubqueryInWhereClause1() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
@@ -403,25 +403,25 @@ public class TestSubqueryPushdown {
 
         ProcessorPlan plan = helpPlan("Select e1 from pm1.g1 where e1 in (select max(e1) FROM pm1.g2)", RealMetadataFactory.example1Cached(),  //$NON-NLS-1$
             null, capFinder,
-            new String[] { "SELECT e1 FROM pm1.g1" }, SHOULD_SUCCEED); //$NON-NLS-1$ 
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm1.g1 AS g_0 ORDER BY c_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         checkNodeTypes(plan, new int[] {
             1,      // Access
             0,      // DependentAccess
-            1,      // DependentSelect
+            0,      // DependentSelect
             0,      // DependentProject
             0,      // DupRemove
             0,      // Grouping
             0,      // NestedLoopJoinStrategy
-            0,      // MergeJoinStrategy
+            1,      // MergeJoinStrategy
             0,      // Null
-            0,      // PlanExecution
+            1,      // PlanExecution
             1,      // Project
             0,      // Select
             0,      // Sort
             0       // UnionAll
         });
     }
-
+    
     /**
      * Check that subquery is not pushed if the subquery is from a different model
      * than the outer query.
@@ -768,16 +768,18 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoinDistinct() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1)", "SELECT DISTINCT e1 FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1", RealMetadataFactory.example1Cached(), cc);
     }
     
     /**
      * Agg does not depend on cardinality
      */
     @Test public void testSubqueryRewriteToJoinGroupBy() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select max(e1) from pm1.g1 as x where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = x.e1) group by e2", "SELECT MAX(e1) FROM pm1.g1 AS x, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE x.e1 = X__1.e1 GROUP BY e2", RealMetadataFactory.example1Cached(), cc);
     }
     
     /**
@@ -788,8 +790,9 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoin() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where exists (select pm1.g1.e1 FROM pm1.g1 where e1 = pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT pm1.g1.e1 FROM pm1.g1) AS X__1 WHERE pm3.g1.e1 = X__1.e1", RealMetadataFactory.example4(), cc);
     }
     
     @Test public void testSubqueryRewriteToJoin1() throws Exception {
@@ -816,13 +819,15 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testDontRewriteToJoinWithOtherCriteria() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ NO_UNNEST */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e2 < pm3.g1.e2)", RealMetadataFactory.example4());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e1 in /*+ NO_UNNEST */ (select pm1.g1.e1 FROM pm1.g1 where e2 < pm3.g1.e2)", "SELECT e1 FROM pm3.g1 WHERE pm3.g1.e1 IN /*+ NO_UNNEST */ (SELECT pm1.g1.e1 FROM pm1.g1 WHERE e2 < pm3.g1.e2)", RealMetadataFactory.example4(), cc);
     }
 
     @Test public void testSubqueryRewriteToJoinWithAggregate() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 where pm3.g1.e1 = e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4(), cc);
     }
     
     /**
@@ -834,13 +839,15 @@ public class TestSubqueryPushdown {
     }
     
     @Test public void testSubqueryRewriteToJoinWithAggregate2() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1, MIN(e3) AS expr3 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.expr3 < pm3.g1.e3) AND (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (select max(e2) FROM pm1.g1 WHERE pm3.g1.e1 = e1 HAVING min(e3) < pm3.g1.e3)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1, MIN(e3) AS expr3 FROM pm1.g1 GROUP BY e1) AS X__1 WHERE (X__1.expr3 < pm3.g1.e3) AND (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4(), cc);
     }
     
     @Test public void testSubqueryRewriteToJoinWithGroupingExpression() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm3.g1 where exists (select 1 FROM pm1.g1 group by e4 || 'x' HAVING min(e3) || (e4 || 'x') = pm3.g1.e3)", "SELECT DISTINCT e1 FROM pm3.g1, (SELECT 1 AS expr1, MIN(e3) AS expr2, concat(convert(e4, string), 'x') AS expr3, concat(convert(MIN(e3), string), concat(convert(e4, string), 'x')) AS expr FROM pm1.g1 GROUP BY concat(convert(e4, string), 'x')) AS X__1 WHERE convert(pm3.g1.e3, string) = X__1.expr", RealMetadataFactory.example4());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select distinct e1 from pm3.g1 where exists (select 1 FROM pm1.g1 group by e4 || 'x' HAVING min(e3) || (e4 || 'x') = pm3.g1.e3)", "SELECT DISTINCT e1 FROM pm3.g1, (SELECT 1 AS expr1, MIN(e3) AS expr2, concat(convert(e4, string), 'x') AS expr3, concat(convert(MIN(e3), string), concat(convert(e4, string), 'x')) AS expr FROM pm1.g1 GROUP BY concat(convert(e4, string), 'x')) AS X__1 WHERE convert(pm3.g1.e3, string) = X__1.expr", RealMetadataFactory.example4(), cc);
     }
 
     /**
@@ -876,8 +883,9 @@ public class TestSubqueryPushdown {
     }
 
     @Test public void testSubqueryExpressionJoin() throws Exception {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
-        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1, MIN(e2) AS expr3 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.expr3, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4());
+    	CommandContext cc = new CommandContext();
+    	cc.setOptions(new Options().subqueryUnnestDefault(true));
+        TestQueryRewriter.helpTestRewriteCommand("Select e1 from pm3.g1 where pm3.g1.e2 < (Select max(e2) from pm2.g2 where e1 = pm3.g1.e1 having convert(min(e2), string) > pm3.g1.e1)", "SELECT e1 FROM pm3.g1, (SELECT MAX(e2) AS expr1, e1, MIN(e2) AS expr3 FROM pm2.g2 GROUP BY e1) AS X__1 WHERE (convert(X__1.expr3, string) > pm3.g1.e1) AND (pm3.g1.e2 < X__1.expr1) AND (pm3.g1.e1 = X__1.e1)", RealMetadataFactory.example4(), cc);
     }
 
     /**
@@ -933,7 +941,6 @@ public class TestSubqueryPushdown {
      * Same as above, but the source is much larger, so a semi-join is favorable
      */
     @Test public void testSemiJoinExistsCosting() {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.TRUE.toString());
         ProcessorPlan plan = helpPlan("Select e1 from pm2.g2 as o where not exists (select 1 from pm3.g1 where e1 = o.e1 having o.e2 = count(e2))", RealMetadataFactory.example4(),  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0, c_1" }); //$NON-NLS-1$
         checkNodeTypes(plan, new int[] {
@@ -975,10 +982,6 @@ public class TestSubqueryPushdown {
             0       // UnionAll
         }); 
         checkJoinCounts(plan, 0, 1);
-    }
-    
-    @After public void tearDown() {
-    	System.setProperty(RuleMergeCriteria.UNNEST_DEFAULT, Boolean.FALSE.toString());
     }
     
     @Test public void testAntiSemiJoinInHint() {
