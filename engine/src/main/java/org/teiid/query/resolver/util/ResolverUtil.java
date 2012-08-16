@@ -428,6 +428,12 @@ public class ResolverUtil {
         
         return getProperlyTypedConstant(defaultValue, type);
 	}    
+	
+	public static boolean hasDefault(Object mid, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+        Object defaultValue = metadata.getDefaultValue(mid);
+        
+        return defaultValue != null || metadata.elementSupports(mid, SupportConstants.Element.NULL);
+	}
     
     /** 
      * Construct a Constant with proper type, given the String default

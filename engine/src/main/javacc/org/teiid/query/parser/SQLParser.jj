@@ -846,6 +846,7 @@ Column tableElement(ParseInfo info) :
 	String element = null;
 	ParsedDataType type = null;
 	boolean autoIncrement = false;
+	//TODO: once we support udts, then this will need to inherit the nullability from the type
 	boolean notNull = false;
 }
 {
@@ -4503,7 +4504,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	ProcedureParameter.Type ppType = ProcedureParameter.Type.In;
 	ProcedureParameter param = null;
 	String defaultValue = null;
-	Boolean notNull = null;
+	boolean notNull = false;
 }
 {
 	[((<IN> {ppType = ProcedureParameter.Type.In ;})
@@ -4524,7 +4525,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 		try {
 			param = factory.addProcedureParameter(validateElementName(name), type.type, ppType, proc);
 			setTypeInfo(type, param);
-			if (notNull != null) {
+			if (notNull) {
 				param.setNullType(Column.NullType.No_Nulls);
 			}
 		} catch (TranslatorException e){
@@ -4775,7 +4776,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	String element = null;
 	ParsedDataType type = null;
 	boolean autoIncrement = false;
-	boolean notNull = false;
+	Boolean notNull = false;
 	String defalt = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
@@ -4799,7 +4800,7 @@ void createColumn(MetadataFactory factory, Table table) :
     	}
 	  }
 	 )
-	 [<NOT> <NULL> { notNull = true; }]
+	 [<NOT> <NULL> { column.setNullType(Column.NullType.No_Nulls); }]
 	 ([(<UNIQUE> { unique = true;  })
 	  |((word = <INDEX> | word = <AUTO_INCREMENT>)  
 	    { if (word.image.equalsIgnoreCase("INDEX")) index = true;
@@ -4834,7 +4835,6 @@ void createColumn(MetadataFactory factory, Table table) :
     	}	 	
 	     	 	
 	    column.setAutoIncremented(autoIncrement);
-	    column.setNullType(notNull?Column.NullType.No_Nulls:Column.NullType.Nullable);
 	 }
 }
 

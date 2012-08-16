@@ -140,15 +140,32 @@ public class ExecResolver extends ProcedureContainerResolver {
         List<SPParameter> metadataParams = storedProcedureInfo.getParameters();
         List<SPParameter> clonedMetadataParams = new ArrayList<SPParameter>(metadataParams.size());
         int inputParams = 0;
+        int optionalParams = 0;
         int outParams = 0;
         boolean hasReturnValue = false;
+        boolean optional = false;
         for (SPParameter metadataParameter : metadataParams) {
             if( (metadataParameter.getParameterType()==ParameterInfo.IN) ||
                 (metadataParameter.getParameterType()==ParameterInfo.INOUT)){
-
-                inputParams++;
+            	if (ResolverUtil.hasDefault(metadataParameter.getMetadataID(), metadata)) {
+                	optional = true;
+                	optionalParams++;
+            	} else {
+                    inputParams++;
+                	if (optional) {
+                		optional = false;
+                		inputParams += optionalParams;
+                		optionalParams = 0;
+                	}
+            	}
             } else if (metadataParameter.getParameterType() == ParameterInfo.OUT) {
             	outParams++;
+            	/*
+            	 * TODO: it would consistent to do the following, but it is a breaking change for procedures that have intermixed out params with in.
+            	 * we may need to revisit this later
+            	 */
+        		//optional = true;
+        		//optionalParams++;
             } else if (metadataParameter.getParameterType() == ParameterInfo.RETURN_VALUE) {
             	hasReturnValue = true;
             }
@@ -174,6 +191,7 @@ public class ExecResolver extends ProcedureContainerResolver {
 	        	if (param.getParameterType() == SPParameter.RETURN_VALUE) {
 	        		Expression expr = postionalExpressions.remove(exprIndex++);
 	                param.setExpression(expr);
+	                break;
 	        	}
 	        }
         }
@@ -196,6 +214,10 @@ public class ExecResolver extends ProcedureContainerResolver {
             		continue;
             	}
                 Expression expr = postionalExpressions.remove(exprIndex++);
+                if (expr == null) {
+                	expr = ResolverUtil.getDefault(param.getParameterSymbol(), metadata);
+                	param.setUsingDefault(true);
+                } 
                 param.setExpression(expr);
             }
         }

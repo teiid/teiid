@@ -49,10 +49,12 @@ public class ProcedureParameter extends BaseColumn {
 		return type;
 	}
 	
+	@Deprecated
 	public void setOptional(boolean optional) {
 		this.optional = optional;
 	}
 	
+	@Deprecated
 	public boolean isOptional() {
 		return optional;
 	}
