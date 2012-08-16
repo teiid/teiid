@@ -225,6 +225,7 @@ public class TestLocalConnections {
 	}
 	
 	@Test public void testUseInDifferentThreads() throws Throwable {
+		assertTrue(server.getDqp().getRequests().isEmpty());
 		Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
     	final Statement s = c.createStatement();
