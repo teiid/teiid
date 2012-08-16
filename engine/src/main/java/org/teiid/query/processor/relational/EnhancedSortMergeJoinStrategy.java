@@ -165,7 +165,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	its.closeSource();
     	this.reverseIndexes = new int[elements.size()];
-    	for (int i = 0; i < reverseIndexes.length; i++) {
+    	for (int i = 0; i < reorderedSortIndex.length; i++) {
     		int oldIndex = reorderedSortIndex[i];
     		this.reverseIndexes[oldIndex] = i + (!state.isDistinct()&&i>=keyLength-1?1:0); 
     	}
