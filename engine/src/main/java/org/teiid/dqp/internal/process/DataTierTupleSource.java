@@ -23,6 +23,8 @@
 package org.teiid.dqp.internal.process;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.activation.DataSource;
 import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
@@ -52,7 +55,7 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
-import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.DQPCore.FutureWork;
@@ -221,28 +224,42 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			FileStore fs = dtm.getBufferManager().createFileStore("bytes"); //$NON-NLS-1$
 			//TODO: guess at the encoding from the content type
 			FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-			
+
 			try {
-				ObjectConverterUtil.write(fsisf.getOuputStream(), ((DataSource)value).getInputStream(), -1);
+				SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
+				return new BlobType(new BlobImpl(is.getInputStreamFactory()));
 			} catch (IOException e) {
-				 throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
+				throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
 			}
-			return new BlobType(new BlobImpl(fsisf));
 		}
 		if (value instanceof Source) {
-			if (value instanceof InputStreamFactory) {
-				return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
+			if (!(value instanceof InputStreamFactory)) {
+				if (value instanceof StreamSource) {
+					StreamSource ss = (StreamSource)value;
+					InputStream is = ss.getInputStream();
+					Reader r = ss.getReader();
+					if (is == null && r != null) {
+						is = new ReaderInputStream(r, Streamable.CHARSET);
+					}
+					final FileStore fs = dtm.getBufferManager().createFileStore("xml"); //$NON-NLS-1$
+					final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+
+					value = new SaveOnReadInputStream(is, fsisf).getInputStreamFactory();
+				} else {
+					//maybe dom or some other source we want to get out of memory
+					StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
+					SQLXMLImpl sqlxml;
+					try {
+						sqlxml = XMLSystemFunctions.saveToBufferManager(dtm.getBufferManager(), sxt);
+					} catch (TeiidComponentException e) {
+						 throw new TeiidRuntimeException(e);
+					} catch (TeiidProcessingException e) {
+						 throw new TeiidRuntimeException(e);
+					}
+					return new XMLType(sqlxml);	
+				}
 			}
-			StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
-			SQLXMLImpl sqlxml;
-			try {
-				sqlxml = XMLSystemFunctions.saveToBufferManager(dtm.getBufferManager(), sxt);
-			} catch (TeiidComponentException e) {
-				 throw new TeiidRuntimeException(e);
-			} catch (TeiidProcessingException e) {
-				 throw new TeiidRuntimeException(e);
-			}
-			return new XMLType(sqlxml);
+			return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
 		}
 		return DataTypeManager.convertToRuntimeType(value);
 	}

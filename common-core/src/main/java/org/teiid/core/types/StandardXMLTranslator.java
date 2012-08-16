@@ -32,6 +32,16 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 
 public class StandardXMLTranslator extends XMLTranslator {
+	
+	private static ThreadLocal<TransformerFactory> threadLocalTransformerFactory = new ThreadLocal<TransformerFactory>() {
+		protected TransformerFactory initialValue() {
+			return TransformerFactory.newInstance();
+		}
+	};
+	
+	public static TransformerFactory getThreadLocalTransformerFactory() {
+		return threadLocalTransformerFactory.get();
+	}
     
     private Source source;
         
@@ -41,7 +51,7 @@ public class StandardXMLTranslator extends XMLTranslator {
     
     @Override
     public void translate(Writer writer) throws TransformerException, IOException {
-        Transformer t = TransformerFactory.newInstance().newTransformer();
+        Transformer t = threadLocalTransformerFactory.get().newTransformer();
         t.transform(source, new StreamResult(writer));
     }
         

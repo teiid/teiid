@@ -47,11 +47,19 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	}
 
 	@Override
-	public InputStream getInputStream() throws IOException {
+	public InputStream getInputStream() {
+		return getInputStream(0);
+	}
+	
+	public InputStream getInputStream(long start) {
 		if (fsos != null && !fsos.bytesWritten()) {
-			return new ByteArrayInputStream(fsos.getBuffer(), 0, fsos.getCount());
+			if (start > Integer.MAX_VALUE) {
+				throw new AssertionError("Invalid start " + start); //$NON-NLS-1$
+			}
+			int s = (int)start;
+			return new ByteArrayInputStream(fsos.getBuffer(), s, fsos.getCount() - s);
 		}
-		return lobBuffer.createInputStream(0);
+		return lobBuffer.createInputStream(start);
 	}
 	
 	@Override
@@ -89,7 +97,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	}
 
 	@Override
-	public void free() throws IOException {
+	public void free() {
 		lobBuffer.remove();
 	}
 	

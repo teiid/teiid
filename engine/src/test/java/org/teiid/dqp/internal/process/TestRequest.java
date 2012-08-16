@@ -22,10 +22,11 @@
 
 package org.teiid.dqp.internal.process;
 
+import static org.junit.Assert.*;
+
 import java.util.ArrayList;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
@@ -46,23 +47,10 @@ import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-
-
-/** 
- * @since 4.2
- */
-public class TestRequest extends TestCase {
+public class TestRequest {
 
     private static final TempTableStore TEMP_TABLE_STORE = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 	private final static String QUERY = "SELECT * FROM pm1.g1";  //$NON-NLS-1$
-    
-    /**
-     * Constructor for TestRequest.
-     * @param name
-     */
-    public TestRequest(String name) {
-        super(name);
-    }
     
     /**
      * Test Request.validateEntitlement().  
@@ -71,7 +59,7 @@ public class TestRequest extends TestCase {
      * @throws Exception
      * @since 4.2
      */
-    public void testValidateEntitlement() throws Exception {
+    @Test public void testValidateEntitlement() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         Request request = new Request();
@@ -99,7 +87,7 @@ public class TestRequest extends TestCase {
      * @throws Exception
      * @since 4.2
      */
-    public void testProcessRequest() throws Exception {
+    @Test public void testProcessRequest() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         //Try before plan is cached.
@@ -115,7 +103,7 @@ public class TestRequest extends TestCase {
         helpProcessMessage(message, null, workContext);
     }
     
-    public void testCommandContext() throws Exception {
+    @Test public void testCommandContext() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         
         //Try before plan is cached.
@@ -153,7 +141,7 @@ public class TestRequest extends TestCase {
      * @throws Exception
      * @since 4.2
      */
-    public void testProcessRequestPreparedStatement() throws Exception {
+    @Test public void testProcessRequestPreparedStatement() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
         SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
         

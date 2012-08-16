@@ -88,6 +88,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.StandardXMLTranslator;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
@@ -326,11 +327,6 @@ public class XMLSystemFunctions {
 		}
 	}
 	
-	private static ThreadLocal<TransformerFactory> threadLocalTransformerFactory = new ThreadLocal<TransformerFactory>() {
-		protected TransformerFactory initialValue() {
-			return TransformerFactory.newInstance();
-		}
-	};
 	static ThreadLocal<XMLOutputFactory> threadLocalOutputFactory = new ThreadLocal<XMLOutputFactory>() {
 		protected XMLOutputFactory initialValue() {
 			return newXmlOutputFactory();
@@ -370,7 +366,7 @@ public class XMLSystemFunctions {
 			styleSource = convertToSource(styleSheet);
 			xmlSource = convertToSource(xml);
 			final Source xmlParam = xmlSource;
-			TransformerFactory factory = threadLocalTransformerFactory.get();
+			TransformerFactory factory = StandardXMLTranslator.getThreadLocalTransformerFactory();
             final Transformer transformer = factory.newTransformer(styleSource);
             
 			//this creates a non-validated sqlxml - it may not be valid xml/root-less xml
