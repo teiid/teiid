@@ -1046,4 +1046,21 @@ public class TestProcedureResolving {
         assertEquals(new Constant("a", DataTypeManager.DefaultDataClasses.STRING), sp.getParameter(2).getExpression());
     }
     
+    @Test public void testOptionalParams1() throws Exception {
+    	VDBMetaData vdb = new VDBMetaData();
+    	MetadataStore store = new MetadataStore();
+    	String ddl = "create foreign procedure proc (x integer, y string NOT NULL, z integer);\n";
+    	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
+    	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
+    	vdb.addAttchment(TransformationMetadata.class, tm);
+    	vdb.addAttchment(QueryMetadataInterface.class, tm);
+    	new MetadataValidator().validate(vdb, store);
+    	
+        String sql = "call proc (1, 'a')"; //$NON-NLS-1$
+
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+
+        assertEquals(new Constant("a", DataTypeManager.DefaultDataClasses.STRING), sp.getParameter(2).getExpression());
+    }
+    
 }
