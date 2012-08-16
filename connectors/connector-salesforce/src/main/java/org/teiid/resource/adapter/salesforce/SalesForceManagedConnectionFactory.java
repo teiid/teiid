@@ -90,7 +90,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	}
 	
 	@Override
-	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory<SalesforceConnectionImpl> createConnectionFactory() throws ResourceException {
 		QName portQName = SforceService.SERVICE;
 		if (this.configFile != null) {
 			this.bus = new SpringBusFactory().createBus(this.configFile);
@@ -101,7 +101,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	        }
 		}
 		
-		return new BasicConnectionFactory() {
+		return new BasicConnectionFactory<SalesforceConnectionImpl>() {
 			private static final long serialVersionUID = 5028356110047329135L;
 
 			@Override

@@ -40,9 +40,9 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.resource.adapter.file.FileConnectionImpl;
+import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
-import org.teiid.translator.FileConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.file.FileExecutionFactory;
 import org.teiid.translator.jdbc.h2.H2ExecutionFactory;
@@ -72,9 +72,9 @@ public class TeiidEmbeddedPortfolio {
 	 */
 	@SuppressWarnings("serial")
 	private static final class FileConnectionFactory extends
-			AbstractConnectionFactory<FileConnection> {
+			BasicConnectionFactory<FileConnectionImpl> {
 		@Override
-		public FileConnection getConnection() throws ResourceException {
+		public FileConnectionImpl getConnection() throws ResourceException {
 			return new FileConnectionImpl(".", null, false);
 		}
 	}
@@ -174,7 +174,7 @@ public class TeiidEmbeddedPortfolio {
 		// configure the connection provider and translator for file based source. 
 		// NOTE: every source that is being integrated, needs its connection provider and its translator 
 		// check out https://docs.jboss.org/author/display/TEIID/Built-in+Translators prebuit translators
-		final ConnectionFactory cf = new FileConnectionFactory();;
+		final ConnectionFactory cf = new FileConnectionFactory();
 		teiidServer.addConnectionFactoryProvider("source-file", new EmbeddedServer.ConnectionFactoryProvider<ConnectionFactory>() {
 			@Override
 			public ConnectionFactory getConnectionFactory() throws TranslatorException {

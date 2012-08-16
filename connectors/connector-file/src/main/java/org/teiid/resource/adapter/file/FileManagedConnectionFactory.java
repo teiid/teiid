@@ -28,7 +28,6 @@ import javax.resource.spi.InvalidPropertyException;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
@@ -43,15 +42,15 @@ public class FileManagedConnectionFactory extends BasicManagedConnectionFactory{
 	
 	@Override
 	@SuppressWarnings("serial")
-	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory<FileConnectionImpl> createConnectionFactory() throws ResourceException {
 		if (this.parentDirectory == null) {
 			throw new InvalidPropertyException(UTIL.getString("parentdirectory_not_set")); //$NON-NLS-1$
 		}
 		final Map<String, String> map = StringUtil.valueOf(this.fileMapping, Map.class);
-		return new BasicConnectionFactory() {
+		return new BasicConnectionFactory<FileConnectionImpl>() {
 			
 			@Override
-			public BasicConnection getConnection() throws ResourceException {
+			public FileConnectionImpl getConnection() throws ResourceException {
 				return new FileConnectionImpl(parentDirectory, map, allowParentPaths);
 			}
 		};

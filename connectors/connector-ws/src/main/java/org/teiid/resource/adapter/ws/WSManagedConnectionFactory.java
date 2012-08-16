@@ -32,7 +32,6 @@ import org.apache.cxf.configuration.Configurer;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.BundleUtil;
-import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
@@ -58,7 +57,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	@SuppressWarnings("serial")
 	@Override
-	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
+	public BasicConnectionFactory<WSConnectionImpl> createConnectionFactory() throws ResourceException {
 		String configName = getConfigName();
 		if (configName == null) {
 			configName = WSConnectionImpl.DEFAULT_LOCAL_NAME; 
@@ -73,9 +72,9 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	        }
 	        outInterceptors = instance.getOutInterceptors();
 		}
-		return new BasicConnectionFactory() {
+		return new BasicConnectionFactory<WSConnectionImpl>() {
 			@Override
-			public BasicConnection getConnection() throws ResourceException {
+			public WSConnectionImpl getConnection() throws ResourceException {
 				return new WSConnectionImpl(WSManagedConnectionFactory.this);
 			}
 		};

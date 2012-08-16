@@ -39,8 +39,8 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 	
 	@Override
 	@SuppressWarnings("serial")
-	public BasicConnectionFactory createConnectionFactory() throws ResourceException {
-		return new BasicConnectionFactory() {
+	public BasicConnectionFactory<LDAPConnectionImpl> createConnectionFactory() throws ResourceException {
+		return new BasicConnectionFactory<LDAPConnectionImpl>() {
 			@Override
 			public LDAPConnectionImpl getConnection() throws ResourceException {
 				return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
