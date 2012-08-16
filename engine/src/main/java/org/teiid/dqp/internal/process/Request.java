@@ -249,7 +249,7 @@ public class Request implements SecurityFunctionEvaluator {
         context.setSubject(workContext.getSubject());
         Options options = new Options();
         options.setProperties(System.getProperties());
-        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid"); //$NON-NLS-1$
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
         this.context.setSession(workContext.getSession());
         this.context.setRequestId(this.requestId);
         this.context.setDQPWorkContext(this.workContext);

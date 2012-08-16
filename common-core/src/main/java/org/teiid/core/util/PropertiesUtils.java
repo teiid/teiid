@@ -40,6 +40,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.core.CorePlugin;
@@ -56,7 +57,7 @@ public final class PropertiesUtils {
 	public static class InvalidPropertyException extends TeiidRuntimeException {
 		private static final long serialVersionUID = 1586068295007497776L;
 
-		public InvalidPropertyException(BundleUtil.Event event, String propertyName, String value, Class<?> expectedType, Throwable cause) {
+		public InvalidPropertyException(BundleUtil.Event event, String propertyName, Object value, Class<?> expectedType, Throwable cause) {
 			super(event, cause, CorePlugin.Util.getString("InvalidPropertyException.message", propertyName, value, expectedType.getSimpleName())); //$NON-NLS-1$
 		}		
 
@@ -732,81 +733,78 @@ public final class PropertiesUtils {
         return original;
     }
     
- public static void setBeanProperties(Object bean, Properties props, String prefix) {
+    public static void setBeanProperties(Object bean, Properties props, String prefix) {
+    	setBeanProperties(bean, props, prefix, false);
+    }
+    
+    public static void setBeanProperties(Object bean, Properties props, String prefix, boolean caseSensitive) {
 		// Move all prop names to lower case so we can use reflection to get
 	    // method names and look them up in the connection props.
-	    final Properties connProps = lowerCaseAllPropNames(props);
+    	Map<?, ?> map = props;
+    	if (!caseSensitive) {
+    		map = caseInsensitiveProps(props);    		
+    	}
 	    final Method[] methods = bean.getClass().getMethods();
 	    for (int i = 0; i < methods.length; i++) {
 	        final Method method = methods[i];
 	        final String methodName = method.getName();
 	        // If setter ...
-	        if ( methodName.startsWith("set") && method.getParameterTypes().length == 1 ) { //$NON-NLS-1$
-	            // Get the property name
-	            final String propertyName = methodName.substring(3);    // remove the "set"
-	            String shortName = propertyName.toLowerCase();
-	            String propertyValue = null;
-	            if (prefix != null) {
-	            	propertyValue = connProps.getProperty(prefix + "." + shortName); //$NON-NLS-1$
-	            } else {
-	            	propertyValue = connProps.getProperty(shortName);
-	            }
-	            if (propertyValue == null) {
-	            	continue;
-	            }
-                final Class<?> argType = method.getParameterTypes()[0];
-                try {
-                    final Object[] params = new Object[] {StringUtil.valueOf(propertyValue, argType)};
-                    method.invoke(bean, params);
-                } catch (Throwable e) {
-                	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10043, propertyName, propertyValue, argType, e);
-                }
+	        if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 ) { //$NON-NLS-1$
+	        	continue;
 	        }
+            // Get the property name
+            String propertyName = methodName.substring(3);    // remove the "set"
+            if (prefix != null) {
+            	propertyName = prefix + "." + propertyName; //$NON-NLS-1$
+            }
+            Object propertyValue = map.get(propertyName);
+            if (propertyValue != null || map.containsKey(propertyName)) {
+            	setProperty(bean, propertyValue, method, propertyName);
+            }
 	    }
 	}
     
     public static void setBeanProperty(Object bean, String name, Object value) {
-    	if (value == null) {
-    		return;
-    	}
-    	name = name.toLowerCase();
 	    final Method[] methods = bean.getClass().getMethods();
 	    for (int i = 0; i < methods.length; i++) {
 	        final Method method = methods[i];
 	        final String methodName = method.getName();
 	        // If setter ...
-	        if ( methodName.startsWith("set") && method.getParameterTypes().length == 1 ) { //$NON-NLS-1$
-	            // Get the property name
-	            final String propertyName = methodName.substring(3);    // remove the "set"
-	            String shortName = propertyName.toLowerCase();
-	            if (!shortName.equals(name)) {
-	            	continue;
-	            }
-                final Class<?> argType = method.getParameterTypes()[0];
-                try {
-                	Object[] params = new Object[] {value};
-                	if (!argType.isAssignableFrom(value.getClass())) {
-                		params = new Object[] {StringUtil.valueOf(value.toString(), argType)};
-                	}
-                    method.invoke(bean, params);
-                } catch (Throwable e) {
-                	  throw new InvalidPropertyException(CorePlugin.Event.TEIID10044, propertyName, value.toString(), argType, e);
-                }
+	        if (! methodName.startsWith("set") || method.getParameterTypes().length != 1 || !StringUtil.endsWithIgnoreCase(methodName, name)) { //$NON-NLS-1$
+	        	continue;
 	        }
+            // Get the property name
+            final String propertyName = methodName.substring(3);    // remove the "set"
+            setProperty(bean, value, method, propertyName);
 	    }
+	}
+
+	private static Class<?> setProperty(Object bean, Object value,
+			final Method method, final String propertyName) {
+		final Class<?> argType = method.getParameterTypes()[0];
+		try {
+			Object[] params = new Object[] {value};
+			if (value != null && !argType.isAssignableFrom(value.getClass())) {
+				params = new Object[] {StringUtil.valueOf(value.toString(), argType)};
+			}
+		    method.invoke(bean, params);
+		} catch (Throwable e) {
+			  throw new InvalidPropertyException(CorePlugin.Event.TEIID10044, propertyName, value, argType, e);
+		}
+		return argType;
 	}    
 
-	private static Properties lowerCaseAllPropNames(final Properties connectionProps) {
-	    final Properties lcProps = new Properties();
+	private static TreeMap<String, String> caseInsensitiveProps(final Properties connectionProps) {
+	    final TreeMap<String, String> caseInsensitive = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	    final Enumeration<?> itr = connectionProps.propertyNames();
 	    while ( itr.hasMoreElements() ) {
 	        final String name = (String) itr.nextElement();
 	        String propValue = connectionProps.getProperty(name);
-	        if (propValue != null) {
-	        	lcProps.setProperty(name.toLowerCase(), propValue);
+	        if (propValue != null || connectionProps.containsKey(name)) {
+	        	caseInsensitive.put(name, propValue);
 	        } 
 	    }
-	    return lcProps;
+	    return caseInsensitive;
 	}
 
 }
