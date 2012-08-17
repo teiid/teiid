@@ -29,7 +29,7 @@ import javax.security.auth.Subject;
 
 import org.jboss.security.SecurityContext;
 import org.jboss.security.SubjectInfo;
-import org.teiid.core.util.Assertion;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.security.SecurityHelper;
 
 public class JBossSecurityHelper implements SecurityHelper, Serializable {
@@ -72,7 +72,9 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 
 	@Override
 	public boolean sameSubject(String securityDomain, Object context, Subject subject) {
-		Assertion.isNotNull(context);
+		if (context == null) {
+			throw new TeiidRuntimeException("No context associated.  More than like either pass-through authentication should not be used or there are no security domains defined on the embedded transport.");
+		}
 		SecurityContext previousContext = (SecurityContext)context;
 		Subject previousUser = previousContext.getSubjectInfo().getAuthenticatedSubject();
 		
