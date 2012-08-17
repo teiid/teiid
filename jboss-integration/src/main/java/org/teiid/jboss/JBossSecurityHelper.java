@@ -73,7 +73,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	@Override
 	public boolean sameSubject(String securityDomain, Object context, Subject subject) {
 		if (context == null) {
-			throw new TeiidRuntimeException("No context associated.  More than like either pass-through authentication should not be used or there are no security domains defined on the embedded transport.");
+			throw new TeiidRuntimeException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50090));
 		}
 		SecurityContext previousContext = (SecurityContext)context;
 		Subject previousUser = previousContext.getSubjectInfo().getAuthenticatedSubject();
