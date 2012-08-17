@@ -261,11 +261,12 @@ public class QueryParser {
 			if (truncateStart) {
 				expected.append("... "); //$NON-NLS-1$
 			}
-			for (int j = start; j < expectedTokenSequences[i].length && j < start+maxTokenSequence; j++) {
+			int j = start;
+			for (; j < expectedTokenSequences[i].length && j < start+maxTokenSequence; j++) {
 				expected.append(tokenImage[expectedTokenSequences[i][j]])
 						.append(" "); //$NON-NLS-1$
 			}
-			if (expectedTokenSequences[i][Math.min(maxTokenSequence, expectedTokenSequences[i].length - 1)] != 0) {
+			if (j < expectedTokenSequences[i].length) {
 				expected.append("..."); //$NON-NLS-1$
 			}
 			expected.append(eol).append("    "); //$NON-NLS-1$
