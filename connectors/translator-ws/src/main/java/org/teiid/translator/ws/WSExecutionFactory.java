@@ -124,6 +124,8 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 			WSConnection conn) throws TranslatorException {
 		Procedure p = metadataFactory.addProcedure("invoke"); //$NON-NLS-1$ 
 		p.setAnnotation("Invokes a webservice that returns an XML result"); //$NON-NLS-1$
+		
+		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
 
 		ProcedureParameter param = metadataFactory.addProcedureParameter("binding", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("The invocation binding (HTTP, SOAP11, SOAP12).  May be set or allowed to default to null to use the default binding."); //$NON-NLS-1$
@@ -142,10 +144,15 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setAnnotation("The relative or abolute endpoint to use.  May be set or allowed to default to null to use the default endpoint address."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 		
-		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
+		param.setNullType(NullType.Nullable);
+		param.setDefaultValue("false"); //$NON-NLS-1$
 		
 		p = metadataFactory.addProcedure(INVOKE_HTTP);
 		p.setAnnotation("Invokes a webservice that returns an binary result"); //$NON-NLS-1$
+		
+		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
 
 		param = metadataFactory.addProcedureParameter("action", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 		param.setAnnotation("Sets the HTTP Method (GET, POST - default, etc.)."); //$NON-NLS-1$
@@ -160,7 +167,11 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setAnnotation("The relative or abolute endpoint to use.  May be set or allowed to default to null to use the default endpoint address."); //$NON-NLS-1$
 		param.setNullType(NullType.Nullable);
 		
-		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.BLOB, Type.ReturnValue, p); //$NON-NLS-1$
+		param = metadataFactory.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, p); //$NON-NLS-1$
+		param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
+		param.setNullType(NullType.Nullable);
+		param.setDefaultValue("false"); //$NON-NLS-1$
+		
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$	
 	}
 	

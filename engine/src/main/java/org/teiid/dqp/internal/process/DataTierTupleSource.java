@@ -34,11 +34,14 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.activation.DataSource;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Source;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.TupleSource;
@@ -74,6 +77,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.CacheDirective.Scope;
+import org.teiid.util.XMLInputStream;
 
 
 /**
@@ -86,7 +90,7 @@ import org.teiid.translator.CacheDirective.Scope;
  */
 public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
 	
-    private static final class MoreWorkTask implements Runnable {
+	private static final class MoreWorkTask implements Runnable {
 
 		WeakReference<RequestWorkItem> ref;
 
@@ -183,7 +187,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 				continue;
 			}
 			if (convertToRuntimeType[i]) {
-				Object result = convertToRuntimeType(value, this.schema[i]);
+				Object result = convertToRuntimeType(dtm.getBufferManager(), value, this.schema[i]);
 				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
 					convertToRuntimeType[i] = false;
 				} else {
@@ -216,12 +220,12 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		return row;
 	}
 
-	private Object convertToRuntimeType(Object value, Class<?> desiredType) throws TransformationException {
+	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType) throws TransformationException {
 		if (value instanceof DataSource && (!(value instanceof Source) || desiredType != DataTypeManager.DefaultDataClasses.XML)) {
 			if (value instanceof InputStreamFactory) {
 				return new BlobType(new BlobImpl((InputStreamFactory)value));
 			}
-			FileStore fs = dtm.getBufferManager().createFileStore("bytes"); //$NON-NLS-1$
+			FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
 			//TODO: guess at the encoding from the content type
 			FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 
@@ -241,20 +245,31 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 					if (is == null && r != null) {
 						is = new ReaderInputStream(r, Streamable.CHARSET);
 					}
-					final FileStore fs = dtm.getBufferManager().createFileStore("xml"); //$NON-NLS-1$
+					final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
 					final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 
 					value = new SaveOnReadInputStream(is, fsisf).getInputStreamFactory();
+				} else if (value instanceof StAXSource) {
+					//TODO: do this lazily.  if the first access to get the STaXSource, then 
+					//it's more efficient to let the processing happen against STaX
+					StAXSource ss = (StAXSource)value;
+					try {
+						final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
+						final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+						value = new SaveOnReadInputStream(new XMLInputStream(ss, XMLSystemFunctions.getOutputFactory()), fsisf).getInputStreamFactory();
+					} catch (XMLStreamException e) {
+						throw new TransformationException(e);
+					}
 				} else {
 					//maybe dom or some other source we want to get out of memory
 					StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
 					SQLXMLImpl sqlxml;
 					try {
-						sqlxml = XMLSystemFunctions.saveToBufferManager(dtm.getBufferManager(), sxt);
+						sqlxml = XMLSystemFunctions.saveToBufferManager(bm, sxt);
 					} catch (TeiidComponentException e) {
-						 throw new TeiidRuntimeException(e);
+						 throw new TransformationException(e);
 					} catch (TeiidProcessingException e) {
-						 throw new TeiidRuntimeException(e);
+						 throw new TransformationException(e);
 					}
 					return new XMLType(sqlxml);	
 				}

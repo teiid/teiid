@@ -20,30 +20,36 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.core.util;
+package org.teiid.util;
 
-import java.io.ByteArrayOutputStream;
+import static org.junit.Assert.*;
 
-public class AccessibleByteArrayOutputStream extends ByteArrayOutputStream {
+import java.io.StringReader;
 
-	public AccessibleByteArrayOutputStream() {
-		super();
-	}
+import javax.xml.stream.XMLOutputFactory;
+import javax.xml.transform.stax.StAXSource;
+
+import org.junit.Test;
+import org.teiid.core.types.XMLType;
+import org.teiid.core.util.ObjectConverterUtil;
+
+@SuppressWarnings("nls")
+public class TestXMLInputStream {
 	
-	public AccessibleByteArrayOutputStream(int size) {
-		super(size);
+	@Test public void testStreaming() throws Exception {
+		StringBuilder xmlBuilder = new StringBuilder();
+		xmlBuilder.append("<?xml version=\"1.0\"?><root>");
+		for (int i = 0; i < 1000; i++) {
+			xmlBuilder.append("<a></a>");
+			xmlBuilder.append("<b></b>");
+		}
+		xmlBuilder.append("</root>");
+		String xml = xmlBuilder.toString();
+		
+		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
+		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory());
+		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
+		assertEquals(xml, new String(bytes, "UTF-8"));
 	}
-	
-	public byte[] getBuffer() {
-		return this.buf;
-	}
-	
-	public int getCount() {
-		return this.count;
-	}
-	
-	public void setCount(int count) {
-		this.count = count;
-	}
-	
+
 }

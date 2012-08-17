@@ -29,17 +29,19 @@ import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.xml.transform.Source;
+import javax.xml.stream.XMLStreamException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.XMLType.Type;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;
@@ -50,16 +52,17 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.WSConnection.Util;
 import org.teiid.translator.ws.WSExecutionFactory.Binding;
+import org.teiid.util.StAXSQLXML;
 
 /**
  * A soap call executor - handles all styles doc/literal, rpc/encoded etc. 
  */
 public class WSProcedureExecution implements ProcedureExecution {
-	
+
 	RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
-    private Source returnValue;
+    private StAXSource returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
     
@@ -80,7 +83,7 @@ public class WSProcedureExecution implements ProcedureExecution {
         String style = (String)arguments.get(0).getArgumentValue().getValue();
         String action = (String)arguments.get(1).getArgumentValue().getValue();
         XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
-        StreamSource source = null;
+        StAXSource source = null;
     	try {
 	        source = convertToSource(docObject);
 	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
@@ -96,7 +99,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 	        	}
 	        }
 	        
-	        Dispatch<StreamSource> dispatch = conn.createDispatch(style, endpoint, StreamSource.class, executionFactory.getDefaultServiceMode()); 
+	        Dispatch<StAXSource> dispatch = conn.createDispatch(style, endpoint, StAXSource.class, executionFactory.getDefaultServiceMode()); 
 	
 			if (Binding.HTTP.getBindingId().equals(style)) {
 				if (action == null) {
@@ -127,23 +130,25 @@ public class WSProcedureExecution implements ProcedureExecution {
 			
 			if (source == null) {
 				// JBoss Native DispatchImpl throws exception when the source is null
-				source = new StreamSource(new StringReader("<none/>")); //$NON-NLS-1$
+				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
 			}
 			this.returnValue = dispatch.invoke(source);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
+		} catch (XMLStreamException e) {
+			throw new TranslatorException(e);
 		} finally {
 			Util.closeSource(source);
 		}
     }
 
-	private StreamSource convertToSource(SQLXML xml) throws SQLException {
+	private StAXSource convertToSource(SQLXML xml) throws SQLException {
 		if (xml == null) {
 			return null;
 		}
-		return xml.getSource(StreamSource.class);
+		return xml.getSource(StAXSource.class);
 	}
     
     @Override
@@ -153,7 +158,14 @@ public class WSProcedureExecution implements ProcedureExecution {
     
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-        return Arrays.asList(returnValue);
+    	Object result = returnValue;
+		if (returnValue != null && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
+			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
+			XMLType xml = new XMLType(sqlXml);
+			xml.setType(Type.DOCUMENT);
+			result = xml;
+		}
+        return Arrays.asList(result);
     }    
     
     public void close() {

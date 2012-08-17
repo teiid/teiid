@@ -24,7 +24,11 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
+import java.io.StringReader;
 import java.util.List;
+
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.transform.stream.StreamSource;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,12 +39,19 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.types.InputStreamFactory.StorageMode;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -87,14 +98,13 @@ public class TestDataTierManager {
     
     private DataTierTupleSource helpSetup(String sql, int nodeId) throws Exception {
         helpSetupDataTierManager();
-        AtomicRequestMessage request = helpSetupRequest(sql, nodeId);
+        AtomicRequestMessage request = helpSetupRequest(sql, nodeId, RealMetadataFactory.exampleBQTCached());
         request.setSerial(serial);
         return new DataTierTupleSource(request, workItem, connectorManager.registerRequest(request), dtm, limit);
     }
 
-	private AtomicRequestMessage helpSetupRequest(String sql, int nodeId) throws Exception {
-		QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
-        DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
+	private AtomicRequestMessage helpSetupRequest(String sql, int nodeId, QueryMetadataInterface metadata) throws Exception {
+		DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(metadata, vdb);
         
         Command command = helpGetCommand(sql, metadata);
         
@@ -293,10 +303,12 @@ public class TestDataTierManager {
     @Test public void testCaching() throws Exception {
     	assertEquals(0, connectorManager.getExecuteCount().get());
 
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+    	
     	CacheDirective cd = new CacheDirective();
     	this.connectorManager.cacheDirective = cd;
     	helpSetupDataTierManager();
-    	Command command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();
+    	Command command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
     	RegisterRequestParameter rrp = new RegisterRequestParameter();
     	rrp.connectorBindingId = "x";
     	TupleSource ts = dtm.registerRequest(context, command, "foo", rrp);
@@ -311,7 +323,7 @@ public class TestDataTierManager {
     	assertEquals(1, this.rm.getRsCache().getTotalCacheEntries());
     	
     	//same session, should be cached
-    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();
+    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
     	rrp = new RegisterRequestParameter();
     	rrp.connectorBindingId = "x";
     	ts = dtm.registerRequest(context, command, "foo", rrp);
@@ -321,7 +333,7 @@ public class TestDataTierManager {
     	assertTrue(rrp.doNotCache);
     	
     	//switch sessions
-    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1).getCommand();
+    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
     	this.context.getSession().setSessionId("different");
     	rrp = new RegisterRequestParameter();
     	rrp.connectorBindingId = "x";
@@ -336,6 +348,26 @@ public class TestDataTierManager {
     	
     	assertEquals(2, this.rm.getRsCache().getCachePutCount());
     	assertEquals(2, this.rm.getRsCache().getTotalCacheEntries());
+    }
+    
+    @Test public void testTypeConversion() throws Exception {
+    	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+    	
+    	String str = "hello world";
+    	
+    	Object source = new StreamSource(new StringReader(str));
+    	XMLType xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
+    	assertEquals(str, xml.getString());
+    	
+    	source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a/>")));
+    	xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
+    	assertEquals("<?xml version=\"1.0\"?><a></a>", xml.getString());
+    	
+    	byte[] bytes = str.getBytes(Streamable.ENCODING);
+		source = new InputStreamFactory.BlobInputStreamFactory(BlobType.createBlob(bytes));
+    	BlobType blob = (BlobType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB);
+    	
+    	assertArrayEquals(bytes, ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()));
     }
     
 }

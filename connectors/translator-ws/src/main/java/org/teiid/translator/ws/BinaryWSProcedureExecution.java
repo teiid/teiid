@@ -22,8 +22,11 @@
 
 package org.teiid.translator.ws;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +38,8 @@ import javax.xml.ws.Service.Mode;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.InputStreamFactory;
 import org.teiid.language.Argument;
@@ -51,6 +56,24 @@ import org.teiid.translator.WSConnection;
  */
 public class BinaryWSProcedureExecution implements ProcedureExecution {
 	
+	private static final class StreamingBlob extends BlobImpl {
+		InputStream is;
+		
+		public StreamingBlob(InputStream is) {
+			this.is = is;
+		}
+		
+		@Override
+		public InputStream getBinaryStream() throws SQLException {
+			if (is == null) {
+				throw new SQLException("Already Freed."); //$NON-NLS-1$
+			}
+			InputStream result = is;
+			is = null;
+			return result;
+		}
+	}
+
 	RuntimeMetadata metadata;
     ExecutionContext context;
     private Call procedure;
@@ -111,7 +134,15 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-        return Arrays.asList(returnValue, returnValue.getContentType());
+    	Object result = returnValue;
+		if (returnValue != null && Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
+			try {
+				result = new BlobType(new StreamingBlob(returnValue.getInputStream()));
+			} catch (IOException e) {
+				throw new TranslatorException(e);
+			}
+		}
+        return Arrays.asList(result, returnValue.getContentType());
     }    
     
     public void close() {

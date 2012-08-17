@@ -93,12 +93,12 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLTranslator;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
-import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
+import org.teiid.util.StAXSQLXML;
 
 
 /** 
@@ -855,47 +855,41 @@ public class XMLSystemFunctions {
     	JSONParser parser = new JSONParser();
     	final JsonToXmlContentHandler reader = new JsonToXmlContentHandler(rootName, r, parser, threadLocalEventtFactory.get());
 
+    	SQLXMLImpl sqlXml = null;
 		if (stream) {
-			//jre 1.7 event logic does not set a dummy location and throws an NPE in StAXSource, so we explicitly set a location
-			reader.eventFactory.setLocation(dummyLocation);
-			return new SQLXMLImpl() {
-				@SuppressWarnings("unchecked")
-				public <T extends Source> T getSource(Class<T> sourceClass) throws SQLException {
-					if (sourceClass == null || sourceClass == StAXSource.class) {
-						StAXSource source;
-						try {
-							source = new StAXSource(reader);
-						} catch (XMLStreamException e) {
-							throw TeiidSQLException.create(e);
-						}
-						return (T) source;
-					}
-					throw new AssertionError("unsupported source type"); //$NON-NLS-1$
-				}
-			};
-		}
-		XMLType result = new XMLType(XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
-			
-			@Override
-			public void translate(Writer writer) throws TransformerException,
-					IOException {
-		    	try {
-					XMLOutputFactory factory = getOutputFactory();
-					final XMLEventWriter streamWriter = factory.createXMLEventWriter(writer);
-
-			    	streamWriter.add(reader);
-					streamWriter.flush(); //woodstox needs a flush rather than a close
-				} catch (XMLStreamException e) {
-					throw new TransformerException(e);
-				} finally {
-		    		try {
-	    				r.close();
-		    		} catch (IOException e) {
-		    			
-		    		}
-		    	}
+			try {
+				//jre 1.7 event logic does not set a dummy location and throws an NPE in StAXSource, so we explicitly set a location
+				//the streaming result will be directly consumed, so there's no danger that we're stepping on another location
+				reader.eventFactory.setLocation(dummyLocation);
+				sqlXml = new StAXSQLXML(new StAXSource(reader));
+			} catch (XMLStreamException e) {
+				throw new TeiidProcessingException(e);
 			}
-		}));
+		} else {
+			sqlXml = XMLSystemFunctions.saveToBufferManager(context.getBufferManager(), new XMLTranslator() {
+				
+				@Override
+				public void translate(Writer writer) throws TransformerException,
+						IOException {
+			    	try {
+						XMLOutputFactory factory = getOutputFactory();
+						final XMLEventWriter streamWriter = factory.createXMLEventWriter(writer);
+	
+				    	streamWriter.add(reader);
+						streamWriter.flush(); //woodstox needs a flush rather than a close
+					} catch (XMLStreamException e) {
+						throw new TransformerException(e);
+					} finally {
+			    		try {
+		    				r.close();
+			    		} catch (IOException e) {
+			    			
+			    		}
+			    	}
+				}
+			});
+		}
+		XMLType result = new XMLType(sqlXml);
 		result.setType(Type.DOCUMENT);
 		return result;
 	}
