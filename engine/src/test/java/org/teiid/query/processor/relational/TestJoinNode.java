@@ -599,6 +599,64 @@ public class TestJoinNode {
         helpTestJoin();
     }
     
+    @Test public void testMergeJoinOptimizationRepeatedElements() throws Exception {
+    	this.joinType = JoinType.JOIN_INNER;
+        this.leftTuples = createMultiColTuples(9, 2);
+        this.rightTuples = new List[100];
+        for (int i = 0; i < rightTuples.length; i++) {
+        	rightTuples[i] = new ArrayList(this.leftTuples[i%this.leftTuples.length]);
+        	if (i == 0) {
+        		rightTuples[i].add(1, rightTuples[i].get(0));
+        	} else {
+        		rightTuples[i].add(1, (Integer)rightTuples[i].get(0) + 1);
+        	}
+        }
+    
+        expected = new List[] {
+           Arrays.asList(new Object[] { 0, 17, 0, 0, 17 }),
+        };
+        ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es3 = new ElementSymbol("e3"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es4 = new ElementSymbol("e4"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es5 = new ElementSymbol("e5"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        leftNode = new FakeRelationalNode(1, leftTuples);
+        leftNode.setElements(Arrays.asList(es1, es2));
+        
+        rightNode = new FakeRelationalNode(2, rightTuples);
+        rightNode.setElements(Arrays.asList(es3, es4, es5));
+        
+        List joinElements = new ArrayList();
+        joinElements.addAll(leftNode.getElements());
+        joinElements.addAll(rightNode.getElements());
+        
+        join = new JoinNode(3);
+        join.setElements(joinElements);
+        join.setJoinType(joinType);
+        join.setJoinExpressions(Arrays.asList(es1, es1, es2), Arrays.asList(es3, es4, es5));
+        join.setJoinStrategy(joinStrategy);               
+        this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
+        this.join.setJoinStrategy(joinStrategy);
+        helpTestJoinDirect(expected, 10, 1);
+    }
+    
+	private List[] createMultiColTuples(int rows, int cols) {
+		List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            for (int j = 0; j < cols; j++) {
+                data[i].add(((i+j)*17) % 47);
+            }
+        }
+		return data;
+	}
+    
     @Test public void testMergeJoinOptimization() throws Exception {
         helpTestEnhancedSortMergeJoin(99);
     }

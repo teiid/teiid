@@ -245,24 +245,16 @@ public class TestSortNode {
     @Test public void testBasicSortRemoveDup() throws Exception {
         List[] expected = new List[] { 
             Arrays.asList(new Object[] { new Integer(0), "0" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(0), "3" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(1), "2" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(1), "5" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(2), "1" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(2), "4" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(3), "3" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(3), "6" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(4), "3" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(5), "2" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(5), "5" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(6), "1" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(6), "4" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(7), "3" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(8), "2" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(9), "1" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(9), "5" }),    //$NON-NLS-1$
             Arrays.asList(new Object[] { new Integer(10), "4" }),    //$NON-NLS-1$
-            Arrays.asList(new Object[] { new Integer(10), "9" })                //$NON-NLS-1$
         };
 
         helpTestBasicSort(expected, Mode.DUP_REMOVE);

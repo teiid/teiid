@@ -41,7 +41,7 @@ public class IndexMetadataRepository extends BaseMetadataRepository {
 			throws TranslatorException {
 		try {
 			if (this.idxStore.getSchema(factory.getName()) == null) {
-				this.idxStore.load(factory.getName(), factory.getDataTypes() == null?null:factory.getDataTypes().values());
+				this.idxStore.load(factory.getName(), factory.getBuiltinDataTypes().values());
 			}
 			if (this.idxStore.getSchema(factory.getName()) == null) {
 				throw new TranslatorException(RuntimeMetadataPlugin.Util.gs(RuntimeMetadataPlugin.Event.TEIID80004, factory.getName()));
