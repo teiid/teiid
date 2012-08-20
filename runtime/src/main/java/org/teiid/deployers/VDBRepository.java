@@ -72,7 +72,7 @@ public class VDBRepository implements Serializable{
 	private boolean odbcEnabled = false;
 	private List<VDBLifeCycleListener> listeners = new CopyOnWriteArrayList<VDBLifeCycleListener>();
 	private SystemFunctionManager systemFunctionManager;
-	private Map<String, Datatype> datatypeMap = SystemMetadata.getInstance().getBuiltinTypeMap();
+	private Map<String, Datatype> datatypeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition vdbAdded = lock.newCondition();
 	
@@ -232,7 +232,7 @@ public class VDBRepository implements Serializable{
 	
 	private MetadataStore getODBCMetadataStore() {
 		try {
-			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getBuiltinDatatypes());
+			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getRuntimeTypeMap());
 			return pg.asMetadataStore();
 		} catch (TranslatorException e) {
 			LogManager.logError(LogConstants.CTX_DQP, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));
@@ -260,7 +260,7 @@ public class VDBRepository implements Serializable{
 		return removed.getVDB();
 	}	
 	
-	public Map<String, Datatype> getBuiltinDatatypes() {
+	public Map<String, Datatype> getRuntimeTypeMap() {
 		return datatypeMap;
 	}
 	

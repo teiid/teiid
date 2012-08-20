@@ -170,41 +170,4 @@ public class SimpleIndexUtil {
         return tmp.toArray(new Index[tmp.size()]);
     }
 
-    /**
-     * Return the name of the index file to use for the specified record type, applies only for sever and vdb
-	 * index files.
-     * @param recordType
-     * @return
-     */
-    public static String getIndexFileNameForRecordType(final char recordType) {
-        switch (recordType) {
-  	      case MetadataConstants.RECORD_TYPE.COLUMN: return IndexConstants.INDEX_NAME.COLUMNS_INDEX;
-		  case MetadataConstants.RECORD_TYPE.TABLE: return IndexConstants.INDEX_NAME.TABLES_INDEX;
-          case MetadataConstants.RECORD_TYPE.MODEL: return IndexConstants.INDEX_NAME.MODELS_INDEX;
-          case MetadataConstants.RECORD_TYPE.CALLABLE:
-          case MetadataConstants.RECORD_TYPE.CALLABLE_PARAMETER:
-		  case MetadataConstants.RECORD_TYPE.RESULT_SET: return IndexConstants.INDEX_NAME.PROCEDURES_INDEX;
-          case MetadataConstants.RECORD_TYPE.INDEX:
-          case MetadataConstants.RECORD_TYPE.ACCESS_PATTERN:           
-          case MetadataConstants.RECORD_TYPE.PRIMARY_KEY:
-          case MetadataConstants.RECORD_TYPE.FOREIGN_KEY:
-		  case MetadataConstants.RECORD_TYPE.UNIQUE_KEY:  return IndexConstants.INDEX_NAME.KEYS_INDEX;
-          case MetadataConstants.RECORD_TYPE.SELECT_TRANSFORM: return IndexConstants.INDEX_NAME.SELECT_TRANSFORM_INDEX;
-          case MetadataConstants.RECORD_TYPE.INSERT_TRANSFORM: return IndexConstants.INDEX_NAME.INSERT_TRANSFORM_INDEX;
-          case MetadataConstants.RECORD_TYPE.UPDATE_TRANSFORM: return IndexConstants.INDEX_NAME.UPDATE_TRANSFORM_INDEX;
-          case MetadataConstants.RECORD_TYPE.DELETE_TRANSFORM: return IndexConstants.INDEX_NAME.DELETE_TRANSFORM_INDEX;
-          case MetadataConstants.RECORD_TYPE.PROC_TRANSFORM: return IndexConstants.INDEX_NAME.PROC_TRANSFORM_INDEX;
-          case MetadataConstants.RECORD_TYPE.MAPPING_TRANSFORM: return IndexConstants.INDEX_NAME.MAPPING_TRANSFORM_INDEX;
-          case MetadataConstants.RECORD_TYPE.DATATYPE: return IndexConstants.INDEX_NAME.DATATYPES_INDEX;
-          //case IndexConstants.RECORD_TYPE.DATATYPE_ELEMENT:
-          //case IndexConstants.RECORD_TYPE.DATATYPE_FACET:
-          case MetadataConstants.RECORD_TYPE.VDB_ARCHIVE: return IndexConstants.INDEX_NAME.VDBS_INDEX;
-          case MetadataConstants.RECORD_TYPE.ANNOTATION: return IndexConstants.INDEX_NAME.ANNOTATION_INDEX;
-          case MetadataConstants.RECORD_TYPE.PROPERTY: return IndexConstants.INDEX_NAME.PROPERTIES_INDEX;
-		  //case IndexConstants.RECORD_TYPE.JOIN_DESCRIPTOR: return null;
-		  case MetadataConstants.RECORD_TYPE.FILE: return IndexConstants.INDEX_NAME.FILES_INDEX;
-        }
-        throw new IllegalArgumentException("Unkown record type " + recordType);
-    }    
-    
 }

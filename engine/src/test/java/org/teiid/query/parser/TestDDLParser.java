@@ -646,7 +646,7 @@ public class TestDDLParser {
 	}
 	
 	public static Map<String, Datatype> getDataTypes() {
-		return SystemMetadata.getInstance().getBuiltinTypeMap();
+		return SystemMetadata.getInstance().getRuntimeTypeMap();
 	}
 	
 	@Test public void testKeyResolve() {

@@ -342,7 +342,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				boolean cached = false;
 				Exception ex = null;
 				// designer based models define data types based on their built in data types, which are system vdb data types
-				Map<String, Datatype> datatypes = getVDBRepository().getBuiltinDatatypes();
+				Map<String, Datatype> datatypes = getVDBRepository().getRuntimeTypeMap();
 				Map<String, Datatype> builtin = getVDBRepository().getSystemStore().getDatatypes();
 				final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 				MetadataFactory factory = getSerializer().loadSafe(cachedFile, MetadataFactory.class);

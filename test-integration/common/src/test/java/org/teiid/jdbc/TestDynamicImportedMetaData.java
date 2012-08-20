@@ -72,7 +72,7 @@ public class TestDynamicImportedMetaData {
 
 	private MetadataFactory createMetadataFactory(String schema, Properties importProperties) {
 		VDBRepository vdbRepository = new VDBRepository();
-    	return new MetadataFactory("vdb", 1, schema, vdbRepository.getBuiltinDatatypes(), importProperties, null);
+    	return new MetadataFactory("vdb", 1, schema, vdbRepository.getRuntimeTypeMap(), importProperties, null);
 	}
 	
 	@Test public void testUniqueReferencedKey() throws Exception {

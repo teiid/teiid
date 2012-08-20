@@ -50,7 +50,7 @@ public class TestMatViewAliasing {
     	server = new FakeServer(true);
     	
     	VDBRepository vdbRepository = new VDBRepository();
-    	MetadataFactory mf = new MetadataFactory(null, 1, "foo", vdbRepository.getBuiltinDatatypes(), new Properties(), null);
+    	MetadataFactory mf = new MetadataFactory(null, 1, "foo", vdbRepository.getRuntimeTypeMap(), new Properties(), null);
     	mf.getSchema().setPhysical(false);
     	Table mat = mf.addTable("mat");
     	mat.setVirtual(true);

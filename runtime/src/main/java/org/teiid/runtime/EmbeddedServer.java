@@ -535,7 +535,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount) throws TranslatorException {
-		Map<String, Datatype> datatypes = this.repo.getBuiltinDatatypes();
+		Map<String, Datatype> datatypes = this.repo.getRuntimeTypeMap();
 		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
 		factory.setBuiltinDataTypes(this.repo.getSystemStore().getDatatypes());
 		factory.getSchema().setPhysical(model.isSource());

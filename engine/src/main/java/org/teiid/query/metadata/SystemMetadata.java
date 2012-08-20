@@ -162,10 +162,10 @@ public class SystemMetadata {
 	}
 	
 	/**
-	 * Map of runtime types and aliases to built-in datatypes
+	 * Map of runtime types and aliases to runtime datatypes
 	 * @return
 	 */
-	public Map<String, Datatype> getBuiltinTypeMap() {
+	public Map<String, Datatype> getRuntimeTypeMap() {
 		return typeMap;
 	}
 	

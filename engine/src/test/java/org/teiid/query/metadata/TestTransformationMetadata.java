@@ -163,7 +163,7 @@ public class TestTransformationMetadata {
 	}
 	
 	@Test public void testTypeCorrection() throws Exception {
-		MetadataFactory mf = new MetadataFactory(null, 1, "x", SystemMetadata.getInstance().getBuiltinTypeMap(), new Properties(), null); //$NON-NLS-1$
+		MetadataFactory mf = new MetadataFactory(null, 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); //$NON-NLS-1$
 		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		
 		Table t = mf.addTable("y"); //$NON-NLS-1$

@@ -38,41 +38,6 @@ public class IndexConstants {
 
     public final static char NAME_DELIM_CHAR = '.';
 
-    //Index file name Constants
-    public static class INDEX_NAME {
-        public final static String TABLES_INDEX            = "TABLES.INDEX"; //$NON-NLS-1$
-        public final static String KEYS_INDEX              = "KEYS.INDEX"; //$NON-NLS-1$        
-        public final static String COLUMNS_INDEX           = "COLUMNS.INDEX"; //$NON-NLS-1$
-        public final static String MODELS_INDEX            = "MODELS.INDEX"; //$NON-NLS-1$
-        public final static String VDBS_INDEX              = "VDBS.INDEX"; //$NON-NLS-1$
-        public final static String PROCEDURES_INDEX        = "PROCEDURES.INDEX"; //$NON-NLS-1$        
-        public final static String DATATYPES_INDEX         = "DATATYPES.INDEX"; //$NON-NLS-1$
-        public final static String SELECT_TRANSFORM_INDEX  = "SELECT_TRANSFORM.INDEX"; //$NON-NLS-1$
-        public final static String INSERT_TRANSFORM_INDEX  = "INSERT_TRANSFORM.INDEX"; //$NON-NLS-1$
-        public final static String UPDATE_TRANSFORM_INDEX  = "UPDATE_TRANSFORM.INDEX"; //$NON-NLS-1$
-        public final static String DELETE_TRANSFORM_INDEX  = "DELETE_TRANSFORM.INDEX"; //$NON-NLS-1$
-        public final static String PROC_TRANSFORM_INDEX    = "PROC_TRANSFORM.INDEX"; //$NON-NLS-1$
-        public final static String MAPPING_TRANSFORM_INDEX = "MAPPING_TRANSFORM.INDEX"; //$NON-NLS-1$
-        public final static String ANNOTATION_INDEX        = "ANNOTATION.INDEX"; //$NON-NLS-1$
-        public final static String PROPERTIES_INDEX        = "PROPERTIES.INDEX"; //$NON-NLS-1$
-        public final static String FILES_INDEX        	 = "FILES.INDEX"; //$NON-NLS-1$
-        public final static String[] INDEX_NAMES  = new String[]{TABLES_INDEX, KEYS_INDEX, 
-                                                                  COLUMNS_INDEX, PROCEDURES_INDEX, MODELS_INDEX, 
-                                                                  VDBS_INDEX, DATATYPES_INDEX, SELECT_TRANSFORM_INDEX,
-                                                                  INSERT_TRANSFORM_INDEX, UPDATE_TRANSFORM_INDEX,
-                                                                  DELETE_TRANSFORM_INDEX, PROC_TRANSFORM_INDEX,
-                                                                  MAPPING_TRANSFORM_INDEX, ANNOTATION_INDEX, PROPERTIES_INDEX, FILES_INDEX};
-
-        public final static boolean isKnownIndex(String indexName) {
-            for (int i = 0; i < INDEX_NAMES.length; i++) {
-                if (INDEX_NAMES[i].equalsIgnoreCase(indexName)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-    }
-
     //Search Record type Constants
 	public static class SEARCH_RECORD_TYPE {
 		public final static char RESOURCE       	= 'A';
