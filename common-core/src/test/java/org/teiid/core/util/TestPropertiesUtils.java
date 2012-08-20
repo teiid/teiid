@@ -22,31 +22,25 @@
 
 package org.teiid.core.util;
 
+import static org.junit.Assert.*;
+
 import java.io.File;
 import java.util.*;
 
-import junit.framework.TestCase;
-
+import org.junit.After;
+import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils.InvalidPropertyException;
 
 
 /**
  * Tests primarily the various cloning scenarios available with PropertiesUtils
  */
-@SuppressWarnings("nls")
-public class TestPropertiesUtils extends TestCase {
+@SuppressWarnings({"nls","unchecked"})
+public class TestPropertiesUtils {
 
     private final static String TEMP_FILE = UnitTestUtil.getTestScratchPath() + "/temp.properties";  //$NON-NLS-1$
     
-    
-    
-	// ################################## FRAMEWORK ################################
-
-    public TestPropertiesUtils(String name) {
-        super(name);
-    }
-    
-	public void tearDown() throws Exception{
+	@After public void tearDown() throws Exception{
         try {
             File temp = new File(TEMP_FILE);
             temp.delete();
@@ -66,7 +60,7 @@ public class TestPropertiesUtils extends TestCase {
      * and {@link org.teiid.core.util.utils.PropertiesUtils#load(String)}
      * and {@link org.teiid.core.util.utils.PropertiesUtils#loadHeader(String)}
      */
-    public void testPrintLoadWithHeader() throws Exception {
+    @Test public void testPrintLoadWithHeader() throws Exception {
         Properties props1 = make(MAP_C, null, !UNMODIFIABLE);
         
         //print to file
@@ -86,7 +80,7 @@ public class TestPropertiesUtils extends TestCase {
      * and {@link org.teiid.core.util.utils.PropertiesUtils#load(String)}
      * and {@link org.teiid.core.util.utils.PropertiesUtils#loadHeader(String)}
      */
-    public void testPrintLoadWithoutHeader() throws Exception {
+    @Test public void testPrintLoadWithoutHeader() throws Exception {
         Properties props1 = make(MAP_C, null, !UNMODIFIABLE);
         
         //print to file
@@ -102,7 +96,7 @@ public class TestPropertiesUtils extends TestCase {
     
 	// ################ putAll(Properties, Properties) ###########################
 
-    public void testPutAllWithDefaults(){
+    @Test public void testPutAllWithDefaults(){
 	    Properties c = make(MAP_C, null, !UNMODIFIABLE);
         Properties ab = make(MAP_A, make(MAP_B, null, UNMODIFIABLE), UNMODIFIABLE);
 	    PropertiesUtils.putAll(c, ab);
@@ -114,7 +108,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties)}
 	 */
-	public void testSimpleModifiableClone(){
+	@Test public void testSimpleModifiableClone(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a);
 	    assertTrue(verifyProps(a, LIST_A));
@@ -123,7 +117,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties)}
 	 */
-	public void testSimpleModifiableCloneWithUnmodifiableDefaults(){
+	@Test public void testSimpleModifiableCloneWithUnmodifiableDefaults(){
 	    Properties ab = make(MAP_A, make(MAP_B, null, UNMODIFIABLE), !UNMODIFIABLE);
 	    ab = PropertiesUtils.clone(ab);
 	    assertTrue(verifyProps(ab, LIST_AB));
@@ -132,7 +126,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties)}
 	 */
-	public void testSimpleModifiableCloneWithModifiableDefaults(){
+	@Test public void testSimpleModifiableCloneWithModifiableDefaults(){
 	    Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), !UNMODIFIABLE);
 	    ab = PropertiesUtils.clone(ab);
 	    assertTrue(verifyProps(ab, LIST_AB));
@@ -143,7 +137,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, boolean)}
 	 */
-	public void testCloneModifiableAsModifiable(){
+	@Test public void testCloneModifiableAsModifiable(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a);
 	    assertTrue(verifyProps(a, LIST_A));
@@ -152,7 +146,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, boolean)}
 	 */
-	public void testCloneUnmodifiableAsModifiable(){
+	@Test public void testCloneUnmodifiableAsModifiable(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 	    a = PropertiesUtils.clone(a);
 	    assertTrue(verifyProps(a, LIST_A));
@@ -161,7 +155,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, boolean)}
 	 */
-	public void testCloneModifiableWithModifiableAsModifiable(){
+	@Test public void testCloneModifiableWithModifiableAsModifiable(){
 	    Properties ab = make(MAP_A, make(MAP_B, null, !UNMODIFIABLE), !UNMODIFIABLE);
 	    ab = PropertiesUtils.clone(ab);
 	    assertTrue(verifyProps(ab, LIST_AB));
@@ -172,7 +166,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testCloneModAndModAsMod(){
+	@Test public void testCloneModAndModAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
@@ -182,7 +176,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testDeepcloneModAndModAsMod(){
+	@Test public void testDeepcloneModAndModAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
@@ -192,7 +186,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testCloneModAndUnmodAsMod(){
+	@Test public void testCloneModAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
@@ -202,7 +196,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testDeepcloneModAndUnmodAsMod(){
+	@Test public void testDeepcloneModAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, !UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
@@ -212,7 +206,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testCloneUnmodAndModAsMod(){
+	@Test public void testCloneUnmodAndModAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
@@ -222,7 +216,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testDeepcloneUnmodAndModAsMod(){
+	@Test public void testDeepcloneUnmodAndModAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, !UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
@@ -232,7 +226,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testCloneUnmodAndUnmodAsMod(){
+	@Test public void testCloneUnmodAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, !DEEP_CLONE);
@@ -242,7 +236,7 @@ public class TestPropertiesUtils extends TestCase {
 	/**
 	 * Tests {@link org.teiid.core.util.utils.PropertiesUtils#clone(Properties, Properties, boolean, boolean)}
 	 */
-	public void testDeepcloneUnmodAndUnmodAsMod(){
+	@Test public void testDeepcloneUnmodAndUnmodAsMod(){
 	    Properties a = make(MAP_A, null, UNMODIFIABLE);
 		Properties b = make(MAP_B, null, UNMODIFIABLE); 
 	    a = PropertiesUtils.clone(a, b, DEEP_CLONE);
@@ -376,51 +370,51 @@ public class TestPropertiesUtils extends TestCase {
 	private static final String PROP_VALUE_5B = "value5b"; //$NON-NLS-1$
 	private static final String PROP_VALUE_6C = "value6c"; //$NON-NLS-1$
 	
-	private static final Map MAP_A;
-	private static final Map MAP_B;
-	private static final Map MAP_C;
-	private static final List LIST_A;
+	private static final Map<String, String> MAP_A;
+	private static final Map<String, String> MAP_B;
+	private static final Map<String, String> MAP_C;
+	private static final List<Map<String, String>> LIST_A;
 //	private static final List LIST_B;
 	private static final List LIST_AB;
 	private static final List LIST_ABC;
 	static{
 		//A
-	    Map temp = new HashMap();
+	    Map<String, String> temp = new HashMap<String, String>();
 	    temp.put(PROP_NAME_1, PROP_VALUE_1A);
 	    temp.put(PROP_NAME_2, PROP_VALUE_2A);
 	    temp.put(PROP_NAME_3, PROP_VALUE_3A);
 		MAP_A = Collections.unmodifiableMap(temp);
 		//B
-	    temp = new HashMap();
+	    temp = new HashMap<String, String>();
 	    temp.put(PROP_NAME_1, PROP_VALUE_1B);
 	    temp.put(PROP_NAME_4, PROP_VALUE_4B);
 	    temp.put(PROP_NAME_5, PROP_VALUE_5B);
 		MAP_B = Collections.unmodifiableMap(temp);
 		//C
-	    temp = new HashMap();
+	    temp = new HashMap<String, String>();
 	    temp.put(PROP_NAME_2, PROP_VALUE_2C);
 	    temp.put(PROP_NAME_4, PROP_VALUE_4C);
 	    temp.put(PROP_NAME_6, PROP_VALUE_6C);
 		MAP_C = Collections.unmodifiableMap(temp);
 		//LISTS OF BINDINGS		
-		List tempList = new ArrayList(1);
+		List<Map<String, String>> tempList = new ArrayList<Map<String, String>>(1);
 		tempList.add(MAP_A);
 		LIST_A = Collections.unmodifiableList(tempList);
-		tempList = new ArrayList(1);
+		tempList = new ArrayList<Map<String, String>>(1);
 		tempList.add(MAP_B);
 //		LIST_B = Collections.unmodifiableList(tempList);
-		tempList = new ArrayList(2);
+		tempList = new ArrayList<Map<String, String>>(2);
 		tempList.add(MAP_A);
 		tempList.add(MAP_B);
 		LIST_AB = Collections.unmodifiableList(tempList);
-		tempList = new ArrayList(3);
+		tempList = new ArrayList<Map<String, String>>(3);
 		tempList.add(MAP_A);
 		tempList.add(MAP_B);
 		tempList.add(MAP_C);
 		LIST_ABC = Collections.unmodifiableList(tempList);
 	}
     
-    public void testNestedProperties() throws Exception {
+    @Test public void testNestedProperties() throws Exception {
         System.setProperty("testdirectory", "c:/metamatrix/testdirectory"); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         Properties p = new Properties(System.getProperties());
@@ -461,7 +455,7 @@ public class TestPropertiesUtils extends TestCase {
 
     }
     
-    public void testOverrideProperties() {
+    @Test public void testOverrideProperties() {
         Properties p = new Properties();
         
         p.setProperty("foo", "bar");  //$NON-NLS-1$ //$NON-NLS-2$
@@ -479,7 +473,7 @@ public class TestPropertiesUtils extends TestCase {
         assertEquals(1, p1.size());
     }
     
-    public void testGetInvalidInt() {
+    @Test public void testGetInvalidInt() {
     	Properties p = new Properties();
     	p.setProperty("x", "y"); //$NON-NLS-1$ //$NON-NLS-2$
     	try {
@@ -522,7 +516,7 @@ public class TestPropertiesUtils extends TestCase {
 		}
     }
     
-    public void testSetBeanProperties() {
+    @Test public void testSetBeanProperties() {
     	Bean bean = new Bean();
     	Properties p = new Properties();
     	p.setProperty("prop", "0");  //$NON-NLS-1$//$NON-NLS-2$
@@ -537,7 +531,7 @@ public class TestPropertiesUtils extends TestCase {
     	
     	assertEquals(0, bean.getProp());
     	assertEquals("1", bean.getProp1()); //$NON-NLS-1$
-    	assertEquals(2d, bean.getProp2());
+    	assertEquals(2d, bean.getProp2(), 0);
     	assertEquals(Arrays.asList("3"), bean.getProp3()); //$NON-NLS-1$
     	
     	p.setProperty("prop", "?"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -550,9 +544,29 @@ public class TestPropertiesUtils extends TestCase {
     	}
     }
     
-    public void testGetInt() {
+    @Test public void testGetInt() {
     	Properties p = new Properties();
     	p.setProperty("prop", "0  "); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(PropertiesUtils.getIntProperty(p, "prop", -1), 0); //$NON-NLS-1$
+    }
+    
+    public static class MyBean {
+    	int val;
+    	
+    	public int getVal() {
+			return val;
+		}
+    	
+    	public void setVal(int val) {
+			this.val = val;
+		}
+    }
+    
+    @Test public void testCaseSensitive() {
+    	Properties p = new Properties();
+    	p.setProperty("org.teiid.val", "100"); //$NON-NLS-1$ //$NON-NLS-2$
+    	MyBean test = new MyBean();
+    	PropertiesUtils.setBeanProperties(test, p, "org.teiid", true);
+    	assertEquals(100, test.getVal());
     }
 }

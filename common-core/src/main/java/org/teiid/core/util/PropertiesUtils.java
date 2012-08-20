@@ -755,7 +755,11 @@ public final class PropertiesUtils {
             // Get the property name
             String propertyName = methodName.substring(3);    // remove the "set"
             if (prefix != null) {
-            	propertyName = prefix + "." + propertyName; //$NON-NLS-1$
+            	if (caseSensitive) {
+            		propertyName = prefix + "." + Character.toLowerCase(propertyName.charAt(0)) + propertyName.substring(1, propertyName.length()); //$NON-NLS-1$
+            	} else {
+            		propertyName = prefix + "." + propertyName; //$NON-NLS-1$
+            	}
             }
             Object propertyValue = map.get(propertyName);
             if (propertyValue != null || map.containsKey(propertyName)) {
