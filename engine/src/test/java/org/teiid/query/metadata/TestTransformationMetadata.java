@@ -37,6 +37,8 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -158,6 +160,25 @@ public class TestTransformationMetadata {
 	@Test public void testRelativeSchemas() throws Exception {
 		TransformationMetadata tm = exampleTransformationMetadata();
 		assertEquals(1, tm.getXMLSchemas(tm.getGroupID("x1.doc")).size());
+	}
+	
+	@Test public void testTypeCorrection() throws Exception {
+		MetadataFactory mf = new MetadataFactory(null, 1, "x", SystemMetadata.getInstance().getBuiltinTypeMap(), new Properties(), null); //$NON-NLS-1$
+		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
+		
+		Table t = mf.addTable("y"); //$NON-NLS-1$
+		mf.addColumn("test", "string", t);
+		
+		MetadataFactory mf1 = UnitTestUtil.helpSerialize(mf);
+		
+		Column column = mf1.getSchema().getTable("y").getColumns().get(0);
+		Datatype dt = column.getDatatype();
+		
+		assertNotSame(mf.getBuiltinDataTypes().get(dt.getName()), column.getDatatype());
+		
+		mf1.correctDatatypes(mf.getDataTypes(), mf.getBuiltinDataTypes());
+		
+		assertSame(mf.getBuiltinDataTypes().get(dt.getName()), column.getDatatype());
 	}
 	
 }
