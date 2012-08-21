@@ -60,6 +60,7 @@ import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 public class SybaseExecutionFactory extends JDBCExecutionFactory {
 	
 	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$
+	public static final String TWELVE_5_3 = "12.5.3"; //$NON-NLS-1$
 	public static final String FIFTEEN_0_2 = "15.0.2"; //$NON-NLS-1$
 	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
 	
@@ -389,6 +390,11 @@ public class SybaseExecutionFactory extends JDBCExecutionFactory {
     
     protected boolean supportsCrossJoin() {
     	return false;
+    }
+    
+    @Override
+    public boolean supportsRowLimit() {
+	return getDatabaseVersion().compareTo(TWELVE_5_3) >= 0;
     }
     
 }
