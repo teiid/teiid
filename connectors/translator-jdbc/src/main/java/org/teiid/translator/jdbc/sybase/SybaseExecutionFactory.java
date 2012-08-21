@@ -52,7 +52,8 @@ import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 @Translator(name="sybase", description="A translator for Sybase Database")
 public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
-	
+
+	public static final String TWELVE_5_3 = "12.5.3"; //$NON-NLS-1$
 	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$
 	public static final String FIFTEEN_0_2 = "15.0.2"; //$NON-NLS-1$
 	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
@@ -363,7 +364,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	@Override
 	public boolean supportsRowLimit() {
-		return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
+		return (getDatabaseVersion().startsWith("12") && getDatabaseVersion().compareTo(TWELVE_5_3) >= 0) || getDatabaseVersion().compareTo(FIFTEEN_0_2) >=0; //$NON-NLS-1$
 	}
     
 }
