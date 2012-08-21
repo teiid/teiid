@@ -35,6 +35,7 @@ import org.teiid.translator.jdbc.TranslationHelper;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestSybaseSQLConversionVisitor {
 
     private static SybaseExecutionFactory trans = new SybaseExecutionFactory();
@@ -254,6 +255,18 @@ public class TestSybaseSQLConversionVisitor {
         helpTestVisitor(getBQTVDB(),
             "SELECT timestampadd(sql_tsi_second, 1, timestampvalue), timestampadd(sql_tsi_frac_second, 1000, timestampvalue), timestampdiff(sql_tsi_frac_second, timestampvalue, timestampvalue) from bqt1.smalla", //$NON-NLS-1$
             "SELECT {fn timestampadd(sql_tsi_second, 1, SmallA.TimestampValue)}, dateadd(millisecond, 1000/1000000, SmallA.TimestampValue), datediff(millisecond, SmallA.TimestampValue,SmallA.TimestampValue)*1000000 FROM SmallA"); //$NON-NLS-1$
+    }
+    
+    @Test public void testLimitSupport() {
+    	SybaseExecutionFactory sybaseExecutionFactory = new SybaseExecutionFactory();
+    	sybaseExecutionFactory.setDatabaseVersion("12.5.4");
+    	assertTrue(sybaseExecutionFactory.supportsRowLimit());
+    	sybaseExecutionFactory.setDatabaseVersion("12.5.2");
+    	assertFalse(sybaseExecutionFactory.supportsRowLimit());
+    	sybaseExecutionFactory.setDatabaseVersion("15");
+    	assertFalse(sybaseExecutionFactory.supportsRowLimit());
+    	sybaseExecutionFactory.setDatabaseVersion("15.1");
+    	assertTrue(sybaseExecutionFactory.supportsRowLimit());
     }
     
 }
