@@ -145,7 +145,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 	public static final String SAVEFILE = "saveFile"; //$NON-NLS-1$
 	
 	private Charset encoding = Charset.defaultCharset();
-	private boolean exceptionIfFileNotFound;
+	private boolean exceptionIfFileNotFound = true;
 	
 	public FileExecutionFactory() {
 		setSourceRequiredForMetadata(false);

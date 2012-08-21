@@ -25,7 +25,6 @@
 	<LI><A HREF="#About">About JBoss</A> 
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
-
 <ul>
 	<li>TEIID-2150 <b>Positional procedure defaults</b> - a procedure now may be called positionally with just the leading input parameters as long as all trailing parameters are out or defaultable.
 	<li>TEIID-2148 <b>Streaming Improvements</b> - the ws translator invoke/invokeHttp procedures now execpt a stream parameter to indicate that the result should be streamed directly without an intermediate copy being created.  
@@ -38,12 +37,6 @@
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
 </ul>
-
-<h4>from 8.1</h4>
-<ul>
-  <li>TEIID-2149 <B>Subquery Unnesting</B> - the optimizer will not consult the subqueryUnnestDefault property if it can make a cost based decision to replace a subquery with a merge join.
-Use the subquery hints, DJ, MJ, and NO_UNNEST to override this behavior if needed.
-<ul>
 
 <h4>from 8.0</h4>
 <ul>
@@ -66,7 +59,7 @@ Use the subquery hints, DJ, MJ, and NO_UNNEST to override this behavior if neede
   <li>TEIID-2127 if ExecutionFactory.isSourceRequired returns true (the default) then not obtaining a connection will for an Execution will result in an error.  If an ExecutionFactory does not use a source, then no connection-jndi-name should be
 specified and isSourceRequired should return false (see setSourceRequired).  If isSourceRequired returns false and a connection-jndi-name is specified, then Teiid will still attempt to obtain a connection, but no exception will be thrown if a connection isn't available.
   <li>TEIID-2138 the odbc layer will report standard_conforming_strings as on, rather than off to better reflect the string literal handling of Teiid.
-<ul>
+</ul>
 
 <h4>from 7.x</h4>
 <ul>
@@ -151,14 +144,25 @@ for how to access the underlying SQLWarning chains.
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
 
-<h4>from 7.4</h4>
+<h4>from 8.1</h4>
 <ul>
-  <li>The configuration for the buffer service now defaults to 256/512 for processor and connector batch sizes respectively.  The buffer service also has 4 new properties inline-lobs, memory-buffer-space, memory-buffer-off-heap, and max-storage-object-size.  
-  If you were explicitly setting the value for 'max-reserve-kb', you should consider lowering that value to account for the memory buffer and/or explicitly set the memory-buffer-space. 
+  <li>The file translator now defaults to exceptionIfFileNotFound=true, you can set the translator property to false to preserve the old behavior of returning null. 
+</ul>
+
+<h4>from 8.0</h4>
+<ul>
+  <li>teiid-security-users and teiid-security-roles properties files have been moved under the configuration directory of their respective deployment. 
+</ul>
+
+<h4>from 7.7</h4>
+<ul>
+  <li>The server is now dependent upon AS 7.x.  The old configuration and deployment structure is no longer applicable. 
 </ul>
 
 <h4>from 7.4</h4>
 <ul>
+  <li>The configuration for the buffer service now defaults to 256/512 for processor and connector batch sizes respectively.  The buffer service also has 4 new properties inline-lobs, memory-buffer-space, memory-buffer-off-heap, and max-storage-object-size.  
+  If you were explicitly setting the value for 'max-reserve-kb', you should consider lowering that value to account for the memory buffer and/or explicitly set the memory-buffer-space. 
   <LI>The configuration for authorization has been moved off of the RuntimeEngineDeployer bean and onto separate AuthorizationValidator and PolicyDecider beans.
   <LI>The configuration for the buffer manager has been simplified to refer to memory sizes in KB, rather than batch columns.
 </ul>
@@ -241,8 +245,8 @@ The following components have been updated:
 </ul>
 
 <h2><a name="Details">Detailed Release Notes</a></h2>
-        Detailed Release Notes - Teiid - Version ${project.version}
-                    
+        Detailed Release Notes - Teiid - Version ${project.version}   
+            
 <h2><a name="Documentation">Documentation and Help</a></h2>
 
 The <a href="http://www.jboss.org/teiid/">Teiid community project</a> is hosted on jboss.org.
