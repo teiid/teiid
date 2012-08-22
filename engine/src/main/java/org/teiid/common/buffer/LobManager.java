@@ -247,11 +247,16 @@ public class LobManager {
 			Streamable<?> persistedLob;
 						
 			OutputStream fsos = store.createOutputStream();
-byteLength = ObjectConverterUtil.write(fsos, is, bytes, -1);
+			byteLength = ObjectConverterUtil.write(fsos, is, bytes, -1);
 			
 			// re-construct the new lobs based on the file store
 			final long lobOffset = offset;
 			final long lobLength = byteLength;
+			/*
+			 * Using an inner class here will hold a reference to the LobManager
+			 * which prevents the removal of the FileStore until all of the
+			 * lobs have been gc'd
+			 */
 			InputStreamFactory isf = new InputStreamFactory() {
 				@Override
 				public InputStream getInputStream() throws IOException {
@@ -263,7 +268,7 @@ byteLength = ObjectConverterUtil.write(fsos, is, bytes, -1);
 					return StorageMode.PERSISTENT;
 				}
 			};			
-		
+			isf.setLength(byteLength);
 			if (lob instanceof BlobType) {
 				persistedLob = new BlobType(new BlobImpl(isf));
 			}

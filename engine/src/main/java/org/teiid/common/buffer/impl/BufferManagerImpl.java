@@ -465,16 +465,13 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
     	Class<?>[] types = getTypeClasses(elements);
     	BatchManagerImpl batchManager = createBatchManager(newID, types);
     	LobManager lobManager = null;
-    	FileStore lobStore = null;
 		if (lobIndexes != null) {
-			lobStore = createFileStore(newID + "_lobs"); //$NON-NLS-1$
+			FileStore lobStore = createFileStore(newID + "_lobs"); //$NON-NLS-1$
 			lobManager = new LobManager(lobIndexes, lobStore);
+			AutoCleanupUtil.setCleanupReference(lobManager, lobStore);
 			batchManager.setLobManager(lobManager);
 		}
     	TupleBuffer tupleBuffer = new TupleBuffer(batchManager, String.valueOf(newID), elements, lobManager, getProcessorBatchSize(elements));
-    	if (lobStore != null) {
-    		AutoCleanupUtil.setCleanupReference(batchManager, lobStore);
-    	}
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
         	LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating TupleBuffer:", newID, elements, Arrays.toString(types), "of type", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
         }
