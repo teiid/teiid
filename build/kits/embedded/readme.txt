@@ -12,6 +12,5 @@ Also there will be not be any functionality provided in these areas
 - Access through Admin API
 - Authentication
 - Connection pools
-- 
 
  

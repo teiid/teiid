@@ -106,6 +106,26 @@
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
-       
+    
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-file</include>
+            <include>org.jboss.teiid.connectors:connector-ldap</include>
+            <include>org.jboss.teiid.connectors:connector-salesforce</include>
+            <include>org.jboss.teiid.connectors:connector-ws</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <attachmentClassifier>lib</attachmentClassifier>
+          <unpack>false</unpack>
+          <outputDirectory>optional</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
+    
     </moduleSets>  
 </assembly>
