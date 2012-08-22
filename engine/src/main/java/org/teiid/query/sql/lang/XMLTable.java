@@ -26,7 +26,7 @@ public class XMLTable extends TableFunctionReference {
 		private XPathExpression pathExpression;
 		
 		public XMLColumn(String name) {
-			super(name, DataTypeManager.DefaultDataTypes.STRING);
+			super(name, DataTypeManager.DefaultDataTypes.INTEGER);
 			this.ordinal = true;
 		}
 		
