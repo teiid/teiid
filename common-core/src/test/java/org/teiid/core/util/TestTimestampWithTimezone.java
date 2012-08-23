@@ -22,6 +22,8 @@
 
 package org.teiid.core.util;
 
+import static org.junit.Assert.*;
+
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -29,28 +31,20 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.TimeZone;
 
-import org.teiid.core.util.TimestampWithTimezone;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-import junit.framework.TestCase;
+public class TestTimestampWithTimezone {
 
-public class TestTimestampWithTimezone extends TestCase {
-
-    /**
-     * Constructor for TestTimestampWithTimezone.
-     * 
-     * @param name
-     */
-    public TestTimestampWithTimezone(String name) {
-        super(name);
-    }
-    
-	public void setUp() { 
+	@Before public void setUp() { 
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/Chicago")); //$NON-NLS-1$ 
 	}
 	
-	public void tearDown() { 
+	@After public void tearDown() { 
 		TimestampWithTimezone.resetCalendar(null);
 	}
 
@@ -117,7 +111,7 @@ public class TestTimestampWithTimezone extends TestCase {
         return ts;
     }
 
-    public void testDST() {
+    @Test public void testDST() {
         helpTestSame("2005-10-30 02:39:10", 1, "America/Chicago", //$NON-NLS-1$ //$NON-NLS-2$
                      "GMT-05:00"); //$NON-NLS-1$ 
 
@@ -137,32 +131,32 @@ public class TestTimestampWithTimezone extends TestCase {
 
     }
 
-    public void testTimezone() {
+    @Test public void testTimezone() {
         helpTestSame("2004-06-29 15:39:10", 1, "GMT-06:00", //$NON-NLS-1$ //$NON-NLS-2$
                      "GMT-05:00"); //$NON-NLS-1$ 
     }
 
-    public void testTimezone2() {
+    @Test public void testTimezone2() {
         helpTestSame("2004-06-29 15:39:10", 1, "GMT-08:00", //$NON-NLS-1$ //$NON-NLS-2$
                      "GMT-06:00"); //$NON-NLS-1$ 
     }
 
-    public void testTimezone3() {
+    @Test public void testTimezone3() {
         helpTestSame("2004-08-31 18:25:54", 1, "Europe/London", //$NON-NLS-1$ //$NON-NLS-2$
                      "GMT"); //$NON-NLS-1$ 
     }
 
-    public void testTimezoneOverMidnight() {
+    @Test public void testTimezoneOverMidnight() {
         helpTestSame("2004-06-30 23:39:10", 1, "America/Los_Angeles", //$NON-NLS-1$ //$NON-NLS-2$
                      "America/Chicago"); //$NON-NLS-1$ 
     }
 
-    public void testCase2852() {
+    @Test public void testCase2852() {
         helpTestSame("2005-05-17 22:35:33", 508659, "GMT", //$NON-NLS-1$ //$NON-NLS-2$
                      "America/New_York"); //$NON-NLS-1$ 
     }
 
-    public void testCreateDate() {
+    @Test public void testCreateDate() {
         Timestamp t = Timestamp.valueOf("2004-06-30 23:39:10.1201"); //$NON-NLS-1$
         Date date = TimestampWithTimezone.createDate(t);
         
@@ -179,7 +173,7 @@ public class TestTimestampWithTimezone extends TestCase {
         assertEquals(cal.get(Calendar.DATE), 30);
     }
     
-    public void testCreateTime() {
+    @Test public void testCreateTime() {
         Timestamp t = Timestamp.valueOf("2004-06-30 23:39:10.1201"); //$NON-NLS-1$
         Time date = TimestampWithTimezone.createTime(t);
         
@@ -199,14 +193,14 @@ public class TestTimestampWithTimezone extends TestCase {
     /**
      * Even though the id of the timezones are different, this should not change the result
      */
-    public void testDateToDateConversion() {
+    @Test public void testDateToDateConversion() {
     	Date t = Date.valueOf("2004-06-30"); //$NON-NLS-1$
     	Date converted = TimestampWithTimezone.createDate(t, TimeZone.getTimeZone("America/Chicago"), Calendar.getInstance(TimeZone.getTimeZone("US/Central"))); //$NON-NLS-1$ //$NON-NLS-2$
     	
     	assertEquals(t.getTime(), converted.getTime());
     }
     
-    public void testDateToDateConversion1() {
+    @Test public void testDateToDateConversion1() {
     	Date t = Date.valueOf("2004-06-30"); //$NON-NLS-1$
     	Date converted = TimestampWithTimezone.createDate(t, TimeZone.getTimeZone("America/Chicago"), Calendar.getInstance(TimeZone.getTimeZone("GMT"))); //$NON-NLS-1$ //$NON-NLS-2$
     	
