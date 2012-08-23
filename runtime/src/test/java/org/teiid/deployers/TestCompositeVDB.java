@@ -52,16 +52,21 @@ public class TestCompositeVDB {
     	VDBMetaData vdb = cvdb.getVDB();
     	return vdb.getAttachment(TransformationMetadata.class);
 	}
+	
+	public static class Foo {
+		
+	}
 
 	private static CompositeVDB createCompositeVDB(MetadataStore metadataStore,	String vdbName) throws VirtualDatabaseException {
 		VDBMetaData vdbMetaData = createVDBMetadata(metadataStore, vdbName);
-    	
+    	vdbMetaData.addAttchment(Foo.class, new Foo());
     	ConnectorManagerRepository cmr = new ConnectorManagerRepository();
     	cmr.addConnectorManager("source", getConnectorManager("FakeTranslator", "FakeConnection", getFuncsOne()));
     	cmr.addConnectorManager("source2", getConnectorManager("FakeTranslator2", "FakeConnection2", getFuncsTwo()));
     	
     	CompositeVDB cvdb = new CompositeVDB(vdbMetaData, metadataStore, null, null, RealMetadataFactory.SFM.getSystemFunctions(),cmr, null);
     	cvdb.metadataLoadFinished();
+    	assertNotNull(cvdb.getVDB().getAttachment(Foo.class));
 		return cvdb;
 	}
 
