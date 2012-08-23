@@ -69,6 +69,13 @@
         <scope>provided</scope>        
     </dependency>    
     
+    <dependency>
+        <groupId>asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>3.3.1</version>
+        <scope>provided</scope>
+    </dependency>
+    
     <!-- This dependency is to read the ra.xml file details -->
     <dependency>
         <groupId>org.jboss.as</groupId>
@@ -102,6 +109,13 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-common-core</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>teiid-engine</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

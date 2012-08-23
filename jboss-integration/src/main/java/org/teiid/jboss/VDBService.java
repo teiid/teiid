@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.as.controller.ModelController;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
@@ -52,10 +53,10 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.CompositeVDB;
@@ -68,8 +69,9 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -96,6 +98,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	protected final InjectedValue<VDBStatusChecker> vdbStatusCheckInjector = new InjectedValue<VDBStatusChecker>();
+	
+	// for REST deployment
+	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	
 	private VDBLifeCycleListener vdbListener;
 	private LinkedHashMap<String, Resource> visibilityMap;
@@ -166,6 +171,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		};
 		
 		getVDBRepository().addListener(this.vdbListener);
+		getVDBRepository().addListener(new ResteasyEnabler(controllerValue.getValue(), executorInjector.getValue()));
 				
 		MetadataStore store = new MetadataStore();
 		

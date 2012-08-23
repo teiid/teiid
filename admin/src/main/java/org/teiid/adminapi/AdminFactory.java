@@ -148,7 +148,7 @@ public class AdminFactory {
 
     }    
     
-    private class AdminImpl implements Admin{
+    public class AdminImpl implements Admin{
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
 		private ModelControllerClient connection;
@@ -749,6 +749,10 @@ public class AdminFactory {
             	}
             }
 	        return templates;
+		}
+		
+		public List<String> getDeployments(){
+			return Util.getDeployments(this.connection);
 		}
 
 		@Override

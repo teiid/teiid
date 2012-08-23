@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
+    <display-name>${context-name}</display-name>
+    <context-param>
+        <param-name>javax.ws.rs.Application</param-name>
+        <param-value>org.teiid.jboss.rest.TeiidRestApplication</param-value>
+    </context-param>
+    <listener>
+        <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
+    </listener>
+    <servlet>
+        <servlet-name>RestDataservice</servlet-name>
+        <servlet-class>org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>RestDataservice</servlet-name>
+        <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+  <!-- 
+     <security-role>
+        <description>security role</description>
+        <role-name>example-role</role-name>
+    </security-role>
+      
+    <security-constraint>
+        <display-name>require valid user</display-name>
+        <web-resource-collection>
+            <web-resource-name>Teiid rest application</web-resource-name>
+            <url-pattern>/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>example-role</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>yourdomain.com</realm-name>
+    </login-config>
+     -->      
+</web-app>

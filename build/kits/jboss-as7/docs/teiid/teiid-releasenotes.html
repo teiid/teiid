@@ -27,8 +27,9 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
 	<li>TEIID-2150 <b>Positional procedure defaults</b> - a procedure now may be called positionally with just the leading input parameters as long as all trailing parameters are out or defaultable.
-	<li>TEIID-2148 <b>Streaming Improvements</b> - the ws translator invoke/invokeHttp procedures now execpt a stream parameter to indicate that the result should be streamed directly without an intermediate copy being created.  
+	<li>TEIID-2148 <b>Streaming Improvements</b> - the ws translator invoke/invokeHttp procedures now accept a "stream"" parameter to indicate that the result should be streamed directly without an intermediate copy being created.  
 	Also intermediate document/blob copies are made concurrently with reading to reduce latency.
+	<li>TEIID-2158 <b>Rest Services</b> - when required extension metadata defined on the virtual procedure, a REST based service on that procedure is automatically generated and deployed upon VDB deployment.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
