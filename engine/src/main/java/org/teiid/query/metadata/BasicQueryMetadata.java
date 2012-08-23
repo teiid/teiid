@@ -28,8 +28,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.script.ScriptEngine;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -519,5 +522,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	public Set<String> getImportedModels() {
 		return Collections.emptySet();
 	}
-    
+	
+	@Override
+	public ScriptEngine getScriptEngine(String langauge) throws TeiidProcessingException {
+		return null;
+	}
+	
 }

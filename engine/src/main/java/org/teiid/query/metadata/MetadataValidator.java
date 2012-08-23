@@ -147,6 +147,8 @@ public class MetadataValidator {
 	static class ResolveQueryPlans implements MetadataRule {
 		@Override
 		public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
+			QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
+	    	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
 			for (Schema schema:store.getSchemaList()) {
 				ModelMetaData model = vdb.getModel(schema.getName());
 
@@ -163,7 +165,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
 						}
 						else {
-							metadataValidator.validate(vdb, model, t, report);
+							metadataValidator.validate(vdb, model, t, report, metadata);
 						}
 					}						
 				}
@@ -174,7 +176,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
 						}
 						else {
-							metadataValidator.validate(vdb, model, p, report);
+							metadataValidator.validate(vdb, model, p, report, metadata);
 						}
 					}
 				}					
@@ -198,9 +200,7 @@ public class MetadataValidator {
 		LogManager.log(messageLevel, LogConstants.CTX_QUERY_RESOLVER, msg);
 	}
 	
-    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report) {
-    	QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
-    	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore()); //TODO: optimize this
+    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report, QueryMetadataInterface metadata) {
     	ValidatorReport resolverReport = null;
     	try {
     		if (record instanceof Procedure) {

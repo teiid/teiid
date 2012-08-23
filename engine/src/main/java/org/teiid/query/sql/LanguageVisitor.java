@@ -144,4 +144,5 @@ public abstract class LanguageVisitor {
 	public void visit(WindowSpecification windowSpecification) {}
 
 	public void visit(Array array) {}
+	public void visit(ObjectTable objectTable) {}
 }

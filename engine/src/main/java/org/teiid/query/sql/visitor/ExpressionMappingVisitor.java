@@ -34,6 +34,7 @@ import java.util.Set;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
@@ -103,6 +104,16 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     @Override
     public void visit(XMLTable obj) {
     	for (XMLColumn col : obj.getColumns()) {
+    		Expression exp = col.getDefaultExpression();
+    		if (exp != null) {
+    			col.setDefaultExpression(replaceExpression(exp));
+    		}
+		}
+    }
+    
+    @Override
+    public void visit(ObjectTable obj) {
+    	for (ObjectColumn col : obj.getColumns()) {
     		Expression exp = col.getDefaultExpression();
     		if (exp != null) {
     			col.setDefaultExpression(replaceExpression(exp));

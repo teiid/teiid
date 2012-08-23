@@ -449,6 +449,7 @@ TOKEN : /* NonReserved words */
 |   <QUOTE: "quote">
 |   <HEADER: "header">
 |   <NULLS: "nulls">
+|   <OBJECTTABLE: "objecttable">
 
 }
 /*
@@ -551,7 +552,7 @@ Token nonReserved() :
 {
 }
 {
-    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>|<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>|<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>|<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>)
+    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>|<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>|<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>|<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>)
     {
     	return getToken(0);
     }	
@@ -2294,6 +2295,8 @@ FromClause tablePrimary(ParseInfo info) :
 	    |
 	    clause = xmlTable(info)
 	    |
+	    LOOKAHEAD(2) clause = objectTable(info)
+	    |
 	    clause = unaryFromClause(info)
 		|
 		LOOKAHEAD(subqueryFromClause(info)) clause = subqueryFromClause(info) 
@@ -2553,6 +2556,89 @@ XMLQuery xmlQuery(ParseInfo info) :
  		return result;
  	}
 }
+
+/*
+name=object table
+description=Returns table results by processing a script.
+example={code:sql}OBJECTTABLE('z' PASSING val AS z COLUMNS col OBJECT 'teiid_row') AS X{code}
+*/
+ObjectTable objectTable(ParseInfo info) :
+{
+	String rowScript = null;
+	String lang = null;
+	DerivedColumn passing = null;
+	ArrayList<DerivedColumn> passingValues = new ArrayList<DerivedColumn>();
+	ObjectTable.ObjectColumn column = null;
+	ArrayList<ObjectTable.ObjectColumn> columns = new ArrayList<ObjectTable.ObjectColumn>();
+	String aliasID = null;
+}
+{
+ 	<OBJECTTABLE> <LPAREN> 
+ 	[<LANGUAGE> lang = stringVal()]
+ 	rowScript = stringVal()
+ 	[ 
+ 	  <PASSING>
+ 	  passing = derivedColumn(info)
+ 	  {
+ 	  	passingValues.add(passing);
+ 	  	passing.setPropagateName(false);
+ 	  }
+ 	  (<COMMA>
+ 	    passing = derivedColumn(info)
+ 	    {
+ 	  	  passingValues.add(passing);
+ 	  	  passing.setPropagateName(false);
+ 	    }
+ 	  )*
+ 	]
+    <COLUMNS>
+    column = objectColumn(info)
+    {
+      columns.add(column);
+    }
+    (<COMMA>
+      column = objectColumn(info)
+      {
+        columns.add(column);
+      }
+    )*
+ 	<RPAREN>
+ 	[<AS>] aliasID=id()
+ 	{
+ 		ObjectTable result = new ObjectTable();
+ 		result.setScriptingLanguage(lang);
+ 		result.setRowScript(rowScript);
+ 		result.setPassing(passingValues);
+ 		result.setColumns(columns);
+ 		result.setName(validateAlias(aliasID));
+ 		return result;
+ 	}
+}
+
+/*
+name=object table column
+description=object table column.
+example={code:sql}y integer 'teiid_rowcount'{code}
+*/
+ObjectTable.ObjectColumn objectColumn(ParseInfo info):
+{
+	String name = null;
+	ParsedDataType datatype = null;
+	String path = null;
+	Expression defaultExpr = null;
+}
+{
+	name = id()
+    datatype = parseDataType()
+	path = stringVal()    
+    [
+   	  <DEFAULT_KEYWORD> defaultExpr = expression(info)
+	]
+	{
+	  return new ObjectTable.ObjectColumn(name, datatype.type, path, defaultExpr);
+	}
+}
+
 
 /*
 name=xml table

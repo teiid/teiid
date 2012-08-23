@@ -328,6 +328,26 @@ public class SimpleQueryResolver implements CommandResolver {
 			}
         }
         
+        @Override
+        public void visit(ObjectTable obj) {
+        	LinkedHashSet<GroupSymbol> saved = preTableFunctionReference(obj);
+        	visitNodes(obj.getPassing());
+			postTableFunctionReference(obj, saved);
+			try {
+	    		ResolverUtil.setDesiredType(obj.getPassing(), obj, DataTypeManager.DefaultDataClasses.OBJECT);
+				for (ObjectTable.ObjectColumn column : obj.getColumns()) {
+					if (column.getDefaultExpression() == null) {
+						continue;
+					}
+					visitNode(column.getDefaultExpression());
+					Expression ex = ResolverUtil.convertExpression(column.getDefaultExpression(), DataTypeManager.getDataTypeName(column.getSymbol().getType()), metadata);
+					column.setDefaultExpression(ex);
+				}
+			} catch (TeiidException e) {
+				 throw new TeiidRuntimeException(e);
+			}
+        }
+        
         /**
 		 * @param tfr  
 		 */

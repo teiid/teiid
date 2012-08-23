@@ -879,7 +879,7 @@ public class Evaluator {
 	 * Evaluate the parameters and return the context item if it exists
 	 */
 	public Object evaluateParameters(List<DerivedColumn> cols, List<?> tuple,
-			HashMap<String, Object> parameters)
+			Map<String, Object> parameters)
 			throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException {
 		Object contextItem = null;

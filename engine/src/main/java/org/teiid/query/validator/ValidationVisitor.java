@@ -31,6 +31,11 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+
+import javax.script.Compilable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 
 import net.sf.saxon.om.Name11Checker;
 import net.sf.saxon.om.QNameException;
@@ -44,6 +49,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -57,6 +63,7 @@ import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
@@ -1191,6 +1198,45 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     @Override
+    public void visit(ObjectTable obj) {
+    	List<DerivedColumn> passing = obj.getPassing();
+    	TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+    	for (DerivedColumn dc : passing) {
+    		if (dc.getAlias() == null) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.context_item_not_allowed"), obj); //$NON-NLS-1$
+        	} else if (!names.add(dc.getAlias())) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
+        	}
+		}
+    	Compilable scriptCompiler = null;
+    	try {
+			ScriptEngine engine = this.getMetadata().getScriptEngine(obj.getScriptingLanguage());
+			obj.setScriptEngine(engine);
+			if (engine instanceof Compilable) {
+				scriptCompiler = (Compilable)engine;
+				engine.put(ScriptEngine.FILENAME, SQLConstants.NonReserved.OBJECTTABLE);
+				obj.setCompiledScript(scriptCompiler.compile(obj.getRowScript()));
+			}
+		} catch (TeiidProcessingException e) {
+			handleValidationError(e.getMessage(), obj);
+		} catch (ScriptException e) {
+			handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31110, obj.getRowScript(), e.getMessage()), obj); //$NON-NLS
+		}
+    	for (ObjectColumn xc : obj.getColumns()) {
+    		if (scriptCompiler != null) {
+    			try {
+					xc.setCompiledScript(scriptCompiler.compile(xc.getPath()));
+				} catch (ScriptException e) {
+					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31110, xc.getPath(), e.getMessage()), obj); //$NON-NLS
+				}
+    		}
+			if (xc.getDefaultExpression() != null && !EvaluatableVisitor.isFullyEvaluatable(xc.getDefaultExpression(), false)) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_default", xc.getDefaultExpression()), obj); //$NON-NLS-1$
+			}
+		}
+    }
+    
+    @Override
     public void visit(XMLQuery obj) {
     	validatePassing(obj, obj.getXQueryExpression(), obj.getPassing());
     }
@@ -1198,7 +1244,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	private void validatePassing(LanguageObject obj, SaxonXQueryExpression xqe, List<DerivedColumn> passing) {
 		boolean context = false;
     	boolean hadError = false;
-    	HashSet<String> names = new HashSet<String>();
+    	TreeSet<String> names = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     	for (DerivedColumn dc : passing) {
     		if (dc.getAlias() == null) {
     			Class<?> type = dc.getExpression().getType();
@@ -1212,7 +1258,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     			context = true;
         	} else { 
         		validateXMLContentTypes(dc.getExpression(), obj);
-        		if (!names.add(dc.getAlias().toUpperCase())) {
+        		if (!names.add(dc.getAlias())) {
         			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.duplicate_passing", dc.getAlias()), obj); //$NON-NLS-1$
         		}
         	}

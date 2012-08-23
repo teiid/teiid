@@ -703,8 +703,8 @@ public class QueryRewriter {
         	TextTable tt = (TextTable)clause;
         	tt.setFile(rewriteExpressionDirect(tt.getFile()));
         } else if (clause instanceof XMLTable) {
-        	XMLTable xt = (XMLTable)clause;
-        	xt.rewriteDefaultColumn();
+        	rewriteExpressions(clause);
+        } else if (clause instanceof ObjectTable) {
         	rewriteExpressions(clause);
         } else if (clause instanceof ArrayTable) {
         	ArrayTable at = (ArrayTable)clause;

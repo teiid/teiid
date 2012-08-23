@@ -1,7 +1,6 @@
 package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import net.sf.saxon.sxpath.XPathExpression;
@@ -11,7 +10,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.DerivedColumn;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.XMLNamespaces;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
@@ -104,7 +102,7 @@ public class XMLTable extends TableFunctionReference {
     private XMLNamespaces namespaces;
     private String xquery;
     private List<DerivedColumn> passing = new ArrayList<DerivedColumn>();
-    private XMLColumn defaultColumn;
+    private boolean usingDefaultColumn;
     
     private SaxonXQueryExpression xqueryExpression;
     
@@ -113,11 +111,7 @@ public class XMLTable extends TableFunctionReference {
 	}
     
     public void compileXqueryExpression() throws TeiidProcessingException {
-    	List<XMLColumn> cols = this.columns;
-    	if (cols.isEmpty()) {
-    		cols = Arrays.asList(defaultColumn);
-    	}
-    	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, cols);
+    	this.xqueryExpression = new SaxonXQueryExpression(xquery, namespaces, passing, this.columns);
     }
     
     public SaxonXQueryExpression getXQueryExpression() {
@@ -141,7 +135,15 @@ public class XMLTable extends TableFunctionReference {
 	}
     
     public void setColumns(List<XMLColumn> columns) {
+    	if (columns.isEmpty()) {
+    		usingDefaultColumn = true;
+        	columns.add(new XMLColumn("OBJECT_VALUE", DataTypeManager.DefaultDataTypes.XML, ".", null)); //$NON-NLS-1$ //$NON-NLS-2$
+    	}
 		this.columns = columns;
+	}
+    
+    public boolean isUsingDefaultColumn() {
+		return usingDefaultColumn;
 	}
     
     public XMLNamespaces getNamespaces() {
@@ -151,17 +153,6 @@ public class XMLTable extends TableFunctionReference {
     public void setNamespaces(XMLNamespaces namespaces) {
 		this.namespaces = namespaces;
 	}
-    
-    @Override
-    public List<ElementSymbol> getProjectedSymbols() {
-    	if (!columns.isEmpty()) {
-        	return super.getProjectedSymbols();
-    	}
-    	if (defaultColumn == null) {
-    		defaultColumn = new XMLColumn("OBJECT_VALUE", DataTypeManager.DefaultDataTypes.XML, ".", null); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    	return Arrays.asList(defaultColumn.getSymbol());
-    }
     
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
@@ -175,9 +166,6 @@ public class XMLTable extends TableFunctionReference {
 		for (XMLColumn column : columns) {
 			clone.getColumns().add(column.clone());
 		}
-		if (defaultColumn != null) {
-			clone.defaultColumn = this.defaultColumn;
-		}
 		if (this.namespaces != null) {
 			clone.namespaces = this.namespaces.clone();
 		}
@@ -190,6 +178,7 @@ public class XMLTable extends TableFunctionReference {
 		if (this.xqueryExpression != null) {
 			clone.xqueryExpression = this.xqueryExpression.clone();
 		}
+		clone.usingDefaultColumn = usingDefaultColumn;
 		return clone;
 	}
 
@@ -208,11 +197,4 @@ public class XMLTable extends TableFunctionReference {
 			&& this.passing.equals(other.passing);
 	}
 
-	public void rewriteDefaultColumn() {
-		if (this.columns.isEmpty() && defaultColumn != null) {
-			this.columns.add(defaultColumn);
-			defaultColumn = null;
-		}
-	}
-	
 }

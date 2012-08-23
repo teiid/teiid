@@ -125,6 +125,7 @@ public class RelationalPlan extends ProcessorPlan {
         return this.outputCols;
     }
 
+    @Override
     public void open()
         throws TeiidComponentException, TeiidProcessingException {
     	if (with != null) {

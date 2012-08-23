@@ -26,20 +26,17 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
 
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -68,6 +65,7 @@ import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
 import org.teiid.query.mapping.xml.MappingLoader;
 import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.lang.SPParameter;
 
 
@@ -159,6 +157,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, Resource> vdbEntries;
     private FunctionLibrary functionLibrary;
     private VDBMetaData vdbMetaData;
+    private ScriptEngineManager scriptEngineManager;
+    private Set<String> importedModels;
     
     /*
      * TODO: move caching to jboss cache structure
@@ -174,6 +174,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
     	ArgCheck.isNotNull(store);
     	this.vdbMetaData = vdbMetadata;
+    	if (this.vdbMetaData !=null) {
+    		this.scriptEngineManager = vdbMetadata.getAttachment(ScriptEngineManager.class);
+    		this.importedModels = this.vdbMetaData.getImportedModels();
+    	} else {
+    		this.importedModels = Collections.emptySet();
+    	}
         this.store = store;
         if (vdbEntries == null) {
         	this.vdbEntries = Collections.emptyMap();
@@ -188,7 +194,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     private TransformationMetadata(final CompositeMetadataStore store, FunctionLibrary functionLibrary) {
-    	ArgCheck.isNotNull(store);
         this.store = store;
     	this.vdbEntries = Collections.emptyMap();
         this.functionLibrary = functionLibrary;
@@ -1089,14 +1094,37 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.metadataCache = this.metadataCache;
 		tm.partialNameToFullNameCache = this.partialNameToFullNameCache;
 		tm.procedureCache = this.procedureCache; 
+		tm.scriptEngineManager = this.scriptEngineManager;
+		tm.importedModels = this.importedModels;
 		return tm;
 	}
 	
 	@Override
 	public Set<String> getImportedModels() {
-		if (this.vdbMetaData == null) {
-			return Collections.emptySet();
-		}
-		return this.vdbMetaData.getImportedModels();
+		return this.importedModels;
 	}
+	
+	@Override
+	public ScriptEngine getScriptEngine(String language) throws TeiidProcessingException {
+		if (this.scriptEngineManager == null) {
+			this.scriptEngineManager = new ScriptEngineManager();
+		}
+		if (language == null) {
+			language = ObjectTable.DEFAULT_LANGUAGE; 
+		}
+		/*
+		 * because of state caching in the engine, we'll return a new instance for each
+		 * usage.  we can pool if needed and add a returnEngine method 
+		 */
+		ScriptEngine engine = this.scriptEngineManager.getEngineByName(language);
+		if (engine == null) {
+			Set<String> names = new LinkedHashSet<String>();
+			for (ScriptEngineFactory factory : this.scriptEngineManager.getEngineFactories()) {
+				names.addAll(factory.getNames());
+			}
+			throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31109, language, names));
+		}
+		return engine;
+	}
+	
 }

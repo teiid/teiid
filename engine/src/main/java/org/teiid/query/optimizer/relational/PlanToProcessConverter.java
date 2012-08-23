@@ -60,6 +60,7 @@ import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -421,7 +422,7 @@ public class PlanToProcessConverter {
 					//we handle the projection filtering once here rather than repeating the
 					//path analysis on a per plan basis
 					updateGroupName(node, xt);
-					Map elementMap = RelationalNode.createLookupMap(xt.getProjectedSymbols());
+					Map<Expression, Integer> elementMap = RelationalNode.createLookupMap(xt.getProjectedSymbols());
 			        List cols = (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
 					int[] projectionIndexes = RelationalNode.getProjectionIndexes(elementMap, cols);
 					ArrayList<XMLColumn> filteredColumns = new ArrayList<XMLColumn>(projectionIndexes.length);
@@ -432,6 +433,24 @@ public class PlanToProcessConverter {
 					xtn.setProjectedColumns(filteredColumns);
 					xtn.setTable(xt);
 					processNode = xtn;
+					break;
+				}
+				if (source instanceof ObjectTable) {
+					ObjectTable ot = (ObjectTable)source;
+					ObjectTableNode otn = new ObjectTableNode(getID());
+					//we handle the projection filtering once here rather than repeating the
+					//path analysis on a per plan basis
+					updateGroupName(node, ot);
+					Map<Expression, Integer> elementMap = RelationalNode.createLookupMap(ot.getProjectedSymbols());
+			        List<Expression> cols = (List<Expression>) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+					int[] projectionIndexes = RelationalNode.getProjectionIndexes(elementMap, cols);
+					ArrayList<ObjectColumn> filteredColumns = new ArrayList<ObjectColumn>(projectionIndexes.length);
+					for (int col : projectionIndexes) {
+						filteredColumns.add(ot.getColumns().get(col));
+					}
+					otn.setProjectedColumns(filteredColumns);
+					otn.setTable(ot);
+					processNode = otn;
 					break;
 				}
 				if (source instanceof TextTable) {

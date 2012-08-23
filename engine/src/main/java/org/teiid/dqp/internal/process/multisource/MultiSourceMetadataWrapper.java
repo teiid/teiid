@@ -373,7 +373,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	}
 	
 	@Override
-	public QueryMetadataInterface getDesignTimeMetadata() {
+	protected QueryMetadataInterface createDesignTimeMetadata() {
 		return new MultiSourceMetadataWrapper(actualMetadata.getDesignTimeMetadata(), multiSourceModels);
 	}
 

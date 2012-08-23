@@ -127,7 +127,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 			Cell cell = cellSet.getCell(colPos, rowPosition);
 			result[i++] = cell.getValue();
 		}	
-		ArrayList<Object[]> results = new ArrayList<Object[]>();
+		ArrayList<Object[]> results = new ArrayList<Object[]>(1);
 		results.add(result);
 		return results;
     }  

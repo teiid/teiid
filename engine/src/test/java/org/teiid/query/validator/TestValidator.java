@@ -1576,6 +1576,22 @@ public class TestValidator {
     @Test public void testXMLTableContextRequired() {
     	helpValidate("select * from xmltable('/a/b' passing convert('<a/>', xml) as a columns x for ordinality, c integer path '.') as x", new String[] {"XMLTABLE('/a/b' PASSING convert('<a/>', xml) AS a COLUMNS x FOR ORDINALITY, c integer PATH '.') AS x"}, RealMetadataFactory.example1Cached());
     }
+    
+    @Test public void testObjectTablePassing() {
+    	helpValidate("select * from objecttable('x' passing 'a' columns c integer 'row') as x", new String[] {"OBJECTTABLE('x' PASSING 'a' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testObjectTablePassingSameName() {
+    	helpValidate("select * from objecttable('x' passing 'a' AS X, 'b' AS x columns c integer 'row') as x", new String[] {"OBJECTTABLE('x' PASSING 'a' AS X, 'b' AS x COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testObjectTableLanguage() {
+    	helpValidate("select * from objecttable(language 'foo!' 'x' columns c integer 'row') as x", new String[] {"OBJECTTABLE(LANGUAGE 'foo!' 'x' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+    }
+    
+    @Test public void testObjectTableScript() {
+    	helpValidate("select * from objecttable('this is not valid' columns c integer 'row') as x", new String[] {"OBJECTTABLE('this is not valid' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+    }
 
     @Test public void testXMLQueryPassingContextType() {
     	helpValidate("select xmlquery('/' passing 2)", new String[] {"XMLQUERY('/' PASSING 2)"}, RealMetadataFactory.example1Cached());

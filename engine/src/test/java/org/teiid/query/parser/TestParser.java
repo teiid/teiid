@@ -5068,6 +5068,11 @@ public class TestParser {
         helpTest(sql, "SELECT * FROM XMLTABLE(XMLNAMESPACES(NO DEFAULT), '/' COLUMNS x FOR ORDINALITY, y date DEFAULT {d'2000-01-01'} PATH '@date') AS x", query);
     }
     
+    @Test public void testObjectTable() throws Exception {
+    	Query actualCommand = (Query)QueryParser.getQueryParser().parseCommand("SELECT * from objecttable(LANGUAGE 'foo' 'x' columns y date 'row.date' default {d'2000-01-01'}) as x", new ParseInfo());
+		assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'foo' 'x' COLUMNS y date 'row.date' DEFAULT {d'2000-01-01'}) AS x", actualCommand.toString());
+    }
+    
     @Test public void testXmlSerialize() throws Exception {
     	XMLSerialize f = new XMLSerialize();
     	f.setDocument(true);

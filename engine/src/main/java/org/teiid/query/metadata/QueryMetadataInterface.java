@@ -27,8 +27,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.script.ScriptEngine;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -622,6 +625,14 @@ public interface QueryMetadataInterface {
     	throws TeiidComponentException, QueryMetadataException;
 
     FunctionLibrary getFunctionLibrary();
+    
+    /**
+     * 
+     * @param langauge null is treated as the default of 'javascript'
+     * @return the ScriptEngine or null if the ScriptEngine is not available
+     * @throws TeiidProcessingException if the ScriptEngine is required
+     */
+    ScriptEngine getScriptEngine(String langauge) throws TeiidProcessingException;
     
     Object getPrimaryKey(Object metadataID);
     

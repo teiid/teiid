@@ -252,13 +252,14 @@ public class ResolverUtil {
 
         return conversion;
     }
-    
+
     public static void setDesiredType(List<DerivedColumn> passing, LanguageObject obj) throws QueryResolverException {
+    	setDesiredType(passing, obj, DataTypeManager.DefaultDataClasses.XML);
+    }
+    
+    public static void setDesiredType(List<DerivedColumn> passing, LanguageObject obj, Class<?> type) throws QueryResolverException {
 		for (DerivedColumn dc : passing) {
-			if (dc.getAlias() == null) {
-		    	ResolverUtil.setDesiredType(dc.getExpression(), DataTypeManager.DefaultDataClasses.XML, obj);
-		    	break;
-			}
+	    	ResolverUtil.setDesiredType(dc.getExpression(), type, obj);
 		}
 	}
 

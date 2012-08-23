@@ -41,6 +41,7 @@ import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
+import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -1778,7 +1779,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
             registerNodes(obj.getPassing(), 0);
         }
-        if (!obj.getColumns().isEmpty()) {
+        if (!obj.getColumns().isEmpty() && !obj.isUsingDefaultColumn()) {
             append(SPACE);
             append(NonReserved.COLUMNS);
             for (Iterator<XMLColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
@@ -1817,6 +1818,50 @@ public class SQLStringVisitor extends LanguageVisitor {
         outputDisplayName(obj.getName());
     }
 
+    @Override
+    public void visit( ObjectTable obj ) {
+        addHintComment(obj);
+        append("OBJECTTABLE("); //$NON-NLS-1$
+        if (obj.getScriptingLanguage() != null) {
+        	append(LANGUAGE);
+            append(SPACE);
+            visitNode(new Constant(obj.getScriptingLanguage()));
+            append(SPACE);
+        }
+        visitNode(new Constant(obj.getRowScript()));
+        if (!obj.getPassing().isEmpty()) {
+            append(SPACE);
+            append(NonReserved.PASSING);
+            append(SPACE);
+            registerNodes(obj.getPassing(), 0);
+        }
+        append(SPACE);
+        append(NonReserved.COLUMNS);
+        for (Iterator<ObjectColumn> cols = obj.getColumns().iterator(); cols.hasNext();) {
+        	ObjectColumn col = cols.next();
+            append(SPACE);
+            outputDisplayName(col.getName());
+            append(SPACE);
+            append(col.getType());
+            append(SPACE);
+            visitNode(new Constant(col.getPath()));
+            if (col.getDefaultExpression() != null) {
+                append(SPACE);
+                append(DEFAULT);
+                append(SPACE);
+                visitNode(col.getDefaultExpression());
+            }
+            if (cols.hasNext()) {
+                append(","); //$NON-NLS-1$
+            }
+        }
+        append(")");//$NON-NLS-1$
+        append(SPACE);
+        append(AS);
+        append(SPACE);
+        outputDisplayName(obj.getName());
+    }
+    
     @Override
     public void visit( XMLQuery obj ) {
         append("XMLQUERY("); //$NON-NLS-1$

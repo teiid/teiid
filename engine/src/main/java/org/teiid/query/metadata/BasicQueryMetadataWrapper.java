@@ -27,8 +27,11 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
+import javax.script.ScriptEngine;
+
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -37,6 +40,8 @@ import org.teiid.query.mapping.xml.MappingNode;
 public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	
 	protected QueryMetadataInterface actualMetadata;
+	protected QueryMetadataInterface designTimeMetadata;
+	protected boolean designTime;
 
 	public BasicQueryMetadataWrapper(QueryMetadataInterface actualMetadata) {
 		this.actualMetadata = actualMetadata;
@@ -355,6 +360,19 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	
 	@Override
 	public QueryMetadataInterface getDesignTimeMetadata() {
+		if (designTime) {
+			return this;
+		}
+		if (designTimeMetadata == null) {
+    		designTimeMetadata = createDesignTimeMetadata();
+    		if (designTimeMetadata instanceof BasicQueryMetadataWrapper) {
+    			((BasicQueryMetadataWrapper)designTimeMetadata).designTime = true;
+    		}
+    	}
+		return designTimeMetadata;
+	}
+	
+	protected QueryMetadataInterface createDesignTimeMetadata() {
 		return actualMetadata.getDesignTimeMetadata();
 	}
 	
@@ -378,5 +396,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public Set<String> getImportedModels() {
 		return actualMetadata.getImportedModels();
 	}
-
+	
+	@Override
+	public ScriptEngine getScriptEngine(String langauge) throws TeiidProcessingException {
+		return actualMetadata.getScriptEngine(langauge);
+	}
+	
 }

@@ -169,26 +169,10 @@ public class TestResolver {
 
         CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
         DeepPreOrderNavigator.doVisit(command, vis);
-        Collection unresolvedSymbols = vis.getUnresolvedSymbols();
+        Collection<LanguageObject> unresolvedSymbols = vis.getUnresolvedSymbols();
         assertTrue("Found unresolved symbols: " + unresolvedSymbols, unresolvedSymbols.isEmpty()); //$NON-NLS-1$
         return command; 
 	}		
-
-	/**
-	 * Expect a QueryResolverException (not any other kind of Throwable)
-	 */
-	private void helpResolveFails(Command command) {
-		// resolve
-		QueryResolverException exception = null;
-		try {
-			QueryResolver.resolveCommand(command, metadata);
-		} catch(QueryResolverException e) {
-			exception = e;
-		} catch(TeiidException e) {
-			fail("Exception during resolution (" + e.getClass().getName() + "): " + e.getMessage()); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		assertNotNull("Expected a QueryResolverException but got none.", exception); //$NON-NLS-1$
-	}
 
     private Criteria helpResolveCriteria(String sql) { 
         Criteria criteria = null;
@@ -211,7 +195,7 @@ public class TestResolver {
 
         CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
         DeepPreOrderNavigator.doVisit(criteria, vis);
-        Collection unresolvedSymbols = vis.getUnresolvedSymbols();
+        Collection<LanguageObject> unresolvedSymbols = vis.getUnresolvedSymbols();
         assertTrue("Found unresolved symbols: " + unresolvedSymbols, unresolvedSymbols.isEmpty()); //$NON-NLS-1$
         return criteria;
     }
@@ -229,7 +213,7 @@ public class TestResolver {
         CheckSymbolsAreResolvedVisitor vis = new CheckSymbolsAreResolvedVisitor();
         DeepPreOrderNavigator.doVisit(command, vis);
 
-        Collection unresolvedSymbols = vis.getUnresolvedSymbols();
+        Collection<LanguageObject> unresolvedSymbols = vis.getUnresolvedSymbols();
         assertTrue("Found unresolved symbols: " + unresolvedSymbols, unresolvedSymbols.isEmpty()); //$NON-NLS-1$
         return command;
     }
@@ -331,27 +315,22 @@ public class TestResolver {
 
         StoredProcedure proc = (StoredProcedure)helpResolve(sql);
         
-        List params = proc.getParameters();
-
-        // Remove all but IN and IN/OUT params
-        Iterator paramIter = params.iterator();
-        while (paramIter.hasNext()) {
-            final SPParameter param = (SPParameter)paramIter.next();
-            if (param.getParameterType() != ParameterInfo.IN && param.getParameterType() != ParameterInfo.INOUT) {
-                paramIter.remove();
-            }
-        }
+        List<SPParameter> params = proc.getParameters();
 
         // Check remaining params against expected expressions
-        assertEquals(expectedParameterExpressions.length, params.size());
-        for (int i=0; i<expectedParameterExpressions.length; i++) {
-            SPParameter param = (SPParameter)params.get(i);
+        int i = 0;
+        for (SPParameter param : params) {
+        	if (param.getParameterType() != SPParameter.IN && param.getParameterType() != SPParameter.INOUT) {
+        		continue;
+        	}
             if (expectedParameterExpressions[i] == null) {
                 assertNull(param.getExpression());
             } else {
                 assertEquals(expectedParameterExpressions[i], param.getExpression());
             }
+            i++;
         }
+        assertEquals(expectedParameterExpressions.length, i);
         
         return proc;
     }
@@ -932,13 +911,13 @@ public class TestResolver {
         Query resolvedQuery = (Query) helpResolve("select * from (EXEC pm1.sq2('abc')) as x"); //$NON-NLS-1$
         helpCheckFrom(resolvedQuery, new String[] { "x" }); //$NON-NLS-1$
         
-        List elements = (List) ElementCollectorVisitor.getElements(resolvedQuery.getSelect(), false);
+        List<ElementSymbol> elements = (List<ElementSymbol>) ElementCollectorVisitor.getElements(resolvedQuery.getSelect(), false);
         
-        ElementSymbol elem1 = (ElementSymbol)elements.get(0);
+        ElementSymbol elem1 = elements.get(0);
         assertEquals("Did not get expected element", "x.e1", elem1.getName() ); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("Did not get expected type", DataTypeManager.DefaultDataClasses.STRING, elem1.getType()); //$NON-NLS-1$
 
-        ElementSymbol elem2 = (ElementSymbol)elements.get(1);
+        ElementSymbol elem2 = elements.get(1);
         assertEquals("Did not get expected element", "x.e2", elem2.getName() ); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("Did not get expected type", DataTypeManager.DefaultDataClasses.INTEGER, elem2.getType()); //$NON-NLS-1$
     }
@@ -2355,7 +2334,7 @@ public class TestResolver {
         String update1 = "update pm1.g1 set e1 =1"; //$NON-NLS-1$
         String update2 = "update pm2.g1 set e1 =1"; //$NON-NLS-1$
         
-        List commands = new ArrayList();
+        List<Command> commands = new ArrayList<Command>();
         commands.add(QueryParser.getQueryParser().parseCommand(update1));
         commands.add(QueryParser.getQueryParser().parseCommand(update2));
         BatchedUpdateCommand command = new BatchedUpdateCommand(commands);
@@ -2438,11 +2417,11 @@ public class TestResolver {
          
         StoredProcedure proc = (StoredProcedure)helpResolve(query); 
         
-        List projected = proc.getProjectedSymbols();
+        List<Expression> projected = proc.getProjectedSymbols();
         
         assertEquals(2, projected.size());
         
-        for (Iterator i = projected.iterator(); i.hasNext();) {
+        for (Iterator<Expression> i = projected.iterator(); i.hasNext();) {
             ElementSymbol symbol = (ElementSymbol)i.next();
             assertNotNull(symbol.getGroupSymbol());
         }
@@ -2921,6 +2900,10 @@ public class TestResolver {
     
     @Test public void testXmlTableWithParam() {
     	helpResolve("select * from xmltable('/a' passing ?) as x");
+    }
+    
+    @Test public void testObjectTableWithParam() {
+    	helpResolve("select * from objecttable('x + 1' passing ? as x columns obj OBJECT '') as y");
     }
     
     @Test public void testXmlQueryWithParam() {

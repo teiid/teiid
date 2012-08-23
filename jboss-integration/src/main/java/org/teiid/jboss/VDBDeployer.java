@@ -29,6 +29,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
+import javax.script.ScriptEngineManager;
+
 import org.jboss.as.controller.ModelController;
 import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.server.Services;
@@ -38,7 +40,16 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.Module;
-import org.jboss.msc.service.*;
+import org.jboss.modules.ModuleClassLoader;
+import org.jboss.msc.service.AbstractServiceListener;
+import org.jboss.msc.service.Service;
+import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceController;
+import org.jboss.msc.service.ServiceName;
+import org.jboss.msc.service.ServiceTarget;
+import org.jboss.msc.service.StartContext;
+import org.jboss.msc.service.StartException;
+import org.jboss.msc.service.StopContext;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
@@ -121,7 +132,9 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		}
 		
 		// add VDB module's classloader as an attachment
-		deployment.addAttchment(ClassLoader.class, deploymentUnit.getAttachment(Attachments.MODULE).getClassLoader());
+		ModuleClassLoader classLoader = deploymentUnit.getAttachment(Attachments.MODULE).getClassLoader();
+		deployment.addAttchment(ClassLoader.class, classLoader);
+		deployment.addAttchment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
 		
 		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);

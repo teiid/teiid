@@ -321,7 +321,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				Calendar cal = cv.getCalendar();
 				Date d = cal.getTime();
 				cal.setTimeZone(getContext().getServerTimeZone());
-				return TimestampWithTimezone.createTimestamp(d, TimeZone.getTimeZone("GMT"), cal);
+				return TimestampWithTimezone.createTimestamp(d, TimeZone.getTimeZone("GMT"), cal); //$NON-NLS-1$
 			}
 		}
 		return Value.convertToJava(value);

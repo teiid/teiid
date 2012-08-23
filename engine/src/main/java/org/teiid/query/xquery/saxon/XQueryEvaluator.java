@@ -41,6 +41,7 @@ import net.sf.saxon.om.DocumentInfo;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.query.DynamicQueryContext;
 import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.value.HexBinaryValue;
 import nu.xom.Builder;
 import nu.xom.DocType;
 import nu.xom.Element;
@@ -53,6 +54,7 @@ import nux.xom.xquery.StreamingTransform;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.BinaryType;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -90,6 +92,8 @@ public class XQueryEvaluator {
 		            	value = wrapStax((Source)value, xquery.getConfig());
 		            } else if (value instanceof java.util.Date) {
 		            	value = XMLSystemFunctions.convertToAtomicValue(value);
+		            } else if (value instanceof BinaryType) {
+		            	value = new HexBinaryValue(((BinaryType)value).getBytesDirect());
 		            }
 		            dynamicContext.setParameter(entry.getKey(), value);                
 		        }
