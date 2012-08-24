@@ -24,6 +24,7 @@ package org.teiid.query.rewriter;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -1949,6 +1950,22 @@ public class QueryRewriter {
         	expression = rewriteExpressionDirect(((ExpressionSymbol)expression).getExpression());
         } else if (expression instanceof Criteria) {
         	expression = rewriteCriteria((Criteria)expression);
+        } else if (expression instanceof XMLSerialize) {
+        	rewriteExpressions(expression);
+        	XMLSerialize serialize = (XMLSerialize)expression;
+        	if (isNull(serialize.getExpression())) {
+        		return new Constant(null, serialize.getType());
+        	}
+        	if (serialize.getDeclaration() == null && serialize.isDocument()) {
+        		if ((serialize.getVersion() != null && !serialize.getVersion().equals("1.0"))) { //$NON-NLS-1$
+        			serialize.setDeclaration(true);
+        		} else if (serialize.getEncoding() != null) {
+        			Charset encoding = Charset.forName(serialize.getEncoding());
+        			if (!encoding.equals(Charset.forName("UTF-8")) && !encoding.equals(Charset.forName("UTF-16"))) { //$NON-NLS-1$ //$NON-NLS-2$
+            			serialize.setDeclaration(true);
+        			}
+        		}
+        	}
         } else {
         	rewriteExpressions(expression);
         } 

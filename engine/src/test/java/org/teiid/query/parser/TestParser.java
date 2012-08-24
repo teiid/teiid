@@ -5073,6 +5073,18 @@ public class TestParser {
 		assertEquals("SELECT * FROM OBJECTTABLE(LANGUAGE 'foo' 'x' COLUMNS y date 'row.date' DEFAULT {d'2000-01-01'}) AS x", actualCommand.toString());
     }
     
+    @Test public void testObjectTable1() throws Exception {
+    	Query query = new Query();
+    	query.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
+    	ObjectTable objectTable = new ObjectTable();
+    	objectTable.setRowScript("y");
+    	objectTable.setPassing(Arrays.asList(new DerivedColumn("y", new ElementSymbol("e1"))));
+    	objectTable.setColumns(Arrays.asList(new ObjectTable.ObjectColumn("z", "time", "now()", null)));
+    	objectTable.setName("x");
+		query.setFrom(new From(Arrays.asList(objectTable)));
+    	helpTest("select * from objecttable('y' passing e1 as y columns z time 'now()') as x", "SELECT * FROM OBJECTTABLE('y' PASSING e1 AS y COLUMNS z time 'now()') AS x", query);
+    }
+    
     @Test public void testXmlSerialize() throws Exception {
     	XMLSerialize f = new XMLSerialize();
     	f.setDocument(true);
@@ -5102,6 +5114,16 @@ public class TestParser {
     	f.setExpression(new ElementSymbol("x"));
     	f.setTypeString("CLOB");
     	helpTestExpression("xmlserialize(x as CLOB)", "XMLSERIALIZE(x AS CLOB)", f);
+    }
+    
+    @Test public void testXmlSerialize2() throws Exception {
+    	XMLSerialize f = new XMLSerialize();
+    	f.setExpression(new ElementSymbol("x"));
+    	f.setTypeString("BLOB");
+    	f.setDeclaration(Boolean.TRUE);
+    	f.setVersion("1.0");
+    	f.setEncoding("UTF-8");
+    	helpTestExpression("xmlserialize(x as BLOB encoding \"UTF-8\" version '1.0' INCLUDING xmldeclaration)", "XMLSERIALIZE(x AS BLOB ENCODING \"UTF-8\" VERSION '1.0' INCLUDING XMLDECLARATION)", f);
     }
     
     @Test public void testExpressionCriteria() throws Exception {

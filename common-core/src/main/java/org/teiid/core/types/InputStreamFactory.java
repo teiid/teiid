@@ -262,7 +262,7 @@ public abstract class InputStreamFactory implements Source {
     
     public static class SQLXMLInputStreamFactory extends InputStreamFactory implements DataSource {
     	
-    	private SQLXML sqlxml;
+    	protected SQLXML sqlxml;
     	
     	public SQLXMLInputStreamFactory(SQLXML sqlxml) {
     		this.sqlxml = sqlxml;

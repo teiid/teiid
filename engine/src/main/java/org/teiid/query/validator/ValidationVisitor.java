@@ -248,6 +248,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0011"),obj); //$NON-NLS-1$
 		}
 	}
+	
+	@Override
+	public void visit(XMLSerialize obj) {
+		if (obj.getEncoding() != null ) {
+        	try {
+				Charset.forName(obj.getEncoding());
+        	} catch (IllegalArgumentException e) {
+        		handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_encoding", obj.getEncoding()), obj); //$NON-NLS-1$
+        	}
+			if ((obj.getType() != DataTypeManager.DefaultDataClasses.BLOB && obj.getType() != DataTypeManager.DefaultDataClasses.VARBINARY)) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.encoding_for_binary"), obj); //$NON-NLS-1$
+			}
+		}
+	}
 
     public void visit(DependentSetCriteria obj) {
         this.validateRowLimitFunctionNotInInvalidCriteria(obj);

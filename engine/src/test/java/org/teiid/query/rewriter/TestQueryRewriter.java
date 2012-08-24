@@ -1636,5 +1636,9 @@ public class TestQueryRewriter {
     @Test public void testRewriteTrim1() throws Exception {
     	helpTestRewriteExpression("trim(leading from pm1.g1.e1)", "ltrim(pm1.g1.e1)", RealMetadataFactory.example1Cached());
     }
+    
+    @Test public void testRewriteXmlSerialize1() throws Exception {
+    	helpTestRewriteExpression("xmlserialize(DOCUMENT cast (pm1.g1.e1 as xml) as clob version '2.0')", "XMLSERIALIZE(DOCUMENT convert(pm1.g1.e1, xml) AS clob VERSION '2.0' INCLUDING XMLDECLARATION)", RealMetadataFactory.example1Cached());
+    }
 
 }

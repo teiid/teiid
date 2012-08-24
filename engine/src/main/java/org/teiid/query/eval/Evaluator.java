@@ -54,7 +54,15 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.*;
+import org.teiid.core.types.BaseLob;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.Sequencable;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
@@ -694,8 +702,20 @@ public class Evaluator {
 		return xml;
 	}
 
-	//TODO: determine when wrapping is not needed
 	public static InputStreamFactory getInputStreamFactory(Streamable<?> s) {
+		if (s.getReference() instanceof Streamable<?>) {
+			return getInputStreamFactory((Streamable<?>) s.getReference());
+		}
+		if (s.getReference() instanceof BaseLob) {
+			BaseLob bl = (BaseLob) s.getReference();
+			try {
+				InputStreamFactory isf = bl.getStreamFactory();
+				if (isf != null) {
+					return isf;
+				}
+			} catch (SQLException e) {
+			}
+		}
 		if (s instanceof ClobType) {
 			return new InputStreamFactory.ClobInputStreamFactory((Clob)s.getReference());
 		} else if (s instanceof BlobType){
@@ -796,14 +816,14 @@ public class Evaluator {
 		}
 		try {
 			if (xs.isDocument() == null || !xs.isDocument()) {
-				return serialize(xs, value);
+				return XMLSystemFunctions.serialize(xs, value);
 			}
 			if (value.getType() == Type.UNKNOWN) {
 				Type type = StringToSQLXMLTransform.isXml(value.getCharacterStream());
 				value.setType(type);
 			}
 			if (value.getType() == Type.DOCUMENT || value.getType() == Type.ELEMENT) {
-				return serialize(xs, value);
+				return XMLSystemFunctions.serialize(xs, value);
 			}
 		} catch (SQLException e) {
 			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30334, e);
@@ -813,14 +833,6 @@ public class Evaluator {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30336, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30336));
 	}
 
-	private Object serialize(XMLSerialize xs, XMLType value) throws TransformationException {
-		if (xs.getType() == DataTypeManager.DefaultDataClasses.STRING) {
-			return DataTypeManager.transformValue(value, xs.getType());
-		}
-		InputStreamFactory isf = getInputStreamFactory(value);
-		return new ClobType(new ClobImpl(isf, -1));
-	}
-	
 	private Object evaluateTextLine(List<?> tuple, TextLine function) throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getExpressions();
 		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true);

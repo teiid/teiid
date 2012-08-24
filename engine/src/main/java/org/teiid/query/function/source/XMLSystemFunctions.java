@@ -42,6 +42,7 @@ import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.QName;
@@ -55,6 +56,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.util.EventReaderDelegate;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -82,23 +84,22 @@ import org.json.simple.parser.ParseException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.StandardXMLTranslator;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.XMLTranslator;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.XMLType.Type;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
+import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.WSConnection.Util;
 import org.teiid.util.StAXSQLXML;
+import org.teiid.util.StAXSQLXML.StAXSourceProvider;
 
 
 /** 
@@ -140,6 +141,63 @@ public class XMLSystemFunctions {
 			return -1;
 		}
 	};
+
+	private static final EventFilter declarationOmittingFilter = new EventFilter() {
+		@Override
+		public boolean accept(XMLEvent event) {
+			return !event.isStartDocument() && !event.isEndDocument();
+		}
+	};
+
+	private static final class DeclarationStaxSourceProvider implements
+			StAXSourceProvider {
+		private final XMLEvent start;
+		private XMLType value;
+
+		private DeclarationStaxSourceProvider(XMLEvent start, XMLType value) {
+			this.start = start;
+			this.value = value;
+		}
+
+		@Override
+		public StAXSource getStaxSource() throws SQLException {
+			StAXSource source = value.getSource(StAXSource.class);
+			try {
+				XMLEventReader reader = getXMLEventReader(source);
+				reader = new EventReaderDelegate(reader) {
+					@Override
+					public XMLEvent nextEvent() throws XMLStreamException {
+						return replaceStart(super.nextEvent());
+					}
+					
+					@Override
+					public XMLEvent peek() throws XMLStreamException {
+						return replaceStart(super.peek());
+					}
+	
+					private XMLEvent replaceStart(XMLEvent event) {
+						if (event != null && event.getEventType() == XMLEvent.START_DOCUMENT) {
+							return start;
+						}
+						return event;
+					}
+					
+					@Override
+					public Object next() {
+						try {
+							return nextEvent();
+						} catch (XMLStreamException e) {
+							throw new NoSuchElementException();
+						}
+					}
+				};
+				return new StAXSource(reader);
+			} catch (XMLStreamException e) {
+				throw new SQLException(e);
+			}
+		}
+
+	}
 
 	private static final class JsonToXmlContentHandler implements
 			ContentHandler, XMLEventReader {
@@ -351,6 +409,15 @@ public class XMLSystemFunctions {
 		return factory;
 	}
 	static XMLOutputFactory xmlOutputFactory = newXmlOutputFactory();
+	
+	private static XMLEventReader getXMLEventReader(StAXSource source) throws XMLStreamException {
+		XMLEventReader reader = source.getXMLEventReader();
+		if (reader == null) {
+			XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
+			reader = inputFactory.createXMLEventReader(source.getXMLStreamReader());
+		}
+		return reader;
+	}
 	
 	public static XMLOutputFactory getOutputFactory() throws FactoryConfigurationError {
 		if (XMLType.isThreadSafeXmlFactories()) {
@@ -630,13 +697,12 @@ public class XMLSystemFunctions {
 		try {
 			if (object instanceof XMLType) {
 				XMLType xml = (XMLType)object;
-				r = xml.getCharacterStream();
 				Type type = xml.getType();
-				convertReader(writer, eventWriter, r, type);
+				convertReader(writer, eventWriter, null, type, xml);
 			} else if (object instanceof Clob) {
 				Clob clob = (Clob)object;
 				r = clob.getCharacterStream();
-				convertReader(writer, eventWriter, r, Type.TEXT);
+				convertReader(writer, eventWriter, r, Type.TEXT, null);
 			} else {
 				String val = convertToAtomicValue(object).getStringValue();
 				eventWriter.add(eventFactory.createCharacters(val));
@@ -652,8 +718,8 @@ public class XMLSystemFunctions {
 	}
 
 	private static void convertReader(Writer writer,
-			XMLEventWriter eventWriter, Reader r, Type type)
-			throws XMLStreamException, IOException, FactoryConfigurationError {
+			XMLEventWriter eventWriter, Reader r, Type type, XMLType xml)
+			throws XMLStreamException, IOException, FactoryConfigurationError, SQLException {
 		switch(type) {
 		case CONTENT:
 		case ELEMENT: 
@@ -662,6 +728,9 @@ public class XMLSystemFunctions {
 			eventWriter.flush();
 			char[] buf = new char[1 << 13];
 			int read = -1;
+			if (r == null) {
+				r = xml.getCharacterStream();
+			}
 			while ((read = r.read(buf)) != -1) {
 				writer.write(buf, 0, read);
 			}
@@ -669,20 +738,27 @@ public class XMLSystemFunctions {
 		}
 		case UNKNOWN:  //assume a document
 		case DOCUMENT: //filter the doc declaration
+			XMLEventReader eventReader = null;
 			XMLInputFactory inputFactory = XMLType.getXmlInputFactory();
-			if (!(r instanceof BufferedReader)) {
-				r = new BufferedReader(r);
-			}
-			XMLEventReader eventReader = inputFactory.createXMLEventReader(r);
-			eventReader = inputFactory.createFilteredReader(eventReader, new EventFilter() {
-				@Override
-				public boolean accept(XMLEvent event) {
-					return !event.isStartDocument() && !event.isEndDocument();
+			if (r != null) {
+				if (!(r instanceof BufferedReader)) {
+					r = new BufferedReader(r);
 				}
-			});
+				eventReader = inputFactory.createXMLEventReader(r);
+			} else {
+				StAXSource staxSource = xml.getSource(StAXSource.class);
+				eventReader = staxSource.getXMLEventReader();
+				if (eventReader == null) {
+					eventReader = inputFactory.createXMLEventReader(staxSource.getXMLStreamReader());
+				}
+			}
+			eventReader = inputFactory.createFilteredReader(eventReader, declarationOmittingFilter);
 			eventWriter.add(eventReader);
 			break;
 		case TEXT:
+			if (r == null) {
+				r = xml.getCharacterStream();
+			}
 			XMLEventFactory eventFactory = threadLocalEventtFactory.get();
 			char[] buf = new char[1 << 13];
 			int read = -1;
@@ -918,6 +994,90 @@ public class XMLSystemFunctions {
 	    		lobBuffer.remove();
 	    	}
 	    }
+	}
+	
+	public static Object serialize(XMLSerialize xs, XMLType value) throws TransformationException {
+		Type type = value.getType();
+		final Charset encoding;
+		if (xs.getEncoding() != null) {
+			encoding = Charset.forName(xs.getEncoding());					
+		} else {
+			encoding = UTF_8;
+		}
+		if (Boolean.TRUE.equals(xs.getDeclaration())) {
+			//need to replace existing/default declaration
+			if (type == Type.ELEMENT || type == Type.DOCUMENT) {
+				XMLEventFactory xmlEventFactory = threadLocalEventtFactory.get();
+				xmlEventFactory.setLocation(dummyLocation);
+				XMLEvent start = null;
+				if (xs.getVersion() != null) {
+					start = xmlEventFactory.createStartDocument(encoding.name(), xs.getVersion());
+				} else if (xs.getEncoding() != null) {
+					start = xmlEventFactory.createStartDocument(encoding.name());
+				} else {
+					start = xmlEventFactory.createStartDocument();
+				}
+				StAXSourceProvider sourceProvider = new DeclarationStaxSourceProvider(start, value);
+				value = new XMLType(new StAXSQLXML(sourceProvider, encoding));
+				value.setType(type);
+			}
+			//else just ignore, since the result is likely invalid
+		} else if (type == Type.DOCUMENT && Boolean.FALSE.equals(xs.getDeclaration())){
+			final XMLType v = value;
+			StAXSourceProvider sourceProvider = new StAXSourceProvider() {
+				@Override
+				public StAXSource getStaxSource() throws SQLException {
+					try {
+						XMLEventReader eventReader = getXMLEventReader(v.getSource(StAXSource.class));
+						eventReader = XMLType.getXmlInputFactory().createFilteredReader(eventReader, declarationOmittingFilter);
+						return new StAXSource(eventReader);
+					} catch (XMLStreamException e) {
+						throw new SQLException(e);
+					}
+				}
+			};
+			value = new XMLType(new StAXSQLXML(sourceProvider, encoding));
+			value.setType(Type.DOCUMENT);
+		}
+		if (xs.getType() == DataTypeManager.DefaultDataClasses.STRING) {
+			return DataTypeManager.transformValue(value, xs.getType());
+		}
+		if (xs.getType() == DataTypeManager.DefaultDataClasses.CLOB) {
+			InputStreamFactory isf = Evaluator.getInputStreamFactory(value);
+			return new ClobType(new ClobImpl(isf, -1));
+		}
+		if (xs.getType() == DataTypeManager.DefaultDataClasses.VARBINARY) {
+			try {
+				InputStream is = null;
+				if (!Charset.forName(value.getEncoding()).equals(encoding)) {
+					is = new ReaderInputStream(value.getCharacterStream(), encoding);
+				} else {
+					is = value.getBinaryStream();					
+				}
+				byte[] bytes = ObjectConverterUtil.convertToByteArray(is, DataTypeManager.MAX_LOB_MEMORY_BYTES);
+				return new BinaryType(bytes);
+			} catch (SQLException e) {
+				throw new TransformationException(CorePlugin.Event.TEIID10080, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10080, "XML", "VARBINARY")); //$NON-NLS-1$ //$NON-NLS-2$ 
+		    } catch (IOException e) {
+		    	throw new TransformationException(CorePlugin.Event.TEIID10080, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10080, "XML", "VARBINARY")); //$NON-NLS-1$ //$NON-NLS-2$
+		    }
+		}
+		InputStreamFactory isf = null;
+		if (!Charset.forName(value.getEncoding()).equals(encoding)) {
+			//create a wrapper for the input stream
+			isf = new InputStreamFactory.SQLXMLInputStreamFactory(value) {
+				public InputStream getInputStream() throws IOException {
+					try {
+						return new ReaderInputStream(sqlxml.getCharacterStream(), encoding);
+					} catch (SQLException e) {
+						throw new IOException(e);
+					}
+				}
+			};
+		} else {
+			isf = Evaluator.getInputStreamFactory(value);
+		}
+		return new BlobType(new BlobImpl(isf));
 	}
     
 }

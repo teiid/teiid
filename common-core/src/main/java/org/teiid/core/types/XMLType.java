@@ -136,6 +136,9 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 	}
 	
 	public String getEncoding() {
+		if (encoding == null) {
+			this.encoding = getEncoding(this);
+		}
 		return encoding;
 	}
 	
@@ -211,7 +214,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 			if (xml instanceof SQLXMLImpl) {
 				Charset cs = ((SQLXMLImpl)xml).getCharset();
 				if (cs != null) {
-					return cs.displayName();
+					return cs.name();
 				}
 			}
 			return getEncoding(xml.getBinaryStream());

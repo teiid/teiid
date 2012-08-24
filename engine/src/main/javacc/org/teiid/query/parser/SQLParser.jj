@@ -450,6 +450,10 @@ TOKEN : /* NonReserved words */
 |   <HEADER: "header">
 |   <NULLS: "nulls">
 |   <OBJECTTABLE: "objecttable">
+|   <VERSION: "version">
+|   <INCLUDING: "including">
+|   <EXCLUDING: "excluding">
+|   <XMLDECLARATION: "xmldeclaration">
 
 }
 /*
@@ -552,7 +556,12 @@ Token nonReserved() :
 {
 }
 {
-    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>|<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>|<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>|<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>|<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>)
+    (<INSTEAD>|<VIEW>|<ENABLED>|<DISABLED>|<KEY>|<SERIAL>|<TEXTAGG>|<COUNT>|<ROW_NUMBER>|<RANK>|<DENSE_RANK>|<SUM>|<AVG>|<MIN>|<MAX>|<EVERY>|<STDDEV_POP>
+     |<STDDEV_SAMP>|<VAR_SAMP>|<VAR_POP>|<DOCUMENT>|<CONTENT>|<TRIM>|<EMPTY>|<ORDINALITY>|<PATH>|<FIRST>|<LAST>|<NEXT>|<SUBSTRING>|<EXTRACT>|<TO_CHARS>
+     |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
+     |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
+     |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>)
     {
     	return getToken(0);
     }	
@@ -2326,17 +2335,26 @@ XMLSerialize xmlSerialize(ParseInfo info) :
 	Expression expr = null;
 	Boolean doc = null;
 	Token t = null;
+	String enc = null;
+	Boolean declr = null;
+	String ver = null;
 }
 {
 	<XMLSERIALIZE> <LPAREN>
 	[LOOKAHEAD(1) (<DOCUMENT> {doc = true;}| <CONTENT> {doc = false;})]
 	expr = expression(info)
 	[
-		<AS> (t = <STRING> | t = <VARCHAR> | t = <CLOB>)
+		<AS> (<STRING> | <VARCHAR> | <CLOB> | <VARBINARY> | <BLOB>) { t = getToken(0);}
 	]
+	[ <ENCODING> enc = id() ]
+	[ <VERSION> ver = stringVal() ]
+	[ ( <INCLUDING> {declr = true;}| <EXCLUDING> {declr = false;}) <XMLDECLARATION> ]
 	<RPAREN>
 	{
 		XMLSerialize result = new XMLSerialize();
+		result.setEncoding(enc);
+		result.setVersion(ver);
+		result.setDeclaration(declr);
 		result.setExpression(expr);
 		if (doc != null) {
 			result.setDocument(doc);

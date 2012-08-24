@@ -28,7 +28,7 @@ import java.sql.SQLXML;
 
 import org.junit.Test;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.basic.StringToSQLXMLTransform;
+import org.teiid.core.types.XMLType;
 
 
 @SuppressWarnings("nls")
@@ -44,6 +44,19 @@ public class TestStringToXmlTransform {
        
        SQLXML xmlValue = (SQLXML)transform.transformDirect(xml);
        assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
+    }
+	
+	@Test public void testGoodElement() throws Exception {
+        String xml = "<customer>\n" + //$NON-NLS-1$
+                        "<name>ABC</name>" + //$NON-NLS-1$
+                        "<age>32</age>" + //$NON-NLS-1$
+                     "</customer>"; //$NON-NLS-1$
+        
+       StringToSQLXMLTransform transform = new StringToSQLXMLTransform();
+       
+       XMLType xmlValue = (XMLType)transform.transformDirect(xml);
+       assertEquals(xml.replaceAll("[\r]", ""), xmlValue.getString().replaceAll("[\r]", ""));
+       assertEquals(XMLType.Type.ELEMENT, xmlValue.getType());
     }
     
     @Test(expected=TransformationException.class) public void testBadXML() throws Exception {

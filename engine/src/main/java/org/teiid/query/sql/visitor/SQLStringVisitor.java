@@ -1922,6 +1922,28 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(SPACE);
             append(obj.getTypeString());
         }
+        if (obj.getEncoding() != null) {
+        	append(SPACE);
+        	append(NonReserved.ENCODING);
+        	append(SPACE);
+        	append(escapeSinglePart(obj.getEncoding()));
+        }
+        if (obj.getVersion() != null) {
+        	append(SPACE);
+        	append(NonReserved.VERSION);
+        	append(SPACE);
+        	append(new Constant(obj.getVersion()));
+        }
+        if (obj.getDeclaration() != null) {
+        	append(SPACE);
+        	if (obj.getDeclaration()) {
+        		append(NonReserved.INCLUDING);
+        	} else {
+        		append(NonReserved.EXCLUDING);
+        	}
+        	append(SPACE);
+        	append(NonReserved.XMLDECLARATION);
+        }
         append(Tokens.RPAREN);
     }
 

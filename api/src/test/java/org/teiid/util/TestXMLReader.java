@@ -34,7 +34,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ObjectConverterUtil;
 
 @SuppressWarnings("nls")
-public class TestXMLInputStream {
+public class TestXMLReader {
 	
 	@Test public void testStreaming() throws Exception {
 		StringBuilder xmlBuilder = new StringBuilder();
@@ -47,25 +47,9 @@ public class TestXMLInputStream {
 		String xml = xmlBuilder.toString();
 		
 		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
-		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory());
-		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
-		assertEquals(xml, new String(bytes, "UTF-8"));
-	}
-	
-	@Test public void testUTF16Streaming() throws Exception {
-		StringBuilder xmlBuilder = new StringBuilder();
-		xmlBuilder.append("<?xml version=\"1.0\"?><root>");
-		for (int i = 0; i < 1000; i++) {
-			xmlBuilder.append("<a></a>");
-			xmlBuilder.append("<b></b>");
-		}
-		xmlBuilder.append("</root>");
-		String xml = xmlBuilder.toString();
-		
-		StAXSource source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader(xml)));
-		XMLInputStream is = new XMLInputStream(source, XMLOutputFactory.newFactory(), "UTF-16");
-		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
-		assertEquals(xml, new String(bytes, "UTF-16"));
+		XMLReader is = new XMLReader(source, XMLOutputFactory.newFactory());
+		String str = ObjectConverterUtil.convertToString(is);
+		assertEquals(xml, str);
 	}
 
 }

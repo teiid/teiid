@@ -595,6 +595,19 @@ public class TestValidator {
 
         helpRunValidator(command, new String[] {}, metadata);
     }
+    
+    @Test public void testXMLSerializeEncoding() {
+    	helpValidate("SELECT xmlserialize(? AS CLOB ENCODING \"UTF-8\")", new String[] {"XMLSERIALIZE(? AS CLOB ENCODING \"UTF-8\")"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testXMLSerializeEncoding1() {
+    	helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-8\" INCLUDING XMLDECLARATION)", new String[] {}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testXMLSerializeEncoding2() {
+    	helpValidate("SELECT xmlserialize(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)", new String[] {"XMLSERIALIZE(? AS BLOB ENCODING \"UTF-75\" INCLUDING XMLDECLARATION)"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+
     @Test public void testXMLQuery1() {
     	helpValidate("SELECT * FROM vm1.doc1", new String[] {}, exampleMetadata()); //$NON-NLS-1$
     }

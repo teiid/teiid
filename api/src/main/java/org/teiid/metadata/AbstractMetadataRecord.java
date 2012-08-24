@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.StringUtil;
 
 
 /**
@@ -93,6 +94,25 @@ public abstract class AbstractMetadataRecord implements Serializable {
         	return result;
         }
         return name;
+	}
+
+	public void getSQLString(StringBuilder sb) {
+		AbstractMetadataRecord parent = getParent();
+		if (parent != null) {
+        	parent.getSQLString(sb);
+        	sb.append(NAME_DELIM_CHAR);
+        }
+		sb.append('"').append(StringUtil.replace(name, "\"", "\"\"")).append('"'); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	/**
+	 * Get the full name as a SQL safe string
+	 * @return
+	 */
+	public String getSQLString() {
+		StringBuilder sb = new StringBuilder();
+		getSQLString(sb);
+		return sb.toString();
 	}
 	
 	public AbstractMetadataRecord getParent() {

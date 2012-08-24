@@ -120,6 +120,10 @@ public class SQLConstants {
 		public static final String TRIM = "TRIM"; //$NON-NLS-1$
 		public static final String RESULT = "RESULT"; //$NON-NLS-1$
 		public static final Object OBJECTTABLE = "OBJECTTABLE"; //$NON-NLS-1$
+		public static final Object VERSION = "VERSION"; //$NON-NLS-1$
+		public static final Object INCLUDING = "INCLUDING"; //$NON-NLS-1$
+		public static final Object EXCLUDING = "EXCLUDING"; //$NON-NLS-1$
+		public static final Object XMLDECLARATION = "XMLDECLARATION"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

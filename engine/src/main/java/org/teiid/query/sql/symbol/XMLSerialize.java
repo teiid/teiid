@@ -23,6 +23,8 @@
 package org.teiid.query.sql.symbol;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -31,9 +33,12 @@ public class XMLSerialize implements Expression {
 	private static final long serialVersionUID = -6574662238317329252L;
 	
 	private Boolean document;
+	private Boolean declaration;
 	private Expression expression;
 	private String typeString;
 	private Class<?> type;
+	private String version;
+	private String encoding;
 	
 	@Override
 	public Class<?> getType() {
@@ -45,6 +50,30 @@ public class XMLSerialize implements Expression {
 			}
 		}
 		return type;
+	}
+	
+	public String getEncoding() {
+		return encoding;
+	}
+	
+	public void setEncoding(String encoding) {
+		this.encoding = encoding;
+	}
+	
+	public String getVersion() {
+		return version;
+	}
+	
+	public void setVersion(String version) {
+		this.version = version;
+	}
+	
+	public Boolean getDeclaration() {
+		return declaration;
+	}
+	
+	public void setDeclaration(Boolean declaration) {
+		this.declaration = declaration;
 	}
 	
 	public Expression getExpression() {
@@ -83,12 +112,15 @@ public class XMLSerialize implements Expression {
 		clone.expression = (Expression)this.expression.clone();
 		clone.typeString = this.typeString;
 		clone.type = this.type;
+		clone.declaration = this.declaration;
+		clone.version = this.version;
+		clone.encoding = this.encoding;
 		return clone;
 	}
 	
 	@Override
 	public int hashCode() {
-		return expression.hashCode();
+		return HashCodeUtil.hashCode(expression.hashCode(), getType());
 	}
 	
 	public boolean equals(Object obj) {
@@ -99,9 +131,12 @@ public class XMLSerialize implements Expression {
 			return false;
 		}
 		XMLSerialize other = (XMLSerialize)obj;
-		return document == other.document 
+		return EquivalenceUtil.areEqual(this.document, other.document)
 			&& this.expression.equals(other.expression)
-			&& this.getType() == other.getType();
+			&& this.getType() == other.getType()
+			&& EquivalenceUtil.areEqual(this.declaration, other.declaration)
+			&& EquivalenceUtil.areEqual(this.version, other.version)
+			&& EquivalenceUtil.areEqual(this.encoding, other.encoding);
 	}
 	
 	@Override

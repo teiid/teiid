@@ -187,6 +187,69 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlSerialize1() throws Exception {
+    	String sql = "SELECT xmlserialize(document xmlelement(parent) as string including xmldeclaration)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<?xml version=\"1.0\" encoding=\"UTF-8\"?><parent></parent>"), 
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlSerialize2() throws Exception {
+    	String sql = "SELECT xmlserialize(document xmlelement(parent) as string version '1.2' including xmldeclaration)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<?xml version=\"1.2\" encoding=\"UTF-8\"?><parent></parent>"), 
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlSerializeBinary() throws Exception {
+    	String sql = "SELECT xmlserialize(document xmlelement(parent) as varbinary version '1.2' including xmldeclaration)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-8\"?><parent></parent>".getBytes(Charset.forName("UTF-8")))), 
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlSerializeBinary1() throws Exception {
+    	String sql = "SELECT xmlserialize(document xmlelement(parent) as varbinary encoding \"UTF-16\" version '1.2' including xmldeclaration)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-16\"?><parent></parent>".getBytes(Charset.forName("UTF-16")))), 
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXmlSerializeBinary2() throws Exception {
+    	String sql = "SELECT cast(xmlserialize(document xmlelement(other) as blob encoding \"UTF-16\" version '1.2' including xmldeclaration) as varbinary)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(new BinaryType("<?xml version=\"1.2\" encoding=\"UTF-16\"?><other></other>".getBytes(Charset.forName("UTF-16")))), 
+        };    
+    
+        process(sql, expected);
+    }
+    
+    /**
+     * if not specifically excluding, then leave the declaration intact (pre-8.2 behavior)
+     */
+    @Test public void testXmlSerialize3() throws Exception {
+    	String sql = "SELECT xmlserialize(document xmlparse(document '<?xml version=\"1.1\" encoding=\"UTF-8\"?><a></a>') as string)"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<?xml version=\"1.1\" encoding=\"UTF-8\"?><a></a>"), 
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test public void testXmlTable() throws Exception {
         String sql = "select * from xmltable('/a/b' passing convert('<a><b>first</b><b x=\"attr\">second</b></a>', xml) columns x string path '@x', val string path '/.') as x"; //$NON-NLS-1$
         
