@@ -25,47 +25,38 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.sql.Blob;
+import java.sql.CallableStatement;
 import java.sql.Clob;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.LinkedHashMap;
 
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
+import org.teiid.core.types.BlobType;
 import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.jboss.IntegrationPlugin;
+import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.sql.symbol.XMLSerialize;
 
 public abstract class TeiidRSProvider {
 
-    public InputStream execute(String procedureSignature, Map<String, String> parameters, String charSet) throws SQLException {
+    public InputStream execute(String procedureSignature, LinkedHashMap<String, String> parameters, String charSet) throws SQLException {
         Object result = null;
         Connection conn = getConnection();
+        boolean usingReturn = procedureSignature.startsWith("{ ?"); //$NON-NLS-1$
         try {
-        	List<String> paramTypes = getPathTypes(procedureSignature);
-            final String executeStatement = "call " + procedureSignature.substring(0, procedureSignature.indexOf('(')) + (parameters.isEmpty() ? "()" : createParmString(parameters.size())) + ";"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
-
-            PreparedStatement statement = conn.prepareStatement(executeStatement);
+        	//TODO: an alternative strategy would be to set the parameters based upon name
+        	// which would also allow for less parameters to be passed than the procedure requires
+        	// however an enhancement would be needed to support named parameters with callable syntax
+        	// alternatively if the end parameters are defaultable, then they can be omitted.
+            CallableStatement statement = conn.prepareCall(procedureSignature);
             if (!parameters.isEmpty()) {
-                int i = 1;
-                for (Object value : parameters.values()) {
-                	try {
-						Transform t = DataTypeManager.getTransform(DataTypeManager.DefaultDataTypes.STRING, paramTypes.get(i-1));
-						if (t != null) {
-							statement.setObject(i++, t.transform(value));
-						}
-						else {
-							statement.setString(i++, (String)value);
-						}
-					} catch (TransformationException e) {
-						throw new SQLException(e);
-					}
+                int i = usingReturn?2:1;
+                for (String value : parameters.values()) {
+					statement.setString(i++, value);
                 }
             }
 
@@ -79,22 +70,38 @@ public abstract class TeiidRSProvider {
                 }
                 rs.close();
             }
-            else {
+            else if (!usingReturn){
             	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092)); 
+            } else {
+            	result = statement.getObject(1);
             }
-
             statement.close();
+            if (result == null) {
+            	return null; //or should this be an empty result?
+            }
             
             if (result instanceof SQLXML) {
+            	if (charSet != null) {
+	            	XMLSerialize serialize = new XMLSerialize();
+	            	serialize.setTypeString("blob"); //$NON-NLS-1$
+	            	serialize.setDeclaration(true);
+	            	serialize.setEncoding(charSet);
+	            	serialize.setDocument(true);
+	            	try {
+						return ((BlobType)XMLSystemFunctions.serialize(serialize, (XMLType)result)).getBinaryStream();
+					} catch (TransformationException e) {
+						throw new SQLException(e);
+					}
+            	}
             	return ((SQLXML)result).getBinaryStream();
             }
             else if (result instanceof Blob) {
             	return ((Blob)result).getBinaryStream();
             }
             else if (result instanceof Clob) {
-            	return new ReaderInputStream(((Clob)result).getCharacterStream(), Charset.forName(charSet));
+            	return new ReaderInputStream(((Clob)result).getCharacterStream(), charSet==null?Charset.defaultCharset():Charset.forName(charSet));
             }
-            return new ByteArrayInputStream(result.toString().getBytes());
+            return new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
         } finally {
             if (conn != null) {
                 try {
@@ -105,28 +112,6 @@ public abstract class TeiidRSProvider {
         }
     }
 
-    protected String createParmString(int paramCount ) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("(?"); //$NON-NLS-1$
-        for (int i = 1; i < paramCount; i++) {
-            sb.append(","); //$NON-NLS-1$
-            sb.append("?"); //$NON-NLS-1$
-        }
-        sb.append(")"); //$NON-NLS-1$
-        return sb.toString();
-    }
-    
-    private ArrayList<String> getPathTypes(String pathStr ) {
-        ArrayList pathParams = new ArrayList();
-        
-        String parms = pathStr.substring(pathStr.indexOf('(')+1, pathStr.indexOf(')'));
-        StringTokenizer st = new StringTokenizer(parms, ","); //$NON-NLS-1$
-        while (st.hasMoreTokens()) {
-        	pathParams.add(st.nextToken());
-        }
-        return pathParams;
-    }    
-    
     protected abstract Connection getConnection() throws SQLException;
 
 }

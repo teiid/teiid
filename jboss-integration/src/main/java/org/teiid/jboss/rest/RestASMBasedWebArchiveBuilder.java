@@ -32,6 +32,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -56,6 +57,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.metadata.TransformationMetadata;
 
 
@@ -115,7 +117,7 @@ public class RestASMBasedWebArchiveBuilder {
 	}
     
     private static ArrayList<String> getPathParameters(String uri ) {
-        ArrayList pathParams = new ArrayList();
+        ArrayList<String> pathParams = new ArrayList<String>();
         String param;
         if (uri.contains("{")) { 
             while (uri.indexOf("}") > -1) { 
@@ -255,7 +257,7 @@ public class RestASMBasedWebArchiveBuilder {
 					else if (contentType.equals("plain")) {
 						contentType = "text/plain";
 					}
-			    	buildRestService(modelName, procedure, method, uri, cw, contentType, charSet==null?"US-ASCII":charSet);
+			    	buildRestService(modelName, procedure, method, uri, cw, contentType, charSet);
 			    	hasValidProcedures = true;
 				}
 			}
@@ -316,7 +318,16 @@ public class RestASMBasedWebArchiveBuilder {
 			String method, String uri, ClassWriter cw, String contentType,
 			String charSet) {
 		
-		int paramsSize = procedure.getParameters().size();
+		List<ProcedureParameter> params = new ArrayList<ProcedureParameter>(procedure.getParameters().size());
+		boolean usingReturn = false;
+		for (ProcedureParameter p : procedure.getParameters()) {
+			if (p.getType() == Type.In || p.getType() == Type.InOut) {
+				params.add(p);
+			} else if (p.getType() == Type.ReturnValue && procedure.getResultSet() == null) {
+				usingReturn = true;
+			}
+		}
+		int paramsSize = params.size();
 		MethodVisitor mv;
 		
 		AnnotationVisitor av0;
@@ -355,7 +366,7 @@ public class RestASMBasedWebArchiveBuilder {
     	for (int i = 0; i < paramsSize; i++)
     	{
 		av0 = mv.visitParameterAnnotation(i, "Ljavax/ws/rs/PathParam;", true);
-		av0.visit("value", procedure.getParameters().get(i).getName());
+		av0.visit("value", params.get(i).getName());
 		av0.visitEnd();
 		}
     	
@@ -372,7 +383,7 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitVarInsn(ASTORE, paramsSize+1);
     	for (int i = 0; i < paramsSize; i++) {
     		mv.visitVarInsn(ALOAD, paramsSize+1);
-    		mv.visitLdcInsn(procedure.getParameters().get(i).getName());
+    		mv.visitLdcInsn(params.get(i).getName());
     		mv.visitVarInsn(ALOAD, i+1);
     		mv.visitMethodInsn(INVOKEINTERFACE, "java/util/Map", "put", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
     		mv.visitInsn(POP);
@@ -382,11 +393,20 @@ public class RestASMBasedWebArchiveBuilder {
     	
     	// send parametr type information the procedure name
     	StringBuilder sb = new StringBuilder();
-    	sb.append(procedure.getFullName()).append("(");
-    	for (ProcedureParameter pp:procedure.getParameters()) {
-    		sb.append(pp.getRuntimeType()).append(",");
+    	sb.append("{ ");
+    	if (usingReturn) {
+    		sb.append("? = ");
     	}
-    	sb.append(")");
+    	sb.append("CALL ");
+    	procedure.getSQLString(sb);
+    	sb.append("(");
+    	for (int i = 0; i < paramsSize; i++) {
+    		if (i > 0) {
+    			sb.append(", ");
+    		}
+    		sb.append("?");
+    	}
+    	sb.append(") }");
     	mv.visitLdcInsn(sb.toString());
     	
     	mv.visitVarInsn(ALOAD, paramsSize+1);
