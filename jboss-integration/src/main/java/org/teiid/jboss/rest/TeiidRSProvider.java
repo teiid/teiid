@@ -38,14 +38,22 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.XMLType;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.jboss.IntegrationPlugin;
+import org.teiid.jdbc.TeiidDriver;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.symbol.XMLSerialize;
 
 public abstract class TeiidRSProvider {
 
-    public InputStream execute(String procedureSignature, LinkedHashMap<String, String> parameters, String charSet) throws SQLException {
+	public InputStream execute(String vdbName, int version,	String procedureSignature,
+			LinkedHashMap<String, String> parameters, String charSet) throws SQLException {
         Object result = null;
-        Connection conn = getConnection();
+        
+        //the generated code sends a empty string rather than null.
+        if (charSet != null && charSet.trim().isEmpty()) {
+        	charSet = null;
+        }
+        
+        Connection conn = getConnection(vdbName, version);
         boolean usingReturn = procedureSignature.startsWith("{ ?"); //$NON-NLS-1$
         try {
         	//TODO: an alternative strategy would be to set the parameters based upon name
@@ -111,7 +119,10 @@ public abstract class TeiidRSProvider {
             }
         }
     }
-
-    protected abstract Connection getConnection() throws SQLException;
-
+	
+	private Connection getConnection(String vdbName, int version) throws SQLException {
+		TeiidDriver driver = new TeiidDriver();
+		return driver.connect("jdbc:teiid:"+vdbName+"."+version, null);
+	}
+	
 }

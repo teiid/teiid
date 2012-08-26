@@ -257,28 +257,12 @@ public class RestASMBasedWebArchiveBuilder {
 					else if (contentType.equals("plain")) {
 						contentType = "text/plain";
 					}
-			    	buildRestService(modelName, procedure, method, uri, cw, contentType, charSet);
+			    	buildRestService(vdbName, vdbVersion, modelName, procedure, method, uri, cw, contentType, charSet);
 			    	hasValidProcedures = true;
 				}
 			}
 		}    	
     	
-    	// getConnection method
-    	{
-    	mv = cw.visitMethod(ACC_PROTECTED, "getConnection", "()Ljava/sql/Connection;", null, new String[] { "java/sql/SQLException" });
-    	mv.visitCode();
-    	mv.visitTypeInsn(NEW, "org/teiid/jdbc/TeiidDriver");
-    	mv.visitInsn(DUP);
-    	mv.visitMethodInsn(INVOKESPECIAL, "org/teiid/jdbc/TeiidDriver", "<init>", "()V");
-    	mv.visitVarInsn(ASTORE, 1);
-    	mv.visitVarInsn(ALOAD, 1);
-    	mv.visitLdcInsn("jdbc:teiid:"+vdbName+"."+vdbVersion);
-    	mv.visitInsn(ACONST_NULL);
-    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jdbc/TeiidDriver", "connect", "(Ljava/lang/String;Ljava/util/Properties;)Lorg/teiid/jdbc/ConnectionImpl;");
-    	mv.visitInsn(ARETURN);
-    	mv.visitMaxs(3, 2);
-    	mv.visitEnd();
-    	}
     	cw.visitEnd();
 
     	if (!hasValidProcedures) {
@@ -314,7 +298,7 @@ public class RestASMBasedWebArchiveBuilder {
 		return contentType;
 	}
 
-	private void buildRestService(String modelName, Procedure procedure,
+	private void buildRestService(String vdbName, int vdbVersion, String modelName, Procedure procedure,
 			String method, String uri, ClassWriter cw, String contentType,
 			String charSet) {
 		
@@ -407,11 +391,16 @@ public class RestASMBasedWebArchiveBuilder {
     		sb.append("?");
     	}
     	sb.append(") }");
+    	
+    	mv.visitLdcInsn(vdbName);
+    	mv.visitIntInsn(BIPUSH, vdbVersion);
+    	
     	mv.visitLdcInsn(sb.toString());
     	
     	mv.visitVarInsn(ALOAD, paramsSize+1);
-    	mv.visitLdcInsn(charSet);
-    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;)Ljava/io/InputStream;");
+    	mv.visitLdcInsn(charSet==null?"":charSet);
+    	
+    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;)Ljava/io/InputStream;");
     	mv.visitLabel(l1);
     	mv.visitInsn(ARETURN);
     	mv.visitLabel(l2);
@@ -423,7 +412,7 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
     	mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
     	mv.visitInsn(ATHROW);
-    	mv.visitMaxs(4, paramsSize+2);
+    	mv.visitMaxs(6, paramsSize+2);
     	mv.visitEnd();
     	}
 	}
