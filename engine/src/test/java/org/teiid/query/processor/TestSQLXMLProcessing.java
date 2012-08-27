@@ -193,6 +193,16 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableDateTime() throws Exception {
+        String sql = "select * from xmltable('/a' passing convert('<a dt=\"2011-11-17T07:38:49\" dtz=\"2011-11-17T07:38:49Z\" t=\"13:23:14\" d=\"2010-04-05\" />', xml) columns x timestamp path '@dt', x1 timestamp path '@dtz', y date path '@d', z time path '@t') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList(TimestampUtil.createTimestamp(111, 10, 17, 7, 38, 49, 0), TimestampUtil.createTimestamp(111, 10, 17, 1, 38, 49, 0), TimestampUtil.createDate(110, 3, 5), TimestampUtil.createTime(13, 23, 14))
+        };    
+    
+        process(sql, expected);
+    }
+    
     @Test public void testXmlTablePassingSubquery() throws Exception {
         String sql = "select * from xmltable('/a/b' passing (SELECT xmlelement(name a, xmlAgg(xmlelement(name b, e1))) from pm1.g1) columns val string path '/.') as x"; //$NON-NLS-1$
         

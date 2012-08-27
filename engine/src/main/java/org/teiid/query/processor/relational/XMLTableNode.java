@@ -23,10 +23,14 @@
 package org.teiid.query.processor.relational;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
@@ -37,6 +41,7 @@ import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
 import net.sf.saxon.value.AtomicValue;
+import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
 import net.sf.saxon.value.Value;
 
@@ -51,6 +56,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
@@ -274,14 +280,14 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 					}
 					Object value = colItem;
 					if (value instanceof AtomicValue) {
-						value = Value.convertToJava(colItem);
+						value = getValue((AtomicValue)colItem);
 					} else if (value instanceof Item) {
 						Item i = (Item)value;
 						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
 						if (bat != null) {
 							ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
 							value = cr.asAtomic();
-							value = Value.convertToJava((AtomicValue)value);
+							value = getValue((AtomicValue)value);
 							if (value instanceof Item) {
 								value = ((Item)value).getStringValue();
 							}
@@ -298,6 +304,19 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		}
 		item = null;
 		return tuple;
+	}
+
+	private Object getValue(AtomicValue value) throws XPathException {
+		if (value instanceof CalendarValue) {
+			CalendarValue cv = (CalendarValue)value;
+			if (!cv.hasTimezone()) {
+				Calendar cal = cv.getCalendar();
+				Date d = cal.getTime();
+				cal.setTimeZone(getContext().getServerTimeZone());
+				return TimestampWithTimezone.createTimestamp(d, TimeZone.getTimeZone("GMT"), cal);
+			}
+		}
+		return Value.convertToJava(value);
 	}
 	
 	@Override
