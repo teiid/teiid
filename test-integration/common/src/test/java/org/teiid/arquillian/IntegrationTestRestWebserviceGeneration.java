@@ -22,13 +22,16 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
@@ -61,7 +64,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 	}
 	
 	@Test
-    public void testReuse() throws Exception {
+    public void testGetOperation() throws Exception {
 		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
@@ -73,15 +76,49 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		assertTrue(((AdminImpl)admin).getDeployments().contains("sample_1.war"));
 		
-		String response = httpCall("http://localhost:8080/sample_1/view/g1/123", "GET");
-		assertEquals("<sample.g1Table.p1 p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></sample.g1Table.p1>", response);
+		// get based call
+		String response = httpCall("http://localhost:8080/sample_1/view/g1/123", "GET", null);
+		assertEquals("<rows p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
     }
 	
-	private String httpCall(String url, String method) throws Exception {
+	@Test
+    public void testPostOperation() throws Exception {
+		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+		
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+		
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
+		this.internalResultSet.next();
+		
+		assertTrue(((AdminImpl)admin).getDeployments().contains("sample_1.war"));
+		
+		String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
+		
+		// post based call
+		String response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
+		assertEquals("<rows p1=\"456\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		
+		// ad-hoc procedure
+		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
+		response = httpCall("http://localhost:8080/sample_1/view/query", "POST", params);
+		assertEquals("<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+    }	
+	
+	
+	private String httpCall(String url, String method, String params) throws Exception {
 		StringBuffer buff = new StringBuffer();
 		HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 		connection.setRequestMethod(method);
 		connection.setDoOutput(true);
+		
+		if (method.equalsIgnoreCase("post")) {
+			OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
+		    wr.write(params);
+		    wr.flush();
+		}
+		
 		BufferedReader serverResponse = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 		String line;
 		while ((line = serverResponse.readLine()) != null) {

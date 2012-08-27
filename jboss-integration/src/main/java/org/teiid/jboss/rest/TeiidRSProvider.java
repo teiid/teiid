@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
+import java.sql.Statement;
 import java.util.LinkedHashMap;
 
 import org.teiid.core.types.BlobType;
@@ -45,7 +46,7 @@ import org.teiid.query.sql.symbol.XMLSerialize;
 public abstract class TeiidRSProvider {
 
 	public InputStream execute(String vdbName, int version,	String procedureSignature,
-			LinkedHashMap<String, String> parameters, String charSet) throws SQLException {
+			LinkedHashMap<String, String> parameters, String charSet, boolean passthroughAuth) throws SQLException {
         Object result = null;
         
         //the generated code sends a empty string rather than null.
@@ -53,7 +54,7 @@ public abstract class TeiidRSProvider {
         	charSet = null;
         }
         
-        Connection conn = getConnection(vdbName, version);
+        Connection conn = getConnection(vdbName, version, passthroughAuth);
         boolean usingReturn = procedureSignature.startsWith("{ ?"); //$NON-NLS-1$
         try {
         	//TODO: an alternative strategy would be to set the parameters based upon name
@@ -84,32 +85,7 @@ public abstract class TeiidRSProvider {
             	result = statement.getObject(1);
             }
             statement.close();
-            if (result == null) {
-            	return null; //or should this be an empty result?
-            }
-            
-            if (result instanceof SQLXML) {
-            	if (charSet != null) {
-	            	XMLSerialize serialize = new XMLSerialize();
-	            	serialize.setTypeString("blob"); //$NON-NLS-1$
-	            	serialize.setDeclaration(true);
-	            	serialize.setEncoding(charSet);
-	            	serialize.setDocument(true);
-	            	try {
-						return ((BlobType)XMLSystemFunctions.serialize(serialize, (XMLType)result)).getBinaryStream();
-					} catch (TransformationException e) {
-						throw new SQLException(e);
-					}
-            	}
-            	return ((SQLXML)result).getBinaryStream();
-            }
-            else if (result instanceof Blob) {
-            	return ((Blob)result).getBinaryStream();
-            }
-            else if (result instanceof Clob) {
-            	return new ReaderInputStream(((Clob)result).getCharacterStream(), charSet==null?Charset.defaultCharset():Charset.forName(charSet));
-            }
-            return new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
+            return handleResult(charSet, result);
         } finally {
             if (conn != null) {
                 try {
@@ -119,10 +95,65 @@ public abstract class TeiidRSProvider {
             }
         }
     }
-	
-	private Connection getConnection(String vdbName, int version) throws SQLException {
-		TeiidDriver driver = new TeiidDriver();
-		return driver.connect("jdbc:teiid:"+vdbName+"."+version, null);
+
+	private InputStream handleResult(String charSet, Object result) throws SQLException {
+        if (result == null) {
+        	return null; //or should this be an empty result?
+        }
+        
+		if (result instanceof SQLXML) {
+			if (charSet != null) {
+		    	XMLSerialize serialize = new XMLSerialize();
+		    	serialize.setTypeString("blob"); //$NON-NLS-1$
+		    	serialize.setDeclaration(true);
+		    	serialize.setEncoding(charSet);
+		    	serialize.setDocument(true);
+		    	try {
+					return ((BlobType)XMLSystemFunctions.serialize(serialize, new XMLType((SQLXML)result))).getBinaryStream();
+				} catch (TransformationException e) {
+					throw new SQLException(e);
+				}
+			}
+			return ((SQLXML)result).getBinaryStream();
+		}
+		else if (result instanceof Blob) {
+			return ((Blob)result).getBinaryStream();
+		}
+		else if (result instanceof Clob) {
+			return new ReaderInputStream(((Clob)result).getCharacterStream(), charSet==null?Charset.defaultCharset():Charset.forName(charSet));
+		}
+		return new ByteArrayInputStream(result.toString().getBytes(charSet==null?Charset.defaultCharset():Charset.forName(charSet)));
 	}
 	
+	public InputStream executeQuery(String vdbName, int vdbVersion, String sql, boolean json, boolean passthroughAuth) throws SQLException {
+		Connection conn = getConnection(vdbName, vdbVersion, passthroughAuth);
+		Object result = null;
+		try {
+			Statement statement = conn.createStatement();
+            final boolean hasResultSet = statement.execute(sql);
+            if (hasResultSet) {
+                ResultSet rs = statement.getResultSet();
+                if (rs.next()) {
+                    result = rs.getObject(1);
+                } else {
+                	throw new SQLException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50092)); 
+                }
+                rs.close();
+            }			
+			statement.close();
+			return handleResult(Charset.defaultCharset().name(), result);
+		} finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                }
+            }
+		}
+	}
+	
+	private Connection getConnection(String vdbName, int version, boolean passthough) throws SQLException {
+		TeiidDriver driver = new TeiidDriver();
+		return driver.connect("jdbc:teiid:"+vdbName+"."+version+(passthough?"PassthroughAuthentication=true":""), null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+	}
 }

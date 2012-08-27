@@ -56,8 +56,8 @@ import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.Schema;
 import org.teiid.query.metadata.TransformationMetadata;
 
 
@@ -74,6 +74,29 @@ public class RestASMBasedWebArchiveBuilder {
 		props.setProperty("${vdb-name}", vdb.getName());
 		props.setProperty("${vdb-version}", String.valueOf(vdb.getVersion()));
 		
+		boolean passthroughAuth = false;
+		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type");
+		String securityDomain = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-domain");
+		String securityRole = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-role");
+		String passthoughAuthStr = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"passthrough-auth");
+		if (passthoughAuthStr != null) {
+			passthroughAuth = Boolean.parseBoolean(passthoughAuthStr);
+		}
+		
+		props.setProperty("${security-role}", ((securityRole == null)?"rest":securityRole));
+		props.setProperty("${security-domain}", ((securityDomain == null)?"teiid-security":securityDomain));
+		
+		if (securityType == null) {
+			securityType = "httpbasic";
+		}
+
+		if (securityType.equalsIgnoreCase("none")) {
+			props.setProperty("${security-content}", "");
+		}
+		else if (securityType.equalsIgnoreCase("httpbasic")) {
+			props.setProperty("${security-content}", replaceTemplates(getFileContents("rest-war/httpbasic.xml"), props));
+		}
+		
 		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
 		ZipOutputStream out = new ZipOutputStream(byteStream); 
 		writeEntry("WEB-INF/web.xml", out, replaceTemplates(getFileContents("rest-war/web.xml"), props).getBytes());
@@ -82,7 +105,7 @@ public class RestASMBasedWebArchiveBuilder {
 		ArrayList<String> applicationViews = new ArrayList<String>();
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
-			byte[] viewContents = getViewClass(vdb.getName(), vdb.getVersion(), model.getName(), schema);
+			byte[] viewContents = getViewClass(vdb.getName(), vdb.getVersion(), model.getName(), schema, passthroughAuth);
 			if (viewContents != null) {
 				writeEntry("WEB-INF/classes/org/teiid/jboss/rest/"+model.getName()+".class", out, viewContents);
 				applicationViews.add(schema.getName());
@@ -205,7 +228,7 @@ public class RestASMBasedWebArchiveBuilder {
     	return cw.toByteArray();
     }
     
-    private byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema) {
+    private byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
     	ClassWriter cw = new ClassWriter(0);
     	FieldVisitor fv;
     	MethodVisitor mv;
@@ -237,11 +260,13 @@ public class RestASMBasedWebArchiveBuilder {
 			String method = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"METHOD", false);
 			String contentType = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"PRODUCES", false);
 			String charSet = procedure.getProperty(ResteasyEnabler.REST_NAMESPACE+"CHARSET", false);
-			if (getPathParameters(uri).size() != procedure.getParameters().size()) {
-				LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50091, procedure.getFullName()));
-				continue;
-			}
+			
 			if (uri != null && method != null) {
+				if (method.equalsIgnoreCase("GET")	&& getPathParameters(uri).size() != procedure.getParameters().size()) {
+					LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50091, procedure.getFullName()));
+					continue;
+				}				
+				
 				if (contentType == null) {
 					contentType = findContentType(procedure);
 				}
@@ -257,14 +282,14 @@ public class RestASMBasedWebArchiveBuilder {
 					else if (contentType.equals("plain")) {
 						contentType = "text/plain";
 					}
-			    	buildRestService(vdbName, vdbVersion, modelName, procedure, method, uri, cw, contentType, charSet);
+			    	buildRestService(vdbName, vdbVersion, modelName, procedure, method, uri, cw, contentType, charSet, passthroughAuth);
 			    	hasValidProcedures = true;
 				}
 			}
 		}    	
 		
-//		buildQueryProcedure(vdbName, vdbVersion, "xml", cw);
-//		buildQueryProcedure(vdbName, vdbVersion, "json", cw);
+		buildQueryProcedure(vdbName, vdbVersion, "xml", cw, passthroughAuth);
+		buildQueryProcedure(vdbName, vdbVersion, "json", cw, passthroughAuth);
     	
     	cw.visitEnd();
 
@@ -303,7 +328,7 @@ public class RestASMBasedWebArchiveBuilder {
 
 	private void buildRestService(String vdbName, int vdbVersion, String modelName, Procedure procedure,
 			String method, String uri, ClassWriter cw, String contentType,
-			String charSet) {
+			String charSet, boolean passthroughAuth) {
 		
 		List<ProcedureParameter> params = new ArrayList<ProcedureParameter>(procedure.getParameters().size());
 		boolean usingReturn = false;
@@ -350,9 +375,15 @@ public class RestASMBasedWebArchiveBuilder {
     	av0.visitEnd();
     	}
     	
+    	// post only accepts Form inputs, not path params
+    	String paramType = "Ljavax/ws/rs/PathParam;";
+    	if (method.toUpperCase().equals("POST")) {
+    		paramType = "Ljavax/ws/rs/FormParam;";
+    	}
+    	
     	for (int i = 0; i < paramsSize; i++)
     	{
-		av0 = mv.visitParameterAnnotation(i, "Ljavax/ws/rs/PathParam;", true);
+		av0 = mv.visitParameterAnnotation(i, paramType, true);
 		av0.visit("value", params.get(i).getName());
 		av0.visitEnd();
 		}
@@ -402,8 +433,8 @@ public class RestASMBasedWebArchiveBuilder {
     	
     	mv.visitVarInsn(ALOAD, paramsSize+1);
     	mv.visitLdcInsn(charSet==null?"":charSet);
-    	
-    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;)Ljava/io/InputStream;");
+    	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
+    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;Z)Ljava/io/InputStream;");
     	mv.visitLabel(l1);
     	mv.visitInsn(ARETURN);
     	mv.visitLabel(l2);
@@ -415,12 +446,12 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
     	mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
     	mv.visitInsn(ATHROW);
-    	mv.visitMaxs(6, paramsSize+2);
+    	mv.visitMaxs(7, paramsSize+2);
     	mv.visitEnd();
     	}
 	}
 	
-	private void buildQueryProcedure(String vdbName, int vdbVersion, String context, ClassWriter cw) {
+	private void buildQueryProcedure(String vdbName, int vdbVersion, String context, ClassWriter cw, boolean passthroughAuth) {
 		MethodVisitor mv;
 		{
 			AnnotationVisitor av0;
@@ -459,7 +490,8 @@ public class RestASMBasedWebArchiveBuilder {
 			mv.visitIntInsn(BIPUSH, vdbVersion);
 			mv.visitVarInsn(ALOAD, 1);
 			mv.visitInsn(context.equals("xml")?ICONST_0:ICONST_1);
-			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/View", "executeQuery", "(Ljava/lang/String;ILjava/lang/String;Z)Ljava/io/InputStream;");
+			mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
+			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/View", "executeQuery", "(Ljava/lang/String;ILjava/lang/String;ZZ)Ljava/io/InputStream;");
 			mv.visitLabel(l1);
 			mv.visitInsn(ARETURN);
 			mv.visitLabel(l2);
@@ -471,7 +503,7 @@ public class RestASMBasedWebArchiveBuilder {
 			mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
 			mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
 			mv.visitInsn(ATHROW);
-			mv.visitMaxs(5, 3);
+			mv.visitMaxs(6, 3);
 			mv.visitEnd();
 		}		
 	}

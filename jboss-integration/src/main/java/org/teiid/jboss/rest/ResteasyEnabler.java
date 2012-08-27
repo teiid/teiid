@@ -61,7 +61,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 		final VDBMetaData vdb = cvdb.getVDB();
 		
-		String generate = vdb.getPropertyValue("auto-generate-rest-war"); //$NON-NLS-1$
+		String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
 
 		final String warName = buildName(vdb);
 		if (generate != null && Boolean.parseBoolean(generate)
@@ -112,6 +112,11 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	}
 	
 	private boolean hasRestMetadata(VDBMetaData vdb) {
+		String securityType = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"security-type"); //$NON-NLS-1$
+		if (securityType != null && !securityType.equalsIgnoreCase("none") && !securityType.equalsIgnoreCase("httpbasic")) { //$NON-NLS-1$ //$NON-NLS-2$
+			return false;
+		}
+		
 		MetadataStore metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			Schema schema = metadataStore.getSchema(model.getName());
