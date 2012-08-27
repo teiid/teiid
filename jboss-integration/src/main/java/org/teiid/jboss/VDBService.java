@@ -103,6 +103,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	protected final InjectedValue<ModelController> controllerValue = new InjectedValue<ModelController>();
 	
 	private VDBLifeCycleListener vdbListener;
+	private VDBLifeCycleListener restEasyListener;
 	private LinkedHashMap<String, Resource> visibilityMap;
 	
 	public VDBService(VDBMetaData metadata, LinkedHashMap<String, Resource> visibilityMap) {
@@ -171,7 +172,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		};
 		
 		getVDBRepository().addListener(this.vdbListener);
-		getVDBRepository().addListener(new ResteasyEnabler(controllerValue.getValue(), executorInjector.getValue()));
+		
+		this.restEasyListener = new ResteasyEnabler(controllerValue.getValue(), executorInjector.getValue());
+		getVDBRepository().addListener(this.restEasyListener);
 				
 		MetadataStore store = new MetadataStore();
 		
@@ -265,8 +268,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
 			this.objectReplicatorInjector.getValue().stop(gts);
 		}		
-		getVDBRepository().removeListener(this.vdbListener);
 		getVDBRepository().removeVDB(this.vdb.getName(), this.vdb.getVersion());
+		getVDBRepository().removeListener(this.vdbListener);
+		getVDBRepository().removeListener(this.restEasyListener);
 		final ServiceController<?> controller = context.getController().getServiceContainer().getService(TeiidServiceNames.vdbFinishedServiceName(vdb.getName(), vdb.getVersion()));
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);

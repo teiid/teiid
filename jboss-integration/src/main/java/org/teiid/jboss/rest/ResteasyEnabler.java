@@ -90,7 +90,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	@Override
 	public void removed(String name, int version, CompositeVDB cvdb) {
 		VDBMetaData vdb = cvdb.getVDB();
-		String generate = vdb.getPropertyValue("auto-generate-rest-war"); //$NON-NLS-1$
+		String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
 		final String warName = buildName(vdb);
 		if (generate != null && Boolean.parseBoolean(generate)
 				&& ((AdminImpl) this.admin).getDeployments().contains(warName)) {
