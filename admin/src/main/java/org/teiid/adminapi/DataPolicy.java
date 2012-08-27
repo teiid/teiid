@@ -37,7 +37,8 @@ public interface DataPolicy {
 		STORED_PROCEDURE;
     }
 	
-	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP};
+	public enum PermissionType {CREATE, READ, UPDATE, DELETE, ALTER, EXECUTE, DROP, LANGUAGE};
+	
 	
 	/**
 	 * Get the Name of the Data Policy
@@ -116,6 +117,13 @@ public interface DataPolicy {
 		 * Is "EXECUTE" allowed?
 		 * @return
 		 */
-		Boolean getAllowExecute();		
+		Boolean getAllowExecute();
+		
+		/**
+		 * Is "LANGUAGE" allowed?
+		 * @return
+		 */
+		Boolean getAllowLanguage();
+		
 	}
 }

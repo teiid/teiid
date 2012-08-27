@@ -84,6 +84,17 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     public void visit(AlterView obj) {
     	validateEntitlements(Arrays.asList(obj.getTarget()), DataPolicy.PermissionType.ALTER, Context.ALTER);
     }
+    
+    @Override
+    public void visit(ObjectTable objectTable) {
+    	String language = ObjectTable.DEFAULT_LANGUAGE;
+    	if (objectTable.getScriptingLanguage() != null) {
+    		language = objectTable.getScriptingLanguage();
+    	}
+    	Map<String, LanguageObject> map = new HashMap<String, LanguageObject>();
+    	map.put(language, objectTable);
+    	validateEntitlements(PermissionType.LANGUAGE, Context.QUERY, map);
+    }
 
 	private void validateTemp(DataPolicy.PermissionType action, GroupSymbol symbol, Context context) {
 		String resource = symbol.getNonCorrelationName();

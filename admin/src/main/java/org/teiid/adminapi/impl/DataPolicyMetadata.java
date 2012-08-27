@@ -23,7 +23,9 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.teiid.adminapi.DataPolicy;
@@ -37,7 +39,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	protected boolean anyAuthenticated;
 	protected Boolean allowCreateTemporaryTables;
 
-    protected PermissionMap permissions = new PermissionMap();
+    protected Map<String, PermissionMetaData> permissions = new HashMap<String, PermissionMetaData>();
+    protected Map<String, PermissionMetaData> languagePermissions = new HashMap<String, PermissionMetaData>(2);
     
     protected List<String> mappedRoleNames = new CopyOnWriteArrayList<String>();
 
@@ -61,19 +64,34 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
 	@Override
 	public List<DataPermission> getPermissions() {
-		return new ArrayList<DataPermission>(this.permissions.values());
+		List<DataPermission> result = new ArrayList<DataPermission>(this.permissions.values());
+		result.addAll(this.languagePermissions.values());
+		return result;
 	}
 	
 	public void setPermissions(List<DataPermission> permissions) {
 		this.permissions.clear();
 		for (DataPermission permission:permissions) {
-			this.permissions.put(permission.getResourceName().toLowerCase(), (PermissionMetaData)permission);
+			addPermission((PermissionMetaData)permission);
 		}
 	}	
 	
-	public void addPermission(PermissionMetaData... permissions) {
-		for (PermissionMetaData permission:permissions) {
-			this.permissions.put(permission.getResourceName().toLowerCase(), permission);
+	public void addPermission(PermissionMetaData... perms) {
+		for (PermissionMetaData permission:perms) {
+			addPermission(permission);
+		}
+	}
+
+	private void addPermission(PermissionMetaData permission) {
+		PermissionMetaData previous = null;
+		if (permission.getAllowLanguage() != null) {
+			previous = this.languagePermissions.put(permission.getResourceName(), permission);
+		} else {
+			previous = permissions.put(permission.getResourceName().toLowerCase(), permission);
+		}
+		if (previous != null) {
+			permission.bits |= previous.bits;
+			permission.bitsSet |= previous.bitsSet;
 		}
 	}
 	
@@ -87,27 +105,25 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		this.mappedRoleNames.addAll(names);
 	}    
 	
-	public void addMappedRoleName(String name) {
-		this.mappedRoleNames.add(name);
+	public void addMappedRoleName(String mappedName) {
+		this.mappedRoleNames.add(mappedName);
 	}  	
 	
-	public void removeMappedRoleName(String name) {
-		this.mappedRoleNames.remove(name);
+	public void removeMappedRoleName(String mappedName) {
+		this.mappedRoleNames.remove(mappedName);
 	}  		
 	
-	public boolean allows(String resourceName, DataPolicy.PermissionType type) {
-		resourceName = resourceName.toLowerCase();
-		while (resourceName.length() > 0) {
-			PermissionMetaData p = this.permissions.get(resourceName);
-			if (p != null) {
-				Boolean allowed = p.allows(type);
-				if (allowed != null) {
-					return allowed;
-				}
-			}
-			resourceName = resourceName.substring(0, Math.max(0, resourceName.lastIndexOf('.')));
+	public Boolean allows(String resourceName, DataPolicy.PermissionType type) {
+		PermissionMetaData p = null;
+		if (type == PermissionType.LANGUAGE) {
+			p = this.languagePermissions.get(resourceName);
+		} else {
+			p = this.permissions.get(resourceName);
 		}
-		return false;
+		if (p != null) {
+			return p.allows(type);
+		}
+		return null;
 	}
 	
 	public static class PermissionMetaData implements DataPermission, Serializable {
@@ -115,12 +131,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         
         // XML based fields
         private String resourceName;
-        protected Boolean allowCreate;
-        protected Boolean allowRead;
-        protected Boolean allowUpdate;
-        protected Boolean allowDelete;
-        protected Boolean allowExecute;
-        protected Boolean allowAlter;
+        protected byte bits;
+        protected byte bitsSet;
         
         @Override
         public String getResourceName() {
@@ -133,38 +145,62 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 
         @Override
         public Boolean getAllowCreate() {
-            return allowCreate;
+			return bitSet(0x01);
         }
 
+		private Boolean bitSet(int bitMask) {
+			if ((bitsSet & bitMask) == bitMask) {
+            	if ((bits & bitMask) == bitMask) {
+            		return Boolean.TRUE;
+            	}
+            	return Boolean.FALSE;
+        	}
+            return null;
+		}
+		
+		private void setBit(int bitMask, Boolean bool) {
+			if (bool == null) {
+				bitsSet &= (~bitMask);
+				bits &= (~bitMask);
+				return;
+        	}
+			bitsSet |= bitMask;
+			if (bool) {
+				bits |= bitMask;
+			} else {
+				bits &= (~bitMask);
+			}
+		}
+
         public void setAllowCreate(Boolean value) {
-            this.allowCreate = value;
+            setBit(0x01, value);
         }
 
         @Override
         public Boolean getAllowRead() {
-            return allowRead;
+        	return bitSet(0x02);
         }
 
         public void setAllowRead(Boolean value) {
-            this.allowRead = value;
+        	setBit(0x02, value);
         }
 
         @Override
         public Boolean getAllowUpdate() {
-            return allowUpdate;
+        	return bitSet(0x04);
         }
 
         public void setAllowUpdate(Boolean value) {
-            this.allowUpdate = value;
+        	setBit(0x04, value);
         }
 
         @Override
         public Boolean getAllowDelete() {
-            return allowDelete;
+        	return bitSet(0x08);
         }
 
         public void setAllowDelete(Boolean value) {
-            this.allowDelete = value;
+        	setBit(0x08, value);
         }
         
         public String getType() {
@@ -187,6 +223,9 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	if (Boolean.TRUE.equals(getAllowAlter())) {
         		sb.append("A");//$NON-NLS-1$
         	}     
+        	if (Boolean.TRUE.equals(getAllowLanguage())) {
+        		sb.append("L");//$NON-NLS-1$
+        	}
         	return sb.toString();
         }
         
@@ -206,26 +245,37 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
             	return getAllowUpdate();
             case DELETE:
             	return getAllowDelete();
-            }        	
+	        case LANGUAGE:
+	        	return getAllowLanguage();
+	        }
             throw new AssertionError();
         }
         
         @Override
         public Boolean getAllowAlter() {
-			return allowAlter;
+        	return bitSet(0x10);
 		}
 
         @Override
 		public Boolean getAllowExecute() {
-			return allowExecute;
+        	return bitSet(0x20);
 		}
 		
 		public void setAllowAlter(Boolean allowAlter) {
-			this.allowAlter = allowAlter;
+			setBit(0x10, allowAlter);
 		}
 		
 		public void setAllowExecute(Boolean allowExecute) {
-			this.allowExecute = allowExecute;
+			setBit(0x20, allowExecute);
+		}
+		
+		@Override
+		public Boolean getAllowLanguage() {
+			return bitSet(0x40);
+		}
+		
+		public void setAllowLanguage(Boolean value) {
+			setBit(0x40, value);
 		}
 
 		public String toString() {

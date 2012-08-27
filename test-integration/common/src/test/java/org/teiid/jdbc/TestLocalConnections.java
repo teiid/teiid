@@ -225,7 +225,11 @@ public class TestLocalConnections {
 	}
 	
 	@Test public void testUseInDifferentThreads() throws Throwable {
-		assertTrue(server.getDqp().getRequests().isEmpty());
+		for (int i = 0; !server.getDqp().getRequests().isEmpty() && i < 40; i++) {
+    		//the previous test may not have cleaned up
+    		Thread.sleep(50);
+    	}
+		int count = server.getDqp().getRequests().size();
 		Connection c = server.createConnection("jdbc:teiid:PartsSupplier");
     	
     	final Statement s = c.createStatement();
@@ -252,11 +256,11 @@ public class TestLocalConnections {
     	if (handler.t != null) {
     		throw handler.t;
     	}    	
-    	for (int i = 0; !server.getDqp().getRequests().isEmpty() && i < 40; i++) {
+    	for (int i = 0; server.getDqp().getRequests().size() != count && i < 40; i++) {
     		//the concurrent modification may not be seen initially
     		Thread.sleep(50);
     	}
-    	assertTrue(server.getDqp().getRequests().isEmpty());
+    	assertEquals(count, server.getDqp().getRequests().size());
 	}
 	
 	@Test public void testWait() throws Throwable {

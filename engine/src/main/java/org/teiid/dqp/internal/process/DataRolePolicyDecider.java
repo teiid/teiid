@@ -22,9 +22,10 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.teiid.CommandContext;
@@ -45,22 +46,33 @@ public class DataRolePolicyDecider implements PolicyDecider {
 		if (action == PermissionType.EXECUTE && context == Context.FUNCTION && allowFunctionCallsByDefault) {
 			return Collections.emptySet();
 		}
-		LinkedHashSet<String> results = new LinkedHashSet<String>(resources);
-		for(DataPolicy p:commandContext.getAllowedDataPolicies().values()) {
-			DataPolicyMetadata policy = (DataPolicyMetadata)p;
-			
-			if (results.isEmpty()) {
-				break;
+		List<DataPolicy> policies = new ArrayList<DataPolicy>(commandContext.getAllowedDataPolicies().values());
+		int policyCount = policies.size();
+		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
+			String resource = iter.next();
+			if (action != PermissionType.LANGUAGE) {
+				resource = resource.toLowerCase();
 			}
-			
-			Iterator<String> i = results.iterator();
-			while (i.hasNext()) {				
-				if (policy.allows(i.next(), action)) {
-					i.remove();
+			while (resource.length() > 0) {
+				boolean isFalse = false;
+				for (int j = 0; j < policyCount; j++) {
+					DataPolicyMetadata policy = (DataPolicyMetadata)policies.get(j);
+					Boolean allows = policy.allows(resource, action);
+					if (allows != null) {
+						if (allows) {
+							iter.remove();
+							continue outer;
+						}
+						isFalse = true;
+					}
 				}
+				if (isFalse || action == PermissionType.LANGUAGE) {
+					break; //don't check less specific permissions
+				}
+				resource = resource.substring(0, Math.max(0, resource.lastIndexOf('.')));
 			}
 		}
-		return results;
+		return resources;
 	}
 
 	@Override

@@ -214,6 +214,9 @@ public class VDBMetadataParser {
 			case ALLOW_CREATE:
 				permission.setAllowCreate(Boolean.parseBoolean(reader.getElementText()));
 				break;
+			case ALLOW_LANGUAGE:
+				permission.setAllowLanguage(Boolean.parseBoolean(reader.getElementText()));
+				break;
 			case ALLOW_DELETE:
 				permission.setAllowDelete(Boolean.parseBoolean(reader.getElementText()));
 				break;
@@ -235,7 +238,7 @@ public class VDBMetadataParser {
             			 Element.ALLOW_DELETE.getLocalName(),
             			 Element.ALLOW_EXECUTE.getLocalName(),
             			 Element.ALLOW_READ.getLocalName(),
-            			 Element.ALLOW_UPADTE), reader.getLocation()); 
+            			 Element.ALLOW_UPADTE, Element.ALLOW_LANGUAGE), reader.getLocation()); 
             }
         }		
 	}	
@@ -375,6 +378,7 @@ public class VDBMetadataParser {
 	    ALLOW_DELETE("allow-delete"),
 	    ALLOW_EXECUTE("allow-execute"),
 	    ALLOW_ALTER("allow-alter"),
+	    ALLOW_LANGUAGE("allow-language"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
 	    ENTRY("entry"),
 	    METADATA("metadata");
@@ -496,6 +500,9 @@ public class VDBMetadataParser {
 			}
 			if (permission.getAllowAlter() != null) {
 				writeElement(writer, Element.ALLOW_ALTER, permission.getAllowAlter().toString());
+			}
+			if (permission.getAllowLanguage() != null) {
+				writeElement(writer, Element.ALLOW_LANGUAGE, permission.getAllowCreate().toString());
 			}
 			writer.writeEndElement();			
 		}

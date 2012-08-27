@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -322,10 +323,17 @@ public class RealMetadataFactory {
 	}
     
 	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, FunctionTree... functionModels) {
+		return createTransformationMetadata(metadataStore, vdbName, null, functionModels);
+	}
+	
+	public static TransformationMetadata createTransformationMetadata(MetadataStore metadataStore, String vdbName, Properties vdbProperties, FunctionTree... functionModels) {
 		CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
     	VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName(vdbName); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
+    	if (vdbProperties != null) {
+    		vdbMetaData.setProperties(vdbProperties);
+    	}
     	List<FunctionTree> udfs = new ArrayList<FunctionTree>();
     	udfs.addAll(Arrays.asList(functionModels));
     	for (Schema schema : metadataStore.getSchemas().values()) {

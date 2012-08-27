@@ -2636,7 +2636,7 @@ ObjectTable objectTable(ParseInfo info) :
 /*
 name=object table column
 description=object table column.
-example={code:sql}y integer 'teiid_rowcount'{code}
+example={code:sql}y integer 'teiid_row_number'{code}
 */
 ObjectTable.ObjectColumn objectColumn(ParseInfo info):
 {

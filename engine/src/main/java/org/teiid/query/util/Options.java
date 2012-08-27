@@ -23,6 +23,7 @@
 package org.teiid.query.util;
 
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * A holder for options
@@ -30,8 +31,10 @@ import java.util.Properties;
 public class Options {
 
 	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$ 
+	public static final String LANGUAGES_DEFAULT = "org.teiid.languagesWithoutDataRoles"; //$NON-NLS-1$
 
 	private Properties properties;
+	private Set<String> languages;
 	private boolean subqueryUnnestDefault;
 	
 	public Properties getProperties() {
@@ -40,6 +43,14 @@ public class Options {
 	
 	public void setProperties(Properties properties) {
 		this.properties = properties;
+	}
+	
+	public void setLanguages(Set<String> languages) {
+		this.languages = languages;
+	}
+	
+	public Set<String> getLanguages() {
+		return languages;
 	}
 	
 	public boolean isSubqueryUnnestDefault() {

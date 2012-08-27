@@ -118,12 +118,17 @@
                                 <xs:complexType>
                                     <xs:sequence>                            
 							             <xs:element name="resource-name" type="xs:string"/>
-							             <xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
-							             <xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
-							             <xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>
-							             <xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
-							             <xs:element name="allow-execute" type="xs:boolean" minOccurs="0"/>
-							             <xs:element name="allow-alter" type="xs:boolean" minOccurs="0"/>
+							             <xs:choice>
+											<xs:sequence>
+	                                             <xs:element name="allow-create" type="xs:boolean" minOccurs="0"/>
+									             <xs:element name="allow-read" type="xs:boolean" minOccurs="0"/>
+									             <xs:element name="allow-update" type="xs:boolean" minOccurs="0"/>
+									             <xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
+									             <xs:element name="allow-execute" type="xs:boolean" minOccurs="0"/>
+									             <xs:element name="allow-alter" type="xs:boolean" minOccurs="0"/>	
+											</xs:sequence>
+											<xs:element name="allow-language" type="xs:boolean" minOccurs="0"/>
+							             </xs:choice>
                                    </xs:sequence>      
                                 </xs:complexType>
                             </xs:element>                                                                      

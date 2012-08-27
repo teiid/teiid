@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.util.*;
 
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
@@ -75,6 +76,8 @@ import org.teiid.query.sql.lang.SPParameter;
  */
 public class TransformationMetadata extends BasicQueryMetadata implements Serializable {
 	
+	public static final String ALLOWED_LANGUAGES = "allowed-languages"; //$NON-NLS-1$
+
 	private static final class LiveQueryNode extends QueryNode {
 		Procedure p;
 		private LiveQueryNode(Procedure p) {
@@ -158,7 +161,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private FunctionLibrary functionLibrary;
     private VDBMetaData vdbMetaData;
     private ScriptEngineManager scriptEngineManager;
+    private Map<String, ScriptEngineFactory> scriptEngineFactories = Collections.synchronizedMap(new HashMap<String, ScriptEngineFactory>());
     private Set<String> importedModels;
+    private Set<String> allowedLanguages;
     
     /*
      * TODO: move caching to jboss cache structure
@@ -177,6 +182,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     	if (this.vdbMetaData !=null) {
     		this.scriptEngineManager = vdbMetadata.getAttachment(ScriptEngineManager.class);
     		this.importedModels = this.vdbMetaData.getImportedModels();
+    		this.allowedLanguages = StringUtil.valueOf(vdbMetadata.getPropertyValue(ALLOWED_LANGUAGES), Set.class); 
+    		if (this.allowedLanguages == null) {
+    			this.allowedLanguages = Collections.emptySet();
+    		}
     	} else {
     		this.importedModels = Collections.emptySet();
     	}
@@ -1096,6 +1105,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		tm.procedureCache = this.procedureCache; 
 		tm.scriptEngineManager = this.scriptEngineManager;
 		tm.importedModels = this.importedModels;
+		tm.allowedLanguages = this.allowedLanguages;
 		return tm;
 	}
 	
@@ -1112,18 +1122,34 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		if (language == null) {
 			language = ObjectTable.DEFAULT_LANGUAGE; 
 		}
-		/*
-		 * because of state caching in the engine, we'll return a new instance for each
-		 * usage.  we can pool if needed and add a returnEngine method 
-		 */
-		ScriptEngine engine = this.scriptEngineManager.getEngineByName(language);
+		ScriptEngine engine = null;
+		if (allowedLanguages == null || allowedLanguages.contains(language)) {
+			/*
+			 * because of state caching in the engine, we'll return a new instance for each
+			 * usage.  we can pool if needed and add a returnEngine method 
+			 */
+			ScriptEngineFactory sef = this.scriptEngineFactories.get(language);
+			if (sef != null) {
+				try {
+					engine = sef.getScriptEngine();
+					engine.setBindings(scriptEngineManager.getBindings(), ScriptContext.ENGINE_SCOPE);
+				} catch (Exception e) {
+					//just swallow the exception to mimic the jsr behavior
+				}
+			}
+			engine = this.scriptEngineManager.getEngineByName(language);
+		}
 		if (engine == null) {
 			Set<String> names = new LinkedHashSet<String>();
 			for (ScriptEngineFactory factory : this.scriptEngineManager.getEngineFactories()) {
 				names.addAll(factory.getNames());
 			}
+			if (allowedLanguages != null) {
+				names.retainAll(allowedLanguages);
+			}
 			throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31109, language, names));
 		}
+		this.scriptEngineFactories.put(language, engine.getFactory());
 		return engine;
 	}
 	

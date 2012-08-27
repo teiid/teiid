@@ -21,12 +21,13 @@
  */
 package org.teiid.adminapi.impl;
 
+import static org.junit.Assert.*;
+
 import java.util.Arrays;
 
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
-import static junit.framework.Assert.*;
 
 public class TestDataPolicyMetaData {
 
@@ -60,24 +61,22 @@ public class TestDataPolicyMetaData {
 		
 		policy.addPermission(perm1, perm2, perm3, perm4, perm5);
 		
+		assertTrue(policy.allows("catalog.schema.Table1".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema.Table1".toLowerCase(), PermissionType.CREATE)); //$NON-NLS-1$
 		
-		assertTrue(policy.allows("catalog.schema.Table1", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("catalog.schema.Table1", PermissionType.CREATE)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema", PermissionType.READ)); //$NON-NLS-1$
 		
-		assertFalse(policy.allows("catalog.schema", PermissionType.READ)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema.Table2.column".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
+		assertFalse(policy.allows("catalog.schema.Table2".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
 		
-		assertFalse(policy.allows("catalog.schema.Table2.column", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("catalog.schema.Table2", PermissionType.READ)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema.Table3.column".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table3".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
 		
-		assertTrue(policy.allows("catalog.schema.Table3.column", PermissionType.READ)); //$NON-NLS-1$
-		assertTrue(policy.allows("catalog.schema.Table3", PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table4".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema.Table4".toLowerCase(), PermissionType.DELETE)); //$NON-NLS-1$
 		
-		assertTrue(policy.allows("catalog.schema.Table4.column", PermissionType.READ)); //$NON-NLS-1$
-		assertTrue(policy.allows("catalog.schema.Table4", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("catalog.schema.Table4", PermissionType.DELETE)); //$NON-NLS-1$
-		
-		assertTrue(policy.allows("catalog.schema.Table5.column1", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("catalog.schema.Table5.column2", PermissionType.READ)); //$NON-NLS-1$
-		assertFalse(policy.allows("catalog.schema.Table5", PermissionType.READ)); //$NON-NLS-1$
+		assertTrue(policy.allows("catalog.schema.Table5.column1".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema.Table5.column2".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
+		assertNull(policy.allows("catalog.schema.Table5".toLowerCase(), PermissionType.READ)); //$NON-NLS-1$
 	}
 }

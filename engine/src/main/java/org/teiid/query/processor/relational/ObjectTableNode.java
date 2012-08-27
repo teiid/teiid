@@ -51,7 +51,7 @@ import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
  */
 public class ObjectTableNode extends SubqueryAwareRelationalNode {
 
-	private static final String TEIID_ROW_COUNT = "teiid_rowcount"; //$NON-NLS-1$
+	private static final String TEIID_ROWN_NUMBER = "teiid_row_number"; //$NON-NLS-1$
 	private static final String TEIID_ROW = "teiid_row"; //$NON-NLS-1$
 	private static final String TEIID_CONTEXT = "teiid_context"; //$NON-NLS-1$
 	
@@ -168,7 +168,7 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
 		this.scriptContext.setAttribute(TEIID_ROW, this.item, ScriptContext.ENGINE_SCOPE);
-		this.scriptContext.setAttribute(TEIID_ROW_COUNT, this.rowCount, ScriptContext.ENGINE_SCOPE);
+		this.scriptContext.setAttribute(TEIID_ROWN_NUMBER, this.rowCount, ScriptContext.ENGINE_SCOPE);
 		for (ObjectColumn proColumn : projectedColumns) {
 			Object value = evalScript(proColumn.getCompiledScript(), proColumn.getPath());
 			if (value == null) {
