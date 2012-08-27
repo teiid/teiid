@@ -262,6 +262,9 @@ public class RestASMBasedWebArchiveBuilder {
 				}
 			}
 		}    	
+		
+//		buildQueryProcedure(vdbName, vdbVersion, "xml", cw);
+//		buildQueryProcedure(vdbName, vdbVersion, "json", cw);
     	
     	cw.visitEnd();
 
@@ -323,7 +326,7 @@ public class RestASMBasedWebArchiveBuilder {
         	}
         	paramSignature.append(")");
     		
-    	mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType, paramSignature+"Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });
+    	mv = cw.visitMethod(ACC_PUBLIC, procedure.getName()+contentType.replace('/', '_'), paramSignature+"Ljava/io/InputStream;", null, new String[] { "javax/ws/rs/WebApplicationException" });
     	{
     	av0 = mv.visitAnnotation("Ljavax/ws/rs/Produces;", true);
     	{
@@ -400,7 +403,7 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitVarInsn(ALOAD, paramsSize+1);
     	mv.visitLdcInsn(charSet==null?"":charSet);
     	
-    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;)Ljava/io/InputStream;");
+    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;)Ljava/io/InputStream;");
     	mv.visitLabel(l1);
     	mv.visitInsn(ARETURN);
     	mv.visitLabel(l2);
@@ -415,5 +418,61 @@ public class RestASMBasedWebArchiveBuilder {
     	mv.visitMaxs(6, paramsSize+2);
     	mv.visitEnd();
     	}
+	}
+	
+	private void buildQueryProcedure(String vdbName, int vdbVersion, String context, ClassWriter cw) {
+		MethodVisitor mv;
+		{
+			AnnotationVisitor av0;
+			mv = cw.visitMethod(ACC_PUBLIC, "sqlQuery"+context, "(Ljava/lang/String;)Ljava/io/InputStream;", null, null);
+			{
+			av0 = mv.visitAnnotation("Ljavax/ws/rs/Produces;", true);
+			{
+			AnnotationVisitor av1 = av0.visitArray("value");
+			av1.visit(null, "application/"+context);
+			av1.visitEnd();
+			}
+			av0.visitEnd();
+			}
+			{
+			av0 = mv.visitAnnotation("Ljavax/ws/rs/POST;", true);
+			av0.visitEnd();
+			}
+			{
+			av0 = mv.visitAnnotation("Ljavax/ws/rs/Path;", true);
+			av0.visit("value", "/query");
+			av0.visitEnd();
+			}
+			{
+			av0 = mv.visitParameterAnnotation(0, "Ljavax/ws/rs/FormParam;", true);
+			av0.visit("value", "sql");
+			av0.visitEnd();
+			}
+			mv.visitCode();
+			Label l0 = new Label();
+			Label l1 = new Label();
+			Label l2 = new Label();
+			mv.visitTryCatchBlock(l0, l1, l2, "java/sql/SQLException");
+			mv.visitLabel(l0);
+			mv.visitVarInsn(ALOAD, 0);
+			mv.visitLdcInsn(vdbName);
+			mv.visitIntInsn(BIPUSH, vdbVersion);
+			mv.visitVarInsn(ALOAD, 1);
+			mv.visitInsn(context.equals("xml")?ICONST_0:ICONST_1);
+			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/View", "executeQuery", "(Ljava/lang/String;ILjava/lang/String;Z)Ljava/io/InputStream;");
+			mv.visitLabel(l1);
+			mv.visitInsn(ARETURN);
+			mv.visitLabel(l2);
+			mv.visitFrame(F_SAME1, 0, null, 1, new Object[] {"java/sql/SQLException"});
+			mv.visitVarInsn(ASTORE, 2);
+			mv.visitTypeInsn(NEW, "javax/ws/rs/WebApplicationException");
+			mv.visitInsn(DUP);
+			mv.visitVarInsn(ALOAD, 2);
+			mv.visitFieldInsn(GETSTATIC, "javax/ws/rs/core/Response$Status", "INTERNAL_SERVER_ERROR", "Ljavax/ws/rs/core/Response$Status;");
+			mv.visitMethodInsn(INVOKESPECIAL, "javax/ws/rs/WebApplicationException", "<init>", "(Ljava/lang/Throwable;Ljavax/ws/rs/core/Response$Status;)V");
+			mv.visitInsn(ATHROW);
+			mv.visitMaxs(5, 3);
+			mv.visitEnd();
+		}		
 	}
 }
