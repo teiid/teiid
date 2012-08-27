@@ -22,15 +22,14 @@
 
 package org.teiid.query.processor.relational;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
@@ -56,7 +55,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
@@ -310,10 +308,11 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		if (value instanceof CalendarValue) {
 			CalendarValue cv = (CalendarValue)value;
 			if (!cv.hasTimezone()) {
+				int tzMin = getContext().getServerTimeZone().getRawOffset()/60000;
+				cv.setTimezoneInMinutes(tzMin);
 				Calendar cal = cv.getCalendar();
-				Date d = cal.getTime();
-				cal.setTimeZone(getContext().getServerTimeZone());
-				return TimestampWithTimezone.createTimestamp(d, TimeZone.getTimeZone("GMT"), cal);
+
+				return new Timestamp(cal.getTime().getTime());
 			}
 		}
 		return Value.convertToJava(value);
