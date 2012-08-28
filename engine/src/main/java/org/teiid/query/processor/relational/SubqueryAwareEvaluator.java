@@ -82,10 +82,12 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		
 		@Override
 		public void clear() {
-			for (TupleBuffer buffer : values()) {
-				buffer.remove();
+			if (!isEmpty()) {
+				for (TupleBuffer buffer : values()) {
+					buffer.remove();
+				}
+				super.clear();
 			}
-			super.clear();
 		}
 	}
 

@@ -127,15 +127,16 @@ public class TupleBuffer {
 	 */
 	public void addTupleBatch(TupleBatch batch, boolean save) throws TeiidComponentException {
 		setRowCount(batch.getBeginRow() - 1); 
+		List<List<?>> tuples = batch.getTuples();
 		if (save) {
-			for (List<?> tuple : batch.getTuples()) {
-				addTuple(tuple);
+			for (int i = 0; i < batch.getRowCount(); i++) {
+				addTuple(tuples.get(i));
 			}
 		} else {
 			//add the lob references only, since they may still be referenced later
 			if (isLobs()) {
-				for (List<?> tuple : batch.getTuples()) {
-					lobManager.updateReferences(tuple, ReferenceMode.CREATE);
+				for (int i = 0; i < batch.getRowCount(); i++) {
+					lobManager.updateReferences(tuples.get(i), ReferenceMode.CREATE);
 				}
 			}
 		}

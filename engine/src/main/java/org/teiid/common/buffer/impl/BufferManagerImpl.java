@@ -30,6 +30,7 @@ import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.ref.PhantomReference;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
@@ -126,6 +127,21 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 			}
 		}
 	}
+	
+	private final class Remover implements Removable {
+		private Long id;
+		private AtomicBoolean prefersMemory;
+		
+		public Remover(Long id, AtomicBoolean prefersMemory) {
+			this.id = id;
+			this.prefersMemory = prefersMemory;
+		}
+
+		@Override
+		public void remove() {
+			removeCacheGroup(id, prefersMemory.get());
+		}
+	}
 
 	/**
 	 * This estimate is based upon adding the value to 2/3 maps and having CacheEntry/PhysicalInfo keys
@@ -136,6 +152,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		final Long id;
 		SizeUtility sizeUtility;
 		private WeakReference<BatchManagerImpl> ref = new WeakReference<BatchManagerImpl>(this);
+		private PhantomReference<Object> cleanup;
 		AtomicBoolean prefersMemory = new AtomicBoolean();
 		String[] types;
 		private LobManager lobManager;
@@ -147,7 +164,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 			for (int i = 0; i < types.length; i++) {
 				this.types[i] = DataTypeManager.getDataTypeName(types[i]);
 			}
-			cache.createCacheGroup(newID);
 		}
 		
 		@Override
@@ -189,6 +205,10 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		public Long createManagedBatch(List<? extends List<?>> batch,
 				Long previous, boolean removeOld)
 				throws TeiidComponentException {
+			if (cleanup == null) {
+				cache.createCacheGroup(id);
+				cleanup = AutoCleanupUtil.setCleanupReference(this, new Remover(id, prefersMemory));
+			}
 			int sizeEstimate = getSizeEstimate(batch);
 			Long oid = batchAdded.getAndIncrement();
 			CacheEntry old = null;
@@ -216,9 +236,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 				throws IOException, ClassNotFoundException {
 			List<? extends List<?>> batch = BatchSerializer.readBatch(ois, types);
 			if (lobManager != null) {
-				for (List<?> list : batch) {
+				for (int i = batch.size() - 1; i >= 0; i--) {
 					try {
-						lobManager.updateReferences(list, ReferenceMode.ATTACH);
+						lobManager.updateReferences(batch.get(i), ReferenceMode.ATTACH);
 					} catch (TeiidComponentException e) {
 						 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30052, e);
 					}
@@ -297,7 +317,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 
 		@Override
 		public void remove() {
-			removeCacheGroup(id, prefersMemory.get());
+			if (cleanup != null) {
+				removeCacheGroup(id, prefersMemory.get());
+				AutoCleanupUtil.removeCleanupReference(cleanup);
+				cleanup = null;
+			}
 		}
 
 		@Override
@@ -468,7 +492,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		if (lobIndexes != null) {
 			FileStore lobStore = createFileStore(newID + "_lobs"); //$NON-NLS-1$
 			lobManager = new LobManager(lobIndexes, lobStore);
-			AutoCleanupUtil.setCleanupReference(lobManager, lobStore);
 			batchManager.setLobManager(lobManager);
 		}
     	TupleBuffer tupleBuffer = new TupleBuffer(batchManager, String.valueOf(newID), elements, lobManager, getProcessorBatchSize(elements));
@@ -510,16 +533,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	}
 
 	private BatchManagerImpl createBatchManager(final Long newID, Class<?>[] types) {
-		BatchManagerImpl bm = new BatchManagerImpl(newID, types);
-		final AtomicBoolean prefersMemory = bm.prefersMemory;
-    	AutoCleanupUtil.setCleanupReference(bm, new Removable() {
-			
-			@Override
-			public void remove() {
-				BufferManagerImpl.this.removeCacheGroup(newID, prefersMemory.get());
-			}
-		});
-		return bm;
+		return new BatchManagerImpl(newID, types);
 	}
 
     @Override
@@ -860,9 +874,11 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		long overhead = vals.size() * BATCH_OVERHEAD;
 		maxReserveBytes.addAndGet(overhead);
 		reserveBatchBytes.addAndGet(overhead);
-		for (Long val : vals) {
-			//TODO: we will unnecessarily call remove on the cache, but that should be low cost
-			fastGet(val, prefersMemory, false);
+		if (!vals.isEmpty()) {
+			for (Long val : vals) {
+				//TODO: we will unnecessarily call remove on the cache, but that should be low cost
+				fastGet(val, prefersMemory, false);
+			}
 		}
 	}
 	
@@ -885,8 +901,8 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	private int[] getSizeEstimates(List<? extends Expression> elements) {
 		int total = 0;
 		boolean isValueCacheEnabled = DataTypeManager.isValueCacheEnabled();
-		for (Expression element : elements) {
-			Class<?> type = element.getType();
+		for (int i = elements.size() - 1; i >= 0; i--) {
+			Class<?> type = elements.get(i).getType();
 			total += SizeUtility.getSize(isValueCacheEnabled, type);
 		}
 		//assume 64-bit
@@ -1027,9 +1043,9 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		String[] types = (String[])in.readObject();
 		
 		List<ElementSymbol> schema = new ArrayList<ElementSymbol>(types.length);
-		for (String type : types) {
+		for (int i = 0; i < types.length; i++) {
 			ElementSymbol es = new ElementSymbol("x"); //$NON-NLS-1$
-			es.setType(DataTypeManager.getDataTypeClass(type));
+			es.setType(DataTypeManager.getDataTypeClass(types[i]));
 			schema.add(es);
 		}
 		TupleBuffer buffer = createTupleBuffer(schema, "cached", TupleSourceType.FINAL); //$NON-NLS-1$

@@ -140,10 +140,9 @@ public class SplittableStorageManager implements StorageManager {
 	    }
 	    
 		public synchronized void removeDirect() {
-			for (FileStore info : storageFiles) {
-				info.remove();
+			for (int i = storageFiles.size() - 1; i >= 0; i--) {
+				this.storageFiles.remove(i).remove();
 			}
-			storageFiles.clear();
 		}
 		
 	}

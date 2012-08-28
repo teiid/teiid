@@ -189,7 +189,7 @@ public class LobManager {
 	public void persist() throws TeiidComponentException {
 		// stream the contents of lob into file store.
 		byte[] bytes = new byte[1 << 14]; 
-
+		AutoCleanupUtil.setCleanupReference(this, lobStore);
 		for (Map.Entry<String, LobHolder> entry : this.lobReferences.entrySet()) {
 			entry.getValue().lob = detachLob(entry.getValue().lob, lobStore, bytes);
 		}
@@ -294,5 +294,6 @@ public class LobManager {
 
 	public void remove() {
 		this.lobReferences.clear();
+		//we don't remove the filestore as there could be local connection references to the lob objects
 	}
 }

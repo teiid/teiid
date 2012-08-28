@@ -600,7 +600,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         return this.data.estimateNodeCardinality;
     }
 
-	private ProcessingState getProcessingState() {
+	private final ProcessingState getProcessingState() {
 		//construct lazily since not all tests call initialize
 		if (this.processingState == null) {
 			this.processingState = new ProcessingState();

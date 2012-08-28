@@ -55,9 +55,19 @@ public class AutoCleanupUtil {
 	private static ReferenceQueue<Object> QUEUE = new ReferenceQueue<Object>();
 	private static final Set<PhantomReference<Object>> REFERENCES = Collections.synchronizedSet(Collections.newSetFromMap(new IdentityHashMap<PhantomReference<Object>, Boolean>()));
 
-	public static void setCleanupReference(Object o, Removable r) {
-		REFERENCES.add(new PhantomCleanupReference(o, r));
+	public static PhantomReference<Object> setCleanupReference(Object o, Removable r) {
+		PhantomCleanupReference ref = new PhantomCleanupReference(o, r);
+		REFERENCES.add(ref);
 		doCleanup();
+		return ref;
+	}
+	
+	public static void removeCleanupReference(PhantomReference<Object> ref) {
+		if (ref == null) {
+			return;
+		}
+		REFERENCES.remove(ref);
+		ref.clear();
 	}
 
 	public static void doCleanup() {

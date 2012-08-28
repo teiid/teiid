@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.ref.PhantomReference;
 import java.nio.charset.Charset;
 
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
@@ -39,11 +40,12 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	private final FileStore lobBuffer;
 	private FileStoreOutputStream fsos;
 	private String encoding;
+	private PhantomReference<Object> cleanup;
 
 	public FileStoreInputStreamFactory(FileStore lobBuffer, String encoding) {
 		this.encoding = encoding;
 		this.lobBuffer = lobBuffer;
-		AutoCleanupUtil.setCleanupReference(this, lobBuffer);
+		cleanup = AutoCleanupUtil.setCleanupReference(this, lobBuffer);
 	}
 
 	@Override
@@ -100,6 +102,8 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	public void free() {
 		fsos = null;
 		lobBuffer.remove();
+		AutoCleanupUtil.removeCleanupReference(cleanup);
+		cleanup = null;
 	}
 	
 	@Override
