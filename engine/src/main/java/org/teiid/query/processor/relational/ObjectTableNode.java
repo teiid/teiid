@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor.relational;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,15 +37,18 @@ import javax.script.SimpleScriptContext;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
+import org.teiid.query.util.CommandContext;
 
 /**
  * Handles object table processing.
@@ -69,17 +73,33 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@Override
+	public void initialize(CommandContext context, BufferManager bufferManager,
+			ProcessorDataManager dataMgr) {
+		super.initialize(context, bufferManager, dataMgr);
+		this.scriptContext = new SimpleScriptContext();
+	}
+	
+	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
 		super.open();
 		if (table.getScriptEngine() == null) {
 			table.setScriptEngine(getContext().getMetadata().getScriptEngine(table.getScriptingLanguage()));
 		}
-		scriptContext = new SimpleScriptContext();
 		this.scriptContext.setAttribute(TEIID_CONTEXT, this.getContext(), ScriptContext.ENGINE_SCOPE);
 	}
 	
 	@Override
 	public synchronized void closeDirect() {
+		if (this.scriptContext != null) {
+			try {
+				this.scriptContext.getErrorWriter().flush();
+			} catch (IOException e) {
+			}
+			try {
+				this.scriptContext.getWriter().flush();
+			} catch (IOException e) {
+			}
+		}
 		super.closeDirect();
 		reset();
 	}
@@ -90,7 +110,9 @@ public class ObjectTableNode extends SubqueryAwareRelationalNode {
 		item = null;
 		result = null;
 		rowCount = 0;
-		this.scriptContext = null;
+		if (this.scriptContext != null) {
+			this.scriptContext.getBindings(ScriptContext.ENGINE_SCOPE).clear();
+		}
 	}
 	
 	public void setTable(ObjectTable table) {

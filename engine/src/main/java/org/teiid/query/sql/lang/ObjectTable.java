@@ -35,7 +35,7 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class ObjectTable extends TableFunctionReference {
 	
-	public static final String DEFAULT_LANGUAGE = "javascript"; //$NON-NLS-1$
+	public static final String DEFAULT_LANGUAGE = "teiid_script"; //$NON-NLS-1$
 	
 	public static class ObjectColumn extends ProjectedColumn {
 		private String path;

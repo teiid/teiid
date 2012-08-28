@@ -1603,7 +1603,7 @@ public class TestValidator {
     }
     
     @Test public void testObjectTableScript() {
-    	helpValidate("select * from objecttable('this is not valid' columns c integer 'row') as x", new String[] {"OBJECTTABLE('this is not valid' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
+    	helpValidate("select * from objecttable('this. is not valid' columns c integer 'row') as x", new String[] {"OBJECTTABLE('this is not valid' COLUMNS c integer 'row') AS x"}, RealMetadataFactory.example1Cached());
     }
 
     @Test public void testXMLQueryPassingContextType() {

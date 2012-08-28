@@ -60,6 +60,7 @@ import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -1119,8 +1120,8 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		if (this.scriptEngineManager == null) {
 			this.scriptEngineManager = new ScriptEngineManager();
 		}
-		if (language == null) {
-			language = ObjectTable.DEFAULT_LANGUAGE; 
+		if (language == null || ObjectTable.DEFAULT_LANGUAGE.equals(language)) {
+			return new TeiidScriptEngine();
 		}
 		ScriptEngine engine = null;
 		if (allowedLanguages == null || allowedLanguages.contains(language)) {
@@ -1147,6 +1148,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			if (allowedLanguages != null) {
 				names.retainAll(allowedLanguages);
 			}
+			names.add(ObjectTable.DEFAULT_LANGUAGE);
 			throw new TeiidProcessingException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31109, language, names));
 		}
 		this.scriptEngineFactories.put(language, engine.getFactory());
