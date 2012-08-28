@@ -288,8 +288,8 @@ public class RestASMBasedWebArchiveBuilder {
 			}
 		}    	
 		
-		buildQueryProcedure(vdbName, vdbVersion, "xml", cw, passthroughAuth);
-		buildQueryProcedure(vdbName, vdbVersion, "json", cw, passthroughAuth);
+		buildQueryProcedure(vdbName, vdbVersion, modelName, "xml", cw, passthroughAuth);
+		buildQueryProcedure(vdbName, vdbVersion, modelName, "json", cw, passthroughAuth);
     	
     	cw.visitEnd();
 
@@ -451,7 +451,7 @@ public class RestASMBasedWebArchiveBuilder {
     	}
 	}
 	
-	private void buildQueryProcedure(String vdbName, int vdbVersion, String context, ClassWriter cw, boolean passthroughAuth) {
+	private void buildQueryProcedure(String vdbName, int vdbVersion, String modelName, String context, ClassWriter cw, boolean passthroughAuth) {
 		MethodVisitor mv;
 		{
 			AnnotationVisitor av0;
@@ -491,7 +491,7 @@ public class RestASMBasedWebArchiveBuilder {
 			mv.visitVarInsn(ALOAD, 1);
 			mv.visitInsn(context.equals("xml")?ICONST_0:ICONST_1);
 			mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
-			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/View", "executeQuery", "(Ljava/lang/String;ILjava/lang/String;ZZ)Ljava/io/InputStream;");
+			mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "executeQuery", "(Ljava/lang/String;ILjava/lang/String;ZZ)Ljava/io/InputStream;");
 			mv.visitLabel(l1);
 			mv.visitInsn(ARETURN);
 			mv.visitLabel(l2);
