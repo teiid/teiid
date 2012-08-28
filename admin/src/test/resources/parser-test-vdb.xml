@@ -33,6 +33,10 @@
             <allow-execute>true</allow-execute>
             <allow-alter>true</allow-alter>
         </permission>
+        <permission>
+            <resource-name>javascript</resource-name>
+            <allow-language>true</allow-language>
+        </permission>
         <mapped-role-name>ROLE1</mapped-role-name>
         <mapped-role-name>ROLE2</mapped-role-name>
     </data-role>

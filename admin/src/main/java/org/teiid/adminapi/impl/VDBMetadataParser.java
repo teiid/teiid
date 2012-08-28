@@ -502,7 +502,7 @@ public class VDBMetadataParser {
 				writeElement(writer, Element.ALLOW_ALTER, permission.getAllowAlter().toString());
 			}
 			if (permission.getAllowLanguage() != null) {
-				writeElement(writer, Element.ALLOW_LANGUAGE, permission.getAllowCreate().toString());
+				writeElement(writer, Element.ALLOW_LANGUAGE, permission.getAllowLanguage().toString());
 			}
 			writer.writeEndElement();			
 		}

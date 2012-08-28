@@ -882,6 +882,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String ALLOW_READ = "allow-read"; //$NON-NLS-1$
 		private static final String ALLOW_EXECUTE = "allow-execute"; //$NON-NLS-1$
 		private static final String ALLOW_ALTER = "allow-alter"; //$NON-NLS-1$
+		private static final String ALLOW_LANGUAGE = "allow-language"; //$NON-NLS-1$
 		
 		public static PermissionMetaDataMapper INSTANCE = new PermissionMetaDataMapper();
 		
@@ -891,6 +892,10 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			
 			node.get(RESOURCE_NAME).set(permission.getResourceName());
+			if(permission.getAllowLanguage() != null) {
+				node.get(ALLOW_LANGUAGE).set(permission.getAllowLanguage().booleanValue());
+				return node;
+			}
 			if (permission.getAllowCreate() != null) {
 				node.get(ALLOW_CREATE).set(permission.getAllowCreate().booleanValue());
 			}
@@ -921,6 +926,10 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.get(RESOURCE_NAME) != null) {
 				permission.setResourceName(node.get(RESOURCE_NAME).asString());
 			}
+			if (node.has(ALLOW_LANGUAGE)) {
+				permission.setAllowLanguage(node.get(ALLOW_LANGUAGE).asBoolean());
+				return permission;
+			}
 			if (node.has(ALLOW_CREATE)) {
 				permission.setAllowCreate(node.get(ALLOW_CREATE).asBoolean());
 			}
@@ -949,6 +958,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, ALLOW_READ, ModelType.BOOLEAN, false);
 			addAttribute(node, ALLOW_EXECUTE, ModelType.BOOLEAN, false);
 			addAttribute(node, ALLOW_ALTER, ModelType.BOOLEAN, false);
+			addAttribute(node, ALLOW_LANGUAGE, ModelType.BOOLEAN, false);
 			return node;
 		}
 	}

@@ -117,9 +117,16 @@ public class TestVDBMetaData {
 		assertTrue(role.getMappedRoleNames().contains("ROLE2")); //$NON-NLS-1$
 		
 		List<DataPolicy.DataPermission> permissions = role.getPermissions();
-		assertEquals(2, permissions.size());
+		assertEquals(3, permissions.size());
 		
+		boolean lang = false;
 		for (DataPolicy.DataPermission p: permissions) {
+			if (p.getAllowLanguage() != null) {
+				assertTrue(p.getAllowLanguage());
+				assertEquals("javascript", p.getResourceName());
+				lang = true;
+				continue;
+			}
 			if (p.getResourceName().equalsIgnoreCase("myTable.T1")) { //$NON-NLS-1$
 				assertTrue(p.getAllowRead());
 				assertNull(p.getAllowDelete());
@@ -129,6 +136,7 @@ public class TestVDBMetaData {
 				assertTrue(p.getAllowDelete());
 			}
 		}
+		assertTrue(lang);
 	}
 
 	private VDBMetaData buildVDB() {
@@ -190,6 +198,11 @@ public class TestVDBMetaData {
 		perm2.setAllowRead(false);
 		perm2.setAllowDelete(true);
 		roleOne.addPermission(perm2);
+		
+		PermissionMetaData perm3 = new PermissionMetaData();
+		perm3.setResourceName("javascript"); //$NON-NLS-1$
+		perm3.setAllowLanguage(true);
+		roleOne.addPermission(perm3);
 		
 		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
 		

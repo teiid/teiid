@@ -378,6 +378,13 @@
                         },
                         "description" : "alter allowed",
                         "required" : false
+                    },
+                    "allow-language" : {
+                        "type" : {
+                            "TYPE_MODEL_VALUE" : "BOOLEAN"
+                        },
+                        "description" : "language allowed",
+                        "required" : false
                     }
                 }
             },
