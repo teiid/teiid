@@ -72,17 +72,17 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	public void setPermissions(List<DataPermission> permissions) {
 		this.permissions.clear();
 		for (DataPermission permission:permissions) {
-			addPermission((PermissionMetaData)permission);
+			addPermissionMetadata((PermissionMetaData)permission);
 		}
 	}	
 	
 	public void addPermission(PermissionMetaData... perms) {
 		for (PermissionMetaData permission:perms) {
-			addPermission(permission);
+			addPermissionMetadata(permission);
 		}
 	}
 
-	private void addPermission(PermissionMetaData permission) {
+	private void addPermissionMetadata(PermissionMetaData permission) {
 		PermissionMetaData previous = null;
 		if (permission.getAllowLanguage() != null) {
 			previous = this.languagePermissions.put(permission.getResourceName(), permission);
