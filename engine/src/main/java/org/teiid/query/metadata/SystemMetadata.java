@@ -27,10 +27,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -57,7 +57,7 @@ public class SystemMetadata {
 	}
 	
 	private List<Datatype> dataTypes = new ArrayList<Datatype>();
-	private Map<String, Datatype> typeMap = new HashMap<String, Datatype>();
+	private Map<String, Datatype> typeMap = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
 	private MetadataStore systemStore;
 	
 	public SystemMetadata() {

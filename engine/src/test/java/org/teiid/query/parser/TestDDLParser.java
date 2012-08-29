@@ -496,6 +496,15 @@ public class TestDDLParser {
 		assertTrue( fm.getInputParameters().get(0).isVarArg());
 	}
 	
+	@Test public void testMixedCaseTypes() throws Exception {
+		String ddl = "CREATE FUNCTION SourceFunc(flag Boolean) RETURNS varchaR options (UUID 'z')";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		
+		FunctionMethod fm = s.getFunction("z");	
+		assertEquals("boolean", fm.getInputParameters().get(0).getType());
+	}
+	
 	@Test(expected=ParseException.class) public void testInvalidFunctionBody() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
 

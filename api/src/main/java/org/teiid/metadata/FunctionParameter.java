@@ -24,6 +24,8 @@ package org.teiid.metadata;
 
 import java.io.Serializable;
 
+import org.teiid.core.types.DataTypeManager;
+
 /**
  * A function parameter defines the name and description of an input or output
  * parameter for a function.  The name should not be null, but that is not 
@@ -124,7 +126,7 @@ public class FunctionParameter implements Serializable {
         if(type == null) { 
             this.type = null;
         } else {
-            this.type = type.toLowerCase();
+            this.type = DataTypeManager.getCanonicalString(type.toLowerCase());
         } 
     }
        
