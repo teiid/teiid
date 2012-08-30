@@ -124,11 +124,6 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	private void setExecutionProperties(Properties info) {
 		this.propInfo = new Properties();
         
-        String overrideProp = info.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP);
-        if ( overrideProp == null || overrideProp.trim().length() == 0 ) {
-        	propInfo.put(ExecutionProperties.PROP_TXN_AUTO_WRAP, ExecutionProperties.TXN_WRAP_DETECT);
-        }
-
         String defaultFetchSize = info.getProperty(ExecutionProperties.PROP_FETCH_SIZE);
         if (defaultFetchSize != null) {
         	propInfo.put(ExecutionProperties.PROP_FETCH_SIZE, defaultFetchSize);
@@ -158,11 +153,9 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         }
                                 
         for (String key : info.stringPropertyNames()) {
-        	for (String prop : JDBCURL.EXECUTION_PROPERTIES) {
-        		if (prop.equalsIgnoreCase(key)) {
-            		propInfo.setProperty(key, info.getProperty(key));
-            		break;
-        		}
+        	String actualKey = JDBCURL.EXECUTION_PROPERTIES.get(key);
+        	if (actualKey != null) {
+        		propInfo.setProperty(actualKey, info.getProperty(key));
         	}
 		}
 	}

@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Properties;
 
 import junit.framework.TestCase;
 
@@ -71,7 +72,7 @@ public class TestTeiidDataSource extends TestCase {
         dataSource.setDatabaseName(STD_DATABASE_NAME);
         dataSource.setPortNumber(STD_PORT_NUMBER);
         dataSource.setDataSourceName(STD_DATA_SOURCE_NAME);
-        dataSource.setTransactionAutoWrap(STD_TXN_WRAP);
+        dataSource.setAutoCommitTxn(STD_TXN_WRAP);
         dataSource.setPartialResultsMode(STD_PARTIAL_MODE);
         dataSource.setSecure(true);
         dataSource.setAlternateServers(STD_ALTERNATE_SERVERS);
@@ -161,7 +162,7 @@ public class TestTeiidDataSource extends TestCase {
         ds.setDatabaseName(vdbName);
         ds.setPortNumber(portNumber);
         ds.setFetchSize(fetchSize);
-        ds.setTransactionAutoWrap(txnAutoWrap);
+        ds.setAutoCommitTxn(txnAutoWrap);
         ds.setPartialResultsMode(partialMode);
         if(showPlan) {
             ds.setShowPlan(ShowPlan.ON.toString());
@@ -196,7 +197,7 @@ public class TestTeiidDataSource extends TestCase {
         ds.setUser(user);
         ds.setPassword(password);
         ds.setDataSourceName(dataSourceName);
-        ds.setTransactionAutoWrap(txnAutoWrap);
+        ds.setAutoCommitTxn(txnAutoWrap);
         ds.setPartialResultsMode(partialMode);
         ds.setAlternateServers(alternateServers);
         ds.setUseJDBC4ColumnNameAndLabelSemantics(true);
@@ -272,7 +273,9 @@ public class TestTeiidDataSource extends TestCase {
     }
 
     public void testGetTransactionAutoWrap() {
-        final String result = dataSource.getTransactionAutoWrap();
+        final String result = dataSource.getAutoCommitTxn();
+        Properties p = dataSource.buildProperties("foo", "bar");
+        assertEquals(p.getProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP), STD_TXN_WRAP);
         assertEquals(result,STD_TXN_WRAP);
     }
     

@@ -22,6 +22,8 @@
 
 package org.teiid.client;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -32,19 +34,16 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
 
 
-
-
 /** 
  * @since 4.2
  */
-public class TestBatchSerializer extends TestCase {
+public class TestBatchSerializer {
 
     private static void helpTestSerialization(String[] types, List<?>[] batch) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
@@ -117,7 +116,7 @@ public class TestBatchSerializer extends TestCase {
         return batch;
     }
     
-    public void testSerializeBasicTypes() throws Exception {
+    @Test public void testSerializeBasicTypes() throws Exception {
         // The number 8 is important here because boolean isNull information is packed into bytes,
         // so we want to make sure the boundary cases are handled correctly
         helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(1)); // Less than 8 rows
@@ -128,16 +127,16 @@ public class TestBatchSerializer extends TestCase {
         helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(4096)); // A bunch of rows. This should also test large strings
     }
     
-    public void testSerializeLargeStrings() throws Exception {
+    @Test public void testSerializeLargeStrings() throws Exception {
         List<?> row = Arrays.asList(new Object[] {sampleString(66666)});
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.STRING}, new List[] {row});
     }
     
-    public void testSerializeNoData() throws Exception {
+    @Test public void testSerializeNoData() throws Exception {
         helpTestSerialization(sampleBatchTypes, new List[0]);
     }
     
-    public void testSerializeDatatypeMismatch() throws Exception {
+    @Test public void testSerializeDatatypeMismatch() throws Exception {
         try {
             helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DOUBLE}, new List[] {Arrays.asList(new Object[] {"Hello!"})}); //$NON-NLS-1$
         } catch (RuntimeException e) {

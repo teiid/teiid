@@ -55,7 +55,6 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
 import org.teiid.dqp.internal.process.DQPConfiguration;
-import org.teiid.dqp.internal.process.SerializableTupleBatch;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -998,6 +997,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 			try {
 				ObjectOutputStream out = new ObjectOutputStream(ostream);
 				getTupleBufferState(out, buffer);
+				out.flush();
 			} catch (TeiidComponentException e) {
 				 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30054, e);
 			} catch (IOException e) {
@@ -1012,7 +1012,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		out.writeObject(buffer.getTypes());
 		for (int row = 1; row <= buffer.getRowCount(); row+=buffer.getBatchSize()) {
 			TupleBatch b = buffer.getBatch(row);
-			out.writeObject(new SerializableTupleBatch(b, buffer.getTypes()));
+			BatchSerializer.writeBatch(out, buffer.getTypes(), b.getTuples());
 		}
 	}
 
@@ -1053,13 +1053,15 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 		buffer.setId(state_id);
 		
 		for (int row = 1; row <= rowCount; row+=batchSize) {
-			TupleBatch batch = (TupleBatch)in.readObject();
-			if (batch == null) {					
-				buffer.remove();
-				throw new IOException(QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
-			}		
-			buffer.addTupleBatch(batch, true);
+			List<List<Object>> batch = BatchSerializer.readBatch(in, types);
+			for (int i = 0; i < batch.size(); i++) {
+				buffer.addTuple(batch.get(i));
+			}
 		}
+		if (buffer.getRowCount() != rowCount) {					
+			buffer.remove();
+			throw new IOException(QueryPlugin.Util.getString("not_found_cache")); //$NON-NLS-1$
+		}	
 		buffer.close();
 		addTupleBuffer(buffer);
 	}

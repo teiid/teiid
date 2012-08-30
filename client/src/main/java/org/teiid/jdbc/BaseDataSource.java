@@ -241,8 +241,8 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         	props.setProperty(ExecutionProperties.NOEXEC, String.valueOf(this.isNoExec()));
         }
         
-        if ( this.getTransactionAutoWrap() != null && this.getTransactionAutoWrap().trim().length() != 0   ) {
-            props.setProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, this.getTransactionAutoWrap());
+        if ( this.getAutoCommitTxn() != null && this.getAutoCommitTxn().trim().length() != 0   ) {
+            props.setProperty(ExecutionProperties.PROP_TXN_AUTO_WRAP, this.getAutoCommitTxn());
         }
         
         if (this.getDisableLocalTxn() != null) {
@@ -250,7 +250,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
         }
         
         if (!this.getUseJDBC4ColumnNameAndLabelSemantics()) {
-        	props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, "false");
+        	props.setProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS, Boolean.FALSE.toString());
         }
         
         if (this.additionalProperties != null) {

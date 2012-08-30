@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,20 +48,27 @@ public class JDBCURL {
     static final String URL_PATTERN = JDBC_PROTOCOL + "([\\w-\\.]+)(?:@([^;]*))?(;.*)?"; //$NON-NLS-1$
     static Pattern urlPattern = Pattern.compile(URL_PATTERN);
 
-    public static final Set<String> EXECUTION_PROPERTIES = Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
-            ExecutionProperties.PROP_TXN_AUTO_WRAP,
-            ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
-            ExecutionProperties.RESULT_SET_CACHE_MODE,
-            ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
-            ExecutionProperties.SQL_OPTION_SHOWPLAN,
-            ExecutionProperties.NOEXEC,
-            ExecutionProperties.PROP_FETCH_SIZE,
-            ExecutionProperties.PROP_XML_FORMAT,
-            ExecutionProperties.PROP_XML_VALIDATION,
-            EmbeddedProfile.USE_CALLING_THREAD,
-            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
-            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS)));
+	public static final Map<String, String> EXECUTION_PROPERTIES = Collections.unmodifiableMap(buildProps());
     
+	private static Map<String, String> buildProps() {
+		Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		for (String key : new String[] {ExecutionProperties.PROP_TXN_AUTO_WRAP,
+	            ExecutionProperties.PROP_PARTIAL_RESULTS_MODE,
+	            ExecutionProperties.RESULT_SET_CACHE_MODE,
+	            ExecutionProperties.ANSI_QUOTED_IDENTIFIERS,
+	            ExecutionProperties.SQL_OPTION_SHOWPLAN,
+	            ExecutionProperties.NOEXEC,
+	            ExecutionProperties.PROP_FETCH_SIZE,
+	            ExecutionProperties.PROP_XML_FORMAT,
+	            ExecutionProperties.PROP_XML_VALIDATION,
+	            EmbeddedProfile.USE_CALLING_THREAD,
+	            ExecutionProperties.DISABLE_LOCAL_TRANSACTIONS,
+	            ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS}) {
+			result.put(key, key);
+		}
+		return result;
+	}
+	
     public static final Set<String> KNOWN_PROPERTIES = getKnownProperties();
     
     private static Set<String> getKnownProperties() {
@@ -78,7 +86,7 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.JAAS_NAME,
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
     	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS));
-    	props.addAll(EXECUTION_PROPERTIES);
+    	props.addAll(EXECUTION_PROPERTIES.keySet());
     	return Collections.unmodifiableSet(props);
     }
     
