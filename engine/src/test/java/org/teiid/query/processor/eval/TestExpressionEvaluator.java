@@ -77,8 +77,10 @@ public class TestExpressionEvaluator {
                 elements.put(elementList[i], i);
             }
         }
-        
-        List<Object> tuple = Arrays.asList(valueList);
+        List<Object> tuple = null;
+        if (valueList != null) {
+        	tuple = Arrays.asList(valueList);
+        }
         return new Evaluator(elements, dataMgr, context).evaluate(expr, tuple);
     }
     
