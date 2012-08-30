@@ -71,6 +71,7 @@ import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
@@ -245,8 +246,19 @@ public class ProcedurePlan extends ProcessorPlan {
 	private void checkNotNull(ElementSymbol param, Object value)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryValidatorException {
-		if (value == null && !metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+		if (metadata.elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+			return;
+		}
+		if (value == null) {
 		     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
+		}
+		if (value instanceof ArrayValue && metadata.isVariadic(param.getMetadataID())) {
+			ArrayValue av = (ArrayValue)value;
+			for (Object o : av.getValues()) {
+				if (o == null) {
+				     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
+				}
+			}
 		}
 	}
 

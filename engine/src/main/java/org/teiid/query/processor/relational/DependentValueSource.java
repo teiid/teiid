@@ -121,7 +121,7 @@ public class DependentValueSource implements
         	int index = 0;
         	Class<?> type = null;
         	if (valueExpression instanceof Array) {
-        		type = ((Array)valueExpression).getBaseType();
+        		type = ((Array)valueExpression).getComponentType();
         	} else { 	
         		if (valueExpression != null) {
 	        		index = schema.indexOf(valueExpression);

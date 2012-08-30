@@ -241,7 +241,15 @@ public class TestDDLStringVisitor {
 	private void helpTest(String ddl, String expected) throws ParseException {
 		Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();
 		String metadataDDL = DDLStringVisitor.getDDLString(s, null, null);
-		//System.out.println(metadataDDL);
 		assertEquals(expected, metadataDDL);
+	}	
+	
+	@Test
+	public void testSourceProcedureVariadic() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, VARIADIC p3 decimal) " +
+				"RETURNS (r1 varchar, r2 decimal);";
+		
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, VARIADIC p3 bigdecimal) RETURNS TABLE (r1 string, r2 bigdecimal)";
+		helpTest(ddl, expected);		
 	}	
 }

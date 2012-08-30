@@ -22,7 +22,6 @@
 
 package org.teiid.query.sql.lang;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -42,7 +41,7 @@ import org.teiid.query.sql.symbol.Expression;
 * The connector will utilize this class to set the appropriate values at the
 * datasource layer.
 */
-public class SPParameter implements Serializable, Cloneable {
+public class SPParameter implements Cloneable {
 
     /** Constant identifying an IN parameter */
     public static final int IN = ParameterInfo.IN;
@@ -60,15 +59,14 @@ public class SPParameter implements Serializable, Cloneable {
     public static final int RESULT_SET = ParameterInfo.RESULT_SET;
 
     // Basic state
-    private String name;        // Param name, qualified by full procedure name
     private int parameterType = ParameterInfo.IN;
-    private Class classType;
     private Expression expression;
     private int index;
-    private List resultSetColumns;      //contains List of columns if it is result set
-    private List resultSetIDs;          // contains List of metadataIDs for each column in the result set
-    private Object metadataID;          // metadataID for the actual metadata ID
+    private List<ElementSymbol> resultSetColumns;      //contains List of columns if it is result set
+    private List<Object> resultSetIDs;          // contains List of metadataIDs for each column in the result set
     private boolean usingDefault;
+	private boolean varArg;
+	private ElementSymbol parameterSymbol;
 
     /**
      * Constructor used when constructing a parameter during execution.  In this case we
@@ -80,6 +78,7 @@ public class SPParameter implements Serializable, Cloneable {
     public SPParameter(int index, Expression expression){
         setIndex(index);
         setExpression(expression);
+        this.parameterSymbol = new ElementSymbol(""); //$NON-NLS-1$
     }
 
     /**
@@ -94,7 +93,11 @@ public class SPParameter implements Serializable, Cloneable {
     public SPParameter(int index, int parameterType, String name) {
         setIndex(index);
         setParameterType(parameterType);
-        setName(name);
+        this.parameterSymbol = new ElementSymbol(name);
+    }
+    
+    private SPParameter() {
+    	
     }
 
     /**
@@ -102,7 +105,7 @@ public class SPParameter implements Serializable, Cloneable {
      * @return Parameter name
      */
     public String getName() {
-        return this.name;
+        return this.parameterSymbol.getName();
     }
 
     /**
@@ -110,7 +113,10 @@ public class SPParameter implements Serializable, Cloneable {
      * @param name Parameter name
      */
     public void setName(String name) {
-        this.name = name;
+    	ElementSymbol es = new ElementSymbol(name);
+    	es.setMetadataID(parameterSymbol.getMetadataID());
+    	es.setType(parameterSymbol.getType());
+        this.parameterSymbol = es;
     }
 
     /**
@@ -148,16 +154,16 @@ public class SPParameter implements Serializable, Cloneable {
      * @param classType See {@link org.teiid.core.types.DataTypeManager.DefaultDataClasses}
      * for types
      */
-    public void setClassType(Class classType){
-        this.classType = classType;
+    public void setClassType(Class<?> classType){
+        this.parameterSymbol.setType(classType);
     }
 
     /**
      * Get class type - MetaMatrix runtime types.
      * @return MetaMatrix runtime type description
      */
-    public Class getClassType(){
-        return this.classType;
+    public Class<?> getClassType(){
+        return this.parameterSymbol.getType();
     }
 
     /**
@@ -195,16 +201,16 @@ public class SPParameter implements Serializable, Cloneable {
     /**
      * Add a result set column if this parameter is a return
      * result set.
-     * @param name Name of column
+     * @param colName Name of column
      * @param type Type of column
      */
-    public void addResultSetColumn(String name, Class type, Object id) {
+    public void addResultSetColumn(String colName, Class<?> type, Object id) {
         if(resultSetColumns == null){
-            resultSetColumns = new ArrayList();
-            resultSetIDs = new ArrayList();
+            resultSetColumns = new ArrayList<ElementSymbol>();
+            resultSetIDs = new ArrayList<Object>();
         }
 
-        ElementSymbol rsColumn = new ElementSymbol(name);
+        ElementSymbol rsColumn = new ElementSymbol(colName);
         rsColumn.setType(type);
         rsColumn.setMetadataID(id);
 
@@ -217,9 +223,9 @@ public class SPParameter implements Serializable, Cloneable {
      * Get the result set columns.  If none exist, return empty list.
      * @return List of ElementSymbol representing result set columns
      */
-    public List getResultSetColumns(){
+    public List<ElementSymbol> getResultSetColumns(){
         if(resultSetColumns == null){
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return resultSetColumns;
     }
@@ -228,9 +234,9 @@ public class SPParameter implements Serializable, Cloneable {
      * Get the result set metadata IDs.  If none exist, return empty list.
      * @return List of Object representing result set metadata IDs
      */
-    public List getResultSetIDs() {
+    public List<Object> getResultSetIDs() {
         if(resultSetIDs == null) { 
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
         return this.resultSetIDs;
     }
@@ -249,7 +255,7 @@ public class SPParameter implements Serializable, Cloneable {
         //position is 1 based
         position--;
         if(position >= 0 && position < resultSetColumns.size()) {
-            return (ElementSymbol) resultSetColumns.get(position);
+            return resultSetColumns.get(position);
         }
         throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0010", new Integer(position + 1))); //$NON-NLS-1$
     }
@@ -259,7 +265,7 @@ public class SPParameter implements Serializable, Cloneable {
      * @return Actual metadata ID for this parameter
      */
     public Object getMetadataID() {
-        return this.metadataID;
+        return this.parameterSymbol.getMetadataID();
     }
 
     /**
@@ -267,7 +273,7 @@ public class SPParameter implements Serializable, Cloneable {
      * @param metadataID Actual metadataID
      */
     public void setMetadataID(Object metadataID) {
-        this.metadataID = metadataID;
+        this.parameterSymbol.setMetadataID(metadataID);
     }
 
     /**
@@ -285,10 +291,7 @@ public class SPParameter implements Serializable, Cloneable {
      * @return Element symbol representing the parameter
      */
     public ElementSymbol getParameterSymbol() {
-        ElementSymbol symbol = new ElementSymbol(this.name);
-        symbol.setType(this.classType);
-        symbol.setMetadataID(this.metadataID);
-		return symbol;
+		return parameterSymbol;
     }
 
     /**
@@ -325,23 +328,23 @@ public class SPParameter implements Serializable, Cloneable {
      * @see java.lang.Object#clone()
      */
     public Object clone() {
-        SPParameter copy = new SPParameter(this.index, this.parameterType, this.name);
-        copy.setClassType(this.classType);
+        SPParameter copy = new SPParameter();
+        copy.index = this.index;
+        copy.parameterType = this.parameterType;
+        copy.parameterSymbol = this.parameterSymbol.clone();
         if(this.expression != null) {
             copy.setExpression((Expression)this.expression.clone());
         }
         if(this.resultSetColumns != null) {
-            Iterator iter = this.resultSetColumns.iterator();
-            Iterator idIter = this.resultSetIDs.iterator();
+            Iterator<ElementSymbol> iter = this.resultSetColumns.iterator();
+            Iterator<Object> idIter = this.resultSetIDs.iterator();
             while(iter.hasNext()) {
-                ElementSymbol column = (ElementSymbol) iter.next();
+                ElementSymbol column = iter.next();
                 copy.addResultSetColumn(column.getName(), column.getType(), idIter.next());
             }
         }
-
-        copy.setMetadataID(this.getMetadataID());
         copy.setUsingDefault(this.usingDefault);
-
+        copy.varArg = this.varArg;
         return copy;
     }
 
@@ -361,6 +364,14 @@ public class SPParameter implements Serializable, Cloneable {
 
 	public void setUsingDefault(boolean usingDefault) {
 		this.usingDefault = usingDefault;
+	}
+
+	public void setVarArg(boolean varArg) {
+		this.varArg = varArg;
+	}
+	
+	public boolean isVarArg() {
+		return varArg;
 	}
 
 }

@@ -63,6 +63,7 @@ import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.xml.TestXMLPlanningEnhancements;
 import org.teiid.query.processor.xml.TestXMLProcessor;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.resolver.TestProcedureResolving;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
@@ -2003,6 +2004,59 @@ public class TestProcedureProcessor {
     	Mockito.verify(ts).resume(tc);
     	Mockito.verify(ts, Mockito.times(0)).commit(tc);
     	Mockito.verify(ts).rollback(tc);
+    }
+    
+    @Test public void testVarArgs() throws Exception {
+    	String ddl = "create foreign procedure proc (x integer, VARIADIC z integer); create virtual procedure vproc (x integer, VARIADIC z integer) returns integer as begin \"return\" = z[2] + array_length(z); call proc(x, z); end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+        String sql = "call vproc(1, 2, 3)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("EXEC proc(1, 2, 3)", new List<?>[0]);
+        // Create expected results
+        List[] expected = new List[] { Arrays.asList(5) }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    @Test public void testVarArgsVirtNotNull() throws Exception {
+    	String ddl = "create virtual procedure vproc (x integer, VARIADIC z integer NOT NULL) returns (y integer) as begin select array_length(z); end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);
+    	
+        String sql = "call vproc(1, null, 3)"; //$NON-NLS-1$
+
+        try {
+        	getProcedurePlan(sql, tm);
+        	fail();
+        } catch (QueryValidatorException e) {
+        	
+        }
+    	
+        sql = "call vproc(1, (select cast(null as integer)), 3)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        try {
+        	helpTestProcess(plan, null, dataManager, tm);
+        	fail();
+        } catch (QueryValidatorException e) {
+        	
+        }
+    }
+    
+    @Test public void testVarArgsFunctionInVirt() throws Exception {
+    	String ddl = "create virtual procedure proc (VARIADIC z STRING) returns string as \"return\" = coalesce(null, null, z);";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+        String sql = "call proc(1, 2, 3)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        // note that we're properly cast to string, even though we called with int
+        List[] expected = new List[] { Arrays.asList("1") }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
     }
 
     private static final boolean DEBUG = false;

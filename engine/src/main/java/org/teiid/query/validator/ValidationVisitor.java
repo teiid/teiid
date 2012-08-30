@@ -367,13 +367,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
 	            	continue;
 	            }
-                if (EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
+                if (!getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL) && EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
 	                try {
 	                    // If nextValue is an expression, evaluate it before checking for null
 	                    Object evaluatedValue = Evaluator.evaluate(param.getExpression());
-	                    if(evaluatedValue == null && ! getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL)) {
+	                    if(evaluatedValue == null) {
 	                        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
-	                    }
+	                    } else if (evaluatedValue instanceof ArrayValue && getMetadata().isVariadic(param.getMetadataID())) {
+	            			ArrayValue av = (ArrayValue)evaluatedValue;
+	            			for (Object o : av.getValues()) {
+	            				if (o == null) {
+	            					handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
+	            				}
+	            			}
+	            		}
 	                } catch(ExpressionEvaluationException e) {
 	                    //ignore for now, we don't have the context which could be the problem
 	                }

@@ -23,6 +23,7 @@
 package org.teiid.core.types;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
@@ -65,6 +66,7 @@ import org.teiid.core.util.PropertiesUtils;
  */
 public class DataTypeManager {
 	
+	private static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
 	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableLobs", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_OBJECT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableObject", false); //$NON-NLS-1$
@@ -377,6 +379,9 @@ public class DataTypeManager {
 		}
 
 		if (dataTypeClass == null) {
+			if (name.endsWith(ARRAY_SUFFIX)) {
+				return getArrayType(getDataTypeClass(name.substring(0, name.length() - 2)));
+			}
 			dataTypeClass = DefaultDataClasses.OBJECT;
 		}
 		return dataTypeClass;
@@ -386,9 +391,11 @@ public class DataTypeManager {
 		if (typeClass == null) {
 			return DefaultDataTypes.NULL;
 		}
-
 		String result = dataTypeClasses.get(typeClass);
 		if (result == null) {
+			if (typeClass.isArray()) {
+				return getDataTypeName(typeClass.getComponentType()) + ARRAY_SUFFIX; 
+			}
 			result = DefaultDataTypes.OBJECT;
 		}
 
@@ -903,6 +910,10 @@ public class DataTypeManager {
 				|| type == DataTypeManager.DefaultDataClasses.BLOB
 				|| type == DataTypeManager.DefaultDataClasses.CLOB
 				|| type == DataTypeManager.DefaultDataClasses.OBJECT);
+	}
+
+	public static Class<?> getArrayType(Class<?> classType) {
+		return Array.newInstance(classType, 0).getClass();
 	}
 
 }

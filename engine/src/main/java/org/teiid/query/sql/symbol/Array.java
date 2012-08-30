@@ -25,6 +25,7 @@ package org.teiid.query.sql.symbol;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
@@ -33,17 +34,29 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class Array implements Expression {
 
-	private Class<?> baseType;
+	private Class<?> type;
 	private List<Expression> expressions;
+	private boolean implicit;
+	
+	public Array(List<Expression> expressions) {
+		this.expressions = expressions;
+	}
 	
 	public Array(Class<?> baseType, List<Expression> expresssions) {
-		this.baseType = baseType;
+		setComponentType(baseType);
 		this.expressions = expresssions;
 	}
 	
 	@Override
 	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.OBJECT;
+		return type;
+	}
+	
+	public void setType(Class<?> type) {
+		if (type != null) {
+			Assertion.assertTrue(type.isArray());
+		}
+		this.type = type;
 	}
 
 	@Override
@@ -53,15 +66,24 @@ public class Array implements Expression {
 	
 	@Override
 	public Array clone() {
-		return new Array(baseType, LanguageObject.Util.deepClone(getExpressions(), Expression.class));
+		Array clone = new Array(type, LanguageObject.Util.deepClone(getExpressions(), Expression.class));
+		clone.implicit = implicit;
+		return clone;
 	}
 	
-	public Class<?> getBaseType() {
-		return baseType;
+	public Class<?> getComponentType() {
+		if (this.type != null) {
+			return this.type.getComponentType();
+		}
+		return null;
 	}
 	
-	public void setBaseType(Class<?> baseType) {
-		this.baseType = baseType;
+	public void setComponentType(Class<?> baseType) {
+		if (baseType != null) {
+			this.type = DataTypeManager.getArrayType(baseType);
+		} else {
+			this.type = null;
+		}
 	}
 	
 	public List<Expression> getExpressions() {
@@ -82,12 +104,24 @@ public class Array implements Expression {
 	    	return false;
 	    }
 		Array other = (Array) obj;
-		return EquivalenceUtil.areEqual(baseType, other.baseType) && EquivalenceUtil.areEqual(expressions, other.expressions);
+		return EquivalenceUtil.areEqual(type, other.type) && EquivalenceUtil.areEqual(expressions, other.expressions);
 	}
 	
 	@Override
 	public String toString() {
 		return SQLStringVisitor.getSQLString(this);
+	}
+
+	public void setImplicit(boolean implicit) {
+		this.implicit = implicit;
+	}
+	
+	/**
+	 * If the array has been implicitly constructed, such as with vararg parameters
+	 * @return
+	 */
+	public boolean isImplicit() {
+		return implicit;
 	}
 	
 }

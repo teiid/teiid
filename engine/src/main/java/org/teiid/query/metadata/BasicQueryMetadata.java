@@ -33,9 +33,11 @@ import javax.script.ScriptEngine;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.sql.lang.ObjectTable;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 
@@ -524,8 +526,26 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	}
 	
 	@Override
-	public ScriptEngine getScriptEngine(String langauge) throws TeiidProcessingException {
+	public ScriptEngine getScriptEngine(String language) throws TeiidProcessingException {
+		if (language == null || ObjectTable.DEFAULT_LANGUAGE.equals(language)) {
+			return new TeiidScriptEngine();
+		}
+		return getScriptEngineDirect(language);
+	}
+	
+	/**
+	 * 
+	 * @param language
+	 * @return
+	 * @throws TeiidProcessingException
+	 */
+	public ScriptEngine getScriptEngineDirect(String language) throws TeiidProcessingException {
 		return null;
+	}
+	
+	@Override
+	public boolean isVariadic(Object metadataID) {
+		return false;
 	}
 	
 }

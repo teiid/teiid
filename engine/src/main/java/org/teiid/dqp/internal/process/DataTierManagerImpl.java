@@ -344,7 +344,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					for (Procedure proc : schema.getProcedures().values()) {
 						for (ProcedureParameter param : proc.getParameters()) {
 							Datatype dt = param.getDatatype();
-							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), param.getType().toString(), param.isOptional(), 
+							rows.add(Arrays.asList(vdbName, proc.getParent().getName(), proc.getName(), param.getName(), dt!=null?dt.getRuntimeTypeName():null, param.getPosition(), param.getType().name(), param.isOptional(), 
 									param.getPrecision(), param.getLength(), param.getScale(), param.getRadix(), param.getNullType().toString(), param.getUUID(), param.getAnnotation(), oid++));
 						}
 						if (proc.getResultSet() != null) {

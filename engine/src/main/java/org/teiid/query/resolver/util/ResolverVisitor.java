@@ -320,6 +320,30 @@ public class ResolverVisitor extends LanguageVisitor {
             handleException(e);
         }
     }
+    
+    @Override
+    public void visit(Array array) {
+    	try {
+	    	if (array.getComponentType() != null) {
+	    		String type = DataTypeManager.getDataTypeName(array.getComponentType());
+	    		for (int i = 0; i < array.getExpressions().size(); i++) {
+	    			Expression expr = array.getExpressions().get(i);
+	    			setDesiredType(expr, array.getComponentType(), array);
+	    			array.getExpressions().set(i, ResolverUtil.convertExpression(expr, type, metadata));
+	    		}
+	    	} else {
+	    		String[] types = new String[array.getExpressions().size()];
+	    		for (int i = 0; i < array.getExpressions().size(); i++) {
+	    			Expression expr = array.getExpressions().get(i);
+	    			types[i] = DataTypeManager.getDataTypeName(expr.getType());
+	    		}
+	    		String commonType = ResolverUtil.getCommonType(types);
+	    		array.setComponentType(DataTypeManager.getDataTypeClass(commonType));
+	    	}
+    	} catch (QueryResolverException e) {
+    		handleException(e);
+    	}
+    }
 
     public void visit(CaseExpression obj) {
         try {
@@ -492,6 +516,13 @@ public class ResolverVisitor extends LanguageVisitor {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30070, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30070, function));
 	    }
 	    
+	    if (fd.getMethod().isVarArgs() 
+	    		&& fd.getTypes().length == types.length 
+	    		&& library.isVarArgArrayParam(fd.getMethod(), types, types.length - 1, fd.getTypes()[types.length - 1])) {
+	    	fd = fd.clone();
+	    	fd.setCalledWithVarArgArrayParam(true);
+	    }
+	    
 	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.CONVERT) || fd.getName().equalsIgnoreCase(FunctionLibrary.CAST)) {
 	        String dataType = (String) ((Constant)args[1]).getValue();
 	        Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
@@ -508,7 +539,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
-	    } 
+	    } else if (FunctionLibrary.ARRAY_GET.equalsIgnoreCase(fd.getName()) && args[0].getType().isArray()) {
+	    	//hack to use typed array values
+			fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
+	    }
 	
 	    function.setFunctionDescriptor(fd);
 	    function.setType(fd.getReturnType());

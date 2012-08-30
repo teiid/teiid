@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -178,7 +179,7 @@ public class MetaDataProcessor {
         if (originalCommand instanceof StoredProcedure) {
         	StoredProcedure sp = (StoredProcedure)originalCommand;
         	paramMap = new HashMap<Reference, String>();
-        	List<SPParameter> params = sp.getParameters();
+        	Collection<SPParameter> params = sp.getParameters();
         	for (SPParameter spParameter : params) {
 				if (spParameter.getParameterType() != SPParameter.INOUT 
 						&& spParameter.getParameterType() != SPParameter.IN
@@ -190,7 +191,7 @@ public class MetaDataProcessor {
 					ex = ((Function)ex).getArg(0);
 				}
 				if (ex instanceof Reference) {
-					paramMap.put((Reference)ex, Symbol.getShortName(spParameter.getName()));
+					paramMap.put((Reference)ex, spParameter.getParameterSymbol().getShortName());
 				}
 			}
         }

@@ -1138,44 +1138,65 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( Constant obj ) {
         Class<?> type = obj.getType();
-        String[] constantParts = null;
-        if (obj.isMultiValued()) {
+        boolean multiValued = obj.isMultiValued();
+	    Object value = obj.getValue();
+	    outputLiteral(type, multiValued, value);
+    }
+
+	private void outputLiteral(Class<?> type,
+			boolean multiValued, Object value) throws AssertionError {
+		String[] constantParts = null;
+	    if (multiValued) {
             constantParts = new String[] {"?"}; //$NON-NLS-1$
-        } else if (obj.isNull()) {
-            if (type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-                constantParts = new String[] {UNKNOWN};
-            } else {
-                constantParts = new String[] {"null"}; //$NON-NLS-1$
-            }
-        } else {
-            if (Number.class.isAssignableFrom(type)) {
-                constantParts = new String[] {obj.getValue().toString()};
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-                constantParts = new String[] {obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE};
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
-                constantParts = new String[] {"{ts'", obj.getValue().toString(), "'}"}; //$NON-NLS-1$ //$NON-NLS-2$
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
-                constantParts = new String[] {"{t'", obj.getValue().toString(), "'}"}; //$NON-NLS-1$ //$NON-NLS-2$
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
-                constantParts = new String[] {"{d'", obj.getValue().toString(), "'}"}; //$NON-NLS-1$ //$NON-NLS-2$
-            } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
-            	constantParts = new String[] {"X'", obj.getValue().toString(), "'"}; //$NON-NLS-1$ //$NON-NLS-2$
-            }
-            if (constantParts == null) {
-            	if (DataTypeManager.isLOB(type)) {
-            		constantParts = new String[] {"?"}; //$NON-NLS-1$
-            	} else {
-	                String strValue = obj.getValue().toString();
-	                strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
-	                constantParts = new String[] {"'", strValue, "'"}; //$NON-NLS-1$ //$NON-NLS-2$
-            	}
-            }
-        }
+        } else if (value == null) {
+		    if (type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+		        constantParts = new String[] {UNKNOWN};
+		    } else {
+		        constantParts = new String[] {"null"}; //$NON-NLS-1$
+		    }
+		} else {
+			if (value.getClass() == ArrayValue.class) {
+				ArrayValue av = (ArrayValue)value;
+				append(Tokens.LPAREN);
+				for (int i = 0; i < av.getValues().length; i++) {
+					if (i > 0) {
+						append(Tokens.COMMA);
+						append(SPACE);
+					}
+					Object value2 = av.getValues()[i];
+					outputLiteral(value2!=null?value2.getClass():av.getValues().getClass().getComponentType(), multiValued, value2);
+				}
+				append(Tokens.RPAREN);
+				return;
+			}
+			if (Number.class.isAssignableFrom(type)) {
+		        constantParts = new String[] {value.toString()};
+		    } else if (type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
+		        constantParts = new String[] {value.equals(Boolean.TRUE) ? TRUE : FALSE};
+		    } else if (type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
+		        constantParts = new String[] {"{ts'", value.toString(), "'}"}; //$NON-NLS-1$ //$NON-NLS-2$
+		    } else if (type.equals(DataTypeManager.DefaultDataClasses.TIME)) {
+		        constantParts = new String[] {"{t'", value.toString(), "'}"}; //$NON-NLS-1$ //$NON-NLS-2$
+		    } else if (type.equals(DataTypeManager.DefaultDataClasses.DATE)) {
+		        constantParts = new String[] {"{d'", value.toString(), "'}"}; //$NON-NLS-1$ //$NON-NLS-2$
+		    } else if (type.equals(DataTypeManager.DefaultDataClasses.VARBINARY)) {
+		    	constantParts = new String[] {"X'", value.toString(), "'"}; //$NON-NLS-1$ //$NON-NLS-2$
+		    }
+		    if (constantParts == null) {
+		    	if (DataTypeManager.isLOB(type)) {
+		    		constantParts = new String[] {"?"}; //$NON-NLS-1$
+		    	} else {
+		            String strValue = value.toString();
+		            strValue = escapeStringValue(strValue, "'"); //$NON-NLS-1$
+		            constantParts = new String[] {"'", strValue, "'"}; //$NON-NLS-1$ //$NON-NLS-2$
+		    	}
+		    }
+		}
 
         for (String string : constantParts) {
             append(string);
         }
-    }
+	}
 
     /**
      * Take a string literal and escape it as necessary. By default, this converts ' to ''.
@@ -2111,9 +2132,13 @@ public class SQLStringVisitor extends LanguageVisitor {
     
     @Override
     public void visit(Array array) {
-    	append(Tokens.LPAREN);
+    	if (!array.isImplicit()) {
+    		append(Tokens.LPAREN);
+    	}
     	registerNodes(array.getExpressions(), 0);
-    	append(Tokens.RPAREN);
+    	if (!array.isImplicit()) {
+    		append(Tokens.RPAREN);
+    	}
     }
 
     public static String escapeSinglePart( String part ) {

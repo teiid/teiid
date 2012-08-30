@@ -41,6 +41,7 @@ public class Reference implements Expression, ContextReference {
 	}
 	
     private boolean positional;
+    private boolean optional;
 
     private int refIndex;
     private Class<?> type;
@@ -81,6 +82,7 @@ public class Reference implements Expression, ContextReference {
     		this.expression = ref.expression.clone();
     	}
     	this.constraint = ref.constraint;
+    	this.optional = ref.optional;
     }
 
     public int getIndex() {
@@ -185,6 +187,14 @@ public class Reference implements Expression, ContextReference {
     public void setExpression(ElementSymbol expression) {
     	assert this.expression != null && !this.positional;
 		this.expression = expression;
+	}
+
+	public boolean isOptional() {
+		return optional;
+	}
+	
+	public void setOptional(boolean optional) {
+		this.optional = optional;
 	}
     
 }

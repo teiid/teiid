@@ -31,6 +31,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
+import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
@@ -297,8 +298,15 @@ public class MetadataFactory implements Serializable {
 		param.setType(parameterType);
 		param.setProcedure(procedure);
 		setColumnType(type, param);
-		procedure.getParameters().add(param);
-		param.setPosition(procedure.getParameters().size()); //1 based indexing
+		if (parameterType == Type.ReturnValue) {
+			procedure.getParameters().add(0, param);
+			for (int i = 0; i < procedure.getParameters().size(); i++) {
+				procedure.getParameters().get(i).setPosition(i+1); //1 based indexing
+			}
+		} else {
+			procedure.getParameters().add(param);
+			param.setPosition(procedure.getParameters().size()); //1 based indexing
+		}
 		return param;
 	}
 	

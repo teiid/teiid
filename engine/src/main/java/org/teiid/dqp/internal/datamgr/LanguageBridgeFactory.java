@@ -551,7 +551,7 @@ public class LanguageBridgeFactory {
     }
     
     org.teiid.language.Array translate(Array array) {
-    	return new org.teiid.language.Array(array.getBaseType(), translateExpressionList(array.getExpressions()));
+    	return new org.teiid.language.Array(array.getComponentType(), translateExpressionList(array.getExpressions()));
     }
     
     org.teiid.language.WindowFunction translate(WindowFunction windowFunction) {
@@ -819,6 +819,14 @@ public class LanguageBridgeFactory {
             //we can assume for now that all arguments will be literals, which may be multivalued
             Literal value = null;
             if (direction != Direction.OUT) {
+            	if (param.isVarArg()) {
+            		ArrayValue av = (ArrayValue) ((Constant)param.getExpression()).getValue();
+            		for (Object obj : av.getValues()) {
+                        Argument arg = new Argument(direction, new Literal(obj, param.getClassType().getComponentType()), param.getClassType().getComponentType(), metadataParam);
+                        translatedParameters.add(arg);
+            		}
+            		break;
+            	}
             	value = (Literal)translate(param.getExpression());
             }
             Argument arg = new Argument(direction, value, param.getClassType(), metadataParam);

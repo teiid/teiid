@@ -23,6 +23,7 @@
 package org.teiid.query.sql.lang;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -146,7 +147,7 @@ public class StoredProcedure extends ProcedureContainer {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0011")); //$NON-NLS-1$
         }
 
-        Integer key = new Integer(parameter.getIndex());
+        Integer key = parameter.getIndex();
         if(parameter.getParameterType() == ParameterInfo.RESULT_SET){
         	resultSetParameterKey = key;
         }
@@ -158,9 +159,8 @@ public class StoredProcedure extends ProcedureContainer {
     * Returns a List of SPParameter objects for this stored procedure
     *
     */
-    public List<SPParameter> getParameters(){
-        List<SPParameter> listOfParameters = new ArrayList<SPParameter>(mapOfParameters.values());
-        return listOfParameters;
+    public Collection<SPParameter> getParameters(){
+        return mapOfParameters.values();
     }
     
     public Map<Integer, SPParameter> getMapOfParameters() {
@@ -168,7 +168,7 @@ public class StoredProcedure extends ProcedureContainer {
 	}
 
     public SPParameter getParameter(int index){
-        return mapOfParameters.get(new Integer(index));
+        return mapOfParameters.get(index);
     }
 
     public int getNumberOfColumns(){
@@ -214,9 +214,9 @@ public class StoredProcedure extends ProcedureContainer {
         copy.setGroup(getGroup().clone());
         copy.callableName = callableName;
         copy.calledWithReturn = calledWithReturn;
-        List<SPParameter> params = getParameters();
-        for(int i=0; i<params.size(); i++) {
-            copy.setParameter((SPParameter)params.get(i).clone());
+        Collection<SPParameter> params = getParameters();
+        for (SPParameter spParameter : params) {
+            copy.setParameter((SPParameter)spParameter.clone());
         }
         copy.resultSetParameterKey = resultSetParameterKey;
         this.copyMetadataState(copy);
@@ -350,23 +350,8 @@ public class StoredProcedure extends ProcedureContainer {
         this.displayNamedParameters = displayNamedParameters;
     }
 
-    /** 
-     * Return the full parameter name for
-     * the indicated parameter of this stored procedure.
-     * @param param
-     * @return
-     * @since 4.3
-     */
-    public String getParamFullName(SPParameter param) {
-        String paramName = param.getName();
-        if(paramName.lastIndexOf(".") < 0) { //$NON-NLS-1$
-            paramName = this.getProcedureName() + "." + paramName; //$NON-NLS-1$
-        }
-        return paramName;
-    }
-    
     public List<SPParameter> getInputParameters() {
-    	List<SPParameter> parameters = getParameters();
+    	List<SPParameter> parameters = new ArrayList<SPParameter>(getParameters());
     	Iterator<SPParameter> params = parameters.iterator();
     	while (params.hasNext()) {
     		SPParameter param = params.next();

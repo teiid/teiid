@@ -65,7 +65,6 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -247,7 +246,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 				if (param.getParameterType() != SPParameter.IN) {
 					continue;
 				}
-				String shortName = Symbol.getShortName(param.getName());        
+				String shortName = param.getParameterSymbol().getShortName();        
 			    if(shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) {
 		        	Constant source = (Constant)param.getExpression();
 		    		params.remove();

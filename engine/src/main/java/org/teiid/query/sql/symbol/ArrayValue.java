@@ -22,10 +22,18 @@
 
 package org.teiid.query.sql.symbol;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public class ArrayValue implements Comparable<ArrayValue> {
+import org.teiid.query.sql.visitor.SQLStringVisitor;
+
+public class ArrayValue implements Comparable<ArrayValue>, Serializable {
+	private static final long serialVersionUID = 517794153664734815L;
 	private Object[] values;
+	
+	@SuppressWarnings("serial")
+	public final static class NullException extends RuntimeException {};
+	private final static NullException ex = new NullException();
 	
 	public ArrayValue(Object[] values) {
 		this.values = values;
@@ -33,6 +41,10 @@ public class ArrayValue implements Comparable<ArrayValue> {
 
 	@Override
 	public int compareTo(ArrayValue o) {
+		return compareTo(o, false);
+	}
+		
+	public int compareTo(ArrayValue o, boolean noNulls) {
 		int len1 = values.length;
 		int len2 = o.values.length;
 	    int lim = Math.min(len1, len2);
@@ -40,11 +52,17 @@ public class ArrayValue implements Comparable<ArrayValue> {
 	    	Object object1 = values[k];
 			Object object2 = o.values[k];
 			if (object1 == null) {
+				if (noNulls) {
+					throw ex;
+				}
 	    		if (object2 != null) {
 	    			return -1;
 	    		}
 	    		continue;
 	    	} else if (object2 == null) {
+	    		if (noNulls) {
+					throw ex;
+				}
 	    		return 1;
 	    	}
 			int comp = Constant.COMPARATOR.compare(object1, object2);
@@ -74,6 +92,11 @@ public class ArrayValue implements Comparable<ArrayValue> {
 	
 	public Object[] getValues() {
 		return values;
+	}
+	
+	@Override
+	public String toString() {
+		return SQLStringVisitor.getSQLString(new Constant(this));
 	}
 	
 }

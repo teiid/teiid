@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -868,7 +869,7 @@ public class TestQueryRewriter {
         // rewrite
         Command rewriteCommand = QueryRewriter.rewrite(command, metadata, null);
         
-        List<SPParameter> parameters = ((StoredProcedure)rewriteCommand).getParameters();
+        Collection<SPParameter> parameters = ((StoredProcedure)rewriteCommand).getParameters();
 
         for (SPParameter param : parameters) {
             if(param.getParameterType() == ParameterInfo.IN || param.getParameterType() == ParameterInfo.INOUT){

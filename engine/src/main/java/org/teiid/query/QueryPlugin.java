@@ -529,5 +529,7 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31109, //invalid scripting language
     	TEIID31110, //invalid script
     	TEIID31111, //invalid teiid script
+    	TEIID31112, //invalid vararg
+    	TEIID31113
 	}
 }

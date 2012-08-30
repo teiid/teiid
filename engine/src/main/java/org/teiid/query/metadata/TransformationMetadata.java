@@ -47,20 +47,11 @@ import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnSet;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -363,6 +354,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
                     SPParameter spParam = new SPParameter(paramRecord.getPosition(), direction, paramRecord.getFullName());
                     spParam.setMetadataID(paramRecord);
                     spParam.setClassType(DataTypeManager.getDataTypeClass(runtimeType));
+                    if (paramRecord.isVarArg()) {
+                    	spParam.setVarArg(true);
+                    	spParam.setClassType(DataTypeManager.getArrayType(spParam.getClassType()));
+                    }
                     procInfo.addParameter(spParam);
                 }
 
@@ -1116,12 +1111,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	}
 	
 	@Override
-	public ScriptEngine getScriptEngine(String language) throws TeiidProcessingException {
+	public ScriptEngine getScriptEngineDirect(String language)
+			throws TeiidProcessingException {
 		if (this.scriptEngineManager == null) {
 			this.scriptEngineManager = new ScriptEngineManager();
-		}
-		if (language == null || ObjectTable.DEFAULT_LANGUAGE.equals(language)) {
-			return new TeiidScriptEngine();
 		}
 		ScriptEngine engine = null;
 		if (allowedLanguages == null || allowedLanguages.contains(language)) {
@@ -1153,6 +1146,17 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		this.scriptEngineFactories.put(language, engine.getFactory());
 		return engine;
+	}
+	
+	@Override
+	public boolean isVariadic(Object metadataID) {
+		if (metadataID instanceof ProcedureParameter) {
+			return ((ProcedureParameter)metadataID).isVarArg();
+		}
+		if (metadataID instanceof FunctionParameter) {
+			return ((FunctionParameter)metadataID).isVarArg();
+		}
+		return false;
 	}
 	
 }

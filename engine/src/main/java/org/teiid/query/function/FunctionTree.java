@@ -22,7 +22,6 @@
 
 package org.teiid.query.function;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -33,6 +32,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.teiid.UserDefinedAggregate;
 import org.teiid.core.CoreConstants;
@@ -62,18 +62,18 @@ import org.teiid.query.util.CommandContext;
 public class FunctionTree {
 
     // Constant used to look up the special descriptor key in a node map
-    private static final Integer DESCRIPTOR_KEY = new Integer(-1);
+    private static final Integer DESCRIPTOR_KEY = -1;
 
     private Map<String, Set<String>> categories = new HashMap<String, Set<String>>();
 
-    private Map<String, List<FunctionMethod>> functionsByName = new HashMap<String, List<FunctionMethod>>();
+    private Map<String, List<FunctionMethod>> functionsByName = new TreeMap<String, List<FunctionMethod>>(String.CASE_INSENSITIVE_ORDER);
     
     private Set<FunctionMethod> allFunctions = new HashSet<FunctionMethod>();
 
 	/**
 	 * Function lookup and invocation use: Function name (uppercase) to Map (recursive tree)
 	 */
-    private Map treeRoot = new HashMap();
+    private Map<String, Map<Object, Object>> treeRoot = new TreeMap<String, Map<Object, Object>>(String.CASE_INSENSITIVE_ORDER);
     private boolean validateClass;
     
     /**
@@ -176,7 +176,7 @@ public class FunctionTree {
      */
     List<FunctionMethod> findFunctionMethods(String name, int args) {
         final List<FunctionMethod> allMatches = new ArrayList<FunctionMethod>();
-        List<FunctionMethod> methods = functionsByName.get(name.toUpperCase());
+        List<FunctionMethod> methods = functionsByName.get(name);
         if(methods == null || methods.size() == 0) {
             return allMatches;
         }
@@ -248,17 +248,23 @@ public class FunctionTree {
 	        }
 	        knownMethods.add(method);
 
-        	Map node = treeRoot;
-	        Object[] path = buildPath(methodName, types);
-	        for(int pathIndex = 0; pathIndex < path.length; pathIndex++) {
-	            Object pathPart = path[pathIndex];
-	            Map children = (Map) node.get(pathPart);
+        	Map<Object, Object> node = treeRoot.get(methodName);
+        	if (node == null) {
+        		node = new HashMap<Object, Object>(2);
+        		treeRoot.put(methodName, node);
+        	}
+	        for(int pathIndex = 0; pathIndex < types.length; pathIndex++) {
+	            Class<?> pathPart = types[pathIndex];
+	            Map<Object, Object> children = (Map<Object, Object>) node.get(pathPart);
 	            if(children == null) {
-	                children = new HashMap();
+	                children = new HashMap<Object, Object>(2);
 	                node.put(pathPart, children);
 	            }
-	            if (method.isVarArgs() && pathIndex == path.length - 1) {
+	            if (method.isVarArgs() && pathIndex == types.length - 1) {
 	        		node.put(DESCRIPTOR_KEY, descriptor);
+	                Map<Object, Object> alternate = new HashMap<Object, Object>(2);
+	                alternate.put(DESCRIPTOR_KEY, descriptor);
+	                node.put(DataTypeManager.getArrayType(pathPart), alternate);
 	            }
 	            node = children;
 	        }
@@ -300,7 +306,7 @@ public class FunctionTree {
 	        }
         }
         if (method.isVarArgs()) {
-        	inputTypes.set(inputTypes.size() - 1, Array.newInstance(inputTypes.get(inputTypes.size() - 1), 0).getClass());
+        	inputTypes.set(inputTypes.size() - 1, DataTypeManager.getArrayType(inputTypes.get(inputTypes.size() - 1)));
         }
 
         Method invocationMethod = null;
@@ -368,16 +374,23 @@ public class FunctionTree {
      * @return Descriptor which can be used to invoke the function
      */
     FunctionDescriptor getFunction(String name, Class<?>[] argTypes) {
-        // Build search path
-        Object[] path = buildPath(name, argTypes);
-
         // Walk path in tree
-        Map node = treeRoot;
-        for(int i=0; i<path.length; i++) {
-        	node = (Map)node.get(path[i]);
-        	if (node == null) {
-        		return null;
+        Map<Object, Object> node = treeRoot.get(name);
+        if (node == null) {
+        	return null;
+        }
+        for(int i=0; i<argTypes.length; i++) {
+        	Map<Object, Object> nextNode = (Map<Object, Object>)node.get(argTypes[i]);
+        	if (nextNode == null) {
+        		if (argTypes[i].isArray()) {
+        			//array types are not yet considered in the function typing logic
+        			nextNode = (Map<Object, Object>) node.get(DataTypeManager.DefaultDataClasses.OBJECT);
+        		}
+        		if (nextNode == null) {
+        			return null;
+        		}
             }
+        	node = nextNode;
         }
 
         // Look for key at the end
@@ -389,17 +402,4 @@ public class FunctionTree {
         return null;
     }
 
-    /**
-     * Build the path in the function storage tree.  The path for a function consists
-     * of it's name (uppercased) and each of the argument classes.
-     * @param name Name of function
-     * @param argTypes Types of each arguments
-     * @return Path in function storage tree
-     */
-    private Object[] buildPath(String name, Class<?>[] argTypes) {
-        Object[] path = new Object[argTypes.length + 1];
-        path[0] = name.toUpperCase();
-        System.arraycopy(argTypes, 0, path, 1, argTypes.length);
-        return path;
-    }
 }

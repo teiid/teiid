@@ -539,7 +539,21 @@ public class Evaluator {
 
 	public static Boolean compare(AbstractCompareCriteria criteria, Object leftValue,
 			Object value) throws AssertionError {
-		int compare = Constant.COMPARATOR.compare(leftValue, value);
+		int compare = 0;
+		//TODO: we follow oracle style array comparison
+		//semantics.  each element is treated as an individual comparison,
+		//so null implies unknown. h2 (and likely other dbms) allow for null
+		//array element equality
+		if (leftValue instanceof ArrayValue) {
+			ArrayValue av = (ArrayValue)leftValue;
+			try {
+				compare = av.compareTo((ArrayValue)value, true);
+			} catch (ArrayValue.NullException e) {
+				return null;
+			}
+		} else {
+			compare = Constant.COMPARATOR.compare(leftValue, value);
+		}
 		// Compare two non-null values using specified operator
 		Boolean result = null;
 		switch(criteria.getOperator()) {
@@ -653,9 +667,6 @@ public class Evaluator {
 		   Object[] result = new Object[exprs.size()];
 		   for (int i = 0; i < exprs.size(); i++) {
 			   result[i] = internalEvaluate(exprs.get(i), tuple);
-			   if (result[i] == null) {
-				   return null; //TODO: this is a hack
-			   }
 		   }
 		   return new ArrayValue(result);
 	   } else {

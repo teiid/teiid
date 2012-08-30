@@ -24,6 +24,7 @@ package org.teiid.query.resolver;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -48,6 +49,7 @@ import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.ProcedureContainer;
+import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.Block;
@@ -55,12 +57,14 @@ import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.TriggerAction;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestProcedureResolving {
@@ -1024,14 +1028,8 @@ public class TestProcedureResolving {
     }
     
     @Test public void testOptionalParams() throws Exception {
-    	VDBMetaData vdb = new VDBMetaData();
-    	MetadataStore store = new MetadataStore();
     	String ddl = "create foreign procedure proc (x integer, y string);\n";
-    	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
-    	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
-    	vdb.addAttchment(TransformationMetadata.class, tm);
-    	vdb.addAttchment(QueryMetadataInterface.class, tm);
-    	new MetadataValidator().validate(vdb, store);
+    	TransformationMetadata tm = createMetadata(ddl);
     	
         String sql = "call proc (1)"; //$NON-NLS-1$
         
@@ -1045,22 +1043,47 @@ public class TestProcedureResolving {
 
         assertEquals(new Constant("a", DataTypeManager.DefaultDataClasses.STRING), sp.getParameter(2).getExpression());
     }
-    
-    @Test public void testOptionalParams1() throws Exception {
-    	VDBMetaData vdb = new VDBMetaData();
+
+	public static TransformationMetadata createMetadata(String ddl) throws Exception {
+		VDBMetaData vdb = new VDBMetaData();
     	MetadataStore store = new MetadataStore();
-    	String ddl = "create foreign procedure proc (x integer, y string NOT NULL, z integer);\n";
     	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
     	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     	vdb.addAttchment(TransformationMetadata.class, tm);
     	vdb.addAttchment(QueryMetadataInterface.class, tm);
-    	new MetadataValidator().validate(vdb, store);
+    	ValidatorReport report = new MetadataValidator().validate(vdb, store);
+    	if (report.hasItems()) {
+    		throw new RuntimeException(report.getFailureMessage());
+    	}
+		return tm;
+	}
+    
+    @Test public void testOptionalParams1() throws Exception {
+    	String ddl = "create foreign procedure proc (x integer, y string NOT NULL, z integer);\n";
+    	TransformationMetadata tm = createMetadata(ddl);
     	
         String sql = "call proc (1, 'a')"; //$NON-NLS-1$
 
         StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
 
         assertEquals(new Constant("a", DataTypeManager.DefaultDataClasses.STRING), sp.getParameter(2).getExpression());
+    }
+    
+    @Test public void testVarArgs() throws Exception {
+    	String ddl = "create foreign procedure proc (x integer, VARIADIC z integer) returns (x string);\n";
+    	TransformationMetadata tm = createMetadata(ddl);    	
+        String sql = "call proc (1, 2, 3)"; //$NON-NLS-1$
+
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc(1, 2, 3)", sp.toString());
+        assertEquals(new Constant(1), sp.getParameter(1).getExpression());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(2), new Constant(3))), sp.getParameter(2).getExpression());
+        assertEquals(SPParameter.RESULT_SET, sp.getParameter(3).getParameterType());
+        
+        sql = "call proc (1)"; //$NON-NLS-1$
+        sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc(1)", sp.toString());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(2).getExpression());
     }
     
 }

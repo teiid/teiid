@@ -134,11 +134,15 @@ public class Constant implements Expression, Comparable<Constant> {
         if(type == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0014")); //$NON-NLS-1$
         }
+        Class<?> originalType = type;
+        while (type.isArray()) {
+        	type = type.getComponentType();
+        }
         if(! DataTypeManager.getAllDataTypeClasses().contains(type)) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0015", type.getName())); //$NON-NLS-1$
         }
-        assert value == null || type.isAssignableFrom(value.getClass()) : "Invalid value for specified type."; //$NON-NLS-1$
-        this.type = type;
+        assert value == null || originalType.isArray() || originalType.isAssignableFrom(value.getClass()) : "Invalid value for specified type."; //$NON-NLS-1$
+        this.type = originalType;
 	}
 
 	/**
@@ -150,10 +154,20 @@ public class Constant implements Expression, Comparable<Constant> {
 		this.value = DataTypeManager.convertToRuntimeType(value);
 		if (this.value == null) {
 			this.type = DataTypeManager.DefaultDataClasses.NULL;
-		} else if (DataTypeManager.getAllDataTypeClasses().contains(this.value.getClass())) {
+		} else { 
 			this.type = this.value.getClass();
-		} else {
-			this.type = DataTypeManager.DefaultDataClasses.OBJECT; 
+			Class<?> originalType = type;
+	        while (type.isArray()) {
+	        	type = type.getComponentType();
+	        }
+			if (DataTypeManager.getAllDataTypeClasses().contains(type)) {
+				//array of a runtime-type
+				this.type = originalType;
+			} else if (originalType.isArray()) {
+				this.type = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
+			} else {
+				this.type = DataTypeManager.DefaultDataClasses.OBJECT;
+			}
 		}
 	}
 

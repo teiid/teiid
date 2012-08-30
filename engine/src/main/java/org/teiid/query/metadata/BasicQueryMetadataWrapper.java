@@ -402,4 +402,9 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getScriptEngine(langauge);
 	}
 	
+	@Override
+	public boolean isVariadic(Object metadataID) {
+		return actualMetadata.isVariadic(metadataID);
+	}
+	
 }

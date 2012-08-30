@@ -64,6 +64,7 @@ public class TestMetadataValidator {
 		
 		DDLMetadataRepository repo = new DDLMetadataRepository();
 		MetadataFactory mf = new MetadataFactory("myVDB",1, modelName, TestDDLParser.getDataTypes(), new Properties(), ddl);
+		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		mf.getSchema().setPhysical(physical);
 		repo.loadMetadata(mf, null, null);
 		mf.mergeInto(store);	
@@ -312,4 +313,17 @@ public class TestMetadataValidator {
 		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 	}	
+	
+	@Test public void testInvalidVarArgs() throws Exception {
+		// note here the unique here does not matter for non-existent reference columns, only primary key counted.
+		String ddl = "CREATE FOREIGN FUNCTION f1(VARIADIC e1 integer, e2 varchar) RETURNS varchar;";
+		
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+	}
 }

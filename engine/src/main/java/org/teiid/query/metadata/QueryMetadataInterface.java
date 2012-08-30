@@ -657,4 +657,6 @@ public interface QueryMetadataInterface {
 	QueryMetadataInterface getSessionMetadata();
 
 	Set<String> getImportedModels();
+
+	boolean isVariadic(Object metadataID);
 }

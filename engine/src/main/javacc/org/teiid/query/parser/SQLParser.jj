@@ -454,6 +454,7 @@ TOKEN : /* NonReserved words */
 |   <INCLUDING: "including">
 |   <EXCLUDING: "excluding">
 |   <XMLDECLARATION: "xmldeclaration">
+|   <VARIADIC: "variadic">
 
 }
 /*
@@ -561,7 +562,7 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>)
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>)
     {
     	return getToken(0);
     }	
@@ -4609,11 +4610,13 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	ProcedureParameter param = null;
 	String defaultValue = null;
 	boolean notNull = false;
+	boolean vararg = false;
 }
 {
-	[((<IN> {ppType = ProcedureParameter.Type.In ;})
+	[LOOKAHEAD(1) ((<IN> {ppType = ProcedureParameter.Type.In ;})
 	 |(<OUT> {ppType = ProcedureParameter.Type.Out;})
-	 |(<INOUT> {ppType = ProcedureParameter.Type.InOut;}))]
+	 |(<INOUT> {ppType = ProcedureParameter.Type.InOut;})
+	 |(<VARIADIC> {ppType = ProcedureParameter.Type.In ; vararg = true;}))]
 	name = id()
 	type = parseDataType()
 	[<NOT> <NULL> {notNull = true;}]
@@ -4632,6 +4635,9 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 			if (notNull) {
 				param.setNullType(Column.NullType.No_Nulls);
 			}
+			if (vararg) {
+				param.setVarArg(vararg);
+			}			
 		} catch (TranslatorException e){
 			throw new ParseException(e.getMessage());
 		}

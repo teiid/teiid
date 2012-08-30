@@ -38,6 +38,7 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.util.CommandContext;
 
 
@@ -57,6 +58,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
     private Object metadataID;
     private boolean hasWrappedArgs;
+    private boolean calledWithVarArgArrayParam; //TODO: could store this on the function and pass to invoke
     
     // This is transient as it would be useless to invoke this method in 
     // a different VM.  This function descriptor can be used to look up 
@@ -154,9 +156,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     }
 
     @Override
-	public Object clone() {
+	public FunctionDescriptor clone() {
         try {
-            return super.clone();
+            return (FunctionDescriptor) super.clone();
         } catch (CloneNotSupportedException e) {
              throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30381, e);
         }
@@ -221,20 +223,46 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         		}
         	}
         	if (method.isVarArgs()) {
-        		int i = invocationMethod.getParameterTypes().length;
-        		Object[] newValues = Arrays.copyOf(values, i);
-        		Object varArgs = null;
-        		if (invocationMethod.getParameterTypes()[i - 1].getComponentType() != Object.class) {
-	        		int varArgCount = values.length - i + 1;
-	        		varArgs = Array.newInstance(invocationMethod.getParameterTypes()[i - 1].getComponentType(), varArgCount);
-	        		for (int j = 0; j < varArgCount; j++) {
-	        			Array.set(varArgs, j, values[i-1+j]);
-	        		}
+        		if (calledWithVarArgArrayParam) {
+        			ArrayValue av = (ArrayValue)values[values.length -1];
+        			if (av != null) {
+        				Object[] vals = av.getValues();
+        				values[values.length - 1] = vals;
+	    				if (hasWrappedArgs && types[types.length - 1] == DataTypeManager.DefaultDataClasses.VARBINARY) {
+	    					vals = Arrays.copyOf(vals, vals.length);
+	        				for (int i = 0; i < vals.length; i++) {
+	        					if (vals[i] != null) {
+	        						vals[i] = ((BinaryType)vals[i]).getBytesDirect();
+	        					}
+	        				}
+	        				values[values.length - 1] = vals;
+	        			}
+	    				Class<?> arrayType = invocationMethod.getParameterTypes()[types.length - 1];
+						if (arrayType.getComponentType() != Object.class
+	    						&& vals.getClass() != arrayType) {
+	    					Object varArgs = Array.newInstance(arrayType.getComponentType(), vals.length);
+	    					for (int i = 0; i < vals.length; i++) {
+			        			Array.set(varArgs, i, vals[i]);
+			        		}
+	        				values[values.length -1] = varArgs;
+	    				}
+        			}
         		} else {
-        			varArgs = Arrays.copyOfRange(values, i - 1, values.length);
+	        		int i = invocationMethod.getParameterTypes().length;
+	        		Object[] newValues = Arrays.copyOf(values, i);
+	        		Object varArgs = null;
+	        		if (invocationMethod.getParameterTypes()[i - 1].getComponentType() != Object.class) {
+		        		int varArgCount = values.length - i + 1;
+		        		varArgs = Array.newInstance(invocationMethod.getParameterTypes()[i - 1].getComponentType(), varArgCount);
+		        		for (int j = 0; j < varArgCount; j++) {
+		        			Array.set(varArgs, j, values[i-1+j]);
+		        		}
+	        		} else {
+	        			varArgs = Arrays.copyOfRange(values, i - 1, values.length);
+	        		}
+	        		newValues[i - 1] = varArgs;
+	        		values = newValues;
         		}
-        		newValues[i - 1] = varArgs;
-        		values = newValues;
         	}
             Object result = invocationMethod.invoke(functionTarget, values);
             if (context != null && getDeterministic().ordinal() <= Determinism.USER_DETERMINISTIC.ordinal()) {
@@ -277,4 +305,13 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		}
 		return result;
 	}    
+	
+	public boolean isCalledWithVarArgArrayParam() {
+		return calledWithVarArgArrayParam;
+	}
+	
+	public void setCalledWithVarArgArrayParam(boolean calledWithVarArgArrayParam) {
+		this.calledWithVarArgArrayParam = calledWithVarArgArrayParam;
+	}
+	
 }

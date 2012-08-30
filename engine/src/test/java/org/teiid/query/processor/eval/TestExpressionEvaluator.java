@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -47,19 +48,12 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.resolver.TestFunctionResolving;
 import org.teiid.query.sql.lang.CollectionValueIterator;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.symbol.CaseExpression;
-import org.teiid.query.sql.symbol.Constant;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.SearchedCaseExpression;
-import org.teiid.query.sql.symbol.TestCaseExpression;
-import org.teiid.query.sql.symbol.TestSearchedCaseExpression;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.ValueIterator;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -77,19 +71,14 @@ public class TestExpressionEvaluator {
     }
 
     public Object helpEval(Expression expr, Expression[] elementList, Object[] valueList, ProcessorDataManager dataMgr, CommandContext context) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
-        Map elements = new HashMap();
+        Map<Expression, Integer> elements = new HashMap<Expression, Integer>();
         if (elementList != null) {
             for(int i=0; i<elementList.length; i++) {
-                elements.put(elementList[i], new Integer(i));
+                elements.put(elementList[i], i);
             }
         }
         
-        List tuple = new ArrayList();
-        if (valueList != null) {
-            for(int i=0; i<valueList.length; i++) {
-                tuple.add(valueList[i]);
-            }
-        }
+        List<Object> tuple = Arrays.asList(valueList);
         return new Evaluator(elements, dataMgr, context).evaluate(expr, tuple);
     }
     
@@ -486,6 +475,11 @@ public class TestExpressionEvaluator {
     @Test public void testLikePlus() throws Exception {
     	Expression ex = TestFunctionResolving.getExpression("'+' like '+'");
     	assertEquals(Boolean.TRUE, Evaluator.evaluate(ex));
+    }
+    
+    @Test public void testArrayEquality() throws Exception {
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(new CompareCriteria(new Array(Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(Arrays.asList((Expression)new Constant(1))))));
+    	assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(Arrays.asList((Expression)new Constant(null)))), null));
     }
     
 }

@@ -586,9 +586,22 @@ public class DDLStringVisitor {
 
 	private void visit(ProcedureParameter param) {
 		Type type = param.getType();
-		String typeStr = type.name().toUpperCase();
-		if (type == Type.ReturnValue) {
-			typeStr = Type.Out.name().toUpperCase();
+		String typeStr = null;
+		switch (type) {
+		case InOut:
+			typeStr = INOUT;
+			break;
+		case ReturnValue:
+		case Out:
+			typeStr = OUT;
+			break;
+		case In:
+			if (param.isVarArg()) {
+				typeStr = NonReserved.VARIADIC;
+			} else {
+				typeStr = IN;
+			}
+			break;
 		}
 		buffer.append(typeStr).append(SPACE);
 		appendColumn(buffer, param, true, true);
@@ -666,6 +679,9 @@ public class DDLStringVisitor {
 	}
 
 	private void visit(FunctionParameter param) {
+		if (param.isVarArg()) {
+			buffer.append(NonReserved.VARIADIC).append(SPACE);
+		}
 		buffer.append(SQLStringVisitor.escapeSinglePart(param.getName())).append(SPACE).append(param.getType());
 	}
 

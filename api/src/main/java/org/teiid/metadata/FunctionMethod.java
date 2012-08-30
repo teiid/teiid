@@ -485,14 +485,14 @@ public class FunctionMethod extends AbstractMetadataRecord {
 			FunctionMethod function) {
 		String deterministic = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true); //$NON-NLS-1$
 		boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", true)); //$NON-NLS-1$
-		boolean varargs = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", true)); //$NON-NLS-1$
+		String varargs = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", true); //$NON-NLS-1$
 		boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", true)); //$NON-NLS-1$
 		if (deterministic != null) {
 			function.setDeterminism(Boolean.valueOf(deterministic)?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);
 		}
 		function.setNullOnNull(nullOnNull);
-		if (varargs && !function.getInputParameters().isEmpty()) {
-			function.getInputParameters().get(function.getInputParameterCount() - 1).setVarArg(varargs);
+		if (varargs != null && !function.getInputParameters().isEmpty()) {
+			function.getInputParameters().get(function.getInputParameterCount() - 1).setVarArg(Boolean.valueOf(varargs));
 		}
 		if (aggregate) {
 			boolean analytic = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "analytic", true)); //$NON-NLS-1$

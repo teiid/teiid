@@ -129,7 +129,7 @@ public class TestResolver {
 
         if (variableNames.length == 0){
             //There should be no TempMetadataIDs
-            Collection symbols = CheckNoTempMetadataIDsVisitor.checkSymbols(query);
+            Collection<Symbol> symbols = CheckNoTempMetadataIDsVisitor.checkSymbols(query);
             assertTrue("Expected no symbols with temp metadataIDs, but got " + symbols, symbols.isEmpty()); //$NON-NLS-1$
         }
         
@@ -315,7 +315,7 @@ public class TestResolver {
 
         StoredProcedure proc = (StoredProcedure)helpResolve(sql);
         
-        List<SPParameter> params = proc.getParameters();
+        Collection<SPParameter> params = proc.getParameters();
 
         // Check remaining params against expected expressions
         int i = 0;
@@ -852,14 +852,14 @@ public class TestResolver {
         StoredProcedure proc = (StoredProcedure) helpResolve("EXEC pm1.sq2('abc')"); //$NON-NLS-1$
         
         // Check number of resolved parameters
-        List<SPParameter> params = proc.getParameters();
+        Map<Integer, SPParameter> params = proc.getMapOfParameters();
         assertEquals("Did not get expected parameter count", 2, params.size()); //$NON-NLS-1$
         
         // Check resolved parameters
-        SPParameter param1 = params.get(1);
+        SPParameter param1 = params.get(2);
         helpCheckParameter(param1, ParameterInfo.RESULT_SET, 2, "pm1.sq2.ret", java.sql.ResultSet.class, null); //$NON-NLS-1$
 
-        SPParameter param2 = params.get(0);
+        SPParameter param2 = params.get(1);
         helpCheckParameter(param2, ParameterInfo.IN, 1, "pm1.sq2.in", DataTypeManager.DefaultDataClasses.STRING, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
@@ -876,14 +876,14 @@ public class TestResolver {
 		StoredProcedure proc = (StoredProcedure) helpResolve("EXEC pm1.sq3a('abc', 123)"); //$NON-NLS-1$
 		
 		// Check number of resolved parameters
-		List<SPParameter> params = proc.getParameters();
+		Map<Integer, SPParameter> params = proc.getMapOfParameters();
 		assertEquals("Did not get expected parameter count", 3, params.size()); //$NON-NLS-1$
         
 		// Check resolved parameters
-		SPParameter param1 = params.get(0);
+		SPParameter param1 = params.get(1);
 		helpCheckParameter(param1, ParameterInfo.IN, 1, "pm1.sq3a.in", DataTypeManager.DefaultDataClasses.STRING, new Constant("abc")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		SPParameter param2 = params.get(1);
+		SPParameter param2 = params.get(2);
 		helpCheckParameter(param2, ParameterInfo.IN, 2, "pm1.sq3a.in2", DataTypeManager.DefaultDataClasses.INTEGER, new Constant(new Integer(123))); //$NON-NLS-1$
 	}    
     
@@ -2049,9 +2049,7 @@ public class TestResolver {
         while(iter.hasNext()) {
             SubqueryFromClause clause = (SubqueryFromClause) iter.next();
             StoredProcedure proc = (StoredProcedure) clause.getCommand();
-            List procParams = proc.getParameters();
-            for(int i=0; i<procParams.size(); i++) {
-                SPParameter param = (SPParameter) procParams.get(i);
+            for (SPParameter param : proc.getParameters()) {
                 if(param.getParameterType() == ParameterInfo.IN) {
                     if(params[0] == null) {
                         params[0] = param;
@@ -2115,7 +2113,7 @@ public class TestResolver {
     }
 
     @Test public void testParameterError() throws Exception {
-        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "TEIID30140 Incorrect number of parameters specified on the stored procedure pm1.sp2 - expected 1 but got 2"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.sp2(1, 2)", metadata, "TEIID31113 1 extra positional parameter(s) passed to pm1.sp2."); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testUnionOfAliasedLiteralsGetsModified() {
@@ -2601,7 +2599,7 @@ public class TestResolver {
 	@Test public void testCallableStatementTooManyParameters() throws Exception {
 		String sql = "{call pm4.spTest9(?, ?)}"; //$NON-NLS-1$
 		
-		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "TEIID30140 Incorrect number of parameters specified on the stored procedure pm4.spTest9 - expected 1 but got 2"); //$NON-NLS-1$
+		TestResolver.helpResolveException(sql, RealMetadataFactory.exampleBQTCached(), "TEIID31113 1 extra positional parameter(s) passed to pm4.spTest9."); //$NON-NLS-1$
 	}	
 	    
     @Test public void testUpdateSetClauseReferenceType() {

@@ -386,12 +386,12 @@ public class Request implements SecurityFunctionEvaluator {
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
         
-        checkReferences(references);
-        
         this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
                 
         resolveCommand(command);
 
+        checkReferences(references);
+        
         validateAccess(requestMsg.getCommands(), command, CommandType.USER);
         
     	this.userCommand = (Command) command.clone();

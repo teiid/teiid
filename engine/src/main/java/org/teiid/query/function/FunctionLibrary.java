@@ -92,6 +92,7 @@ public class FunctionLibrary {
     public static final String COALESCE = "coalesce"; //$NON-NLS-1$
 
     public static final String SPACE = "space"; //$NON-NLS-1$
+	public static final String ARRAY_GET = "array_get"; //$NON-NLS-1$
 	
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;
@@ -237,7 +238,6 @@ public class FunctionLibrary {
             //no implicit conversion is possible
             int i = 0;
             for(; i < types.length; i++) {
-            	//treat all varags as the same type
                 final String tmpTypeName = methodTypes.get(Math.min(i, methodTypes.size() - 1)).getType();
                 Class<?> targetType = DataTypeManager.getDataTypeClass(tmpTypeName);
 
@@ -246,7 +246,14 @@ public class FunctionLibrary {
                     currentScore++;
                     continue;
                 }
-                
+                if (sourceType.isArray()) {
+                    if (isVarArgArrayParam(nextMethod, types, i, targetType)) {
+                		//vararg array parameter
+                		continue;
+                	}
+                    //treat the array as object type until proper type handling is added
+                	sourceType = DataTypeManager.DefaultDataClasses.OBJECT;
+                }
 				try {
 					Transform t = getConvertFunctionDescriptor(sourceType, targetType);
 					if (t != null) {
@@ -320,10 +327,20 @@ public class FunctionLibrary {
             if (sourceType == null) {
                 result[i] = findTypedConversionFunction(DataTypeManager.DefaultDataClasses.NULL, targetType);
             } else if (sourceType != targetType){
+            	if (isVarArgArrayParam(method, types, i, targetType)) {
+            		//vararg array parameter
+            		continue;
+            	}
             	result[i] = findTypedConversionFunction(sourceType, targetType);
             }
         }
         return result;
+	}
+
+	public boolean isVarArgArrayParam(FunctionMethod method, Class<?>[] types,
+			int i, Class<?> targetType) {
+		return i == types.length - 1 && method.isVarArgs() && i == method.getInputParameterCount() - 1 
+				&& types[i].getComponentType() == targetType;
 	}
 	
 	private Transform getConvertFunctionDescriptor(Class<?> sourceType, Class<?> targetType) throws InvalidFunctionException {
@@ -346,6 +363,7 @@ public class FunctionLibrary {
      * @return A CONVERT function descriptor or null if not possible
      */
     public FunctionDescriptor findTypedConversionFunction(Class<?> sourceType, Class<?> targetType) {
+    	//TODO: should array to string be prohibited?    	
         FunctionDescriptor fd = findFunction(CONVERT, new Class[] {sourceType, DataTypeManager.DefaultDataClasses.STRING});
         if (fd != null) {
             return copyFunctionChangeReturnType(fd, targetType);
@@ -362,7 +380,7 @@ public class FunctionLibrary {
     public FunctionDescriptor copyFunctionChangeReturnType(FunctionDescriptor fd, Class<?> returnType) {
         if(fd != null) {
         	FunctionDescriptor fdImpl = fd;
-            FunctionDescriptor copy = (FunctionDescriptor)fdImpl.clone();
+            FunctionDescriptor copy = fdImpl.clone();
             copy.setReturnType(returnType);
             return copy;
         }

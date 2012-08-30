@@ -24,11 +24,20 @@ package org.teiid.query.sql.symbol;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.Test;
+import org.teiid.client.BatchSerializer;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 @SuppressWarnings("nls")
 public class TestArray {
@@ -43,6 +52,12 @@ public class TestArray {
 		UnitTestUtil.helpTestEquivalence(1, a1, a2);
 	}
 	
+	@Test public void testArrayValueToString() {
+		ArrayValue a1 = new ArrayValue(new Object[] {1, "x'2", 3});
+		
+		assertEquals("(1, 'x''2', 3)", SQLStringVisitor.getSQLString(new Constant(a1)));
+	}
+	
 	@Test public void testArrayClone() {
 		Array array = new Array(DataTypeManager.DefaultDataClasses.OBJECT, Arrays.asList((Expression)new ElementSymbol("e1")));
 		
@@ -50,6 +65,19 @@ public class TestArray {
 		
 		assertNotSame(a1, array);
 		assertNotSame(a1.getExpressions().get(0), array.getExpressions().get(0));
+	}
+	
+	@Test public void testArrayValueSerialization() throws Exception {
+		ArrayValue a1 = new ArrayValue(new Integer[] {1, 2, 3});
+		String[] types = TupleBuffer.getTypeNames(Arrays.asList(new Array(Integer.class, null)));
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		BatchSerializer.writeBatch(oos, types, Collections.singletonList(Arrays.asList((a1))));
+		oos.close();
+		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+		ObjectInputStream ois = new ObjectInputStream(bais);
+		List<List<Object>> batch = BatchSerializer.readBatch(ois, types);
+		assertEquals(a1, batch.get(0).get(0));
 	}
 	
 }

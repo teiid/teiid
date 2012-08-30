@@ -119,6 +119,9 @@ public class MetadataValidator {
 					boolean hasReturn = false;
 					names.clear();
 					for (ProcedureParameter param : p.getParameters()) {
+						if (param.isVarArg() && param != p.getParameters().get(p.getParameters().size() -1)) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31112, p.getFullName()));
+						}
 						if (param.getType() == ProcedureParameter.Type.ReturnValue) {
 							if (hasReturn) {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31107, p.getFullName()));
@@ -135,6 +138,11 @@ public class MetadataValidator {
 				}
 				
 				for (FunctionMethod func:schema.getFunctions().values()) {
+					for (FunctionParameter param : func.getInputParameters()) {
+						if (param.isVarArg() && param != func.getInputParameters().get(func.getInputParameterCount() -1)) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31112, func.getFullName()));
+						}
+					}
 					if (func.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN) && !model.isSource()) {
 						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31078, func.getName(), model.getName()));
 					}

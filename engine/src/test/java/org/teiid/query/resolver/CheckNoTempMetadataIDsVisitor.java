@@ -22,12 +22,16 @@
 
 package org.teiid.query.resolver;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.sql.*;
+import org.teiid.query.sql.LanguageObject;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.navigator.DeepPreOrderNavigator;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Symbol;
 
 
 /**
@@ -37,16 +41,14 @@ import org.teiid.query.sql.symbol.*;
  */
 public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
 
-    private Collection symbolsWithTempMetadataIDs;
-    private Collection ignoreTheseSymbols;
+    private Collection<Symbol> symbolsWithTempMetadataIDs;
     
     /**
      * By default, this visitor deeply traverses all commands, and there are
      * no symbols to ignore
      */
 	public CheckNoTempMetadataIDsVisitor() { 
-        symbolsWithTempMetadataIDs = new ArrayList();    
-        this.ignoreTheseSymbols = Collections.EMPTY_LIST;
+        symbolsWithTempMetadataIDs = new ArrayList<Symbol>();    
     }
     
     /**
@@ -54,7 +56,7 @@ public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
      * @return Collection of any unresolved Symbols; may
      * be empty but never null
      */
-    public Collection getSymbols(){
+    public Collection<Symbol> getSymbols(){
         return this.symbolsWithTempMetadataIDs;
     }
 
@@ -62,7 +64,7 @@ public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
      * By default, this visitor deeply traverses all commands, and there are
      * no symbols to ignore
      */
-    public static final Collection checkSymbols(LanguageObject obj){
+    public static final Collection<Symbol> checkSymbols(LanguageObject obj){
         CheckNoTempMetadataIDsVisitor visitor = new CheckNoTempMetadataIDsVisitor();
         DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor.getSymbols();
@@ -71,13 +73,13 @@ public class CheckNoTempMetadataIDsVisitor extends LanguageVisitor {
     // visitor methods
     
     public void visit(ElementSymbol obj) {
-        if (obj.getMetadataID() instanceof TempMetadataID && !(this.ignoreTheseSymbols.contains(obj))){
+        if (obj.getMetadataID() instanceof TempMetadataID){
             this.symbolsWithTempMetadataIDs.add(obj);
         }
     }
 
     public void visit(GroupSymbol obj) {
-        if (obj.getMetadataID() instanceof TempMetadataID && !(this.ignoreTheseSymbols.contains(obj))){
+        if (obj.getMetadataID() instanceof TempMetadataID){
             this.symbolsWithTempMetadataIDs.add(obj);
         }
     }

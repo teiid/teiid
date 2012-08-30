@@ -286,12 +286,12 @@ public class TempTableDataManager implements ProcessorDataManager {
 		QueryMetadataInterface metadata = context.getMetadata();
 		GlobalTableStore globalStore = context.getGlobalTableStore();
 		if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEW)) {
-			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(1).getExpression()).getValue());
+			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
 			Object matTableId = globalStore.getGlobalTempTableMetadataId(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
-			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(2).getExpression()).getValue());
+			boolean invalidate = Boolean.TRUE.equals(((Constant)proc.getParameter(3).getExpression()).getValue());
 			boolean needsLoading = globalStore.needsLoading(matTableName, globalStore.getAddress(), true, true, invalidate);
 			if (!needsLoading) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
@@ -301,7 +301,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			int rowCount = loadGlobalTable(context, matTable, matTableName, globalStore);
 			return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
 		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
-			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(1).getExpression()).getValue());
+			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
 			Object pk = metadata.getPrimaryKey(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			if (pk == null) {
@@ -320,7 +320,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (!tempTable.isUpdatable()) {
 				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
 			}
-			Constant key = (Constant)proc.getParameter(2).getExpression();
+			Constant key = (Constant)proc.getParameter(3).getExpression();
 			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, key));
 			Object id = ids.iterator().next();
 			String targetTypeName = metadata.getElementType(id);

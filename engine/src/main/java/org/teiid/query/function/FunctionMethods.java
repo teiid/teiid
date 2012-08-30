@@ -59,6 +59,7 @@ import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -1407,6 +1408,9 @@ public final class FunctionMethods {
 			if (array instanceof java.sql.Array) {
 				return Array.get(((java.sql.Array)array).getArray(index, 1), 0);
 			}
+			if (array instanceof ArrayValue) {
+				return ((ArrayValue)array).getValues()[index - 1];
+			}
 		} catch (ArrayIndexOutOfBoundsException e) {
 			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30415, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30415, index));
 		}
@@ -1419,6 +1423,9 @@ public final class FunctionMethods {
 		}
 		if (array instanceof java.sql.Array) {
 			return Array.getLength(((java.sql.Array)array).getArray());
+		}
+		if (array instanceof ArrayValue) {
+			return ((ArrayValue)array).getValues().length;
 		}
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}

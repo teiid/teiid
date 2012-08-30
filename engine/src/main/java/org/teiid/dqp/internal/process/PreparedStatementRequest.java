@@ -74,54 +74,13 @@ public class PreparedStatementRequest extends Request {
     @Override
     protected void checkReferences(List<Reference> references)
     		throws QueryValidatorException {
+    	for (Iterator<Reference> i = references.iterator(); i.hasNext();) {
+    		if (i.next().isOptional()) {
+    			i.remove(); //remove any optional parameter, which accounts for out params - the client does not send any bindings
+    		}
+    	}
         prepPlan.setReferences(references);
     }
-    
-    /** 
-     * @see org.teiid.dqp.internal.process.Request#resolveCommand(org.teiid.query.sql.lang.Command)
-     */
-    @Override
-    protected void resolveCommand(Command command) throws QueryResolverException,
-                                                  TeiidComponentException {
-    	handleCallableStatement(command);
-    	
-    	super.resolveCommand(command);
-    }
-
-    /**
-     * TODO: this is a hack that maintains pre 5.6 behavior, which ignores output parameters for resolving
-     * @param command
-     * @param references
-     */
-	private void handleCallableStatement(Command command) {
-		if (!this.requestMsg.isCallableStatement() || !(command instanceof StoredProcedure)) {
-    		return;
-    	}
-		StoredProcedure proc = (StoredProcedure)command;
-		if (!proc.isCallableStatement()) {
-			return;
-		}
-		List<?> values = requestMsg.getParameterValues();
-		List<SPParameter> spParams = proc.getParameters();
-		proc.clearParameters();
-		int inParameterCount = values.size();
-		if (this.requestMsg.isBatchedUpdate() && values.size() > 0) {
-			inParameterCount = ((List)values.get(0)).size();
-		}
-		int index = 1;
-		for (Iterator<SPParameter> params = spParams.iterator(); params.hasNext();) {
-			SPParameter param = params.next();
-			if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-				inParameterCount++;
-			} else if (param.getExpression() instanceof Reference && index > inParameterCount) {
-				//assume it's an output parameter
-				this.prepPlan.getReferences().remove(param.getExpression());
-				continue;
-			}
-			param.setIndex(index++);
-			proc.setParameter(param);					
-		}
-	}
     
     /** 
      * @throws TeiidComponentException 
