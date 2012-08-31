@@ -200,6 +200,11 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 			return DataTypeManager.DefaultDataClasses.OBJECT;
 		case TEXTAGG:
 			return DataTypeManager.DefaultDataClasses.BLOB;
+		case USER_DEFINED:
+			if (this.getFunctionDescriptor() == null) {
+				return null;
+			}
+			return this.getFunctionDescriptor().getReturnType();
 		}
 		if (isBoolean()) {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;

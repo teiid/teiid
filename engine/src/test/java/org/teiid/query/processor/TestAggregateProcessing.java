@@ -22,6 +22,7 @@
 
 package org.teiid.query.processor;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.processor.TestProcessor.*;
 
 import java.math.BigDecimal;
@@ -46,6 +47,7 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -496,28 +498,44 @@ public class TestAggregateProcessing {
 		
 	}
 	
+	public static class LongSumAll implements UserDefinedAggregate<Long> {
+		
+		private boolean isNull = true;
+		private long result;
+		
+		public void addInput(Integer... vals) {
+			isNull = false;
+			for (int i : vals) {
+				result += i;
+			}
+		}
+		
+		@Override
+		public Long getResult(org.teiid.CommandContext commandContext) {
+			if (isNull) {
+				return null;
+			}
+			return result;
+		}
+
+		@Override
+		public void reset() {
+			isNull = true;
+			result = 0;
+		}
+		
+	}
+	
 	@Test public void testUserDefined() throws Exception {
 		MetadataStore ms = RealMetadataFactory.example1Store();
 		Schema s = ms.getSchemas().get("PM1");
-		FunctionMethod fm = new FunctionMethod();
-		fm.setName("myagg");
-		fm.setInvocationClass(SumAll.class.getName());
-		fm.setInvocationMethod("addInput");
-		FunctionParameter fp = new FunctionParameter();
-		fp.setType(DataTypeManager.DefaultDataTypes.INTEGER);
-		fp.setName("arg");
-		fp.setVarArg(true);
-		fm.getInputParameters().add(fp);
-		FunctionParameter fpout = new FunctionParameter();
-		fp.setType(DataTypeManager.DefaultDataTypes.INTEGER);
-		fp.setName("outp");
-		fm.setOutputParameter(fpout);
-
-		AggregateAttributes aa = new AggregateAttributes();
-		fm.setAggregateAttributes(aa);
-		s.getFunctions().put(fm.getName(), fm);
+		AggregateAttributes aa = addAgg(s, "myagg", SumAll.class, DataTypeManager.DefaultDataTypes.INTEGER);
+		addAgg(s, "myagg2", LongSumAll.class, DataTypeManager.DefaultDataTypes.LONG);
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(ms, "test");
 
+		Command c = TestResolver.helpResolve("select myagg2(distinct e2) from pm1.g1", metadata);
+		assertEquals(DataTypeManager.DefaultDataClasses.LONG, c.getProjectedSymbols().get(0).getType());
+		
 		//must be in agg form
 		TestValidator.helpValidate("SELECT myagg(e2) from pm1.g1", new String[] {"myagg(e2)"}, metadata);
 
@@ -551,6 +569,27 @@ public class TestAggregateProcessing {
 		
 		ProcessorPlan plan = helpGetPlan("select myagg(all e2, e2 order by e1), myagg(all e2, e2) from pm1.g1 group by e3", metadata);
 		helpProcess(plan, dataManager, expected);
+	}
+
+	private AggregateAttributes addAgg(Schema s, String name, Class<?> clazz, String returns) {
+		FunctionMethod fm = new FunctionMethod();
+		fm.setName(name);
+		fm.setInvocationClass(clazz.getName());
+		fm.setInvocationMethod("addInput");
+		FunctionParameter fp = new FunctionParameter();
+		fp.setType(DataTypeManager.DefaultDataTypes.INTEGER);
+		fp.setName("arg");
+		fp.setVarArg(true);
+		fm.getInputParameters().add(fp);
+		FunctionParameter fpout = new FunctionParameter();
+		fpout.setType(returns);
+		fpout.setName("outp");
+		fm.setOutputParameter(fpout);
+
+		AggregateAttributes aa = new AggregateAttributes();
+		fm.setAggregateAttributes(aa);
+		s.getFunctions().put(fm.getName(), fm);
+		return aa;
 	}
 
 }
