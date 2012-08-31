@@ -236,10 +236,13 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     }
     
     public synchronized void clearRuntimeMessages() {
-    	if (runtimeMessages != null) {
-    		runtimeMessages = null;
-    	}
-    }    
+		runtimeMessages = null;
+    }  
+    
+    public synchronized void clearMessages() {
+    	clearRuntimeMessages();
+    	this.messages = null;
+    } 
 	
     public static class Message implements Serializable{
 		private static final long serialVersionUID = 2044197069467559527L;
@@ -333,5 +336,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 		return allErrors;
 	}
+	
+	
 	
 }
