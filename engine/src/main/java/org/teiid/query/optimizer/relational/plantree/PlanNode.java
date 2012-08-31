@@ -30,6 +30,7 @@ import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SubqueryContainer;
@@ -402,6 +403,11 @@ public class PlanNode {
 				if (tfr != null) {
 					toSearch = Arrays.asList(tfr);
 				}
+				break;
+			}
+			case NodeConstants.Types.GROUP: {
+				SymbolMap groupMap = (SymbolMap)this.getProperty(Info.SYMBOL_MAP);
+				toSearch = groupMap.getValues();
 				break;
 			}
 		}

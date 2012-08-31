@@ -26,6 +26,7 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -47,6 +48,7 @@ import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.processor.relational.SortUtility.Mode;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.AggregateSymbol;
@@ -58,7 +60,7 @@ import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
 
-public class GroupingNode extends RelationalNode {
+public class GroupingNode extends SubqueryAwareRelationalNode {
 
     static class ProjectingTupleSource extends
 			BatchCollector.BatchProducerTupleSource {
@@ -106,7 +108,6 @@ public class GroupingNode extends RelationalNode {
     private AggregateFunction[] functions;
     private List<?> lastRow;
 	private List<?> currentGroupTuple;
-	private Evaluator eval;
 
     private static final int COLLECTION = 1;
     private static final int SORT = 2;
@@ -324,11 +325,15 @@ public class GroupingNode extends RelationalNode {
 	
 	public TupleSource getCollectionTupleSource() {
 		final RelationalNode sourceNode = this.getChildren()[0];
-		return new ProjectingTupleSource(sourceNode, eval, new ArrayList<Expression>(collectedExpressions.keySet()));
+		return new ProjectingTupleSource(sourceNode, getEvaluator(elementMap), new ArrayList<Expression>(collectedExpressions.keySet()));
+	}
+	
+	@Override
+	protected Collection<? extends LanguageObject> getObjects() {
+		return this.getChildren()[0].getOutputElements();
 	}
 
     private void collectionPhase() {
-    	eval = new Evaluator(elementMap, getDataManager(), getContext());
         if(this.orderBy == null) {
             // No need to sort
             this.groupTupleSource = getCollectionTupleSource();

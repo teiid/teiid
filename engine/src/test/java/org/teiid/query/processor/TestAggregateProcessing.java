@@ -141,6 +141,28 @@ public class TestAggregateProcessing {
 		// Run query
 		helpProcess(plan, dataManager, expected);
 	}
+	
+	@Test public void testAggregateSubquery() throws Exception {
+		// Create query
+		String sql = "SELECT IntKey, SUM((select IntNum from bqt1.smallb where intkey = smalla.intkey)) FROM BQT1.SmallA GROUP BY IntKey, IntNum HAVING IntNum > 10 ORDER BY IntKey"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(new Object[] { 1, 2l }),
+				Arrays.asList(new Object[] { 2, 3l }) };
+
+		// Construct data manager with data
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT g_0.IntKey, g_0.IntNum FROM BQT1.SmallA AS g_0 WHERE g_0.IntNum > 10", new List<?>[] {Arrays.asList(1, 2), Arrays.asList(2, 3)});
+		dataManager.addData("SELECT g_0.IntNum FROM BQT1.SmallB AS g_0 WHERE g_0.IntKey = 1", new List<?>[] {Arrays.asList(2)});
+		dataManager.addData("SELECT g_0.IntNum FROM BQT1.SmallB AS g_0 WHERE g_0.IntKey = 2", new List<?>[] {Arrays.asList(3)});
+		
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.exampleBQTCached(), TestOptimizer.getGenericFinder());
+
+		// Run query
+		helpProcess(plan, dataManager, expected);
+	}
 
 	@Test public void testAggregateOnBQT2() throws Exception {
 		// Create query
