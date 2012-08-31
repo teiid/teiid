@@ -253,7 +253,7 @@ public class RelationalPlanner {
     private void connectSubqueryContainers(PlanNode plan) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
-        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE)) {
+        for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP)) {
             List<SubqueryContainer> subqueryContainers = node.getSubqueryContainers();
             if (subqueryContainers.isEmpty()){
             	continue;
@@ -267,7 +267,7 @@ public class RelationalPlanner {
                 Command subCommand = (Command)container.getCommand().clone(); 
                 ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
                 CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
-                if (node.getType() != NodeConstants.Types.JOIN) {
+                if (node.getType() != NodeConstants.Types.JOIN && node.getType() != NodeConstants.Types.GROUP) {
                 	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
                 	if (grouping != null && !correlatedReferences.isEmpty()) {
                 		SymbolMap map = (SymbolMap) grouping.getProperty(Info.SYMBOL_MAP);

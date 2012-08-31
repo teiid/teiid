@@ -480,8 +480,8 @@ public class TestExpressionEvaluator {
     }
     
     @Test public void testArrayEquality() throws Exception {
-    	assertEquals(Boolean.TRUE, Evaluator.evaluate(new CompareCriteria(new Array(Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(Arrays.asList((Expression)new Constant(1))))));
-    	assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(Arrays.asList((Expression)new Constant(null)))), null));
+    	assertEquals(Boolean.TRUE, Evaluator.evaluate(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))))));
+    	assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(null)))), null));
     }
     
 }

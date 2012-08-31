@@ -197,7 +197,10 @@ public class AggregateSymbol extends Function implements DerivedExpression {
             expressionType = this.getArg(0).getType();
             return AVG_TYPES.get(expressionType);
 		case ARRAY_AGG:
-			return DataTypeManager.DefaultDataClasses.OBJECT;
+			if (this.getArg(0) == null) {
+				return null;
+			}
+			return DataTypeManager.getArrayType(this.getArg(0).getType());
 		case TEXTAGG:
 			return DataTypeManager.DefaultDataClasses.BLOB;
 		case USER_DEFINED:

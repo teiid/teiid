@@ -23,8 +23,6 @@ package org.teiid.odbc;
 
 import java.sql.Types;
 
-import org.teiid.deployers.PgCatalogMetadataStore;
-
 public class PGUtil {
 
 	public static final int PG_TYPE_VARCHAR = 1043;
@@ -41,10 +39,11 @@ public class PGUtil {
 	public static final int PG_TYPE_FLOAT8 = 701;
 	public static final int PG_TYPE_UNKNOWN = 705;
     
-	public static final int PG_TYPE_OIDVECTOR = PgCatalogMetadataStore.PG_TYPE_OIDVECTOR;
-	public static final int PG_TYPE_OIDARRAY = PgCatalogMetadataStore.PG_TYPE_OIDARRAY;
-	public static final int PG_TYPE_CHARARRAY = PgCatalogMetadataStore.PG_TYPE_CHARARRAY;
-	public static final int PG_TYPE_TEXTARRAY = PgCatalogMetadataStore.PG_TYPE_TEXTARRAY;
+	public static final int PG_TYPE_OIDVECTOR = 30;
+	public static final int PG_TYPE_INT2VECTOR = 22;
+    public static final int PG_TYPE_OIDARRAY = 1028;
+    public static final int PG_TYPE_CHARARRAY = 1002;
+    public static final int PG_TYPE_TEXTARRAY = 1009;
     
 	public static final int PG_TYPE_DATE = 1082;
 	public static final int PG_TYPE_TIME = 1083;

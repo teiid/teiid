@@ -35,7 +35,7 @@ public class AnyToObjectTransform extends Transform {
 	}
 	
 	@Override
-	public Class getSourceType() {
+	public Class<?> getSourceType() {
 		return sourceType;
 	}
 
@@ -55,7 +55,7 @@ public class AnyToObjectTransform extends Transform {
 	 * Type of the outgoing value.
 	 * @return Target type
 	 */
-	public Class getTargetType() {
+	public Class<?> getTargetType() {
 		return DataTypeManager.DefaultDataClasses.OBJECT;
 	}
 

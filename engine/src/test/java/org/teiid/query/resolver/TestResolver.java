@@ -2913,5 +2913,15 @@ public class TestResolver {
     @Test public void testImplicitTempTableWithExplicitColumns() {
     	helpResolve("insert into #temp(x, y) select e1, e2 from pm1.g1");
     }
+    
+    @Test public void testArrayCase() {
+    	Command c = helpResolve("select case when e1 is null then array_agg(e4) when e2 is null then array_agg(e4+1) end from pm1.g1 group by e1, e2");
+    	assertTrue(c.getProjectedSymbols().get(0).getType().isArray());
+    }
+    
+    @Test public void testArrayCase1() {
+    	Command c = helpResolve("select case when e1 is null then array_agg(e1) when e2 is null then array_agg(e4+1) end from pm1.g1 group by e1, e2");
+    	assertTrue(c.getProjectedSymbols().get(0).getType().isArray());
+    }
 
 }

@@ -46,7 +46,7 @@ public class MetadataProvider {
         return column.get(metadataPropertyKey);
     }
 
-    public int getColumnCount() throws SQLException {
+    public int getColumnCount() {
         return metadata.length;
     }
     
@@ -55,7 +55,15 @@ public class MetadataProvider {
     }
 
     public int getIntValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {
-        return ((Integer) getValue(columnIndex, metadataPropertyKey)).intValue();
+    	return getIntValue(columnIndex, metadataPropertyKey, 0);
+    }
+    
+    public int getIntValue(int columnIndex, Integer metadataPropertyKey, int defaultValue) throws SQLException {
+    	Integer val = (Integer) getValue(columnIndex, metadataPropertyKey);
+    	if (val == null) {
+    		return defaultValue;
+    	}
+    	return val; 
     }
 
     public boolean getBooleanValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {

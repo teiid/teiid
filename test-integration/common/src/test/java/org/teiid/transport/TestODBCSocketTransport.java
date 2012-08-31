@@ -306,6 +306,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ResultSet rs = stmt.executeQuery("select * from pg_proc");
 		rs.next();
 		assertEquals("oid", rs.getArray("proargtypes").getBaseTypeName());
+		TestMMDatabaseMetaData.compareResultSet(rs); //compare the rest
 	}
 	
 	// this does not work as JDBC always sends the queries in prepared form
@@ -383,5 +384,11 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		rs = s.executeQuery("select name::varchar from tables where name = 'Columns'");
 		assertTrue(rs.next());
 		assertEquals("Columns", rs.getString(1));
+	}
+	
+	@Test public void testInt2Vector() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select indkey FROM pg_index");
+		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
 }

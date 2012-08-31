@@ -321,10 +321,7 @@ public class TestProcessor {
                 		compareDocuments((String)expectedResults[i].get(0), actualDoc);
                         continue;
                 	}
-            	} else if (cellValue instanceof Object[]) {
-            		assertArrayEquals((Object[])expectedResults[i].get(0), (Object[])cellValue);
-            		continue;
-            	}
+            	} 
             }
             
             assertEquals("Row " + i + " does not match expected: ", expectedResults[i], record);                 //$NON-NLS-1$ //$NON-NLS-2$

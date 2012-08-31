@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.teiid.UserDefinedAggregate;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
@@ -415,8 +416,8 @@ public class TestAggregateProcessing {
 
 		// Create expected results
 		List[] expected = new List[] {
-				Arrays.asList((Object)new Integer[] {1, 0, 0, 2}),
-				Arrays.asList((Object)new Integer[] {3, 1}),
+				Arrays.asList(new ArrayImpl(new Integer[] {1, 0, 0, 2})),
+				Arrays.asList(new ArrayImpl(new Integer[] {3, 1})),
 		};
 
 		// Construct data manager with data

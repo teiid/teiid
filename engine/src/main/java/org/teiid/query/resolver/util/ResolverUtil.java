@@ -105,32 +105,56 @@ public class ResolverUtil {
      * @param typeNames an ordered array of unique type names.
      * @return a type name to which all the given types can be converted
      */
-    public static String getCommonType(String[] typeNames) {
+    @SuppressWarnings("null")
+	public static String getCommonType(String[] typeNames) {
         if (typeNames == null || typeNames.length == 0) {
             return null;
         }
-        // If there is only one type, then simply return it
         if (typeNames.length == 1) {
-            return typeNames[0];
+        	return typeNames[0];
         }
-        // A type can be implicitly converted to itself, so we put the implicit
-        // conversions as well as the original type in the working list of
-        // conversions.
-        HashSet<String> commonConversions = new LinkedHashSet<String>();
-        commonConversions.add(typeNames[0]);
-        commonConversions.addAll(DataTypeManager.getImplicitConversions(typeNames[0]));
-        for (int i = 1; i < typeNames.length; i++ ) {
-            HashSet<String> conversions = new LinkedHashSet<String>(DataTypeManager.getImplicitConversions(typeNames[i]));
-            conversions.add(typeNames[i]);
-            // Equivalent to set intersection
-            commonConversions.retainAll(conversions);
+        LinkedHashSet<String> commonConversions = null;
+        Set<String> types = new LinkedHashSet<String>();
+        Set<String> conversions = null;
+        boolean first = true;
+        for (int i = 0; i < typeNames.length && (first || !commonConversions.isEmpty()); i++) {
+        	String string = typeNames[i];
+			if (string == null) {
+				return null;
+			}
+			if (DataTypeManager.DefaultDataTypes.NULL.equals(string) || !types.add(string)) {
+				continue;
+			}
+			if (first) {
+				commonConversions = new LinkedHashSet<String>();
+		        // A type can be implicitly convertd to itself, so we put the implicit
+		        // conversions as well as the original type in the working list of
+		        // conversions.
+		        commonConversions.add(string);
+		        DataTypeManager.getImplicitConversions(string, commonConversions);
+		        first = false;
+			} else {
+				if (conversions == null) {
+					conversions = new HashSet<String>();
+				}
+				DataTypeManager.getImplicitConversions(string, conversions);
+	            conversions.add(string);
+	            // Equivalent to set intersection
+	            commonConversions.retainAll(conversions);
+	            conversions.clear();
+			}
+
+		}
+        // If there is only one type, then simply return it
+        if (types.size() == 1) {
+            return types.iterator().next();
         }
-        if (commonConversions.isEmpty()) {
-            return null;
+        if (types.isEmpty()) {
+        	return DataTypeManager.DefaultDataTypes.NULL;
         }
-        for (int i = 0; i < typeNames.length; i++) {
-            if (commonConversions.contains(typeNames[i])) {
-                return typeNames[i];
+        for (String string : types) {
+            if (commonConversions.contains(string)) {
+                return string;
             }
         }
     	commonConversions.remove(DefaultDataTypes.STRING);

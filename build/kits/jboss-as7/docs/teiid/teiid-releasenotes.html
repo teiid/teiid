@@ -32,6 +32,7 @@
 	<li>TEIID-2158 <b>Rest Services</b> - when required extension metadata defined on the virtual procedure, a REST based service on that procedure is automatically generated and deployed upon VDB deployment.
 	<li>TEIID-2163 <b>Binary XMLSERIALIZE</b> - XMLSERIALIZE now supports blob/varbinary and the encoding/version and XMLDECLARATION options.
 	<li>TEIID-2141 <b>OBJECTTABLE</b> - was added to extract values from objects using arbitrary scripts.  See the Reference for usage.
+	<li>TEIID-2111 <b>Vararg Procedures</b> - variable argument procedures and functions can be created through DDL using the VARIADIC parameter type.  See the Reference for usage.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -39,6 +40,11 @@
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
+</ul>
+
+<h4>from 8.0</h4>
+<ul>
+  <li>TEIID-2166 array_get will return null if the index is out of bounds rather than raising an error.
 </ul>
 
 <h4>from 8.0</h4>

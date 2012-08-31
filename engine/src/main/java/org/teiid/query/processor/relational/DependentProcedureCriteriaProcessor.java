@@ -29,13 +29,13 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.symbol.Array;
-import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Reference;
@@ -101,7 +101,7 @@ public class DependentProcedureCriteriaProcessor extends DependentCriteriaProces
                 		validRow = false;
                 		break;
                 	}
-                	ArrayValue valueArray = (ArrayValue)value;
+                	ArrayImpl valueArray = (ArrayImpl)value;
                 	for (int j = 0; j < array.getExpressions().size(); j++) {
                 		validRow = setParam(context, valueArray.getValues()[j], nullAllowed, (Reference) array.getExpressions().get(j));
                 		if (!validRow) {

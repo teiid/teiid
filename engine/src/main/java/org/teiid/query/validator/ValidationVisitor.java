@@ -47,6 +47,7 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.SQLConstants;
@@ -373,8 +374,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	                    Object evaluatedValue = Evaluator.evaluate(param.getExpression());
 	                    if(evaluatedValue == null) {
 	                        handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
-	                    } else if (evaluatedValue instanceof ArrayValue && getMetadata().isVariadic(param.getMetadataID())) {
-	            			ArrayValue av = (ArrayValue)evaluatedValue;
+	                    } else if (evaluatedValue instanceof ArrayImpl && getMetadata().isVariadic(param.getMetadataID())) {
+	            			ArrayImpl av = (ArrayImpl)evaluatedValue;
 	            			for (Object o : av.getValues()) {
 	            				if (o == null) {
 	            					handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0055", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$

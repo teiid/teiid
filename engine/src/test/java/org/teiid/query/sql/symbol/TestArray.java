@@ -35,6 +35,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
@@ -43,17 +44,17 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
 public class TestArray {
 
 	@Test public void testArrayValueCompare() {
-		ArrayValue a1 = new ArrayValue(new Object[] {1, 2, 3});
+		ArrayImpl a1 = new ArrayImpl(new Object[] {1, 2, 3});
 		
 		UnitTestUtil.helpTestEquivalence(0, a1, a1);
 		
-		ArrayValue a2 = new ArrayValue(new Object[] {1, 2});
+		ArrayImpl a2 = new ArrayImpl(new Object[] {1, 2});
 		
 		UnitTestUtil.helpTestEquivalence(1, a1, a2);
 	}
 	
 	@Test public void testArrayValueToString() {
-		ArrayValue a1 = new ArrayValue(new Object[] {1, "x'2", 3});
+		ArrayImpl a1 = new ArrayImpl(new Object[] {1, "x'2", 3});
 		
 		assertEquals("(1, 'x''2', 3)", SQLStringVisitor.getSQLString(new Constant(a1)));
 	}
@@ -64,11 +65,12 @@ public class TestArray {
 		Array a1 = array.clone();
 		
 		assertNotSame(a1, array);
+		assertEquals(a1, array);
 		assertNotSame(a1.getExpressions().get(0), array.getExpressions().get(0));
 	}
 	
 	@Test public void testArrayValueSerialization() throws Exception {
-		ArrayValue a1 = new ArrayValue(new Integer[] {1, 2, 3});
+		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
 		String[] types = TupleBuffer.getTypeNames(Arrays.asList(new Array(Integer.class, null)));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
@@ -80,4 +82,18 @@ public class TestArray {
 		assertEquals(a1, batch.get(0).get(0));
 	}
 	
+	@Test public void testZeroBasedArray() throws Exception {
+		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		a1.setZeroBased(true);
+		assertEquals(2, java.lang.reflect.Array.get(a1.getArray(1, 1), 0));
+	}
+	
+	/**
+	 * This is for compatibility with array_get
+	 * @throws Exception
+	 */
+	@Test(expected=IndexOutOfBoundsException.class) public void testIndexOutOfBounds() throws Exception {
+		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		a1.getArray(-1, 1);
+	}
 }

@@ -57,7 +57,8 @@ import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 public class ResolverVisitor extends LanguageVisitor {
     
-    private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
+    public static final String TEIID_PASS_THROUGH_TYPE = "teiid:pass-through-type"; //$NON-NLS-1$
+	private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
 
 	private static class ElementMatch {
     	ElementSymbol element;
@@ -542,6 +543,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } else if (FunctionLibrary.ARRAY_GET.equalsIgnoreCase(fd.getName()) && args[0].getType().isArray()) {
 	    	//hack to use typed array values
 			fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
+	    } else if (Boolean.valueOf(fd.getMethod().getProperty(TEIID_PASS_THROUGH_TYPE, false))) {
+	    	//hack largely to support pg
+	    	fd = library.copyFunctionChangeReturnType(fd, args[0].getType());
 	    }
 	
 	    function.setFunctionDescriptor(fd);
@@ -958,16 +962,12 @@ public class ResolverVisitor extends LanguageVisitor {
 	    for (int i = 0; i < whenCount; i++) {
 	        then = obj.getThenExpression(i);
 	        setDesiredType(then, thenType, obj);
-	        if (!thenTypeNames.contains(DataTypeManager.getDataTypeName(then.getType()))) {
-	            thenTypeNames.add(DataTypeManager.getDataTypeName(then.getType()));
-	        }
+            thenTypeNames.add(DataTypeManager.getDataTypeName(then.getType()));
 	    }
 	    // Set the type of the else expression
 	    if (elseExpr != null) {
 	        setDesiredType(elseExpr, thenType, obj);
-	        if (!thenTypeNames.contains(DataTypeManager.getDataTypeName(elseExpr.getType()))) {
-	            thenTypeNames.add(DataTypeManager.getDataTypeName(elseExpr.getType()));
-	        }
+            thenTypeNames.add(DataTypeManager.getDataTypeName(elseExpr.getType()));
 	    }
 	
 	    // Invariants: all the expressions' types are non-null
@@ -977,7 +977,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    if (thenTypeName == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "THEN/ELSE", obj)); //$NON-NLS-1$
 	    }
-	    ArrayList thens = new ArrayList(whenCount);
+	    ArrayList<Expression> thens = new ArrayList<Expression>(whenCount);
 	    for (int i = 0; i < whenCount; i++) {
 	        thens.add(ResolverUtil.convertExpression(obj.getThenExpression(i), thenTypeName, metadata));
 	    }

@@ -53,6 +53,7 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.SqlUtil;
@@ -514,11 +515,11 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    case PG_TYPE_TEXTARRAY:
 		    case PG_TYPE_OIDARRAY:
 		    	{
-		    	Object[] obj = (Object[])rs.getObject(column);
+		    	ArrayImpl obj = (ArrayImpl)rs.getObject(column);
 		    	if (obj != null) {
 		    		writer.append("{");
 			    	boolean first = true;
-			    	for (Object o:obj) {
+			    	for (Object o:obj.getValues()) {
 			    		if (!first) {
 			    			writer.append(",");
 			    		}
@@ -538,13 +539,13 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    	}
 		    	}
 		    	break;
-		    	
+		    case PG_TYPE_INT2VECTOR:
 		    case PG_TYPE_OIDVECTOR:
 		    	{
-		    	Object[] obj = (Object[])rs.getObject(column);
+	    		ArrayImpl obj = (ArrayImpl)rs.getObject(column);
 		    	if (obj != null) {
 			    	boolean first = true;
-			    	for (Object o:obj) {
+			    	for (Object o:obj.getValues()) {
 			    		if (!first) {
 			    			writer.append(" ");
 			    		}

@@ -31,15 +31,7 @@ import java.sql.Clob;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.core.CorePlugin;
 import org.teiid.core.types.basic.*;
@@ -66,7 +58,7 @@ import org.teiid.core.util.PropertiesUtils;
  */
 public class DataTypeManager {
 	
-	private static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
+	static final String ARRAY_SUFFIX = "[]"; //$NON-NLS-1$
 	private static final boolean USE_VALUE_CACHE = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.useValueCache", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_LOBS = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableLobs", false); //$NON-NLS-1$
 	private static final boolean COMPARABLE_OBJECT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.comparableObject", false); //$NON-NLS-1$
@@ -308,6 +300,9 @@ public class DataTypeManager {
 
 	/** Base data type names and classes, Type class --> Type name */
 	private static Map<Class<?>, String> dataTypeClasses = new LinkedHashMap<Class<?>, String>(128);
+	
+	private static Map<Class<?>, Class<?>> arrayTypes = new HashMap<Class<?>, Class<?>>(128); 
+	private static Map<Class<?>, String> arrayTypeNames = new HashMap<Class<?>, String>(128); 
 
 	private static Set<String> DATA_TYPE_NAMES;
 
@@ -324,6 +319,12 @@ public class DataTypeManager {
 		loadBasicTransforms();
 		
 		loadSourceConversions();
+		
+		for (Map.Entry<String, Class<?>> entry : dataTypeNames.entrySet()) {
+			Class<?> arrayType = getArrayType(entry.getValue());
+			arrayTypes.put(entry.getValue(), arrayType);
+			arrayTypeNames.put(arrayType, getDataTypeName(arrayType));
+		}
 	}
 
 	/**
@@ -379,12 +380,16 @@ public class DataTypeManager {
 		}
 
 		if (dataTypeClass == null) {
-			if (name.endsWith(ARRAY_SUFFIX)) {
+			if (isArrayType(name)) {
 				return getArrayType(getDataTypeClass(name.substring(0, name.length() - 2)));
 			}
 			dataTypeClass = DefaultDataClasses.OBJECT;
 		}
 		return dataTypeClass;
+	}
+	
+	public static boolean isArrayType(String name) {
+		return name.endsWith(ARRAY_SUFFIX);
 	}
 
 	public static String getDataTypeName(Class<?> typeClass) {
@@ -394,11 +399,14 @@ public class DataTypeManager {
 		String result = dataTypeClasses.get(typeClass);
 		if (result == null) {
 			if (typeClass.isArray()) {
-				return getDataTypeName(typeClass.getComponentType()) + ARRAY_SUFFIX; 
+				result = arrayTypeNames.get(typeClass);
+				if (result == null) {
+					return getDataTypeName(typeClass.getComponentType()) + ARRAY_SUFFIX;
+				}
+				return result;
 			}
 			result = DefaultDataTypes.OBJECT;
 		}
-
 		return result;
 	}
 
@@ -517,18 +525,22 @@ public class DataTypeManager {
 		innerMap.put(targetName, transform);
 	}
 
-	public static List<String> getImplicitConversions(String type) {
+	public static void getImplicitConversions(String type, Collection<String> result) {
 		Map<String, Transform> innerMap = transforms.get(type);
 		if (innerMap != null) {
-			List<String> result = new ArrayList<String>(innerMap.size());
 			for (Map.Entry<String, Transform> entry : innerMap.entrySet()) {
 				if (!entry.getValue().isExplicit()) {
 					result.add(entry.getKey());
 				}
 			}
-			return result;
+			return;
 		}
-		return Collections.emptyList();
+		String previous = DataTypeManager.DefaultDataTypes.OBJECT;
+		while (isArrayType(type)) {
+			previous += ARRAY_SUFFIX;
+			result.add(previous);
+			type = getComponentType(type);
+		}
 	}
 
 	public static boolean isImplicitConversion(String srcType, String tgtType) {
@@ -536,7 +548,17 @@ public class DataTypeManager {
 		if (t != null) {
 			return !t.isExplicit();
 		}
+		if (DefaultDataTypes.NULL.equals(srcType) && !DefaultDataTypes.NULL.equals(tgtType)) {
+			return true;
+		}
+		if (isArrayType(srcType) && isArrayType(tgtType)) {
+			return isImplicitConversion(getComponentType(srcType), getComponentType(tgtType));
+		}
 		return false;
+	}
+
+	private static String getComponentType(String srcType) {
+		return srcType.substring(0, srcType.length() - ARRAY_SUFFIX.length());
 	}
 
 	public static boolean isExplicitConversion(String srcType, String tgtType) {
@@ -913,6 +935,10 @@ public class DataTypeManager {
 	}
 
 	public static Class<?> getArrayType(Class<?> classType) {
+		Class<?> result = arrayTypes.get(classType);
+		if (result != null) {
+			return result;
+		}
 		return Array.newInstance(classType, 0).getClass();
 	}
 

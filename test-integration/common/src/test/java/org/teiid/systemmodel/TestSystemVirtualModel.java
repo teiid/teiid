@@ -266,4 +266,9 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		assertEquals(cs.getBoolean(1), cs.getBoolean("logged"));
 	}
 	
+	@Test public void testArrayAggType() throws Exception {
+		String sql = "SELECT array_agg(name) from tables"; //$NON-NLS-1$
+		checkResult("testArrayAggType", sql); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
 }

@@ -98,7 +98,7 @@ public class ResultSetMetaDataImpl extends WrapperImpl implements ResultSetMetaD
     }
 
     public int getColumnDisplaySize(int index) throws SQLException {
-        return provider.getIntValue(adjustColumn(index), ResultsMetadataConstants.DISPLAY_SIZE);
+        return provider.getIntValue(adjustColumn(index), ResultsMetadataConstants.DISPLAY_SIZE, Integer.MAX_VALUE);
     }
 
     public String getColumnLabel(int index) throws SQLException {

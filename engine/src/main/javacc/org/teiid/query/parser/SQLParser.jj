@@ -3692,6 +3692,7 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 	QueryCommand subquery = null;
 	Integer index = null;
 	Expression condition = null;
+	Expression indexExpr = null;
 }
 {
         (
@@ -3721,7 +3722,7 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 				    return new Constant(normalizeStringLiteral(symbolImage));
 				}  
 			} | symbol=nonReserved()) 
-			(<LSBRACE> index = intVal() <RSBRACE>)?
+			(<LSBRACE> indexExpr = commonValueExpression(info) <RSBRACE>)?
 		)
 		|
 		LOOKAHEAD(subquery(info)) subquery = subquery(info)
@@ -3729,7 +3730,7 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 		( <LPAREN> 
  			expression = expression(info)
 		  <RPAREN>
-		  (<LSBRACE> index = intVal() <RSBRACE>)?
+		  (<LSBRACE> indexExpr = commonValueExpression(info) <RSBRACE>)?
 		)
 		|
 		// Searched CASE expressions
@@ -3748,8 +3749,8 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 		if (condition != null) {
 			((AggregateSymbol)expression).setCondition(condition);
 		}
-		if (index != null) {
-			expression = new Function("array_get", new Expression[] {expression, new Constant(index)});		
+		if (indexExpr != null) {
+			expression = new Function("array_get", new Expression[] {expression, indexExpr});		
 		}
 		return expression;
 	}

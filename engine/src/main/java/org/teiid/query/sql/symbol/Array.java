@@ -66,7 +66,8 @@ public class Array implements Expression {
 	
 	@Override
 	public Array clone() {
-		Array clone = new Array(type, LanguageObject.Util.deepClone(getExpressions(), Expression.class));
+		Array clone = new Array(LanguageObject.Util.deepClone(getExpressions(), Expression.class));
+		clone.type = type;
 		clone.implicit = implicit;
 		return clone;
 	}
@@ -92,7 +93,7 @@ public class Array implements Expression {
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(0, getExpressions());
+		return HashCodeUtil.expHashCode(type.hashCode(), getExpressions());
 	}
 	
 	@Override

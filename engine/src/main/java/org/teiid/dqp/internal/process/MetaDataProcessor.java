@@ -147,7 +147,7 @@ public class MetaDataProcessor {
     
     // For each projected symbol, construct a metadata map
     private MetadataResult getMetadataForCommand(Command originalCommand) throws TeiidComponentException {
-        Map[] columnMetadata = null;
+        Map<Integer, Object>[] columnMetadata = null;
         
         switch(originalCommand.getType()) {
             case Command.TYPE_QUERY:
@@ -196,7 +196,7 @@ public class MetaDataProcessor {
 			}
         }
         List<Reference> params = ReferenceCollectorVisitor.getReferences(originalCommand);
-        Map[] paramMetadata = new Map[params.size()];
+        Map<Integer, Object>[] paramMetadata = new Map[params.size()];
         for (int i = 0; i < params.size(); i++) {
 			Reference param = params.get(i);
 			paramMetadata[i] = getDefaultColumn(null, paramMap.get(param), param.getType());
@@ -205,8 +205,8 @@ public class MetaDataProcessor {
         return new MetadataResult(columnMetadata, paramMetadata);
     }
 
-    private Map[] createProjectedSymbolMetadata(Command originalCommand) throws TeiidComponentException {
-        Map[] columnMetadata;
+    private Map<Integer, Object>[] createProjectedSymbolMetadata(Command originalCommand) throws TeiidComponentException {
+        Map<Integer, Object>[] columnMetadata;
         // Allow command to use temporary metadata
         TempMetadataStore tempMetadata = originalCommand.getTemporaryMetadata();
         if(tempMetadata != null && tempMetadata.getData().size() > 0) {
@@ -250,9 +250,9 @@ public class MetaDataProcessor {
         return getMetadataForCommand(command);            
     }
 
-    private Map createXMLColumnMetadata(Query xmlCommand) {
+    private Map<Integer, Object> createXMLColumnMetadata(Query xmlCommand) {
         GroupSymbol doc = xmlCommand.getFrom().getGroups().get(0);
-        Map xmlMetadata = getDefaultColumn(doc.getName(), XML_COLUMN_NAME, XMLType.class);
+        Map<Integer, Object> xmlMetadata = getDefaultColumn(doc.getName(), XML_COLUMN_NAME, XMLType.class);
 
         // Override size as XML may be big        
         xmlMetadata.put(ResultsMetadataConstants.DISPLAY_SIZE, JDBCSQLTypeInfo.XML_COLUMN_LENGTH);
@@ -260,7 +260,7 @@ public class MetaDataProcessor {
         return xmlMetadata;
     }
 
-    private Map createColumnMetadata(String label, Expression symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map<Integer, Object> createColumnMetadata(String label, Expression symbol) throws QueryMetadataException, TeiidComponentException {
         if(symbol instanceof ElementSymbol) {
             return createElementMetadata(label, (ElementSymbol) symbol);        
         }
@@ -273,7 +273,7 @@ public class MetaDataProcessor {
         return createTypedMetadata(label, symbol);            
     }
     
-    private Map createElementMetadata(String label, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
+    private Map<Integer, Object> createElementMetadata(String label, ElementSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         Object elementID = symbol.getMetadataID();
         
         Map<Integer, Object> column = new HashMap<Integer, Object>();
@@ -339,7 +339,7 @@ public class MetaDataProcessor {
         return column;
     }
     
-    private Map createAggregateMetadata(String shortColumnName,
+    private Map<Integer, Object> createAggregateMetadata(String shortColumnName,
                                         AggregateSymbol symbol) throws QueryMetadataException, TeiidComponentException {
         
         Type function = symbol.getAggregateFunction();
@@ -352,7 +352,7 @@ public class MetaDataProcessor {
         return createTypedMetadata(shortColumnName, symbol);
     }
 
-    private Map createTypedMetadata(String shortColumnName, Expression symbol) {
+    private Map<Integer, Object> createTypedMetadata(String shortColumnName, Expression symbol) {
         return getDefaultColumn(null, shortColumnName, symbol.getType());
     }
     

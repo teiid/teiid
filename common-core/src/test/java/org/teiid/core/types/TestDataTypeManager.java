@@ -25,7 +25,9 @@ package org.teiid.core.types;
 import static org.junit.Assert.*;
 
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import javax.sql.rowset.serial.SerialBlob;
@@ -174,6 +176,8 @@ public class TestDataTypeManager {
         assertEquals(Types.SQLXML, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.XML));
         assertEquals(DataTypeManager.DefaultDataTypes.STRING, JDBCSQLTypeInfo.getTypeName(Types.CHAR));
         assertEquals(Types.CHAR, JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(DataTypeManager.DefaultDataClasses.CHAR));
+        
+        assertEquals(Types.ARRAY, JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL))));
     }
     
     @Test public void testRuntimeTypeConversion() throws Exception {
@@ -197,12 +201,14 @@ public class TestDataTypeManager {
     }
     
     @Test public void testImplicitConversions() {
+    	List<String> c = new ArrayList<String>();
+    	DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER, c);
     	assertEquals(Arrays.asList(DataTypeManager.DefaultDataTypes.LONG, 
     			DataTypeManager.DefaultDataTypes.BIG_INTEGER, 
     			DataTypeManager.DefaultDataTypes.DOUBLE, 
     			DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
     			DataTypeManager.DefaultDataTypes.STRING, 
-    			DataTypeManager.DefaultDataTypes.OBJECT), DataTypeManager.getImplicitConversions(DataTypeManager.DefaultDataTypes.INTEGER));
+    			DataTypeManager.DefaultDataTypes.OBJECT), c);
     }
     
 	@Test(expected=TransformationException.class) public void testStringToXML() throws Exception {

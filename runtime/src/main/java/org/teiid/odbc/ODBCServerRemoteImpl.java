@@ -599,7 +599,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				// this call resolution is ambiguous
 				return "SELECT ''";  //$NON-NLS-1$
 			}
-			
+			else if (sql.equals("SELECT typinput='array_in'::regproc, typtype FROM pg_catalog.pg_type WHERE typname = $1")) { //$NON-NLS-1$
+				return "SELECT substring(typname,1,1) = '_', typtype FROM pg_catalog.pg_type WHERE typname = ?"; //$NON-NLS-1$
+			}
 		}
 		else if (sql.equalsIgnoreCase("show max_identifier_length")){ //$NON-NLS-1$
 			return "select 63"; //$NON-NLS-1$

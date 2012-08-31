@@ -65,10 +65,13 @@ public class TestArrayTable {
         process(sql, expected);
     }
 	
-	@Test(expected=TeiidProcessingException.class) public void testCorrelatedTextTable3() throws Exception {
+	@Test public void testCorrelatedTextTable3() throws Exception {
     	String sql = "select x.* from bqt1.smalla, arraytable(objectvalue COLUMNS x string, y integer, z integer, aa object) x"; //$NON-NLS-1$
     	
-        List[] expected = new List[] {};    
+        List[] expected = new List[] {
+        		Arrays.asList("a", 1, 2, null),
+        		Arrays.asList("b", 3, 6, null),
+        };    
 
         process(sql, expected);
     }

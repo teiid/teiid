@@ -33,18 +33,17 @@ import org.teiid.core.util.ExternalizeUtil;
 
 public class MetadataResult implements Externalizable {
 	private static final long serialVersionUID = -1520482281079030324L;
-	private Map[] columnMetadata;
-	private Map[] parameterMetadata;
+	private Map<Integer, Object>[] columnMetadata;
+	private Map<Integer, Object>[] parameterMetadata;
 	
 	public MetadataResult() {
 	}
 	
-	public MetadataResult(Map[] columnMetadata, Map[] parameterMetadata) {
-		super();
+	public MetadataResult(Map<Integer, Object>[] columnMetadata, Map<Integer, Object>[] parameterMetadata) {
 		this.columnMetadata = columnMetadata;
 		this.parameterMetadata = parameterMetadata;
 	}
-	public Map[] getColumnMetadata() {
+	public Map<Integer, Object>[] getColumnMetadata() {
 		return columnMetadata;
 	}
 	

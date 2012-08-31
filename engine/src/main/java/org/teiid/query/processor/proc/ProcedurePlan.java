@@ -48,6 +48,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.DataTierTupleSource;
@@ -71,7 +72,6 @@ import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
@@ -252,8 +252,8 @@ public class ProcedurePlan extends ProcessorPlan {
 		if (value == null) {
 		     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));
 		}
-		if (value instanceof ArrayValue && metadata.isVariadic(param.getMetadataID())) {
-			ArrayValue av = (ArrayValue)value;
+		if (value instanceof ArrayImpl && metadata.isVariadic(param.getMetadataID())) {
+			ArrayImpl av = (ArrayImpl)value;
 			for (Object o : av.getValues()) {
 				if (o == null) {
 				     throw new QueryValidatorException(QueryPlugin.Event.TEIID30164, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30164, param));

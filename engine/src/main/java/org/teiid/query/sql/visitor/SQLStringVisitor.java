@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
@@ -1155,8 +1156,8 @@ public class SQLStringVisitor extends LanguageVisitor {
 		        constantParts = new String[] {"null"}; //$NON-NLS-1$
 		    }
 		} else {
-			if (value.getClass() == ArrayValue.class) {
-				ArrayValue av = (ArrayValue)value;
+			if (value.getClass() == ArrayImpl.class) {
+				ArrayImpl av = (ArrayImpl)value;
 				append(Tokens.LPAREN);
 				for (int i = 0; i < av.getValues().length; i++) {
 					if (i > 0) {

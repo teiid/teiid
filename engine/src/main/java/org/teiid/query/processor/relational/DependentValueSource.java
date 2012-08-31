@@ -33,10 +33,10 @@ import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.sql.symbol.Array;
-import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.ValueIteratorSource;
@@ -76,7 +76,7 @@ public class DependentValueSource implements
     	int index = 0;
     	if (valueExpression != null) {
     		if (valueExpression instanceof Array) {
-    			Array array = (Array)valueExpression;
+    			final Array array = (Array)valueExpression;
     			List<Expression> exprs = array.getExpressions();
     			final int[] indexes = new int[exprs.size()];
     			for (int i = 0; i < exprs.size(); i++) {
@@ -86,14 +86,14 @@ public class DependentValueSource implements
     	        	@Override
     	        	public Object next() throws TeiidComponentException {
     	        		List<?> tuple = super.nextTuple();
-    	        		Object[] a = new Object[indexes.length];
+    	        		Object[] a = (Object[]) java.lang.reflect.Array.newInstance(array.getComponentType(), indexes.length);
     	        		for (int i = 0; i < indexes.length; i++) {
     	        			a[i] = tuple.get(indexes[i]);
     	        			if (a[i] == null) {
     	        				return null; //TODO: this is a hack
     	        			}
     	        		}
-    	        		return new ArrayValue(a);
+    	        		return new ArrayImpl(a);
     	        	}
     	        };
     		} 

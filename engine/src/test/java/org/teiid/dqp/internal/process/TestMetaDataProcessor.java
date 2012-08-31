@@ -174,6 +174,14 @@ public class TestMetaDataProcessor {
         helpCheckNumericAttributes(response, 2, 22, 20, 0);
         helpCheckNumericAttributes(response, 3, 22, 20, 0);
     }
+    
+    @Test public void testArrayAgg() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached(); 
+        String sql = "SELECT array_agg(e1) FROM pm1.g2"; //$NON-NLS-1$
+        
+        MetadataResult response = helpTestQuery(metadata, sql, RealMetadataFactory.example1VDB());
+        assertEquals("string[]", response.getColumnMetadata()[0].get(ResultsMetadataConstants.DATA_TYPE));
+    }
 
     @Test public void testWindowFunction() throws Exception {
         QueryMetadataInterface metadata = TestMetaDataProcessor.examplePrivatePhysicalModel(); 

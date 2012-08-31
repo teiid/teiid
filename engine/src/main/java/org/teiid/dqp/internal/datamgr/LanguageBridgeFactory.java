@@ -32,6 +32,7 @@ import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
 import org.teiid.language.DerivedColumn;
@@ -586,7 +587,7 @@ public class LanguageBridgeFactory {
     		result.setValueIndex(valueIndex++);
     		return result;
     	}
-    	if (constant.getValue() instanceof ArrayValue) {
+    	if (constant.getValue() instanceof ArrayImpl) {
     		//TODO: we could check if there is a common base type (also needs to be in the dependent logic)
     		// and expand binding options in the translators
 
@@ -597,7 +598,7 @@ public class LanguageBridgeFactory {
     		//result.setBindEligible(constant.isBindEligible());
             //return result;
 
-    		ArrayValue av = (ArrayValue)constant.getValue();
+    		ArrayImpl av = (ArrayImpl)constant.getValue();
     		List<Constant> vals = new ArrayList<Constant>();
     		Class<?> baseType = null;
     		for (Object o : av.getValues()) {
@@ -820,7 +821,7 @@ public class LanguageBridgeFactory {
             Literal value = null;
             if (direction != Direction.OUT) {
             	if (param.isVarArg()) {
-            		ArrayValue av = (ArrayValue) ((Constant)param.getExpression()).getValue();
+            		ArrayImpl av = (ArrayImpl) ((Constant)param.getExpression()).getValue();
             		for (Object obj : av.getValues()) {
                         Argument arg = new Argument(direction, new Literal(obj, param.getClassType().getComponentType()), param.getClassType().getComponentType(), metadataParam);
                         translatedParameters.add(arg);

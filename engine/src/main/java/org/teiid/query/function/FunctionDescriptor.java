@@ -30,6 +30,7 @@ import java.util.Arrays;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
@@ -38,7 +39,6 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.sql.symbol.ArrayValue;
 import org.teiid.query.util.CommandContext;
 
 
@@ -224,7 +224,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         	}
         	if (method.isVarArgs()) {
         		if (calledWithVarArgArrayParam) {
-        			ArrayValue av = (ArrayValue)values[values.length -1];
+        			ArrayImpl av = (ArrayImpl)values[values.length -1];
         			if (av != null) {
         				Object[] vals = av.getValues();
         				values[values.length - 1] = vals;
@@ -296,6 +296,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		    }
 		}
 		result = DataTypeManager.convertToRuntimeType(result);
+		if (expectedType.isArray() && result instanceof ArrayImpl) {
+			return result;
+		}
 		result = DataTypeManager.transformValue(result, expectedType);
 		if (result instanceof String) {
 			String s = (String)result;

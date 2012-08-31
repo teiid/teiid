@@ -54,15 +54,7 @@ import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.types.BaseLob;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Sequencable;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
@@ -544,11 +536,11 @@ public class Evaluator {
 		//semantics.  each element is treated as an individual comparison,
 		//so null implies unknown. h2 (and likely other dbms) allow for null
 		//array element equality
-		if (leftValue instanceof ArrayValue) {
-			ArrayValue av = (ArrayValue)leftValue;
+		if (leftValue instanceof ArrayImpl) {
+			ArrayImpl av = (ArrayImpl)leftValue;
 			try {
-				compare = av.compareTo((ArrayValue)value, true);
-			} catch (ArrayValue.NullException e) {
+				compare = av.compareTo((ArrayImpl)value, true, Constant.COMPARATOR);
+			} catch (ArrayImpl.NullException e) {
 				return null;
 			}
 		} else {
@@ -664,11 +656,11 @@ public class Evaluator {
 	   } else if (expression instanceof Array) {
 		   Array array = (Array)expression;
 		   List<Expression> exprs = array.getExpressions();
-		   Object[] result = new Object[exprs.size()];
+		   Object[] result = (Object[]) java.lang.reflect.Array.newInstance(array.getComponentType(), exprs.size());
 		   for (int i = 0; i < exprs.size(); i++) {
 			   result[i] = internalEvaluate(exprs.get(i), tuple);
 		   }
-		   return new ArrayValue(result);
+		   return new ArrayImpl(result);
 	   } else {
 	        throw new TeiidComponentException(QueryPlugin.Event.TEIID30329, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30329, expression.getClass().getName()));
 	   }
