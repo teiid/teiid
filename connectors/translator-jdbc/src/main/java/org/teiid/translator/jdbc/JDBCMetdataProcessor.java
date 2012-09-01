@@ -100,6 +100,8 @@ public class JDBCMetdataProcessor {
 	private Pattern excludeTables;
 	private Pattern excludeProcedures;
 	
+	private int excludedTables;
+	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
 			throws SQLException, TranslatorException {
 		DatabaseMetaData metadata = conn.getMetaData();
@@ -235,6 +237,7 @@ public class JDBCMetdataProcessor {
 			String tableName = tables.getString(3);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
 			if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
+				excludedTables++;
 				continue;
 			}
 			Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
@@ -256,7 +259,24 @@ public class JDBCMetdataProcessor {
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
 			throws SQLException, TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
-		ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
+		boolean singleSchema = schemaPattern != null && !schemaPattern.contains("_") && !schemaPattern.contains("%"); //$NON-NLS-1$ //$NON-NLS-2$
+		if ((excludeTables == null && schemaPattern == null && tableNamePattern == null) //getting everything
+			|| (singleSchema && tableNamePattern == null && 
+					(excludeTables == null //getting all from a single schema 
+					|| tableMap.size() > Math.sqrt(tableMap.size() + excludedTables)))) {  //not excluding enough from a single schema
+			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
+			processColumns(metadataFactory, tableMap, columns);
+		} else {
+			for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
+				ResultSet columns = metadata.getColumns(catalog, ti.schema, ti.name, null);
+				processColumns(metadataFactory, tableMap, columns);
+			}
+		}
+	}
+
+	private void processColumns(MetadataFactory metadataFactory,
+			Map<String, TableInfo> tableMap, ResultSet columns)
+			throws SQLException, TranslatorException {
 		int rsColumns = columns.getMetaData().getColumnCount();
 		while (columns.next()) {
 			String tableCatalog = columns.getString(1);
