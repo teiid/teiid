@@ -27,15 +27,29 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.Hibernate;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.dialect.function.VarArgsSQLFunction;
+import org.hibernate.type.*;
 
 public class TeiidDialect extends Dialect {
-
+	private static DoubleType DOUBLE = DoubleType.INSTANCE;
+	private static StringType STRING = StringType.INSTANCE;
+	private static BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
+	private static FloatType FLOAT = FloatType.INSTANCE;
+	private static IntegerType INTEGER = IntegerType.INSTANCE;
+	private static LongType LONG = LongType.INSTANCE;
+	private static CharacterType CHARACTER = CharacterType.INSTANCE; 
+	private static BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
+	private static DateType DATE = DateType.INSTANCE;
+	private static TimeType TIME = TimeType.INSTANCE;
+	private static TimestampType TIMESTAMP = TimestampType.INSTANCE;
+	private static BlobType BLOB = BlobType.INSTANCE;
+	private static ClobType CLOB = ClobType.INSTANCE;
+	private static ObjectType OBJECT = ObjectType.INSTANCE;
+	
     public TeiidDialect() {
         // Register types
         registerColumnType(Types.CHAR, "char"); //$NON-NLS-1$
@@ -61,94 +75,94 @@ public class TeiidDialect extends Dialect {
         registerColumnType(Types.CLOB, "clob"); //$NON-NLS-1$
         registerColumnType(Types.JAVA_OBJECT, "object"); //$NON-NLS-1$
         
-        registerFunction("acos", new StandardSQLFunction("acos", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("asin", new StandardSQLFunction("asin", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("atan", new StandardSQLFunction("atan", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("atan2", new StandardSQLFunction("atan2", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("acos", new StandardSQLFunction("acos", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("asin", new StandardSQLFunction("asin", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("atan", new StandardSQLFunction("atan", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("atan2", new StandardSQLFunction("atan2", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("ceil", new StandardSQLFunction("ceiling")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("cos", new StandardSQLFunction("cos", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("cot", new StandardSQLFunction("cot", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("degrees", new StandardSQLFunction("degrees", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("exp", new StandardSQLFunction("exp", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("cos", new StandardSQLFunction("cos", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("cot", new StandardSQLFunction("cot", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("degrees", new StandardSQLFunction("degrees", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("exp", new StandardSQLFunction("exp", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("floor", new StandardSQLFunction("floor")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatbigdecimal", new StandardSQLFunction("formatbigdecimal", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatbiginteger", new StandardSQLFunction("formatbiginteger", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatdouble", new StandardSQLFunction("formatdouble", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatfloat", new StandardSQLFunction("formatfloat", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatinteger", new StandardSQLFunction("formatinteger", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatlong", new StandardSQLFunction("formatlong", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("log", new StandardSQLFunction("log", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatbigdecimal", new StandardSQLFunction("formatbigdecimal", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatbiginteger", new StandardSQLFunction("formatbiginteger", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatdouble", new StandardSQLFunction("formatdouble", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatfloat", new StandardSQLFunction("formatfloat", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatinteger", new StandardSQLFunction("formatinteger", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatlong", new StandardSQLFunction("formatlong", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("log", new StandardSQLFunction("log", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("mod", new StandardSQLFunction("mod")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsebigdecimal", new StandardSQLFunction("parsebigdecimal", Hibernate.BIG_DECIMAL)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsebiginteger", new StandardSQLFunction("parsebiginteger", Hibernate.BIG_INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsedouble", new StandardSQLFunction("parsedouble", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsefloat", new StandardSQLFunction("parsefloat", Hibernate.FLOAT)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parseinteger", new StandardSQLFunction("parseinteger", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parselong", new StandardSQLFunction("parselong", Hibernate.LONG)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("pi", new StandardSQLFunction("pi", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("power", new StandardSQLFunction("power", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("radians", new StandardSQLFunction("radians", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsebigdecimal", new StandardSQLFunction("parsebigdecimal", BIG_DECIMAL)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsebiginteger", new StandardSQLFunction("parsebiginteger", BIG_INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsedouble", new StandardSQLFunction("parsedouble", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsefloat", new StandardSQLFunction("parsefloat", FLOAT)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parseinteger", new StandardSQLFunction("parseinteger", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parselong", new StandardSQLFunction("parselong", LONG)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("pi", new StandardSQLFunction("pi", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("power", new StandardSQLFunction("power", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("radians", new StandardSQLFunction("radians", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("round", new StandardSQLFunction("round")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("sign", new StandardSQLFunction("sign", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("sin", new StandardSQLFunction("sin", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("tan", new StandardSQLFunction("tan", Hibernate.DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("sign", new StandardSQLFunction("sign", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("sin", new StandardSQLFunction("sin", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("tan", new StandardSQLFunction("tan", DOUBLE)); //$NON-NLS-1$ //$NON-NLS-2$
 
-        registerFunction("ascii", new StandardSQLFunction("ascii", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("chr", new StandardSQLFunction("chr", Hibernate.CHARACTER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("char", new StandardSQLFunction("char", Hibernate.CHARACTER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("concat", new VarArgsSQLFunction(Hibernate.STRING, "", "||", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        registerFunction("initcap", new StandardSQLFunction("initcap", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("insert", new StandardSQLFunction("insert", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("lcase", new StandardSQLFunction("lcase", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("left", new StandardSQLFunction("left", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("locate", new StandardSQLFunction("locate", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("lpad", new StandardSQLFunction("lpad", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("ltrim", new StandardSQLFunction("ltrim", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("repeat", new StandardSQLFunction("repeat", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("replace", new StandardSQLFunction("replace", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("right", new StandardSQLFunction("right", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("rpad", new StandardSQLFunction("rpad", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("rtrim", new StandardSQLFunction("rtrim", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("substring", new StandardSQLFunction("substring", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("translate", new StandardSQLFunction("translate", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("ucase", new StandardSQLFunction("ucase", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("ascii", new StandardSQLFunction("ascii", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("chr", new StandardSQLFunction("chr", CHARACTER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("char", new StandardSQLFunction("char", CHARACTER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("concat", new VarArgsSQLFunction(STRING, "", "||", "")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+        registerFunction("initcap", new StandardSQLFunction("initcap", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("insert", new StandardSQLFunction("insert", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("lcase", new StandardSQLFunction("lcase", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("left", new StandardSQLFunction("left", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("locate", new StandardSQLFunction("locate", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("lpad", new StandardSQLFunction("lpad", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("ltrim", new StandardSQLFunction("ltrim", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("repeat", new StandardSQLFunction("repeat", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("replace", new StandardSQLFunction("replace", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("right", new StandardSQLFunction("right", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("rpad", new StandardSQLFunction("rpad", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("rtrim", new StandardSQLFunction("rtrim", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("substring", new StandardSQLFunction("substring", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("translate", new StandardSQLFunction("translate", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("ucase", new StandardSQLFunction("ucase", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
 
-        registerFunction("curdate", new NoArgSQLFunction("curdate", Hibernate.DATE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("curtime", new NoArgSQLFunction("curtime", Hibernate.TIME)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("now", new NoArgSQLFunction("now", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("dayname", new StandardSQLFunction("dayname", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("dayofmonth", new StandardSQLFunction("dayofmonth", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("dayofweek", new StandardSQLFunction("dayofweek", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("dayofyear", new StandardSQLFunction("dayofyear", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formatdate", new StandardSQLFunction("formatdate", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formattime", new StandardSQLFunction("formattime", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("formattimestamp", new StandardSQLFunction("formattimestamp", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("hour", new StandardSQLFunction("hour", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("minute", new StandardSQLFunction("minute", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("monthname", new StandardSQLFunction("monthname", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsedate", new StandardSQLFunction("parsedate", Hibernate.DATE)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsetime", new StandardSQLFunction("parsetime", Hibernate.TIME)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("parsetimestamp", new StandardSQLFunction("parsetimestamp", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("second", new StandardSQLFunction("second", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("timestampcreate", new StandardSQLFunction("timestampcreate", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("curdate", new NoArgSQLFunction("curdate", DATE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("curtime", new NoArgSQLFunction("curtime", TIME)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("now", new NoArgSQLFunction("now", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("dayname", new StandardSQLFunction("dayname", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("dayofmonth", new StandardSQLFunction("dayofmonth", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("dayofweek", new StandardSQLFunction("dayofweek", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("dayofyear", new StandardSQLFunction("dayofyear", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formatdate", new StandardSQLFunction("formatdate", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formattime", new StandardSQLFunction("formattime", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("formattimestamp", new StandardSQLFunction("formattimestamp", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("hour", new StandardSQLFunction("hour", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("minute", new StandardSQLFunction("minute", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("monthname", new StandardSQLFunction("monthname", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsedate", new StandardSQLFunction("parsedate", DATE)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsetime", new StandardSQLFunction("parsetime", TIME)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("parsetimestamp", new StandardSQLFunction("parsetimestamp", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("second", new StandardSQLFunction("second", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("timestampcreate", new StandardSQLFunction("timestampcreate", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
         registerFunction("timestampAdd", new StandardSQLFunction("timestampAdd")); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("timestampDiff", new StandardSQLFunction("timestampDiff", Hibernate.LONG)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("week", new StandardSQLFunction("week", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("year", new StandardSQLFunction("year", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("modifytimezone", new StandardSQLFunction("modifytimezone", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("timestampDiff", new StandardSQLFunction("timestampDiff", LONG)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("week", new StandardSQLFunction("week", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("year", new StandardSQLFunction("year", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("modifytimezone", new StandardSQLFunction("modifytimezone", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
 
         registerFunction("convert", new StandardSQLFunction("convert")); //$NON-NLS-1$ //$NON-NLS-2$
         
-        registerFunction("to_bytes", new StandardSQLFunction("to_bytes", Hibernate.BLOB)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("to_chars", new StandardSQLFunction("to_chars", Hibernate.CLOB)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("from_unittime", new StandardSQLFunction("from_unittime", Hibernate.TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("session_id", new StandardSQLFunction("session_id", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("to_bytes", new StandardSQLFunction("to_bytes", BLOB)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("to_chars", new StandardSQLFunction("to_chars", CLOB)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("from_unittime", new StandardSQLFunction("from_unittime", TIMESTAMP)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("session_id", new StandardSQLFunction("session_id", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         
-        registerFunction("uuid", new StandardSQLFunction("uuid", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("unescape", new StandardSQLFunction("unescape", Hibernate.STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("uuid", new StandardSQLFunction("uuid", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("unescape", new StandardSQLFunction("unescape", STRING)); //$NON-NLS-1$ //$NON-NLS-2$
         
-        registerFunction("array_get", new StandardSQLFunction("array_get", Hibernate.OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
-        registerFunction("array_length", new StandardSQLFunction("array_length", Hibernate.INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("array_get", new StandardSQLFunction("array_get", OBJECT)); //$NON-NLS-1$ //$NON-NLS-2$
+        registerFunction("array_length", new StandardSQLFunction("array_length", INTEGER)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     public boolean dropConstraints() {
