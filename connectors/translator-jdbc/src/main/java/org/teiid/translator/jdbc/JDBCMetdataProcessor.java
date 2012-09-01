@@ -263,7 +263,7 @@ public class JDBCMetdataProcessor {
 		if ((excludeTables == null && schemaPattern == null && tableNamePattern == null) //getting everything
 			|| (singleSchema && tableNamePattern == null && 
 					(excludeTables == null //getting all from a single schema 
-					|| tableMap.size() > Math.sqrt(tableMap.size() + excludedTables)))) {  //not excluding enough from a single schema
+					|| tableMap.size()/2 > Math.sqrt(tableMap.size()/2 + excludedTables)))) {  //not excluding enough from a single schema
 			ResultSet columns = metadata.getColumns(catalog, schemaPattern, tableNamePattern, null);
 			processColumns(metadataFactory, tableMap, columns);
 		} else {
