@@ -57,7 +57,8 @@ public class DQPWorkContext implements Serializable {
 		SEVEN_4("7.4", (byte)0), //$NON-NLS-1$
 		SEVEN_5("7.5", (byte)0), //$NON-NLS-1$
 		SEVEN_6("7.6", (byte)0), //$NON-NLS-1$
-		EIGHT_0("8.0", (byte)1); //$NON-NLS-1$
+		EIGHT_0("8.0", (byte)1), //$NON-NLS-1$
+		EIGHT_2("8.2", (byte)2); //$NON-NLS-1$
 		
 		private String string;
 		private byte clientSerializationVersion;

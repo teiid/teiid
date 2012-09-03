@@ -65,7 +65,7 @@ public class TeiidRuntimeException extends RuntimeException {
         super(message);
     }
 
-    public TeiidRuntimeException(final String code, final String message) {
+    TeiidRuntimeException(final String code, final String message) {
         super(message);
         // The following setCode call should be executed after setting the message 
         setCode(code);
@@ -83,37 +83,15 @@ public class TeiidRuntimeException extends RuntimeException {
         setCode(code.toString());
     }    
     
-    public TeiidRuntimeException(BundleUtil.Event code) {
-        super();
-        setCode(code.toString());
-    }    
-    
-    public TeiidRuntimeException(final String[] message) {
-        super(message[1]);
-        // The following setCode call should be executed after setting the message 
-        setCode(message[0]);
-    }    
-
     /**
      * Construct an instance with a linked exception specified.  If the exception is a {@link TeiidException} or a
-     * MetaMatrixRuntimeException, then the code will be set to the exception's code.
+     * TeoodRuntimeException, then the code will be set to the exception's code.
      * @param e An exception to chain to this exception
      */
     public TeiidRuntimeException(final Throwable e) {
-        this(e, ( e instanceof java.lang.reflect.InvocationTargetException )
-                   ? ((java.lang.reflect.InvocationTargetException)e).getTargetException().getMessage()
-                   : (e == null ? null : e.getMessage()));        
-    }
-
-    /**
-     * Construct an instance with the linked exception and error message specified.  If the message is actually a key, the error
-     * message will be retrieved from a resource bundle the key, and code will be set to that key.  Otherwise, if the specified
-     * exception is a {@link TeiidException} or a MetaMatrixRuntimeException, the code will be set to the exception's code.
-     * @param e       The exception to chain to this exception
-     * @param message The error message or a resource bundle key
-     */
-    public TeiidRuntimeException(final Throwable e, final String message) {
-        super(message, e);
+        super(( e instanceof java.lang.reflect.InvocationTargetException )
+                ? ((java.lang.reflect.InvocationTargetException)e).getTargetException().getMessage()
+                        : (e == null ? null : e.getMessage()), e);
         setCode(TeiidException.getCode(e));
     }
 

@@ -366,7 +366,7 @@ public class TempTable implements Cloneable {
 			clone.activeReaders = new AtomicInteger();
 			return clone;
 		} catch (CloneNotSupportedException e) {
-			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30237);
+			 throw new TeiidRuntimeException(e);
 		} finally {
 			lock.readLock().unlock();
 		}

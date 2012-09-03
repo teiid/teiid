@@ -28,8 +28,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -69,17 +69,25 @@ public class TestArray {
 		assertNotSame(a1.getExpressions().get(0), array.getExpressions().get(0));
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Test public void testArrayValueSerialization() throws Exception {
-		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, null, 3});
+		ArrayImpl a2 = new ArrayImpl(null);
 		String[] types = TupleBuffer.getTypeNames(Arrays.asList(new Array(Integer.class, null)));
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		ObjectOutputStream oos = new ObjectOutputStream(baos);
-		BatchSerializer.writeBatch(oos, types, Collections.singletonList(Arrays.asList((a1))));
+		BatchSerializer.writeBatch(oos, types, Arrays.asList(Arrays.asList(a1), Arrays.asList(a2)));
 		oos.close();
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
 		ObjectInputStream ois = new ObjectInputStream(bais);
 		List<List<Object>> batch = BatchSerializer.readBatch(ois, types);
 		assertEquals(a1, batch.get(0).get(0));
+		try {
+			((java.sql.Array)batch.get(1).get(0)).getArray();
+			fail();
+		} catch (SQLException e) {
+			
+		}
 	}
 	
 	@Test public void testZeroBasedArray() throws Exception {

@@ -84,15 +84,6 @@ public final class TestMetaMatrixRuntimeException extends TestCase {
         
     }
 
-    public void testMetaMatrixRuntimeExceptionWithExceptionAndMessage() {
-        final String code = "1234"; //$NON-NLS-1$
-        final TeiidRuntimeException child = new TeiidRuntimeException(code, "Child"); //$NON-NLS-1$
-        final TeiidRuntimeException err = new TeiidRuntimeException(child, "Test"); //$NON-NLS-1$
-        assertSame(child, err.getCause());
-        assertEquals(code, err.getCode());
-        assertEquals("1234 Test", err.getMessage()); //$NON-NLS-1$
-        
-    }
     public static enum Event implements BundleUtil.Event {
     	Code,
     }

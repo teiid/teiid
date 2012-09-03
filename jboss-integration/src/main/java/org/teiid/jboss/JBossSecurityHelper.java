@@ -73,7 +73,7 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	@Override
 	public boolean sameSubject(String securityDomain, Object context, Subject subject) {
 		if (context == null) {
-			throw new TeiidRuntimeException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50090));
+			throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50090, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50090));
 		}
 		SecurityContext previousContext = (SecurityContext)context;
 		Subject previousUser = previousContext.getSubjectInfo().getAuthenticatedSubject();

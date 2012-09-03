@@ -22,7 +22,10 @@
 
 package org.teiid.core.types;
 
-import java.io.Serializable;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,12 +35,14 @@ import java.util.Comparator;
 import java.util.Map;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ExternalizeUtil;
 import org.teiid.core.util.HashCodeUtil;
 
 /**
  * Provides a serializable {@link Array} implementation with minimal JDBC functionality. 
  */
-public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Array {
+public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, Array {
+	private static final String INVALID = ""; //$NON-NLS-1$
 	private static final long serialVersionUID = 517794153664734815L;
 	/**
 	 * a regrettable hack for pg compatibility since we want to avoid adding a vector type
@@ -53,6 +58,16 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 		this.values = values;
 	}
 
+	public ArrayImpl() {
+		
+	}
+	
+	private void checkValues() throws SQLException {
+		if (values == null) {
+			throw new SQLException("Already freed or invalid"); //$NON-NLS-1$
+		}
+	}
+
 	@Override
 	public int compareTo(ArrayImpl o) {
 		return compareTo(o, false, null);
@@ -61,6 +76,12 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 	public int compareTo(ArrayImpl o, boolean noNulls, Comparator<Object> comparator) {
 		if (zeroBased != o.zeroBased) {
 			throw new TeiidRuntimeException("Incompatible types"); //$NON-NLS-1$
+		}
+		try {
+			checkValues();
+			o.checkValues();
+		} catch (SQLException e) {
+			throw new TeiidRuntimeException(e);
 		}
 		int len1 = values.length;
 		int len2 = o.values.length;
@@ -113,6 +134,9 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 	}
 	
 	public Object[] getValues() {
+		if (values == null) {
+			throw new TeiidRuntimeException("Already freed or invalid"); //$NON-NLS-1$
+		}
 		return values;
 	}
 	
@@ -131,11 +155,12 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 
 	@Override
 	public void free() throws SQLException {
-		
+		this.values = null;
 	}
 
 	@Override
 	public Object getArray() throws SQLException {
+		checkValues();
 		return values;
 	}
 
@@ -154,6 +179,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 		if (iIndex >= values.length || iIndex < 0) {
 			throw new ArrayIndexOutOfBoundsException(iIndex);
 		}
+		checkValues();
 		return Arrays.copyOfRange(values, iIndex, Math.min(iIndex + count, values.length));
 	}
 
@@ -165,11 +191,13 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 
 	@Override
 	public int getBaseType() throws SQLException {
+		checkValues();
 		return JDBCSQLTypeInfo.getSQLType(DataTypeManager.getDataTypeName(values.getClass().getComponentType()));
 	}
 
 	@Override
 	public String getBaseTypeName() throws SQLException {
+		checkValues();
 		return DataTypeManager.getDataTypeName(values.getClass().getComponentType());
 	}
 
@@ -193,6 +221,28 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Serializable, Arr
 	public ResultSet getResultSet(long index, int count,
 			Map<String, Class<?>> map) throws SQLException {
 		throw new SQLFeatureNotSupportedException();
+	}
+	
+	@Override
+	public void readExternal(ObjectInput in) throws IOException,
+			ClassNotFoundException {
+		String componentType = in.readUTF();
+		if (INVALID.equalsIgnoreCase(componentType)) {
+			return;
+		}
+		ExternalizeUtil.readArray(in, DataTypeManager.getDataTypeClass(componentType));
+		zeroBased = in.readBoolean();
+	}
+	
+	@Override
+	public void writeExternal(ObjectOutput out) throws IOException {
+		if (values == null) {
+			out.writeUTF(INVALID);  
+			return;
+		}
+		out.writeUTF(DataTypeManager.getDataTypeName(this.values.getClass().getComponentType()));
+		ExternalizeUtil.writeArray(out, values);
+		out.writeBoolean(zeroBased);
 	}
 	
 }

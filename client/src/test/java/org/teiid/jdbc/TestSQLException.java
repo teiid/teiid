@@ -154,11 +154,9 @@ public class TestSQLException {
     @Test public void testCreateThrowable3() {
         TeiidSQLException e = testCreateThrowable(
                             new TeiidException(
-                                    new TeiidRuntimeException(
                                             new SocketTimeoutException(
                                                     "A test MM Invalid Session Exception"), //$NON-NLS-1$
                                             "Test MetaMatrixRuntimeException with a InvalidSessionException in it"), //$NON-NLS-1$
-                                    "Test MM Core Exception with an MM Runtime Exception in it and an InvalidSessionException nested within"), //$NON-NLS-1$
                             SQLStates.CONNECTION_EXCEPTION_STALE_CONNECTION);
         
         //test to ensure that wrapping mmsqlexceptions works

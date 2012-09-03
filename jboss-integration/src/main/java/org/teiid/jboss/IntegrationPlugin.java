@@ -75,8 +75,6 @@ public class IntegrationPlugin {
     	TEIID50042, // error state
     	TEIID50043,
     	TEIID50044, // vdb save failed
-    	TEIID50045,
-    	TEIID50046,
     	TEIID50047,
     	TEIID50048,
     	TEIID50049,

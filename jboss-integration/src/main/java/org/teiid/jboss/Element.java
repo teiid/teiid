@@ -31,7 +31,6 @@ import java.util.Set;
 
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.transport.SSLConfiguration;
 
@@ -206,7 +205,7 @@ enum Element {
         		node.get(type, name, DEFAULT).set(this.defaultValue);
         	}
         	else {
-        		 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50045);
+        		 throw new AssertionError(this.modelType);
         	}
         }        
     }
@@ -230,7 +229,7 @@ enum Element {
     			model.get(getModelName()).set(operation.get(getModelName()).asBoolean());
     		}
     		else {
-    			 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50046);
+    			throw new AssertionError(this.modelType);
     		}
     	}
     }
