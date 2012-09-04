@@ -46,7 +46,8 @@
 <ul>
   <li>TEIID-2166 array_get will return null if the index is out of bounds rather than raising an error.
   <li>TEIID-2175 for 8.0 and 8.1 clients the server will check if serialized date/time values fall outside of 32-bit value ranges (year 1900 - 9999 for dates and times between years 1901 and 2038) and throw an exception.  The previous behavior was
-  to truncate.  The exception and the use of 32 bit serialization can be avoided by setting the system property org.teiid.longDatesTimes to true. 
+  to truncate.  The exception and the use of 32 bit serialization can be avoided by setting the system property org.teiid.longDatesTimes to true.
+  <li>TEIID-2184 to be consistent with the rest of Teiid's logic the system functions dayName and monthName will return values from the default locale, rather than only the English names.  Use the system property org.teiid.enDateNames true to revert to the pre-8.2 behavior.   
 </ul>
 
 <h4>from 8.0</h4>

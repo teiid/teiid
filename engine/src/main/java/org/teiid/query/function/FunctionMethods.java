@@ -36,11 +36,14 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.text.DateFormatSymbols;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -55,6 +58,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -374,11 +378,32 @@ public final class FunctionMethods {
 
 	// ================== Function = dayname =====================
 
-	static final String[] dayNames = new String[] {
-		"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-
+	static String[] dayNames;
+	static String[] monthNames;
+	
 	public static Object dayName(Date x) {
-		return dayNames[getField(x, Calendar.DAY_OF_WEEK) - 1];
+		return getDayNames()[getField(x, Calendar.DAY_OF_WEEK) - 1];
+	}
+	
+	private static Locale getSymbolLocale() {
+		return PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.enDateNames", false)?Locale.ENGLISH:Locale.getDefault(); //$NON-NLS-1$
+	}
+
+	static String[] getMonthNames() {
+		if (monthNames == null) {
+			DateFormatSymbols dateFormatSymbols = DateFormatSymbols.getInstance(getSymbolLocale());
+			String[] months = dateFormatSymbols.getMonths();
+			monthNames = Arrays.copyOf(months, 12);
+		}
+		return monthNames;
+	}
+
+	static String[] getDayNames() {
+		if (dayNames == null) {
+			DateFormatSymbols dateFormatSymbols = DateFormatSymbols.getInstance(getSymbolLocale());
+			dayNames = Arrays.copyOfRange(dateFormatSymbols.getWeekdays(), 1, 8);
+		}
+		return dayNames;
 	}
 
 	// ================== Function = dayofmonth =====================
@@ -423,12 +448,8 @@ public final class FunctionMethods {
 
 	// ================== Function = monthname =====================
 
-	static final String[] monthNames = new String[] {
-		"January", "February", "March", "April", "May", "June", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-		"July", "August", "September", "October", "November", "December" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-
 	public static Object monthName(Date x) {
-		return monthNames[getField(x, Calendar.MONTH)];
+		return getMonthNames()[getField(x, Calendar.MONTH)];
 	}
 
 	// ================== Function = second =====================
@@ -1068,7 +1089,7 @@ public final class FunctionMethods {
             SimpleDateFormat sdf = CommandContext.getDateFormat(context, format);
             return sdf.format(date);
 		} catch (IllegalArgumentException iae) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30409, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30409,iae.getMessage()));
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30409, iae, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30409,iae.getMessage()));
 		}
 	}
 
@@ -1079,7 +1100,7 @@ public final class FunctionMethods {
 		try {
 			return df.parse(date);
 		} catch (ParseException e) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30410, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30410, date, format));
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30410, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30410, date, format));
 		}
 	}
 	
@@ -1095,7 +1116,7 @@ public final class FunctionMethods {
 	        DecimalFormat df = CommandContext.getDecimalFormat(context, format);
 	        return df.format(number);
 		} catch (IllegalArgumentException iae) {
-			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30411, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30411, iae.getMessage()));
+			 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30411, iae, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30411, iae.getMessage()));
 		}
 	}
 

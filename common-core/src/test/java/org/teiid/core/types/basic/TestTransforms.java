@@ -31,6 +31,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 
 import org.junit.Test;
+import org.teiid.core.CorePlugin;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -249,7 +250,8 @@ public class TestTransforms {
     }
     
     @Test public void testRangeCheck1() throws Exception {
-    	helpTransformException(new Double("1E11"), DataTypeManager.DefaultDataClasses.INTEGER, "TEIID10058 The Double value '100,000,000,000' is outside the of range for Integer"); //$NON-NLS-1$ //$NON-NLS-2$  
+    	Double value = new Double("1E11");//$NON-NLS-1$
+		helpTransformException(value, DataTypeManager.DefaultDataClasses.INTEGER, CorePlugin.Util.gs(CorePlugin.Event.TEIID10058, value, Double.class.getSimpleName(), Integer.class.getSimpleName())); //$NON-NLS-1$ //$NON-NLS-2$  
     }
 
 

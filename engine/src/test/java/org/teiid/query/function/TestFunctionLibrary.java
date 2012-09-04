@@ -33,6 +33,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -80,12 +81,18 @@ public class TestFunctionLibrary {
 	private static final Class<Timestamp> T_TIMESTAMP = DataTypeManager.DefaultDataClasses.TIMESTAMP;
 	
 	private FunctionLibrary library = new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions());
+	private Locale locale;
 
-	@Before public void setUp() { 
+	@Before public void setUp() {
+		locale = Locale.getDefault();
+		Locale.setDefault(Locale.US);
 		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$ 
 	}
 	
 	@After public void tearDown() { 
+		Locale.setDefault(locale);
+		FunctionMethods.dayNames = null;
+		FunctionMethods.monthNames = null;
 		TimestampWithTimezone.resetCalendar(null);
 	}
 	
@@ -1270,9 +1277,10 @@ public class TestFunctionLibrary {
     }
     
     @Test public void testInvokeDayName() {
-        for (int i = 0; i < FunctionMethods.dayNames.length; i++) {
+        String[] dayNames = FunctionMethods.getDayNames();
+		for (int i = 0; i < dayNames.length; i++) {
             Date time = TimestampUtil.createDate(100, 0, i + 2);
-            helpInvokeMethod("dayName", new Object[] { time }, FunctionMethods.dayNames[i]); //$NON-NLS-1$ 
+            helpInvokeMethod("dayName", new Object[] { time }, dayNames[i]); //$NON-NLS-1$ 
         }
     }
     
@@ -1297,9 +1305,10 @@ public class TestFunctionLibrary {
     }
     
     @Test public void testInvokeMonthName() {
-        for (int i = 0; i < FunctionMethods.monthNames.length; i++) {
+        String[] monthNames = FunctionMethods.getMonthNames();
+		for (int i = 0; i < monthNames.length; i++) {
             Date time = TimestampUtil.createDate(100, i, 1);
-            helpInvokeMethod("monthName", new Object[] { time }, FunctionMethods.monthNames[i]); //$NON-NLS-1$ 
+            helpInvokeMethod("monthName", new Object[] { time }, monthNames[i]); //$NON-NLS-1$ 
         }
     }
     
