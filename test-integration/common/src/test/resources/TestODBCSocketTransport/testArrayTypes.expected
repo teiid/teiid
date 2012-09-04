@@ -1,0 +1,27 @@
+int2vector                                                       
+indkey                                                           
+1                                                                
+1                                                                
+1                                                                
+1                                                                
+3                                                                
+1                                                                
+2                                                                
+2                                                                
+1                                                                
+1                                                                
+3                                                                
+2                                                                
+1                                                                
+3                                                                
+4                                                                
+5                                                                
+1                                                                
+2                                                                
+1                                                                
+1                                                                
+1                                                                
+1                                                                
+Row Count : 22
+getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
+indkey         1111                           java.lang.Object    indkey          int2vector                                      2147483647            2147483647    0         false            true             false       false                 1           false       true          false     true        
