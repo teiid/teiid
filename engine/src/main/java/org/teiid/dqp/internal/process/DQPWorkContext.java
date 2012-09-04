@@ -42,6 +42,7 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.SessionToken;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.security.SecurityHelper;
 
@@ -50,14 +51,13 @@ public class DQPWorkContext implements Serializable {
 	
 	private static final long serialVersionUID = -6389893410233192977L;
 	
+	private static final boolean longDatesTimes = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.longDatesTimes", false); //$NON-NLS-1$
+	
 	public enum Version {
 		SEVEN_1("7.1", (byte)0), //$NON-NLS-1$
-		SEVEN_2("7.2", (byte)0), //$NON-NLS-1$
 		SEVEN_3("7.3", (byte)0), //$NON-NLS-1$
 		SEVEN_4("7.4", (byte)0), //$NON-NLS-1$
-		SEVEN_5("7.5", (byte)0), //$NON-NLS-1$
-		SEVEN_6("7.6", (byte)0), //$NON-NLS-1$
-		EIGHT_0("8.0", (byte)1), //$NON-NLS-1$
+		EIGHT_0("8.0", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
 		EIGHT_2("8.2", (byte)2); //$NON-NLS-1$
 		
 		private String string;

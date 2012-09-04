@@ -54,10 +54,20 @@ import org.teiid.jdbc.JDBCPlugin;
 
 /** 
  * @since 4.2
+ * 
+ * <ul>
+ * <li>version 0: starts with 7.1 and uses simple serialization too broadly
+ * <li>version 1: starts with 8.0 uses better string, blob, clob, xml, etc. 
+ *   add varbinary support. 
+ *   however was possibly silently truncating date/time values that were
+ *   outside of jdbc allowed values
+ * <li>version 2: starts with 8.2 and adds better array serialization and
+ *   uses a safer date/time serialization
+ * </ul>
  */
 public class BatchSerializer {
 	
-    private static final byte CURRENT_VERSION = (byte)2;
+    static final byte CURRENT_VERSION = (byte)2;
 
 	private BatchSerializer() {} // Uninstantiable
     
@@ -70,13 +80,13 @@ public class BatchSerializer {
         serializers.put(DataTypeManager.DefaultDataTypes.BOOLEAN,       new ColumnSerializer[] {new BooleanColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.BYTE,          new ColumnSerializer[] {new ByteColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.CHAR,          new ColumnSerializer[] {new CharColumnSerializer()});
-        serializers.put(DataTypeManager.DefaultDataTypes.DATE,          new ColumnSerializer[] {new DateColumnSerializer(), new DateColumnSerializer1()});
+        serializers.put(DataTypeManager.DefaultDataTypes.DATE,          new ColumnSerializer[] {new DateColumnSerializer(), new DateColumnSerializer1(), new DateColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.DOUBLE,        new ColumnSerializer[] {new DoubleColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.FLOAT,         new ColumnSerializer[] {new FloatColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.INTEGER,       new ColumnSerializer[] {new IntColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.LONG,          new ColumnSerializer[] {new LongColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.SHORT,         new ColumnSerializer[] {new ShortColumnSerializer()});
-        serializers.put(DataTypeManager.DefaultDataTypes.TIME,          new ColumnSerializer[] {new TimeColumnSerializer(), new TimeColumnSerializer1()});
+        serializers.put(DataTypeManager.DefaultDataTypes.TIME,          new ColumnSerializer[] {new TimeColumnSerializer(), new TimeColumnSerializer1(), new TimeColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.TIMESTAMP,     new ColumnSerializer[] {new TimestampColumnSerializer()});
         serializers.put(DataTypeManager.DefaultDataTypes.STRING,     	new ColumnSerializer[] {defaultSerializer, new StringColumnSerializer1()});
         serializers.put(DataTypeManager.DefaultDataTypes.CLOB,  	   	new ColumnSerializer[] {defaultSerializer, new ClobColumnSerializer1()});
@@ -617,18 +627,30 @@ public class BatchSerializer {
     }
     
     static int DATE_NORMALIZER = 0;
+    public final static long MIN_DATE_32;
+    public final static long MAX_DATE_32;
+    public final static long MIN_TIME_32;
+    public final static long MAX_TIME_32;
     	
 	static {
 		Calendar c = Calendar.getInstance();
 		c.setTimeZone(TimeZone.getTimeZone("GMT")); //$NON-NLS-1$
 		c.set(1900, 0, 1, 0, 0, 0);
 		c.set(Calendar.MILLISECOND, 0);
-		DATE_NORMALIZER = -(int)(c.getTime().getTime()/60000); //support a 32 bit range starting at this value
+		MIN_DATE_32 = c.getTimeInMillis();
+		MAX_DATE_32 = MIN_DATE_32 + ((1l<<32)-1)*60000;
+		DATE_NORMALIZER = -(int)(MIN_DATE_32/60000); //support a 32 bit range starting at this value
+		MAX_TIME_32 = Integer.MAX_VALUE*1000l;
+		MIN_TIME_32 = Integer.MIN_VALUE*1000l;
 	}
 
     private static class DateColumnSerializer1 extends ColumnSerializer {
         protected void writeObject(ObjectOutput out, Object obj) throws IOException {
-            out.writeInt((int)(((java.sql.Date)obj).getTime()/60000) + DATE_NORMALIZER);
+            long time = ((java.sql.Date)obj).getTime();
+            if (time < MIN_DATE_32 || time > MAX_DATE_32) {
+            	throw new IOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20029, obj.getClass().getName()));
+            }
+			out.writeInt((int)(time/60000) + DATE_NORMALIZER);
         }
         protected Object readObject(ObjectInput in) throws IOException {
             return new java.sql.Date(((in.readInt()&0xffffffffL) - DATE_NORMALIZER)*60000);
@@ -637,7 +659,11 @@ public class BatchSerializer {
     
     private static class TimeColumnSerializer1 extends ColumnSerializer {
         protected void writeObject(ObjectOutput out, Object obj) throws IOException {
-            out.writeInt((int)(((Time)obj).getTime()/1000));
+            long time = ((Time)obj).getTime();
+            if (time < MIN_TIME_32 || time > MAX_TIME_32) {
+            	throw new IOException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20029, obj.getClass().getName()));
+            }
+			out.writeInt((int)(time/1000));
         }
         protected Object readObject(ObjectInput in) throws IOException {
             return new Time((in.readInt()&0xffffffffL)*1000);

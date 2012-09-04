@@ -38,6 +38,7 @@ import org.junit.Test;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.query.unittest.TimestampUtil;
 
 
 /** 
@@ -45,11 +46,12 @@ import org.teiid.core.util.TimestampWithTimezone;
  */
 public class TestBatchSerializer {
 
-    private static void helpTestSerialization(String[] types, List<?>[] batch) throws IOException, ClassNotFoundException {
+    private static void helpTestSerialization(String[] types, List<?>[] batch, byte version) throws IOException, ClassNotFoundException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         ObjectOutputStream out = new ObjectOutputStream(byteStream);
         List<List<?>> batchList = Arrays.asList(batch);
-        BatchSerializer.writeBatch(out, types, batchList);
+        
+        BatchSerializer.writeBatch(out, types, batchList, version);
         out.flush();
         
         byte[] bytes = byteStream.toByteArray();
@@ -119,28 +121,33 @@ public class TestBatchSerializer {
     @Test public void testSerializeBasicTypes() throws Exception {
         // The number 8 is important here because boolean isNull information is packed into bytes,
         // so we want to make sure the boundary cases are handled correctly
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(1)); // Less than 8 rows
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(8)); // Exactly 8 rows
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(17)); // More than 8 rows, but not a multiple of 8
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(120)); // A multiple of 8 rows
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(833)); // A bunch of rows. This should also test large strings
-        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(4096)); // A bunch of rows. This should also test large strings
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(1), BatchSerializer.CURRENT_VERSION); // Less than 8 rows
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(8), BatchSerializer.CURRENT_VERSION); // Exactly 8 rows
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(17), BatchSerializer.CURRENT_VERSION); // More than 8 rows, but not a multiple of 8
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(120), BatchSerializer.CURRENT_VERSION); // A multiple of 8 rows
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(833), BatchSerializer.CURRENT_VERSION); // A bunch of rows. This should also test large strings
+        helpTestSerialization(sampleBatchTypes, sampleBatchWithNulls(4096), BatchSerializer.CURRENT_VERSION); // A bunch of rows. This should also test large strings
     }
     
     @Test public void testSerializeLargeStrings() throws Exception {
         List<?> row = Arrays.asList(new Object[] {sampleString(66666)});
-        helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.STRING}, new List[] {row});
+        helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.STRING}, new List[] {row}, BatchSerializer.CURRENT_VERSION);
     }
     
     @Test public void testSerializeNoData() throws Exception {
-        helpTestSerialization(sampleBatchTypes, new List[0]);
+        helpTestSerialization(sampleBatchTypes, new List[0], BatchSerializer.CURRENT_VERSION);
     }
     
     @Test public void testSerializeDatatypeMismatch() throws Exception {
         try {
-            helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DOUBLE}, new List[] {Arrays.asList(new Object[] {"Hello!"})}); //$NON-NLS-1$
+            helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DOUBLE}, new List[] {Arrays.asList(new Object[] {"Hello!"})}, BatchSerializer.CURRENT_VERSION); //$NON-NLS-1$
         } catch (RuntimeException e) {
             assertEquals("TEIID20001 The modeled datatype double for column 0 doesn't match the runtime type \"java.lang.String\". Please ensure that the column's modeled datatype matches the expected data.", e.getMessage()); //$NON-NLS-1$
         }
     }
+    
+    @Test(expected=IOException.class) public void testOutOfRangeDate() throws Exception {
+        helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DATE}, new List[] {Arrays.asList(TimestampUtil.createDate(-2, 0, 1))}, (byte)1);
+    }
+
 }
