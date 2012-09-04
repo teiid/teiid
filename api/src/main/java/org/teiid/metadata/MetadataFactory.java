@@ -144,7 +144,7 @@ public class MetadataFactory implements Serializable {
 			 throw new TranslatorException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
 		}
 		if (table.getColumnByName(name) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
 		}
 		Column column = new Column();
 		column.setName(name);
