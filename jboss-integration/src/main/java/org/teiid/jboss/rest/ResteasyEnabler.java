@@ -26,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jboss.as.controller.ModelController;
 import org.teiid.adminapi.Admin;
@@ -47,63 +48,78 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	static final String REST_NAMESPACE = "{http://teiid.org/rest}"; //$NON-NLS-1$
 	private Admin admin;
 	private Executor executor;
+	private String vdbName;
+	private int vdbVersion;
+	private AtomicBoolean deployed = new AtomicBoolean(false);
 	
-	public ResteasyEnabler(ModelController deployer, Executor executor) {
+	public ResteasyEnabler(String vdbName, int version, ModelController deployer, Executor executor) {
 		this.admin = AdminFactory.getInstance().createAdmin(deployer.createClient(executor));
 		this.executor = executor;
+		this.vdbName = vdbName;
+		this.vdbVersion = version;
 	}
 	
 	@Override
-	public void added(String name, int version, CompositeVDB vdb) {
+	public synchronized void added(String name, int version, CompositeVDB vdb) {
 	}
 	
 	@Override
-	public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
-		final VDBMetaData vdb = cvdb.getVDB();
-		
-		String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
+	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb) {
+		if (this.vdbName.equals(name) && this.vdbVersion == version) {
 
-		final String warName = buildName(vdb);
-		if (generate != null && Boolean.parseBoolean(generate)
-				&& hasRestMetadata(vdb)
-				&& !((AdminImpl) this.admin).getDeployments().contains(warName)) {
-			// this must be executing the async thread to avoid any lock-up from management operations
-			this.executor.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-						byte[] warContents = builder.createRestArchive(vdb);
-						admin.deploy(warName, new ByteArrayInputStream(warContents));
-					} catch (FileNotFoundException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
-					} catch (IOException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
-					} catch (AdminException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+			final VDBMetaData vdb = cvdb.getVDB();
+			
+			String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
+	
+			final String warName = buildName(vdb);
+			if (generate != null && Boolean.parseBoolean(generate)
+					&& hasRestMetadata(vdb)
+					&& !this.deployed.get()
+					&& !((AdminImpl) this.admin).getDeployments().contains(warName)) {
+				
+				this.deployed.set(true);
+				
+				// this must be executing the async thread to avoid any lock-up from management operations
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
+							RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+							byte[] warContents = builder.createRestArchive(vdb);
+							admin.deploy(warName, new ByteArrayInputStream(warContents));
+						} catch (FileNotFoundException e) {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+						} catch (IOException e) {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+						} catch (AdminException e) {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+						}
 					}
-				}
-			});
+				});
+			}
 		}
 	}
 	
 	@Override
-	public void removed(String name, int version, CompositeVDB cvdb) {
-		VDBMetaData vdb = cvdb.getVDB();
-		String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
-		final String warName = buildName(vdb);
-		if (generate != null && Boolean.parseBoolean(generate)
-				&& ((AdminImpl) this.admin).getDeployments().contains(warName)) {
-			this.executor.execute(new Runnable() {
-				@Override
-				public void run() {
-					try {
-					admin.undeploy(warName);
-					} catch (AdminException e) {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
-					}						
-				}
-			});
+	public synchronized void removed(String name, int version, CompositeVDB cvdb) {
+		if (this.vdbName.equals(name) && this.vdbVersion == version) {
+			VDBMetaData vdb = cvdb.getVDB();
+	
+			// we only want un-deploy what is auto-generated previously 
+			final String warName = buildName(vdb);
+			if (this.deployed.get()) {
+				this.deployed.set(false);
+				this.executor.execute(new Runnable() {
+					@Override
+					public void run() {
+						try {
+						admin.undeploy(warName);
+						} catch (AdminException e) {
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+						}						
+					}
+				});
+			}
 		}
 	}
 	

@@ -173,7 +173,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		
 		getVDBRepository().addListener(this.vdbListener);
 		
-		this.restEasyListener = new ResteasyEnabler(controllerValue.getValue(), executorInjector.getValue());
+		this.restEasyListener = new ResteasyEnabler(this.vdb.getName(), this.vdb.getVersion(), controllerValue.getValue(), executorInjector.getValue());
 		getVDBRepository().addListener(this.restEasyListener);
 				
 		MetadataStore store = new MetadataStore();
