@@ -53,6 +53,8 @@ public class TupleBrowser implements TupleSource {
 	
 	private boolean inPartial;
 	
+	private List<Object> cachedBound;
+	
 	private ArrayList<SearchResult> places = new ArrayList<SearchResult>();
 
 	/**
@@ -111,7 +113,7 @@ public class TupleBrowser implements TupleSource {
 			if (!direction) {
 				values = upper.values;
 			}
-			if (lowerBound != null) {
+			if (lowerBound != null && page == bound) {
 				valid = index<=boundIndex;
 			}
 		} else {
@@ -172,7 +174,12 @@ public class TupleBrowser implements TupleSource {
 					return null;
 				}
 				if (newValue.size() < tree.getKeyLength()) {
-					init(new ArrayList<Object>(newValue), newValue, true);
+					if (cachedBound == null) {
+						cachedBound = new ArrayList<Object>(tree.getKeyLength());
+					}
+					cachedBound.clear();
+					cachedBound.addAll(newValue);
+					init(cachedBound, newValue, true);
 					inPartial = true;
 					continue;
 				}
