@@ -44,6 +44,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.Like.MatchMode;
@@ -98,7 +99,8 @@ public class QueryRewriter {
     public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER));
     public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
     
-    private static final Map<String, String> ALIASED_FUNCTIONS = new HashMap<String, String>();
+    private static final Map<String, String> ALIASED_FUNCTIONS = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    private static final Set<String> PARSE_FORMAT_TYPES = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
     
     static {
     	ALIASED_FUNCTIONS.put("lower", SourceSystemFunctions.LCASE); //$NON-NLS-1$
@@ -107,12 +109,11 @@ public class QueryRewriter {
     	ALIASED_FUNCTIONS.put("nvl", SourceSystemFunctions.IFNULL); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("||", SourceSystemFunctions.CONCAT); //$NON-NLS-1$
     	ALIASED_FUNCTIONS.put("chr", SourceSystemFunctions.CHAR); //$NON-NLS-1$
-    }
-    
-    private static final Set<String> PARSE_FORMAT_TYPES = new HashSet<String>(Arrays.asList(DataTypeManager.DefaultDataTypes.TIME, 
+    	PARSE_FORMAT_TYPES.addAll(    Arrays.asList(DataTypeManager.DefaultDataTypes.TIME, 
     		DataTypeManager.DefaultDataTypes.DATE, DataTypeManager.DefaultDataTypes.TIMESTAMP, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, 
     		DataTypeManager.DefaultDataTypes.BIG_INTEGER, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.LONG, 
     		DataTypeManager.DefaultDataTypes.FLOAT, DataTypeManager.DefaultDataTypes.DOUBLE));
+    }
     
     // Constants used in simplifying mathematical criteria
     private final static Integer INTEGER_ZERO = new Integer(0);
@@ -1556,15 +1557,15 @@ public class QueryRewriter {
         }
     	boolean isFormat = false;
     	Function leftFunction = (Function) crit.getLeftExpression();
-        String funcName = leftFunction.getName().toLowerCase();
+        String funcName = leftFunction.getName();
         String inverseFunction = null;
-        if(funcName.startsWith("parse")) { //$NON-NLS-1$
+        if(StringUtil.startsWithIgnoreCase(funcName, "parse")) { //$NON-NLS-1$
             String type = funcName.substring(5);
             if (!PARSE_FORMAT_TYPES.contains(type)) {
                 return crit;
             }
             inverseFunction = "format" + type; //$NON-NLS-1$
-        } else if(funcName.startsWith("format")) { //$NON-NLS-1$
+        } else if(StringUtil.startsWithIgnoreCase(funcName, "format")) { //$NON-NLS-1$
             String type = funcName.substring(6);
             if (!PARSE_FORMAT_TYPES.contains(type)) {
                 return crit;
@@ -2040,29 +2041,26 @@ public class QueryRewriter {
 		return expression;
 	}
    
-    private static Map<String, Integer> FUNCTION_MAP = new HashMap<String, Integer>();
+    private static Map<String, Integer> FUNCTION_MAP = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
     
     static {
-    	FUNCTION_MAP.put(FunctionLibrary.SPACE.toLowerCase(), 0);
-    	FUNCTION_MAP.put(FunctionLibrary.FROM_UNIXTIME.toLowerCase(), 1);
-    	FUNCTION_MAP.put(FunctionLibrary.NULLIF.toLowerCase(), 2);
-    	FUNCTION_MAP.put(FunctionLibrary.COALESCE.toLowerCase(), 3);
-    	FUNCTION_MAP.put(FunctionLibrary.CONCAT2.toLowerCase(), 4);
-    	FUNCTION_MAP.put(FunctionLibrary.TIMESTAMPADD.toLowerCase(), 5);
-    	FUNCTION_MAP.put(FunctionLibrary.PARSEDATE.toLowerCase(), 6);
-    	FUNCTION_MAP.put(FunctionLibrary.PARSETIME.toLowerCase(), 7);
-    	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE.toLowerCase(), 8);
-    	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME.toLowerCase(), 9);
-    	FUNCTION_MAP.put(SourceSystemFunctions.TRIM.toLowerCase(), 10);
+    	FUNCTION_MAP.put(FunctionLibrary.SPACE, 0);
+    	FUNCTION_MAP.put(FunctionLibrary.FROM_UNIXTIME, 1);
+    	FUNCTION_MAP.put(FunctionLibrary.NULLIF, 2);
+    	FUNCTION_MAP.put(FunctionLibrary.COALESCE, 3);
+    	FUNCTION_MAP.put(FunctionLibrary.CONCAT2, 4);
+    	FUNCTION_MAP.put(FunctionLibrary.TIMESTAMPADD, 5);
+    	FUNCTION_MAP.put(FunctionLibrary.PARSEDATE, 6);
+    	FUNCTION_MAP.put(FunctionLibrary.PARSETIME, 7);
+    	FUNCTION_MAP.put(FunctionLibrary.FORMATDATE, 8);
+    	FUNCTION_MAP.put(FunctionLibrary.FORMATTIME, 9);
+    	FUNCTION_MAP.put(SourceSystemFunctions.TRIM, 10);
     }
     
 	private Expression rewriteFunction(Function function) throws TeiidComponentException, TeiidProcessingException{
-		if (function.isAggregate()) {
-			//AggregateSymbol as = new AggregateSymbol(function.getName(), aggregateFunction, isDistinct, expression)
-		}
 		//rewrite alias functions
-		String functionLowerName = function.getName().toLowerCase();
-		String actualName =ALIASED_FUNCTIONS.get(functionLowerName);
+		String functionName = function.getName();
+		String actualName =ALIASED_FUNCTIONS.get(functionName);
 		FunctionLibrary funcLibrary = this.metadata.getFunctionLibrary();
 
 		if (actualName != null) {
@@ -2076,8 +2074,8 @@ public class QueryRewriter {
 			function.setFunctionDescriptor(descriptor);
 		}
 		
-		if(functionLowerName.startsWith("parse")) { //$NON-NLS-1$
-            String type = functionLowerName.substring(5);
+		if(StringUtil.startsWithIgnoreCase(functionName, "parse")) { //$NON-NLS-1$
+            String type = functionName.substring(5);
             if (PARSE_FORMAT_TYPES.contains(type) && Number.class.isAssignableFrom(function.getType()) && !type.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
             	Function result = new Function(SourceSystemFunctions.PARSEBIGDECIMAL, function.getArgs());
 				FunctionDescriptor descriptor = 
@@ -2086,8 +2084,8 @@ public class QueryRewriter {
 				result.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
 				return rewriteFunction(ResolverUtil.getConversion(result, DataTypeManager.DefaultDataTypes.BIG_DECIMAL, DataTypeManager.getDataTypeName(function.getType()), false, metadata.getFunctionLibrary()));
             }
-        } else if(functionLowerName.startsWith("format")) { //$NON-NLS-1$
-            String type = functionLowerName.substring(6);
+        } else if(StringUtil.startsWithIgnoreCase(functionName, "format")) { //$NON-NLS-1$
+            String type = functionName.substring(6);
             if (PARSE_FORMAT_TYPES.contains(type) && Number.class.isAssignableFrom(function.getArg(0).getType()) && !type.equals(DataTypeManager.DefaultDataTypes.BIG_DECIMAL)) {
             	Function bigDecimalParam = ResolverUtil.getConversion(function.getArg(0), DataTypeManager.getDataTypeName(function.getArg(0).getType()), DataTypeManager.DefaultDataTypes.BIG_DECIMAL, false, metadata.getFunctionLibrary());
             	Function result = new Function(SourceSystemFunctions.FORMATBIGDECIMAL, new Expression[] {bigDecimalParam, function.getArg(1)});
@@ -2099,7 +2097,7 @@ public class QueryRewriter {
             }
         }
 		
-		Integer code = FUNCTION_MAP.get(functionLowerName);
+		Integer code = FUNCTION_MAP.get(functionName);
 		if (code != null) {
 			switch (code) {
 			case 0: { //space(x) => repeat(' ', x)

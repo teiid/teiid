@@ -22,26 +22,20 @@
 
 package org.teiid.core.util;
 
+import static org.junit.Assert.*;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import junit.framework.TestCase;
+import org.junit.Test;
 
 /**
  * @version 	1.0
  * @author
  */
-public class TestStringUtil extends TestCase {
-
-    /**
-     * Constructor for TestStringUtil.
-     * @param name
-     */
-    public TestStringUtil(String name) {
-        super(name);
-    }
+public class TestStringUtil {
 
 	//  ********* H E L P E R   M E T H O D S  *********
 	public void helpTestEncloseInSingleQuotes(String input, String expectedResult){
@@ -80,133 +74,133 @@ public class TestStringUtil extends TestCase {
 	}
 
 	//  ********* T E S T   S U I T E   M E T H O D S  *********
-	public void testEncloseInSingleQuotes() {
+	@Test public void testEncloseInSingleQuotes() {
 	    helpTestEncloseInSingleQuotes("testString", "\'testString\'"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputeDisplayableForm1() {
+	@Test public void testComputeDisplayableForm1() {
 	    helpTestComputeDisplayableForm("testString", "Test String"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputeDisplayableForm2() {
+	@Test public void testComputeDisplayableForm2() {
 	    helpTestComputeDisplayableForm("TEST STRING", "TEST STRING"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-    public void testComputeDisplayableForm3() {
+    @Test public void testComputeDisplayableForm3() {
         helpTestComputeDisplayableForm("TestSTRING", "Test STRING"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputeDisplayableForm4() {
+    @Test public void testComputeDisplayableForm4() {
         helpTestComputeDisplayableForm("MetaMatrix", "Meta Matrix"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputeDisplayableForm5() {
+    @Test public void testComputeDisplayableForm5() {
         helpTestComputeDisplayableForm("metaMatrix", "Meta Matrix"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputeDisplayableForm6() {
+    @Test public void testComputeDisplayableForm6() {
         helpTestComputeDisplayableForm("Metamatrix", "Metamatrix"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputeDisplayableForm7() {
+    @Test public void testComputeDisplayableForm7() {
         helpTestComputeDisplayableForm("SomeMetaMatrixEmbedded", "Some Meta Matrix Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputeDisplayableForm8() {
+    @Test public void testComputeDisplayableForm8() {
         helpTestComputeDisplayableForm("SomeMetaMetaMatrixMetaEmbedded", "Some Meta Meta Matrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputeDisplayableForm9() {
+    @Test public void testComputeDisplayableForm9() {
         helpTestComputeDisplayableForm("SomemetaMatrixMetaMatrixMetaEmbedded", "Somemeta Matrix Meta Matrix Meta Embedded"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	public void testComputePluralForm1() {
+	@Test public void testComputePluralForm1() {
 	    helpTestComputePluralForm("Test", "Tests"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm2() {
+	@Test public void testComputePluralForm2() {
 	    helpTestComputePluralForm("ss", "sses"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm3() {
+	@Test public void testComputePluralForm3() {
 	    helpTestComputePluralForm("x", "xes"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm4() {
+	@Test public void testComputePluralForm4() {
 	    helpTestComputePluralForm("ch", "ches"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm5() {
+	@Test public void testComputePluralForm5() {
 	    helpTestComputePluralForm("zy", "zies"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm6() {
+	@Test public void testComputePluralForm6() {
 	    helpTestComputePluralForm("ay", "ays"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm7() {
+	@Test public void testComputePluralForm7() {
 	    helpTestComputePluralForm("ey", "eys"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm8() {
+	@Test public void testComputePluralForm8() {
 	    helpTestComputePluralForm("iy", "iys"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testComputePluralForm9() {
+	@Test public void testComputePluralForm9() {
 	    helpTestComputePluralForm("oy", "oys"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-    public void testComputePluralForm10() {
+    @Test public void testComputePluralForm10() {
         helpTestComputePluralForm("uy", "uys"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputePluralForm11() {
+    @Test public void testComputePluralForm11() {
         helpTestComputePluralForm("any", "anys"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testComputePluralForm12() {
+    @Test public void testComputePluralForm12() {
         helpTestComputePluralForm("classes", "classes"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-	public void testJoin1() {
-	    List input = new ArrayList();
+	@Test public void testJoin1() {
+	    List<String> input = new ArrayList<String>();
 	    input.add("One"); //$NON-NLS-1$
 	    input.add("Two"); //$NON-NLS-1$
 	    helpTestJoin(input, null, null);
 	}
 
-	public void testJoin2() {
+	@Test public void testJoin2() {
 	    helpTestJoin(null, "/", null); //$NON-NLS-1$
 	}
 
-	public void testJoin3() {
-	    List input = new ArrayList();
+	@Test public void testJoin3() {
+	    List<String> input = new ArrayList<String>();
 	    input.add("One"); //$NON-NLS-1$
 	    input.add("Two"); //$NON-NLS-1$
 	    helpTestJoin(input, "/", "One/Two"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	public void testReplace1() {
+	@Test public void testReplace1() {
 	    helpTestReplace("12225", null, "234", "12225"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	public void testReplace2() {
+	@Test public void testReplace2() {
 	    helpTestReplace("12225", "222", null, "12225"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-	public void testReplace3() {
+	@Test public void testReplace3() {
 	    helpTestReplace("12225", "222", "234", "12345"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
-	public void testReplaceAll() {
+	@Test public void testReplaceAll() {
 	    helpTestReplaceAll("1121121112", "2", "1", "1111111111"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
-    public void testTruncString() {
+    @Test public void testTruncString() {
         helpTestTruncString("123456", 5, "12345"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testGetStackTrace() {
+    @Test public void testGetStackTrace() {
         final String expectedStackTrace = "java.lang.RuntimeException: Test"; //$NON-NLS-1$
         final Throwable t = new RuntimeException("Test"); //$NON-NLS-1$
         final String trace = StringUtil.getStackTrace(t);
@@ -215,15 +209,15 @@ public class TestStringUtil extends TestCase {
         }
     }
 
-    public void testToString() {
+    @Test public void testToString() {
         final String[] input = new String[]{"string1","string2","string3"}; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         final String output = StringUtil.toString(input);
         assertEquals("[string1,string2,string3]", output); //$NON-NLS-1$
     }
 
-    public void testGetTokens() {
+    @Test public void testGetTokens() {
         final String input = "string with; tokens ; delimited by ; ; semicolons; there;; are 7 tokens."; //$NON-NLS-1$
-        final List tokens = StringUtil.getTokens(input,";"); //$NON-NLS-1$
+        final List<String> tokens = StringUtil.getTokens(input,";"); //$NON-NLS-1$
         assertEquals(7, tokens.size());
 		assertEquals("string with", tokens.get(0)); //$NON-NLS-1$
 		assertEquals(" tokens ", tokens.get(1)); //$NON-NLS-1$
@@ -234,8 +228,8 @@ public class TestStringUtil extends TestCase {
 		assertEquals(" are 7 tokens.", tokens.get(6)); //$NON-NLS-1$
     }
 
-    public void testSplitOnEntireString() {
-        List result = StringUtil.splitOnEntireString("thisNEXTcanNEXTbe", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testSplitOnEntireString() {
+        List<String> result = StringUtil.splitOnEntireString("thisNEXTcanNEXTbe", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(3, result.size());
         assertEquals("this", result.get(0)); //$NON-NLS-1$
         assertEquals("can", result.get(1)); //$NON-NLS-1$
@@ -243,33 +237,33 @@ public class TestStringUtil extends TestCase {
 
     }
 
-    public void testSplitOnEntireStringEmptyString() {
-        List result = StringUtil.splitOnEntireString("", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testSplitOnEntireStringEmptyString() {
+        List<String> result = StringUtil.splitOnEntireString("", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(1, result.size());
         assertEquals("", result.get(0)); //$NON-NLS-1$
     }
 
-    public void testSplitOnEntireStringEntireStringIsDelimiter() {
-        List result = StringUtil.splitOnEntireString("NEXT", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testSplitOnEntireStringEntireStringIsDelimiter() {
+        List<String> result = StringUtil.splitOnEntireString("NEXT", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(2, result.size());
         assertEquals("", result.get(0)); //$NON-NLS-1$
         assertEquals("", result.get(1)); //$NON-NLS-1$
     }
 
-    public void testSplitOnEntireStringEmptyDelimiter() {
-        List result = StringUtil.splitOnEntireString("test", ""); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testSplitOnEntireStringEmptyDelimiter() {
+        List<String> result = StringUtil.splitOnEntireString("test", ""); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(1, result.size());
         assertEquals("test", result.get(0)); //$NON-NLS-1$
     }
 
-    public void testSplitOnEntireStringEndsWithDelimiter() {
-        List result = StringUtil.splitOnEntireString("testNEXT", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
+    @Test public void testSplitOnEntireStringEndsWithDelimiter() {
+        List<String> result = StringUtil.splitOnEntireString("testNEXT", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals(2, result.size());
         assertEquals("test", result.get(0)); //$NON-NLS-1$
         assertEquals("", result.get(1)); //$NON-NLS-1$
     }
 
-    public void testIndexOfIgnoreCase() {
+    @Test public void testIndexOfIgnoreCase() {
         String text = "test"; //$NON-NLS-1$
         assertEquals(-1,StringUtil.indexOfIgnoreCase(null,text));
         assertEquals(-1,StringUtil.indexOfIgnoreCase("",text)); //$NON-NLS-1$
@@ -283,7 +277,7 @@ public class TestStringUtil extends TestCase {
         assertEquals(2,StringUtil.indexOfIgnoreCase(text,"ST")); //$NON-NLS-1$
     }
 
-    public void testStartsWithIgnoreCase() {
+    @Test public void testStartsWithIgnoreCase() {
         String text = "test"; //$NON-NLS-1$
         assertEquals(false,StringUtil.startsWithIgnoreCase(null,text));
         assertEquals(false,StringUtil.startsWithIgnoreCase("",text)); //$NON-NLS-1$
@@ -298,7 +292,7 @@ public class TestStringUtil extends TestCase {
         assertEquals(true,StringUtil.startsWithIgnoreCase(text,"TE")); //$NON-NLS-1$
     }
 
-    public void testEndsWithIgnoreCase() {
+    @Test public void testEndsWithIgnoreCase() {
         String text = "test"; //$NON-NLS-1$
         assertEquals(false,StringUtil.endsWithIgnoreCase(null,text));
         assertEquals(false,StringUtil.endsWithIgnoreCase("",text)); //$NON-NLS-1$
@@ -313,30 +307,30 @@ public class TestStringUtil extends TestCase {
         assertEquals(true,StringUtil.endsWithIgnoreCase(text,"ST")); //$NON-NLS-1$
     }
 
-    public void testIsDigits() {
+    @Test public void testIsDigits() {
         assertTrue(StringUtil.isDigits("012872")); //$NON-NLS-1$
         assertTrue(StringUtil.isDigits("634644")); //$NON-NLS-1$
         assertFalse(StringUtil.isDigits("A634644")); //$NON-NLS-1$
         assertFalse(StringUtil.isDigits("634A644")); //$NON-NLS-1$
     }
 
-    public void testToFixedLengthNull() {
+    @Test public void testToFixedLengthNull() {
         assertEquals("    ", StringUtil.toFixedLength(null, 4)); //$NON-NLS-1$
     }
 
-    public void testToFixedLengthPad() {
+    @Test public void testToFixedLengthPad() {
         assertEquals("a   ", StringUtil.toFixedLength("a", 4)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testToFixedLengthNoChange() {
+    @Test public void testToFixedLengthNoChange() {
         assertEquals("abcd", StringUtil.toFixedLength("abcd", 4)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testToFixedLengthChop() {
+    @Test public void testToFixedLengthChop() {
         assertEquals("abcd", StringUtil.toFixedLength("abcdefgh", 4)); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testIsLetter() {
+    @Test public void testIsLetter() {
         assertTrue(StringUtil.isLetter('a'));
         assertTrue(StringUtil.isLetter('A'));
         assertFalse(StringUtil.isLetter('5'));
@@ -346,7 +340,7 @@ public class TestStringUtil extends TestCase {
         assertTrue(StringUtil.isLetter('\u0905')); // Devanagiri letter
     }
 
-    public void testIsDigit() {
+    @Test public void testIsDigit() {
         assertFalse(StringUtil.isDigit('a'));
         assertFalse(StringUtil.isDigit('A'));
         assertTrue(StringUtil.isDigit('5'));
@@ -356,7 +350,7 @@ public class TestStringUtil extends TestCase {
         assertFalse(StringUtil.isDigit('\u0905')); // Devanagiri letter
     }
 
-    public void testIsLetterOrDigit() {
+    @Test public void testIsLetterOrDigit() {
         assertTrue(StringUtil.isLetterOrDigit('a'));
         assertTrue(StringUtil.isLetterOrDigit('A'));
         assertTrue(StringUtil.isLetterOrDigit('5'));
@@ -366,21 +360,12 @@ public class TestStringUtil extends TestCase {
         assertTrue(StringUtil.isLetterOrDigit('\u0905')); // Devanagiri letter
     }
 
-    public void testToUpperCase() {
-        assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", StringUtil.toUpperCase("abcdefghijklmnopqrstuvwxyz1234567890")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("LATIN1_\u00c0", StringUtil.toUpperCase("Latin1_\u00e0")); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    public void testToLowerCase() {
-        assertEquals("abcdefghijklmnopqrstuvwxyz1234567890", StringUtil.toLowerCase("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals("latin1_\u00e0", StringUtil.toLowerCase("Latin1_\u00c0")); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    public void testCreateFileName() {
+    @Test public void testCreateFileName() {
         assertEquals("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", StringUtil.createFileName("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")); //$NON-NLS-1$ //$NON-NLS-2$
         assertEquals("http:__www.metamatrix.com_parm1=test;parm2=testy2", StringUtil.createFileName("http://www.metamatrix.com?parm1=test;parm2=testy2")); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    public void testGetFirstToken(){
+    @Test public void testGetFirstToken(){
     	assertEquals("/foo/bar", StringUtil.getFirstToken("/foo/bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	assertEquals("", StringUtil.getFirstToken("/foo/bar.vdb", "/"));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	assertEquals("/foo", StringUtil.getFirstToken("/foo./bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -388,12 +373,12 @@ public class TestStringUtil extends TestCase {
     	assertEquals("vdb", StringUtil.getLastToken("/foo/bar.vdb", "."));//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
     
-    public enum Test {
+    public enum EnumTest {
     	HELLO,
     	WORLD
     }
     
-    public void testValueOf() throws Exception {
+    @Test public void testValueOf() throws Exception {
     	assertEquals(Integer.valueOf(21), StringUtil.valueOf("21", Integer.class)); //$NON-NLS-1$
     	assertEquals(Boolean.valueOf(true), StringUtil.valueOf("true", Boolean.class)); //$NON-NLS-1$    	
     	assertEquals("Foo", StringUtil.valueOf("Foo", String.class)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -415,7 +400,7 @@ public class TestStringUtil extends TestCase {
     	assertEquals(3, m.size());
     	assertEquals(m.get("foo"), "bar"); //$NON-NLS-1$ //$NON-NLS-2$
     	assertEquals(m.get("x"), ""); //$NON-NLS-1$ //$NON-NLS-2$
-    	assertEquals(Test.HELLO, StringUtil.valueOf("HELLO", Test.class)); //$NON-NLS-1$ 
+    	assertEquals(EnumTest.HELLO, StringUtil.valueOf("HELLO", EnumTest.class)); //$NON-NLS-1$ 
     	
     	assertEquals(new URL("http://teiid.org"), StringUtil.valueOf("http://teiid.org", URL.class)); //$NON-NLS-1$ //$NON-NLS-2$
     }

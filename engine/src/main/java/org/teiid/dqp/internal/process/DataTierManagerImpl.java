@@ -391,7 +391,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 							break;
 						case KEYS:
 							for (KeyRecord key : table.getAllKeys()) {
-								rows.add(Arrays.asList(vdbName, table.getParent().getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
+								rows.add(Arrays.asList(vdbName, schema.getName(), table.getName(), key.getName(), key.getAnnotation(), key.getNameInSource(), key.getType().toString(), 
 										false, (key instanceof ForeignKey)?((ForeignKey)key).getUniqueKeyID():null, key.getUUID(), oid++));
 							}
 							break;

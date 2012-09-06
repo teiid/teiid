@@ -39,13 +39,13 @@ public class KeyRecord extends ColumnSet<Table> {
 	private Type type;
 
 	public KeyRecord(Type type) {
+		if (type == Type.NonUnique) {
+			type = Type.Index;
+		}
 		this.type = type;
 	}
 	
 	public Type getType() {
-		if (type == Type.NonUnique) {
-			type = Type.Index;
-		}
 		return type;
 	}
 	

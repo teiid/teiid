@@ -364,8 +364,8 @@ public final class StringUtil {
 	 * @param delimiter Characters which are delimit tokens
 	 * @return List of string tokens contained in the tokenized string
 	 */
-	public static List getTokens(String str, String delimiter) {
-		ArrayList l = new ArrayList();
+	public static List<String> getTokens(String str, String delimiter) {
+		ArrayList<String> l = new ArrayList<String>();
 		StringTokenizer tokens = new StringTokenizer(str, delimiter);
 		while(tokens.hasMoreTokens()) {
 			l.add(tokens.nextToken());
@@ -835,22 +835,6 @@ public final class StringUtil {
     	return (!(str == null || str.trim().length() == 0));
     }
     
-    public static String toUpperCase(String str) {
-        String newStr = convertBasicLatinToUpper(str);
-        if (newStr == null) {
-            return str.toUpperCase();
-        }
-        return newStr;
-    }
-    
-    public static String toLowerCase(String str) {
-        String newStr = convertBasicLatinToLower(str);
-        if (newStr == null) {
-            return str.toLowerCase();
-        }
-        return newStr;
-    }
-    
     /**
      * Create a valid filename from the given String.
      * 
@@ -892,45 +876,12 @@ public final class StringUtil {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
     
-    private static String convertBasicLatinToUpper(String str) {
-        char[] chars = str.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            if (isBasicLatinLowerCase(chars[i])) {
-                chars[i] = (char)('A' + (chars[i] - 'a'));
-            } else if (!isBasicLatinChar(chars[i])) {
-                return null;
-            }
-        }
-        return new String(chars);
-    }
-    
-    private static String convertBasicLatinToLower(String str) {
-        char[] chars = str.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            if (isBasicLatinUpperCase(chars[i])) {
-                chars[i] = (char)('a' + (chars[i] - 'A'));
-            } else if (!isBasicLatinChar(chars[i])) {
-                return null;
-            }
-        }
-        return new String(chars);
-    }
-    
-    private static boolean isBasicLatinUpperCase(char c) {
-        return c >= 'A' && c <= 'Z';
-    }
-    private static boolean isBasicLatinLowerCase(char c) {
-        return c >= 'a' && c <= 'z';
-    }
     private static boolean isBasicLatinLetter(char c) {
         return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
     }
     private static boolean isBasicLatinDigit(char c) {
         return c >= '0' && c <= '9';
     }
-    private static boolean isBasicLatinChar(char c) {
-        return c <= '\u007F';
-    }   
     
     /**
      * Convert the given value to specified type. 
