@@ -2,7 +2,10 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
@@ -12,6 +15,7 @@ import org.teiid.jdbc.TestMMDatabaseMetaData;
 @SuppressWarnings("nls")
 public class TestODBCSchema extends AbstractMMQueryTestCase {
 	private static final String VDB = "PartsSupplier"; //$NON-NLS-1$
+	private static FakeServer server;
 
 	public TestODBCSchema() {
 		// this is needed because the result files are generated
@@ -19,11 +23,24 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		super.DELIMITER = "\t"; //$NON-NLS-1$
 	}
 	
-    @Before public void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    @BeforeClass public static void oneTimeSetUp() throws Exception {
+    	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	
    	}
+    
+    @AfterClass public static void oneTimeTearDown() {
+    	server.stop();
+    }
+    
+    @Before public void setUp() throws Exception {
+    	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @After public void tearDown() throws Exception {
+    	if (this.internalConnection != null) {
+    		this.internalConnection.close();
+    	}
+    }
    
 	@Test public void test_PG_AM() throws Exception {
 		execute("select * FROM pg_am"); //$NON-NLS-1$

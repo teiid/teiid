@@ -31,7 +31,20 @@ oid          relname                                                            
 29           pg_trigger                                                         4             v        0            0.0        0            false        false     
 30           pg_type                                                            4             v        0            0.0        0            false        false     
 31           pg_user                                                            4             v        0            0.0        0            false        false     
-Row Count : 31
+32           PK_PARTS                                                           1             i        0            0.0        0            false        false     
+33           PK_SHIP_VIA                                                        1             i        0            0.0        0            false        false     
+34           PK_STATUS                                                          1             i        0            0.0        0            false        false     
+35           PK_SUPPLIER                                                        1             i        0            0.0        0            false        false     
+37           PK_SUPPLIER_PARTS                                                  1             i        0            0.0        0            false        false     
+40           matpg_datatype_names                                               4             i        0            0.0        0            false        false     
+41           matpg_datatype_ids                                                 4             i        0            0.0        0            false        false     
+42           pk_matpg_relatt_names                                              4             i        0            0.0        0            false        false     
+43           idx_matpg_relatt_ids                                               4             i        0            0.0        0            false        false     
+44           pk_pg_attr                                                         4             i        0            0.0        0            false        false     
+45           pk_pg_class                                                        4             i        0            0.0        0            false        false     
+46           pk_pg_index                                                        4             i        0            0.0        0            false        false     
+47           pk_pg_proc                                                         4             i        0            0.0        0            false        false     
+Row Count : 44
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_class      11                    10            0         false            false            false       false                 1           true        true          true      false       
 relname        12             PartsSupplier   java.lang.String    relname         string             pg_catalog     pg_class      4000                  4000          0         false            true             false       false                 1           true        true          false     false       

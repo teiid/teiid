@@ -67,7 +67,6 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
@@ -85,6 +84,7 @@ import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
@@ -623,7 +623,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 				}
 			}
 		};
-		PreOrPostOrderNavigator.doVisit(object, ecv, PreOrPostOrderNavigator.PRE_ORDER, true);
+		AggregateStopNavigator asn = new AggregateStopNavigator(ecv);
+		object.acceptVisitor(asn);
 	}
 
 	private void validateNoAggsInClause(LanguageObject clause) {

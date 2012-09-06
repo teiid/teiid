@@ -152,7 +152,21 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as atthasdef " + //$NON-NLS-1$
 				"FROM SYS.Columns as t1 LEFT OUTER JOIN " + //$NON-NLS-1$
 				"SYS.Tables st ON (st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
-				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name";//$NON-NLS-1$
+				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name " +//$NON-NLS-1$
+				"UNION ALL SELECT kc.OID + (SELECT MAX(oid) FROM SYS.Columns) as oid, " + //$NON-NLS-1$
+				"k.oid + (SELECT MAX(OID) FROM SYS.Tables) as attrelid, " + //$NON-NLS-1$
+				"t1.Name as attname, " + //$NON-NLS-1$
+				"pt.oid as atttypid," + //$NON-NLS-1$
+				"pt.typlen as attlen, " + //$NON-NLS-1$
+				"convert(kc.Position, short) as attnum, " + //$NON-NLS-1$
+				"(CASE WHEN (t1.DataType = 'bigdecimal' OR t1.DataType = 'biginteger' OR t1.DataType = 'float' OR t1.DataType='double') THEN (4+(65536*t1.Precision)+t1.Scale) " + //$NON-NLS-1$
+				"ELSE (4+t1.Length) END) as atttypmod, " + //$NON-NLS-1$
+				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
+				"false as attisdropped, " + //$NON-NLS-1$
+				"false as atthasdef " + //$NON-NLS-1$
+				"FROM (SYS.Keys as k INNER JOIN SYS.KeyColumns as kc ON k.uid = kc.uid INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name INNER JOIN " + //$NON-NLS-1$
+				"SYS.Tables as st ON st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
+				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
@@ -200,7 +214,15 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids " + //$NON-NLS-1$
-				"FROM SYS.Tables t1"; //$NON-NLS-1$
+				"FROM SYS.Tables t1 UNION ALL SELECT t1.OID + (SELECT MAX(oid) as max from sys.tables) as oid, t1.name as relname, " +  //$NON-NLS-1$
+				"(SELECT OID FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
+				"convert('i', char) as relkind," + //$NON-NLS-1$
+				"0 as relam, " + //$NON-NLS-1$
+				"convert(0, float) as reltuples, " + //$NON-NLS-1$
+				"0 as relpages, " + //$NON-NLS-1$
+				"false as relhasrules, " + //$NON-NLS-1$
+				"false as relhasoids " + //$NON-NLS-1$
+				"FROM SYS.Keys t1 WHERE t1.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
@@ -235,16 +257,16 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		addPrimaryKey("pk_pg_index", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		String transformation = "SELECT min(t1.OID) as oid, " + //$NON-NLS-1$
-				"min(t1.OID) as indexrelid, " + //$NON-NLS-1$
+		String transformation = "SELECT k.oid as oid, " + //$NON-NLS-1$
+				"k.oid + (SELECT MAX(oid) as max from sys.tables) as indexrelid, " + //$NON-NLS-1$
 				"(SELECT OID FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName) as indrelid, " + //$NON-NLS-1$
 				"cast(count(t1.OID) as short) as indnatts, " + //$NON-NLS-1$
 				"false indisclustered, " + //$NON-NLS-1$
-				"(CASE t1.KeyType WHEN 'Unique' THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
+				"(CASE WHEN t1.KeyType in ('Unique', 'Primary') THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
 				"(CASE t1.KeyType WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
 				"'' as indexprs, asPGVector(" + //$NON-NLS-1$
 				arrayAgg("(select at.attnum FROM pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = (SELECT OID FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName))", "t1.position") +") as indkey " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				"FROM SYS.KeyColumns as t1 GROUP BY t1.uid, t1.KeyType, t1.SchemaName, t1.TableName, t1.Name"; //$NON-NLS-1$
+				"FROM SYS.Keys as k, Sys.KeyColumns as t1 WHERE k.uid = t1.uid GROUP BY k.oid, t1.KeyType, t1.SchemaName, t1.TableName, t1.KeyName"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
