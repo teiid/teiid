@@ -262,4 +262,13 @@ public class TestCommSockets {
 		assertArrayEquals(new String[] {"x","y","z"}, config.getEnabledCipherSuitesAsArray());
 	}
 	
+	@Test public void testAnonSSLMode() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode("enabled");
+		assertFalse(config.isClientEncryptionEnabled());
+		assertTrue(config.isSslEnabled());
+		config.setMode("login");
+		assertTrue(config.isClientEncryptionEnabled());
+	}
+	
 }
