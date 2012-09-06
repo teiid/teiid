@@ -21,11 +21,12 @@
  */
 package org.teiid.translator.jpa;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.cdk.api.TranslationUtility;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Select;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -41,7 +42,7 @@ public class TestJSelectJPQLVisitor {
     	jpaTranslator = new JPA2ExecutionFactory();
     	jpaTranslator.start();
     	
-    	TransformationMetadata metadata = RealMetadataFactory.fromDDL(UnitTestUtil.getTestDataFile("sakila.ddl"), "sakila", "sakila");
+    	TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("sakila.ddl")), "sakila", "sakila");
     	utility = new TranslationUtility(metadata);
     	
     }

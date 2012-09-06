@@ -22,7 +22,6 @@
 
 package org.teiid.query.unittest;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -61,11 +60,13 @@ import org.teiid.query.mapping.xml.MappingSequenceNode;
 import org.teiid.query.mapping.xml.MappingVisitor;
 import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.sql.lang.SPParameter;
+import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class RealMetadataFactory {
@@ -342,7 +343,10 @@ public class RealMetadataFactory {
 				udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true));
 			}
 		}
-    	return new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
+    	TransformationMetadata metadata = new TransformationMetadata(vdbMetaData, store, null, SFM.getSystemFunctions(), udfs);
+    	vdbMetaData.addAttchment(TransformationMetadata.class, metadata);
+    	vdbMetaData.addAttchment(QueryMetadataInterface.class, metadata);
+    	return metadata;
 	}
 	
     /** 
@@ -2666,8 +2670,13 @@ public class RealMetadataFactory {
 		return createTransformationMetadata(metadataStore, "example4");
 	}
 	
-	public static TransformationMetadata fromDDL(File ddlFile, String vdbName, String modelName) throws Exception {
-		MetadataFactory mf = new TestDDLParser().buildMetadataFactory(ddlFile, modelName);
-		return createTransformationMetadata(mf.asMetadataStore(), vdbName);
+	public static TransformationMetadata fromDDL(String ddl, String vdbName, String modelName) throws Exception {
+		MetadataFactory mf = TestDDLParser.helpParse(ddl, modelName);
+		TransformationMetadata tm = createTransformationMetadata(mf.asMetadataStore(), vdbName);
+    	ValidatorReport report = new MetadataValidator().validate(tm.getVdbMetaData(), tm.getMetadataStore());
+    	if (report.hasItems()) {
+    		throw new RuntimeException(report.getFailureMessage());
+    	}
+    	return tm;
 	}	
 }

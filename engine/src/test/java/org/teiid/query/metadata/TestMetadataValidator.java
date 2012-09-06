@@ -178,8 +178,8 @@ public class TestMetadataValidator {
 	
 	@Test
 	public void testCrossReferenceFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));";
-		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2), FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1(g1e1, g1e2))";		
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));";
+		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2), FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1(g1e1, g1e2))";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		buildModel("pm2", true, this.vdb, this.store, ddl2);
@@ -197,8 +197,8 @@ public class TestMetadataValidator {
 	
 	@Test
 	public void testCrossReferenceFKFromUniqueKey() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT UNIQUE(g1e2));";
-		String ddl2 = "CREATE FOREIGN TABLE G2(g2e1 integer, g2e2 varchar CONSTRAINT FOREIGN KEY (g2e2) REFERENCES pm1.G1(g1e2))";		
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, UNIQUE(g1e2));";
+		String ddl2 = "CREATE FOREIGN TABLE G2(g2e1 integer, g2e2 varchar, FOREIGN KEY (g2e2) REFERENCES pm1.G1(g1e2))";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		buildModel("pm2", true, this.vdb, this.store, ddl2);
@@ -216,8 +216,8 @@ public class TestMetadataValidator {
 
 	@Test
 	public void testCrossReferenceResoveOptionalFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));";
-		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1)";		
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));";
+		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1)";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		buildModel("pm2", true, this.vdb, this.store, ddl2);
@@ -236,8 +236,8 @@ public class TestMetadataValidator {
 	@Test
 	public void testCrossReferenceFKNoPKonRefTable() throws Exception {
 		// note here the unique here does not matter for non-existent reference columns, only primary key counted.
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT UNIQUE(g1e1, g1e2));";
-		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2), FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1)";		
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, UNIQUE(g1e1, g1e2));";
+		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2), FOREIGN KEY (g2e1, g2e2) REFERENCES pm1.G1)";		
 		
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		buildModel("pm2", true, this.vdb, this.store, ddl2);

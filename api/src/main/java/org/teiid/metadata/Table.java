@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -57,10 +58,10 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private boolean isSystem;
     private boolean isMaterialized;
     private boolean supportsUpdate;
-    private List<ForeignKey> foriegnKeys = new LinkedList<ForeignKey>();
-    private List<KeyRecord> indexes = new LinkedList<KeyRecord>();
-    private List<KeyRecord> uniqueKeys = new LinkedList<KeyRecord>();
-    private List<KeyRecord> accessPatterns = new LinkedList<KeyRecord>();
+    private List<ForeignKey> foriegnKeys = new ArrayList<ForeignKey>(2);
+    private List<KeyRecord> indexes = new ArrayList<KeyRecord>(2);
+    private List<KeyRecord> uniqueKeys = new ArrayList<KeyRecord>(2);
+    private List<KeyRecord> accessPatterns = new ArrayList<KeyRecord>(2);
     private KeyRecord primaryKey;
 
     //view information
@@ -208,15 +209,6 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     public void setForiegnKeys(List<ForeignKey> foriegnKeys) {
 		this.foriegnKeys = foriegnKeys;
 	}
-    
-    public ForeignKey getForeignKey(String name) {
-    	for (ForeignKey fk:this.foriegnKeys) {
-    		if (fk.getName().equals(name)) {
-    			return fk;
-    		}
-    	}
-    	return null;
-    }
     
     public List<KeyRecord> getIndexes() {
     	return this.indexes;

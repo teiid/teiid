@@ -22,8 +22,6 @@ package org.teiid.query.parser;
  */
 import static org.junit.Assert.*;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -31,7 +29,6 @@ import java.util.Properties;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.MetadataValidator;
@@ -146,7 +143,7 @@ public class TestDDLParser {
 	
 	@Test
 	public void testMultiKeyPK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT PRIMARY KEY (e1, e2))";
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, PRIMARY KEY (e1, e2))";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -159,7 +156,7 @@ public class TestDDLParser {
 	
 	@Test
 	public void testOptionsKey() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT UNIQUE (e1) OPTIONS (CUSTOM_PROP 'VALUE'))";
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, UNIQUE (e1) OPTIONS (CUSTOM_PROP 'VALUE'))";
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
 		
@@ -171,8 +168,8 @@ public class TestDDLParser {
 	
 	@Test
 	public void testConstraints() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date " +
-				" CONSTRAINT PRIMARY KEY (e1, e2), INDEX(e2, e3), ACCESSPATTERN(e1), UNIQUE(e1)," +
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, " +
+				" PRIMARY KEY (e1, e2), INDEX(e2, e3), ACCESSPATTERN(e1), UNIQUE(e1)," +
 				" ACCESSPATTERN(e2, e3))";
 
 		Schema s = helpParse(ddl, "model").getSchema();
@@ -191,7 +188,7 @@ public class TestDDLParser {
 	
 	@Test
 	public void testConstraints2() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT " +
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, " +
 				"ACCESSPATTERN(e1), UNIQUE(e1), ACCESSPATTERN(e2, e3))";
 
 		Schema s = helpParse(ddl, "model").getSchema();
@@ -218,8 +215,8 @@ public class TestDDLParser {
 
 	@Test
 	public void testFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n" +
-				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT " +
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, " +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
 		
 		Schema s = helpParse(ddl, "model").getSchema();
@@ -237,8 +234,8 @@ public class TestDDLParser {
 	
 	@Test
 	public void testOptionalFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n" +
-				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2)," +
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
 		
 		MetadataFactory s = helpParse(ddl, "model");
@@ -269,7 +266,7 @@ public class TestDDLParser {
 	@Test
 	public void testOptionalFKFail() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar);\n" +
-				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2)," +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
 		
 		MetadataFactory s = helpParse(ddl, "model");
@@ -297,9 +294,9 @@ public class TestDDLParser {
 	
 	@Test
 	public void testFKAccrossSchemas() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n";
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n";
 		
-		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2)," +
+		String ddl2 = "CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES model.G1)";		
 		
 		MetadataFactory f1 = helpParse(ddl, "model");
@@ -646,12 +643,6 @@ public class TestDDLParser {
 		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf, ddl);
 		return mf;
-	}
-	
-	public MetadataFactory buildMetadataFactory(File ddlFile, String model) throws IOException, ParseException {
-		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
-		parser.parseDDL(mf, ObjectConverterUtil.convertFileToString(ddlFile));
-		return mf;		
 	}
 	
 	public static Map<String, Datatype> getDataTypes() {

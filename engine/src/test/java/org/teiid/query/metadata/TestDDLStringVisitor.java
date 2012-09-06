@@ -78,10 +78,10 @@ public class TestDDLStringVisitor {
 		e6.setDefaultValue("hello");
 		
 		mf.addPrimaryKey("PK", Arrays.asList("e1"), table);
-		mf.addIndex("UK", false, Arrays.asList("e2"), table);
-		mf.addIndex("UK2", false, Arrays.asList("e3"), table);
-		mf.addIndex("IDX", true, Arrays.asList("e5"), table);
-		mf.addIndex("IDX2", true, Arrays.asList("e6"), table);
+		mf.addIndex("UNIQUE0", false, Arrays.asList("e2"), table);
+		mf.addIndex("UNIQUE1", false, Arrays.asList("e3"), table);
+		mf.addIndex("INDEX0", true, Arrays.asList("e5"), table);
+		mf.addIndex("INDEX1", true, Arrays.asList("e6"), table);
 		
 		Map<String, String> options = new HashMap<String, String>();
 		options.put("CARDINALITY", "12");
@@ -97,45 +97,45 @@ public class TestDDLStringVisitor {
 	
 	@Test
 	public void testMultiKeyPK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT PRIMARY KEY (e1, e2))";
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, PRIMARY KEY (e1, e2))";
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
 				"	e1 integer,\n" + 
 				"	e2 string,\n" + 
-				"	e3 date\n" + 
-				"	CONSTRAINT PRIMARY KEY(e1, e2)\n" + 
+				"	e3 date,\n" + 
+				"	PRIMARY KEY(e1, e2)\n" + 
 				");";
 		helpTest(ddl, expected);
 	}	
 	
 	@Test
 	public void testConstraints2() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date CONSTRAINT " +
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, " +
 				"ACCESSPATTERN(e1), UNIQUE(e1), ACCESSPATTERN(e2, e3))";
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
 				"	e1 integer UNIQUE,\n" + 
 				"	e2 string,\n" + 
-				"	e3 date\n" + 
-				"	CONSTRAINT ACCESSPATTERN(e1), ACCESSPATTERN(e2, e3)\n" + 
+				"	e3 date,\n" + 
+				"	ACCESSPATTERN(e1),\n	ACCESSPATTERN(e2, e3)\n" + 
 				");";
 		helpTest(ddl, expected);
 	}		
 	
 	@Test
 	public void testFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE G1(\"g1-e1\" integer, g1e2 varchar CONSTRAINT PRIMARY KEY(\"g1-e1\", g1e2));\n" +
-				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT " +
+		String ddl = "CREATE FOREIGN TABLE G1(\"g1-e1\" integer, g1e2 varchar, PRIMARY KEY(\"g1-e1\", g1e2));\n" +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, " +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
 		
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
 				"	\"g1-e1\" integer,\n" + 
-				"	g1e2 string\n" + 
-				"	CONSTRAINT PRIMARY KEY(\"g1-e1\", g1e2)\n" + 
+				"	g1e2 string,\n" + 
+				"	PRIMARY KEY(\"g1-e1\", g1e2)\n" + 
 				");\n" + 
 				"\n" + 
 				"CREATE FOREIGN TABLE G2 (\n" + 
 				"	g2e1 integer,\n" + 
-				"	g2e2 string\n" + 
-				"	CONSTRAINT FOREIGN KEY(g2e1, g2e2) REFERENCES G1 (g1e1, g1e2)\n" + 
+				"	g2e2 string,\n" + 
+				"	FOREIGN KEY(g2e1, g2e2) REFERENCES G1 (g1e1, g1e2)\n" + 
 				");";
 		
 		helpTest(ddl, expected);
@@ -143,19 +143,19 @@ public class TestDDLStringVisitor {
 	
 	@Test
 	public void testOptionalFK() throws Exception {
-		String ddl = "CREATE FOREIGN TABLE \"G1+\"(g1e1 integer, g1e2 varchar CONSTRAINT PRIMARY KEY(g1e1, g1e2));\n" +
-				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar CONSTRAINT PRIMARY KEY(g2e1, g2e2)," +
+		String ddl = "CREATE FOREIGN TABLE \"G1+\"(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
+				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, PRIMARY KEY(g2e1, g2e2)," +
 				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1)";
 		String expected = "CREATE FOREIGN TABLE \"G1+\" (\n" + 
 				"	g1e1 integer,\n" + 
-				"	g1e2 string\n" + 
-				"	CONSTRAINT PRIMARY KEY(g1e1, g1e2)\n" + 
+				"	g1e2 string,\n" + 
+				"	PRIMARY KEY(g1e1, g1e2)\n" + 
 				");\n" + 
 				"\n" + 
 				"CREATE FOREIGN TABLE G2 (\n" + 
 				"	g2e1 integer,\n" + 
-				"	g2e2 string\n" + 
-				"	CONSTRAINT PRIMARY KEY(g2e1, g2e2), FOREIGN KEY(g2e1, g2e2) REFERENCES G1 \n" + 
+				"	g2e2 string,\n" + 
+				"	PRIMARY KEY(g2e1, g2e2),\n	FOREIGN KEY(g2e1, g2e2) REFERENCES G1 \n" + 
 				");";
 		helpTest(ddl, expected);
 	}	

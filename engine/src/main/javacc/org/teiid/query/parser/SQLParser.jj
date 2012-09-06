@@ -4689,6 +4689,7 @@ void createTable(MetadataFactory factory) :
 	boolean view = false;
 	Command query = null;
 	Token comment = null;
+	String name = null;
 }
 {
 	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
@@ -4703,14 +4704,10 @@ void createTable(MetadataFactory factory) :
 	}
 	[<LPAREN>
     createColumn(factory, table)
-    (LOOKAHEAD(2) <COMMA>
+    (LOOKAHEAD(3) <COMMA>
       createColumn(factory, table)
     )*	
-    [<CONSTRAINT> (primaryKeys(factory, table) | constraints(factory, table) | foreignKeys(factory, table))
-        (<COMMA>
-         (primaryKeys(factory, table) | constraints(factory, table)|foreignKeys(factory, table))
-        )*
-    ]    
+    (<COMMA>{name=null;} [<CONSTRAINT> name = id()] (primaryKeys(factory, table, name) | constraints(factory, table, name) | foreignKeys(factory, table, name)))*
     <RPAREN>]    
     [optionsClause(table, factory)
 	   {
@@ -4740,7 +4737,7 @@ name=foreign key
 description=Defines the foreign key referential constraint.
 example={code:sql}FOREIGN KEY (a, b) REFERENCES tbl (x, y){code}
 */
-void foreignKeys(MetadataFactory factory, Table table) :
+void foreignKeys(MetadataFactory factory, Table table, String name) :
 {
 	List<String> columnNames = null;
 	String viewName = null;
@@ -4763,7 +4760,7 @@ void foreignKeys(MetadataFactory factory, Table table) :
     [pkColumnNames = getColumnNames()]
     {
 	    try{
-		    key = factory.addForiegnKey("FK"+table.getForeignKeys().size(), columnNames, pkColumnNames, viewName, table);   
+		    key = factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
 	    } catch (TranslatorException e){
 	    	throw new ParseException(e.getMessage());
 	    }
@@ -4780,7 +4777,7 @@ name=primary key
 description=Defines the primary key.
 example={code:sql}PRIMARY KEY (a, b){code}
 */
-void primaryKeys(MetadataFactory factory, Table table) :
+void primaryKeys(MetadataFactory factory, Table table, String name) :
 {
 	List<String> columnNames = null;
 	Column column = null;
@@ -4797,7 +4794,7 @@ void primaryKeys(MetadataFactory factory, Table table) :
 	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 	 	}
 	 	try{
-	 		key = factory.addPrimaryKey("PK", columnNames, table);
+	 		key = factory.addPrimaryKey(name!=null?name:"PK", columnNames, table);
 	 	} catch(TranslatorException e){
 	 		throw new ParseException(e.getMessage());
 	 	}
@@ -4814,7 +4811,7 @@ name=other constraints
 description=Defines ACCESSPATTERN and UNIQUE constraints and INDEXes. 
 example={code:sql}UNIQUE (a){code}
 */
-void constraints(MetadataFactory factory, Table table) :
+void constraints(MetadataFactory factory, Table table, String name) :
 {
 	KeyRecord keyrecord = null;
 	Column column = null;
@@ -4824,20 +4821,18 @@ void constraints(MetadataFactory factory, Table table) :
 }
 {
 	( type = <UNIQUE> | type = <INDEX> | type = <ACCESSPATTERN>)
-    {
+	{
 	    columnNames = getColumnNames();	    
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
 	    }
 	    try{
 	    	if (type.image.equalsIgnoreCase("INDEX")) { 
-	    		key = factory.addIndex("INDEX"+table.getIndexes().size(), true, columnNames, table);
-	    	}
-	    	if (type.image.equalsIgnoreCase("UNIQUE")) { 
-	    		key = factory.addIndex("UNIQUE"+table.getUniqueKeys().size(), false, columnNames, table);
-	    	}	    
-	    	if (type.image.equalsIgnoreCase("ACCESSPATTERN")) { 
-	    		key = factory.addAccessPattern("AP"+table.getAccessPatterns().size(), columnNames, table);
+	    		key = factory.addIndex(name != null?name:("INDEX"+table.getIndexes().size()), true, columnNames, table);
+	    	} else if (type.image.equalsIgnoreCase("UNIQUE")) { 
+	    		key = factory.addIndex(name != null?name:("UNIQUE"+table.getUniqueKeys().size()), false, columnNames, table);
+	    	} else if (type.image.equalsIgnoreCase("ACCESSPATTERN")) { 
+	    		key = factory.addAccessPattern(name != null?name:("AP"+table.getAccessPatterns().size()), columnNames, table);
 	    	}
     	}catch(TranslatorException e){
     		throw new ParseException(e.getMessage());
@@ -4928,18 +4923,14 @@ void createColumn(MetadataFactory factory, Table table) :
 	 {
 	 	try{
 		    if (index){
-		 		factory.addIndex(element, true, columnName, table);
-		 	}
-		 	
-		    if (unique){
-		 		factory.addIndex(element, false, columnName, table);
-		 	}	 	
-		 	
-		    if (pk) {
+		 		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table);
+		 	} else if (unique){
+		 		factory.addIndex("UNIQUE"+table.getIndexes().size(), false, columnName, table);
+		 	} else if (pk) {
 		    	if (table.getPrimaryKey() != null) {
 		    		throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 		    	}
-		 		factory.addPrimaryKey(element, columnName, table);
+		 		factory.addPrimaryKey("PK", columnName, table);
 		 	}
     	}catch(TranslatorException e){
     		throw new ParseException(e.getMessage());

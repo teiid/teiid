@@ -126,13 +126,13 @@ public class JPAMetadataProcessor {
 			c.setUpdatable(true);
 			return c;
 		}
-		return entityTable.getColumn(name);
+		return entityTable.getColumnByName(name);
 	}
 	
 	private void addForiegnKey(MetadataFactory mf, String name, List<String> columnNames, String referenceTable, Table table) throws TranslatorException {
 		ForeignKey fk = mf.addForiegnKey("FK_"+name, columnNames, referenceTable, table);
 		for (String column:columnNames) {
-			Column c = table.getColumn(column);
+			Column c = table.getColumnByName(column);
 			c.setProperty(KEY_ASSOSIATED_WITH_FOREIGN_TABLE, mf.getName()+Tokens.DOT+referenceTable);
 		}
 		fk.setNameInSource(name);

@@ -50,7 +50,7 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
     	}
     	Map<String, Column> map = columnMap;
     	if (map == null) {
-    		map = new TreeMap<String, Column>();
+    		map = new TreeMap<String, Column>(String.CASE_INSENSITIVE_ORDER);
     		for (Column c : columns) {
 				map.put(c.getName(), c);
 			}
@@ -84,12 +84,4 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
 		this.parent = parent;
 	}
 
-    public Column getColumn(String name) {
-    	for (Column c:columns) {
-    		if (c.getCanonicalName().equals(name.toUpperCase())) {
-    			return c;
-    		}
-    	}
-    	return null;
-    }
 }

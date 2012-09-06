@@ -156,14 +156,7 @@ public class DDLStringVisitor {
 				}
 				visit(c, table);
 			}
-			
-			// constraints
-			String contraints = buildContraints(table);
-			if (!contraints.isEmpty()) {
-				buffer.append(NEWLINE).append(TAB);
-				buffer.append(CONSTRAINT);
-				buffer.append(contraints);
-			}
+			buildContraints(table);
 			buffer.append(NEWLINE);
 			buffer.append(RPAREN);			
 		}
@@ -237,78 +230,48 @@ public class DDLStringVisitor {
 		}
 	}
 	
-	private String buildContraints(Table table) {
-		StringBuilder options = new StringBuilder();
-		
-		boolean first = true;
-		for (KeyRecord key:table.getAccessPatterns()) {
-			if (first) {
-				first = false;
-			}
-			else {
-				options.append(COMMA);
-			}			
-			options.append(SPACE).append(ACCESSPATTERN);
-			addColumns(options, key.getColumns(), false);
-		}
-		
+	private void buildContraints(Table table) {
+		addConstraints(table.getAccessPatterns(), "AP", ACCESSPATTERN); //$NON-NLS-1$
 		
 		KeyRecord pk = table.getPrimaryKey();
-		if (pk != null && pk.getColumns().size() > 1) {
-			if (first) {
-				first = false;
-			}
-			else {
-				options.append(COMMA);
-			}
-			options.append(SPACE).append(PRIMARY_KEY);
-			addColumns(options, pk.getColumns(), false);
+		if (pk != null) {
+			addConstraint("PK", PRIMARY_KEY, pk); //$NON-NLS-1$
 		}
-		
-		for (KeyRecord key:table.getUniqueKeys()) {
-			if (key != null && key.getColumns().size() > 1) {
-				if (first) {
-					first = false;
-				}
-				else {
-					options.append(COMMA);
-				}
-				options.append(SPACE).append(UNIQUE);
-				addColumns(options, key.getColumns(), false);
-			}
-		}
-		
-		for (KeyRecord key:table.getIndexes()) {
-			if (key != null && key.getColumns().size() > 1) {
-				if (first) {
-					first = false;
-				}
-				else {
-					options.append(COMMA);
-				}				
-				options.append(SPACE).append(INDEX);
-				addColumns(options, key.getColumns(), false);
-			}
-		}		
 
-		for (ForeignKey key:table.getForeignKeys()) {
-			if (first) {
-				first = false;
-			}
-			else {
-				options.append(COMMA);
-			}			
-			options.append(SPACE).append(FOREIGN_KEY);
-			addColumns(options, key.getColumns(), false);
-			options.append(SPACE).append(REFERENCES);
+		addConstraints(table.getUniqueKeys(), UNIQUE, UNIQUE);
+		addConstraints(table.getIndexes(), INDEX, INDEX);
+
+		for (int i = 0; i < table.getForeignKeys().size(); i++) {
+			ForeignKey key = table.getForeignKeys().get(i);
+			addConstraint("FK" + i, FOREIGN_KEY, key); //$NON-NLS-1$
+			buffer.append(SPACE).append(REFERENCES);
 			if (key.getReferenceTableName() != null) {
-				options.append(SPACE).append(key.getReferenceTableName());
+				buffer.append(SPACE).append(key.getReferenceTableName());
 			}
-			options.append(SPACE);
-			addNames(options, key.getReferenceColumns());
+			buffer.append(SPACE);
+			addNames(buffer, key.getReferenceColumns());
 		}
-		
-		return options.toString();
+	}
+
+	private void addConstraints(List<KeyRecord> constraints, String defaultName, String type) {
+		for (int i = 0; i < constraints.size(); i++) {
+			KeyRecord constraint = constraints.get(i);
+			addConstraint(defaultName + i, type, constraint);
+		}
+	}
+
+	private void addConstraint(String defaultName, String type,
+			KeyRecord constraint) {
+		if (constraint.getType() != KeyRecord.Type.AccessPattern && constraint.getColumns().size() <= 1) {
+			return;
+		}
+		buffer.append(COMMA).append(NEWLINE).append(TAB);
+		boolean nameMatches = defaultName.equals(constraint.getName());
+		if (!nameMatches) {
+			buffer.append(CONSTRAINT).append(SPACE).append(SQLStringVisitor.escapeSinglePart(constraint.getName())).append(SPACE);	
+		}
+		buffer.append(type);
+		addColumns(buffer, constraint.getColumns(), false);
 	}
 
 	private void addColumns(StringBuilder builder, List<Column> columns, boolean includeType) {
