@@ -162,7 +162,6 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 					if (joinCriteria == null || joinCriteria.isEmpty()) {
 						joinCriteria = new ArrayList<Criteria>();
 						joinCriteria.add(cc);
-						joinNode.setProperty(Info.JOIN_TYPE, JoinType.JOIN_INNER);
 					}
 				}
         		joinNode.setProperty(Info.NON_EQUI_JOIN_CRITERIA, joinCriteria);

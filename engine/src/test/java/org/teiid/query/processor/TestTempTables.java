@@ -476,6 +476,7 @@ public class TestTempTables {
 		execute("insert into x (e2, e1) values (2, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x1 (e2, e1) values (3, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("select x.e1 from x makenotdep, x1 makenotdep where x.e2 = x1.e2 and x.e1 = x1.e1", new List[0]); //$NON-NLS-1$
+		execute("select x.e1 from x left outer join x1 on x.e2 = x1.e2 and x.e1 = x1.e1", new List[] {Arrays.asList("b")}); //$NON-NLS-1$
 	}
 	
 	private void sampleTable() throws Exception {
