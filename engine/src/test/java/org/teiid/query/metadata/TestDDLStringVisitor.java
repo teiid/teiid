@@ -44,12 +44,17 @@ public class TestDDLStringVisitor {
 	public void testForeignTable() throws Exception {
 		
 		String ddl = "CREATE FOREIGN TABLE G1 (\n" + 
-				"	e1 integer PRIMARY KEY,\n" + 
-				"	e2 string(10) UNIQUE,\n" + 
-				"	e3 date NOT NULL UNIQUE,\n" + 
+				"	e1 integer,\n" + 
+				"	e2 string(10),\n" + 
+				"	e3 date NOT NULL,\n" + 
 				"	e4 bigdecimal(12,3),\n" + 
-				"	e5 integer AUTO_INCREMENT INDEX OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE false),\n" + 
-				"	e6 string INDEX DEFAULT 'hello'\n" + 
+				"	e5 integer AUTO_INCREMENT OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE false),\n" + 
+				"	e6 string DEFAULT 'hello',\n" +
+				"	PRIMARY KEY(e1),\n" +
+				"	UNIQUE(e2),\n" +
+				"	UNIQUE(e3),\n" +
+				"	INDEX(e5),\n" +
+				"	INDEX(e6)\n" +
 				") OPTIONS (ANNOTATION 'Test Table', CARDINALITY '12', FOO 'BAR', UPDATABLE 'true', UUID 'uuid2');";
 		
 		MetadataFactory mf = new MetadataFactory("test", 1, "model", TestDDLParser.getDataTypes(), new Properties(), null);
@@ -110,12 +115,12 @@ public class TestDDLStringVisitor {
 	@Test
 	public void testConstraints2() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, " +
-				"ACCESSPATTERN(e1), UNIQUE(e1), ACCESSPATTERN(e2, e3))";
+				"ACCESSPATTERN(e1), UNIQUE(e1) options (x true), ACCESSPATTERN(e2, e3))";
 		String expected = "CREATE FOREIGN TABLE G1 (\n" + 
-				"	e1 integer UNIQUE,\n" + 
+				"	e1 integer,\n" + 
 				"	e2 string,\n" + 
 				"	e3 date,\n" + 
-				"	ACCESSPATTERN(e1),\n	ACCESSPATTERN(e2, e3)\n" + 
+				"	ACCESSPATTERN(e1),\n	ACCESSPATTERN(e2, e3),\n	UNIQUE(e1) OPTIONS (x 'true')\n" + 
 				");";
 		helpTest(ddl, expected);
 	}		

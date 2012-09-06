@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.teiid.adminapi.Admin.SchemaObjectType;
@@ -154,7 +155,7 @@ public class DDLStringVisitor {
 				else {
 					buffer.append(COMMA);
 				}
-				visit(c, table);
+				visit(c);
 			}
 			buildContraints(table);
 			buffer.append(NEWLINE);
@@ -235,7 +236,7 @@ public class DDLStringVisitor {
 		
 		KeyRecord pk = table.getPrimaryKey();
 		if (pk != null) {
-			addConstraint("PK", PRIMARY_KEY, pk); //$NON-NLS-1$
+			addConstraint("PK", PRIMARY_KEY, pk, true); //$NON-NLS-1$
 		}
 
 		addConstraints(table.getUniqueKeys(), UNIQUE, UNIQUE);
@@ -243,28 +244,26 @@ public class DDLStringVisitor {
 
 		for (int i = 0; i < table.getForeignKeys().size(); i++) {
 			ForeignKey key = table.getForeignKeys().get(i);
-			addConstraint("FK" + i, FOREIGN_KEY, key); //$NON-NLS-1$
+			addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
 			buffer.append(SPACE).append(REFERENCES);
 			if (key.getReferenceTableName() != null) {
 				buffer.append(SPACE).append(key.getReferenceTableName());
 			}
 			buffer.append(SPACE);
 			addNames(buffer, key.getReferenceColumns());
+			appendOptions(key);
 		}
 	}
 
 	private void addConstraints(List<KeyRecord> constraints, String defaultName, String type) {
 		for (int i = 0; i < constraints.size(); i++) {
 			KeyRecord constraint = constraints.get(i);
-			addConstraint(defaultName + i, type, constraint);
+			addConstraint(defaultName + i, type, constraint, true);
 		}
 	}
 
 	private void addConstraint(String defaultName, String type,
-			KeyRecord constraint) {
-		if (constraint.getType() != KeyRecord.Type.AccessPattern && constraint.getColumns().size() <= 1) {
-			return;
-		}
+			KeyRecord constraint, boolean addOptions) {
 		buffer.append(COMMA).append(NEWLINE).append(TAB);
 		boolean nameMatches = defaultName.equals(constraint.getName());
 		if (!nameMatches) {
@@ -272,6 +271,9 @@ public class DDLStringVisitor {
 		}
 		buffer.append(type);
 		addColumns(buffer, constraint.getColumns(), false);
+		if (addOptions) {
+			appendOptions(constraint);
+		}
 	}
 
 	private void addColumns(StringBuilder builder, List<Column> columns, boolean includeType) {
@@ -309,39 +311,13 @@ public class DDLStringVisitor {
 		}
 	}	
 	
-	private void visit(Column column, Table table) {
+	private void visit(Column column) {
 		buffer.append(NEWLINE).append(TAB);
 		appendColumn(buffer, column, true, true);
 		
 		if (column.isAutoIncremented()) {
 			buffer.append(SPACE).append(AUTO_INCREMENT);
 		}
-		
-		KeyRecord pk = table.getPrimaryKey();
-		if (pk != null && pk.getColumns().size() == 1) {
-			Column c = pk.getColumns().get(0);
-			if (column.equals(c)) {
-				buffer.append(SPACE).append(PRIMARY_KEY);
-			}
-		}
-		
-		for (KeyRecord key:table.getUniqueKeys()) {
-			if (key != null && key.getColumns().size() == 1) {
-				Column c = key.getColumns().get(0);
-				if (column.equals(c)) {
-					buffer.append(SPACE).append(UNIQUE);
-				}
-			}
-		}
-		
-		for (KeyRecord key:table.getIndexes()) {
-			if (key != null && key.getColumns().size() == 1) {
-				Column c = key.getColumns().get(0);
-				if (column.equals(c)) {
-					buffer.append(SPACE).append(INDEX);
-				}
-			}
-		}		
 		
 		appendDefault(column);
 		
@@ -460,9 +436,21 @@ public class DDLStringVisitor {
 			addOption(options, DISTINCT_VALUES, column.getDistinctValues());
 		}		
 		
-		if (!column.getProperties().isEmpty()) {
-			for (String key:column.getProperties().keySet()) {
-				addOption(options, key, column.getProperty(key, false));
+		buildOptions(column, options);
+	}
+	
+	private void appendOptions(AbstractMetadataRecord record) {
+		StringBuilder options = new StringBuilder();
+		buildOptions(record, options);
+		if (options.length() != 0) {
+			buffer.append(SPACE).append(OPTIONS).append(SPACE).append(LPAREN).append(options).append(RPAREN);
+		}
+	}
+
+	private void buildOptions(AbstractMetadataRecord record, StringBuilder options) {
+		if (!record.getProperties().isEmpty()) {
+			for (Map.Entry<String, String> entry:record.getProperties().entrySet()) {
+				addOption(options, entry.getKey(), entry.getValue());
 			}
 		}
 	}	
