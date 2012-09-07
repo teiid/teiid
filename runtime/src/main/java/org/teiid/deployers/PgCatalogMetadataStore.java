@@ -166,7 +166,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false as atthasdef " + //$NON-NLS-1$
 				"FROM (SYS.Keys as k INNER JOIN SYS.KeyColumns as kc ON k.uid = kc.uid INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name INNER JOIN " + //$NON-NLS-1$
 				"SYS.Tables as st ON st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
-				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name"; //$NON-NLS-1$
+				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE k.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
