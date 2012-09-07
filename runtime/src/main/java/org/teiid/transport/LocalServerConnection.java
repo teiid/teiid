@@ -81,6 +81,7 @@ public class LocalServerConnection implements ServerConnection {
 		
 		workContext.setSecurityHelper(csr.getSecurityHelper());
 		workContext.setUseCallingThread(useCallingThread);
+		workContext.setSecurityContext(csr.getSecurityHelper().getSecurityContext());
 		authenticate();
 		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	}

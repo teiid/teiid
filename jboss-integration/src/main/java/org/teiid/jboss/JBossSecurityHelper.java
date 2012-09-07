@@ -50,12 +50,8 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 	}
 	
 	@Override
-	public Object getSecurityContext(String securityDomain) {
-		SecurityContext sc = SecurityActions.getSecurityContext();
-		if (sc != null && sc.getSecurityDomain().equals(securityDomain)) {
-			return sc;
-		}
-		return null;
+	public Object getSecurityContext() {
+		return SecurityActions.getSecurityContext();
 	}	
 	
 	@Override
@@ -88,6 +84,11 @@ public class JBossSecurityHelper implements SecurityHelper, Serializable {
 			}
 		}
 		return false;
+	}
+			
+	@Override
+	public String getSecurityDomain(Object context) {
+		return ((SecurityContext)context).getSecurityDomain();
 	}
 	
 }

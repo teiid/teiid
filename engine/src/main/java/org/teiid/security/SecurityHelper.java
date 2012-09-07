@@ -32,11 +32,13 @@ public interface SecurityHelper {
 	
 	void clearSecurityContext();
 	
-	Object getSecurityContext(String securityDomain);
+	Object getSecurityContext();
 	
 	Object createSecurityContext(String securityDomain, Principal p, Object credentials, Subject subject);
 
 	Subject getSubjectInContext(String securityDomain);
 	
 	boolean sameSubject(String securityDomain, Object context, Subject subject);
+	
+	String getSecurityDomain(Object context);
 }

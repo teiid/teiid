@@ -80,7 +80,10 @@ public class TeiidLoginContext {
 					this.userName = getUserName(existing)+AT+domain;
 					this.securitydomain = domain;     
 					this.loginContext = createLoginContext(domain, existing);
-			        this.securityContext = this.securityHelper.getSecurityContext(this.securitydomain);
+					Object sc = this.securityHelper.getSecurityContext();
+					if (sc != null && this.securityHelper.getSecurityDomain(sc).equals(this.securitydomain)) {
+						this.securityContext = this.securityHelper.getSecurityContext();
+					}
 					return;
 	        	}
             }

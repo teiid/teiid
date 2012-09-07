@@ -153,6 +153,10 @@ public class DQPWorkContext implements Serializable {
     	return null;
     }
     
+    public void setSecurityContext(Object securityContext) {
+    	session.setSecurityContext(securityContext);
+    }
+    
     /**
      * @return
      */

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.jboss.deployers.spi.DeploymentException;
+import org.mockito.Mockito;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -65,6 +66,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.security.SecurityHelper;
 import org.teiid.services.BufferServiceImpl;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
@@ -167,6 +169,7 @@ public class FakeServer extends ClientServiceRegistryImpl implements ConnectionP
         		return true; //pretend to be replicated for matview tests
         	}
         });
+        this.setSecurityHelper(Mockito.mock(SecurityHelper.class));
         this.dqp.start(config);
         this.sessionService.setDqp(this.dqp);
         
