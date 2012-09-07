@@ -37,6 +37,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.relational.JoinNode;
@@ -991,6 +992,34 @@ public class TestDependentJoins {
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached());
         TestOptimizer.checkDependentJoinCount(plan, 1);
 
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+	
+    @Test public void testIndependentDupRemoval() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2<pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a", 0, 3 }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "a", 0, 3 }), //$NON-NLS-1$
+        };   
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
+        caps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
+
+        Command command = TestProcessor.helpParse(sql);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, new DefaultCapabilitiesFinder(caps));
+        
+        // Construct data manager with data
+        FakeDataManager dataManager = new FakeDataManager();
+        TestProcessor.sampleData1(dataManager);
+        
         // Run query
         TestProcessor.helpProcess(plan, dataManager, expected);
     }

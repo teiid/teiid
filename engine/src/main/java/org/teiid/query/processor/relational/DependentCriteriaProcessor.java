@@ -103,10 +103,10 @@ public class DependentCriteriaProcessor {
                     if (setState.maxNdv <= 0 || setState.maxNdv >= distinctCount) {
                     	continue;
                     }
-                    if (dvs.getTupleBuffer().getSchema().size() > 1) {
+                    if (dvs.getTupleBuffer().getSchema().size() > 1 && dependentSetStates.size() > 1) {
 	                    distinctCount = 0;
 	                	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-                    	if (dvs.getTupleBuffer().getSchema().indexOf(setState.valueExpression) == 0) {
+                    	if (setState.valueExpression.equals(dependentSetStates.get(0).valueExpression)) {
         	            	Object last = null;
 	                    	while (vi.hasNext()) {
     	                		Object next = vi.next();

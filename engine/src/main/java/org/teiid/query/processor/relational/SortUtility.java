@@ -129,7 +129,7 @@ public class SortUtility {
 				sortTypes.add(orderByItem.isAscending());
 				nullOrderings.add(orderByItem.getNullOrdering());
 			}
-            if (items.size() < schema.size() && mode != Mode.SORT) {
+            if (items.size() < schema.size() && mode == Mode.DUP_REMOVE_SORT) {
 	        	List<Expression> toAdd = new ArrayList<Expression>(schema);
 	        	toAdd.removeAll(sortElements);
 	        	sortElements.addAll(toAdd);
