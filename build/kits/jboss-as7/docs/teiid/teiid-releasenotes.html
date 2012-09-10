@@ -33,6 +33,8 @@
 	<li>TEIID-2163 <b>Binary XMLSERIALIZE</b> - XMLSERIALIZE now supports blob/varbinary and the encoding/version and XMLDECLARATION options.
 	<li>TEIID-2141 <b>OBJECTTABLE</b> - was added to extract values from objects using arbitrary scripts.  See the Reference for usage.
 	<li>TEIID-2111 <b>Vararg Procedures</b> - variable argument procedures and functions can be created through DDL using the VARIADIC parameter type.  See the Reference for usage.
+	<li>TEIID-2195 <b>Function Based Indexes</b> - DDL can be used to specify function based indexes.  When used on an internal mat view it will create
+	the corresponding function based index automatically.  In any other circumstance, the metadata is not currently used.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

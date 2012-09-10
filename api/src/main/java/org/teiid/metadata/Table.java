@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -60,6 +61,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private boolean supportsUpdate;
     private List<ForeignKey> foriegnKeys = new ArrayList<ForeignKey>(2);
     private List<KeyRecord> indexes = new ArrayList<KeyRecord>(2);
+    private List<KeyRecord> functionBasedIndexes = new ArrayList<KeyRecord>(2);
     private List<KeyRecord> uniqueKeys = new ArrayList<KeyRecord>(2);
     private List<KeyRecord> accessPatterns = new ArrayList<KeyRecord>(2);
     private KeyRecord primaryKey;
@@ -216,6 +218,14 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     
     public void setIndexes(List<KeyRecord> indexes) {
 		this.indexes = indexes;
+	}
+    
+    public List<KeyRecord> getFunctionBasedIndexes() {
+		return functionBasedIndexes;
+	}
+    
+    public void setFunctionBasedIndexes(List<KeyRecord> functionBasedIndexes) {
+		this.functionBasedIndexes = functionBasedIndexes;
 	}
     
     public List<KeyRecord> getUniqueKeys() {
@@ -398,6 +408,14 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
       if (result == null)
          return null;
       return type.cast(result);      
-   }	
+   }
+	
+    private void readObject(java.io.ObjectInputStream in)
+    throws IOException, ClassNotFoundException {
+    	in.defaultReadObject();
+    	if (this.functionBasedIndexes == null) {
+    		this.functionBasedIndexes = new ArrayList<KeyRecord>(2);
+    	}
+    }
 	
 }

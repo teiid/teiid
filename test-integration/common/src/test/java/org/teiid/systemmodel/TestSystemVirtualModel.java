@@ -142,31 +142,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 
 	@Test public void testDefect12064() throws Exception {
-		String[] expected = { 
-				"KeyName[string]	RefKeyUID[string]	",  //$NON-NLS-1$
-				"PK_PARTS	null", //$NON-NLS-1$
-				"PK_SHIP_VIA	null", //$NON-NLS-1$
-				"PK_STATUS	null",  //$NON-NLS-1$
-				"PK_SUPPLIER	null",  //$NON-NLS-1$
-				"PK_SUPPLIER_PARTS	null", //$NON-NLS-1$
-				"PK_SUPPLIER_PARTS	null",  //$NON-NLS-1$
-				"idx_matpg_relatt_ids	null",
-				"idx_matpg_relatt_ids	null",
-				"matpg_datatype_ids	null",
-				"matpg_datatype_ids	null",
-				"matpg_datatype_names	null",
-				"matpg_datatype_names	null",				
-				"pk_matpg_relatt_names	null",
-				"pk_matpg_relatt_names	null",
-				"pk_matpg_relatt_names	null",
-				"pk_pg_attr	null",  //$NON-NLS-1$
-				"pk_pg_class	null",  //$NON-NLS-1$
-				"pk_pg_index	null",  //$NON-NLS-1$
-				"pk_pg_proc	null",  //$NON-NLS-1$
-				
-
-		};
-		executeAndAssertResults("select KeyName, RefKeyUID FROM SYS.KeyColumns WHERE RefKeyUID IS NULL order by KeyName",expected); //$NON-NLS-1$
+		checkResult("testDefect12064", "select KeyName, RefKeyUID FROM SYS.KeyColumns WHERE RefKeyUID IS NULL order by KeyName"); //$NON-NLS-1$
 	}
 
 	@Test public void testReferenceKeyColumns() throws Exception {

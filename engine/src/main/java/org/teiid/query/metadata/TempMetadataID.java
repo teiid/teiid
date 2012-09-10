@@ -25,6 +25,7 @@ package org.teiid.query.metadata;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
 import org.teiid.metadata.AbstractMetadataRecord.Modifiable;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.sql.lang.CacheHint;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Symbol;
 
 /**
@@ -60,10 +62,11 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		LRUCache<Object, Object> localCache;
 		CacheHint cacheHint;
 		List<List<TempMetadataID>> keys;
-		List<List<TempMetadataID>> indexes;
+		List<TempMetadataID> indexes;
 		long lastDataModification;
 		long lastModified = System.currentTimeMillis();
 		int modCount;
+		private LinkedHashMap<Expression, Integer> functionBasedExpressions;
 		
 		public long getLastDataModification() {
 			return lastDataModification;
@@ -89,6 +92,15 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		public long getLastModified() {
 			return lastModified;
 		}
+
+		public void setFunctionBasedExpressions(
+				LinkedHashMap<Expression, Integer> newExprs) {
+			this.functionBasedExpressions = newExprs;
+		}
+		
+		public LinkedHashMap<Expression, Integer> getFunctionBasedExpressions() {
+			return functionBasedExpressions;
+		}
 		
 	}
 	
@@ -98,7 +110,8 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		VIRTUAL,
 		TEMP,
 		SCALAR,
-		XML
+		XML,
+		INDEX
 	}
 	
     private String ID;      // never null, upper cased fully-qualified string
@@ -357,15 +370,18 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		this.getTableData().cacheHint = cacheHint;
 	}
 	
-	public List<List<TempMetadataID>> getIndexes() {
+	public List<TempMetadataID> getIndexes() {
 		return getTableData().indexes;
 	}
 	
-	public void addIndex(List<TempMetadataID> index) {
+	public void addIndex(Object originalMetadataId, List<TempMetadataID> index) {
 		if (this.getTableData().indexes == null) {
-			this.getTableData().indexes = new LinkedList<List<TempMetadataID>>();
+			this.getTableData().indexes = new LinkedList<TempMetadataID>();
 		}
-		this.getTableData().indexes.add(index);
+		TempMetadataID id = new TempMetadataID(ID, Collections.EMPTY_LIST, Type.INDEX);
+		id.getTableData().elements = index;
+		id.setOriginalMetadataID(originalMetadataId);
+		this.getTableData().indexes.add(id);
 	}
 	
 	public List<List<TempMetadataID>> getUniqueKeys() {

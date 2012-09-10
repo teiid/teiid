@@ -30,7 +30,23 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 
 public class TempCapabilitiesFinder implements CapabilitiesFinder {
 
-	private static BasicSourceCapabilities tempCaps;
+	private final static BasicSourceCapabilities tempCaps;
+	static {
+		tempCaps = new BasicSourceCapabilities();
+		tempCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
+		tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
+		tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
+		tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
+	}
+	
 	private final CapabilitiesFinder delegate;
 	
 	public TempCapabilitiesFinder(CapabilitiesFinder delegate) {
@@ -41,21 +57,6 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
 	public SourceCapabilities findCapabilities(String modelName)
 			throws TeiidComponentException {
 		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
-    		if (tempCaps == null) {
-	    		tempCaps = new BasicSourceCapabilities();
-	    		tempCaps.setCapabilitySupport(Capability.INSERT_WITH_ITERATOR, true);
-	    		tempCaps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_NOT, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_IN, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_ISNULL, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
-	    		tempCaps.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
-	    		tempCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT_STAR, true);
-    		}
     		return tempCaps;
     	}
 		return delegate.findCapabilities(modelName);

@@ -326,4 +326,28 @@ public class TestMetadataValidator {
 		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertTrue(printError(report), report.hasItems());
 	}
+	
+	@Test public void testFBIResolveError() throws Exception {
+		String ddl = "CREATE view G1(e1 integer, e2 varchar, CONSTRAINT fbi INDEX (UPPER(e3))) options (materialized true) as select 1, 'a'";
+
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+	}
+	
+	@Test public void testFBISubquery() throws Exception {
+		String ddl = "CREATE view G1(e1 integer, e2 varchar, CONSTRAINT fbi INDEX ((select 1))) options (materialized true) as select 1, 'a'";
+
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+	}
 }

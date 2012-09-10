@@ -241,12 +241,13 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	protected VDBRepository repo = new VDBRepository() {
 		@Override
-		protected void processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
+		protected boolean processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
 			if (throwMetadataErrors) {
 				super.processMetadataValidatorReport(key, report); //remove
 				ValidatorFailure firstFailure = report.getItems().iterator().next();
 				throw new VDBValidationError(RuntimePlugin.Event.TEIID40095, firstFailure.getMessage());
 			}
+			return true;
 		}
 	};
 	protected boolean throwMetadataErrors = true;

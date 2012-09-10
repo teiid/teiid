@@ -21,6 +21,7 @@
  */
 package org.teiid.query.metadata;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +29,7 @@ import java.util.Set;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
@@ -35,6 +37,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -43,11 +46,15 @@ import org.teiid.query.report.ActivityReport;
 import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -219,13 +226,15 @@ public class MetadataValidator {
     		} else if (record instanceof Table) {
     			Table t = (Table)record;
     			
+    			GroupSymbol symbol = new GroupSymbol(t.getFullName());
+    			ResolverUtil.resolveGroup(symbol, metadata);
+    			MetadataFactory mf = t.removeAttachment(MetadataFactory.class);    			
     			if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {
     				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
     				QueryResolver.resolveCommand(command, metadata);
     				resolverReport =  Validator.validate(command, metadata);
     				if(!resolverReport.hasItems()) {
     					List<Expression> symbols = command.getProjectedSymbols();
-    					MetadataFactory mf = t.removeAttachment(MetadataFactory.class);
     					for (Expression column:symbols) {
     						try {
 								addColumn(Symbol.getShortName(column), column.getType(), t, mf);
@@ -236,9 +245,36 @@ public class MetadataValidator {
     				}
     			}
     			
-    			GroupSymbol symbol = new GroupSymbol(t.getFullName());
-    			ResolverUtil.resolveGroup(symbol, metadata);
-
+    			if (t.isMaterialized() && t.getMaterializedTable() == null) {
+	    			List<KeyRecord> fbis = t.getFunctionBasedIndexes();
+	    			List<GroupSymbol> groups = Arrays.asList(symbol);
+					if (fbis != null && !fbis.isEmpty()) {
+						for (KeyRecord fbi : fbis) {
+	    					for (int j = 0; j < fbi.getColumns().size(); j++) {
+	    						Column c = fbi.getColumns().get(j);
+	    						if (c.getParent() != fbi) {
+	    							continue;
+	    						}
+	    						String exprString = c.getNameInSource();
+	    						try {
+		    						Expression ex = QueryParser.getQueryParser().parseExpression(exprString);
+									ResolverVisitor.resolveLanguageObject(ex, groups, metadata);
+									if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(ex).isEmpty()) {
+										log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31114, exprString, fbi.getFullName()));
+									} 
+									EvaluatableVisitor ev = new EvaluatableVisitor();
+									PreOrPostOrderNavigator.doVisit(ex, ev, PreOrPostOrderNavigator.PRE_ORDER);
+									if (ev.getDeterminismLevel().compareTo(Determinism.VDB_DETERMINISTIC) < 0) {
+										log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31115, exprString, fbi.getFullName()));
+									}
+	    						} catch (QueryResolverException e) {
+	    							log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31116, exprString, fbi.getFullName(), e.getMessage()));
+	    						}
+							}
+						}
+					}
+    			}
+    			
     			// this seems to parse, resolve and validate.
     			QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
     		}

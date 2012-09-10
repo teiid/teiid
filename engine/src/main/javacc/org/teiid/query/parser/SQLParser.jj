@@ -811,6 +811,7 @@ Command createTempTable(ParseInfo info) :
 	String table = null;
 	String pkId = null;
 	Column col = null;
+	List<String> columnNames = null;
 }
 {
 	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
@@ -829,17 +830,13 @@ Command createTempTable(ParseInfo info) :
         create.getColumns().add(col);
       }
     )*	
-	[<COMMA> <PRIMARY> <KEY> <LPAREN>
-	  pkId = id()
+	[<COMMA> <PRIMARY> <KEY> 
+	  columnNames = getColumnNames()
 	  {
-	    create.getPrimaryKey().add(new ElementSymbol(validateElementName(pkId)));
-	  }
-	  (<COMMA> pkId = id()
-	   {
-	     create.getPrimaryKey().add(new ElementSymbol(validateElementName(pkId)));
-	   }
-	  )*
-	 <RPAREN>	
+	  	for (String id : columnNames) {
+	  		create.getPrimaryKey().add(new ElementSymbol(validateElementName(id)));
+	  	}
+	  }	  
 	]
 	<RPAREN>
 	{
@@ -4690,6 +4687,7 @@ void createTable(MetadataFactory factory) :
 	Command query = null;
 	Token comment = null;
 	String name = null;
+	AbstractMetadataRecord constraint = null;
 }
 {
 	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
@@ -4707,14 +4705,20 @@ void createTable(MetadataFactory factory) :
     (LOOKAHEAD(3) <COMMA>
       createColumn(factory, table)
     )*	
-    (<COMMA>{name=null;} [<CONSTRAINT> name = id()] (primaryKeys(factory, table, name) | constraints(factory, table, name) | foreignKeys(factory, table, name)))*
+    (<COMMA>{name=null;} [<CONSTRAINT> name = id()] (constraint = primaryKey(factory, table, name) | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) | constraint = foreignKey(factory, table, name))
+       [optionsClause(constraint, factory)
+	   {
+	      setCommonProperties(constraint, constraint.getProperties());
+	   }
+	]
+    )*
     <RPAREN>]    
     [optionsClause(table, factory)
 	   {
 	      setTableOptions(table);
 	   }
 	]
-	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(new ParseInfo())]
+	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)]
 	{
 		if (query != null){
 		   if (!view) {
@@ -4737,7 +4741,7 @@ name=foreign key
 description=Defines the foreign key referential constraint.
 example={code:sql}FOREIGN KEY (a, b) REFERENCES tbl (x, y){code}
 */
-void foreignKeys(MetadataFactory factory, Table table, String name) :
+AbstractMetadataRecord foreignKey(MetadataFactory factory, Table table, String name) :
 {
 	List<String> columnNames = null;
 	String viewName = null;
@@ -4760,16 +4764,11 @@ void foreignKeys(MetadataFactory factory, Table table, String name) :
     [pkColumnNames = getColumnNames()]
     {
 	    try{
-		    key = factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
+		    return factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
 	    } catch (TranslatorException e){
 	    	throw new ParseException(e.getMessage());
 	    }
     }
-    [optionsClause(key, factory)
-	   {
-	      setCommonProperties(key, key.getProperties());
-	   }
-	]
 }
 
 /*
@@ -4777,7 +4776,7 @@ name=primary key
 description=Defines the primary key.
 example={code:sql}PRIMARY KEY (a, b){code}
 */
-void primaryKeys(MetadataFactory factory, Table table, String name) :
+AbstractMetadataRecord primaryKey(MetadataFactory factory, Table table, String name) :
 {
 	List<String> columnNames = null;
 	Column column = null;
@@ -4785,8 +4784,8 @@ void primaryKeys(MetadataFactory factory, Table table, String name) :
 }
 {
 	<PRIMARY> <KEY>
+	columnNames = getColumnNames()
     {
-    	columnNames = getColumnNames();
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
 	    }
@@ -4794,16 +4793,11 @@ void primaryKeys(MetadataFactory factory, Table table, String name) :
 	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 	 	}
 	 	try{
-	 		key = factory.addPrimaryKey(name!=null?name:"PK", columnNames, table);
+	 		return factory.addPrimaryKey(name!=null?name:"PK", columnNames, table);
 	 	} catch(TranslatorException e){
 	 		throw new ParseException(e.getMessage());
 	 	}
     }
-    [optionsClause(key, factory)
-	   {
-	      setCommonProperties(key, key.getProperties());
-	   }
-	]    
 }
 
 /*
@@ -4811,38 +4805,40 @@ name=other constraints
 description=Defines ACCESSPATTERN and UNIQUE constraints and INDEXes. 
 example={code:sql}UNIQUE (a){code}
 */
-void constraints(MetadataFactory factory, Table table, String name) :
+AbstractMetadataRecord constraint(MetadataFactory factory, Table table, String name, ParseInfo info) :
 {
 	KeyRecord keyrecord = null;
 	Column column = null;
 	List<String> columnNames = null;
 	Token type = null;
 	KeyRecord key = null;
+	List<Expression> expressions = null;
 }
 {
-	( type = <UNIQUE> | type = <INDEX> | type = <ACCESSPATTERN>)
+	(( type = <UNIQUE> | type = <ACCESSPATTERN>)
+	columnNames = getColumnNames()	    
 	{
-	    columnNames = getColumnNames();	    
 	    for (String col: columnNames) {
 	    	column = getColumn(col, table);
 	    }
 	    try{
-	    	if (type.image.equalsIgnoreCase("INDEX")) { 
-	    		key = factory.addIndex(name != null?name:("INDEX"+table.getIndexes().size()), true, columnNames, table);
-	    	} else if (type.image.equalsIgnoreCase("UNIQUE")) { 
-	    		key = factory.addIndex(name != null?name:("UNIQUE"+table.getUniqueKeys().size()), false, columnNames, table);
+			if (type.image.equalsIgnoreCase("UNIQUE")) { 
+	    		return factory.addIndex(name != null?name:("UNIQUE"+table.getUniqueKeys().size()), false, columnNames, table);
 	    	} else if (type.image.equalsIgnoreCase("ACCESSPATTERN")) { 
-	    		key = factory.addAccessPattern(name != null?name:("AP"+table.getAccessPatterns().size()), columnNames, table);
+	    		return factory.addAccessPattern(name != null?name:("AP"+table.getAccessPatterns().size()), columnNames, table);
 	    	}
     	}catch(TranslatorException e){
     		throw new ParseException(e.getMessage());
     	}	    
-    }
-    [optionsClause(key, factory)
-	   {
-	      setCommonProperties(key, key.getProperties());
-	   }
-	]    
+    }) | (
+    type = <INDEX>
+    <LPAREN>
+ 	expressions = expressionList(info)
+ 	<RPAREN>
+ 	 {
+ 		return addFBI(factory, expressions, table, name);
+ 	 }
+ 	)
 }
 
 /*

@@ -290,8 +290,7 @@ public class VDBRepository implements Serializable{
 
 			if (report.hasItems()) {
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
-				if (!v.getVDB().isPreview()) {
-					processMetadataValidatorReport(key, report);
+				if (!v.getVDB().isPreview() && !processMetadataValidatorReport(key, report)) {
 					v.getVDB().setStatus(Status.FAILED);
 					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
 					return;
@@ -306,9 +305,11 @@ public class VDBRepository implements Serializable{
 	
 	/**
 	 * @param key 
-	 * @param report  
+	 * @param report
+	 * @return if the deployment should finish  
 	 */
-	protected void processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
+	protected boolean processMetadataValidatorReport(VDBKey key, ValidatorReport report) {
+		return false;
 	}
 
 	void validateDataSources(VDBMetaData vdb) {

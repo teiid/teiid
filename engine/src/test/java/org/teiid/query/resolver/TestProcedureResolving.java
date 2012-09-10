@@ -29,20 +29,15 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.junit.Test;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
-import org.teiid.query.metadata.CompositeMetadataStore;
-import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.metadata.TestMetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -64,7 +59,6 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestProcedureResolving {
@@ -1045,17 +1039,7 @@ public class TestProcedureResolving {
     }
 
 	public static TransformationMetadata createMetadata(String ddl) throws Exception {
-		VDBMetaData vdb = new VDBMetaData();
-    	MetadataStore store = new MetadataStore();
-    	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
-    	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
-    	vdb.addAttchment(TransformationMetadata.class, tm);
-    	vdb.addAttchment(QueryMetadataInterface.class, tm);
-    	ValidatorReport report = new MetadataValidator().validate(vdb, store);
-    	if (report.hasItems()) {
-    		throw new RuntimeException(report.getFailureMessage());
-    	}
-		return tm;
+		return RealMetadataFactory.fromDDL(ddl, "test", "test");
 	}
     
     @Test public void testOptionalParams1() throws Exception {

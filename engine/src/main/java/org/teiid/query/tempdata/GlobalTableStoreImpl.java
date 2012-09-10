@@ -31,6 +31,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,6 +49,9 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.query.mapping.relational.QueryNode;
@@ -55,17 +60,25 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 
 public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<String> {
 	
+	private static final String TEIID_FBI = "teiid:fbi"; //$NON-NLS-1$
+
 	public enum MatState {
 		NEEDS_LOADING,
 		LOADING,
@@ -202,7 +215,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			
 	@Override
 	public TempMetadataID getGlobalTempTableMetadataId(Object viewId)
-	throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException {
+	throws TeiidProcessingException, TeiidComponentException {
 		String matViewName = metadata.getFullName(viewId);
 		String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 		GroupSymbol group = new GroupSymbol(matViewName);
@@ -212,9 +225,58 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		if (id == null) {
 			synchronized (viewId) {
 				id = tableStore.getMetadataStore().getTempGroupID(matTableName);
+				LinkedHashMap<Expression, Integer> newExprs = null;
 				if (id == null) {
-					id = tableStore.getMetadataStore().addTempGroup(matTableName, ResolverUtil.resolveElementsInGroup(group, metadata), false, true);
-					id.setQueryNode(metadata.getVirtualPlan(viewId));
+					List<ElementSymbol> allCols = ResolverUtil.resolveElementsInGroup(group, metadata);
+					QueryNode qnode = metadata.getVirtualPlan(viewId);
+					if (viewId instanceof Table) {
+						Table t = (Table)viewId;
+						List<KeyRecord> fbis = t.getFunctionBasedIndexes();
+						if (!fbis.isEmpty()) {
+		    				List<GroupSymbol> groups = Arrays.asList(group);
+		    				int i = 0;
+		    				newExprs = new LinkedHashMap<Expression, Integer>();
+		    				for (KeyRecord keyRecord : fbis) {
+		    					for (int j = 0; j < keyRecord.getColumns().size(); j++) {
+		    						Column c = keyRecord.getColumns().get(j);
+		    						if (c.getParent() != keyRecord) {
+		    							continue;
+		    						}
+		    						String exprString = c.getNameInSource();
+		    						Expression ex = QueryParser.getQueryParser().parseExpression(exprString);
+		    						Integer index = newExprs.get(ex);
+		    						if (index == null) {
+		    							ResolverVisitor.resolveLanguageObject(ex, groups, metadata);
+		    							ex = QueryRewriter.rewriteExpression(ex, null, metadata);
+		    							String colName = TEIID_FBI + i;
+		    							while (t.getColumnByName(colName) != null) {
+		    								colName = TEIID_FBI + (++i);
+		    							}
+		    							ElementSymbol es = new ElementSymbol(colName);
+		    							es.setType(ex.getType());
+		    							allCols.add(es);
+		    							c.setPosition(allCols.size());
+		    							newExprs.put(ex, allCols.size());
+		    							ex = (Expression)ex.clone();
+		    						} else {
+		    							c.setPosition(index);
+		    						}
+		    					}
+		    				}
+		    				ResolverUtil.clearGroupInfo(group, metadata);
+		    				StringBuilder query = new StringBuilder("SELECT x.*, "); //$NON-NLS-1$
+		    				for (Iterator<Expression> iter = newExprs.keySet().iterator(); iter.hasNext();) {
+		    					query.append(iter.next());
+		    					if (iter.hasNext()) {
+		    						query.append(", "); //$NON-NLS-1$
+		    					}
+		    				}
+		    				query.append(" FROM ").append(group).append(" as x option nocache " + group); //$NON-NLS-1$ //$NON-NLS-2$
+		    				qnode = new QueryNode(query.toString());
+						}
+					}
+					id = tableStore.getMetadataStore().addTempGroup(matTableName, allCols, false, true);
+					id.setQueryNode(qnode);
 					id.setCardinality(metadata.getCardinality(viewId));
 					id.setOriginalMetadataID(viewId);
 					
@@ -229,7 +291,24 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 					}
 					Collection indexes = metadata.getIndexesInGroup(viewId);
 					for (Object index : indexes) {
-						id.addIndex(resolveIndex(metadata, id, index));
+						id.addIndex(index, resolveIndex(metadata, id, index));
+					}
+					if (newExprs != null) {
+						Table table = (Table)viewId;
+						List<KeyRecord> fbis = table.getFunctionBasedIndexes();
+						for (KeyRecord keyRecord : fbis) {
+							id.addIndex(keyRecord, resolveIndex(metadata, id, keyRecord));
+						}
+						GroupSymbol gs = new GroupSymbol(matTableName);
+						gs.setMetadataID(id);
+						SymbolMap map = SymbolMap.createSymbolMap(group, ResolverUtil.resolveElementsInGroup(gs, metadata).subList(0, allCols.size() - newExprs.size()), metadata);
+						LinkedHashMap<Expression, Integer> mappedExprs = new LinkedHashMap<Expression, Integer>();
+						for (Map.Entry<Expression, Integer> entry : newExprs.entrySet()) {
+							Expression ex = (Expression) entry.getKey().clone();
+							ExpressionMappingVisitor.mapExpressions(ex, map.asMap());
+							mappedExprs.put(ex, entry.getValue());
+						}
+						id.getTableData().setFunctionBasedExpressions(mappedExprs);
 					}
 				}
 			}

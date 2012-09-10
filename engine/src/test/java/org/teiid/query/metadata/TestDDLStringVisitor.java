@@ -180,7 +180,7 @@ public class TestDDLStringVisitor {
 		
 	}	
 	
-	@Test
+	@Test 
 	public void testView() throws Exception {
 		String ddl = "CREATE View G1( e1 integer, e2 varchar) OPTIONS (CARDINALITY 12) AS select e1, e2 from foo.bar";
 		String expected = "CREATE VIEW G1 (\n" + 
@@ -257,4 +257,10 @@ public class TestDDLStringVisitor {
 		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, VARIADIC p3 bigdecimal) RETURNS TABLE (r1 string, r2 bigdecimal)";
 		helpTest(ddl, expected);		
 	}	
+	
+	@Test public void testViewFBI() throws Exception {
+		String ddl = "CREATE View G1( \"a e1\" integer, \"a e2\" varchar, INDEX (\"a e1\", upper(\"a e2\"))) AS select e1, e2 from foo.bar";
+		String expected = "CREATE VIEW G1 (\n	\"a e1\" integer,\n	\"a e2\" string,\n	INDEX(\"a e1\", upper(\"a e2\"))\n)\nAS\nSELECT e1, e2 FROM foo.bar;";
+		helpTest(ddl, expected);
+	}
 }

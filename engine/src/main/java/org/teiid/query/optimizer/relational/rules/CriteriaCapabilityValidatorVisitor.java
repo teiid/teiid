@@ -201,7 +201,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 			return;
 		}
 		for (LanguageObject languageObject : toCheck) {
-			if (!EvaluatableVisitor.willBecomeConstant(languageObject, true)) {
+			if (!EvaluatableVisitor.willBecomeConstant(languageObject)) {
 	        	markInvalid(obj, "Non-literal comparison not supported by source."); //$NON-NLS-1$
 	        	return;
 			}

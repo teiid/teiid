@@ -228,6 +228,54 @@ public class MetadataFactory implements Serializable {
 		return index;
 	}
 	
+	/**
+	 * Adds a function based index on the given expressions.
+	 * @param name
+	 * @param expressions
+	 * @param nonColumnExpressions a Boolean list indicating when expressions are non-column expressions
+	 * @param table
+	 * @return
+	 * @throws TranslatorException
+	 */
+	public KeyRecord addFunctionBasedIndex(String name, List<String> expressions, List<Boolean> nonColumnExpressions, Table table) throws TranslatorException {
+		KeyRecord index = new KeyRecord(KeyRecord.Type.Index);
+		index.setParent(table);
+		index.setColumns(new ArrayList<Column>(expressions.size()));
+		index.setName(name);
+		setUUID(index);
+		boolean functionBased = false;
+		for (int i = 0; i < expressions.size(); i++) {
+			String expr = expressions.get(i);
+			if (nonColumnExpressions.get(i)) {
+				Column c = new Column();
+				//TODO: we could choose a derived name at this point, but we delay that to get a single unique name across all index expressions
+				c.setName(expr);
+				c.setNameInSource(expr);
+				setUUID(c);
+				c.setParent(index);
+				c.setPosition(i + 1); //position is temporarily relative to the index, but the validator changes this
+				index.getColumns().add(c);
+				functionBased = true;
+			} else {
+				assignColumn(table, index, expr);
+			}
+		}
+		if (!functionBased) {
+			table.getIndexes().add(index);
+		} else {
+			table.getFunctionBasedIndexes().add(index);
+		}
+		return index;
+	}
+
+	private void assignColumn(Table table, ColumnSet<?> columns, String columnName)
+			throws TranslatorException {
+		Column column = table.getColumnByName(columnName);
+		if (column == null) {
+			throw new TranslatorException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));				
+		}
+		columns.getColumns().add(column);
+	}
 	
 	/**
 	 * Adds a foreign key to the given table.  The referenced primary key must already exist.  The column names should be in key order.
@@ -332,11 +380,7 @@ public class MetadataFactory implements Serializable {
 	private void assignColumns(List<String> columnNames, Table table,
 			ColumnSet<?> columns) throws TranslatorException {
 		for (String columnName : columnNames) {
-			Column column = table.getColumnByName(columnName);
-			if (column == null) {
-				throw new TranslatorException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));				
-			}
-			columns.getColumns().add(column);
+			assignColumn(table, columns, columnName);
 		}
 	}
 	

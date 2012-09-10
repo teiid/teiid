@@ -42,6 +42,7 @@ import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public class DDLStringVisitor {
@@ -241,13 +242,14 @@ public class DDLStringVisitor {
 
 		addConstraints(table.getUniqueKeys(), UNIQUE, UNIQUE);
 		addConstraints(table.getIndexes(), INDEX, INDEX);
+		addConstraints(table.getFunctionBasedIndexes(), INDEX, INDEX);
 
 		for (int i = 0; i < table.getForeignKeys().size(); i++) {
 			ForeignKey key = table.getForeignKeys().get(i);
 			addConstraint("FK" + i, FOREIGN_KEY, key, false); //$NON-NLS-1$
 			buffer.append(SPACE).append(REFERENCES);
 			if (key.getReferenceTableName() != null) {
-				buffer.append(SPACE).append(key.getReferenceTableName());
+				buffer.append(SPACE).append(new GroupSymbol(key.getReferenceTableName()).getName());
 			}
 			buffer.append(SPACE);
 			addNames(buffer, key.getReferenceColumns());
@@ -286,9 +288,14 @@ public class DDLStringVisitor {
 			else {
 				builder.append(COMMA).append(SPACE);
 			}
-			appendColumn(builder, c, true, includeType);
 			if (includeType) {
+				appendColumn(builder, c, true, includeType);
 				appendColumnOptions(builder, c);
+			} else if (c.getParent() instanceof KeyRecord) {
+				//function based column
+				builder.append(c.getNameInSource());
+			} else {
+				builder.append(SQLStringVisitor.escapeSinglePart(c.getName()));
 			}
 		}
 		builder.append(RPAREN);
@@ -305,7 +312,7 @@ public class DDLStringVisitor {
 				else {
 					builder.append(COMMA).append(SPACE);
 				}
-				builder.append(c);
+				builder.append(SQLStringVisitor.escapeSinglePart(c));
 			}
 			builder.append(RPAREN);
 		}

@@ -38,6 +38,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
 import org.teiid.query.metadata.TempMetadataID.Type;
+import org.teiid.query.sql.symbol.Expression;
 
 
 /**
@@ -429,7 +430,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Collection getIndexesInGroup(Object groupID)
         throws TeiidComponentException, QueryMetadataException {
         if(groupID instanceof TempMetadataID) {
-        	List<List<TempMetadataID>> result = ((TempMetadataID)groupID).getIndexes();
+        	List<TempMetadataID> result = ((TempMetadataID)groupID).getIndexes();
         	if (result == null) {
         		return Collections.emptyList();
         	}
@@ -477,6 +478,13 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         
     	if (keyID instanceof List) {
     		return (List)keyID;
+    	}
+    	
+    	if (keyID instanceof TempMetadataID) {
+    		TempMetadataID id = (TempMetadataID)keyID;
+    		if (id.getMetadataType() == Type.INDEX) {
+    			return id.getElements();
+    		}
     	}
     	
         return this.actualMetadata.getElementIDsInKey(keyID);   
@@ -575,9 +583,6 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     public Properties getExtensionProperties(Object metadataID)
         throws TeiidComponentException, QueryMetadataException {
             
-        if(metadataID instanceof TempMetadataID) {
-            return null;
-        }
         return actualMetadata.getExtensionProperties(metadataID);
     }
 
@@ -733,6 +738,14 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     		return false;
     	} 
     	return this.actualMetadata.isMultiSourceElement(elementId);
+    }
+    
+    @Override
+    public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
+    	if (metadataID instanceof TempMetadataID) {
+    		return ((TempMetadataID)metadataID).getTableData().getFunctionBasedExpressions();
+    	}
+    	return super.getFunctionBasedExpressions(metadataID);
     }
 
 }

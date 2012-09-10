@@ -407,6 +407,9 @@ public class RelationalPlanner {
             rules.push(RuleConstants.PLAN_JOINS);
         }
         rules.push(RuleConstants.RAISE_ACCESS);
+        if (hints.hasFunctionBasedColumns) {
+        	rules.push(RuleConstants.SUBSTITUE_EXPRESSIONS);
+        }
         if (hints.hasSetQuery) {
             rules.push(RuleConstants.PLAN_UNIONS);
         } 
@@ -827,6 +830,9 @@ public class RelationalPlanner {
             GroupSymbol group = ufc.getGroup();
             if (metadata.isVirtualGroup(group.getMetadataID())) {
             	hints.hasVirtualGroups = true;
+            }
+            if (metadata.getFunctionBasedExpressions(group.getMetadataID()) != null) {
+            	hints.hasFunctionBasedColumns = true;
             }
             Command nestedCommand = ufc.getExpandedCommand();
             if (nestedCommand == null && !group.isProcedure()) {
@@ -1251,7 +1257,11 @@ public class RelationalPlanner {
         	}else{
             	this.context.accessedPlanningObject(matMetadataId);
         		qnode = new QueryNode(null);
-        		Query query = createMatViewQuery(matMetadataId, matTableName, Arrays.asList(new MultipleElementSymbol()), isImplicitGlobal);
+        		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
+        		for (ElementSymbol el : ResolverUtil.resolveElementsInGroup(virtualGroup, metadata)) {
+        			symbols.add(new ElementSymbol(el.getShortName()));
+        		}
+        		Query query = createMatViewQuery(matMetadataId, matTableName, symbols, isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$

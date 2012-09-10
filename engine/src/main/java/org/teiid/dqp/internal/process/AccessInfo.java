@@ -31,9 +31,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
@@ -122,11 +121,10 @@ public class AccessInfo implements Serializable {
 	
 	/**
 	 * Restore reconnects to the live metadata objects
-	 * @throws QueryResolverException
-	 * @throws QueryValidatorException
 	 * @throws TeiidComponentException
+	 * @throws TeiidProcessingException 
 	 */
-	void restore() throws QueryResolverException, QueryValidatorException, TeiidComponentException {
+	void restore() throws TeiidComponentException, TeiidProcessingException {
 		if (this.objectsAccessed != null) {
 			return;
 		}

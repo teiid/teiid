@@ -28,8 +28,6 @@ import java.util.List;
 import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.api.exception.query.QueryResolverException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TempMetadataID;
@@ -38,7 +36,7 @@ import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 
 public interface GlobalTableStore {
 	
-	TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws QueryMetadataException, TeiidComponentException, QueryResolverException, QueryValidatorException;
+	TempMetadataID getGlobalTempTableMetadataId(Object groupID) throws TeiidComponentException, TeiidProcessingException;
 	
 	TempMetadataID getCodeTableMetadataId(String codeTableName,
 			String returnElementName, String keyElementName,

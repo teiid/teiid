@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
@@ -45,6 +46,7 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.Statement;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.translator.TranslatorException;
@@ -651,6 +653,29 @@ public class SQLParserUtil {
 	 		//TODO warnings or errors if not resolvable 
 	 	}
 	 	return key;
+	}
+	
+	KeyRecord addFBI(MetadataFactory factory, List<Expression> expressions, Table table, String name) throws ParseException {
+		List<String> columnNames = new ArrayList<String>(expressions.size());
+		List<Boolean> nonColumnExpressions = new ArrayList<Boolean>(expressions.size());
+		boolean fbi = false;
+		for (int i = 0; i < expressions.size(); i++) {
+			Expression ex = expressions.get(i);
+			if (ex instanceof ElementSymbol) {
+	 			columnNames.add(((ElementSymbol)ex).getName());
+	 			nonColumnExpressions.add(Boolean.FALSE);
+			} else {
+				columnNames.add(ex.toString());
+				nonColumnExpressions.add(Boolean.TRUE);
+				fbi = true;
+			}
+		}
+		try{
+			table.addAttchment(MetadataFactory.class, factory);
+	    	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
+	    }catch(TranslatorException e){
+			throw new ParseException(e.getMessage());
+		}
 	}
 	
 	static class  ParsedDataType{

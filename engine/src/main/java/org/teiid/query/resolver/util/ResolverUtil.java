@@ -492,6 +492,10 @@ public class ResolverUtil {
         return new ArrayList<ElementSymbol>(getGroupInfo(group, metadata).getSymbolList());
     }
     
+    public static void clearGroupInfo(GroupSymbol group, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
+    	metadata.addToMetadataCache(group.getMetadataID(), GroupInfo.CACHE_PREFIX + group.getName(), null);
+    }
+    
 	static GroupInfo getGroupInfo(GroupSymbol group,
 			QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {

@@ -125,6 +125,7 @@ public class SQLConstants {
 		public static final String EXCLUDING = "EXCLUDING"; //$NON-NLS-1$
 		public static final String XMLDECLARATION = "XMLDECLARATION"; //$NON-NLS-1$
 		public static final String VARIADIC = "VARIADIC"; //$NON-NLS-1$
+		public static final String INDEX = "INDEX"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

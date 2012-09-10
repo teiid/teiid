@@ -24,6 +24,7 @@ package org.teiid.query.metadata;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
@@ -35,6 +36,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
+import org.teiid.query.sql.symbol.Expression;
 
 
 public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
@@ -405,6 +407,11 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	@Override
 	public boolean isVariadic(Object metadataID) {
 		return actualMetadata.isVariadic(metadataID);
+	}
+	
+	@Override
+	public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
+		return actualMetadata.getFunctionBasedExpressions(metadataID);
 	}
 	
 }

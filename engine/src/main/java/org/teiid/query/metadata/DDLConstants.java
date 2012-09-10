@@ -43,7 +43,6 @@ public interface DDLConstants {
 	public static final String AUTO_INCREMENT = "AUTO_INCREMENT";//$NON-NLS-1$
 	public static final String NOT_NULL = "NOT NULL";//$NON-NLS-1$
 	public static final String FOREIGN_KEY = "FOREIGN KEY";//$NON-NLS-1$
-	public static final String INDEX = "INDEX";//$NON-NLS-1$
 	public static final String PRIMARY_KEY = "PRIMARY KEY";//$NON-NLS-1$
 	public static final String ACCESSPATTERN = "ACCESSPATTERN";//$NON-NLS-1$
 	public static final String NAMEINSOURCE = "NAMEINSOURCE";//$NON-NLS-1$

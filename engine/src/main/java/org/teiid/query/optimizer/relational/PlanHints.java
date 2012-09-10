@@ -45,6 +45,8 @@ public final class PlanHints {
     public boolean hasOptionalJoin = false;
     
     public boolean hasRelationalProc = false;
+
+	public boolean hasFunctionBasedColumns;
     
     public PlanHints() { }    
     

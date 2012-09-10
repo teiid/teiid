@@ -141,6 +141,17 @@ public class TestDDLParser {
 		assertEquals(14, table.getColumns().get(1).getScale());		
 	}	
 	
+	@Test public void testFBI() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1(e1 integer, e2 varchar, CONSTRAINT fbi INDEX (UPPER(e2)))";
+
+		Schema s = helpParse(ddl, "model").getSchema();
+		Map<String, Table> tableMap = s.getTables();	
+		
+		Table table = tableMap.get("G1");
+		
+		assertEquals(1, table.getFunctionBasedIndexes().size());
+	}
+	
 	@Test
 	public void testMultiKeyPK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date, PRIMARY KEY (e1, e2))";
