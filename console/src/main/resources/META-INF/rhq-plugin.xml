@@ -484,15 +484,11 @@
 						required="false">
 						<c:map-property name="map">
 							<c:simple-property displayName="Request ID"
-								name="getRequestId" type="string" description="The request identifier" />
+								name="getExecutionId" type="string" description="The request identifier" />
 							<c:simple-property displayName="Session ID"
 								name="getSessionId" type="string" description="Session identifier" />
-							<c:simple-property displayName="Execution ID"
-								name="getExecutionId" type="string" description="Unique Identifier for Request" />
 							<c:simple-property displayName="Start Time"
 								name="getStartTime" type="string" description="Time when request submitted" />
-							<c:simple-property displayName="Processing Time"
-								name="getProcessingTime" type="string" description="Processing time for the request" />
 							<c:simple-property displayName="Last ping time"
 								name="getCommand" type="string" description="SQL Command" />
 							<c:simple-property displayName="Connector level request?"
