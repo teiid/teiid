@@ -9,5 +9,13 @@
 	<artifactId>test-integration-perf</artifactId>
 	<name>Performance Integration Tests</name>
 	<description>Performance tests that do not require external dependencies</description>
+	<dependencies>
+	<dependency>
+      <groupId>org.jboss.teiid</groupId>
+      <artifactId>test-integration-common</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
+    </dependency>
 	
+	</dependencies>
 </project>
