@@ -25,8 +25,10 @@ package org.teiid.query.optimizer.relational.rules;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -50,6 +52,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SingleElementSymbol;
 import org.teiid.query.sql.util.SymbolMap;
@@ -131,44 +134,51 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	key = NewCalculateCostUtil.getKeyUsed(leftExpressions, null, metadata, null);
             	right = false;
             }
-            if (key != null) {
-            	//redo the join predicates based upon the key alone
-            	List<Object> keyCols = metadata.getElementIDsInKey(key);
-            	int[] reorder = new int[keyCols.size()];
-            	List<Integer> toCriteria = new ArrayList<Integer>(rightExpressions.size() - keyCols.size()); 
+            if (key != null && joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) == null) {
+             	//redo the join predicates based upon the key alone
+             	List<Object> keyCols = metadata.getElementIDsInKey(key);
+             	int[] reorder = new int[keyCols.size()];
+             	LinkedHashSet<Integer> toCriteria = new LinkedHashSet<Integer>();
             	List<SingleElementSymbol> keyExpressions = right?rightExpressions:leftExpressions;
-        		for (int j = 0; j < keyExpressions.size(); j++) {
-					SingleElementSymbol ses = keyExpressions.get(j);
-					if (!(ses instanceof ElementSymbol)) {
+            	Map<Object, Integer> indexMap = new LinkedHashMap<Object, Integer>();
+            	for (int i = 0; i < keyExpressions.size(); i++) {
+            		Expression ses = keyExpressions.get(i);
+            		if (!(ses instanceof ElementSymbol)) {
 						continue;
 					}
-					ElementSymbol es = (ElementSymbol)ses;
-					boolean found = false;
-					for (int i = 0; !found && i < keyCols.size(); i++) {
-						if (es.getMetadataID().equals(keyCols.get(i))) {
-							reorder[i] = j;
-							found = true;
-						}
-					}
-					if (!found) {
-						toCriteria.add(j);
-					}
+            		Integer existing = indexMap.put(((ElementSymbol)ses).getMetadataID(), i);
+            		if (existing != null) {
+            			toCriteria.add(existing);
+            		}
+            	}
+            	boolean found = true;
+            	for (int i = 0; i < keyCols.size(); i++) {
+            		Object id = keyCols.get(i);
+            		Integer index = indexMap.remove(id);
+            		if (index == null) {
+            			found = false;
+            			break;
+            		}
+            		reorder[i] = index;
 				}
-        		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.NON_EQUI_JOIN_CRITERIA);
-        		for (int index : toCriteria) {
-					SingleElementSymbol lses = leftExpressions.get(index);
-					SingleElementSymbol rses = rightExpressions.get(index);
-					CompareCriteria cc = new CompareCriteria(lses, CompareCriteria.EQ, rses);
-					if (joinCriteria == null || joinCriteria.isEmpty()) {
-						joinCriteria = new ArrayList<Criteria>();
+            	if (found) {
+            		toCriteria.addAll(indexMap.values());
+            		List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.NON_EQUI_JOIN_CRITERIA);
+            		for (int index : toCriteria) {
+            			Expression lses = leftExpressions.get(index);
+            			Expression rses = rightExpressions.get(index);
+            			CompareCriteria cc = new CompareCriteria(lses, CompareCriteria.EQ, rses);
+            			if (joinCriteria == null || joinCriteria.isEmpty()) {
+            				joinCriteria = new ArrayList<Criteria>();
+            			}
 						joinCriteria.add(cc);
 					}
-				}
-        		joinNode.setProperty(Info.NON_EQUI_JOIN_CRITERIA, joinCriteria);
-        		leftExpressions = RelationalNode.projectTuple(reorder, leftExpressions);
-            	rightExpressions = RelationalNode.projectTuple(reorder, rightExpressions);
-            	joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, leftExpressions);
-            	joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, rightExpressions);
+            		joinNode.setProperty(Info.NON_EQUI_JOIN_CRITERIA, joinCriteria);
+            		leftExpressions = RelationalNode.projectTuple(reorder, leftExpressions);
+            		rightExpressions = RelationalNode.projectTuple(reorder, rightExpressions);
+            		joinNode.setProperty(NodeConstants.Info.LEFT_EXPRESSIONS, leftExpressions);
+            		joinNode.setProperty(NodeConstants.Info.RIGHT_EXPRESSIONS, rightExpressions);
+            	}				
             }
 
 			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	

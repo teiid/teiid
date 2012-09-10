@@ -479,6 +479,21 @@ public class TestTempTables {
 		execute("select x.e1 from x left outer join x1 on x.e2 = x1.e2 and x.e1 = x1.e1", new List[] {Arrays.asList("b")}); //$NON-NLS-1$
 	}
 	
+	@Test public void testUnneededMergePredicate1() throws Exception {
+		execute("create local temporary table x (e1 string, e2 integer, e3 integer, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("create local temporary table x1 (e1 string, e2 integer, e3 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+				
+		execute("insert into x (e3, e2, e1) values (4, 2, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x (e3, e2, e1) values (4, 2, '2')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x1 (e3, e2, e1) values (5, 2, '1')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		execute("insert into x1 (e3, e2, e1) values (5, 1, '2')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		//ensure predicates are preserved
+		execute("select x.e1 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2", new List[] {Arrays.asList("1"), Arrays.asList("2")}); //$NON-NLS-1$
+		execute("select x.e1 from /*+ makenotdep */ x inner join  /*+ makenotdep */ x1 on x.e1 = x1.e1 and upper(x.e1) = x1.e2 and x1.e3 = x.e3", new List[0]); //$NON-NLS-1$
+		//ensure there's no bad interaction with makedep
+		execute("select x.e1 from /*+ makedep */ x inner join  x1 on x.e1 = x1.e1 and x.e2 = x1.e2", new List[] {Arrays.asList("1")}); //$NON-NLS-1$
+	}
+	
 	private void sampleTable() throws Exception {
 		execute("create local temporary table x (e1 string, e2 integer, primary key (e1, e2))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (3, 'b')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
