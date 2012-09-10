@@ -53,6 +53,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.AliasGenerator;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
 import org.teiid.query.parser.QueryParser;
@@ -6678,6 +6679,15 @@ public class TestOptimizer {
                                       new String[] {"SELECT 1 AS c_0 FROM pm1.g1 AS g_0 LIMIT 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         
         checkNodeTypes(plan, FULL_PUSHDOWN);
+    }
+    
+    @Test public void testPlanNodeAnnotation() throws Exception {
+    	PlanNode pn = new PlanNode();
+    	TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+    	Object modelID = metadata.getMetadataStore().getSchema("pm1");
+    	AnalysisRecord record = new AnalysisRecord(true, true);
+    	pn.recordDebugAnnotation("hello", modelID, "world", record, metadata);
+    	assertEquals("[QueryAnnotation<Relational Planner, LOW,hello pm1,world Unknown: 0(groups=[]>]", record.getAnnotations().toString());
     }
     
 	public static final boolean DEBUG = false;
