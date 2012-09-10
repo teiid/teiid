@@ -25,6 +25,7 @@ package org.teiid.common.buffer;
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -32,6 +33,8 @@ import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -128,6 +131,30 @@ public class TestSTree {
 			assertNotNull(map.remove(Arrays.asList(new String(new byte[1000]))));
 		}
 				
+	}
+	
+	@Test public void testSearch() throws TeiidComponentException, TeiidProcessingException {
+		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
+		bm.setProcessorBatchSize(1);
+		
+		ElementSymbol e1 = new ElementSymbol("x");
+		e1.setType(Integer.class);
+		ElementSymbol e2 = new ElementSymbol("x");
+		e1.setType(Integer.class);
+		List elements = Arrays.asList(e1, e2);
+		STree map = bm.createSTree(elements, "1", 2);
+		
+		int size = 1<<16;
+		for (int i = 0; i < size; i++) {
+			assertNull(map.insert(Arrays.asList(i, i), InsertMode.NEW, -1));
+			assertEquals(i + 1, map.getRowCount());
+		}
+		map.compact();
+		for (int i = 0; i < size; i++) {
+			TupleBrowser tb = new TupleBrowser(map, new CollectionTupleSource(Collections.singletonList(Arrays.asList(i)).iterator()), true);
+			assertNotNull(tb.nextTuple());
+			assertNull(tb.nextTuple());
+		}
 	}
 	
 }
