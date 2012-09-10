@@ -9,10 +9,15 @@
 	<artifactId>test-integration-perf</artifactId>
 	<name>Common Integration Tests</name>
 	<description>Performance tests that do not require external dependencies</description>
-	
 	<dependencies>
 		<dependency>
-  			<artifactId>teiid-cache-jbosscache</artifactId>
+			<groupId>org.jboss.teiid</groupId>
+			<artifactId>test-integration-common</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+		</dependency>
+		<dependency>
+			<artifactId>teiid-cache-jbosscache</artifactId>
 			<groupId>org.jboss.teiid</groupId>
 		</dependency>
 		<dependency>
@@ -20,9 +25,8 @@
 			<artifactId>jgroups</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
 		</dependency>
 	</dependencies>
-     
 </project>

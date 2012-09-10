@@ -34,7 +34,6 @@ import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -193,13 +192,13 @@ public class TestEnginePerformance {
 		runTask(iterations, threadCount, task);
 	}
 
-	private List<?>[] sampleData(final int rowCount) {
+	static List<?>[] sampleData(final int rowCount) {
 		final List<?>[] data = new List<?>[rowCount];
 
 		for (int i = 0; i < rowCount; i++) {
 			data[i] = Arrays.asList(i, String.valueOf(i));
 		}
-		Collections.shuffle(Arrays.asList(data), r);
+		//Collections.shuffle(Arrays.asList(data), r);
 		return data;
 	}
 	
