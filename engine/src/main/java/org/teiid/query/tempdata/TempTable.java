@@ -324,9 +324,9 @@ public class TempTable implements Cloneable {
 		int startIndex = 0;
 		if (primaryKeyLength == 0) {
 			startIndex = 1;
-            ElementSymbol id = new ElementSymbol("rowId"); //$NON-NLS-1$
-    		id.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-    		columns.add(0, id);
+            ElementSymbol rid = new ElementSymbol("rowId"); //$NON-NLS-1$
+    		rid.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+    		columns.add(0, rid);
     		rowId = new AtomicInteger();
         	tree = bm.createSTree(columns, sessionID, 1);
         } else {
@@ -444,10 +444,10 @@ public class TempTable implements Cloneable {
 		if (indexTables != null && (condition != null || orderBy != null) && ii.valueSet.size() != 1) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Considering indexes on table", this, "for query", projectedCols, condition, orderBy); //$NON-NLS-1$ //$NON-NLS-2$
 			int rowCost = this.tree.getRowCount();
-			int bestCost = estimateCost(orderBy, ii, rowCost);
+			long bestCost = estimateCost(orderBy, ii, rowCost);
 			for (TempTable table : this.indexTables.values()) {
 				IndexInfo secondary = new IndexInfo(table, projectedCols, condition, orderBy, false);
-				int cost = estimateCost(orderBy, secondary, rowCost);
+				long cost = estimateCost(orderBy, secondary, rowCost);
 				if (cost < bestCost) {
 					ii = secondary;
 					bestCost = cost;
@@ -521,25 +521,36 @@ public class TempTable implements Cloneable {
 	 * to compute them, since it minimizes page loads, and is a random sample.
 	 * TODO: this should also factor in the block size
 	 */
-	private int estimateCost(OrderBy orderBy, IndexInfo ii, int rowCost) {
-		int initialCost = rowCost;
+	private long estimateCost(OrderBy orderBy, IndexInfo ii, long rowCost) {
+		long initialCost = rowCost;
+		long additionalCost = 0;
 		if (ii.valueSet.size() != 0) {
 			int length = ii.valueSet.get(0).size();
-			rowCost = ii.valueSet.size() * (ii.table.getPkLength() - length + 1);
+			rowCost = ii.valueSet.size();
+			additionalCost = rowCost * (64 - Long.numberOfLeadingZeros(initialCost - 1));
 			if (ii.table.uniqueColIndex != length) {
-				rowCost *= 3;
+				rowCost *= 3*(ii.table.uniqueColIndex - length);
+			}
+			if (rowCost > initialCost) {
+				additionalCost = rowCost - initialCost;
+				rowCost = initialCost;
 			}
 		} else if (ii.upper != null) {
+			additionalCost = (64 - Long.numberOfLeadingZeros(initialCost - 1));
 			rowCost /= 3;
 		} else if (ii.lower != null) {
+			additionalCost = (64 - Long.numberOfLeadingZeros(initialCost - 1));
 			rowCost /= 3;
 		}
-		int additionalCost = Math.max(0, initialCost - rowCost);
-		int cost = Math.min(initialCost, Math.max(1, rowCost));
-		if (cost > 1 && (!ii.covering || (orderBy != null && ii.ordering == null))) {
-			cost *= (32 - Integer.numberOfLeadingZeros(cost - 1));
+		if (rowCost > 1 && (!ii.covering || (orderBy != null && ii.ordering == null))) {
+			//pk order or non-covered ordering
+			rowCost *= (64 - Long.numberOfLeadingZeros(rowCost - 1));
+			if (!ii.covering) {
+				//primary lookup
+				rowCost *= 2;
+			}
 		}
-		return cost + additionalCost;
+		return rowCost + additionalCost;
 	}
 
 	private TupleBrowser createTupleBrower(Criteria condition, boolean direction) throws TeiidComponentException {
