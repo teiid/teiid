@@ -68,7 +68,9 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	private static final String UNNAMED = "UNNAMED"; //$NON-NLS-1$
-	private static Pattern setPattern = Pattern.compile("(SET|set)\\s+(\\w+)\\s+(TO|to)\\s+'(\\w+\\d*)'");//$NON-NLS-1$
+	private static Pattern pgToastLiteral = Pattern.compile("'pg_toast'");//$NON-NLS-1$
+	private static Pattern pgCast = Pattern.compile("(\\s[^']+)::[A-Za-z0-9]*"); //$NON-NLS-1$
+	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
 			"from pg_catalog.pg_attribute ta, pg_catalog.pg_attribute ia, pg_catalog.pg_class tc, pg_catalog.pg_index i, " +//$NON-NLS-1$
@@ -625,8 +627,9 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return "SELECT 0"; //$NON-NLS-1$
 		}		
 		//these are somewhat dangerous
-		modified =  modified.replaceAll("::[A-Za-z0-9]*", " "); //$NON-NLS-1$ //$NON-NLS-2$
-		modified =  modified.replaceAll("'pg_toast'", "'SYS'"); //$NON-NLS-1$ //$NON-NLS-2$
+		modified = pgCast.matcher(modified).replaceAll("$1"); //$NON-NLS-1$
+		//TODO: use an appropriate cast
+		modified = pgToastLiteral.matcher(modified).replaceAll("'SYS'"); //$NON-NLS-1$
 		return modified;
 	}
 
