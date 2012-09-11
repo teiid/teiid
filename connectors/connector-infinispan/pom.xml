@@ -3,7 +3,7 @@
     <parent>
         <artifactId>connectors</artifactId>
         <groupId>org.jboss.teiid</groupId>
-        <version>7.7.1</version>
+        <version>7.7.2</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan</artifactId>
@@ -70,7 +70,7 @@
             <plugin>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration>
-                    <outputDirectory>target/connector-infinispan-7.7.1/connector-infinispan.rar</outputDirectory>
+                    <outputDirectory>target/connector-infinispan-7.7.2/connector-infinispan.rar</outputDirectory>
                 </configuration>
                 <executions>
                     <execution>
