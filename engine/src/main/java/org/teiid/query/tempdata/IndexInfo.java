@@ -25,10 +25,10 @@ package org.teiid.query.tempdata;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleSource;
@@ -38,6 +38,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.CollectionTupleSource;
+import org.teiid.query.processor.relational.ListNestedSortComparator;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -311,32 +312,23 @@ class IndexInfo {
 		}
 		if (!valueSet.isEmpty()) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
-			CollectionTupleSource cts = null;
-			if (direction == OrderBy.ASC) {
-				cts = new CollectionTupleSource(valueSet.iterator());
-			} else {
-				cts = new CollectionTupleSource(new Iterator<List<Object>>() {
-					ListIterator<List<Object>> iter = valueSet.listIterator(valueSet.size());
-					@Override
-					public boolean hasNext() {
-						return iter.hasPrevious();
-					}
-					@Override
-					public List<Object> next() {
-						return iter.previous();
-					}
-					@Override
-					public void remove() {
-						throw new UnsupportedOperationException();
-					}
-				});
-			}
+			sortValueSet(direction);
+			CollectionTupleSource cts = new CollectionTupleSource(valueSet.iterator());
 			return new TupleBrowser(this.table.getTree(), cts, direction);
 		}
 		if (lower != null || upper != null) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Using index for range query", lower, upper); //$NON-NLS-1$
 		} 
 		return new TupleBrowser(this.table.getTree(), lower, upper, direction);
+	}
+	
+	public void sortValueSet(boolean direction) {
+		int size = valueSet.get(0).size();
+		int[] sortOn = new int[size];
+		for (int i = 0; i <sortOn.length; i++) {
+			sortOn[i] = i;
+		}
+		Collections.sort(valueSet, new ListNestedSortComparator(sortOn, direction));
 	}
 	
 }
