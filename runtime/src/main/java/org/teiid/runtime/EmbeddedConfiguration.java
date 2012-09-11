@@ -22,11 +22,16 @@
 
 package org.teiid.runtime;
 
+import java.io.IOException;
 import java.util.List;
 
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
+import org.infinispan.manager.DefaultCacheManager;
+import org.teiid.cache.CacheFactory;
+import org.teiid.cache.infinispan.InfinispanCacheFactory;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
@@ -42,6 +47,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private WorkManager workManager;
 	private boolean useDisk = true;
 	private String bufferDirectory;
+	private CacheFactory cacheFactory;
+	private int maxResultSetCacheStaleness = 60;
 	
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -113,4 +120,26 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public String getBufferDirectory() {
 		return this.bufferDirectory;
 	}
+	
+	public CacheFactory getCacheFactory() {
+		if (this.cacheFactory == null) {
+			try {
+				DefaultCacheManager manager =   new DefaultCacheManager("infinispan-config.xml"); //$NON-NLS-1$
+				this.cacheFactory = new InfinispanCacheFactory(manager, this.getClass().getClassLoader());
+			} catch (IOException e) {
+				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40100, e);
+			}
+		}
+		return this.cacheFactory;
+	}
+	
+	public void setCacheFactory(CacheFactory cacheFactory) {
+		this.cacheFactory = cacheFactory;
+	}
+	public int getMaxResultSetCacheStaleness() {
+		return maxResultSetCacheStaleness;
+	}
+	public void setMaxResultSetCacheStaleness(int maxResultSetCacheStaleness) {
+		this.maxResultSetCacheStaleness = maxResultSetCacheStaleness;
+	}	
 }

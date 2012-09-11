@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.cache.Cachable;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -42,7 +43,7 @@ public class TestSessionAwareCache {
 	@Test
 	public void testSessionSpecfic() {
 		
-		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 		
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
@@ -65,7 +66,7 @@ public class TestSessionAwareCache {
 	@Test
 	public void testUserSpecfic() {
 		
-		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 		
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
@@ -91,7 +92,7 @@ public class TestSessionAwareCache {
 	@Test
 	public void testNoScope() {
 		
-		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 		
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		
@@ -117,7 +118,7 @@ public class TestSessionAwareCache {
 	@Test
 	public void testVDBRemoval() {
 		
-		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>();
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 		
 		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
 		

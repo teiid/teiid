@@ -28,6 +28,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.common.buffer.BufferManager;
@@ -47,6 +48,7 @@ import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+@SuppressWarnings("nls")
 public class TestRequest {
 
     private static final TempTableStore TEMP_TABLE_STORE = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
@@ -143,7 +145,7 @@ public class TestRequest {
      */
     @Test public void testProcessRequestPreparedStatement() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
-        SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>();
+        SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
         
 
         //Try before plan is cached.

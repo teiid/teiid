@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -88,7 +89,7 @@ public class TestCallableStatement {
 	private void helpProcess(String sql, List values, List[] expected,
 			HardcodedDataManager dataManager) throws TeiidComponentException,
 			TeiidProcessingException, Exception {
-		SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
 		PreparedStatementRequest plan = TestPreparedStatement.helpGetProcessorPlan(sql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.exampleBQTCached(), planCache, 1, true, false, RealMetadataFactory.exampleBQTVDB());
         TestProcessor.doProcess(plan.processPlan, dataManager, expected, plan.context);
         

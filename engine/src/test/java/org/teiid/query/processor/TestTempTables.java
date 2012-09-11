@@ -22,7 +22,10 @@
 
 package org.teiid.query.processor;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.util.Arrays;
@@ -40,6 +43,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
@@ -83,7 +87,7 @@ public class TestTempTables {
 		TestProcessor.doProcess(processorPlan, dataManager, expectedResults, cc);
 		assertTrue(Determinism.SESSION_DETERMINISTIC.compareTo(cc.getDeterminismLevel()) <= 0);
 	}
-
+	
 	@Before public void setUp() {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
@@ -91,7 +95,8 @@ public class TestTempTables {
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+	    
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(fdm, bm, cache);
 	}

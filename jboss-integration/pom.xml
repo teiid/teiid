@@ -14,6 +14,28 @@
     <dependency>
       <groupId>org.jboss.teiid</groupId>
       <artifactId>teiid-runtime</artifactId>
+      <exclusions>
+        <exclusion>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-core</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.jboss.marshalling</groupId>
+            <artifactId>jboss-marshalling-river</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.jboss.marshalling</groupId>
+            <artifactId>jboss-marshalling</artifactId>
+        </exclusion>        
+        <exclusion>
+            <groupId>org.jgroups</groupId>
+            <artifactId>jgroups</artifactId>
+        </exclusion>
+        <exclusion>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+        </exclusion>        
+      </exclusions>
     </dependency>
     
     <dependency>
@@ -72,7 +94,6 @@
     <dependency>
         <groupId>asm</groupId>
         <artifactId>asm</artifactId>
-        <version>3.3.1</version>
         <scope>provided</scope>
     </dependency>
     

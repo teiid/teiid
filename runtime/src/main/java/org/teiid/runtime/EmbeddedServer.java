@@ -29,10 +29,8 @@ import java.lang.reflect.Proxy;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,20 +42,14 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
-import org.teiid.Replicated;
-import org.teiid.Replicated.ReplicationMode;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.cache.Cache;
-import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.BundleUtil.Event;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -210,24 +202,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		T getConnectionFactory() throws TranslatorException;
 	}
 	
-	/**
-	 * Annotated cache for use with the {@link EmbeddedServer} with an {@link ObjectReplicator} instead of Infinispan.
-	 * @param <K> key
-	 * @param <V> value
-	 */
-	public interface ReplicatedCache<K, V> extends Cache<K, V> {
-
-		@Replicated(replicateState = ReplicationMode.PULL)
-		public V get(K key);
-
-		@Replicated(replicateState = ReplicationMode.PUSH)
-		V put(K key, V value, Long ttl);
-
-		@Replicated()
-		V remove(K key);
-
-	}
-	
 	private static class VDBValidationError extends TeiidRuntimeException {
 		
 		private VDBValidationError(Event event, String message) {
@@ -272,42 +246,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected LogonImpl logon;
 	private TeiidDriver driver = new TeiidDriver();
 	protected ConnectorManagerRepository cmr = new ProviderAwareConnectorManagerRepository();
-	protected DefaultCacheFactory dcf = new DefaultCacheFactory() {
-		
-		List<ReplicatedCache<?, ?>> caches = new ArrayList<ReplicatedCache<?, ?>>();
-		
-		public boolean isReplicated() {
-			return true;
-		}
-
-		@SuppressWarnings("unchecked")
-		@Override
-		public <K, V> Cache<K, V> get(String location,
-				CacheConfiguration config) {
-			Cache<K, V> result = super.get(location, config);
-			if (replicator != null) {
-				try {
-					ReplicatedCache cache = replicator.replicate("$RS$", ReplicatedCache.class, new ReplicatedCacheImpl(result), 0); //$NON-NLS-1$
-					caches.add(cache);
-					return cache;
-				} catch (Exception e) {
-					throw new TeiidRuntimeException(e);
-				}
-			}
-			return result;
-		}
-		
-		@Override
-		public void destroy() {
-			if (replicator != null) {
-				for (ReplicatedCache<?, ?> cache : caches) {
-					replicator.stop(cache);
-				}
-				caches.clear();
-			}
-			super.destroy();
-		}
-	};
+	
 	protected AbstractEventDistributorFactoryService eventDistributorFactoryService = new AbstractEventDistributorFactoryService() {
 		
 		@Override
@@ -335,14 +274,14 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.connectionFactoryProviders.put(name, connectionFactoryProvider);
 	}
 
-	public synchronized void start(EmbeddedConfiguration dqpConfiguration) {
+	public synchronized void start(EmbeddedConfiguration config) {
 		if (running != null) {
 			throw new IllegalStateException();
 		}
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
-		this.replicator = dqpConfiguration.getObjectReplicator();
-		if (dqpConfiguration.getTransactionManager() == null) {
+		this.replicator = config.getObjectReplicator();
+		if (config.getTransactionManager() == null) {
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 			this.transactionService.setTransactionManager((TransactionManager) Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[] {TransactionManager.class}, new InvocationHandler() {
 				
@@ -354,34 +293,34 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}));
 			this.detectTransactions = false;
 		} else {
-			this.transactionService.setTransactionManager(dqpConfiguration.getTransactionManager());
+			this.transactionService.setTransactionManager(config.getTransactionManager());
 		}
-		if (dqpConfiguration.getSecurityHelper() != null) {
-			this.sessionService.setSecurityHelper(dqpConfiguration.getSecurityHelper());
+		if (config.getSecurityHelper() != null) {
+			this.sessionService.setSecurityHelper(config.getSecurityHelper());
 		} else {
 			this.sessionService.setSecurityHelper(new DoNothingSecurityHelper());
 		}
-		if (dqpConfiguration.getSecurityDomains() != null) {
-			this.sessionService.setSecurityDomains(dqpConfiguration.getSecurityDomains());
+		if (config.getSecurityDomains() != null) {
+			this.sessionService.setSecurityDomains(config.getSecurityDomains());
 		} else {
 			this.sessionService.setSecurityDomains(Arrays.asList("teiid-security")); //$NON-NLS-1$
 		}
 
 		this.sessionService.setVDBRepository(repo);
-		this.bufferService.setUseDisk(dqpConfiguration.isUseDisk());
-		if (dqpConfiguration.isUseDisk()) {
-			if (dqpConfiguration.getBufferDirectory() == null) {
-				dqpConfiguration.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
+		this.bufferService.setUseDisk(config.isUseDisk());
+		if (config.isUseDisk()) {
+			if (config.getBufferDirectory() == null) {
+				config.setBufferDirectory(System.getProperty("java.io.tmpdir")); //$NON-NLS-1$
 			}
-			this.bufferService.setDiskDirectory(dqpConfiguration.getBufferDirectory());
+			this.bufferService.setDiskDirectory(config.getBufferDirectory());
 		}
 		BufferService bs = getBufferService();
 		this.dqp.setBufferManager(bs.getBufferManager());
 
 		startVDBRepository();
 
-		SessionAwareCache<CachedResults> rs = new SessionAwareCache<CachedResults>(dcf, SessionAwareCache.Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, 250, "resultsetcache")); //$NON-NLS-1$
-		SessionAwareCache<PreparedPlan> ppc = new SessionAwareCache<PreparedPlan>(dcf, SessionAwareCache.Type.PREPAREDPLAN,	new CacheConfiguration());
+		SessionAwareCache<CachedResults> rs = new SessionAwareCache<CachedResults>("resultset", config.getCacheFactory(), SessionAwareCache.Type.RESULTSET, config.getMaxResultSetCacheStaleness()); //$NON-NLS-1$
+		SessionAwareCache<PreparedPlan> ppc = new SessionAwareCache<PreparedPlan>("preparedplan", config.getCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
 		rs.setTupleBufferCache(bs.getTupleBufferCache());
 		this.dqp.setResultsetCache(rs);
 
@@ -390,7 +329,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 		this.dqp.setTransactionService(this.transactionService);
 
-		this.dqp.start(dqpConfiguration);
+		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
 		this.logon = new LogonImpl(sessionService, null);

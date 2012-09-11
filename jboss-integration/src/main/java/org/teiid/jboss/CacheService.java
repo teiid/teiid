@@ -26,7 +26,6 @@ import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.dqp.internal.process.SessionAwareCache;
@@ -38,16 +37,18 @@ class CacheService<T> implements Service<SessionAwareCache<T>> {
 	protected InjectedValue<CacheFactory> cacheFactoryInjector = new InjectedValue<CacheFactory>();
 
 	private SessionAwareCache.Type type;
-	private CacheConfiguration config;
+	private String cacheName;
+	private int maxStaleness;
 	
-	public CacheService(SessionAwareCache.Type type, CacheConfiguration config){
+	public CacheService(String cacheName, SessionAwareCache.Type type, int maxStaleness){
+		this.cacheName = cacheName;
 		this.type = type;
-		this.config = config;
+		this.maxStaleness = maxStaleness;
 	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.cache = new SessionAwareCache<T>(cacheFactoryInjector.getValue(), this.type, this.config);
+		this.cache = new SessionAwareCache<T>(this.cacheName, cacheFactoryInjector.getValue(), this.type, this.maxStaleness);
 		this.cache.setTupleBufferCache(this.tupleBufferCacheInjector.getValue());
 	}
 

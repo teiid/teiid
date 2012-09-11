@@ -20,43 +20,38 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.cache.jboss;
+package org.teiid.cache.infinispan;
 
 import java.io.Serializable;
 
 import org.infinispan.manager.CacheContainer;
 import org.teiid.cache.Cache;
-import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.jboss.IntegrationPlugin;
+import org.teiid.runtime.RuntimePlugin;
 
 
-public class JBossCacheFactory implements CacheFactory, Serializable{
+public class InfinispanCacheFactory implements CacheFactory, Serializable{
 	private static final long serialVersionUID = -2767452034178675653L;
-	private transient org.infinispan.Cache cacheStore;
+	private transient org.infinispan.manager.CacheContainer cacheStore;
 	private volatile boolean destroyed = false;
 	private ClassLoader classLoader;
 	
 
-	public JBossCacheFactory(String name, CacheContainer cm, ClassLoader classLoader) {
-		if (name != null) {
-			this.cacheStore = cm.getCache(name);
-		}
-		else {
-			this.cacheStore = cm.getCache();
-		}
+	public InfinispanCacheFactory(CacheContainer cm, ClassLoader classLoader) {
+		this.cacheStore = cm;
 		this.classLoader = classLoader;
 	}
 	
-	/**
-	 * {@inheritDoc}
-	 */
-	public Cache get(String location, CacheConfiguration config) {
+	public Cache get(String cacheName) {
 		if (!destroyed) {
-			return new JBossCache(this.cacheStore, config.getLocation(), this.classLoader);	
+			org.infinispan.Cache cache = this.cacheStore.getCache(cacheName);
+			if (cache != null) {
+				return new InfinispanCache(cache, cacheName, this.classLoader);
+			}
+			return null;
 		}
-		 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50066, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50066));
+		throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40099, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40099));
 	}
 	
 	public void destroy() {

@@ -32,6 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.cache.CacheConfiguration;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.metadata.ResultsMetadataConstants;
@@ -66,7 +68,7 @@ public class TestMetaDataProcessor {
         QueryResolver.resolveCommand(command, metadata);
         
         // Create components
-        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(new CacheConfiguration()), SessionAwareCache.Type.PREPAREDPLAN, 0);
         DQPCore requestMgr = new DQPCore();
         requestMgr.setTransactionService(new FakeTransactionService());
 
@@ -138,7 +140,7 @@ public class TestMetaDataProcessor {
     
     private MetadataResult helpTestQuery(QueryMetadataInterface metadata, String sql, VDBMetaData vdb) throws Exception {
         // Create components
-        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+        SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(new CacheConfiguration()), SessionAwareCache.Type.PREPAREDPLAN, 0);
         
         // Initialize components
         MetaDataProcessor mdProc = new MetaDataProcessor(new DQPCore(), prepPlanCache, "MyVDB", 1);

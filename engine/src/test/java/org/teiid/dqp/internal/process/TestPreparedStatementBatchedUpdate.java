@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -46,6 +47,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
  * plans that contain batched updates.
  *
  */
+@SuppressWarnings("nls")
 public class TestPreparedStatementBatchedUpdate {
 
     @Test public void testBatchedUpdatePushdown() throws Exception {
@@ -53,7 +55,7 @@ public class TestPreparedStatementBatchedUpdate {
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
 		// Create a testable prepared plan cache
-		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
 		
 		// Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -84,7 +86,7 @@ public class TestPreparedStatementBatchedUpdate {
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
         
 		// Create a testable prepared plan cache
-		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
 		
 		// Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
@@ -146,7 +148,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -242,7 +244,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE vm1.g1 SET vm1.g1.e2=? WHERE vm1.g1.e1=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -335,7 +337,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE pm1.g1 SET pm1.g1.e1=?, pm1.g1.e3=? WHERE pm1.g1.e2=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();
@@ -458,7 +460,7 @@ public class TestPreparedStatementBatchedUpdate {
         // Create query 
 		String preparedSql = "UPDATE vm1.g1 SET vm1.g1.e1=?, vm1.g1.e3=? WHERE vm1.g1.e2=?"; //$NON-NLS-1$
 		// Create a testable prepared plan cache
-		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>();
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
 		
 		// Construct data manager with data
         FakeDataManager dataManager = new FakeDataManager();

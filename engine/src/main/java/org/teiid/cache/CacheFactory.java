@@ -26,11 +26,10 @@ public interface CacheFactory {
 	
 	/**
 	 * Create / Get the cache for the give type use
-	 * @param type cache type
-	 * @param config configuration setup for the cache
+	 * @param name - name of the cache 
 	 * @return
 	 */
-	<K,V> Cache<K, V> get(String location, CacheConfiguration config);
+	<K,V> Cache<K, V> get(String name);
 
 	/**
 	 * Destroy the cache factory and any caches underneath.

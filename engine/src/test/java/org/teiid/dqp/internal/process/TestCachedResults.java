@@ -29,8 +29,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.cache.Cache;
-import org.teiid.cache.DefaultCache;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -81,12 +79,12 @@ public class TestCachedResults {
 		plan.setContext(cc);
 		results.setResults(tb, plan);
 		results.setCommand(new Query());
-		Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
+		//Cache cache = new DefaultCache("dummy"); //$NON-NLS-1$
 		long ts = results.getAccessInfo().getCreationTime();
 		// simulate the jboss-cache remote transport, where the batches are remotely looked up
 		// in cache
 		for (int row=1; row<=tb.getRowCount();row+=4) {
-			cache.put(results.getId()+","+row, tb.getBatch(row), null); //$NON-NLS-1$ 
+			//cache.put(results.getId()+","+row, tb.getBatch(row), null); //$NON-NLS-1$ 
 		}
 		
 		results.prepare(bm);
@@ -104,7 +102,7 @@ public class TestCachedResults {
 		assertTrue(cachedResults.restore(bm2));
 		
 		// since restored, simulate a async cache flush
-		cache.clear();
+		//cache.clear();
 		
 		TupleBuffer cachedTb = cachedResults.getResults();
 		

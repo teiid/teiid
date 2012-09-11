@@ -139,6 +139,16 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
 		
     	if (this.socketConfig != null) {
+    		/*
+    		try {
+				// this is to show the bound socket port in the JMX console
+				SocketBinding socketBinding = getSocketBindingInjector().getValue();
+				ManagedServerSocketBinding ss = (ManagedServerSocketBinding)socketBinding.getSocketBindings().getServerSocketFactory().createServerSocket(socketBinding.getName());
+				socketBinding.getSocketBindings().getNamedRegistry().registerBinding(ss);
+			}  catch (IOException e) {
+				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50013));
+			}
+    		*/
     		this.address = getSocketBindingInjector().getValue().getSocketAddress();
     		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
     		boolean sslEnabled = false;

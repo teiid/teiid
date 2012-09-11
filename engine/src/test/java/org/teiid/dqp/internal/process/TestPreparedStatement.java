@@ -33,6 +33,7 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.StatementType;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -79,7 +80,7 @@ public class TestPreparedStatement {
         }
         
         if ( prepPlanCache == null ) {
-        	prepPlanCache = new SessionAwareCache<PreparedPlan>();
+        	prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
         }
         
 		// expected cache hit count
@@ -194,7 +195,7 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList(0);
 
-        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>(), SESSION_ID, false, false,RealMetadataFactory.example1VDB());
+        PreparedStatementRequest plan = helpGetProcessorPlan(preparedSql, values, capFinder, metadata, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0), SESSION_ID, false, false,RealMetadataFactory.example1VDB());
         
         TestOptimizer.checkNodeTypes(plan.processPlan, TestOptimizer.FULL_PUSHDOWN);  
     }
@@ -256,7 +257,7 @@ public class TestPreparedStatement {
         List values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
 	}	
 
 	/** SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)*/
@@ -267,7 +268,7 @@ public class TestPreparedStatement {
 		List values = Arrays.asList("a"); //$NON-NLS-1$
 		
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
 	}	
 
 	/** SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e1 = ? AND pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?) */
@@ -278,7 +279,7 @@ public class TestPreparedStatement {
 		List values = Arrays.asList("d", "c"); //$NON-NLS-1$ //$NON-NLS-2$
 				
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
 	}	
 
 	/** SELECT X.e1 FROM (SELECT pm1.g2.e1 FROM pm1.g2 WHERE pm1.g2.e1 = ?) as X */
@@ -290,13 +291,13 @@ public class TestPreparedStatement {
 		List values = Arrays.asList("d"); //$NON-NLS-1$
 		
         //Create plan
-        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
+        helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
 	}	
 	
 	@Test public void testValidateWrongValues() throws Exception {
 		// Create query 
 	    String preparedSql = "SELECT pm1.g1.e1, e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE pm1.g1.e2=?"; //$NON-NLS-1$
-	    SessionAwareCache<PreparedPlan> prepCache = new SessionAwareCache<PreparedPlan>();
+	    SessionAwareCache<PreparedPlan> prepCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
 
 	    //wrong type
 		try{         	        
@@ -342,7 +343,7 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList("0"); //$NON-NLS-1$
         
-		helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>());
+		helpGetProcessorPlan(preparedSql, values, new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
     }
     
     @Test public void testLimit() throws Exception {
@@ -351,7 +352,7 @@ public class TestPreparedStatement {
         
         List values = Arrays.asList("0"); //$NON-NLS-1$
         
-        SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>();
+        SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
         
 		helpGetProcessorPlan(preparedSql, values, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), planCache, SESSION_ID, false, true, RealMetadataFactory.example1VDB());
 

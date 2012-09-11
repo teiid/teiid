@@ -32,6 +32,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
@@ -72,7 +73,7 @@ public class TestMaterialization {
 		hdm.addData("SELECT MatTable.info.e1, MatTable.info.e2 FROM MatTable.info", new List[] {Arrays.asList("a", 1), Arrays.asList("a", 2)});
 		hdm.addData("SELECT MatTable.info.e2, MatTable.info.e1 FROM MatTable.info", new List[] {Arrays.asList(1, "a"), Arrays.asList(2, "a")});
 		
-	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(hdm, bm, cache);
 	}

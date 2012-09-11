@@ -110,5 +110,7 @@ public class RuntimePlugin {
     	TEIID40096, //vdb deploy timeout
     	TEIID40097, //vdb finish timeout  
     	TEIID40098,
+    	TEIID40099,
+    	TEIID40100,
     }
 }

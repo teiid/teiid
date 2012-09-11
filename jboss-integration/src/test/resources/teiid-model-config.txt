@@ -169,22 +169,28 @@
         "required" => false,
         "default" => 8388608
     },
-    "preparedplan-cache-max-entries" => {
-        "type" => INT,
-        "description" => "Max Entries allowed",
+    "preparedplan-cache-name" => {
+        "type" => STRING,
+        "description" => "Infinispan cache name for prepared plans",
         "required" => false,
-        "default" => 512
+        "default" => "preparedplan"
     },
-    "preparedplan-cache-max-age-in-seconds" => {
-        "type" => INT,
-        "description" => "Max age in seconds",
+    "preparedplan-cache-infinispan-container" => {
+        "type" => STRING,
+        "description" => "Infinispan cache container name",
+        "required" => false
+    },
+    "preparedplan-cache-enable" => {
+        "type" => BOOLEAN,
+        "description" => "Prepared Plan cache enabled (default true)",
         "required" => false,
-        "default" => 28800
+        "default" => true
     },
     "resultset-cache-name" => {
         "type" => STRING,
         "description" => "Infinispan cache name for resultset; if not specified default cache on infinispan container is used.",
-        "required" => false
+        "required" => false,
+        "default" => "resultset"
     },
     "resultset-cache-infinispan-container" => {
         "type" => STRING,

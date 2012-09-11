@@ -22,7 +22,10 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
 
 import java.util.Iterator;
 import java.util.List;
@@ -42,8 +45,8 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.RelativePathService;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
@@ -58,17 +61,15 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.ValueService;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
-import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.deployers.VDBRepository;
@@ -126,8 +127,9 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE,
 		
 		// prepared plan cache
-		Element.PPC_MAX_ENTRIES_ATTRIBUTE,
-		Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE,
+		Element.PPC_NAME_ELEMENT,
+		Element.PPC_CONTAINER_NAME_ELEMENT,
+		Element.PPC_ENABLE_ATTRIBUTE,
 		
 		// resultset cache
 		Element.RSC_NAME_ELEMENT,
@@ -303,40 +305,67 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     		rsCache = false;
     	}
     		
-		String infinispanCacheContainer = null;
-    	if (Element.RSC_CONTAINER_NAME_ELEMENT.isDefined(operation)) {
-    		infinispanCacheContainer = Element.RSC_CONTAINER_NAME_ELEMENT.asString(operation);
+    	if (!Element.RSC_CONTAINER_NAME_ELEMENT.isDefined(operation)) {
+    		throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50094));
     	}
 
-    	String cacheName = null;
+    	String cacheName = "resultset"; //$NON-NLS-1$
     	if (Element.RSC_NAME_ELEMENT.isDefined(operation)) {
     		// if null; default cache will be used
     		cacheName = Element.RSC_NAME_ELEMENT.asString(operation);
     	}	 
     	
     	if (rsCache) {
-	    	ServiceName cfName = ServiceName.JBOSS.append("teiid", "infinispan-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
-	    	CacheFactoryService cfs = new CacheFactoryService(cacheName);
+	    	ServiceName cfName = ServiceName.JBOSS.append("teiid", "infinispan-rs-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	    	CacheFactoryService cfs = new CacheFactoryService();
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(cfName, cfs);
 	    	
-	    	if (infinispanCacheContainer != null) {
-	    		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", infinispanCacheContainer), CacheContainer.class, cfs.cacheContainerInjector); //$NON-NLS-1$
-	    	}
+	    	String ispnName = Element.RSC_CONTAINER_NAME_ELEMENT.asString(operation);
+	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), CacheContainer.class, cfs.cacheContainerInjector); //$NON-NLS-1$
 	    	newControllers.add(cacheFactoryBuilder.install());
 	    	
-	    	CacheService<CachedResults> resultSetService = new CacheService<CachedResults>(SessionAwareCache.Type.RESULTSET, buildCacheConfig(operation));
+	    	int maxStaleness = 60;
+	    	if (Element.RSC_MAX_STALENESS_ELEMENT.isDefined(operation)) {
+	    		maxStaleness = Element.RSC_MAX_STALENESS_ELEMENT.asInt(operation);
+	    	}
+	    	
+	    	CacheService<CachedResults> resultSetService = new CacheService<CachedResults>(cacheName, SessionAwareCache.Type.RESULTSET, maxStaleness);
 	    	ServiceBuilder<SessionAwareCache<CachedResults>> resultsCacheBuilder = target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService);
 	    	resultsCacheBuilder.addDependency(TeiidServiceNames.TUPLE_BUFFER, TupleBufferCache.class, resultSetService.tupleBufferCacheInjector);
 	    	resultsCacheBuilder.addDependency(cfName, CacheFactory.class, resultSetService.cacheFactoryInjector);
 	    	newControllers.add(resultsCacheBuilder.install());
     	}
     	
-    	// prepared-plan cache (note that there is no dependency on the cache factory for 
-    	// prepared plan cache, as it is always local)
-    	CacheService<PreparedPlan> preparedPlanService = new PreparedPlanCacheService(SessionAwareCache.Type.PREPAREDPLAN, buildPreparedPlanCacheConfig(operation));
-    	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
-    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.TUPLE_BUFFER, TupleBufferCache.class, preparedPlanService.tupleBufferCacheInjector);
-    	newControllers.add(preparedPlanCacheBuilder.install());
+    	// prepared-plan cache
+    	boolean ppCache = true;
+    	if (Element.PPC_ENABLE_ATTRIBUTE.isDefined(operation)) {
+    		ppCache = Element.PPC_ENABLE_ATTRIBUTE.asBoolean(operation);
+    	}
+    		
+    	if (!Element.PPC_CONTAINER_NAME_ELEMENT.isDefined(operation)) {
+    		throw new OperationFailedException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50095));
+    	}
+
+    	cacheName = "preparedplan"; //$NON-NLS-1$
+    	if (Element.PPC_NAME_ELEMENT.isDefined(operation)) {
+    		cacheName = Element.PPC_NAME_ELEMENT.asString(operation);
+    	}	 
+    	
+    	if (ppCache) {
+	    	ServiceName cfName = ServiceName.JBOSS.append("teiid", "infinispan-pp-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	    	CacheFactoryService cfs = new CacheFactoryService();
+	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(cfName, cfs);
+	    	
+	    	String ispnName = Element.PPC_CONTAINER_NAME_ELEMENT.asString(operation);
+    		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), CacheContainer.class, cfs.cacheContainerInjector); //$NON-NLS-1$
+	    	newControllers.add(cacheFactoryBuilder.install());
+	    	
+	    	CacheService<PreparedPlan> preparedPlanService = new CacheService<PreparedPlan>(cacheName, SessionAwareCache.Type.PREPAREDPLAN, 0);
+	    	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
+	    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.TUPLE_BUFFER, TupleBufferCache.class, preparedPlanService.tupleBufferCacheInjector);
+	    	preparedPlanCacheBuilder.addDependency(cfName, CacheFactory.class, preparedPlanService.cacheFactoryInjector);
+	    	newControllers.add(preparedPlanCacheBuilder.install());
+    	}    	
     	
     	// Query Engine
     	final DQPCoreService engine = buildQueryEngine(operation);
@@ -467,47 +496,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	
     	return bufferManger;
     }	
-
-    private CacheConfiguration buildCacheConfig(ModelNode node) {
-
-    	CacheConfiguration cacheConfig = new CacheConfiguration();
-    	cacheConfig.setMaxEntries(1024);
-   		cacheConfig.setMaxAgeInSeconds(7200);
-   		cacheConfig.setType(Policy.EXPIRATION.name());
-    	cacheConfig.setLocation("resultset"); //$NON-NLS-1$
-    	cacheConfig.setMaxStaleness(60);
-    	
-   		if (Element.RSC_MAX_STALENESS_ELEMENT.isDefined(node)) {
-    		cacheConfig.setMaxStaleness(Element.RSC_MAX_STALENESS_ELEMENT.asInt(node));
-    	}
-
-   		return cacheConfig;
-	}	      
-    
-    
-    private CacheConfiguration buildPreparedPlanCacheConfig(ModelNode node) {
-    	CacheConfiguration cacheConfig = new CacheConfiguration();
-    	if (Element.PPC_MAX_ENTRIES_ATTRIBUTE.isDefined(node)) {
-    		cacheConfig.setMaxEntries(Element.PPC_MAX_ENTRIES_ATTRIBUTE.asInt(node));
-    	}
-    	else {
-    		cacheConfig.setMaxEntries(512);
-    	}
-    	
-    	if (Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE.isDefined(node)) {
-    		cacheConfig.setMaxAgeInSeconds(Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE.asInt(node));
-    	}
-    	else {
-    		cacheConfig.setMaxAgeInSeconds(28800);
-    	}
-    	
-		cacheConfig.setType(Policy.LRU.name());
-    	
-    	cacheConfig.setLocation("prepared"); //$NON-NLS-1$
-    	
-    	return cacheConfig;
-	}	    
-    
     
 	private DQPCoreService buildQueryEngine(ModelNode node) {
 		DQPCoreService engine = new DQPCoreService();

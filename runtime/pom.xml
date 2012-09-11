@@ -54,5 +54,31 @@
         <groupId>javax.resource</groupId>
         <artifactId>connector-api</artifactId>
     </dependency>
+    <dependency>
+        <groupId>org.infinispan</groupId>
+        <artifactId>infinispan-core</artifactId>
+        <exclusions>
+            <exclusion>
+              <groupId>org.jboss.spec.javax.transaction</groupId>
+              <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>    
+    <dependency>
+        <groupId>org.jboss.marshalling</groupId>
+        <artifactId>jboss-marshalling-river</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.marshalling</groupId>
+        <artifactId>jboss-marshalling</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jgroups</groupId>
+        <artifactId>jgroups</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>org.jboss.logging</groupId>
+        <artifactId>jboss-logging</artifactId>
+    </dependency>    
   </dependencies>
 </project>

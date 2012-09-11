@@ -76,8 +76,9 @@ enum Element {
 	
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),
-	PPC_MAX_ENTRIES_ATTRIBUTE("max-entries", "preparedplan-cache-max-entries", ModelType.INT, false, "512"),
-	PPC_MAX_AGE_IN_SECS_ATTRIBUTE("max-age-in-seconds", "preparedplan-cache-max-age-in-seconds", ModelType.INT, false, "28800"),
+	PPC_ENABLE_ATTRIBUTE("enable", "preparedplan-cache-enable", ModelType.BOOLEAN, false, "true"),
+	PPC_NAME_ELEMENT("name", "preparedplan-cache-name", ModelType.STRING, false, "preparedplan"),
+	PPC_CONTAINER_NAME_ELEMENT("infinispan-container", "preparedplan-cache-infinispan-container", ModelType.STRING, false, null),
 	
 	// Object Replicator
 	DISTRIBUTED_CACHE("distributed-cache"),
@@ -86,7 +87,7 @@ enum Element {
 	// Result set cache	
 	RESULTSET_CACHE_ELEMENT("resultset-cache"),
 	RSC_ENABLE_ATTRIBUTE("enable", "resultset-cache-enable", ModelType.BOOLEAN, false, "true"),
-	RSC_NAME_ELEMENT("name", "resultset-cache-name", ModelType.STRING, false, null),
+	RSC_NAME_ELEMENT("name", "resultset-cache-name", ModelType.STRING, false, "resultset"),
 	RSC_CONTAINER_NAME_ELEMENT("infinispan-container", "resultset-cache-infinispan-container", ModelType.STRING, false, null),
 	RSC_MAX_STALENESS_ELEMENT("max-staleness", "resultset-cache-max-staleness", ModelType.INT, false, "60"),
 	

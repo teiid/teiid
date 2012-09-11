@@ -204,8 +204,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 	}
 
 	private void writePreparedPlanCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
-		writeAttribute(writer, Element.PPC_MAX_ENTRIES_ATTRIBUTE, node);
-		writeAttribute(writer, Element.PPC_MAX_AGE_IN_SECS_ATTRIBUTE, node);
+		writeAttribute(writer, Element.PPC_NAME_ELEMENT, node);
+		writeAttribute(writer, Element.PPC_CONTAINER_NAME_ELEMENT, node);
+		writeAttribute(writer, Element.PPC_ENABLE_ATTRIBUTE, node);
 	}
 
 	private boolean has(ModelNode node, String name) {
@@ -637,17 +638,18 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     			String attrValue = reader.getAttributeValue(i);
     			Element element = Element.forName(attrName, Element.PREPAREDPLAN_CACHE_ELEMENT);
     			switch(element) {
-                case PPC_MAX_ENTRIES_ATTRIBUTE:
-                	node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-                	break;
-                	
-                case PPC_MAX_AGE_IN_SECS_ATTRIBUTE:
-                	node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-                	break;
-                	
-                default: 
-                    throw ParseUtils.unexpectedAttribute(reader, i);
-    			}
+    			case PPC_CONTAINER_NAME_ELEMENT:
+    				node.get(element.getModelName()).set(attrValue);
+    				break;
+    			case PPC_ENABLE_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				break;
+    			case PPC_NAME_ELEMENT:
+    				node.get(element.getModelName()).set(attrValue);
+    				break;
+    			default: 
+                	throw ParseUtils.unexpectedAttribute(reader, i);
+    			} 
     		}
     	}    	
         while (reader.hasNext() && (reader.nextTag() != XMLStreamConstants.END_ELEMENT));

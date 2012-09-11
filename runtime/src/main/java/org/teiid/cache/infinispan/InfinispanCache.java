@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.cache.jboss;
+package org.teiid.cache.infinispan;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -31,13 +31,14 @@ import org.teiid.cache.Cache;
 /**
  * Implementation of Cache using Infinispan
  */
-public class JBossCache<K, V> implements Cache<K, V> {
+public class InfinispanCache<K, V> implements Cache<K, V> {
 
 	protected org.infinispan.AdvancedCache<K, V> cacheStore;
 	private final String name; 
 	private ClassLoader classloader;
 	
-	public JBossCache(org.infinispan.Cache<K, V> cacheStore, String cacheName, ClassLoader classloader) {
+	public InfinispanCache(org.infinispan.Cache<K, V> cacheStore, String cacheName, ClassLoader classloader) {
+		assert(cacheStore != null);
 		this.cacheStore = cacheStore.getAdvancedCache();
 		this.name = cacheName;
 		this.classloader = classloader;

@@ -32,11 +32,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.teiid.adminapi.Admin;
 import org.teiid.cache.Cachable;
 import org.teiid.cache.Cache;
-import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.DefaultCache;
-import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.EquivalenceUtil;
@@ -61,7 +57,6 @@ public class SessionAwareCache<T> {
 	private Cache<CacheID, T> localCache;
 	private Cache<CacheID, T> distributedCache;
 	
-	private int maxSize = DEFAULT_MAX_SIZE_TOTAL;
 	private long modTime;
 	private Type type;
 	
@@ -71,30 +66,25 @@ public class SessionAwareCache<T> {
 	
 	private TupleBufferCache bufferManager;
 	
-	public SessionAwareCache(){
-		this(DEFAULT_MAX_SIZE_TOTAL);
-	}
-	
-	SessionAwareCache(int maxSize){
-		this(new DefaultCacheFactory(), Type.RESULTSET, new CacheConfiguration(Policy.LRU, 60, maxSize, "default")); //$NON-NLS-1$
-	}
-	
-	public SessionAwareCache (final CacheFactory cacheFactory, final Type type, final CacheConfiguration config){
-		this.maxSize = config.getMaxEntries();
-		if(this.maxSize < 0){
-			this.maxSize = Integer.MAX_VALUE;
-		}		
-		this.localCache = new DefaultCache<CacheID, T>("local", maxSize, config.getMaxAgeInSeconds()*1000); //$NON-NLS-1$
+	public SessionAwareCache (String cacheName, final CacheFactory cacheFactory, final Type type, int maxStaleness) {
+		assert (cacheFactory != null);
+		
+		this.localCache = cacheFactory.get(cacheName); 
 		
 		if (type == Type.PREPAREDPLAN) {
 			this.distributedCache = localCache;
 		}
 		else {
-			String location = config.getLocation()+"/"+type.name(); //$NON-NLS-1$
-			this.distributedCache = cacheFactory.get(location, config);
+			this.distributedCache = cacheFactory.get(cacheName+"-repl"); //$NON-NLS-1$
+			if (this.distributedCache == null && this.localCache != null) {
+				this.distributedCache = this.localCache;
+			}
 		}
-		this.modTime = config.getMaxStaleness()*1000;
+		this.modTime = maxStaleness * 1000;
 		this.type = type;
+		
+		assert (this.localCache != null);
+		assert (this.distributedCache != null);
 	}	
 	
 	public T get(CacheID id){
@@ -315,10 +305,6 @@ public class SessionAwareCache<T> {
 	    
 	}
 	
-    int getSpaceAllowed() {
-        return maxSize;
-    }
-    
     public void setTupleBufferCache(TupleBufferCache bufferManager) {
     	this.bufferManager = bufferManager;
     }

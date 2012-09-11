@@ -119,8 +119,8 @@ public class TestDQPCore {
 		FakeBufferService bs = new FakeBufferService(bm, bm);
         core = new DQPCore();
         core.setBufferManager(bs.getBufferManager());
-        core.setResultsetCache(new SessionAwareCache<CachedResults>(new DefaultCacheFactory(), SessionAwareCache.Type.RESULTSET, new CacheConfiguration()));
-        core.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>(new DefaultCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, new CacheConfiguration()));
+        core.setResultsetCache(new SessionAwareCache<CachedResults>("resultset", new DefaultCacheFactory(new CacheConfiguration()), SessionAwareCache.Type.RESULTSET, 0));
+        core.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(new CacheConfiguration()), SessionAwareCache.Type.PREPAREDPLAN, 0));
         core.setTransactionService(new FakeTransactionService());
         
         config = new DQPConfiguration();
@@ -524,7 +524,8 @@ public class TestDQPCore {
         reqMsg.setUseResultSetCache(true);
         ResultsMessage rm = execute(userName, sessionid, reqMsg);
         assertEquals(10, rm.getResultsList().size()); //$NON-NLS-1$
-                
+        assertEquals(0, this.core.getRsCache().getCacheHitCount());        
+        
         sql = "select * FROM vqt.SmallB"; //$NON-NLS-1$
         reqMsg = exampleRequestMessage(sql);
         reqMsg.setUseResultSetCache(true);

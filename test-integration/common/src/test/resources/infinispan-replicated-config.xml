@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<infinispan xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:infinispan:config:5.1 http://www.infinispan.org/schemas/infinispan-config-5.1.xsd" xmlns="urn:infinispan:config:5.1">
+
+    <global>
+        <transport clusterName="teiid-cluster" machineId="m1" rackId="r1" nodeName="Node-A">
+         <properties>
+            <property name="configurationFile" value="tcp.xml"/>
+         </properties>        
+        </transport>
+    </global>
+
+    <namedCache name="resultset">
+        <eviction maxEntries="1024" strategy="LIRS" />
+        <expiration lifespan="7200000"/>
+        <clustering mode="local"/>
+    </namedCache>
+    
+    <namedCache name="resultset-repl">
+        <eviction maxEntries="1024" strategy="LIRS" />
+        <expiration lifespan="7200000"/>
+        <clustering mode="replication">
+            <sync/>
+        </clustering>
+    </namedCache>
+        
+    <namedCache name="preparedplan">
+        <eviction maxEntries="512" strategy="LIRS"/>
+        <expiration lifespan="28800"/>    
+        <clustering mode="local"/>
+    </namedCache>         
+
+</infinispan>

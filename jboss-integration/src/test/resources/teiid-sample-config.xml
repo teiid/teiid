@@ -26,7 +26,7 @@
     
     <resultset-cache name="cache" infinispan-container="container" enable="false" max-staleness="90"/>
     
-    <preparedplan-cache max-entries="512" max-age-in-seconds="28800"/>
+    <preparedplan-cache name="prepcache" infinispan-container="prep-container" enable="false"/>
     
     <distributed-cache jgroups-stack="stack"/>
     

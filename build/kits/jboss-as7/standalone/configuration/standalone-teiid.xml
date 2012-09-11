@@ -171,8 +171,16 @@
             <cache-container name="teiid" default-cache="resultset">
                 <local-cache name="resultset">
                     <expiration lifespan="7200000" />
-                    <eviction max-entries="1024" strategy="LRU"/>
+                    <eviction max-entries="1024" strategy="LIRS"/>
                 </local-cache>
+                <local-cache name="resultset-repl">
+                    <expiration lifespan="7200000" />
+                    <eviction max-entries="1024" strategy="LIRS"/>
+                </local-cache>                
+                <local-cache name="preparedplan">
+                    <expiration lifespan="28800" />
+                    <eviction max-entries="512" strategy="LIRS"/>
+                </local-cache>  
             </cache-container>            
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:jaxrs:1.0"/>
@@ -268,7 +276,8 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:teiid:1.0">
             <async-thread-pool>teiid-async</async-thread-pool>
-            <resultset-cache infinispan-container="teiid"/>
+            <resultset-cache infinispan-container="teiid" name="resultset"/>
+            <preparedplan-cache infinispan-container="teiid" name="preparedplan"/>
             
             <transport name="embedded"/>
             <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">

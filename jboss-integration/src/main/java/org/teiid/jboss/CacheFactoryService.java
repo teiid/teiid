@@ -29,26 +29,20 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.cache.CacheFactory;
-import org.teiid.cache.DefaultCacheFactory;
-import org.teiid.cache.jboss.JBossCacheFactory;
+import org.teiid.cache.infinispan.InfinispanCacheFactory;
 
 class CacheFactoryService implements Service<CacheFactory> {
 	protected InjectedValue<CacheContainer> cacheContainerInjector = new InjectedValue<CacheContainer>();
-	private String cacheName;
 	private CacheFactory cacheFactory;
-	
-	public CacheFactoryService(String cacheName){
-		this.cacheName = cacheName;
-	}
 	
 	@Override
 	public void start(StartContext context) throws StartException {
 		CacheContainer cc = cacheContainerInjector.getValue();
 		if (cc != null) {
-			this.cacheFactory = new JBossCacheFactory(this.cacheName, cc, Module.getCallerModule().getClassLoader());
+			this.cacheFactory = new InfinispanCacheFactory(cc, Module.getCallerModule().getClassLoader());
 		}
 		else {
-			this.cacheFactory = new DefaultCacheFactory();
+			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50093));
 		}
 	}
 

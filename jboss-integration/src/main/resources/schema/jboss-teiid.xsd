@@ -227,10 +227,10 @@
                     <xs:documentation>Configuration for prepared plan caching. (local memory only)</xs:documentation>
                 </xs:annotation>
                 <xs:complexType>
-                    <xs:attribute name="max-entries" type="xs:int" default="512"/>
-                    <xs:attribute name="max-age-in-seconds" type="xs:int" default="28800"/>
-                    <xs:attribute name="max-staleness" type="xs:int" default="0"/>    
-                </xs:complexType>            
+                    <xs:attribute name="name" type="xs:string"/>
+                    <xs:attribute name="infinispan-container" type="xs:string" use="required"/>
+                    <xs:attribute name="enable" type="xs:boolean" default="true"/>
+                </xs:complexType>
             </xs:element>
             
             <xs:element name="distributed-cache" maxOccurs="1" minOccurs="0">

@@ -33,6 +33,7 @@ import java.util.*;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -244,7 +245,7 @@ public class TestProcessor {
         	context.setGlobalTableStore(gts);
         }
         if (!(dataManager instanceof TempTableDataManager)) {
-    	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
+    	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
     	    cache.setTupleBufferCache(bufferMgr);
         	dataManager = new TempTableDataManager(dataManager, bufferMgr, cache);
         }        
@@ -352,7 +353,7 @@ public class TestProcessor {
 		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
-        context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>());
+        context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));
 		return context;
 	}   
     	
