@@ -152,7 +152,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		return this.status;
 	}
 	
-	public void setStatus(Status s) {
+	public synchronized void setStatus(Status s) {
+		this.notifyAll();
 		this.status = s;
 	}
 	
