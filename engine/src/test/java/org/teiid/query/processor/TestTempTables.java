@@ -318,6 +318,9 @@ public class TestTempTables {
 		execute("insert into x (e2, e1) values (3, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("insert into x (e2, e1) values (2, 'one')", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
 		execute("select * from x as y order by e2 desc", new List[] {Arrays.asList("one", 3), Arrays.asList("one", 2)}); //$NON-NLS-1$
+		execute("select * from x as y where e2 in (2, 3) order by e2 desc", new List[] {Arrays.asList("one", 3), Arrays.asList("one", 2)}); //$NON-NLS-1$
+		execute("select * from x as y where e2 in (3, 2) order by e2", new List[] {Arrays.asList("one", 2), Arrays.asList("one", 3)}); //$NON-NLS-1$
+		execute("select * from x as y where e2 in (3, 2) order by e2 desc", new List[] {Arrays.asList("one", 3), Arrays.asList("one", 2)}); //$NON-NLS-1$
 	}
 	
 	@Test public void testOrderByWithoutIndex() throws Exception {
