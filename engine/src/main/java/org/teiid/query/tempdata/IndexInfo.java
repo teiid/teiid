@@ -312,7 +312,9 @@ class IndexInfo {
 		}
 		if (!valueSet.isEmpty()) {
 			LogManager.logDetail(LogConstants.CTX_DQP, "Using index value set"); //$NON-NLS-1$
-			sortValueSet(direction);
+			if (ordering != null) {
+				sortValueSet(direction);
+			}
 			CollectionTupleSource cts = new CollectionTupleSource(valueSet.iterator());
 			return new TupleBrowser(this.table.getTree(), cts, direction);
 		}
