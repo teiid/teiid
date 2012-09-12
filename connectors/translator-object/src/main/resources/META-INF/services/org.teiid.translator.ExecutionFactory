@@ -1,0 +1,4 @@
+org.teiid.translator.object.infinispan.InfinispanExecutionFactory
+org.teiid.translator.object.infinispan.InfinispanRemoteExecutionFactory
+org.teiid.translator.object.mapcache.MapCacheExecutionFactory
+
