@@ -38,7 +38,7 @@ import org.teiid.translator.Translator;
  * 
  */
 
-@Translator(name = "infinispanRemoteCache", description = "The Execution Factory for Remote Infinispan Cache")
+@Translator(name = "infinispanremote-cache", description = "The Execution Factory for Remote Infinispan Cache")
 public class InfinispanRemoteExecutionFactory extends
 		InfinispanExecutionFactory {
 	// public static final String DATAGRID_HOST = "datagrid.host";

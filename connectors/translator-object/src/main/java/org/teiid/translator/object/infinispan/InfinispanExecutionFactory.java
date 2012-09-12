@@ -46,7 +46,7 @@ import org.teiid.translator.object.ObjectPlugin;
 import org.teiid.translator.object.infinispan.search.LuceneSearch;
 import org.teiid.translator.object.infinispan.search.SearchByKey;
 
-@Translator(name = "infinispanCache", description = "The Infinispan Cache Translator")
+@Translator(name = "infinispan-cache", description = "The Infinispan Cache Translator")
 public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	public static final String PROPERTIES_FILE = "META-INF" + File.separator
 			+ "datagrid.properties";

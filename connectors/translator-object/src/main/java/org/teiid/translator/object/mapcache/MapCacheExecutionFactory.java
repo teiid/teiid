@@ -24,7 +24,7 @@ package org.teiid.translator.object.mapcache;
 import org.teiid.translator.Translator;
 import org.teiid.translator.object.ObjectExecutionFactory;
 
-@Translator(name = "mapCache", description = "The Map Cache Factory")
+@Translator(name = "map-cache", description = "The Map Cache Factory")
 public class MapCacheExecutionFactory extends ObjectExecutionFactory {
 
 	public MapCacheExecutionFactory() {
