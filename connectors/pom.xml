@@ -106,5 +106,6 @@
     <module>translator-olap</module>
     <module>translator-hive</module>
     <module>translator-jpa</module>
+    <module>translator-object</module>
   </modules>
 </project>
