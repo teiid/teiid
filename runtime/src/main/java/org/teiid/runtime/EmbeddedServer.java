@@ -48,8 +48,8 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.core.BundleUtil.Event;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.BundleUtil.Event;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -166,7 +166,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 							}
 						});
 						tc.setTransaction(tx);
-						tc.setTransactionType(Scope.LOCAL);
+						tc.setTransactionType(Scope.GLOBAL);
 					}
 				} catch (SystemException e) {
 				} catch (IllegalStateException e) {

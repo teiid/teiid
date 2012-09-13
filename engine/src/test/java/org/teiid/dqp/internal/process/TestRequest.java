@@ -115,6 +115,7 @@ public class TestRequest {
         
         Request request = helpProcessMessage(message, null, workContext);
         assertEquals("1", request.context.getConnectionId()); //$NON-NLS-1$
+        assertNotNull(request.context.getTransactionContext());
     }
 
     private Request helpProcessMessage(RequestMessage message, SessionAwareCache<PreparedPlan> cache, DQPWorkContext workContext) throws TeiidComponentException,

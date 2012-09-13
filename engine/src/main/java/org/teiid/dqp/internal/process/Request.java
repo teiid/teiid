@@ -254,7 +254,6 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setRequestId(this.requestId);
         this.context.setDQPWorkContext(this.workContext);
         this.context.setTransactionService(this.transactionService);
-        this.context.setTransactionContext(this.transactionContext);
         this.context.setVDBClassLoader(workContext.getVDB().getAttachment(ClassLoader.class));
     }
     
@@ -366,6 +365,7 @@ public class Request implements SecurityFunctionEvaluator {
         
         tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
+        this.context.setTransactionContext(tc);
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
     	this.processor.setContinuous(this.requestMsg.getRequestOptions().isContinuous());
     }

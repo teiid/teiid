@@ -27,12 +27,24 @@ import static org.junit.Assert.*;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javax.transaction.HeuristicMixedException;
+import javax.transaction.HeuristicRollbackException;
+import javax.transaction.InvalidTransactionException;
+import javax.transaction.NotSupportedException;
+import javax.transaction.RollbackException;
+import javax.transaction.Status;
+import javax.transaction.SystemException;
+import javax.transaction.Transaction;
+import javax.transaction.TransactionManager;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.deployers.VirtualDatabaseException;
@@ -54,6 +66,85 @@ import org.teiid.translator.UpdateExecution;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
+	private final class MockTransactionManager implements TransactionManager {
+		ThreadLocal<Transaction> txns = new ThreadLocal<Transaction>();
+		List<Transaction> txnHistory = new ArrayList<Transaction>();
+
+		@Override
+		public Transaction suspend() throws SystemException {
+			Transaction result = txns.get();
+			txns.remove();
+			return result;
+		}
+
+		@Override
+		public void setTransactionTimeout(int seconds) throws SystemException {
+		}
+
+		@Override
+		public void setRollbackOnly() throws IllegalStateException, SystemException {
+			Transaction result = txns.get();
+			if (result == null) {
+				throw new IllegalStateException();
+			}
+			result.setRollbackOnly();
+		}
+
+		@Override
+		public void rollback() throws IllegalStateException, SecurityException,
+				SystemException {
+			Transaction t = checkNull(false);
+			txns.remove();
+			t.rollback();
+		}
+
+		@Override
+		public void resume(Transaction tobj) throws InvalidTransactionException,
+				IllegalStateException, SystemException {
+			checkNull(true);
+			txns.set(tobj);
+		}
+
+		private Transaction checkNull(boolean isNull) {
+			Transaction t = txns.get();
+			if ((!isNull && t == null) || (isNull && t != null)) {
+				throw new IllegalStateException();
+			}
+			return t;
+		}
+
+		@Override
+		public Transaction getTransaction() throws SystemException {
+			return txns.get();
+		}
+
+		@Override
+		public int getStatus() throws SystemException {
+			Transaction t = txns.get();
+			if (t == null) {
+				return Status.STATUS_NO_TRANSACTION;
+			}
+			return t.getStatus();
+		}
+
+		@Override
+		public void commit() throws RollbackException, HeuristicMixedException,
+				HeuristicRollbackException, SecurityException,
+				IllegalStateException, SystemException {
+			Transaction t = checkNull(false);
+			txns.remove();
+			t.commit();
+		}
+
+		@Override
+		public void begin() throws NotSupportedException, SystemException {
+			checkNull(true);
+			Transaction t = Mockito.mock(Transaction.class);
+			txnHistory.add(t);
+			txns.set(t);
+		}
+	}
+
 	EmbeddedServer es;
 	
 	@Before public void setup() {
@@ -226,6 +317,49 @@ public class TestEmbeddedServer {
 		} catch (VirtualDatabaseException e) {
 			
 		}
+	}
+	
+	@Test public void testTransactions() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setModelType(Type.VIRTUAL);
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view v as select 1; " +
+				"create virtual procedure proc () options (updatecount 2) as begin select * from v; end; " +
+				"create virtual procedure proc1 () as begin atomic select * from v; end; ");
+
+		es.deployVDB("test", mmd1);
+		
+		TeiidDriver td = es.getDriver();
+		Connection c = td.connect("jdbc:teiid:test", null);
+		//local txn
+		c.setAutoCommit(false);
+		Statement s = c.createStatement();
+		s.execute("select 1");
+		c.setAutoCommit(true);
+		assertEquals(1, tm.txnHistory.size());
+		Transaction txn = tm.txnHistory.remove(0);
+		Mockito.verify(txn).commit();
+		
+		//should be an auto-commit txn (could also force with autoCommitTxn=true)
+		s.execute("call proc ()");
+		
+		assertEquals(1, tm.txnHistory.size());
+		txn = tm.txnHistory.remove(0);
+		Mockito.verify(txn).commit();
+		
+		//block txn
+		s.execute("call proc1()");
+		
+		assertEquals(1, tm.txnHistory.size());
+		txn = tm.txnHistory.remove(0);
+		Mockito.verify(txn).commit();
 	}
 
 }

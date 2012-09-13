@@ -356,13 +356,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private void resume() throws XATransactionException {
-		if (this.transactionState == TransactionState.ACTIVE && isSuspendable()) {
+		if (this.transactionState == TransactionState.ACTIVE) {
 			this.transactionService.resume(this.transactionContext);
 		}
 	}
 
 	private boolean isSuspendable() {
-		return !this.useCallingThread && this.transactionContext.getTransaction() != null;
+		return this.transactionContext.getTransaction() != null && !(this.useCallingThread & this.transactionContext.getTransactionType() == Scope.GLOBAL);
 	}
 
 	private void suspend() {

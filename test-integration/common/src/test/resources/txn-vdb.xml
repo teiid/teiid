@@ -1,0 +1,8 @@
+<vdb name="txn" version= "1">
+    <model visible = "true" type = "VIRTUAL" name = "x">
+         <metadata type = "DDL"><![CDATA[
+              CREATE VIRTUAL PROCEDURE PROC() AS BEGIN ATOMIC declare integer x = 1; END;
+         ]]>
+         </metadata>
+    </model>
+</vdb>

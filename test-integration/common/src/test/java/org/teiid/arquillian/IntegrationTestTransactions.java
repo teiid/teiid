@@ -25,7 +25,6 @@ package org.teiid.arquillian;
 import static org.junit.Assert.*;
 
 import java.io.FileInputStream;
-import java.util.Properties;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
@@ -41,7 +40,7 @@ import org.teiid.jdbc.TeiidDriver;
 
 @RunWith(Arquillian.class)
 @SuppressWarnings("nls")
-public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCase {
+public class IntegrationTestTransactions extends AbstractMMQueryTestCase {
 
 	private Admin admin;
 	
@@ -59,21 +58,22 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 	@Test
     public void testViewDefinition() throws Exception {
 				
-		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
+		admin.deploy("txn-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("txn-vdb.xml")));
 		
-		Properties props = new Properties();
-		props.setProperty("ParentDirectory", "../docs/teiid/examples/dynamicvdb-portfolio/data");
-		props.setProperty("AllowParentPaths", "true");
-		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "txn", 1, 30));
 		
-		AdminUtil.createDataSource(admin, "marketdata-file", "teiid-connector-file.rar", props);
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:txn@mm://localhost:31000;user=user;password=user", null);
 		
-		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
-		
-		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
-		
-		execute("SELECT * FROM Sys.Columns WHERE tablename='stock'"); //$NON-NLS-1$
-		assertRowCount(2);
+		execute("create local temporary table temp (x integer)"); //$NON-NLS-1$
+		execute("call proc()");
+		execute("start transaction"); //$NON-NLS-1$
+		execute("call proc()");
+		execute("insert into temp (x) values (1)"); //$NON-NLS-1$
+		execute("select * from temp");
+		assertRowCount(1);
+		execute("rollback");
+		execute("select * from temp");
+		assertRowCount(0);
     }
 
 }
