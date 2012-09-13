@@ -68,7 +68,7 @@ import org.teiid.query.sql.symbol.ExpressionSymbol;
  * TODO: in this implementation blocked exceptions will not happen
  *       allowing for subquery evaluation though would cause pauses
  */
-public class TempTable implements Cloneable {
+public class TempTable implements Cloneable, SearchableTable {
 	
 	private final class InsertUpdateProcessor extends UpdateProcessor {
 		
@@ -94,7 +94,6 @@ public class TempTable implements Cloneable {
 			tree.setBatchInsert(false);
 		}
 		
-
 		@Override
 		protected void tuplePassed(List tuple) throws BlockedException,
 				TeiidComponentException, TeiidProcessingException {
@@ -452,9 +451,9 @@ public class TempTable implements Cloneable {
 			if (ii.ordering != null) {
 				//use order and join
 				primary.valueTs = ii.table.createTupleSource(pkColumns, 
-						Criteria.combineCriteria(ii.coveredCriteria), orderBy, ii, agg);
+						ii.coveredCriteria, orderBy, ii, agg);
 				primary.ordering = null;
-				return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), null, primary, agg);
+				return createTupleSource(projectedCols, ii.nonCoveredCriteria, null, primary, agg);
 			} 
 			//order by pk to localize lookup costs, then join
 			OrderBy pkOrderBy = new OrderBy();
@@ -462,8 +461,8 @@ public class TempTable implements Cloneable {
 				pkOrderBy.addVariable(elementSymbol);
 			}
 			primary.valueTs = ii.table.createTupleSource(pkColumns, 
-					Criteria.combineCriteria(ii.coveredCriteria), pkOrderBy, ii, agg);
-			return createTupleSource(projectedCols, Criteria.combineCriteria(ii.nonCoveredCriteria), orderBy, primary, agg);
+					ii.coveredCriteria, pkOrderBy, ii, agg);
+			return createTupleSource(projectedCols, ii.nonCoveredCriteria, orderBy, primary, agg);
 		}
 		return createTupleSource(projectedCols, condition, orderBy, ii, agg);
 	}
@@ -572,6 +571,20 @@ public class TempTable implements Cloneable {
 		} finally {
 			lock.writeLock().unlock();
 		}
+	}
+	
+	@Override
+	public boolean matchesPkColumn(int pkIndex, Expression ex) {
+		if (rowId != null) {
+			return false;
+		}
+		return columns.get(pkIndex).equals(ex);
+	}
+	
+	@Override
+	public boolean supportsOrdering(int pkIndex, Expression ex) {
+		//all indexes are currently ordered
+		return true;
 	}
 	
 	public List<ElementSymbol> getColumns() {
@@ -696,7 +709,7 @@ public class TempTable implements Cloneable {
 	
 	private void insertTuple(List<?> list, boolean ordered) throws TeiidComponentException, TeiidProcessingException {
 		if (tree.insert(list, ordered?InsertMode.ORDERED:InsertMode.NEW, -1) != null) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30238, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30238));
+			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30238, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30238, this.tid.getID()));
 		}
 	}
 	
@@ -798,7 +811,7 @@ public class TempTable implements Cloneable {
 		return this.tid.getCacheHint();
 	}
 	
-	int getPkLength() {
+	public int getPkLength() {
 		if (rowId != null) {
 			return 0;
 		}
@@ -814,7 +827,7 @@ public class TempTable implements Cloneable {
 		return tid.getID() + " (" + columns + ")\n"; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
-	Map<Expression, Integer> getColumnMap() {
+	public Map<Expression, Integer> getColumnMap() {
 		return this.columnMap;
 	}
 	

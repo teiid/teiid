@@ -75,13 +75,13 @@ public abstract class Criteria implements Expression {
 		return parts;			
 	}
     
-    public static Criteria combineCriteria(List parts) {
+    public static Criteria combineCriteria(List<Criteria> parts) {
         if(parts == null || parts.isEmpty()) { 
             return null;
         }
         
         if (parts.size() == 1) {
-            return (Criteria)parts.get(0);
+            return parts.get(0);
         }
         
         return new CompoundCriteria(parts);           

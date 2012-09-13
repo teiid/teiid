@@ -149,21 +149,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		checkResult("testReferenceKeyColumns", "select* FROM SYS.ReferenceKeyColumns order by PKTABLE_NAME"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
-	
-	@Test public void test_UID_OID_are_Equal()  throws Exception {
-		execute("select distinct(UID) FROM SYS.Schemas"); //$NON-NLS-1$
-		int uidCount = getRowCount();
-		execute("select distinct(OID) FROM SYS.Schemas"); //$NON-NLS-1$
-		int oidCount = getRowCount();
-		assertEquals(uidCount, oidCount);
-		
-		execute("select distinct(UID) FROM SYS.DataTypes"); //$NON-NLS-1$
-		uidCount = getRowCount();
-		execute("select distinct(OID) FROM SYS.DataTypes"); //$NON-NLS-1$
-		oidCount = getRowCount();
-		assertEquals(uidCount, oidCount);		
-	}
-	
 	@Test public void testLogMsg() throws Exception {
 		execute("call logMsg(level=>'DEBUG', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
 	}

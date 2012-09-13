@@ -2674,14 +2674,8 @@ public class QueryRewriter {
 		int i = 0;
 		for (SetClause clause : update.getChangeList().getClauses()) {
 			Expression ex = clause.getValue();
-			Expression selectSymbol = null;
 			if (!EvaluatableVisitor.willBecomeConstant(ex)) {
-				if (!(ex instanceof Expression)) {
-					selectSymbol = new ExpressionSymbol("expr", ex); //$NON-NLS-1$
-				} else {
-					selectSymbol = (Expression)ex;
-				}
-				selectSymbols.add(new AliasSymbol("s_" +i, selectSymbol)); //$NON-NLS-1$
+				selectSymbols.add(new AliasSymbol("s_" +i, ex)); //$NON-NLS-1$
 				ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
 			}
 			if (symbolMap != null) {

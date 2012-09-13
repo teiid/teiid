@@ -29,7 +29,7 @@ CREATE FOREIGN TABLE Columns (
 	Radix integer NOT NULL,
 	UID string(50) NOT NULL,
 	Description string(255),
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE DataTypes (
@@ -51,7 +51,7 @@ CREATE FOREIGN TABLE DataTypes (
 	RuntimeType string(64),
 	BaseType string(64),
 	Description string(255),
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE KeyColumns (
@@ -64,7 +64,7 @@ CREATE FOREIGN TABLE KeyColumns (
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
 	Position integer,
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE Keys (
@@ -78,7 +78,7 @@ CREATE FOREIGN TABLE Keys (
 	IsIndexed boolean NOT NULL,
 	RefKeyUID string(50),
 	UID string(50) NOT NULL,
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE ProcedureParams (
@@ -97,7 +97,7 @@ CREATE FOREIGN TABLE ProcedureParams (
 	NullType string(10) NOT NULL,
 	UID string(50),
 	Description string(255),
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE Procedures (
@@ -108,14 +108,14 @@ CREATE FOREIGN TABLE Procedures (
 	ReturnsResults boolean NOT NULL,
 	UID string(50) NOT NULL,
 	Description string(255),
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE Properties (
 	Name string(255) NOT NULL,
 	"Value" string(255) NOT NULL,
 	UID string(50) NOT NULL,
-	OID integer NOT NULL,
+	OID integer,
 	ClobValue clob(2097152)
 );
 
@@ -143,7 +143,7 @@ CREATE FOREIGN TABLE Schemas (
 	UID string(50) NOT NULL,
 	Description string(255),
 	PrimaryMetamodelURI string(255) NOT NULL,
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE Tables (
@@ -159,7 +159,7 @@ CREATE FOREIGN TABLE Tables (
 	Description string(255),
 	IsSystem boolean,
 	IsMaterialized boolean NOT NULL,
-	OID integer NOT NULL
+	OID integer
 );
 
 CREATE FOREIGN TABLE VirtualDatabases (

@@ -149,6 +149,7 @@ public class MetadataFactory implements Serializable {
 		Column column = new Column();
 		column.setName(name);
 		table.addColumn(column);
+		column.setParent(table);
 		column.setPosition(table.getColumns().size()); //1 based indexing
 		setColumnType(type, column);
 		setUUID(column);

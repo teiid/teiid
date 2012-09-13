@@ -35,6 +35,7 @@
 	<li>TEIID-2111 <b>Vararg Procedures</b> - variable argument procedures and functions can be created through DDL using the VARIADIC parameter type.  See the Reference for usage.
 	<li>TEIID-2195 <b>Function Based Indexes</b> - DDL can be used to specify function based indexes.  When used on an internal mat view it will create
 	the corresponding function based index automatically.  In any other circumstance, the metadata is not currently used.
+	<li>TEIID-2181 <b>System query performance</b> - system queries are now indexed on case-insensitive schema/table name columns.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -51,6 +52,7 @@
   to truncate.  The exception and the use of 32 bit serialization can be avoided by setting the system property org.teiid.longDatesTimes to true.
   <li>TEIID-2184 to be consistent with the rest of Teiid's logic the system functions dayName and monthName will return values from the default locale, rather than only the English names.  Use the system property org.teiid.enDateNames true to revert to the pre-8.2 behavior.
   <li>TEIID-2187 the CONSTRAINT keyword is not correctly used in table DDL.  It should be replaced with a comma from scripts to be compatible with 8.2.  If desired, 8.2 now supports the CONSTRAINT keyword to provide a name for each constraint.
+  <li>TEIID-2181 system tables no longer contain valid OIDs.  That responsibility has moved to the pg_catalog.
 </ul>
 
 <h4>from 8.0</h4>

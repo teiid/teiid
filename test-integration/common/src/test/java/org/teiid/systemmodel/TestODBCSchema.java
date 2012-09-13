@@ -98,8 +98,8 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 	}
 	
 	@Test public void testOIDUniquness() throws Exception {
-		for (String table : new String[] {"Tables", "Columns", "Schemas", "DataTypes", "Keys", "Procedures", "ProcedureParams", "Properties"}) {
-			execute("select count(distinct oid), count(*) from SYS."+table);
+		for (String table : new String[] {"pg_type", "pg_attribute", "pg_namespace", "pg_index"}) {
+			execute("select count(distinct oid), count(*) from "+table);
 			internalResultSet.next();
 			assertEquals(internalResultSet.getInt(2), internalResultSet.getInt(1));
 		}

@@ -55,7 +55,7 @@ public class CompoundCriteria extends LogicalCriteria {
      * Constructs a default instance of this class.
      */
     public CompoundCriteria() {
-        criteria = new ArrayList<Criteria>();
+        criteria = new ArrayList<Criteria>(2);
     }
 
     /**
@@ -64,11 +64,11 @@ public class CompoundCriteria extends LogicalCriteria {
      * expression.
      * @param criteria List of {@link Criteria} being added
      */
-    public CompoundCriteria( List criteria ) {
+    public CompoundCriteria( List<? extends Criteria> criteria ) {
         this();
-        Iterator iter = criteria.iterator();
+        Iterator<? extends Criteria> iter = criteria.iterator();
         while ( iter.hasNext() ) {
-            addCriteria( (Criteria)iter.next() );
+            addCriteria( iter.next() );
         }
     }
 

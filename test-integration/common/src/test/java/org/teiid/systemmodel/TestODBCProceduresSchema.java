@@ -21,10 +21,6 @@
  */
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
-
-import java.sql.Array;
-
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -60,47 +56,17 @@ public class TestODBCProceduresSchema extends AbstractMMQueryTestCase {
    
 	@Test public void test_Pg_Proc_alltypes() throws Exception {
 		execute("select oid, proname, proretset,prorettype, pronargs, proargtypes, proargnames, proargmodes, proallargtypes, pronamespace FROM pg_proc where proname='bigProcedure'"); //$NON-NLS-1$
-		assertTrue(this.internalResultSet.next());
-		assertEquals(1, this.internalResultSet.getInt(1)); //oid
-		assertEquals("bigProcedure", this.internalResultSet.getString(2)); //proname
-		assertEquals(true, this.internalResultSet.getBoolean(3)); //proretset
-		assertEquals(2249, this.internalResultSet.getInt(4)); //prorettype
-		assertEquals(14, this.internalResultSet.getInt(5)); //pronargs
-		assertArrayEquals(new Object[] {1700,1043,700,20,701,21,1082,1083,1114,16,1043,21,1700,1700}, (Object[])((Array)this.internalResultSet.getObject(6)).getArray()); //proargtypes
-		assertArrayEquals(new Object[] {"intNum","stringNum","floatNum","longNum","doubleNum","byteNum","dateValue","timeValue","timestampValue","booValue","charValue","shortNum","bigIntNum","bigdecimalNum","col","col2"}, (Object[])((Array)this.internalResultSet.getObject(7)).getArray()); //proargnames
-		assertArrayEquals(new Object[] {'i','i','i','i','i','i','i','i','i','i','i','i','i','i','t','t'}, (Object[])((Array)this.internalResultSet.getObject(8)).getArray()); //proargmodes
-		assertArrayEquals(new Object[] {1700,1043,700,20,701,21,1082,1083,1114,16,1043,21,1700,1700,1043,1700}, (Object[])((Array)this.internalResultSet.getObject(9)).getArray()); //proallargtypes
-		assertEquals(1, this.internalResultSet.getInt(10)); //pronamespace
+		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 	
 	@Test public void test_Pg_Proc_void() throws Exception {
 		execute("select oid, proname, proretset,prorettype, pronargs, proargtypes, proargnames, proargmodes, proallargtypes, pronamespace FROM pg_proc where proname='VoidProcedure'"); //$NON-NLS-1$
-		assertTrue(this.internalResultSet.next());
-		assertEquals(4, this.internalResultSet.getInt(1)); //oid
-		assertEquals("VoidProcedure", this.internalResultSet.getString(2)); //proname
-		assertEquals(false, this.internalResultSet.getBoolean(3)); //proretset
-		assertEquals(2278, this.internalResultSet.getInt(4)); //prorettype
-		assertEquals(2, this.internalResultSet.getInt(5)); //pronargs
-		assertArrayEquals(new Object[] {1700,1043}, (Object[])((Array)this.internalResultSet.getObject(6)).getArray()); //proargtypes
-		assertArrayEquals(new Object[] {"intNum","stringNum"}, (Object[])((Array)this.internalResultSet.getObject(7)).getArray()); //proargnames
-		assertNull(this.internalResultSet.getObject(8)); //proargmodes
-		assertArrayEquals(new Object[] {1700,1043}, (Object[])((Array)this.internalResultSet.getObject(9)).getArray()); //proallargtypes
-		assertEquals(1, this.internalResultSet.getInt(10)); //pronamespace
+		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 	
 	@Test public void test_Pg_Proc_with_return() throws Exception {
 		execute("select oid, proname, proretset,prorettype, pronargs, proargtypes, proargnames, proargmodes, proallargtypes, pronamespace FROM pg_proc where proname='ProcedureWithReturn'"); //$NON-NLS-1$
-		assertTrue(this.internalResultSet.next());
-		assertEquals(3, this.internalResultSet.getInt(1)); //oid
-		assertEquals("ProcedureWithReturn", this.internalResultSet.getString(2)); //proname
-		assertEquals(false, this.internalResultSet.getBoolean(3)); //proretset
-		assertEquals(20, this.internalResultSet.getInt(4)); //prorettype
-		assertEquals(3, this.internalResultSet.getInt(5)); //pronargs
-		assertArrayEquals(new Object[] {1700,1043,700}, (Object[])((Array)this.internalResultSet.getObject(6)).getArray()); //proargtypes
-		assertArrayEquals(new Object[] {"intNum","stringNum","floatNum"}, (Object[])((Array)this.internalResultSet.getObject(7)).getArray()); //proargnames
-		assertNull(this.internalResultSet.getObject(8)); //proargmodes
-		assertArrayEquals(new Object[] {1700,1043,700}, (Object[])((Array)this.internalResultSet.getObject(9)).getArray()); //proallargtypes
-		assertEquals(1, this.internalResultSet.getInt(10)); //pronamespace
+		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 	
 	@Test public void test_Pg_Proc_with_return_table() throws Exception {

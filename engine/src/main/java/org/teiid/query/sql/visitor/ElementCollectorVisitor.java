@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.LanguageObject;
@@ -81,8 +82,11 @@ public class ElementCollectorVisitor extends LanguageVisitor {
      * @param obj Language object
      */
     public void visit(MultipleElementSymbol obj) {
-        if(obj.getElementSymbols() != null) {
-	        this.elements.addAll(obj.getElementSymbols());
+        List<ElementSymbol> elementSymbols = obj.getElementSymbols();
+		if(elementSymbols != null) {
+        	for (int i = 0; i < elementSymbols.size(); i++) {
+				visit(elementSymbols.get(i));
+			}
         }
     }
 

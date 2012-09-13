@@ -33,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -230,12 +229,10 @@ public class Evaluator {
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		List<Criteria> subCrits = criteria.getCriteria();
-		Iterator<Criteria> subCritIter = subCrits.iterator();
-
 		boolean and = criteria.getOperator() == CompoundCriteria.AND;
         Boolean result = and?Boolean.TRUE:Boolean.FALSE;
-		while(subCritIter.hasNext()) {
-			Criteria subCrit = subCritIter.next();
+		for (int i = 0; i < subCrits.size(); i++) {
+			Criteria subCrit = subCrits.get(i);
 			Boolean value = evaluateTVL(subCrit, tuple);
             if (value == null) {
 				result = null;

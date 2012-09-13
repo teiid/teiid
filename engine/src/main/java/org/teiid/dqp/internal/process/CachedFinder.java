@@ -36,6 +36,8 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
 
@@ -44,6 +46,19 @@ import org.teiid.translator.TranslatorException;
 public class CachedFinder implements CapabilitiesFinder {
 
 	private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
+	static {
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_IN, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_ONLY_LITERAL_COMPARE, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_ESCAPE, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_LIKE_REGEX, true);
+		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_SIMILAR, true);
+		SYSTEM_CAPS.setFunctionSupport(SourceSystemFunctions.UCASE, true);
+		SYSTEM_CAPS.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 100000);
+		SYSTEM_CAPS.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+	}
 	
     private ConnectorManagerRepository connectorRepo;
     private VDBMetaData vdb;

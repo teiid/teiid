@@ -56,6 +56,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private long queryTimeout = Long.MIN_VALUE;
 	private Set<String> importedModels = Collections.emptySet();
+	private Set<String> multiSource;
 
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion();
@@ -192,13 +193,16 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	}
 	
 	public Set<String> getMultiSourceModelNames(){
-		Set<String> list = new HashSet<String>();
-		for(ModelMetaData m: models.values()) {
-			if (m.isSupportsMultiSourceBindings()) {
-				list.add(m.getName());
+		if (multiSource == null) {
+			HashSet<String> set = new HashSet<String>();
+			for(ModelMetaData m: models.values()) {
+				if (m.isSupportsMultiSourceBindings()) {
+					set.add(m.getName());
+				}
 			}
+			multiSource = set;
 		}
-		return list;
+		return multiSource;
 	}
 	
 	public boolean isDynamic() {

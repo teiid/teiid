@@ -73,7 +73,7 @@ public class TestMultipleModelIndexes {
 		assertFalse(t.isVirtual());
 	}
 	
-	@Test public void test71Schema() throws Exception {
+	@Test public void test81Schema() throws Exception {
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(UnitTestUtil.getTestDataFile("schema.ser")));
 		Schema schema = (Schema) ois.readObject();
 		assertNotNull(schema.getFunctions());

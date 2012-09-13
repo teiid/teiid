@@ -26,7 +26,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
+import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
@@ -37,11 +37,11 @@ import org.teiid.connector.DataPlugin;
 public class MetadataStore implements Serializable {
 
 	private static final long serialVersionUID = -3130247626435324312L;
-	protected Map<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
+	protected NavigableMap<String, Schema> schemas = new TreeMap<String, Schema>(String.CASE_INSENSITIVE_ORDER);
 	protected List<Schema> schemaList = new ArrayList<Schema>(); //used for a stable ordering
-	protected Map<String, Datatype> datatypes = new TreeMap<String, Datatype>();
+	protected NavigableMap<String, Datatype> datatypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
 	
-	public Map<String, Schema> getSchemas() {
+	public NavigableMap<String, Schema> getSchemas() {
 		return schemas;
 	}
 	
@@ -72,7 +72,7 @@ public class MetadataStore implements Serializable {
 		this.datatypes.put(datatype.getName(), datatype);
 	}
 		
-	public Map<String, Datatype> getDatatypes() {
+	public NavigableMap<String, Datatype> getDatatypes() {
 		return datatypes;
 	}
 	

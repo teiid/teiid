@@ -24,6 +24,7 @@ package org.teiid.metadata;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import org.teiid.connector.DataPlugin;
@@ -35,8 +36,8 @@ public class Schema extends AbstractMetadataRecord {
 	private boolean physical = true;
     private String primaryMetamodelUri = "http://www.metamatrix.com/metamodels/Relational"; //$NON-NLS-1$
     
-    private Map<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
-	private Map<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
+    private NavigableMap<String, Table> tables = new TreeMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
+	private NavigableMap<String, Procedure> procedures = new TreeMap<String, Procedure>(String.CASE_INSENSITIVE_ORDER);
 	private Map<String, FunctionMethod> functions = new TreeMap<String, FunctionMethod>(String.CASE_INSENSITIVE_ORDER);
 	
 	public void addTable(Table table) {
@@ -65,7 +66,7 @@ public class Schema extends AbstractMetadataRecord {
 	 * Get the tables defined in this schema
 	 * @return
 	 */
-	public Map<String, Table> getTables() {
+	public NavigableMap<String, Table> getTables() {
 		return tables;
 	}
 	
@@ -77,7 +78,7 @@ public class Schema extends AbstractMetadataRecord {
 	 * Get the procedures defined in this schema
 	 * @return
 	 */
-	public Map<String, Procedure> getProcedures() {
+	public NavigableMap<String, Procedure> getProcedures() {
 		return procedures;
 	}
 	

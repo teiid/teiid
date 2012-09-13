@@ -37,7 +37,7 @@ import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 
 @Translator(name="hardcoded")
-public final class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> {
+public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> {
 	Map<String, List<? extends List<?>>> dataMap = new HashMap<String, List<? extends List<?>>>();
 	
 	@Override

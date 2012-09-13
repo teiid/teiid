@@ -28,6 +28,8 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.CommandContext;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
@@ -38,6 +40,7 @@ import org.teiid.metadata.Table;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.translator.TranslatorException;
 
@@ -64,6 +67,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
+		addFunction("getOid", "getOid"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
 	private Table createView(String name) throws TranslatorException {
@@ -96,7 +100,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("adbin", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		addColumn("adsrc", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
-		String transformation = "SELECT st.oid as adrelid, convert(t1.Position, short) as adnum, " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(st.uid) as adrelid, convert(t1.Position, short) as adnum, " + //$NON-NLS-1$
 				"case when t1.IsAutoIncremented then 'nextval(' else t1.DefaultValue end as adbin, " + //$NON-NLS-1$
 				"case when t1.IsAutoIncremented then 'nextval(' else t1.DefaultValue end as adsrc " + //$NON-NLS-1$
 				"FROM SYS.Columns as t1 LEFT OUTER JOIN SYS.Tables st ON (st.Name = t1.TableName AND st.SchemaName = t1.SchemaName)"; //$NON-NLS-1$
@@ -139,8 +143,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		addPrimaryKey("pk_pg_attr", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		String transformation = "SELECT t1.OID as oid, " + //$NON-NLS-1$
-				"st.oid as attrelid, " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, " + //$NON-NLS-1$
+				"pg_catalog.getOid(st.uid) as attrelid, " + //$NON-NLS-1$
 				"t1.Name as attname, " + //$NON-NLS-1$
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
@@ -153,8 +157,8 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"FROM SYS.Columns as t1 LEFT OUTER JOIN " + //$NON-NLS-1$
 				"SYS.Tables st ON (st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
 				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name " +//$NON-NLS-1$
-				"UNION ALL SELECT kc.OID + (SELECT MAX(oid) FROM SYS.Columns) as oid, " + //$NON-NLS-1$
-				"k.oid + (SELECT MAX(OID) FROM SYS.Tables) as attrelid, " + //$NON-NLS-1$
+				"UNION ALL SELECT pg_catalog.getOid(kc.uid) + kc.position as oid, " + //$NON-NLS-1$
+				"pg_catalog.getOid(kc.uid) as attrelid, " + //$NON-NLS-1$
 				"t1.Name as attname, " + //$NON-NLS-1$
 				"pt.oid as atttypid," + //$NON-NLS-1$
 				"pt.typlen as attlen, " + //$NON-NLS-1$
@@ -164,9 +168,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"CASE WHEN (t1.NullType = 'No Nulls') THEN true ELSE false END as attnotnull, " + //$NON-NLS-1$
 				"false as attisdropped, " + //$NON-NLS-1$
 				"false as atthasdef " + //$NON-NLS-1$
-				"FROM (SYS.Keys as k INNER JOIN SYS.KeyColumns as kc ON k.uid = kc.uid INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name INNER JOIN " + //$NON-NLS-1$
+				"FROM (SYS.KeyColumns as kc INNER JOIN SYS.Columns as t1 ON kc.SchemaName = t1.SchemaName AND kc.TableName = t1.TableName AND kc.Name = t1.Name INNER JOIN " + //$NON-NLS-1$
 				"SYS.Tables as st ON st.Name = t1.TableName AND st.SchemaName = t1.SchemaName) LEFT OUTER JOIN " + //$NON-NLS-1$
-				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE k.type in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
+				"pg_catalog.matpg_datatype pt ON t1.DataType = pt.Name WHERE kc.keytype in ('Primary', 'Unique', 'Index')"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
@@ -206,16 +210,16 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 
 		addPrimaryKey("pk_pg_class", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 
-		String transformation = "SELECT t1.OID as oid, t1.name as relname, " +  //$NON-NLS-1$
-				"(SELECT OID FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
+				"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
 				"convert((CASE t1.isPhysical WHEN true THEN 'r' ELSE 'v' END), char) as relkind," + //$NON-NLS-1$
 				"0 as relam, " + //$NON-NLS-1$
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
 				"0 as relpages, " + //$NON-NLS-1$
 				"false as relhasrules, " + //$NON-NLS-1$
 				"false as relhasoids " + //$NON-NLS-1$
-				"FROM SYS.Tables t1 UNION ALL SELECT t1.OID + (SELECT MAX(oid) as max from sys.tables) as oid, t1.name as relname, " +  //$NON-NLS-1$
-				"(SELECT OID FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
+				"FROM SYS.Tables t1 UNION ALL SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, " +  //$NON-NLS-1$
+				"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as relnamespace, " + //$NON-NLS-1$
 				"convert('i', char) as relkind," + //$NON-NLS-1$
 				"0 as relam, " + //$NON-NLS-1$
 				"convert(0, float) as reltuples, " + //$NON-NLS-1$
@@ -257,16 +261,16 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		
 		addPrimaryKey("pk_pg_index", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
-		String transformation = "SELECT k.oid as oid, " + //$NON-NLS-1$
-				"k.oid + (SELECT MAX(oid) as max from sys.tables) as indexrelid, " + //$NON-NLS-1$
-				"(SELECT OID FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName) as indrelid, " + //$NON-NLS-1$
-				"cast(count(t1.OID) as short) as indnatts, " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, " + //$NON-NLS-1$
+				"pg_catalog.getOid(t1.uid) as indexrelid, " + //$NON-NLS-1$
+				"(SELECT pg_catalog.getOid(uid) FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName) as indrelid, " + //$NON-NLS-1$
+				"cast(count(t1.uid) as short) as indnatts, " + //$NON-NLS-1$
 				"false indisclustered, " + //$NON-NLS-1$
 				"(CASE WHEN t1.KeyType in ('Unique', 'Primary') THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
 				"(CASE t1.KeyType WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
 				"'' as indexprs, asPGVector(" + //$NON-NLS-1$
-				arrayAgg("(select at.attnum FROM pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = (SELECT OID FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName))", "t1.position") +") as indkey " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				"FROM SYS.Keys as k, Sys.KeyColumns as t1 WHERE k.uid = t1.uid GROUP BY k.oid, t1.KeyType, t1.SchemaName, t1.TableName, t1.KeyName"; //$NON-NLS-1$
+				arrayAgg("(select at.attnum FROM pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = (SELECT pg_catalog.getOid(uid) FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName))", "t1.position") +") as indkey " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				"FROM Sys.KeyColumns as t1 GROUP BY t1.uid, t1.KeyType, t1.SchemaName, t1.TableName, t1.KeyName"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);
 		return t;		
@@ -278,7 +282,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("nspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		
-		String transformation = "SELECT t1.OID as oid, t1.Name as nspname " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(uid) as oid, t1.Name as nspname " + //$NON-NLS-1$
 		"FROM SYS.Schemas as t1"; //$NON-NLS-1$
 
 		t.setSelectTransformation(transformation);
@@ -327,14 +331,14 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addPrimaryKey("pk_pg_proc", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		
-		String transformation = "SELECT t1.OID as oid, t1.Name as proname, (SELECT (CASE WHEN count(pp.Type)>0 THEN true else false END) as x FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName and pp.Type='ResultSet') as proretset, " + //$NON-NLS-1$
+		String transformation = "SELECT pg_catalog.getOid(t1.uid) as oid, t1.Name as proname, (SELECT (CASE WHEN count(pp.Type)>0 THEN true else false END) as x FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName and pp.Type='ResultSet') as proretset, " + //$NON-NLS-1$
 		"CASE WHEN (SELECT count(dt.oid) FROM ProcedureParams pp, matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type IN ('ReturnValue', 'ResultSet') AND dt.Name = pp.DataType) IS NULL THEN (select oid from pg_type WHERE typname = 'void') WHEN (SELECT count(dt.oid) FROM ProcedureParams pp, matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ResultSet' AND dt.Name = pp.DataType) IS NOT NULL THEN (select oid from pg_type WHERE typname = 'record') ELSE (SELECT dt.oid FROM ProcedureParams pp, matpg_datatype dt WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type = 'ReturnValue' AND dt.Name = pp.DataType) END as prorettype,  " + //$NON-NLS-1$
 		"convert((SELECT count(*) FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type IN ('In', 'InOut')), short) as pronargs, " + //$NON-NLS-1$
 		"asPGVector((select "+arrayAgg("y.oid","y.type, y.position" )+" FROM ("+paramTable("'ResultSet','ReturnValue', 'Out'")+") as y)) as proargtypes, " +//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 		"(select "+arrayAgg("y.name", "y.type, y.position")+" FROM (SELECT pp.Name as name, pp.position as position, pp.Type as type FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ('ReturnValue' )) as y) as proargnames, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		"(select case WHEN count(distinct(y.type)) = 1 THEN null ELSE "+arrayAgg("CASE WHEN (y.type ='In') THEN cast('i' as char) WHEN (y.type = 'Out') THEN cast('o' as char) WHEN (y.type = 'InOut') THEN cast('b' as char) WHEN (y.type = 'ResultSet') THEN cast('t' as char) END", "y.type,y.position")+" END FROM (SELECT pp.Type as type, pp.Position as position FROM ProcedureParams pp WHERE pp.ProcedureName = t1.Name AND pp.SchemaName = t1.SchemaName AND pp.Type NOT IN ('ReturnValue')) as y) as proargmodes, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		"(select case WHEN count(distinct(y.oid)) = 1 THEN null ELSE "+arrayAgg("y.oid", "y.type, y.position")+" END FROM ("+paramTable("'ReturnValue'")+") as y) as proallargtypes, " +  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
-		"(SELECT OID FROM SYS.Schemas WHERE Name = t1.SchemaName) as pronamespace " + //$NON-NLS-1$
+		"(SELECT pg_catalog.getOid(uid) FROM SYS.Schemas WHERE Name = t1.SchemaName) as pronamespace " + //$NON-NLS-1$
 		"FROM SYS.Procedures as t1";//$NON-NLS-1$			
 		
 		t.setSelectTransformation(transformation);
@@ -406,7 +410,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		String transformation =
-			"select oid, typname, (SELECT OID FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem from texttable('" + //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem from texttable('" + //$NON-NLS-1$
 			"16,boolean,1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"1043,string,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"25,text,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
@@ -547,6 +551,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			for (int i = 0; i < params.length; i++) {
 				paramTypes[i] = DataTypeManager.getDataTypeName(params[i]);
 			}
+			if (params.length > 0 && params[0] == CommandContext.class) {
+				paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
+			}
 			FunctionMethod func = FunctionMethod.createFunctionMethod(name, name, "pg", returnType, paramTypes); //$NON-NLS-1$
 			setUUID(func);
 			getSchema().addFunction(func);
@@ -582,6 +589,12 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				((ArrayImpl)obj).setZeroBased(true);
 			}
 			return obj;
+		}
+		
+		public static Integer getOid(org.teiid.CommandContext cc, String uid) {
+			VDBMetaData metadata = (VDBMetaData) cc.getVdb();
+			TransformationMetadata tm = metadata.getAttachment(TransformationMetadata.class);
+			return tm.getMetadataStore().getOid(uid);
 		}
 	}
 }
