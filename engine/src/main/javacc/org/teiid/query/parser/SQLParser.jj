@@ -4557,8 +4557,8 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 		}
 	
 		<LPAREN>
-		[procedureParameter(factory, proc)]
-		(<COMMA> procedureParameter(factory, proc))*	
+		[procedureParameter(factory, proc)
+		(<COMMA> procedureParameter(factory, proc))*]	
 		<RPAREN>
 		
 		[<RETURNS> (([<TABLE>] <LPAREN>
