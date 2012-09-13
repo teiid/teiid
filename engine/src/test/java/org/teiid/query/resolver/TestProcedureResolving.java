@@ -443,7 +443,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.UPDATE, "Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
+									 Table.TriggerEvent.UPDATE, "TEIID31119 Symbol pm1.g1.e2 is specified with an unknown group context"); //$NON-NLS-1$
     }
     
 	// physical elements used on criteria of the if statement
@@ -522,7 +522,7 @@ public class TestProcedureResolving {
         
         String userCommand = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
 
-        helpFailUpdateProcedure(procedure, userCommand, Table.TriggerEvent.UPDATE, "Element \"badElement\" is not defined by any relevant group."); //$NON-NLS-1$
+        helpFailUpdateProcedure(procedure, userCommand, Table.TriggerEvent.UPDATE, "TEIID31118 Element \"badElement\" is not defined by any relevant group."); //$NON-NLS-1$
     }
     
 	// addresses Cases 4624.  Before change to UpdateProcedureResolver,
@@ -747,7 +747,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                Table.TriggerEvent.UPDATE, "TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
+                Table.TriggerEvent.UPDATE, "TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'var1': TEIID31118 Element \"var1\" is not defined by any relevant group.]"); //$NON-NLS-1$
     }
     
     // variables cannot be used among insert elements
@@ -762,7 +762,7 @@ public class TestProcedureResolving {
         String userQuery = "UPDATE vm1.g3 SET x='x' where e3= 1"; //$NON-NLS-1$
 
         helpFailUpdateProcedure(procedure, userQuery, 
-                Table.TriggerEvent.UPDATE, "TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
+                Table.TriggerEvent.UPDATE, "TEIID30126 Column variables do not reference columns on group \"pm1.g1\": [Unable to resolve 'INPUTS.x': TEIID31119 Symbol INPUTS.x is specified with an unknown group context]"); //$NON-NLS-1$
     }
     
     //should resolve first to the table's column
@@ -788,7 +788,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(procedure, userUpdateStr,
-                                     Table.TriggerEvent.UPDATE, "Element \"e1\" is ambiguous, it exists in two or more groups."); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "TEIID31117 Element \"e1\" is ambiguous and should be qualified, at a single scope it exists in [CHANGING, \"NEW\", \"OLD\"]"); //$NON-NLS-1$
     }
     
     @Test public void testLoopRedefinition() {
@@ -820,7 +820,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     Table.TriggerEvent.UPDATE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "TEIID31119 Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable1() {
@@ -833,7 +833,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     Table.TriggerEvent.UPDATE, "Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "TEIID31119 Symbol #temp.a is specified with an unknown group context"); //$NON-NLS-1$
     }
     
     @Test public void testProcedureCreate() throws Exception {
@@ -927,7 +927,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "delete from vm1.g1 where e1='x'"; //$NON-NLS-1$
         
 		helpFailUpdateProcedure(procedure, userUpdateStr,
-									 Table.TriggerEvent.DELETE, "Symbol \"NEW\".e1 is specified with an unknown group context"); //$NON-NLS-1$
+									 Table.TriggerEvent.DELETE, "TEIID31119 Symbol \"NEW\".e1 is specified with an unknown group context"); //$NON-NLS-1$
 	}
 	
     @Test public void testInvalidVirtualProcedure3() throws Exception {
@@ -998,7 +998,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testInvalidVirtualProcedure2() throws Exception {
-        helpResolveException("EXEC pm1.vsp12()", RealMetadataFactory.example1Cached(), "Symbol mycursor.e2 is specified with an unknown group context"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp12()", RealMetadataFactory.example1Cached(), "TEIID31119 Symbol mycursor.e2 is specified with an unknown group context"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testLoopRedefinition2() throws Exception {

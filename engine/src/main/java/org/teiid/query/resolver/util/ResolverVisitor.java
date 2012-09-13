@@ -60,16 +60,6 @@ public class ResolverVisitor extends LanguageVisitor {
     public static final String TEIID_PASS_THROUGH_TYPE = "teiid:pass-through-type"; //$NON-NLS-1$
 	private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
 
-	private static class ElementMatch {
-    	ElementSymbol element;
-    	GroupSymbol group;
-    	
-		public ElementMatch(ElementSymbol element, GroupSymbol group) {
-			this.element = element;
-			this.group = group;
-		}
-    }
-    
     private static ThreadLocal<Boolean> determinePartialName = new ThreadLocal<Boolean>() {
     	protected Boolean initialValue() {
     		return false;
@@ -87,6 +77,8 @@ public class ResolverVisitor extends LanguageVisitor {
     private QueryResolverException resolverException;
     private Map<Function, QueryResolverException> unresolvedFunctions;
     private boolean findShortName;
+    private List<ElementSymbol> matches = new ArrayList<ElementSymbol>(2);
+    private List<GroupSymbol> groupMatches = new ArrayList<GroupSymbol>(2);
     
     /**
      * Constructor for ResolveElementsVisitor.
@@ -189,16 +181,17 @@ public class ResolverVisitor extends LanguageVisitor {
             }
         }
         
-        LinkedList<ElementMatch> matches = new LinkedList<ElementMatch>();
+        matches.clear();
+        groupMatches.clear();
         while (root != null) {
             Collection<GroupSymbol> matchedGroups = ResolverUtil.findMatchingGroups(groupContext, root.getGroups(), metadata);
             if (matchedGroups != null && !matchedGroups.isEmpty()) {
                 groupMatched = true;
                     
-                resolveAgainstGroups(shortCanonicalName, matchedGroups, matches);
+                resolveAgainstGroups(shortCanonicalName, matchedGroups);
                 
                 if (matches.size() > 1) {
-            	    throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0053", elementSymbol)); //$NON-NLS-1$
+            	    throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31117, elementSymbol, groupMatches));
                 }
                 
                 if (matches.size() == 1) {
@@ -212,15 +205,13 @@ public class ResolverVisitor extends LanguageVisitor {
         
         if (matches.isEmpty()) {
             if (groupMatched) {
-                throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0054", elementSymbol)); //$NON-NLS-1$
+                throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31118, elementSymbol)); 
             }
-            throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.getString("ERR.015.008.0051", elementSymbol)); //$NON-NLS-1$
+            throw handleUnresolvedElement(elementSymbol, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31119, elementSymbol)); 
         }
-        ElementMatch match = matches.getFirst();
-        
         //copy the match information
-        ElementSymbol resolvedSymbol = match.element;
-        GroupSymbol resolvedGroup = match.group;
+        ElementSymbol resolvedSymbol = matches.get(0);
+        GroupSymbol resolvedGroup = groupMatches.get(0);
         String oldName = elementSymbol.getOutputName();
         if (expectedGroupContext != null && !ResolverUtil.nameMatchesGroup(expectedGroupContext, resolvedGroup.getName())) {
         	return false;
@@ -235,14 +226,15 @@ public class ResolverVisitor extends LanguageVisitor {
 	}
     
     private void resolveAgainstGroups(String elementShortName,
-                                      Collection<GroupSymbol> matchedGroups, LinkedList<ElementMatch> matches) throws QueryMetadataException,
+                                      Collection<GroupSymbol> matchedGroups) throws QueryMetadataException,
                                                          TeiidComponentException {
     	for (GroupSymbol group : matchedGroups) {
             GroupInfo groupInfo = ResolverUtil.getGroupInfo(group, metadata);
             
             ElementSymbol result = groupInfo.getSymbol(elementShortName);
             if (result != null) {
-            	matches.add(new ElementMatch(result, group));
+            	matches.add(result);
+            	groupMatches.add(group);
             }
         }
     }
@@ -762,7 +754,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    throws QueryResolverException {
 	
 	    // Check that each of the values are the same type as expression
-	    Class exprType = scrit.getExpression().getType();
+	    Class<?> exprType = scrit.getExpression().getType();
 	    if(exprType == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30075, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30075, scrit.getExpression()));
 	    }
@@ -854,8 +846,8 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	    // 2. Attempt to set the target types of all contained expressions,
 	    //    and collect their type names for the next step
-	    ArrayList whenTypeNames = new ArrayList(whenCount + 1);
-	    ArrayList thenTypeNames = new ArrayList(whenCount + 1);
+	    ArrayList<String> whenTypeNames = new ArrayList<String>(whenCount + 1);
+	    ArrayList<String> thenTypeNames = new ArrayList<String>(whenCount + 1);
 	    setDesiredType(expr, whenType, obj);
 	    // Add the expression's type to the WHEN types
 	    whenTypeNames.add(DataTypeManager.getDataTypeName(expr.getType()));
@@ -887,17 +879,17 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // Invariants: all the expressions' types are non-null
 	
 	    // 3. Perform implicit type conversions
-	    String whenTypeName = ResolverUtil.getCommonType((String[])whenTypeNames.toArray(new String[whenTypeNames.size()]));
+	    String whenTypeName = ResolverUtil.getCommonType(whenTypeNames.toArray(new String[whenTypeNames.size()]));
 	    if (whenTypeName == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "WHEN", obj));//$NON-NLS-1$
 	    }
-	    String thenTypeName = ResolverUtil.getCommonType((String[])thenTypeNames.toArray(new String[thenTypeNames.size()]));
+	    String thenTypeName = ResolverUtil.getCommonType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
 	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "THEN/ELSE", obj));//$NON-NLS-1$
 	    }
 	    obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), whenTypeName, metadata));
-	    ArrayList whens = new ArrayList(whenCount);
-	    ArrayList thens = new ArrayList(whenCount);
+	    ArrayList<Expression> whens = new ArrayList<Expression>(whenCount);
+	    ArrayList<Expression> thens = new ArrayList<Expression>(whenCount);
 	    for (int i = 0; i < whenCount; i++) {
 	        whens.add(ResolverUtil.convertExpression(obj.getWhenExpression(i), whenTypeName, metadata));
 	        thens.add(ResolverUtil.convertExpression(obj.getThenExpression(i), thenTypeName, metadata));

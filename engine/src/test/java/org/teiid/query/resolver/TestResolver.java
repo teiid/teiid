@@ -940,7 +940,7 @@ public class TestResolver {
             
             fail("Expected exception on invalid variable pm1.sq2.in"); //$NON-NLS-1$
         } catch(QueryResolverException e) {
-        	assertEquals("Symbol pm1.sq2.\"in\" is specified with an unknown group context", e.getMessage()); //$NON-NLS-1$
+        	assertEquals("TEIID31119 Symbol pm1.sq2.\"in\" is specified with an unknown group context", e.getMessage()); //$NON-NLS-1$
         } 
     }
 
@@ -1702,7 +1702,7 @@ public class TestResolver {
      */
     @Test public void testNestedCorrelatedSubqueries4(){
         String sql = "select X.e2 from pm4.g2 Y, pm4.g2 X where X.e2 = all (select e2 from pm4.g1 where e5 = e1)"; //$NON-NLS-1$
-        helpResolveException(sql, metadata, "Element \"e5\" is ambiguous, it exists in two or more groups."); //$NON-NLS-1$
+        helpResolveException(sql, metadata, "TEIID31117 Element \"e5\" is ambiguous and should be qualified, at a single scope it exists in [pm4.g2 AS Y, pm4.g2 AS X]"); //$NON-NLS-1$
     }
 
     @Test public void testSubqueryCorrelatedInCriteriaVirtualLayer(){
@@ -2226,7 +2226,7 @@ public class TestResolver {
         procedure = procedure + "DECLARE string VARIABLES.X = 1;\n";         //$NON-NLS-1$
         procedure = procedure + "END\n";         //$NON-NLS-1$
 
-        helpResolveException(procedure, "Element \"VARIABLES.X\" is not defined by any relevant group."); //$NON-NLS-1$
+        helpResolveException(procedure, "TEIID31118 Element \"VARIABLES.X\" is not defined by any relevant group."); //$NON-NLS-1$
     }
     
     /**
@@ -2266,7 +2266,7 @@ public class TestResolver {
     
     @Test public void testCreateUnknownPk() {
         String sql = "CREATE LOCAL TEMPORARY TABLE foo (column1 string, primary key (column2))"; //$NON-NLS-1$
-        helpResolveException(sql, "Element \"column2\" is not defined by any relevant group."); //$NON-NLS-1$
+        helpResolveException(sql, "TEIID31118 Element \"column2\" is not defined by any relevant group."); //$NON-NLS-1$
     }
 
     @Test public void testCreateAlreadyExists() {
@@ -2318,7 +2318,7 @@ public class TestResolver {
             QueryResolver.resolveCriteria(criteria, metadata);
             fail("Exception expected"); //$NON-NLS-1$
         } catch(QueryResolverException e) {
-            assertEquals("Symbol e1 is specified with an unknown group context", e.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID31119 Symbol e1 is specified with an unknown group context", e.getMessage()); //$NON-NLS-1$
         } 
     }
     
@@ -2351,7 +2351,7 @@ public class TestResolver {
             +"SELECT ROWS_UPDATED; " //$NON-NLS-1$
             +"end "; //$NON-NLS-1$
         
-        helpResolveException(sql, metadata, "Element \"ROWS_UPDATED\" is not defined by any relevant group."); //$NON-NLS-1$
+        helpResolveException(sql, metadata, "TEIID31118 Element \"ROWS_UPDATED\" is not defined by any relevant group."); //$NON-NLS-1$
     }
     
     @Test public void testXMLQueryWithVariable() {
@@ -2575,11 +2575,11 @@ public class TestResolver {
     }
             
     @Test public void testResolveOldProcRelational() {
-        helpResolveException("SELECT * FROM pm1.g1, (exec pm1.sq2(pm1.g1.e1)) as a", "Symbol pm1.g1.e1 is specified with an unknown group context"); //$NON-NLS-1$  //$NON-NLS-2$
+        helpResolveException("SELECT * FROM pm1.g1, (exec pm1.sq2(pm1.g1.e1)) as a", "TEIID31119 Symbol pm1.g1.e1 is specified with an unknown group context"); //$NON-NLS-1$  //$NON-NLS-2$
     }
     
     @Test public void testResolverOrderOfPrecedence() {
-        helpResolveException("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 CROSS JOIN (pm1.g2 LEFT OUTER JOIN pm2.g1 on pm1.g1.e1 = pm2.g1.e1)", "Symbol pm1.g1.e1 is specified with an unknown group context"); //$NON-NLS-1$  //$NON-NLS-2$
+        helpResolveException("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 CROSS JOIN (pm1.g2 LEFT OUTER JOIN pm2.g1 on pm1.g1.e1 = pm2.g1.e1)", "TEIID31119 Symbol pm1.g1.e1 is specified with an unknown group context"); //$NON-NLS-1$  //$NON-NLS-2$
     }
     
     /**
