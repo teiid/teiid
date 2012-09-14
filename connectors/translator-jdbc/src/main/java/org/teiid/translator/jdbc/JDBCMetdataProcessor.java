@@ -268,7 +268,7 @@ public class JDBCMetdataProcessor {
 			processColumns(metadataFactory, tableMap, columns);
 		} else {
 			for (TableInfo ti : new LinkedHashSet<TableInfo>(tableMap.values())) {
-				ResultSet columns = metadata.getColumns(catalog, ti.schema, ti.name, null);
+				ResultSet columns = metadata.getColumns(ti.catalog, ti.schema, ti.name, null);
 				processColumns(metadataFactory, tableMap, columns);
 			}
 		}
