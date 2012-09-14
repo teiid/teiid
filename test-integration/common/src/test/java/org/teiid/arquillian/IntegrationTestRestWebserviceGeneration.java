@@ -34,14 +34,13 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import org.jboss.arquillian.junit.Arquillian;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
-import org.teiid.adminapi.AdminFactory.AdminImpl;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
@@ -50,23 +49,23 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTestCase {
 
-	private static Admin admin;
+	private Admin admin;
 	
-	@BeforeClass
-	public static void setup() throws Exception {
+	@Before
+	public void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", 9999,	"admin", "admin".toCharArray());
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
+		
 	}
 	
-	@AfterClass
-	public static void teardown() throws AdminException {
+	@After
+	public void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
 	
 	@Test
     public void testGetOperation() throws Exception {
-		
+		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
@@ -83,7 +82,7 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 	
 	@Test
     public void testPostOperation() throws Exception {
-		
+		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
