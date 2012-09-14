@@ -159,8 +159,11 @@ public class TestFunctionPushdown {
         //cannot pushdown
         caps.setFunctionSupport(SourceSystemFunctions.CONCAT2, false);
         
-        helpPlan(sql, metadata, null, capFinder, 
+        ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, 
                 new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("a"), Arrays.asList((String)null)});
+        TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("aa"), Arrays.asList((String)null)});
         
         caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         caps.setFunctionSupport(SourceSystemFunctions.IFNULL, true);
