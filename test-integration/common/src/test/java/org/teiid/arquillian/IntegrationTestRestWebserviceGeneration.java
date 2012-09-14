@@ -74,11 +74,11 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
 		this.internalResultSet.next();
 		
-		assertTrue(((AdminImpl)admin).getDeployments().contains("sample_1.war"));
+		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
 		
 		// get based call
 		String response = httpCall("http://localhost:8080/sample_1/view/g1/123", "GET", null);
-		assertEquals("<rows p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		assertEquals("response did not match expected", "<rows p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
     }
 	
 	@Test
@@ -91,18 +91,18 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		execute("SELECT * FROM Txns.G1"); //$NON-NLS-1$
 		this.internalResultSet.next();
 		
-		assertTrue(((AdminImpl)admin).getDeployments().contains("sample_1.war"));
+		assertTrue("sample_1.war not found", AdminUtil.waitForDeployment(admin, "sample_1.war", 5));
 		
 		String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
 		
 		// post based call
 		String response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
-		assertEquals("<rows p1=\"456\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		assertEquals("response did not match expected", "<rows p1=\"456\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		
 		// ad-hoc procedure
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");
 		response = httpCall("http://localhost:8080/sample_1/view/query", "POST", params);
-		assertEquals("<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		assertEquals("response did not match expected", "<rows><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
     }	
 	
 	

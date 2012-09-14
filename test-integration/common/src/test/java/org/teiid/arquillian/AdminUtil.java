@@ -22,11 +22,13 @@
 
 package org.teiid.arquillian;
 
+import java.util.List;
 import java.util.Properties;
 
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.AdminFactory.AdminImpl;
 import org.teiid.adminapi.VDB.Status;
 
 @SuppressWarnings("nls")
@@ -73,6 +75,31 @@ public class AdminUtil {
 			}
 			VDB vdb = admin.getVDB(vdbName, vdbVersion);
 			if (vdb != null && vdb.getStatus() != Status.LOADING) {
+				return true;
+			}
+		} while (System.currentTimeMillis() < waitUntil);
+		return false;
+	}
+	
+	static boolean waitForDeployment(Admin admin, String deploymentName,
+			int timeoutInSecs) {
+		long waitUntil = System.currentTimeMillis() + timeoutInSecs*1000;
+		if (timeoutInSecs < 0) {
+			waitUntil = Long.MAX_VALUE;
+		}
+		boolean first = true;
+		do {
+			if (!first) {
+				try {
+					Thread.sleep(2000);
+				} catch (InterruptedException e) {
+					break;
+				}
+			} else {
+				first = false;
+			}
+			List<String> deployments = ((AdminImpl)admin).getDeployments();
+			if (deployments.contains(deploymentName)) {
 				return true;
 			}
 		} while (System.currentTimeMillis() < waitUntil);
