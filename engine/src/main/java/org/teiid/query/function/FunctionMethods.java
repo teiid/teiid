@@ -620,12 +620,25 @@ public final class FunctionMethods {
 	// ================== Function = length =====================
 
 	public static Object length(String str) {
-		return new Integer(str.length());
+		return str.length();
 	}
 
 	// ================== Function = concat =====================
 
-	public static Object concat(String str1, String str2) {
+	public static String concat(String str1, String str2) {
+		return str1 + str2;
+	}
+	
+	public static String concat2(String str1, String str2) {
+		if (str1 == null) {
+			if (str2 == null) {
+				return null;
+			}
+			return str2;
+		}
+		if (str2 == null) {
+			return str1;
+		}
 		return str1 + str2;
 	}
 

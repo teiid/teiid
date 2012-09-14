@@ -380,18 +380,22 @@ public class TestOracleTranslator {
     
     @Test public void testConcat2_useLiteral() throws Exception {        
         String input = "select concat2(stringnum,'_xx') from bqt1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT concat(nvl(SmallA.StringNum, ''), '_xx') FROM SmallA"; //$NON-NLS-1$
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
-                input, output, 
-                TRANSLATOR);
+        String output = "SELECT (g_0.StringNum || '_xx') FROM SmallA g_0"; //$NON-NLS-1$
+        
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        commandBuilder.getLanguageBridgeFactory().setSupportsConcat2(true);
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
     }
 
     @Test public void testConcat2() throws Exception {        
         String input = "select concat2(stringnum, stringkey) from bqt1.Smalla"; //$NON-NLS-1$
-        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL AND SmallA.StringKey IS NULL THEN NULL ELSE concat(nvl(SmallA.StringNum, ''), nvl(SmallA.StringKey, '')) END FROM SmallA"; //$NON-NLS-1$
-        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, UDF,
-                input, output, 
-                TRANSLATOR);
+        String output = "SELECT (g_0.StringNum || g_0.StringKey) FROM SmallA g_0"; //$NON-NLS-1$
+        
+        CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
+        commandBuilder.getLanguageBridgeFactory().setSupportsConcat2(true);
+        Command obj = commandBuilder.getCommand(input, true, true);
+        TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
     }
     
     /**

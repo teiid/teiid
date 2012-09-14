@@ -98,7 +98,7 @@ public class TestDB2SqlTranslator {
     @Test
     public void testConcat2() throws Exception {
         String input = "select concat2(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
-        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, '')) END FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL AND SmallA.StringNum IS NULL THEN NULL ELSE concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, '')) END FROM SmallA";  //$NON-NLS-1$
         
         helpTestVisitor(FakeTranslationFactory.getInstance().getBQTTranslationUtility(),
                 input, 

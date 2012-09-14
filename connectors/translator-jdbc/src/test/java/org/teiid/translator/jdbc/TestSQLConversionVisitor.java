@@ -441,5 +441,12 @@ public class TestSQLConversionVisitor {
             input, 
             output, TRANSLATOR);
     }
+    
+    @Test public void testConcat2() {
+        helpTestVisitor(getTestVDB(),
+                        "select part_name from parts where concat2(part_name, 'x') = concat2(part_weight, part_id)", //$NON-NLS-1$
+                        "SELECT PARTS.PART_NAME FROM PARTS WHERE concat(ifnull(PARTS.PART_NAME, ''), 'x') = CASE WHEN PARTS.PART_WEIGHT IS NULL AND PARTS.PART_ID IS NULL THEN NULL ELSE concat(ifnull(PARTS.PART_WEIGHT, ''), ifnull(PARTS.PART_ID, '')) END", //$NON-NLS-1$
+                        true); 
+    }
 
 }

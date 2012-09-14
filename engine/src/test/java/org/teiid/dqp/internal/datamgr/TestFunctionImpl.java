@@ -50,7 +50,7 @@ public class TestFunctionImpl extends TestCase {
     }
     
     public static Function example(String name) throws Exception {
-        return TstLanguageBridgeFactory.factory.translate(helpExample(name));
+        return (Function) TstLanguageBridgeFactory.factory.translate(helpExample(name));
     }
 
     public void testGetName() throws Exception {

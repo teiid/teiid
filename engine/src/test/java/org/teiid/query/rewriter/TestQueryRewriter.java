@@ -1336,15 +1336,11 @@ public class TestQueryRewriter {
     }
 
     @Test public void testRewriteConcat2_2() throws Exception {
-        helpTestRewriteCriteria("concat2(pm1.g1.e1, null) = 'xyz'", "CASE WHEN pm1.g1.e1 IS NULL THEN null ELSE concat(ifnull(pm1.g1.e1, ''), '') END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-
-    @Test public void testRewriteConcat2_3() throws Exception {
-        helpTestRewriteCriteria("concat2(pm1.g1.e1, convert(pm1.g1.e2, string)) = 'xyz'", "CASE WHEN (pm1.g1.e1 IS NULL) AND (convert(pm1.g1.e2, string) IS NULL) THEN null ELSE concat(ifnull(pm1.g1.e1, ''), ifnull(convert(pm1.g1.e2, string), '')) END = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("concat2(pm1.g1.e1, null) = 'xyz'", "pm1.g1.e1 = 'xyz'", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     @Test public void testRewriteConcat2_4() throws Exception {
-        helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat('a', ifnull(pm1.g1.e1, '')) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("concat2('a', pm1.g1.e1) = 'xyz'", "concat2('a', pm1.g1.e1) = 'xyz'"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteFromUnixTime() throws Exception {

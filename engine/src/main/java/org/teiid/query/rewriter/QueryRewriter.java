@@ -2097,6 +2097,7 @@ public class QueryRewriter {
             }
         }
 		
+		boolean omitNull = false;
 		Integer code = FUNCTION_MAP.get(functionName);
 		if (code != null) {
 			switch (code) {
@@ -2145,33 +2146,9 @@ public class QueryRewriter {
 				}
 				break;
 			}
-			case 4: { //rewrite concat2 - CONCAT2(a, b) ==> CASE WHEN (a is NULL AND b is NULL) THEN NULL ELSE CONCAT( NVL(a, ''), NVL(b, '') )
-				Expression[] args = function.getArgs();
-				Function[] newArgs = new Function[args.length];
-
-				for(int i=0; i<args.length; i++) {
-					newArgs[i] = new Function(SourceSystemFunctions.IFNULL, new Expression[] {args[i], new Constant("")}); //$NON-NLS-1$
-					newArgs[i].setType(args[i].getType());
-					Assertion.assertTrue(args[i].getType() == DataTypeManager.DefaultDataClasses.STRING);
-			        FunctionDescriptor descriptor = 
-			        	funcLibrary.findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
-			        newArgs[i].setFunctionDescriptor(descriptor);
-				}
-				
-				Function concat = new Function(SourceSystemFunctions.CONCAT, newArgs);
-				concat.setType(DataTypeManager.DefaultDataClasses.STRING);
-				FunctionDescriptor descriptor = 
-					funcLibrary.findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
-				concat.setFunctionDescriptor(descriptor);
-				
-				List when = Arrays.asList(new Criteria[] {new CompoundCriteria(CompoundCriteria.AND, new IsNullCriteria(args[0]), new IsNullCriteria(args[1]))});
-				Constant nullConstant = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);
-				List then = Arrays.asList(new Expression[] {nullConstant});
-				SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
-				caseExpr.setElseExpression(concat);
-				caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
-				return rewriteExpressionDirect(caseExpr);
-			}
+			case 4:
+				omitNull = true;
+				break;
 			case 5: {
 				if (function.getType() != DataTypeManager.DefaultDataClasses.TIMESTAMP) {
 					FunctionDescriptor descriptor = 
@@ -2229,14 +2206,32 @@ public class QueryRewriter {
 						
 		Expression[] args = function.getArgs();
 		Expression[] newArgs = new Expression[args.length];
-		        
+		    
         // Rewrite args
+		int j = 0;
 		for(int i=0; i<args.length; i++) {
-			newArgs[i] = rewriteExpressionDirect(args[i]);
-            if (isNull(newArgs[i]) && !function.getFunctionDescriptor().isNullDependent()) {
-                return new Constant(null, function.getType());
+			Expression ex = rewriteExpressionDirect(args[i]);
+            if (isNull(ex)) {
+            	if (!function.getFunctionDescriptor().isNullDependent()) {
+            		return new Constant(null, function.getType());
+            	}
+            	if (omitNull) {
+            		continue;
+            	}
             }
+        	newArgs[j++] = ex;
         }
+		if (omitNull) {
+			if (j==0) {
+				return new Constant(null, function.getType());
+			}
+			if (j==1) {
+				return newArgs[0];
+			}
+			if (j!=args.length) {
+				newArgs = Arrays.copyOf(newArgs, j);
+			}
+		}
         function.setArgs(newArgs);
 
         if( FunctionLibrary.isConvert(function)) {

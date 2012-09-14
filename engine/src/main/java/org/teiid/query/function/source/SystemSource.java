@@ -540,11 +540,12 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
                     new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concatop_result_desc")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
         
-        FunctionMethod concat2 = new FunctionMethod("concat2", QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, PushDown.SYNTHETIC, null, null, //$NON-NLS-1$ //$NON-NLS-2$ 
-                           Arrays.asList(
-                               new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
-                               new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) ), //$NON-NLS-1$ //$NON-NLS-2$
-                           new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_result_desc")), false, Determinism.DETERMINISTIC ); //$NON-NLS-1$ //$NON-NLS-2$
+        FunctionMethod concat2 = new FunctionMethod(SourceSystemFunctions.CONCAT2, QueryPlugin.Util.getString("SystemSource.Concat_desc"), STRING, FUNCTION_CLASS, "concat2", //$NON-NLS-1$ //$NON-NLS-2$ 
+                new FunctionParameter[] {
+            		new FunctionParameter("string1", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
+            		new FunctionParameter("string2", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_arg2")) }, //$NON-NLS-1$ //$NON-NLS-2$
+            	new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.Concat_result_desc")) );                 //$NON-NLS-1$ //$NON-NLS-2$
+        concat2.setNullOnNull(false);
         functions.add(concat2);                         
     }
 

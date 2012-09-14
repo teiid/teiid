@@ -30,6 +30,7 @@ import javax.resource.ResourceException;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.ResizingArrayList;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.RequestWorkItem;
@@ -48,15 +49,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.resource.spi.WrappedConnection;
-import org.teiid.translator.CacheDirective;
-import org.teiid.translator.DataNotAvailableException;
-import org.teiid.translator.Execution;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.ReusableExecution;
-import org.teiid.translator.TranslatorException;
-import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.*;
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
@@ -85,7 +78,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	
 	private DataNotAvailableException dnae;
     
-    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) {
+    ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
         this.requestMsg = message;
         this.manager = manager;
@@ -108,6 +101,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		this.securityContext.setTransactional(requestMsg.isTransactional());
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
         factory.setConvertIn(!this.connector.supportsInCriteria());
+        factory.setSupportsConcat2(manager.getCapabilities().supportsFunction(SourceSystemFunctions.CONCAT2));
         translatedCommand = factory.translate(message.getCommand());
     }
     

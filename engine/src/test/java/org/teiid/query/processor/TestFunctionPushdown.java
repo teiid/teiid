@@ -37,8 +37,10 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestFunctionPushdown {
@@ -139,6 +141,34 @@ public class TestFunctionPushdown {
         
         helpPlan("select sourceFunc(y) from x", metadata, null, capFinder, 
                 new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$         
+	}
+	
+	@Test public void testConcat2() throws Exception {
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+		
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setFunctionSupport(SourceSystemFunctions.CONCAT2, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        String sql = "select concat2(x.e1, x.e1) from pm1.g1 as x"; //$NON-NLS-1$
+        
+        helpPlan(sql, metadata, null, capFinder, 
+                                      new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        //cannot pushdown
+        caps.setFunctionSupport(SourceSystemFunctions.CONCAT2, false);
+        
+        helpPlan(sql, metadata, null, capFinder, 
+                new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        caps.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        caps.setFunctionSupport(SourceSystemFunctions.IFNULL, true);
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        
+        //will get replaced in the LanguageBridgeFactory
+        helpPlan(sql, metadata, null, capFinder, 
+                new String[] {"SELECT concat2(g_0.e1, g_0.e1) FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
 	}
 	
 	public static String sourceFunc(String msg) {

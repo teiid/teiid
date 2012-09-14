@@ -126,6 +126,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LEFT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.RIGHT, new LeftOrRightFunctionModifier(getLanguageFactory()));
         registerFunctionModifier(SourceSystemFunctions.CONCAT, new ConcatFunctionModifier(getLanguageFactory())); 
+        registerFunctionModifier(SourceSystemFunctions.CONCAT2, new AliasModifier("||")); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.COT, new FunctionModifier() {
 			@Override
 			public List<?> translate(Function function) {
@@ -589,6 +590,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("CHAR"); //$NON-NLS-1$
         supportedFunctions.add("CHR"); //$NON-NLS-1$
         supportedFunctions.add("CONCAT"); //$NON-NLS-1$
+        supportedFunctions.add(SourceSystemFunctions.CONCAT2);
         supportedFunctions.add("||"); //$NON-NLS-1$
         supportedFunctions.add("INITCAP"); //$NON-NLS-1$
         supportedFunctions.add("LCASE"); //$NON-NLS-1$

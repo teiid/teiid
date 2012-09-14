@@ -67,7 +67,7 @@ public class TestDerbySQLTranslator {
     @Test
     public void testConcat2() throws Exception {
         String input = "select concat2(stringnum, stringnum) from BQT1.Smalla"; //$NON-NLS-1$       
-        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL THEN NULL ELSE {fn concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, ''))} END FROM SmallA";  //$NON-NLS-1$
+        String output = "SELECT CASE WHEN SmallA.StringNum IS NULL AND SmallA.StringNum IS NULL THEN NULL ELSE {fn concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, ''))} END FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    

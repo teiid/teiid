@@ -46,6 +46,7 @@ import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.Command;
@@ -63,6 +64,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.TranslatorException;
 
 
@@ -135,6 +137,7 @@ public class LanguageBridgeFactory {
     private List<List<?>> allValues = new LinkedList<List<?>>();
     private Map<String, List<? extends List<?>>> dependentSets;
     private boolean convertIn;
+    private boolean supportsConcat2;
 
     public LanguageBridgeFactory(QueryMetadataInterface metadata) {
         if (metadata != null) {
@@ -148,6 +151,10 @@ public class LanguageBridgeFactory {
     
     public void setConvertIn(boolean convertIn) {
 		this.convertIn = convertIn;
+	}
+    
+    public void setSupportsConcat2(boolean supportsConcat2) {
+		this.supportsConcat2 = supportsConcat2;
 	}
 
     public org.teiid.language.Command translate(Command command) {
@@ -619,7 +626,7 @@ public class LanguageBridgeFactory {
         return result;
     }
 
-    org.teiid.language.Function translate(Function function) {
+    org.teiid.language.Expression translate(Function function) {
         Expression [] args = function.getArgs();
         List<org.teiid.language.Expression> params = new ArrayList<org.teiid.language.Expression>(args.length);
         for (int i = 0; i < args.length; i++) {
@@ -628,6 +635,43 @@ public class LanguageBridgeFactory {
         String name = function.getName();
         if (function.getFunctionDescriptor() != null) {
         	name = function.getFunctionDescriptor().getName();
+        	if (!supportsConcat2 && function.getFunctionDescriptor().getMethod().getParent() == null && name.equalsIgnoreCase(SourceSystemFunctions.CONCAT2)) {
+				Expression[] newArgs = new Expression[args.length];
+
+				boolean useCase = true;
+				for(int i=0; i<args.length; i++) {
+					if (args[i] instanceof Constant) {
+						newArgs[i] = args[i];
+						useCase = false;
+					} else {
+						Function f = new Function(SourceSystemFunctions.IFNULL, new Expression[] {args[i], new Constant("")}); //$NON-NLS-1$
+						newArgs[i] = f;
+						f.setType(args[i].getType());
+				        FunctionDescriptor descriptor = 
+				        	metadataFactory.getMetadata().getFunctionLibrary().findFunction(SourceSystemFunctions.IFNULL, new Class[] { args[i].getType(), DataTypeManager.DefaultDataClasses.STRING });
+				        f.setFunctionDescriptor(descriptor);
+					} 
+				}
+				
+				Function concat = new Function(SourceSystemFunctions.CONCAT, newArgs);
+				concat.setType(DataTypeManager.DefaultDataClasses.STRING);
+				
+				if (!useCase) {
+					return translate(concat);
+				}
+				
+				FunctionDescriptor descriptor = 
+					metadataFactory.getMetadata().getFunctionLibrary().findFunction(SourceSystemFunctions.CONCAT, new Class[] { DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.STRING });
+				concat.setFunctionDescriptor(descriptor);
+				
+				List<CompoundCriteria> when = Arrays.asList(new CompoundCriteria(CompoundCriteria.AND, new IsNullCriteria(args[0]), new IsNullCriteria(args[1])));
+				Constant nullConstant = new Constant(null, DataTypeManager.DefaultDataClasses.STRING);
+				List<Constant> then = Arrays.asList(nullConstant);
+				SearchedCaseExpression caseExpr = new SearchedCaseExpression(when, then);
+				caseExpr.setElseExpression(concat);
+				caseExpr.setType(DataTypeManager.DefaultDataClasses.STRING);
+				return translate(caseExpr);
+        	}
         	//check for translator pushdown functions, and use the name in source if possible
         	if (function.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN 
         			&& function.getFunctionDescriptor().getSchema().equalsIgnoreCase(CoreConstants.SYSTEM_MODEL)

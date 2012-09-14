@@ -48,6 +48,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
@@ -231,10 +232,16 @@ public class CapabilitiesUtil {
         //technically the other functions are scoped to SYS or their function model, but that's 
         //not formally part of their metadata yet
         Schema schema = function.getFunctionDescriptor().getMethod().getParent();
+        String fullName = function.getFunctionDescriptor().getMethod().getFullName();
         if (schema == null || !schema.isPhysical()) {
             // Find capabilities
-            if (!caps.supportsFunction(function.getFunctionDescriptor().getMethod().getFullName())) {
-                return false;
+        	
+            if (!caps.supportsFunction(fullName)) {
+            	//special handling for delayed rewrite of concat2
+            	return (schema == null && SourceSystemFunctions.CONCAT2.equalsIgnoreCase(fullName)
+                		&& caps.supportsFunction(SourceSystemFunctions.CONCAT) 
+                		&& caps.supportsFunction(SourceSystemFunctions.IFNULL)
+                		&& caps.supportsCapability(Capability.QUERY_SEARCHED_CASE));
             }
             if (FunctionLibrary.isConvert(function)) {
                 Class<?> fromType = function.getArg(0).getType();
@@ -245,7 +252,7 @@ public class CapabilitiesUtil {
                 return caps.supportsConvert(DataTypeManager.getTypeCode(fromType), DataTypeManager.getTypeCode(targetType));
             }
         } else if (!isSameConnector(modelID, schema, metadata, capFinder)) {
-        	return caps.supportsFunction(function.getFunctionDescriptor().getMethod().getFullName());
+        	return caps.supportsFunction(fullName);
         }
         
         return true;

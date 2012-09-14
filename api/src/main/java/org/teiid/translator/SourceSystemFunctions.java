@@ -44,6 +44,7 @@ public class SourceSystemFunctions {
 	public static final String ASCII = "ascii"; //$NON-NLS-1$
 	public static final String CHAR = "char"; //$NON-NLS-1$
 	public static final String CONCAT = "concat"; //$NON-NLS-1$
+	public static final String CONCAT2 = "concat2"; //$NON-NLS-1$
 	//public static final String DIFFERENCE = "difference";
 	public static final String INITCAP = "initcap"; //$NON-NLS-1$
 	public static final String INSERT = "insert"; //$NON-NLS-1$

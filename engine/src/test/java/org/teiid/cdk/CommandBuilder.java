@@ -52,13 +52,19 @@ public class CommandBuilder {
 	}
 
     private QueryMetadataInterface metadata;
+	private LanguageBridgeFactory languageBridgeFactory;
     
     /**
      * @param metadata The metadata describing the datasource which the query is for.
      */
     public CommandBuilder(QueryMetadataInterface metadata) {
         this.metadata = metadata;
+        this.languageBridgeFactory = new LanguageBridgeFactory(metadata);
     }
+    
+    public LanguageBridgeFactory getLanguageBridgeFactory() {
+		return languageBridgeFactory;
+	}
     
     public org.teiid.language.Command getCommand(String queryString) {
         return getCommand(queryString, false, false);
@@ -75,7 +81,7 @@ public class CommandBuilder {
             	command = (Command)command.clone();
                 command.acceptVisitor(new AliasGenerator(supportsGroupAlias));
             }
-            return new LanguageBridgeFactory(metadata).translate(command);
+			return languageBridgeFactory.translate(command);
         } catch (TeiidException e) {
             throw new TeiidRuntimeException(e);
 		}
