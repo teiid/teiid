@@ -163,6 +163,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
         		getVdbRepository().odbcEnabled();
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
+        		this.socketListener = odbc;
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		else {

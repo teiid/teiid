@@ -216,7 +216,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 			InitialContext ic = new InitialContext();
 			ic.lookup(LocalServerConnection.TEIID_RUNTIME_CONTEXT);
 			return true;
-		} catch (NamingException e) {
+		} catch (Throwable e) {
 			return false;
 		}
 	}	
