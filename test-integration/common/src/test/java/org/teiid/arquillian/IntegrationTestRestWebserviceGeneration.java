@@ -34,8 +34,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 
 import org.jboss.arquillian.junit.Arquillian;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
@@ -50,22 +50,22 @@ import org.teiid.jdbc.TeiidDriver;
 @SuppressWarnings("nls")
 public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTestCase {
 
-	private Admin admin;
+	private static Admin admin;
 	
-	@Before
-	public void setup() throws Exception {
+	@BeforeClass
+	public static void setup() throws Exception {
 		admin = AdminFactory.getInstance().createAdmin("localhost", 9999,	"admin", "admin".toCharArray());
+		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 	}
 	
-	@After
-	public void teardown() throws AdminException {
+	@AfterClass
+	public static void teardown() throws AdminException {
 		AdminUtil.cleanUp(admin);
 		admin.close();
 	}
 	
 	@Test
     public void testGetOperation() throws Exception {
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
@@ -83,7 +83,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 	
 	@Test
     public void testPostOperation() throws Exception {
-		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
 		
