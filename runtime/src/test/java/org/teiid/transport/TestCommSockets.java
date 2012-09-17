@@ -23,7 +23,6 @@
 package org.teiid.transport;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.Serializable;
@@ -35,18 +34,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
-import org.teiid.client.security.InvalidSessionException;
-import org.teiid.client.security.LogonException;
-import org.teiid.client.security.LogonResult;
-import org.teiid.client.security.SessionToken;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
-import org.teiid.core.ComponentNotFoundException;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.core.crypto.NullCryptor;
 import org.teiid.core.util.ObjectConverterUtil;
-import org.teiid.dqp.service.SessionService;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.TeiidURL;
@@ -54,6 +45,7 @@ import org.teiid.net.socket.SocketServerConnection;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.net.socket.SocketUtil;
 import org.teiid.net.socket.UrlServerDiscovery;
+import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.TestSocketRemoting.FakeService;
 
 
@@ -64,6 +56,7 @@ public class TestCommSockets {
 	private SocketServerConnectionFactory sscf;
 	private InetSocketAddress addr;
 	private MemoryStorageManager storageManager;
+	private SessionServiceImpl service;
 
 	@Before public void setUp() {
 		addr = new InetSocketAddress(0);
@@ -165,26 +158,8 @@ public class TestCommSockets {
 					return getClass().getClassLoader();
 				}
 			};
-			server.registerClientService(ILogon.class, new LogonImpl(mock(SessionService.class), "fakeCluster") { //$NON-NLS-1$
-				@Override
-				public LogonResult logon(Properties connProps)
-						throws LogonException, ComponentNotFoundException {
-					return new LogonResult(new SessionToken("dummy"), "x", 1, "z");
-				}
-				
-				@Override
-				public ResultsFuture<?> ping() throws InvalidSessionException,
-						TeiidComponentException {
-					return ResultsFuture.NULL_FUTURE;
-				}
-				
-				@Override
-				public void assertIdentity(SessionToken checkSession)
-						throws InvalidSessionException, TeiidComponentException {
-					return;
-				}
-
-			}, null); 
+			service = new SessionServiceImpl();
+			server.registerClientService(ILogon.class, new LogonImpl(service, "fakeCluster"), null); 
 			server.registerClientService(FakeService.class, new TestSocketRemoting.FakeServiceImpl(), null);
 			storageManager = new MemoryStorageManager();
 			listener = new SocketListener(addr, 1024, 1024, 1, config, server, storageManager);
@@ -199,6 +174,7 @@ public class TestCommSockets {
 		Properties p = new Properties();
 		String url = new TeiidURL(addr.getHostName(), listener.getPort(), clientSecure).getAppServerURL();
 		p.setProperty(TeiidURL.CONNECTION.SERVER_URL, url); 
+		p.setProperty(TeiidURL.CONNECTION.APP_NAME, "test");
 		p.setProperty(TeiidURL.CONNECTION.DISCOVERY_STRATEGY, UrlServerDiscovery.class.getName());
 		if (sscf == null) {
 			sscf = new SocketServerConnectionFactory();
@@ -254,10 +230,13 @@ public class TestCommSockets {
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
 		conn.cleanUp();
+		helpEstablishConnection(false, config, p);
+		conn.selectServerInstance(false);
+		assertEquals(2, this.service.getActiveSessions().size());
 		assertTrue(conn.isOpen(1000));
 		stats = listener.getStats();
-		assertEquals(5, stats.objectsRead); // ping (pool test), assert identity, ping (isOpen)
-		assertEquals(1, stats.sockets);
+		assertEquals(7, stats.objectsRead); // ping (pool test), assert identity, ping (isOpen)
+		assertEquals(2, stats.sockets);
 		conn.close();
 	}
 	
