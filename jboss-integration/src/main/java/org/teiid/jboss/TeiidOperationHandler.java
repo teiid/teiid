@@ -1389,9 +1389,7 @@ class AssignDataSource extends VDBOperations {
 			synchronized (vdb.getVdb()) {
 				ReplaceResult rr = vdb.assignDatasource(modelName, sourceName, translatorName, dsName);
 				if (rr.isNew) {
-					ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_STATUS_CHECKER);
-					VDBStatusChecker vsc = VDBStatusChecker.class.cast(sc.getValue());
-					VDBDeployer.addDataSourceListener(context.getServiceTarget(), new VDBKey(vdb.getVdb().getName(), vdb.getVdb().getVersion()), dsName, vsc);
+					VDBDeployer.addDataSourceListener(context.getServiceTarget(), new VDBKey(vdb.getVdb().getName(), vdb.getVdb().getVersion()), dsName);
 				}
 				if (rr.removedDs != null) {
 					final ServiceRegistry registry = context.getServiceRegistry(true);

@@ -81,13 +81,13 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$			
 	private TranslatorRepository translatorRepository;
 	private String asyncThreadPoolName;
-	private VDBStatusChecker vdbStatusChecker;
+	private VDBRepository vdbRepository;
 	JBossLifeCycleListener shutdownListener;
 	
-	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBStatusChecker vdbStatusChecker, JBossLifeCycleListener shutdownListener) {
+	public VDBDeployer (TranslatorRepository translatorRepo, String poolName, VDBRepository vdbRepo, JBossLifeCycleListener shutdownListener) {
 		this.translatorRepository = translatorRepo;
 		this.asyncThreadPoolName = poolName;
-		this.vdbStatusChecker = vdbStatusChecker;
+		this.vdbRepository = vdbRepo;
 		this.shutdownListener = shutdownListener;
 	}
 	
@@ -154,8 +154,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			indexRepo = new IndexMetadataRepository(indexFactory);
 			visibilityMap = indexFactory.getEntriesPlusVisibilities();
 		}
-		VDBRepository repo = vdbStatusChecker.getVDBRepository();
-		repo.addPendingDeployment(deployment);
+		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
 		final VDBService vdb = new VDBService(deployment, visibilityMap);
 		if (indexRepo != null) {
@@ -255,13 +254,14 @@ class VDBDeployer implements DeploymentUnitProcessor {
 	static void addDataSourceListener(
 			final ServiceTarget serviceTarget,
 			final VDBKey vdbKey,
-			final String dsName, VDBStatusChecker vdbStatusChecker) {
+			final String dsName) {
 		final String jndiName = getJndiName(dsName);
 		final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
 		final ServiceName svcName = bindInfo.getBinderServiceName();
-		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbStatusChecker, vdbKey);									
+		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbKey);									
 		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(TeiidServiceNames.dsListenerServiceName(vdbKey.getName(), vdbKey.getVersion(), dsName), dsl);
 		sb.addDependency(svcName);
+		sb.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, dsl.vdbStatusCheckInjector);
 		sb.setInitialMode(Mode.PASSIVE).install();
 	}
 	
@@ -284,21 +284,20 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				if (!dataSources.add(VDBStatusChecker.stripContext(dsName))) {
 					continue; //already listening
 				}
-				addDataSourceListener(serviceTarget, vdbKey, dsName, vdbStatusChecker);				
+				addDataSourceListener(serviceTarget, vdbKey, dsName);				
 			}
 		}
 	}
 	
 	static class DataSourceListener implements Service<DataSourceListener>{
-		private VDBStatusChecker vdbStatusChecker;
 		private String dsName;
 		private ServiceName svcName;
 		private VDBKey vdb;
+		InjectedValue<VDBStatusChecker> vdbStatusCheckInjector = new InjectedValue<VDBStatusChecker>();
 		
-		public DataSourceListener(String dsName, ServiceName svcName, VDBStatusChecker checker, VDBKey vdb) {
+		public DataSourceListener(String dsName, ServiceName svcName, VDBKey vdb) {
 			this.dsName = dsName;
 			this.svcName = svcName;
-			this.vdbStatusChecker = checker;
 			this.vdb = vdb;
 		}
 		
@@ -310,7 +309,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		public void start(StartContext context) throws StartException {
 			ServiceController<?> s = context.getController().getServiceContainer().getService(this.svcName);
 			if (s != null) {
-				this.vdbStatusChecker.dataSourceAdded(this.dsName, vdb);
+				this.vdbStatusCheckInjector.getValue().dataSourceAdded(this.dsName, vdb);
 			}
 		}
 
@@ -318,7 +317,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		public void stop(StopContext context) {
 			ServiceController<?> s = context.getController().getServiceContainer().getService(this.svcName);
 			if (s.getMode().equals(Mode.REMOVE) || s.getState().equals(State.STOPPING)) {
-				this.vdbStatusChecker.dataSourceRemoved(this.dsName, vdb);
+				this.vdbStatusCheckInjector.getValue().dataSourceRemoved(this.dsName, vdb);
 			}
 		}		
 	}
@@ -348,7 +347,7 @@ class VDBDeployer implements DeploymentUnitProcessor {
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "VDB "+vdb.getName()+" metadata removed"); //$NON-NLS-1$ //$NON-NLS-2$
 			}		
 		}
-		this.vdbStatusChecker.getVDBRepository().removeVDB(deployment.getName(), deployment.getVersion());
+		this.vdbRepository.removeVDB(deployment.getName(), deployment.getVersion());
 	
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (SourceMappingMetadata smm:model.getSources().values()) {
