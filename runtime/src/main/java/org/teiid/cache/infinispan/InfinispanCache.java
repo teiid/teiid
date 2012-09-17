@@ -25,7 +25,10 @@ package org.teiid.cache.infinispan;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.infinispan.transaction.TransactionMode;
 import org.teiid.cache.Cache;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 
 
 /**
@@ -36,12 +39,21 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 	protected org.infinispan.AdvancedCache<K, V> cacheStore;
 	private final String name; 
 	private ClassLoader classloader;
+	private boolean transactional;
 	
 	public InfinispanCache(org.infinispan.Cache<K, V> cacheStore, String cacheName, ClassLoader classloader) {
 		assert(cacheStore != null);
 		this.cacheStore = cacheStore.getAdvancedCache();
+		TransactionMode transactionMode = this.cacheStore.getCacheConfiguration().transaction().transactionMode();
+		this.transactional = transactionMode == TransactionMode.TRANSACTIONAL;
+		LogManager.logDetail(LogConstants.CTX_RUNTIME, "Added", transactionMode, "infinispan cache", cacheName); //$NON-NLS-1$ //$NON-NLS-2$
 		this.name = cacheName;
 		this.classloader = classloader;
+	}
+	
+	@Override
+	public boolean isTransactional() {
+		return transactional;
 	}
 	
 	@Override
@@ -82,7 +94,7 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 	}
 
 	@Override
-	public Set<K> keys() {
+	public Set<K> keySet() {
 		return this.cacheStore.with(this.classloader).keySet();
 	}
 }

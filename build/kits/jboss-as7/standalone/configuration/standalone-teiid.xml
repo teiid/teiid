@@ -170,10 +170,12 @@
             </cache-container>
             <cache-container name="teiid" default-cache="resultset">
                 <local-cache name="resultset">
+                	<transaction mode="NON_XA"/>
                     <expiration lifespan="7200000" />
                     <eviction max-entries="1024" strategy="LIRS"/>
                 </local-cache>
                 <local-cache name="resultset-repl">
+	                <transaction mode="NON_XA"/>
                     <expiration lifespan="7200000" />
                     <eviction max-entries="1024" strategy="LIRS"/>
                 </local-cache>                

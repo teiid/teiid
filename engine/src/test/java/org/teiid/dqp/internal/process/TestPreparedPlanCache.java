@@ -30,7 +30,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.cache.CacheConfiguration;
-import org.teiid.cache.CacheConfiguration.Policy;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -101,56 +100,11 @@ public class TestPreparedPlanCache {
     	assertNull("Unable to get prepared plan from cache for token2", cache.get(new CacheID(token2, pi, EXAMPLE_QUERY + 1))); //$NON-NLS-1$ 
     }
     
-    @Test public void testMaxSize() throws Exception {
-    	CacheConfiguration config = new CacheConfiguration();
-    	config.setType(Policy.LRU.name());
-    	config.setMaxEntries(100);    
-    	config.setMaxAgeInSeconds(60);
-        SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(config), SessionAwareCache.Type.PREPAREDPLAN, 0);
-        
-        helpPutPreparedPlans(cache, token, 0, 101);
-        assertTrue(cache.getTotalCacheEntries() <= 100);
-        
-        // find a entry that has not been evicted.
-        int i = 0;
-        while (true) {
-        	PreparedPlan plan = cache.get(new CacheID(token, pi, EXAMPLE_QUERY + i));
-        	if (plan != null) {
-        		break;
-        	}
-        	i++;
-        	if (i > 100) break;
-        }
-        assertNotNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + i))); 
-        
-        helpPutPreparedPlans(cache, token, 102, 50);
-       
-        //"sql12" should still be there based on lru  policy
-        assertNotNull(cache.get(new CacheID(token, pi, EXAMPLE_QUERY + i))); 
-        
-        helpPutPreparedPlans(cache, token2, 0, 121);
-        helpPutPreparedPlans(cache, token, 0, 50);
-        assertTrue(cache.getTotalCacheEntries() <= 100);
-    }
-    
-    @Test public void testZeroSizeCache() throws Exception {
-    	CacheConfiguration config = new CacheConfiguration();
-    	config.setMaxEntries(0);
-    	config.setType(Policy.LRU.name());
-    	
-        try {
-			// Create with 0 size cache
-			SessionAwareCache<PreparedPlan> cache = new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(config), SessionAwareCache.Type.PREPAREDPLAN, 0);
-			fail("should have failed to create zero sized cache store");
-		} catch (Exception e) {
-		}
-    }
-    
     // set init size to negative number, which should default to max
     @Test public void testNegativeSizeCacheUsesDefault() {
     	CacheConfiguration config = new CacheConfiguration();
     	config.setMaxEntries(-1);    	
-        SessionAwareCache<PreparedPlan> negativeSizedCache = new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(config), SessionAwareCache.Type.PREPAREDPLAN, 0);
+        new SessionAwareCache<PreparedPlan>("preparedplan", new DefaultCacheFactory(config), SessionAwareCache.Type.PREPAREDPLAN, 0);
         // -1 means unlimited in the infinispan
     }
     

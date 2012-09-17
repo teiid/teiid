@@ -48,6 +48,7 @@ import org.teiid.vdb.runtime.VDBKey;
  * This class is used to cache session aware objects
  */
 public class SessionAwareCache<T> {
+	public static final String REPL = "-repl"; //$NON-NLS-1$
 	public static final int DEFAULT_MAX_SIZE_TOTAL = 512;
 	public enum Type {
 		RESULTSET,
@@ -75,7 +76,7 @@ public class SessionAwareCache<T> {
 			this.distributedCache = localCache;
 		}
 		else {
-			this.distributedCache = cacheFactory.get(cacheName+"-repl"); //$NON-NLS-1$
+			this.distributedCache = cacheFactory.get(cacheName+REPL); 
 			if (this.distributedCache == null && this.localCache != null) {
 				this.distributedCache = this.localCache;
 			}
@@ -204,7 +205,7 @@ public class SessionAwareCache<T> {
 	}
 	
 	private void clearCache(Cache<CacheID, T> cache, String vdbName, int version) {
-		Set<CacheID> keys = cache.keys();
+		Set<CacheID> keys = cache.keySet();
 		VDBKey vdbKey = new VDBKey(vdbName, version);
 		for (CacheID key:keys) {
 			if (key.vdbInfo.equals(vdbKey)) {
@@ -323,4 +324,8 @@ public class SessionAwareCache<T> {
     public static boolean isResultsetCache(String cacheType) {
     	return (Admin.Cache.valueOf(cacheType) == Admin.Cache.QUERY_SERVICE_RESULT_SET_CACHE);
     }
+
+	public boolean isTransactional() {
+		return this.localCache.isTransactional() || this.distributedCache.isTransactional();
+	}
 }

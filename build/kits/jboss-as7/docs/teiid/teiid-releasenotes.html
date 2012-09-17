@@ -36,6 +36,7 @@
 	<li>TEIID-2195 <b>Function Based Indexes</b> - DDL can be used to specify function based indexes.  When used on an internal mat view it will create
 	the corresponding function based index automatically.  In any other circumstance, the metadata is not currently used.
 	<li>TEIID-2181 <b>System query performance</b> - system queries are now indexed on case-insensitive schema/table name columns.
+	<li>TEIID-2086 <b>Transactional results caching</b> - the result set cache is now transactional by default.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -163,7 +164,8 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 8.1</h4>
 <ul>
-  <li>The file translator now defaults to exceptionIfFileNotFound=true, you can set the translator property to false to preserve the old behavior of returning null. 
+  <li>The file translator now defaults to exceptionIfFileNotFound=true, you can set the translator property to false to preserve the old behavior of returning null.
+  <li>TEIID-2086 TEIID-2168 prepared plan and result set caches are now configured as infinispan caches.  See the teiid cache container in the configuration.  You may also control the transactional aspects of the result set cache on the resultset and resultset-repl caches via the configuration. 
 </ul>
 
 <h4>from 8.0</h4>

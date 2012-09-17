@@ -54,16 +54,11 @@ public class AccessInfo implements Serializable {
 	private boolean sensitiveToMetadataChanges = true;
 	private List<List<String>> externalNames;
 	
-	private transient long creationTime = System.currentTimeMillis();
+	private long creationTime = System.currentTimeMillis();
 	
 	private void writeObject(java.io.ObjectOutputStream out)  throws IOException {
 		externalNames = initExternalList(externalNames, objectsAccessed);
 		out.defaultWriteObject();
-	}
-	
-	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
-		in.defaultReadObject();
-		this.creationTime = System.currentTimeMillis();
 	}
 	
 	public boolean isSensitiveToMetadataChanges() {

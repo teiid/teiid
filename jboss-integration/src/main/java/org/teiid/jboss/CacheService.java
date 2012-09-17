@@ -29,6 +29,7 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.cache.CacheFactory;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.SessionAwareCache.Type;
 
 class CacheService<T> implements Service<SessionAwareCache<T>> {
 	
@@ -49,7 +50,9 @@ class CacheService<T> implements Service<SessionAwareCache<T>> {
 	@Override
 	public void start(StartContext context) throws StartException {
 		this.cache = new SessionAwareCache<T>(this.cacheName, cacheFactoryInjector.getValue(), this.type, this.maxStaleness);
-		this.cache.setTupleBufferCache(this.tupleBufferCacheInjector.getValue());
+		if (type == Type.RESULTSET) {
+			this.cache.setTupleBufferCache(this.tupleBufferCacheInjector.getValue());
+		}
 	}
 
 	@Override

@@ -31,14 +31,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 
-import org.infinispan.manager.DefaultCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.as.server.ServerEnvironment;
 import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
@@ -146,8 +144,7 @@ public class TestReplication {
 
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
 		config.setObjectReplicator(jor);
-		DefaultCacheManager manager = new DefaultCacheManager(UnitTestUtil.getTestDataPath()+"/infinispan-replicated-config.xml");
-		config.setCacheFactory(new InfinispanCacheFactory(manager, this.getClass().getClassLoader()));
+		config.setInfinispanConfigFile(UnitTestUtil.getTestDataPath()+"/infinispan-replicated-config.xml");
 		
 		server.start(config, true);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();

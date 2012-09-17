@@ -510,6 +510,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				cacheId = new CacheID(this.dqpWorkContext, pi, requestMsg.getCommandString());
 		    	cachable = cacheId.setParameters(requestMsg.getParameterValues());
 				if (cachable) {
+					//allow cache to be transactionally aware
+					if (rsCache.isTransactional()) {
+						TransactionContext tc = request.getTransactionContext(false);
+						if (tc != null && tc.getTransactionType() != Scope.NONE) {
+							initTransactionState(tc);
+							resume();
+						}
+					}
 					CachedResults cr = rsCache.get(cacheId);
 					//check that there are enough cached results
 					//TODO: possibly ignore max rows for caching
@@ -587,13 +595,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			//This is just a dummy result it will get replaced by collector source
 	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionId(), TupleSourceType.FINAL);
 		}
-		transactionContext = request.transactionContext;
-		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
-			if (this.requestMsg.getRequestOptions().isContinuous()) {
-				throw new IllegalStateException("Continuous requests are not allowed to be transactional."); //$NON-NLS-1$
-			}
-			this.transactionState = TransactionState.ACTIVE;
-		}
+		initTransactionState(request.transactionContext);
 		if (requestMsg.isNoExec()) {
 		    doneProducingBatches();
             resultsBuffer.close();
@@ -604,6 +606,16 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			throw new IllegalStateException("Continuous requests are not allowed to be updates."); //$NON-NLS-1$
 	    }
 		request = null;
+	}
+
+	private void initTransactionState(TransactionContext tc) {
+		transactionContext = tc;
+		if (this.transactionContext != null && this.transactionContext.getTransactionType() != Scope.NONE) {
+			if (this.requestMsg.getRequestOptions().isContinuous()) {
+				throw new IllegalStateException("Continuous requests are not allowed to be transactional."); //$NON-NLS-1$
+			}
+			this.transactionState = TransactionState.ACTIVE;
+		}
 	}
 
 	private CacheHint getCacheHint() {
@@ -941,7 +953,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	TransactionContext getTransactionContext() {
 		return transactionContext;
 	}
-	
 	
 	Collection<DataTierTupleSource> getConnectorRequests() {
 		synchronized (this.connectorInfo) {

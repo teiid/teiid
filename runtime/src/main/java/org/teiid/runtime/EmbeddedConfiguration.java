@@ -49,6 +49,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private String bufferDirectory;
 	private CacheFactory cacheFactory;
 	private int maxResultSetCacheStaleness = 60;
+	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -121,10 +122,19 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		return this.bufferDirectory;
 	}
 	
+	public String getInfinispanConfigFile() {
+		return infinispanConfigFile;
+	}
+	
+	public void setInfinispanConfigFile(String infinispanConfigFile) {
+		this.infinispanConfigFile = infinispanConfigFile;
+	}
+	
 	public CacheFactory getCacheFactory() {
 		if (this.cacheFactory == null) {
 			try {
-				DefaultCacheManager manager =   new DefaultCacheManager("infinispan-config.xml"); //$NON-NLS-1$
+				DefaultCacheManager manager = new DefaultCacheManager(this.infinispanConfigFile, true);
+				manager.startCaches(manager.getCacheNames().toArray(new String[manager.getCacheNames().size()]));
 				this.cacheFactory = new InfinispanCacheFactory(manager, this.getClass().getClassLoader());
 			} catch (IOException e) {
 				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40100, e);

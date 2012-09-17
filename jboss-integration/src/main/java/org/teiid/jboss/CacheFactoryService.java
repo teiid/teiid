@@ -21,7 +21,7 @@
  */
 package org.teiid.jboss;
 
-import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.modules.Module;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
@@ -32,12 +32,12 @@ import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 
 class CacheFactoryService implements Service<CacheFactory> {
-	protected InjectedValue<CacheContainer> cacheContainerInjector = new InjectedValue<CacheContainer>();
+	protected InjectedValue<EmbeddedCacheManager> cacheContainerInjector = new InjectedValue<EmbeddedCacheManager>();
 	private CacheFactory cacheFactory;
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		CacheContainer cc = cacheContainerInjector.getValue();
+		EmbeddedCacheManager cc = cacheContainerInjector.getValue();
 		if (cc != null) {
 			this.cacheFactory = new InfinispanCacheFactory(cc, Module.getCallerModule().getClassLoader());
 		}

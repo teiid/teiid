@@ -81,5 +81,12 @@ public interface Cache<K, V>  {
 	 * Return all the keys
 	 * @return
 	 */
-	Set<K> keys();
+	Set<K> keySet();
+
+	/**
+	 * If the cache is transactional
+	 * @return
+	 */
+	boolean isTransactional();
+	
 }

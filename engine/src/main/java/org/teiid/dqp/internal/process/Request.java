@@ -336,14 +336,24 @@ public class Request implements SecurityFunctionEvaluator {
     }
 
     private void createProcessor() throws TeiidComponentException {
-        
-        TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
+    	this.context.setTransactionContext(getTransactionContext(true));
+        this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
+    	this.processor.setContinuous(this.requestMsg.getRequestOptions().isContinuous());
+    }
+
+	TransactionContext getTransactionContext(boolean startAutoWrap) throws TeiidComponentException {
+		if (this.transactionContext != null) {
+			return this.transactionContext;
+		}
+		TransactionContext tc = transactionService.getOrCreateTransactionContext(workContext.getSessionId());
         
         Assertion.assertTrue(tc.getTransactionType() != TransactionContext.Scope.REQUEST, "Transaction already associated with request."); //$NON-NLS-1$
 
         // If local or global transaction is not started.
-        if (tc.getTransactionType() == Scope.NONE) {
-            
+        if (tc.getTransactionType() == Scope.NONE && !requestMsg.isNoExec()) {
+            if (!startAutoWrap) {
+            	return null;
+            }
             boolean startAutoWrapTxn = false;
             
             if(RequestMessage.TXN_WRAP_ON.equals(requestMsg.getTxnAutoWrapMode())){ 
@@ -365,10 +375,8 @@ public class Request implements SecurityFunctionEvaluator {
         
         tc.setIsolationLevel(requestMsg.getTransactionIsolation());
         this.transactionContext = tc;
-        this.context.setTransactionContext(tc);
-        this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
-    	this.processor.setContinuous(this.requestMsg.getRequestOptions().isContinuous());
-    }
+        return this.transactionContext;
+	}
 
     /**
      * state side effects:

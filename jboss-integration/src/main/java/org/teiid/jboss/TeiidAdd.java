@@ -22,10 +22,7 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.Iterator;
 import java.util.List;
@@ -38,15 +35,15 @@ import javax.resource.spi.XATerminator;
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
-import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.AttributeAccess.Storage;
 import org.jboss.as.controller.services.path.RelativePathService;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
@@ -61,12 +58,12 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.ValueService;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheFactory;
@@ -321,7 +318,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(cfName, cfs);
 	    	
 	    	String ispnName = Element.RSC_CONTAINER_NAME_ELEMENT.asString(operation);
-	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), CacheContainer.class, cfs.cacheContainerInjector); //$NON-NLS-1$
+	    	cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
 	    	newControllers.add(cacheFactoryBuilder.install());
 	    	
 	    	int maxStaleness = 60;
@@ -333,6 +330,8 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	    	ServiceBuilder<SessionAwareCache<CachedResults>> resultsCacheBuilder = target.addService(TeiidServiceNames.CACHE_RESULTSET, resultSetService);
 	    	resultsCacheBuilder.addDependency(TeiidServiceNames.TUPLE_BUFFER, TupleBufferCache.class, resultSetService.tupleBufferCacheInjector);
 	    	resultsCacheBuilder.addDependency(cfName, CacheFactory.class, resultSetService.cacheFactoryInjector);
+	    	resultsCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
+	    	resultsCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName + SessionAwareCache.REPL)); //$NON-NLS-1$
 	    	newControllers.add(resultsCacheBuilder.install());
     	}
     	
@@ -357,13 +356,13 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	    	ServiceBuilder<CacheFactory> cacheFactoryBuilder = target.addService(cfName, cfs);
 	    	
 	    	String ispnName = Element.PPC_CONTAINER_NAME_ELEMENT.asString(operation);
-    		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), CacheContainer.class, cfs.cacheContainerInjector); //$NON-NLS-1$
-	    	newControllers.add(cacheFactoryBuilder.install());
+    		cacheFactoryBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName), EmbeddedCacheManager.class, cfs.cacheContainerInjector); //$NON-NLS-1$
+    		newControllers.add(cacheFactoryBuilder.install());
 	    	
 	    	CacheService<PreparedPlan> preparedPlanService = new CacheService<PreparedPlan>(cacheName, SessionAwareCache.Type.PREPAREDPLAN, 0);
 	    	ServiceBuilder<SessionAwareCache<PreparedPlan>> preparedPlanCacheBuilder = target.addService(TeiidServiceNames.CACHE_PREPAREDPLAN, preparedPlanService);
-	    	preparedPlanCacheBuilder.addDependency(TeiidServiceNames.TUPLE_BUFFER, TupleBufferCache.class, preparedPlanService.tupleBufferCacheInjector);
 	    	preparedPlanCacheBuilder.addDependency(cfName, CacheFactory.class, preparedPlanService.cacheFactoryInjector);
+	    	preparedPlanCacheBuilder.addDependency(ServiceName.JBOSS.append("infinispan", ispnName, cacheName)); //$NON-NLS-1$
 	    	newControllers.add(preparedPlanCacheBuilder.install());
     	}    	
     	

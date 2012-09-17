@@ -24,30 +24,30 @@ package org.teiid.cache.infinispan;
 
 import java.io.Serializable;
 
-import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.EmbeddedCacheManager;
 import org.teiid.cache.Cache;
 import org.teiid.cache.CacheFactory;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.runtime.RuntimePlugin;
 
-
 public class InfinispanCacheFactory implements CacheFactory, Serializable{
 	private static final long serialVersionUID = -2767452034178675653L;
-	private transient org.infinispan.manager.CacheContainer cacheStore;
+	private transient EmbeddedCacheManager cacheStore;
 	private volatile boolean destroyed = false;
 	private ClassLoader classLoader;
 	
-
-	public InfinispanCacheFactory(CacheContainer cm, ClassLoader classLoader) {
+	public InfinispanCacheFactory(EmbeddedCacheManager cm, ClassLoader classLoader) {
 		this.cacheStore = cm;
 		this.classLoader = classLoader;
 	}
 	
-	public Cache get(String cacheName) {
+	@SuppressWarnings("unchecked")
+	@Override
+	public <K, V> Cache<K, V> get(String cacheName) {
 		if (!destroyed) {
-			org.infinispan.Cache cache = this.cacheStore.getCache(cacheName);
+			org.infinispan.Cache cache = this.cacheStore.getCache(cacheName, false);
 			if (cache != null) {
-				return new InfinispanCache(cache, cacheName, this.classLoader);
+				return new InfinispanCache<K, V>(cache, cacheName, this.classLoader);
 			}
 			return null;
 		}
@@ -62,8 +62,4 @@ public class InfinispanCacheFactory implements CacheFactory, Serializable{
 		destroy();
 	}
 	
-	@Override
-	public boolean isReplicated() {
-		return true;
-	}
 }

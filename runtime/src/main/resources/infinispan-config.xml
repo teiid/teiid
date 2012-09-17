@@ -30,12 +30,14 @@
     <global/>
 
     <namedCache name="resultset">
+        <transaction transactionMode="TRANSACTIONAL"/>
         <eviction maxEntries="1024" strategy="LIRS" />
         <expiration lifespan="7200000" />
         <clustering mode="local"/>
     </namedCache>
     
     <namedCache name="resultset-repl">
+	    <transaction transactionMode="TRANSACTIONAL"/>
         <eviction maxEntries="1024" strategy="LIRS" />
         <expiration lifespan="7200000" />
         <clustering mode="local"/>

@@ -360,6 +360,11 @@ public class TestEmbeddedServer {
 		assertEquals(1, tm.txnHistory.size());
 		txn = tm.txnHistory.remove(0);
 		Mockito.verify(txn).commit();
+		
+		s.execute("set autoCommitTxn on");
+		s.execute("set noexec on");
+		s.execute("select 1");
+		assertFalse(s.getResultSet().next());
 	}
 
 }
