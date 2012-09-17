@@ -326,8 +326,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private void handleThrowable(Throwable e) {
-		LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred"); //$NON-NLS-1$ //$NON-NLS-2$
-		
 		if (!isCanceled()) {
 			dqpCore.logMMCommand(this, Event.ERROR, null);
 		    //Case 5558: Differentiate between system level errors and
@@ -345,10 +343,17 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    	} else {
 		    		elem = cause.getMessage();
 		    	}
-		        LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getName(), elem));
+		        String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getName(), elem);
+		    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+		    		LogManager.logWarning(LogConstants.CTX_DQP, e, msg);
+		    	} else {
+		    		LogManager.logWarning(LogConstants.CTX_DQP, msg + QueryPlugin.Util.getString("stack_info")); //$NON-NLS-1$		    		
+		    	}
 		    } else {
 		        LogManager.logError(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30019, requestID));
-		    }                                
+		    }                             
+		} else {
+			LogManager.logDetail(LogConstants.CTX_DQP, e, "Request Thread", requestID, "- error occurred after cancel"); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		this.processingException = e;

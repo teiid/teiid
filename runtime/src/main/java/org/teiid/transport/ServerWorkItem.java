@@ -40,8 +40,10 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.crypto.CryptoException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ServiceInvocationStruct;
+import org.teiid.query.QueryPlugin;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.ClientServiceRegistryImpl.ClientService;
 
@@ -159,7 +161,11 @@ public class ServerWorkItem implements Runnable {
 			cause = cause.getCause();
 		}
 		StackTraceElement elem = cause.getStackTrace()[0];
-		LogManager.logDetail(context, e, "Processing exception for session", this.socketClientInstance.getWorkContext().getSessionId()); //$NON-NLS-1$ 
-		LogManager.logWarning(context, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40011, e.getMessage(), this.socketClientInstance.getWorkContext().getSessionId(), e.getClass().getName(), elem));
+		String msg = RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40011, e.getMessage(), this.socketClientInstance.getWorkContext().getSessionId(), e.getClass().getName(), elem);
+		if (LogManager.isMessageToBeRecorded(context, MessageLevel.DETAIL)) {
+			LogManager.logWarning(context, e, msg);
+		} else {
+			LogManager.logWarning(context, msg + QueryPlugin.Util.getString("stack_info")); ////$NON-NLS-1$
+		}
 	}
 }
