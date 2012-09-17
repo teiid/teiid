@@ -56,9 +56,7 @@ public class IntegrationPlugin {
     	TEIID50017, // vdb.xml parse exception
     	TEIID50018, // failed VDB dependency processing
     	TEIID50019, // redeploying VDB
-    	TEIID50020, // replication error failed to pull
     	TEIID50021, // vdb defined translator not found
-    	TEIID50022, // replication error timeout during the pull
     	TEIID50023, // replication failed
     	TEIID50024, // failed metadata load
     	TEIID50025, // VDB deployed
@@ -72,7 +70,6 @@ public class IntegrationPlugin {
     	TEIID50039, // socket_disabled
     	TEIID50040, // odbc_disabled
     	TEIID50041, // embedded disabled
-    	TEIID50042, // error state
     	TEIID50043,
     	TEIID50044, // vdb save failed
     	TEIID50047,
@@ -82,7 +79,6 @@ public class IntegrationPlugin {
     	TEIID50055,
     	TEIID50056,
     	TEIID50057,
-    	TEIID50067,
     	TEIID50069,
     	TEIID50070,
     	TEIID50071,

@@ -22,7 +22,8 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -30,9 +31,8 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.Executors;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.server.ServerEnvironment;
 import org.jgroups.Channel;
 import org.jgroups.JChannel;
 import org.junit.BeforeClass;
@@ -42,10 +42,11 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.replication.jboss.JGroupsObjectReplicator;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.replication.jgroups.ChannelFactory;
+import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.EmbeddedConfiguration;
 
 @SuppressWarnings("nls")
@@ -129,21 +130,8 @@ public class TestReplication {
 
 	private FakeServer createServer() throws Exception {
 		FakeServer server = new FakeServer(false);
-		
-		JGroupsObjectReplicator jor = new JGroupsObjectReplicator(new ChannelFactory() {
-					@Override
-					public Channel createChannel(String id) throws Exception {
-						return new JChannel(this.getClass().getClassLoader().getResource("tcp.xml"));
-					}
-
-					@Override
-					public ServerEnvironment getServerEnvironment() {
-						return null;
-					}
-				});
 
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		config.setObjectReplicator(jor);
 		config.setInfinispanConfigFile(UnitTestUtil.getTestDataPath()+"/infinispan-replicated-config.xml");
 		
 		server.start(config, true);

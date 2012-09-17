@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.replication.jboss;
+package org.teiid.replication.jgroups;
 
 import java.io.Externalizable;
 import java.io.IOException;

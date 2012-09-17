@@ -24,11 +24,14 @@ package org.teiid.runtime;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import javax.resource.spi.work.WorkManager;
 import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.DefaultCacheManager;
+import org.jgroups.Channel;
+import org.jgroups.JChannel;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
@@ -36,6 +39,8 @@ import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.query.ObjectReplicator;
+import org.teiid.replication.jgroups.ChannelFactory;
+import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.security.SecurityHelper;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
@@ -50,6 +55,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private CacheFactory cacheFactory;
 	private int maxResultSetCacheStaleness = 60;
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
+	private String jgroupsConfigFile = "tcp.xml"; //$NON-NLS-1$
 	
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -76,12 +82,23 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setTransactionManager(TransactionManager transactionManager) {
 		this.transactionManager = transactionManager;
 	}
+	
 	public ObjectReplicator getObjectReplicator() {
+		if (this.objectReplicator == null) {
+			this.objectReplicator = new JGroupsObjectReplicator(new ChannelFactory() {
+				@Override
+				public Channel createChannel(String id) throws Exception {
+					return new JChannel(this.getClass().getClassLoader().getResource(getJgroupsConfigFile()));
+				}
+			}, Executors.newCachedThreadPool());			
+		}
 		return objectReplicator;
 	}
+	
 	public void setObjectReplicator(ObjectReplicator objectReplicator) {
 		this.objectReplicator = objectReplicator;
 	}
+	
 	/**
 	 * Sets the {@link WorkManager} to be used instead of a {@link ThreadReuseExecutor}.
 	 * This means that Teiid will not own the processing threads and will not necessarily be
@@ -151,5 +168,11 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}
 	public void setMaxResultSetCacheStaleness(int maxResultSetCacheStaleness) {
 		this.maxResultSetCacheStaleness = maxResultSetCacheStaleness;
+	}
+	public String getJgroupsConfigFile() {
+		return jgroupsConfigFile;
+	}
+	public void setJgroupsConfigFile(String jgroupsConfigFile) {
+		this.jgroupsConfigFile = jgroupsConfigFile;
 	}	
 }

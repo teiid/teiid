@@ -83,7 +83,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
-import org.teiid.replication.jboss.JGroupsObjectReplicator;
+import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.services.InternalEventDistributorFactory;
 
 class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
@@ -247,6 +247,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     		JGroupsObjectReplicatorService replicatorService = new JGroupsObjectReplicatorService();
 			ServiceBuilder<JGroupsObjectReplicator> serviceBuilder = target.addService(TeiidServiceNames.OBJECT_REPLICATOR, replicatorService);
 			serviceBuilder.addDependency(ServiceName.JBOSS.append("jgroups", "stack", stack), ChannelFactory.class, replicatorService.channelFactoryInjector); //$NON-NLS-1$ //$NON-NLS-2$
+			serviceBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  replicatorService.executorInjector);
 			newControllers.add(serviceBuilder.install());
 			LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50003)); 
     	} else {

@@ -39,18 +39,6 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- 
-        <dependency>
-           <groupId>javax.enterprise</groupId>
-           <artifactId>cdi-api</artifactId>
-           <scope>test</scope>
-        </dependency> 
-         -->  
-        <dependency>
-          <groupId>org.jboss.as</groupId>
-          <artifactId>jboss-as-clustering-jgroups</artifactId>
-          <scope>provided</scope>
-        </dependency>
 	</dependencies>
     
     <profiles>

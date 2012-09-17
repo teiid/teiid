@@ -21,23 +21,32 @@
  */
 package org.teiid.jboss;
 
+import java.util.concurrent.Executor;
+
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.msc.service.Service;
 import org.jboss.msc.service.StartContext;
 import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
-import org.teiid.replication.jboss.JGroupsObjectReplicator;
+import org.jgroups.Channel;
+import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 
 class JGroupsObjectReplicatorService implements Service<JGroupsObjectReplicator> {
 
 	public final InjectedValue<ChannelFactory> channelFactoryInjector = new InjectedValue<ChannelFactory>();
+	final InjectedValue<Executor> executorInjector = new InjectedValue<Executor>();
 	private JGroupsObjectReplicator replicator; 
 	
 	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.replicator = new JGroupsObjectReplicator(channelFactoryInjector.getValue());
+		this.replicator = new JGroupsObjectReplicator(new org.teiid.replication.jgroups.ChannelFactory() {
+			@Override
+			public Channel createChannel(String id) throws Exception {
+				return channelFactoryInjector.getValue().createChannel(id);
+			}
+		}, executorInjector.getValue());
 	}
 
 	@Override

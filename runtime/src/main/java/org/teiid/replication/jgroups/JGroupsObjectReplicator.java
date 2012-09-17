@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.replication.jboss;
+package org.teiid.replication.jgroups;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,9 +43,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
-import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jgroups.Address;
 import org.jgroups.Channel;
 import org.jgroups.MembershipListener;
@@ -66,11 +64,11 @@ import org.teiid.Replicated;
 import org.teiid.Replicated.ReplicationMode;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectInputStreamWithClassloader;
-import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.ReplicatedObject;
+import org.teiid.runtime.RuntimePlugin;
 
 @SuppressWarnings("unchecked")
 public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
@@ -243,7 +241,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 				if (promise != null) {
 					promise.setResult(Boolean.FALSE);
 				}
-				LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50042,stateId));
+				LogManager.logError(LogConstants.CTX_RUNTIME, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40101, stateId));
 			} finally {
 				is.close();
 			}
@@ -445,9 +443,9 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 							}
 							break;
 						} 
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50020, object, stateId));
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40102, object, stateId));
 					} else {
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50022, object, stateId));
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40103, object, stateId));
 					}
 				} finally {
 					synchronized (loadingStates) {
@@ -486,11 +484,12 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 	}
 
 	//TODO: this should be configurable, or use a common executor
-	private transient Executor executor = Executors.newCachedThreadPool();
+	private transient Executor executor;
 	private transient ChannelFactory channelFactory;
 
-	public JGroupsObjectReplicator(ChannelFactory channelFactory) {
+	public JGroupsObjectReplicator(ChannelFactory channelFactory, Executor executor) {
 		this.channelFactory = channelFactory;
+		this.executor = executor;
 	}
 	
 	public void stop(Object object) {
@@ -572,7 +571,7 @@ public class JGroupsObjectReplicator implements ObjectReplicator, Serializable {
 			if (e instanceof Exception) {
 				throw (Exception)e;
 			}
-			 throw new TeiidRuntimeException(IntegrationPlugin.Event.TEIID50067, e);
+			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40104, e);
 		} finally {
 			if (!success) {
 				channel.close();
