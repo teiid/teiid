@@ -22,8 +22,7 @@
 
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -31,10 +30,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.concurrent.Executors;
 
-import org.jgroups.Channel;
-import org.jgroups.JChannel;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
@@ -42,11 +38,9 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
-import org.teiid.metadata.FunctionParameter;
-import org.teiid.replication.jgroups.ChannelFactory;
-import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.runtime.EmbeddedConfiguration;
 
 @SuppressWarnings("nls")
@@ -63,8 +57,7 @@ public class TestReplication {
     	if (DEBUG) {
 	    	UnitTestUtil.enableTraceLogging("org.teiid");
     	}
-    	
-		FakeServer server1 = createServer();
+		FakeServer server1 = createServer("infinispan-replicated-config.xml", "tcp-shared.xml");
 		
 		Connection c1 = server1.createConnection("jdbc:teiid:matviews");
 		Statement stmt = c1.createStatement();
@@ -74,7 +67,7 @@ public class TestReplication {
 		double d1 = rs.getDouble(1);
 		double d2 = rs.getDouble(2);
 		
-		FakeServer server2 = createServer();
+		FakeServer server2 = createServer("infinispan-replicated-config-1.xml", "tcp-shared-1.xml");
 		Connection c2 = server2.createConnection("jdbc:teiid:matviews");
 		Statement stmt2 = c2.createStatement();
 		ResultSet rs2 = stmt2.executeQuery("select * from matviews where name = 'RandomView'");
@@ -128,12 +121,12 @@ public class TestReplication {
 		server2.stop();
     }
 
-	private FakeServer createServer() throws Exception {
+	private FakeServer createServer(String ispn, String jgroups) throws Exception {
 		FakeServer server = new FakeServer(false);
 
 		EmbeddedConfiguration config = new EmbeddedConfiguration();
-		config.setInfinispanConfigFile(UnitTestUtil.getTestDataPath()+"/infinispan-replicated-config.xml");
-		
+		config.setInfinispanConfigFile(ispn);
+		config.setJgroupsConfigFile(jgroups);
 		server.start(config, true);
     	HashMap<String, Collection<FunctionMethod>> udfs = new HashMap<String, Collection<FunctionMethod>>();
     	udfs.put("funcs", Arrays.asList(new FunctionMethod("pause", null, null, PushDown.CANNOT_PUSHDOWN, TestMatViews.class.getName(), "pause", null, new FunctionParameter("return", DataTypeManager.DefaultDataTypes.INTEGER), true, Determinism.NONDETERMINISTIC)));

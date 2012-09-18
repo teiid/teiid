@@ -264,6 +264,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	//to allow teiid to start a request transaction under an existing thread bound transaction
 	protected boolean detectTransactions = true;
 	private Boolean running;
+	private EmbeddedConfiguration config;
 	
 	public EmbeddedServer() {
 
@@ -274,10 +275,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.connectionFactoryProviders.put(name, connectionFactoryProvider);
 	}
 
-	public synchronized void start(EmbeddedConfiguration config) {
+	public synchronized void start(@SuppressWarnings("hiding") EmbeddedConfiguration config) {
 		if (running != null) {
 			throw new IllegalStateException();
 		}
+		this.config = config;
 		this.eventDistributorFactoryService.start();
 		this.dqp.setEventDistributor(this.eventDistributorFactoryService.getReplicatedEventDistributor());
 		this.replicator = config.getObjectReplicator();
@@ -505,6 +507,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * Stops the server.  Once stopped it cannot be restarted.
 	 */
 	public synchronized void stop() {
+		if (config != null) {
+			config.stop();
+		}
 		dqp.stop();
 		eventDistributorFactoryService.stop();
 		bufferService = null;

@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -485,20 +484,12 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     public int getTransactionIsolation() throws SQLException {
     	return this.transactionIsolation;
     }
-
-    /**
-     * Retreives the type map associated with this Connection object. The type map
-     * contains entries for undefined types. This method always returns an empty
-     * map since it is not possible to add entries to this type map
-     * @return map containing undefined types(empty)
-     * @throws SQLException, should never occur
-     */
-    public Map getTypeMap() throws SQLException {
-        //Check to see the connection is open
-        checkConnection();
-        return new HashMap();
+    
+    @Override
+    public Map<String, Class<?>> getTypeMap() throws SQLException {
+    	return Collections.emptyMap();
     }
-
+    
     /**
      * <p>This method will return the first warning reported by calls on this connection,
      * or null if none exist.</p>

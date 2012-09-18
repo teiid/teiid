@@ -23,7 +23,10 @@
 package org.teiid.runtime;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 
 import javax.resource.spi.work.WorkManager;
@@ -31,6 +34,7 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.DefaultCacheManager;
 import org.jgroups.Channel;
+import org.jgroups.ChannelListener;
 import org.jgroups.JChannel;
 import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
@@ -45,6 +49,37 @@ import org.teiid.security.SecurityHelper;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
 	
+	private final class SimpleChannelFactory implements ChannelFactory, ChannelListener {
+		private final Map<Channel, String> channels = new WeakHashMap<Channel, String>();
+		
+		@Override
+		public Channel createChannel(String id) throws Exception {
+			JChannel channel = new JChannel(this.getClass().getClassLoader().getResource(getJgroupsConfigFile()));
+			channels.put(channel, id);
+			channel.addChannelListener(this);
+			return channel;
+		}
+
+		@Override
+		public void channelClosed(Channel channel) {
+			channels.remove(channel);
+		}
+
+		@Override
+		public void channelConnected(Channel channel) {
+		}
+
+		@Override
+		public void channelDisconnected(Channel channel) {
+		}
+		
+		void stop() {
+			for (Channel c : new ArrayList<Channel>(channels.keySet())) {
+				c.close();
+			}
+		}
+	}
+
 	private SecurityHelper securityHelper;
 	private List<String> securityDomains;
 	private TransactionManager transactionManager;
@@ -55,7 +90,13 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private CacheFactory cacheFactory;
 	private int maxResultSetCacheStaleness = 60;
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
-	private String jgroupsConfigFile = "tcp.xml"; //$NON-NLS-1$
+	private String jgroupsConfigFile;
+	
+	private DefaultCacheManager manager;
+	private SimpleChannelFactory channelFactory;
+	
+	public EmbeddedConfiguration() {
+	}
 	
 	public SecurityHelper getSecurityHelper() {
 		return securityHelper;
@@ -84,13 +125,9 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	}
 	
 	public ObjectReplicator getObjectReplicator() {
-		if (this.objectReplicator == null) {
-			this.objectReplicator = new JGroupsObjectReplicator(new ChannelFactory() {
-				@Override
-				public Channel createChannel(String id) throws Exception {
-					return new JChannel(this.getClass().getClassLoader().getResource(getJgroupsConfigFile()));
-				}
-			}, Executors.newCachedThreadPool());			
+		if (this.objectReplicator == null && jgroupsConfigFile != null) {
+			channelFactory = new SimpleChannelFactory();
+			this.objectReplicator = new JGroupsObjectReplicator(channelFactory, Executors.newCachedThreadPool());			
 		}
 		return objectReplicator;
 	}
@@ -150,7 +187,7 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public CacheFactory getCacheFactory() {
 		if (this.cacheFactory == null) {
 			try {
-				DefaultCacheManager manager = new DefaultCacheManager(this.infinispanConfigFile, true);
+				manager = new DefaultCacheManager(this.infinispanConfigFile, true);
 				manager.startCaches(manager.getCacheNames().toArray(new String[manager.getCacheNames().size()]));
 				this.cacheFactory = new InfinispanCacheFactory(manager, this.getClass().getClassLoader());
 			} catch (IOException e) {
@@ -175,4 +212,13 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	public void setJgroupsConfigFile(String jgroupsConfigFile) {
 		this.jgroupsConfigFile = jgroupsConfigFile;
 	}	
+	
+	protected void stop() {
+		if (manager != null) {
+			manager.stop();
+		}
+		if (channelFactory != null) {
+			channelFactory.stop();
+		}
+	}
 }

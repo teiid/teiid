@@ -5,7 +5,7 @@
     <global>
         <transport clusterName="teiid-cluster" machineId="m1" rackId="r1" nodeName="Node-A">
          <properties>
-            <property name="configurationFile" value="tcp.xml"/>
+            <property name="configurationFile" value="tcp-shared.xml"/>
          </properties>        
         </transport>
     </global>
