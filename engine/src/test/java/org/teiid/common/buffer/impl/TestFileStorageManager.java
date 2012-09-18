@@ -104,6 +104,15 @@ public class TestFileStorageManager {
     	fsos.flush();
     	assertEquals(0, fsos.getCount());
     }
+    
+    @Test public void testClose() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null);
+    	FileStore store = sm.createFileStore("0");
+    	FileStoreOutputStream fsos = store.createOutputStream(2);
+    	fsos.write(new byte[100000]);
+    	fsos.close();
+    	fsos.close();
+    }
 
     static Random r = new Random();
     

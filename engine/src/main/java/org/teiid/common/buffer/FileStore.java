@@ -114,6 +114,9 @@ public abstract class FileStore implements Removable {
 		
 		@Override
 		public void close() throws IOException {
+			if (closed) {
+				return;
+			}
 			flush();
 			closed = true;
 			if (bytesWritten) {
