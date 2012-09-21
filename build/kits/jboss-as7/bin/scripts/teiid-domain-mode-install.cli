@@ -62,6 +62,10 @@ connect
 /profile=ha/subsystem=teiid/translator=ws:add(module=org.jboss.teiid.translator.ws)
 /profile=ha/subsystem=teiid/translator=salesforce:add(module=org.jboss.teiid.translator.salesforce)
 /profile=ha/subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
+/profile=ha/subsystem=teiid/translator=infinispan-cache:add(module=org.jboss.teiid.translator.object)
+/profile=ha/subsystem=teiid/translator=infinispanremote-cache:add(module=org.jboss.teiid.translator.object)
+/profile=ha/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
+
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
 /profile=ha/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local, driver-module-name=org.jboss.teiid, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
