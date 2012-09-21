@@ -376,6 +376,39 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 	
+	@Test public void testMultiJoinCriteria() throws Exception {
+		String sql = "SELECT count(t2.e4) as s FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3 WHERE t1.e1 = t2.e1 and t2.e2 = t3.e2 and t1.e3 || t2.e3 = t3.e3"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList(0)
+		};
+
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testMultiJoinGroupBy() throws Exception {
+		String sql = "SELECT count(t2.e4) as s, t1.e3 || t2.e3 FROM pm1.g1 as t1, pm1.g2 as t2, pm1.g3 as t3 WHERE t1.e1 = t2.e1 and t2.e2 = t3.e2 GROUP BY t1.e3 || t2.e3"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList(9, "falsefalse"),
+				Arrays.asList(2, "falsetrue"),
+				Arrays.asList(4, "truefalse"),
+				Arrays.asList(1, "truetrue"),
+		};
+
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		helpProcess(plan, dataManager, expected);
+	}
+	
 	@Test public void testArrayAggOrderByPersistence() throws Exception {
 		// Create query
 		String sql = "SELECT array_agg(e2 order by e1) from pm1.g1 group by e3"; //$NON-NLS-1$

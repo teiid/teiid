@@ -595,11 +595,12 @@ public class RulePushAggregates implements
             Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
             Collection<AggregateSymbol> aggregates = aggregateMap.get(planNode);
 
-            if (!canPush(groupNode, stagedGroupingSymbols, planNode)) {
-                continue;
+            planNode = canPush(groupNode, stagedGroupingSymbols, planNode);
+            if (planNode == null) {
+            	continue;
             }
 
-        	filterJoinColumns(stagedGroupingSymbols, planNode.getGroups(), groupingExpressions);
+        	filterExpressions(stagedGroupingSymbols, planNode.getGroups(), groupingExpressions, false);
 
             collectSymbolsFromOtherAggregates(allAggregates, aggregates, planNode, stagedGroupingSymbols);
             
@@ -726,45 +727,70 @@ public class RulePushAggregates implements
 
     /**
      * Ensures that we are only pushing through inner equi joins or cross joins.  Also collects the necessary staged grouping symbols
+     * @return null if we cannot push otherwise the target join node
      */
-    private boolean canPush(PlanNode groupNode,
+    private PlanNode canPush(PlanNode groupNode,
                             Set<Expression> stagedGroupingSymbols,
                             PlanNode planNode) {
         PlanNode parentJoin = planNode.getParent();
         
         Set<GroupSymbol> groups = FrameUtil.findJoinSourceNode(planNode).getGroups();
         
+        PlanNode result = planNode;
         while (parentJoin != groupNode) {
             if (parentJoin.getType() != NodeConstants.Types.JOIN
                 || parentJoin.hasCollectionProperty(NodeConstants.Info.NON_EQUI_JOIN_CRITERIA)
                 || ((JoinType)parentJoin.getProperty(NodeConstants.Info.JOIN_TYPE)).isOuter()) {
-                return false;
+                return null;
             }
-
+            //we move the target up if the filtered expressions introduce outside groups
             if (planNode == parentJoin.getFirstChild()) {
-                if (parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS)) {
-                	filterJoinColumns(stagedGroupingSymbols, groups, (List<SingleElementSymbol>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS));
+                if (parentJoin.hasCollectionProperty(NodeConstants.Info.LEFT_EXPRESSIONS)
+                		&& filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS), true)) {
+                	result = parentJoin;
+                	groups = result.getGroups();
                 }
             } else {
-                if (parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)) {
-                	filterJoinColumns(stagedGroupingSymbols, groups, (List<SingleElementSymbol>)parentJoin.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS));
+                if (parentJoin.hasCollectionProperty(NodeConstants.Info.RIGHT_EXPRESSIONS)
+                		&& filterExpressions(stagedGroupingSymbols, groups, (List<Expression>)parentJoin.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS), true)) {
+                	result = parentJoin;
+                	groups = result.getGroups();
                 }
             }
 
             planNode = parentJoin;
             parentJoin = parentJoin.getParent();
         }
-        return true;
+        if (result.getParent() == groupNode) {
+        	//can't be pushed as we are already at the direct child
+        	return null;
+        }
+        return result;
     }
 
-    private void filterJoinColumns(Set<Expression> stagedGroupingSymbols,
+    /**
+     * @return true if the filtered expressions contain outside groups
+     */
+    private boolean filterExpressions(Set<Expression> stagedGroupingSymbols,
                                    Set<GroupSymbol> groups,
-                                   List<? extends Expression> symbols) {
+                                   Collection<? extends Expression> symbols, boolean wholeExpression) {
+    	boolean result = false;
         for (Expression ex : symbols) {
-            if (groups.containsAll(GroupsUsedByElementsVisitor.getGroups(ex))) {
+            Set<GroupSymbol> groups2 = GroupsUsedByElementsVisitor.getGroups(ex);
+            if (!Collections.disjoint(groups, groups2)) {
+            	if (!result) {
+            		boolean containsAll = groups.containsAll(groups2);
+            		if (!wholeExpression && !containsAll) {
+            			//collect only matching subexpressions - but the best that we'll currently do is elementsymbols
+                		filterExpressions(stagedGroupingSymbols, groups, ElementCollectorVisitor.getElements(ex, true), true);
+                		continue;
+                    }
+					result = !containsAll;
+				}
                 stagedGroupingSymbols.add(SymbolMap.getExpression(ex));
             }
         }
+        return result;
     }
 
     private <T extends Expression> Map<PlanNode, List<T>> createNodeMapping(PlanNode groupNode,
