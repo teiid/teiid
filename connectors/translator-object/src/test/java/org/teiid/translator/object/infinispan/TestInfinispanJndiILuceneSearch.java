@@ -34,7 +34,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.infinispan.search.LuceneSearch;
 import org.teiid.translator.object.util.TradesCacheSource;
@@ -58,11 +60,20 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 
 	@Before public void beforeEachTest() throws Exception{	
         
-		factory = new InfinispanExecutionFactory();
+		factory = new InfinispanExecutionFactory() {
 
+			@Override
+			protected Object findCacheUsingJNDIName()
+					throws TranslatorException {
+				return container;
+			}
+			
+		};
+
+		factory.setCacheJndiName("JNDINAME");
 		factory.setCacheName(TradesCacheSource.TRADES_CACHE_NAME);
 		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
-		factory.setSearchStrategyClassName(LuceneSearch.class.getName());
+		factory.setSupportsLuceneSearching(true);
 		factory.start();
 	    
 
@@ -70,8 +81,8 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 
 	@Override
 	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
-
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, container);
+		
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 		
 		exec.execute();
 		

@@ -24,7 +24,6 @@ package org.teiid.translator.object.search;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.core.util.Assertion;
 import org.teiid.language.AggregateFunction;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
@@ -44,7 +43,6 @@ import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
-import org.teiid.translator.object.SelectProjections;
 
 /**
  * The BasicKeySearchCriteria parses the {@link Command select} and creates
@@ -59,31 +57,19 @@ public class BasicKeySearchCriteria extends HierarchyVisitor {
 
 	// search criteria based on the WHERE clause
 	private SearchCriterion criterion;
-	private SelectProjections projections;
 
 	private List<String> exceptionMessages = new ArrayList<String>(2);
 
-	private BasicKeySearchCriteria(ObjectExecutionFactory factory,
-			SelectProjections projections) {
-		this.projections = projections;
+	private BasicKeySearchCriteria(ObjectExecutionFactory factory) {
 	}
 
 	public static BasicKeySearchCriteria getInstance(
-			ObjectExecutionFactory factory, SelectProjections projections,
+			ObjectExecutionFactory factory,
 			Select command) throws TranslatorException {
-		BasicKeySearchCriteria visitor = new BasicKeySearchCriteria(factory,
-				projections);
+		BasicKeySearchCriteria visitor = new BasicKeySearchCriteria(factory);
 		visitor.visitNode(command);
 		visitor.throwExceptionIfFound();
 		return visitor;
-	}
-
-	private String getRootNodePrimaryKeyColumnName() {
-		return this.projections.getRootNodePrimaryKeyColumnName();
-	}
-
-	private boolean isRootTableInFrom() {
-		return this.projections.isRootTableInFrom();
 	}
 
 	/**
@@ -100,7 +86,6 @@ public class BasicKeySearchCriteria extends HierarchyVisitor {
 			this.criterion = new SearchCriterion();
 
 		}
-		this.criterion.setRootTableInSelect(isRootTableInFrom());
 
 		return this.criterion;
 	}
@@ -139,8 +124,11 @@ public class BasicKeySearchCriteria extends HierarchyVisitor {
 		}
 
 		if (mdIDElement == null || value == null) {
-			Assertion.assertTrue(false,
-					"BasicKeySearchCriteria.missingComparisonExpression");
+			String msg = ObjectPlugin.Util
+			.getString(
+					"BasicKeySearchCriteria.missingComparisonExpression", new Object[] { });
+			addException(msg);
+			return;
 		}
 
 		addCompareCriteria(mdIDElement,
@@ -170,10 +158,11 @@ public class BasicKeySearchCriteria extends HierarchyVisitor {
 				type = literal.getType();
 
 			} else {
-				Assertion
-						.assertTrue(false,
-								"BasicKeySearchCriteria.Unsupported_expression "
-										+ expr);
+				String msg = ObjectPlugin.Util
+				.getString(
+						"BasicKeySearchCriteria.Unsupported_expression", new Object[] {expr });
+				addException(msg);
+				return;
 			}
 
 		}
@@ -227,19 +216,9 @@ public class BasicKeySearchCriteria extends HierarchyVisitor {
 		assert (searchCriteria.getTableName() != null);
 
 		assert (searchCriteria.getField() != null);
-		assert (getRootNodePrimaryKeyColumnName() != null);
 
-		// must be a key column in order to perform search
-		if (searchCriteria.getTableName().equalsIgnoreCase(
-				this.projections.getRootTableName())
-				&& searchCriteria.getField().equalsIgnoreCase(
-						getRootNodePrimaryKeyColumnName())) {
-
-			if (this.criterion != null) {
-				searchCriteria.addOrCriterion(this.criterion);
-			}
-
-			this.criterion = searchCriteria;
+		if (this.criterion != null) {
+			searchCriteria.addOrCriterion(this.criterion);
 		}
 
 		this.criterion = searchCriteria;

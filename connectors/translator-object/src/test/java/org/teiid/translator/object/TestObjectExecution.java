@@ -22,6 +22,8 @@
 package org.teiid.translator.object;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -43,19 +45,20 @@ public class TestObjectExecution {
 	
 	@Mock
 	private ExecutionContext context;
+	@Mock 
+	private ObjectConnection connection;
 
 	@Before public void beforeEach() throws Exception{	
  
 		MockitoAnnotations.initMocks(this);
+		
+	    when(connection.performSearch(any(Select.class))).thenReturn(source.getAll());
+
 
 		factory = new ObjectExecutionFactory() {		};
-		factory.setSearchStrategyClassName(FakeStrategy.class.getName());
 		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
 		
 		factory.start();
-		
-		FakeStrategy.RESULTS = source.getAll();
-		
 
     }
 	
@@ -113,7 +116,7 @@ public class TestObjectExecution {
 	private ObjectExecution createExecution(String sql) throws Exception {
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand(sql); //$NON-NLS-1$
 				
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, connection);
 		
 		return exec;
 

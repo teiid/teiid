@@ -57,7 +57,6 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 
 		factory.setCacheName(TradesCacheSource.TRADES_CACHE_NAME);
 		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
-		factory.setSearchStrategyClassName(SearchByKey.class.getName());
 		factory.start();
 		
 		TradesCacheSource.loadCache(factory.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME));

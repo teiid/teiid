@@ -25,69 +25,72 @@ package org.teiid.translator.object.infinispan.search;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.infinispan.api.BasicCache;
+import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.SearchStrategy;
-import org.teiid.translator.object.SelectProjections;
-import org.teiid.translator.object.infinispan.InfinispanExecutionFactory;
+import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
 import org.teiid.translator.object.search.BasicKeySearchCriteria;
 import org.teiid.translator.object.search.SearchCriterion;
 
 /**
- * SearchByKey is a simple SearchStrategy that enables querying the cache by
+ * SearchByKey is a simple ObjectConnection that enables querying the cache by
  * the key, using EQUI and IN clauses on the SELECT statement.
  */
-public class SearchByKey implements SearchStrategy {
+public final class SearchByKey  {
 
-	public List<Object> performSearch(Select command,
-			SelectProjections projections,
-			ObjectExecutionFactory objectFactory, Object connection)
+	public static List<Object> performSearch(Select command, InfinispanConnectionImpl connection)
 			throws TranslatorException {
 
-		InfinispanExecutionFactory factory = (InfinispanExecutionFactory) objectFactory;
-		BasicCache<String, Object> cache = factory.getCache(connection);
+		BasicCache<String, Object> cache = connection.getCache();
 		BasicKeySearchCriteria bksc = BasicKeySearchCriteria.getInstance(
-				factory, projections, command);
+				connection.getFactory(), command);
 
-		return get(bksc.getCriterion(), cache, factory);
+		return get(bksc.getCriterion(), cache, connection.getFactory().getRootClass());
 
 	}
 
-	private List<Object> get(SearchCriterion criterion,
-			BasicCache<String, Object> cache, InfinispanExecutionFactory factory)
+	private static List<Object> get(SearchCriterion criterion,
+			BasicCache<String, Object> cache, Class rootClass)
 			throws TranslatorException {
 		List<Object> results = null;
 
-		if (!criterion.isRootTableInSelect()) {
-			return Collections.EMPTY_LIST;
-		}
-
 		if (criterion.getOperator() == SearchCriterion.Operator.ALL) {
-			Set keys = cache.keySet();
-			results = new ArrayList<Object>();
-			for (Iterator it = keys.iterator(); it.hasNext();) {
-				Object v = cache.get(it.next());
-				addValue(v, results, factory.getRootClass());
+
+			if (cache instanceof RemoteCache) {
+				RemoteCache<?, ?> rc = (RemoteCache<?, ?>) cache;
+		  		Map<?, ?> c = rc.getBulk();
+	    		results = new ArrayList<Object>();
+	    		for (Iterator it = c.keySet().iterator(); it.hasNext();) {
+	    			Object v = cache.get(it.next());
+	    			addValue(v, results, rootClass);	
+	    		}	
+	 
+			} else {
+				Set keys = cache.keySet();
+				results = new ArrayList<Object>();
+				for (Iterator it = keys.iterator(); it.hasNext();) {
+					Object v = cache.get(it.next());
+					addValue(v, results, rootClass);
+				}
 			}
 
 			return results;
 		}
 
 		if (criterion.getCriterion() != null) {
-			results = get(criterion.getCriterion(), cache, factory);
+			results = get(criterion.getCriterion(), cache, rootClass);
 		}
 
 		if (results == null) {
 			results = new ArrayList<Object>();
 		}
+	
 
 		if (criterion.getOperator().equals(SearchCriterion.Operator.EQUALS)) {
 
@@ -96,7 +99,7 @@ public class SearchByKey implements SearchStrategy {
 			Object v = cache.get(value instanceof String ? value : value
 					.toString());
 			if (v != null) {
-				addValue(v, results, factory.getRootClass());
+				addValue(v, results, rootClass);
 			}
 		} else if (criterion.getOperator().equals(SearchCriterion.Operator.IN)) {
 
@@ -107,7 +110,7 @@ public class SearchByKey implements SearchStrategy {
 				Object v = cache.get(arg instanceof String ? arg : arg
 						.toString());
 				if (v != null) {
-					addValue(v, results, factory.getRootClass());
+					addValue(v, results, rootClass);
 				}
 			}
 
@@ -117,7 +120,7 @@ public class SearchByKey implements SearchStrategy {
 
 	}
 
-	private void addValue(Object value, List<Object> results, Class rootNodeType) {
+	private static void addValue(Object value, List<Object> results, Class rootNodeType) {
 		if (value != null && value.getClass().equals(rootNodeType)) {
 
 			if (value.getClass().isArray()) {

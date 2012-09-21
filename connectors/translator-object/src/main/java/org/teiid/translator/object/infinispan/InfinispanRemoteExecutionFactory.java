@@ -27,6 +27,7 @@ import org.infinispan.manager.CacheContainer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorProperty;
 
 /**
  * The InfinispanRemoteExecutionFactory is used to obtain a remote
@@ -40,37 +41,27 @@ import org.teiid.translator.Translator;
 
 @Translator(name = "infinispanremote-cache", description = "The Execution Factory for Remote Infinispan Cache")
 public class InfinispanRemoteExecutionFactory extends
-		InfinispanExecutionFactory {
-	// public static final String DATAGRID_HOST = "datagrid.host";
-	// public static final String HOTROD_PORT = "datagrid.hotrod.port";
+		InfinispanBaseExecutionFactory {
 
-	private BasicCacheContainer manager;
+	private RemoteCacheManager manager;
 
-	private volatile String remoteServerList;
+	private String remoteServerList;
 
 	public InfinispanRemoteExecutionFactory() {
 		super();
-		this.setSourceRequired(false);
 	}
-
-
-	protected boolean createCacheContainer() {
-		if (this.getConfigurationFileName() != null) {
-			return true;
-		}
-
-		if (this.getRemoteServerList() != null
-				|| this.getRemoteServerList().length() > 0) {
-			return true;
-		}
-
-		return false;
-
-	}
-
+	
 	@Override
 	public boolean isSourceRequired() {
-		return true;
+		return false;
+	}
+	
+	public boolean isAlive() {
+		return (manager.isStarted());
+	}
+	
+	public boolean isFullTextSearchingSupported() {
+		return false;
 	}
 
 	/**
@@ -82,6 +73,7 @@ public class InfinispanRemoteExecutionFactory extends
 	 * 
 	 * @return the names of the remote servers
 	 */
+	@TranslatorProperty(display = "Server List", description = "Server List (host:port[;host:port...]) to connect to", advanced = true)
 	public String getRemoteServerList() {
 		return remoteServerList;
 	}
@@ -99,7 +91,7 @@ public class InfinispanRemoteExecutionFactory extends
 	 * 
 	 * @see #getRemoteServerList()
 	 */
-	public synchronized void setRemoteServerList(
+	public void setRemoteServerList(
 			String remoteInfinispanServerList) {
 		if (this.remoteServerList == remoteInfinispanServerList
 				|| this.remoteServerList != null
@@ -110,6 +102,8 @@ public class InfinispanRemoteExecutionFactory extends
 
 	@Override
 	protected synchronized BasicCacheContainer getCacheContainer() {
+		if (this.manager != null) return this.manager;
+		
 		RemoteCacheManager container = null;
 		if (this.getConfigurationFileName() != null) {
 			container = new RemoteCacheManager(this.getConfigurationFileName());
@@ -123,27 +117,30 @@ public class InfinispanRemoteExecutionFactory extends
 					|| this.getRemoteServerList().isEmpty()
 					|| this.getRemoteServerList().equals("")) {
 				container = new RemoteCacheManager();
-				
+
 				LogManager
 				.logInfo(LogConstants.CTX_CONNECTOR,
 						"=== Using RemoteCacheManager (no serverlist defined) ==="); //$NON-NLS-1$
 
 			} else {
 				container = new RemoteCacheManager(this.getRemoteServerList());
-				
 				LogManager
 				.logInfo(LogConstants.CTX_CONNECTOR,
 						"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
 
 			}
 		}
+		
 
-		return container;
+		this.manager = container;
+		return this.manager;
 
 	}
 
 	public void cleanUp() {
-		manager.stop();
+		if (this.manager != null) {
+			manager.stop();
+		}
 		manager = null;
 	}
 

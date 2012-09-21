@@ -26,14 +26,21 @@ import java.util.List;
 import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
 
-public class FakeStrategy implements SearchStrategy {
+/**
+ * Each ObjectConnection implementation represents a connection instance and is responsible for
+ * implementing the data source search language specifics for searching its cache.
+ * 
+ * @author vhalbert
+ *
+ */
+public interface ObjectConnection  {
 	
-	public static List<Object> RESULTS = null;
-	
-	@Override
-	public List<Object> performSearch(Select command, SelectProjections projections,
-			ObjectExecutionFactory factory, Object connection) throws TranslatorException{
-		return RESULTS;
-	}
-	
+	/**
+	 * Call to perform the search on the cache identified by this connection instance
+	 * @param command
+	 * @return List of Objects
+	 * @throws TranslatorException
+	 */
+	public List<Object> performSearch(Select command) throws TranslatorException;
+
 }

@@ -22,6 +22,7 @@
 package org.teiid.translator.object.infinispan;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,7 +54,7 @@ public class TestInfinispanRemoteJndiKeySearch extends BasicSearchTest {
 	private static ExecutionContext context;
 
     
-    private InfinispanExecutionFactory factory = null;
+    private InfinispanRemoteExecutionFactory factory = null;
 		
 	@Mock
 	private static Context jndi;
@@ -62,11 +63,10 @@ public class TestInfinispanRemoteJndiKeySearch extends BasicSearchTest {
     public static void beforeEachClass() throws Exception { 
 		RemoteInfinispanTestHelper.createServer();
 	       // Create the cache manager ...
-
+		
         // Set up the mock JNDI ...
 		jndi = mock(Context.class);
         when(jndi.lookup(anyString())).thenReturn(null);
-        when(jndi.lookup(JNDI_NAME)).thenReturn(container);
         
 		context = mock(ExecutionContext.class);
 
@@ -75,8 +75,9 @@ public class TestInfinispanRemoteJndiKeySearch extends BasicSearchTest {
 
 	@Before public void beforeEachTest() throws Exception{	
         
-		factory = new InfinispanExecutionFactory();
+		factory = new InfinispanRemoteExecutionFactory();
 
+		factory.setRemoteServerList(RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
 		factory.setCacheName(TradesCacheSource.TRADES_CACHE_NAME);
 		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
 		factory.start();	    
@@ -91,11 +92,13 @@ public class TestInfinispanRemoteJndiKeySearch extends BasicSearchTest {
 	
 	@Override
 	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
-		container = new RemoteCacheManager("infinispan_remote_config.xml");
-		
-		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
+	    when(jndi.lookup(JNDI_NAME)).thenReturn(container);
+	    
+	    Object t =  RemoteInfinispanTestHelper.getCacheManager().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("1");
 
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, container);
+	    assertNotNull(t);
+	    
+		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 		
 		exec.execute();
 		

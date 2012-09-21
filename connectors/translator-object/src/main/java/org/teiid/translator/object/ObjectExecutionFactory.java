@@ -24,7 +24,11 @@ package org.teiid.translator.object;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.QueryExpression;
@@ -35,46 +39,38 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.object.infinispan.search.SearchByKey;
-import org.teiid.translator.object.util.ObjectUtil;
+
 
 /**
  * The ObjectExecutionFactory is a base implementation for connecting to an
- * Object data source that's stored in a cache.
- * 
+ * Object cache.  It provides the core features and behavior common to all implementations.
  * 
  * @author vhalbert
  * 
  */
 public abstract class ObjectExecutionFactory extends
-		ExecutionFactory<ConnectionFactory, Object> {
+		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 1000;
-
-	/*
-	 * SearchStrategy is the implementation that will perform a specific cache
-	 * lookup algorithm
-	 */
-	private SearchStrategy searchStrategy = null;
-	private String searchStrategyClassName = null;
 
 	// rootClassName identifies the name of the class that is identified by the
 	// unique key in the cache
 	private String rootClassName = null;
 	private Class<?> rootClass = null;
+	private String cacheJndiName;
+
 
 	public ObjectExecutionFactory() {
-		super();
 
-		this.setSourceRequiredForMetadata(false);
-		this.setMaxInCriteriaSize(MAX_SET_SIZE);
-		this.setMaxDependentInPredicates(1);
+		setSourceRequiredForMetadata(false);
+		setMaxInCriteriaSize(MAX_SET_SIZE);
+		setMaxDependentInPredicates(1);
 
-		this.setSupportsOrderBy(false);
-		this.setSupportsSelectDistinct(false);
-		this.setSupportsInnerJoins(false);
-		this.setSupportsFullOuterJoins(false);
-		this.setSupportsOuterJoins(false);
+		setSupportsOrderBy(false);
+		setSupportsSelectDistinct(false);
+		setSupportsInnerJoins(false);
+		setSupportsFullOuterJoins(false);
+		setSupportsOuterJoins(false);
 
 	}
 
@@ -94,10 +90,6 @@ public abstract class ObjectExecutionFactory extends
 			rootClass = Class.forName(rootClassName.trim(), true, getClass()
 					.getClassLoader());
 
-			searchStrategy = (SearchStrategy) ObjectUtil.createObject(
-					searchStrategyClassName, Collections.EMPTY_LIST, getClass()
-							.getClassLoader());
-
 		} catch (ClassNotFoundException e) {
 			String msg = ObjectPlugin.Util.getString(
 					"ObjectExecutionFactory.rootClassNotFound",
@@ -110,12 +102,15 @@ public abstract class ObjectExecutionFactory extends
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
+			ObjectConnection connection) throws TranslatorException {
 
-		return new ObjectExecution((Select) command, metadata, this, connection);
+		
+		return new ObjectExecution((Select) command, metadata, this, (connection == null ? getConnection(null, executionContext) : connection) );
 
 	}
 
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public List getSupportedFunctions() {
 		return Collections.EMPTY_LIST;
 	}
@@ -172,37 +167,7 @@ public abstract class ObjectExecutionFactory extends
 	public boolean supportsOrderBy() {
 		return false;
 	}
-
-	/**
-	 * Get the class name for the search strategy that will be used to perform
-	 * object lookups in the cache.
-	 * 
-	 * @return String class name
-	 * @see #setSearchStrategyClassName(String)
-	 */
-	public String getSearchStrategyClassName() {
-		return this.searchStrategyClassName;
-	}
-
-	/**
-	 * Set the class name for the search strategy that will be used to perform
-	 * object lookups in the cache.
-	 * <p>
-	 * Default is {@link SearchByKey}
-	 * 
-	 * @param searchStrategyClassName
-	 * @see #getSearchStrategyClassName()
-	 */
-
-	public void setSearchStrategyClassName(String searchStrategyClassName) {
-		this.searchStrategyClassName = searchStrategyClassName;
-	}
-
-	protected SearchStrategy getSearchStrategy() {
-		return this.searchStrategy;
-	}
-
-
+	
 	/**
 	 * Call to get the class name of the root object in the cache. This
 	 * identifies the name of the class that is identified by the unique key in
@@ -230,6 +195,29 @@ public abstract class ObjectExecutionFactory extends
 
 		}
 	}
+	
+	 /**
+     * Get the JNDI name for the  {@link Map cache}  instance that should be used as the data source.
+     * 
+     * @return the JNDI name of the {@link Map cache} instance that should be used,
+     * @see #setCacheJndiName(String)
+     */
+	@TranslatorProperty(display = "CacheJndiName", advanced = true)
+    public String getCacheJndiName() {
+        return cacheJndiName;
+    }
+
+    /**
+     * Set the JNDI name to a {@link Map cache} instance that should be used as this source.
+     * 
+     * @param jndiName the JNDI name of the {@link Map cache} instance that should be used
+     * @see #setCacheJndiName(String)
+     */
+    public synchronized void setCacheJndiName( String jndiName ) {
+        if (this.cacheJndiName == jndiName || this.cacheJndiName != null
+            && this.cacheJndiName.equals(jndiName)) return; // unchanged
+        this.cacheJndiName = jndiName;
+    }
 
 	/**
 	 * Call to get the class specified by calling
@@ -240,5 +228,41 @@ public abstract class ObjectExecutionFactory extends
 	public Class<?> getRootClass() {
 		return this.rootClass;
 	}
+	
+	/**
+	 * Utility method available to all implementations to find the Cache via JNDI.
+	 * @return Object located via JNDI
+	 * @throws TranslatorException
+	 */
+	protected Object findCacheUsingJNDIName() throws TranslatorException {
+		  	
+		    Object cache = null;
+		    String jndiName = getCacheJndiName();
+		    if (jndiName != null && jndiName.trim().length() != 0) {
+		        try {
+		            Context context = null;
+		            if (context == null) {
+		                try {
+		                    context = new InitialContext();
+		                } catch (NamingException err) {
+		                    throw new TranslatorException(err);
+		                }
+		            }
+		            cache = context.lookup(jndiName);
+		            
+		            if (cache == null) {
+		    			String msg = ObjectPlugin.Util.getString(
+		    					"ObjectExecutionFactory.cacheNotFoundinJNDI",
+		    					new Object[] { jndiName });
+		    			throw new TranslatorException(msg); //$NON-NLS-1$
+		            	
+		            } 		
+		        } catch (Throwable err) {
+		            if (err instanceof RuntimeException) throw (RuntimeException)err;
+		            throw new TranslatorException(err);
+		        }
+		    } 
+		    return cache;
+	    }	
 
 }

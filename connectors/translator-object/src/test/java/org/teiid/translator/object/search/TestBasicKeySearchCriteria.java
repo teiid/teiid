@@ -29,7 +29,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.object.ObjectExecutionFactory;
-import org.teiid.translator.object.SelectProjections;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
@@ -47,25 +46,17 @@ public class TestBasicKeySearchCriteria {
 		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
 
 	}
-	
-	private SelectProjections createSelectProjections(Select command) {
-		SelectProjections visitor = SelectProjections.create(factory);
-		visitor.parse(command);
-		return visitor;
 		
-	}
-		
-	private BasicKeySearchCriteria createVisitor(Select command, SelectProjections projections) throws Exception {
-		return BasicKeySearchCriteria.getInstance(factory, projections, command);		
+	private BasicKeySearchCriteria createVisitor(Select command) throws Exception {
+		return BasicKeySearchCriteria.getInstance(factory, command);		
 	}
 	
 
 	@Test public void testIN() throws Exception {
 		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade where Trade_Object.Trade.TradeID IN ('1','2','3')"); //$NON-NLS-1$
-		SelectProjections visitor = createSelectProjections(command);
 		
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, true);
 	
 	}
@@ -73,29 +64,25 @@ public class TestBasicKeySearchCriteria {
 	@Test public void test1Equals() throws Exception {
 
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade where Trade_Object.Trade.TradeID = '1'"); //$NON-NLS-1$
-		SelectProjections visitor = createSelectProjections(command);
 
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, true);
 		
 	}
 	
-	@Test public void test2Equals() throws Exception {
+	@Test public void test5Equals() throws Exception {
 
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade where Trade_Object.Trade.Name = 'MyName' and (Trade_Object.Trade.TradeId = '2' or  Trade_Object.Trade.Settled = 'true') or (Trade_Object.Trade.Settled = 'false' and Trade_Object.Trade.TradeId = 3) "); //$NON-NLS-1$
-		SelectProjections visitor = createSelectProjections(command);
 
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
-		validateSearchCriteria(criteria.getCriterion(), 2, false, true);
+		BasicKeySearchCriteria criteria = createVisitor(command);
+		validateSearchCriteria(criteria.getCriterion(), 5, false, true);
 	}		
 
 	
 	@Test public void testQueryIncludeLegsNoCriteria() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"); //$NON-NLS-1$
 
-		SelectProjections visitor = createSelectProjections(command);
-		
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, true);
 		
 		assertEquals(criteria.getCriterion().getOperator(), SearchCriterion.Operator.ALL);
@@ -104,9 +91,7 @@ public class TestBasicKeySearchCriteria {
 	@Test public void testQueryIncludeLegsWithCriteria() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId and L.Name='MyLeg'"); //$NON-NLS-1$
 
-		SelectProjections visitor = createSelectProjections(command);
-
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, true);
 	}	
 	
@@ -115,9 +100,8 @@ public class TestBasicKeySearchCriteria {
 				" N.LineItem " +
 				" From Trade_Object.Trade as T, Trade_Object.Leg as L, Trade_Object.Transaction as N " + 
 				" Where T.TradeId = L.TradeId and L.LegId = N.LegId "); //$NON-NLS-1$
-		SelectProjections visitor = createSelectProjections(command);
 
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, true);
 				
 		assertEquals(criteria.getCriterion().getOperator(), SearchCriterion.Operator.ALL);
@@ -129,9 +113,8 @@ public class TestBasicKeySearchCriteria {
 				" N.LineItem " +
 				" From Trade_Object.Trade as T, Trade_Object.Leg as L, Trade_Object.Transaction as N " + 
 				" Where T.TradeId = L.TradeId and L.LegId = N.LegId and T.TradeId in ('1','2','3') "); //$NON-NLS-1$
-		SelectProjections visitor = createSelectProjections(command);
 
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, true);
 	
 	}
@@ -139,9 +122,7 @@ public class TestBasicKeySearchCriteria {
 	@Test public void testQueryLegsWithCriteria() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select L.Name as LegName From Trade_Object.Leg as L Where L.Name='MyLeg'"); //$NON-NLS-1$
 
-		SelectProjections visitor = createSelectProjections(command);
-
-		BasicKeySearchCriteria criteria = createVisitor(command, visitor);
+		BasicKeySearchCriteria criteria = createVisitor(command);
 		validateSearchCriteria(criteria.getCriterion(), 1, false, false);
 	}	
 	
@@ -153,7 +134,7 @@ public class TestBasicKeySearchCriteria {
 
 		
 		assertNotNull(criteria);
-		assertEquals(cnt, criteria.getCriteriaCount());
+		assertEquals( "Criteria Count", cnt, criteria.getCriteriaCount());
 
 		if (criteria.getOperator() != SearchCriterion.Operator.ALL) {
 		
@@ -165,12 +146,11 @@ public class TestBasicKeySearchCriteria {
 			assertNotNull(criteria.getRuntimeType());
 			assertNotNull(criteria.getValue());
 			
-			assertEquals(isAnd, criteria.isAndCondition());
+			assertEquals("IsAnd", isAnd, criteria.isAndCondition());
 
+		} else {
+			assertEquals("Criteria Cnt must be 1 when using ALL", 1, criteria.getCriteriaCount());
 		}
-		
-		assertEquals(isRootInSelect, criteria.isRootTableInSelect());
-		
 	}
 	
 }

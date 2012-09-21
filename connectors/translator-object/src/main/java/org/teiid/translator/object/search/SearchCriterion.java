@@ -41,7 +41,6 @@ public class SearchCriterion {
 	private Column column;
 	private Object value;
 	private String runtimeType;
-	private boolean isRootTableInSelect = false;
 
 	public SearchCriterion() {
 		this.operator = Operator.ALL;
@@ -139,14 +138,6 @@ public class SearchCriterion {
 
 	public boolean isAndCondition() {
 		return this.isAnd;
-	}
-
-	public boolean isRootTableInSelect() {
-		return isRootTableInSelect;
-	}
-
-	public void setRootTableInSelect(boolean isRootTableInSelect) {
-		this.isRootTableInSelect = isRootTableInSelect;
 	}
 
 	private String getNameInSourceFromColumn(Column c) {

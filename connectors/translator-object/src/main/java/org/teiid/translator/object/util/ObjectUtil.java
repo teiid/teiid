@@ -32,9 +32,20 @@ public class ObjectUtil {
 			Collection<?> ctors, ClassLoader loader) throws TranslatorException {
 		try {
 	
-			return ReflectionHelper.create(objectClassName, ctors.toArray(), null, loader);
+			return ReflectionHelper.create(objectClassName, ctors, loader);
 		} catch (Exception e1) {
-			throw new TranslatorException(e1.getCause());
+			throw new TranslatorException(e1);
+		}
+	}
+	
+	public static Object createObject(String objectClassName,
+			Object[] ctorObjs, Class<?>[] argTypes, ClassLoader loader) throws TranslatorException {
+		try {
+	
+			return ReflectionHelper.create(objectClassName, ctorObjs, argTypes, loader);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			throw new TranslatorException(e1);
 		}
 	}
 

@@ -21,7 +21,6 @@
  */
 package org.teiid.translator.object.infinispan.search;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,46 +45,33 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
-import org.teiid.translator.object.SearchStrategy;
-import org.teiid.translator.object.SelectProjections;
-import org.teiid.translator.object.infinispan.InfinispanExecutionFactory;
+import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
 
 /**
  * LuceneSearch will parse the WHERE criteria and build the search query(s)
  * that's used to retrieve the results from an Infinispan cache.
  * 
+ * Note:  As of Infinispan 5.x, it doesn't support fulltext searching the RemoteCache
+ * 
  * @author vhalbert
  * 
  */
-public class LuceneSearch implements SearchStrategy {
-	protected List<String> exceptionMessages = new ArrayList<String>(2);
+public final class LuceneSearch   {
 
-	private QueryBuilder queryBuilder;
 
-	public LuceneSearch() {
-	}
-
-	public List<Object> performSearch(Select command,
-			SelectProjections projections,
-			ObjectExecutionFactory objectFactory, Object connection)
+	public static List<Object> performSearch(Select command, InfinispanConnectionImpl connection)
 			throws TranslatorException {
-
-		InfinispanExecutionFactory factory = (InfinispanExecutionFactory) objectFactory;
-
+		
 		SearchManager searchManager = Search
-				.getSearchManager((Cache<?, ?>) factory.getCache(connection));
+				.getSearchManager((Cache) connection.getCache() );
 
-		queryBuilder = searchManager.buildQueryBuilderForClass(
-				factory.getRootClass()).get();
+		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(
+				connection.getFactory().getRootClass()).get();
 
 		BooleanJunction<BooleanJunction> junction = queryBuilder.bool();
 		boolean createdQueries = buildQueryFromWhereClause(command.getWhere(),
-				junction);
-
-		// check for errors
-		this.throwExceptionIfFound();
+				junction, queryBuilder);
 
 		Query query = null;
 		if (createdQueries) {
@@ -95,7 +81,7 @@ public class LuceneSearch implements SearchStrategy {
 		}
 
 		CacheQuery cacheQuery = searchManager.getQuery(query,
-				factory.getRootClass()); // rootNodeType
+				connection.getFactory().getRootClass()); // rootNodeType
 
 		List<Object> results = cacheQuery.list();
 		if (results == null || results.isEmpty()) {
@@ -105,8 +91,8 @@ public class LuceneSearch implements SearchStrategy {
 		return results;
 	}
 
-	private boolean buildQueryFromWhereClause(Condition criteria,
-			BooleanJunction<BooleanJunction> junction)
+	private static boolean buildQueryFromWhereClause(Condition criteria,
+			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder)
 			throws TranslatorException {
 		boolean createdQueries = false;
 		BooleanJunction<BooleanJunction> inUse = junction;
@@ -120,15 +106,15 @@ public class LuceneSearch implements SearchStrategy {
 			switch (op) {
 			case AND:
 
-				BooleanJunction<BooleanJunction> leftAnd = this.queryBuilder
+				BooleanJunction<BooleanJunction> leftAnd = queryBuilder
 						.bool();
 				boolean andLeftHasQueries = buildQueryFromWhereClause(
-						crit.getLeftCondition(), leftAnd);
+						crit.getLeftCondition(), leftAnd, queryBuilder);
 
-				BooleanJunction<BooleanJunction> rightAnd = this.queryBuilder
+				BooleanJunction<BooleanJunction> rightAnd = queryBuilder
 						.bool();
 				boolean andRightHasQueries = buildQueryFromWhereClause(
-						crit.getRightCondition(), rightAnd);
+						crit.getRightCondition(), rightAnd, queryBuilder);
 
 				if (andLeftHasQueries && andRightHasQueries) {
 					leftAnd.must(rightAnd.createQuery());
@@ -148,9 +134,9 @@ public class LuceneSearch implements SearchStrategy {
 			case OR:
 
 				boolean orLeftHasQueries = buildQueryFromWhereClause(
-						crit.getLeftCondition(), inUse);
+						crit.getLeftCondition(), inUse, queryBuilder);
 				boolean orRightHasQueries = buildQueryFromWhereClause(
-						crit.getRightCondition(), inUse);
+						crit.getRightCondition(), inUse, queryBuilder);
 
 				createdQueries = (orLeftHasQueries ? orLeftHasQueries
 						: orRightHasQueries);
@@ -164,7 +150,7 @@ public class LuceneSearch implements SearchStrategy {
 			}
 
 		} else if (criteria instanceof Comparison) {
-			createdQueries = visit((Comparison) criteria, inUse);
+			createdQueries = visit((Comparison) criteria, inUse, queryBuilder);
 
 		} else if (criteria instanceof Exists) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
@@ -172,10 +158,10 @@ public class LuceneSearch implements SearchStrategy {
 			// TODO Exists should be supported in a future release.
 
 		} else if (criteria instanceof Like) {
-			createdQueries = visit((Like) criteria, inUse);
+			createdQueries = visit((Like) criteria, inUse, queryBuilder);
 
 		} else if (criteria instanceof In) {
-			createdQueries = visit((In) criteria, inUse);
+			createdQueries = visit((In) criteria, inUse, queryBuilder);
 
 		}
 		// else if (criteria instanceof Not) {
@@ -188,8 +174,8 @@ public class LuceneSearch implements SearchStrategy {
 		return createdQueries;
 	}
 
-	public boolean visit(Comparison obj,
-			BooleanJunction<BooleanJunction> junction) {
+	public static boolean visit(Comparison obj,
+			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) throws TranslatorException {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing Comparison criteria."); //$NON-NLS-1$
@@ -222,39 +208,37 @@ public class LuceneSearch implements SearchStrategy {
 		if (value == null) {
 			final String msg = ObjectPlugin.Util
 					.getString("LuceneSearch.unsupportedComparingByNull"); //$NON-NLS-1$
-			addException(msg);
-			return false;
+			throw new TranslatorException(msg);
 		}
 
 		value = escapeReservedChars(value);
 		switch (op) {
 		case NE:
-			createEqualsQuery(mdIDElement, value, false, true, junction);
+			createEqualsQuery(mdIDElement, value, false, true, junction, queryBuilder);
 			break;
 
 		case EQ:
-			createEqualsQuery(mdIDElement, value, true, false, junction);
+			createEqualsQuery(mdIDElement, value, true, false, junction, queryBuilder);
 			break;
 
 		case GT:
-			createRangeAboveQuery(mdIDElement, value, junction);
+			createRangeAboveQuery(mdIDElement, value, junction, queryBuilder);
 			break;
 
 		case LT:
-			createRangeBelowQuery(mdIDElement, value, junction);
+			createRangeBelowQuery(mdIDElement, value, junction, queryBuilder);
 			break;
 
 		default:
 			final String msg = ObjectPlugin.Util
-					.getString("LuceneSearch.unsupportedComparisonOperator"); //$NON-NLS-1$
-			addException(msg);
-			return false;
+					.getString("LuceneSearch.invalidOperator", new Object[] { op, "NE, EQ, GT, LT" }); //$NON-NLS-1$
+			throw new TranslatorException(msg);
 		}
 		return true;
 
 	}
 
-	public boolean visit(In obj, BooleanJunction<BooleanJunction> junction) {
+	public static boolean visit(In obj, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
 		Expression lhs = ((In) obj).getLeftExpression();
@@ -271,19 +255,19 @@ public class LuceneSearch implements SearchStrategy {
 				// add these as OR queries
 				createEqualsQuery(mdIDElement,
 						escapeReservedChars(literal.getValue()), false, false,
-						junction);
+						junction, queryBuilder);
 				createdQuery = true;
 			} else {
 				String msg = ObjectPlugin.Util.getString(
 						"LuceneSearch.Unsupported_expression",
 						new Object[] { expr, "IN" });
-				this.addException(msg);
+				throw new TranslatorException(msg);
 			}
 		}
 		return createdQuery;
 	}
 
-	public boolean visit(Like obj, BooleanJunction<BooleanJunction> junction) {
+	public static boolean visit(Like obj, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing LIKE criteria."); //$NON-NLS-1$
 
@@ -305,17 +289,15 @@ public class LuceneSearch implements SearchStrategy {
 
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
-			createLikeQuery(c, value.replaceAll("%", ""), junction); // "*"
-			return true;
+			createLikeQuery(c, value.replaceAll("%", ""), junction, queryBuilder); // "*"
 		} else {
 			final String msg = ObjectPlugin.Util.getString(
 					"LuceneSearch.Unsupported_expression",
 					new Object[] { literalExp.toString(), "LIKE" });
-			this.addException(msg);
-			return false;
-
+			throw new TranslatorException(msg);
 		}
 
+		return true;
 	}
 
 	protected static Object escapeReservedChars(final Object value) {
@@ -352,8 +334,8 @@ public class LuceneSearch implements SearchStrategy {
 		return sb.toString();
 	}
 
-	private Query createEqualsQuery(Column column, Object value, boolean and,
-			boolean not, BooleanJunction<BooleanJunction> junction) {
+	private static Query createEqualsQuery(Column column, Object value, boolean and,
+			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.keyword()
 				.onField(getNameInSourceFromColumn(column))
 				// .matching(value.toString() + "*")
@@ -369,8 +351,8 @@ public class LuceneSearch implements SearchStrategy {
 		return queryKey;
 	}
 
-	private Query createRangeAboveQuery(Column column, Object value,
-			BooleanJunction<BooleanJunction> junction) {
+	private static Query createRangeAboveQuery(Column column, Object value,
+			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
 				.onField(getNameInSourceFromColumn(column))
@@ -379,8 +361,8 @@ public class LuceneSearch implements SearchStrategy {
 		return queryKey;
 	}
 
-	private Query createRangeBelowQuery(Column column, Object value,
-			BooleanJunction<BooleanJunction> junction) {
+	private static Query createRangeBelowQuery(Column column, Object value,
+			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
 				.onField(getNameInSourceFromColumn(column))
@@ -389,8 +371,8 @@ public class LuceneSearch implements SearchStrategy {
 		return queryKey;
 	}
 
-	private Query createLikeQuery(Column column, String value,
-			BooleanJunction<BooleanJunction> junction) {
+	private static Query createLikeQuery(Column column, String value,
+			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.phrase()
 				.onField(getNameInSourceFromColumn(column)).sentence(value)
 				.createQuery();
@@ -398,24 +380,12 @@ public class LuceneSearch implements SearchStrategy {
 		return queryKey;
 	}
 
-	private String getNameInSourceFromColumn(Column c) {
+	private static String getNameInSourceFromColumn(Column c) {
 		String name = c.getNameInSource();
 		if (name == null || name.trim().equals("")) { //$NON-NLS-1$
 			return c.getName();
 		}
 		return name;
-	}
-
-	private void addException(String message) {
-
-		exceptionMessages.add(message);
-
-	}
-
-	protected void throwExceptionIfFound() throws TranslatorException {
-		if (!exceptionMessages.isEmpty())
-			throw new TranslatorException("LuceneSearch Exception(s): "
-					+ exceptionMessages.toString());
 	}
 
 }

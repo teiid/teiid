@@ -24,25 +24,40 @@ package org.teiid.translator.object.infinispan;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Properties;
+
+import org.infinispan.configuration.cache.CacheMode;
+import org.infinispan.configuration.cache.Configuration;
+import org.infinispan.configuration.cache.ConfigurationBuilder;
+import org.infinispan.configuration.global.GlobalConfigurationBuilder;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.server.core.Main;
 import org.infinispan.server.hotrod.HotRodServer;
+import org.teiid.translator.object.util.TradesCacheSource;
 
 /**
  */
 public class RemoteInfinispanTestHelper {
     protected static final int PORT = 11311;
     protected static final int TIMEOUT = 0;
-    protected static final String CONFIG_FILE = "src/test/resources/infinispan_remote_config.xml";
     private static HotRodServer server = null;
     private static int count = 0;
+    private static  DefaultCacheManager CACHEMANAGER = null;
 
     public static synchronized HotRodServer createServer() throws IOException {
         count++;
         if (server == null) {
-            DefaultCacheManager cacheManager = new DefaultCacheManager(CONFIG_FILE);
+        	Configuration c = new ConfigurationBuilder().clustering().cacheMode(CacheMode.REPL_SYNC).eviction().maxEntries(7).build();
+        	
+        	CACHEMANAGER = new DefaultCacheManager(
+                    new GlobalConfigurationBuilder().transport().defaultTransport().build(),
+                    c);
+        	CACHEMANAGER.start();
             // This doesn't work on IPv6, because the util assumes "127.0.0.1" ...
             // server = HotRodTestingUtil.startHotRodServer(cacheManager, HOST, PORT);
+        	
+        	
+        	CACHEMANAGER.defineConfiguration(TradesCacheSource.TRADES_CACHE_NAME, c);
+        	
             server = new HotRodServer();
             String hostAddress = hostAddress();
             String hostPort = Integer.toString(hostPort());
@@ -54,9 +69,18 @@ public class RemoteInfinispanTestHelper {
             props.setProperty(Main.PROP_KEY_PROXY_HOST(), hostAddress);
             props.setProperty(Main.PROP_KEY_PROXY_PORT(), hostPort);
             // System.out.println("Starting HotRot Server at " + hostAddress + ":" + hostPort);
-            server.start(props, cacheManager);
+            server.start(props, CACHEMANAGER);
+            
+            server.cacheManager().startCaches(TradesCacheSource.TRADES_CACHE_NAME);
+            
+            TradesCacheSource.loadCache(server.getCacheManager().getCache(TradesCacheSource.TRADES_CACHE_NAME));
+ 
         }
         return server;
+    }
+    
+    public static DefaultCacheManager getCacheManager() {
+    	return CACHEMANAGER;
     }
 
     public static int hostPort() {

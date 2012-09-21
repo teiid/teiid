@@ -41,16 +41,14 @@ import org.teiid.translator.TranslatorException;
 public class ObjectExecution implements ResultSetExecution {
 
 	private Select query;
-	private Object connection;
-	private ObjectExecutionFactory config;
+	private ObjectConnection connection;
 
 	private Iterator<Object> resultsIt = null;
 
 	public ObjectExecution(Select query, RuntimeMetadata metadata,
-			ObjectExecutionFactory factory, Object connection) {
+			ObjectExecutionFactory factory, ObjectConnection connection) {
 		this.query = query;
 		this.connection = connection;
-		this.config = factory;
 	}
 
 	@Override
@@ -59,10 +57,7 @@ public class ObjectExecution implements ResultSetExecution {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"ObjectExecution command: " + query.toString()); //$NON-NLS-1$
 
-		SelectProjections projections = SelectProjections.create(config);
-		projections.parse(query);
-
-		List<Object> results = executeQuery(projections);
+		List<Object> results = executeQuery();
 
 		if (results != null && results.size() > 0) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
@@ -78,17 +73,15 @@ public class ObjectExecution implements ResultSetExecution {
 		this.resultsIt = results.iterator();
 	}
 
-	protected List<Object> executeQuery(SelectProjections projections)
+	protected List<Object> executeQuery()
 			throws TranslatorException {
 
-		SearchStrategy is = this.config.getSearchStrategy();
 		LogManager
 				.logTrace(
 						LogConstants.CTX_CONNECTOR,
-						"ObjectExecution calling search strategy : " + is.getClass().getName()); //$NON-NLS-1$
+						"ObjectExecution calling search strategy : " + connection.getClass().getName()); //$NON-NLS-1$
 
-		return is.performSearch((Select) query, projections, this.config,
-				this.connection);
+		return connection.performSearch((Select) query);
 
 	}
 
@@ -108,7 +101,6 @@ public class ObjectExecution implements ResultSetExecution {
 	public void close() {
 		this.query = null;
 		this.connection = null;
-		this.config = null;
 		this.resultsIt = null;
 	}
 

@@ -1,0 +1,9 @@
+
+
+Chaining objecttables using JDG Team example:
+
+SELECT o.TeamName, c.Name 
+FROM object, OBJECTTABLE('x' PASSING ocol AS x COLUMNS TeamName varchar(255) 'teiid_row.foo', members object 'teiid_row.teamMembers') as o, 
+OBJECTABLE('m' PASSING o.members as m COLUMNS Name string 'teiid_row.name') as c
+
+Would produce a list of every team/member name.

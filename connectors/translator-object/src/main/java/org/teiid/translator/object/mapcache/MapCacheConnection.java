@@ -28,44 +28,56 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.resource.ResourceException;
+
 import org.teiid.language.Select;
+import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectPlugin;
-import org.teiid.translator.object.SearchStrategy;
-import org.teiid.translator.object.SelectProjections;
 import org.teiid.translator.object.search.BasicKeySearchCriteria;
 import org.teiid.translator.object.search.SearchCriterion;
 
 /**
- * The MapCacheSearchByKey provides simple key searches of the cache.
+ * The MapCacheConnection provides simple key searches of the cache.
  * 
  * @author vhalbert
  * 
  */
-public class MapCacheSearchByKey implements SearchStrategy {
+public class MapCacheConnection extends BasicConnection  implements ObjectConnection {
 
+	private MapCacheExecutionFactory factory = null;
 	private BasicKeySearchCriteria visitor = null;
+	
+	public MapCacheConnection(MapCacheExecutionFactory factory) {
+		super();
+		this.factory = factory;
+	}
+	
+	@Override
+	public boolean isAlive() {
+		return true;
+	}
 
-	public List<Object> performSearch(Select command,
-			SelectProjections projections, ObjectExecutionFactory factory,
-			Object connection) throws TranslatorException {
 
-		Map<?, ?> cache = null;
-		if (connection instanceof Map) {
-			cache = (Map<?, ?>) connection;
-		} else {
-			String msg = ObjectPlugin.Util.getString(
-					"MapCacheSearchByKey.unexpectedCacheType",
-					new Object[] { connection.getClass().getName(), "Map" });
-			throw new TranslatorException(msg); //$NON-NLS-1$
+	@Override
+	public void cleanUp() {
+		factory = null;
+		visitor = null;
+	}
+	
 
-		}
+	@Override
+	public void close() throws ResourceException {
+		cleanUp();
+		
+	}
 
-		visitor = BasicKeySearchCriteria.getInstance(factory, projections,
-				command);
+	public List<Object> performSearch(Select command) throws TranslatorException {
 
-		return get(visitor.getCriterion(), cache, factory.getRootClass());
+		visitor = BasicKeySearchCriteria.getInstance(factory,command);
+
+		return get(visitor.getCriterion(), factory.getCache(), factory.getRootClass());
 	}
 
 	private List<Object> get(SearchCriterion criterion, Map<?, ?> cache,
@@ -142,7 +154,7 @@ public class MapCacheSearchByKey implements SearchStrategy {
 				// class type, otherwise, the modeling
 				// structure won't correspond correctly
 				String msg = ObjectPlugin.Util.getString(
-						"MapCacheSearchByKey.unexpectedObjectTypeInCache",
+						"MapCacheConnection.unexpectedObjectTypeInCache",
 						new Object[] { value.getClass().getName(),
 								rootClass.getName() });
 

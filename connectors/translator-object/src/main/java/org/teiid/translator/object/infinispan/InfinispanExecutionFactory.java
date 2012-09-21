@@ -25,102 +25,78 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.infinispan.Cache;
-import org.infinispan.api.BasicCache;
 import org.infinispan.api.BasicCacheContainer;
-import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
-import org.teiid.language.QueryExpression;
-import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
-import org.teiid.translator.object.infinispan.search.LuceneSearch;
-import org.teiid.translator.object.infinispan.search.SearchByKey;
 
+/**
+ * InfinispanExecutionFactory is the translator that will access an Infinispan local cache.
+ * <p>
+ * The default settings are:
+ * <li>{@link #supportsLuceneSearching dynamic Searching} - will be set to <code>false</code>, supporting only Key searching.
+ * This is because you must have your objects in your cache annotated before Hibernate/Lucene searching will work.
+ * </li>
+ * <p>
+ * The required settings are:
+ * <li>{@link #setCacheJndiName(String) jndiName} OR {@link #setConfigurationFileName(String) configFileName} - 
+ * must be specified to indicate how the Infinispan container will be obtained</li>
+ * <li>{@link #setCacheName(String) cacheName} - identifies the cache located in the Infinispan container</li>
+ * <p>
+ * Optional settings are:
+ * <li>{@link #setSupportsLuceneSearching(boolean) dynamic Searching} - when <code>true</code>, will use the 
+ * Hibernate/Lucene searching to locate objects in the cache</li>
+ * 
+ * @author vhalbert
+ *
+ */
 @Translator(name = "infinispan-cache", description = "The Infinispan Cache Translator")
-public class InfinispanExecutionFactory extends ObjectExecutionFactory {
+public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
 	public static final String PROPERTIES_FILE = "META-INF" + File.separator
 			+ "datagrid.properties";
 
-	private boolean useLeceneSearching = false;
-	private String cacheName = null;
-	private String configurationFileName = null;
+	private boolean supportsLuceneSearching = false;
 
-	private BasicCacheContainer cacheContainer = null;
-
+	protected BasicCacheContainer cacheContainer = null;
+	private boolean useJndi = true;
+	
 	public InfinispanExecutionFactory() {
 		super();
-
-		this.setSearchStrategyClassName(SearchByKey.class.getName());
 	}
-
+	
 	@Override
 	public void start() throws TranslatorException {
-
-		if (this.getCacheName() == null || this.getCacheName().isEmpty()) {
-			String msg = ObjectPlugin.Util.getString(
-					"InfinispanExecutionFactory.cacheNameNotDefined",
-					new Object[] {});
-			throw new TranslatorException(msg); //$NON-NLS-1$
-		}
-
 		super.start();
-
-		if (createCacheContainer()) {
-			cacheContainer = this.getCacheContainer();
-		}
-	}
-
-	@Override
-	public ResultSetExecution createResultSetExecution(QueryExpression command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			Object connection) throws TranslatorException {
-
-		return new ObjectExecution((Select) command, metadata, this,
-				(cacheContainer != null ? cacheContainer : connection));
-
-	}
-
-	protected boolean createCacheContainer() {
-		if (this.getConfigurationFileName() != null) {
-			return true;
-		}
-		return false;
+		
+		String configFile = this.getConfigurationFileName();
+		String jndiName = getCacheJndiName();
+		if ( jndiName == null || jndiName.trim().length() == 0) {
+			if (configFile == null || configFile.trim().length() == 0) {
+	   			String msg = ObjectPlugin.Util
+    			.getString(
+    					"InfinispanExecutionFactory.undefinedHowToGetCache");
+        		throw new TranslatorException(msg); //$NON-NLS-1$	
+			}
+			useJndi = false;
+			
+		} else {
+			useJndi = true;
+		}			
 
 	}
-
-	/**
-	 * Get the cacheName that will be used by this factory instance to access
-	 * the named cache. However, if not specified a default configuration will
-	 * be created.
-	 * 
-	 * @return
-	 * @see #setCacheName(String)
-	 */
-	@TranslatorProperty(display = "CacheName", advanced = true)
-	public String getCacheName() {
-		return this.cacheName;
+	
+	public boolean isAlive() {
+		return (cacheContainer != null ? true : false);
+	}
+	
+	public boolean isFullTextSearchingSupported() {
+		return this.supportsLuceneSearching;
 	}
 
-	/**
-	 * Set the cacheName that will be used to find the named cache.
-	 * 
-	 * @param cacheName
-	 * @see #getCacheName()
-	 */
-
-	public void setCacheName(String cacheName) {
-		this.cacheName = cacheName;
-	}
 
 	/**
 	 * Indicates if Hibernate Search and Apache Lucene are used to index and
@@ -128,88 +104,15 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	 * 
 	 * @since 6.1.0
 	 */
-	@TranslatorProperty(display = "Use Lucene Searching", description = "True, assumes objects have Hibernate Search annotations", advanced = true)
-	public boolean useLuceneSearching() {
-		return useLeceneSearching;
+	@TranslatorProperty(display = "Support Using Lucene Searching", description = "True, assumes objects have Hibernate Search annotations", advanced = true)
+	public boolean supportsLuceneSearching() {
+		return this.supportsLuceneSearching;
 	}
 
-	public void setUseLeceneSearching(boolean useLeceneSearching) {
-		this.useLeceneSearching = useLeceneSearching;
-		if (useLeceneSearching) {
-			this.setSearchStrategyClassName(LuceneSearch.class.getName());
-		} else {
-			this.setSearchStrategyClassName(SearchByKey.class.getName());
-		}
+	public void setSupportsLuceneSearching(boolean supportsLuceneSearching) {
+		this.supportsLuceneSearching = supportsLuceneSearching;
 	}
 
-	/**
-	 * Get the name of the configuration resource or file that should be used if
-	 * a {@link Cache cache} is to be created using the
-	 * {@link DefaultCacheManager}. If not specified, a default configuration
-	 * will be used.
-	 * 
-	 * @return the name of the resource or file configuration that should be
-	 *         passed to the {@link CacheContainer}, or null if the default
-	 *         configuration should be used
-	 * @see #setConfigurationFileName(String)
-	 */
-	@TranslatorProperty(display = "ConfigurationFileName", advanced = true)
-	public String getConfigurationFileName() {
-		return configurationFileName;
-	}
-
-	/**
-	 * Set the name of the configuration that should be used if a {@link Cache
-	 * cache} is to be created using the {@link DefaultCacheManager}.
-	 * 
-	 * @param configurationFileName
-	 *            the name of the configuration file that should be used to load
-	 *            the {@link CacheContainer}, or null if the default
-	 *            configuration should be used
-	 * @see #getConfigurationFileName()
-	 */
-	public synchronized void setConfigurationFileName(
-			String configurationFileName) {
-		if (this.configurationFileName == configurationFileName
-				|| this.configurationFileName != null
-				&& this.configurationFileName.equals(configurationFileName))
-			return; // unchanged
-		this.configurationFileName = configurationFileName;
-	}
-
-	public BasicCache<String, Object> getCache(Object connection)
-			throws TranslatorException {
-		BasicCache<String, Object> cache = null;
-		if (connection instanceof BasicCacheContainer) {
-			BasicCacheContainer bc = (BasicCacheContainer) connection;
-
-			if (this.getCacheName() != null) {
-				cache = bc.getCache(this.getCacheName());
-			} else {
-				cache = bc.getCache();
-			}
-		} else if (connection instanceof BasicCache) {
-			cache = (BasicCache) connection;
-		} else {
-			String msg = ObjectPlugin.Util.getString(
-					"InfinispanExecutionFactory.unsupportedConnectionType",
-					new Object[] { connection.getClass().getName(),
-							"either BasicCache or BasicCacheContainer" });
-			throw new TranslatorException(msg); //$NON-NLS-1$
-
-		}
-
-		if (cache == null) {
-			String msg = ObjectPlugin.Util.getString(
-					"InfinispanExecutionFactory.noCache", new Object[] { (this
-							.getCacheName() != null ? this.getCacheName()
-							: "DefaultCache") });
-			throw new TranslatorException(msg); //$NON-NLS-1$
-		}
-
-		return cache;
-
-	}
 
 	/**
 	 * Method for obtaining the CacheContainer. This method will be called to
@@ -223,8 +126,34 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	 */
 	protected synchronized BasicCacheContainer getCacheContainer()
 			throws TranslatorException {
+		if (this.cacheContainer != null) return this.cacheContainer;
+		
+		this.cacheContainer = createCacheContainer();
+		
+		return this.cacheContainer;
+
+	}
+	
+	private BasicCacheContainer createCacheContainer() throws TranslatorException {
 		BasicCacheContainer container = null;
 
+		if (useJndi) {
+			Object object = findCacheUsingJNDIName();
+			if (object instanceof BasicCacheContainer) {
+				LogManager
+				.logInfo(LogConstants.CTX_CONNECTOR,
+						"=== Using CacheContainer (loaded from Jndi) ==="); //$NON-NLS-1$
+
+				return (BasicCacheContainer) object;
+			}
+			String msg = ObjectPlugin.Util.getString(
+			"InfinispanExecutionFactory.unsupportedContainerType",
+			new Object[] { object.getClass().getName(),
+					"BasicCacheContainer" });
+			throw new TranslatorException(msg); //$NON-NLS-1$
+			
+			
+		}
 		try {
 			container = new DefaultCacheManager(
 					this.getConfigurationFileName());
@@ -249,4 +178,7 @@ public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 		return props.getProperty(name);
 	}
 
+	public void cleanUp() {
+		this.cacheContainer = null;
+	}
 }

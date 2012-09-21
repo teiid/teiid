@@ -54,22 +54,26 @@
 	        <groupId>org.infinispan</groupId>
     	    <artifactId>infinispan-core</artifactId>
        		<version>${version.org.infinispan}</version>
-       	</dependency>	 
+       		<scope>provided</scope>
+		</dependency>	 
 	 	<dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-query</artifactId>
 	      <version>${version.org.infinispan}</version>
-    	</dependency>  
+	      <scope>provided</scope>
+	 	</dependency>  
 		<dependency>
 		   <groupId>org.hibernate</groupId>
 		   <artifactId>hibernate-search</artifactId>
 		   <version>${version.hibernate.search}</version>
+		   <scope>provided</scope>
 		</dependency>
 		
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-client-hotrod</artifactId>
 	      <version>${version.org.infinispan}</version>
+	      <scope>provided</scope>
 	    </dependency> 
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
@@ -87,10 +91,12 @@
      	<dependency>
               <groupId>org.jgroups</groupId>
               <artifactId>jgroups</artifactId>
+              <scope>test</scope>
      	</dependency>
         <dependency>
             <groupId>org.jboss.marshalling</groupId>
             <artifactId>jboss-marshalling-river</artifactId>
+            <scope>test</scope>
         </dependency>
 	    <dependency>
 		    <groupId>org.mockito</groupId>

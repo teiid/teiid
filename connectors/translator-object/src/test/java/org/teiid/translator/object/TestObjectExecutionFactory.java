@@ -59,8 +59,6 @@ public class TestObjectExecutionFactory {
 		MockitoAnnotations.initMocks(this);
 		
 		factory = new TestFactory();
-		factory.setSearchStrategyClassName(FakeStrategy.class.getName());
-
     }
 
 	@Test public void testFactory() throws Exception {
