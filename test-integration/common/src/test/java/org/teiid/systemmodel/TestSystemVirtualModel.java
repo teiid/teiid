@@ -39,9 +39,11 @@ import org.junit.Test;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
+import org.teiid.jdbc.AsynchPositioningException;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.RequestOptions;
 import org.teiid.jdbc.StatementCallback;
+import org.teiid.jdbc.TeiidResultSet;
 import org.teiid.jdbc.TeiidStatement;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 
@@ -161,11 +163,24 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
+		ts.submitExecute("select * from SYS.columns a, sys.tables b", new StatementCallback() {
 			int rowCount;
 			@Override
 			public void onRow(Statement s, ResultSet rs) {
 				rowCount++;
+				try {
+					if (!rs.isLast()) {
+						assertTrue(rs.unwrap(TeiidResultSet.class).available() > 0);
+					}
+				} catch (AsynchPositioningException e) {
+					try {
+						assertEquals(0, rs.unwrap(TeiidResultSet.class).available());
+					} catch (SQLException e1) {
+						result.getResultsReceiver().exceptionOccurred(e1);
+					}
+				} catch (SQLException e) {
+					result.getResultsReceiver().exceptionOccurred(e);
+				}
 			}
 			
 			@Override
@@ -178,7 +193,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
 		}, new RequestOptions());
-		assertEquals(4, result.get().intValue());
+		assertEquals(7905, result.get().intValue());
 	}
 	
 	@Test public void testAsynchContinuous() throws Exception {

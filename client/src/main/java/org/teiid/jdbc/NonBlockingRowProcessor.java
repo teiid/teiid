@@ -27,6 +27,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.TeiidRuntimeException;
 
 /**
  * Handles the future processing logic and makes the appropriate calls to the callback
@@ -52,6 +53,7 @@ public class NonBlockingRowProcessor implements
 				return;
 			}
 			final ResultSetImpl resultSet = stmt.getResultSet();
+			resultSet.asynch = true;
 			Runnable rowProcessor = new Runnable() {
 				@Override
 				public void run() {
@@ -109,6 +111,9 @@ public class NonBlockingRowProcessor implements
 		} catch (Exception e) {
 			onException(e);
 			return false;
+		} catch (Throwable t) {
+			onException(new TeiidRuntimeException(t));
+			return false;	
 		}
 	}
 
@@ -116,7 +121,7 @@ public class NonBlockingRowProcessor implements
 		if (e instanceof ExecutionException) {
 			ExecutionException ee = (ExecutionException)e;
 			if (ee.getCause() instanceof Exception) {
-				e = (Exception)ee.getCause();
+				e = (Exception) ee.getCause();
 			}
 		}
 		try {

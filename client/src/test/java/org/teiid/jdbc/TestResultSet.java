@@ -35,8 +35,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -50,7 +48,9 @@ import org.teiid.core.types.XMLType;
 @SuppressWarnings("nls")
 public class TestResultSet {
 
-    /** test next() without walking through */
+    private static final int BATCH_SIZE = 400;
+
+	/** test next() without walking through */
     @Test public void testNext1() throws SQLException {  
         ResultSet cs =  helpExecuteQuery();
         assertEquals(" Actual doesn't match with expected. ", new Integer(0), new Integer(cs.getRow())); //$NON-NLS-1$
@@ -59,12 +59,13 @@ public class TestResultSet {
     
     /** test next() with walking through all the rows and compare records */
     @Test public void testNext2() throws SQLException {  
-        List[] expected = TestAllResultsImpl.exampleResults1(1000);
+        List<?>[] expected = TestAllResultsImpl.exampleResults1(1000);
         ResultSetImpl cs =  helpExecuteQuery();
 
         int i=0;
         while(cs.next()) { 
            assertEquals(" Actual doesn't match with expected. ", expected[i], cs.getCurrentRecord()); //$NON-NLS-1$
+           assertEquals((i < 800?BATCH_SIZE:200) - (i%BATCH_SIZE) - 1, cs.available());
            i++;
         }
 
@@ -204,7 +205,7 @@ public class TestResultSet {
     /** walk all way through from the end back to first row */
     @Test public void testPrevious1() throws SQLException {  
         ResultSetImpl cs = helpExecuteQuery();
-        List[] expected = TestAllResultsImpl.exampleResults1(1000);
+        List<?>[] expected = TestAllResultsImpl.exampleResults1(1000);
         while(cs.next()) {
             //System.out.println(" rs.next == " + cs.getCurrentRecord());
         }
@@ -236,7 +237,7 @@ public class TestResultSet {
     @Test public void testPrevious3() throws Exception {  
         //large batch size
         ResultSetImpl cs = helpExecuteQuery(600, 10000, ResultSet.TYPE_SCROLL_INSENSITIVE);
-        List[] expected = TestAllResultsImpl.exampleResults1(10000);
+        List<?>[] expected = TestAllResultsImpl.exampleResults1(10000);
         while(cs.next()) {
         }
         // cursor is after the last row. getRow() should return 0 when not on a valid row
@@ -256,7 +257,7 @@ public class TestResultSet {
     @Test public void testPrevious4() throws Exception {  
         //small batch size
         ResultSetImpl cs = helpExecuteQuery(50, 1000, ResultSet.TYPE_SCROLL_INSENSITIVE);
-        List[] expected = TestAllResultsImpl.exampleResults1(1000);
+        List<?>[] expected = TestAllResultsImpl.exampleResults1(1000);
         while(cs.next()) {
             //System.out.println(" rs.next == " + cs.getCurrentRecord());
         }
@@ -578,9 +579,9 @@ public class TestResultSet {
         
         // check result set metadata
         // expected column info.
-        List columnName = getBQTRSMetaData1a();
-        List columnType = getBQTRSMetaData1b();
-        List columnTypeName = getBQTRSMetaData1c();
+        List<String> columnName = getBQTRSMetaData1a();
+        List<Integer> columnType = getBQTRSMetaData1b();
+        List<String> columnTypeName = getBQTRSMetaData1c();
 
         ResultSetMetaData rm = cs.getMetaData();
         assertNotNull(rm);
@@ -731,13 +732,13 @@ public class TestResultSet {
 
     private ResultSetImpl helpExecuteQuery() {
         try {
-			return helpExecuteQuery(400, 1000, ResultSet.TYPE_SCROLL_INSENSITIVE);
+			return helpExecuteQuery(BATCH_SIZE, 1000, ResultSet.TYPE_SCROLL_INSENSITIVE);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
     }
     
-    private ResultSetImpl helpExecuteQuery(int fetchSize, int totalResults, int cursorType) throws SQLException, TeiidProcessingException, InterruptedException, ExecutionException, TimeoutException {
+    private ResultSetImpl helpExecuteQuery(int fetchSize, int totalResults, int cursorType) throws SQLException, TeiidProcessingException {
         StatementImpl statement = createMockStatement(cursorType);
 		return TestAllResultsImpl.helpTestBatching(statement, fetchSize, Math.min(fetchSize, totalResults), totalResults);
     }
@@ -755,22 +756,22 @@ public class TestResultSet {
 
     ////////////////////////Expected Results////////////////
     /** column name */
-    private List getBQTRSMetaData1a() {
-        List results = new ArrayList();
+    private List<String> getBQTRSMetaData1a() {
+        List<String> results = new ArrayList<String>();
         results.add("IntKey"); //$NON-NLS-1$
         return results;   
     }
 
     /** column type */
-    private List getBQTRSMetaData1b() {
-        List results = new ArrayList();
-        results.add(new Integer(Types.INTEGER));
+    private List<Integer> getBQTRSMetaData1b() {
+        List<Integer> results = new ArrayList<Integer>();
+        results.add(Types.INTEGER);
         return results;   
     }
 
     /** column type name*/
-    private List getBQTRSMetaData1c() {
-        List results = new ArrayList();
+    private List<String> getBQTRSMetaData1c() {
+        List<String> results = new ArrayList<String>();
         results.add("integer"); //$NON-NLS-1$
         return results;   
     }               

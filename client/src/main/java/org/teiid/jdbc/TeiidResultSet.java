@@ -22,43 +22,19 @@
 
 package org.teiid.jdbc;
 
-import java.util.ResourceBundle;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
-import org.teiid.core.BundleUtil;
+public interface TeiidResultSet extends ResultSet {
+	
+    /**
+     * Returns an estimate of the minimum number of rows that can be read (after the current) 
+     * without blocking or the end of the ResultSet is reached.  
+     *
+     * @return     an estimate of the minimum number of rows that can be read (after the current) 
+     *             without blocking or the end of the ResultSet is reached.
+     * @exception  SQLException if the statement is closed or another error condition occurs.
+     */
+	int available() throws SQLException;
 
-/**
- * JDBCPlugin
- * <p>Used here in <code>jdbc</code> to have access to the new
- * logging framework.</p>
- */
-public class JDBCPlugin { // extends Plugin {
-
-    public static final String PLUGIN_ID = "org.teiid.jdbc" ; //$NON-NLS-1$
-
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
-	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
-	public static enum Event implements BundleUtil.Event {
-		TEIID20000,
-		TEIID20001,
-		TEIID20002,
-		TEIID20003,
-		TEIID20005,
-		TEIID20007,
-		TEIID20008,
-		TEIID20009,
-		TEIID20010,
-		TEIID20012,
-		TEIID20013,
-		TEIID20014,
-		TEIID20016,
-		TEIID20018,
-		TEIID20019,
-		TEIID20020,
-		TEIID20021,
-		TEIID20023,
-		TEIID20027,
-		TEIID20028,
-		TEIID20029, 
-		TEIID20030
-	}	
 }
