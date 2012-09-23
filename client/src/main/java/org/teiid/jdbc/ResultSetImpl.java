@@ -60,19 +60,10 @@ import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.jdbc.BatchResults.Batch;
 import org.teiid.jdbc.BatchResults.BatchFetcher;
 
-
-/**
- * <p>
- * The MMResultSet is the way query results are returned to the requesting
- * client based upon a query given to the server. This abstract class that
- * implements java.sql.ResultSet. This class represents access to results
- * produced by any of the classes on the driver.
- * </p>
- */
-
-public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetcher {
+public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchFetcher {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-
+	private static AsynchPositioningException ape = new AsynchPositioningException();
+	
 	private static final int BEFORE_FIRST_ROW = 0;
 
 	// the object which was last read from Results
@@ -99,6 +90,11 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     private int fetchSize;
     
 	private Map<String, Integer> columnMap;
+	
+	//blocking operations that throw positioning errors are recoverable if we attempt to honor the
+	//results requested
+	private ResultsFuture<ResultsMessage> asynchResults;
+    boolean asynch;
 
 	/**
 	 * Constructor.
@@ -275,7 +271,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     	if(column < 1 || column > columnCount) {
             throw new IllegalArgumentException(JDBCPlugin.Util.getString("ResultsImpl.Invalid_col_index", column)); //$NON-NLS-1$
         }
-        List cursorRow = batchResults.getCurrentRow();
+        List<?> cursorRow = batchResults.getCurrentRow();
         
         if (cursorRow == null) {
             throw new TeiidSQLException(JDBCPlugin.Util.getString("ResultsImpl.The_cursor_is_not_on_a_valid_row._1")); //$NON-NLS-1$
@@ -334,7 +330,7 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
      * @return List of Object values in current row
      * @throws SQLException if an access error occurs.
      */
-    public List getCurrentRecord() throws SQLException {
+    public List<?> getCurrentRecord() throws SQLException {
     	checkClosed();
         return batchResults.getCurrentRow();
     }
@@ -359,6 +355,12 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
     	checkClosed();
         try {
         	ResultsFuture<ResultsMessage> results = submitRequestBatch(beginRow);
+        	if (asynch && !results.isDone()) {
+        		synchronized (this) {
+            		asynchResults = results;
+				}
+        		throw ape;
+        	}
         	ResultsMessage currentResultMsg = getResults(results);
             return processBatch(currentResultMsg);
 		} catch (InterruptedException e) {
@@ -372,10 +374,19 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 
 	private ResultsFuture<ResultsMessage> submitRequestBatch(int beginRow)
 			throws TeiidSQLException {
+		ResultsFuture<ResultsMessage> results;
+		if (asynch) {
+			synchronized (this) {
+				if (this.asynchResults != null) {
+					results = this.asynchResults;
+					this.asynchResults = null;
+					return results;
+				}
+			}
+		}
 		if (logger.isLoggable(Level.FINER)) {
 			logger.finer("requestBatch requestID: " + requestID + " beginRow: " + beginRow ); //$NON-NLS-1$ //$NON-NLS-2$
 		}
-		ResultsFuture<ResultsMessage> results;
 		try {
 			results = statement.getDQP().processCursorRequest(requestID, beginRow, fetchSize);
 		} catch (TeiidProcessingException e) {
@@ -419,6 +430,13 @@ public class ResultSetImpl extends WrapperImpl implements ResultSet, BatchFetche
 
 	protected boolean hasNext() throws SQLException {
 		return batchResults.hasNext(getOffset() + 1, true);
+	}
+	
+	@Override
+	public int available() throws SQLException {
+		int current = batchResults.getCurrentRowNumber();
+		int highest = batchResults.getHighestRowNumber();
+		return highest - current - getOffset();
 	}
 	
 	protected int getOffset() {
