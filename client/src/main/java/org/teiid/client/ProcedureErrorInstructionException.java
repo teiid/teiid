@@ -50,7 +50,7 @@ public class ProcedureErrorInstructionException extends TeiidProcessingException
         super(message);
     }
 
-    public ProcedureErrorInstructionException(BundleUtil.Event event, String message) {
-        super(event, message);
+    public ProcedureErrorInstructionException(BundleUtil.Event event, Exception parent) {
+        super(event, parent);
     }    
 }

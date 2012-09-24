@@ -113,9 +113,9 @@ public class DeclareStatement extends AssignmentStatement {
 	 */
 	public Object clone() {		
         if (getValue() == null) {
-            return new DeclareStatement((ElementSymbol)this.getVariable().clone(), this.varType);
+            return new DeclareStatement(this.getVariable().clone(), this.varType);
         }
-        return new DeclareStatement((ElementSymbol)this.getVariable().clone(), this.varType, (Expression)getValue().clone());
+        return new DeclareStatement(this.getVariable().clone(), this.varType, (Expression)getValue().clone());
 	}
 	
     /**

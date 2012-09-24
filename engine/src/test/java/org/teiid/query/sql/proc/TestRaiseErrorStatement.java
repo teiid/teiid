@@ -23,7 +23,7 @@
 package org.teiid.query.sql.proc;
 
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.sql.proc.RaiseErrorStatement;
+import org.teiid.query.sql.proc.RaiseStatement;
 import org.teiid.query.sql.symbol.Constant;
 
 import junit.framework.*;
@@ -43,32 +43,32 @@ public class TestRaiseErrorStatement  extends TestCase {
 	
 	// ################################## TEST HELPERS ################################	
 
-	public static final RaiseErrorStatement sample1() { 
-		return new RaiseErrorStatement(new Constant("a")); //$NON-NLS-1$
+	public static final RaiseStatement sample1() { 
+		return new RaiseStatement(new Constant("a")); //$NON-NLS-1$
 	}
 	
-	public static final RaiseErrorStatement sample2() {
-		return new RaiseErrorStatement(new Constant("b")); //$NON-NLS-1$
+	public static final RaiseStatement sample2() {
+		return new RaiseStatement(new Constant("b")); //$NON-NLS-1$
 	}
 	
 	// ################################## ACTUAL TESTS ################################	
 	
 	public void testSelfEquivalence(){
-		RaiseErrorStatement s1 = sample1();
+		RaiseStatement s1 = sample1();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1);
 	}
 
 	public void testEquivalence(){
-		RaiseErrorStatement s1 = sample1();
-		RaiseErrorStatement s1a = sample1();
+		RaiseStatement s1 = sample1();
+		RaiseStatement s1a = sample1();
 		int equals = 0;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s1a);
 	}
 	
 	public void testNonEquivalence(){
-		RaiseErrorStatement s1 = sample1();
-		RaiseErrorStatement s2 = sample2();
+		RaiseStatement s1 = sample1();
+		RaiseStatement s2 = sample2();
 		int equals = -1;
 		UnitTestUtil.helpTestEquivalence(equals, s1, s2);
 	}

@@ -36,7 +36,6 @@ import java.util.concurrent.ScheduledFuture;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
-import org.teiid.client.SourceWarning;
 import org.teiid.client.RequestMessage.ShowPlan;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
@@ -155,8 +154,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
      */
     private Throwable processingException;
     private Map<AtomicRequestID, DataTierTupleSource> connectorInfo = Collections.synchronizedMap(new HashMap<AtomicRequestID, DataTierTupleSource>(4));
-    // This exception contains details of all the atomic requests that failed when query is run in partial results mode.
-    private List<TeiidException> warnings = new LinkedList<TeiidException>();
     private volatile boolean doneProducingBatches;
     private volatile boolean isClosed;
     private volatile boolean isCanceled;
@@ -719,19 +716,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	        // set final row
 	        response.setFinalRow(finalRowCount);
 	
-	        // send any warnings with the response object
-	        List<Throwable> responseWarnings = new ArrayList<Throwable>();
-	        if (this.processor != null) {
-				List<Exception> currentWarnings = processor.getAndClearWarnings();
-			    if (currentWarnings != null) {
-			    	responseWarnings.addAll(currentWarnings);
-			    }
-	        }
-		    synchronized (warnings) {
-	        	responseWarnings.addAll(this.warnings);
-	        	this.warnings.clear();
-		    }
-	        response.setWarnings(responseWarnings);
+	        setWarnings(response);
 	        
 	        // If it is stored procedure, set parameters
 	        if (originalCommand instanceof StoredProcedure) {
@@ -750,6 +735,18 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		cancelCancelTask();
         receiver.receiveResults(response);
         return result;
+	}
+
+	private void setWarnings(ResultsMessage response) {
+		// send any warnings with the response object
+		List<Throwable> responseWarnings = new ArrayList<Throwable>();
+		if (this.processor != null) {
+			List<Exception> currentWarnings = processor.getAndClearWarnings();
+		    if (currentWarnings != null) {
+		    	responseWarnings.addAll(currentWarnings);
+		    }
+		}
+		response.setWarnings(responseWarnings);
 	}
     
     public ResultsMessage createResultsMessage(List<? extends List<?>> batch, List<? extends Expression> columnSymbols) {
@@ -801,6 +798,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         if (isCanceled) {
         	exception = addCancelCode(exception); 
         }
+        setWarnings(response);
         response.setException(exception);
         setAnalysisRecords(response);
         receiver.receiveResults(response);
@@ -927,16 +925,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		connectorInfo.put(atomicRequestId, connInfo);
 	}
     
-    /**
-	 * <p>This method add information to the warning on the work item for the given
-	 * <code>RequestID</code>. This method is called from <code>DataTierManager</code></p>
-	 */
-    public void addSourceFailureDetails(SourceWarning details) {
-    	synchronized (warnings) {
-			this.warnings.add(details);
-    	}
-	}
-        
 	boolean isCanceled() {
 		return isCanceled;
 	}
@@ -969,10 +957,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		return this.connectorInfo.get(id);
 	}
 	
-	public List<TeiidException> getWarnings() {
-		return warnings;
-	}
-
 	@Override
 	public String toString() {
 		return this.requestID.toString();

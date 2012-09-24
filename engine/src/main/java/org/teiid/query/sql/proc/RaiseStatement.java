@@ -32,22 +32,18 @@ import org.teiid.query.sql.symbol.Expression;
  * It extends the <code>Statement</code> that could part of a <code>Block</code>.  This
  * this object holds and error message.</p>
  */
-public class RaiseErrorStatement extends Statement implements ExpressionStatement {
+public class RaiseStatement extends Statement implements ExpressionStatement {
 	
 	private Expression expression;
 
-	/**
-	 * Constructor for RaiseErrorStatement.
-	 */
-	public RaiseErrorStatement() {
-		super();
+	public RaiseStatement() {
 	}
 	
 	/**
 	 * Constructor for RaiseErrorStatement.
 	 * @param message The error message
 	 */
-	public RaiseErrorStatement(Expression message) {
+	public RaiseStatement(Expression message) {
 		expression = message;
 	}
         
@@ -63,16 +59,13 @@ public class RaiseErrorStatement extends Statement implements ExpressionStatemen
 		this.expression = expression;
 	}
     
-    /** 
-     * @see org.teiid.query.sql.proc.AssignmentStatement#getType()
-     */
     public int getType() {
         return TYPE_ERROR;
     }
 
 	@Override
-	public RaiseErrorStatement clone() {
-		return new RaiseErrorStatement((Expression) this.expression.clone());
+	public RaiseStatement clone() {
+		return new RaiseStatement((Expression) this.expression.clone());
 	}
 	
 	@Override
@@ -85,18 +78,18 @@ public class RaiseErrorStatement extends Statement implements ExpressionStatemen
 			return true;
 		}
 		
-		if (!(obj instanceof RaiseErrorStatement)) {
+		if (!(obj instanceof RaiseStatement)) {
 			return false;
 		}
 		
-		RaiseErrorStatement other = (RaiseErrorStatement)obj;
+		RaiseStatement other = (RaiseStatement)obj;
 		
 		return other.expression.equals(this.expression);
 	}
 	
 	@Override
 	public Class<?> getExpectedType() {
-		return DataTypeManager.DefaultDataClasses.STRING;
+		return DataTypeManager.DefaultDataClasses.OBJECT;
 	}
     
 } // END CLASS

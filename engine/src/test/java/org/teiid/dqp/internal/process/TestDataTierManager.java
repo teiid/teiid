@@ -124,6 +124,7 @@ public class TestDataTierManager {
         AtomicRequestMessage request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$
+        request.setCommandContext(context);
         return request;
 	}
 
@@ -187,8 +188,9 @@ public class TestDataTierManager {
     	assertEquals(10, pullTuples(info, 10));
         assertNotNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
         assertNull(info.nextTuple());
-        assertEquals(1, workItem.getWarnings().size());
-        SourceWarning warning = (SourceWarning) workItem.getWarnings().get(0);
+        List<Exception> warnings = context.getAndClearWarnings();
+		assertEquals(1, warnings.size());
+        SourceWarning warning = (SourceWarning) warnings.get(0);
 		assertFalse(warning.isPartialResultsError());
         info.closeSource();
         assertNull(workItem.getConnectorRequest(info.getAtomicRequestMessage().getAtomicRequestID()));
@@ -229,7 +231,7 @@ public class TestDataTierManager {
     	for (int i = 0; i < 10; i++) {
 	    	try {
 	    		assertNull(info.nextTuple());
-	    		SourceWarning warning = (SourceWarning) workItem.getWarnings().get(0);
+	    		SourceWarning warning = (SourceWarning) context.getAndClearWarnings().get(0);
 	    		assertTrue(warning.isPartialResultsError());
 	    		return;
 	    	} catch (BlockedException e) {

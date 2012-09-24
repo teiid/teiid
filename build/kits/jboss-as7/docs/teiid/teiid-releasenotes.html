@@ -38,6 +38,7 @@
 	<li>TEIID-2181 <b>System query performance</b> - system queries are now indexed on case-insensitive schema/table name columns.
 	<li>TEIID-2086 <b>Transactional results caching</b> - the result set cache is now transactional by default.
 	<li>TEIID-2210 <b>Object Translator</b> - the translator-object can support Infinispan Cache and other Map type caches.  See OBJECTTABLE for executing queries against this translator.
+	<li>TEIID-1386 <b>Procedure exception handling</b> - the Teiid procedure language now supports exception handling and emitting SQLWarnings.  See the Reference for syntax and usage.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -55,6 +56,9 @@
   <li>TEIID-2184 to be consistent with the rest of Teiid's logic the system functions dayName and monthName will return values from the default locale, rather than only the English names.  Use the system property org.teiid.enDateNames true to revert to the pre-8.2 behavior.
   <li>TEIID-2187 the CONSTRAINT keyword is not correctly used in table DDL.  It should be replaced with a comma from scripts to be compatible with 8.2.  If desired, 8.2 now supports the CONSTRAINT keyword to provide a name for each constraint.
   <li>TEIID-2181 system tables no longer contain valid OIDs.  That responsibility has moved to the pg_catalog.
+  <li>TEIID-1386 assignment statements and stored procedure invocations assigning a return value will no longer allow non-quoted non-reserved identifiers as left hand side variables.  The workaround is to use a quoted variable name if you are using a non-reserved word as a variable name.
+  <li>TEIID-1386 the SQLState and errorCode reported by a TeiidSQLException will typically be from the top level nested SQLException.  If there is also a nested TeiidException, the TeiidSQLException.teiidCode will be set to the TeiidException.getCode value and the TeiidSQLException.errorCode will be set
+  to the integer suffix of the teiidCode if possible.  
 </ul>
 
 <h4>from 8.0</h4>

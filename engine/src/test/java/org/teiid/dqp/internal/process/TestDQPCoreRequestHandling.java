@@ -119,21 +119,6 @@ public class TestDQPCoreRequestHandling extends TestCase {
         addRequest(rm, r0, requestID, null, null);  
     }
     
-    public void testWarnings1() {
-        DQPCore rm = new DQPCore();
-        rm.setTransactionService(new FakeTransactionService());
-        RequestMessage r0 = new RequestMessage("foo"); //$NON-NLS-1$
-        RequestID requestID = new RequestID(SESSION_STRING, 1);
-
-        RequestWorkItem workItem = addRequest(rm, r0, requestID, null, null);
-                
-        workItem.addSourceFailureDetails(getSourceFailures("Model1", "Binding1", "Warning1")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        workItem.addSourceFailureDetails(getSourceFailures("Model2", "Binding2", "Warning2")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        workItem.addSourceFailureDetails(getSourceFailures("Model3", "Binding3", "Warning3")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        
-        assertEquals(3, workItem.getWarnings().size());
-    }
-    
     static RequestWorkItem addRequest(DQPCore rm, 
                     RequestMessage requestMsg,
                     RequestID id,

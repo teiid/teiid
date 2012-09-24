@@ -214,17 +214,18 @@ public class TestSQLException {
         assertEquals(exception.getNextException().getNextException().getMessage(), nested.getMessage());
     }
 	public static enum Event implements BundleUtil.Event {
-		T21,
+		TEIID21,
 	}
-    @Test public void testCodeAsSQLState() {
+    @Test public void testCodeAsVendorCode() {
 
-        TeiidException sqlexception = new TeiidException(Event.T21, "foo"); //$NON-NLS-1$ 
+        TeiidException sqlexception = new TeiidException(Event.TEIID21, "foo"); //$NON-NLS-1$ 
         
         String message = "top level message"; //$NON-NLS-1$
         
         TeiidSQLException exception = TeiidSQLException.create(sqlexception, message);
         
-        assertEquals(sqlexception.getCode(), exception.getSQLState());        
+        assertEquals(sqlexception.getCode(), exception.getTeiidCode());        
+        assertEquals(21, exception.getErrorCode());
     }
 
 }

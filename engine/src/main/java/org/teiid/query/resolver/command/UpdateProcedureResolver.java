@@ -33,6 +33,7 @@ import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.SQLConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.SupportConstants;
@@ -217,7 +218,10 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        		     throw new QueryResolverException(QueryPlugin.Event.TEIID30123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30123));
 	        		}
 	        		String varTypeName = DataTypeManager.getDataTypeName(varType);
-	        		exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));          
+	        		exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));     
+	        		if (statement.getType() == Statement.TYPE_ERROR) {
+	        			ResolverVisitor.checkException(exprStmt.getExpression());
+	        		}
                 }
                 break;
             case Statement.TYPE_WHILE:
@@ -301,11 +305,11 @@ public class UpdateProcedureResolver implements CommandResolver {
         }
         variable.setType(DataTypeManager.getDataTypeClass(typeName));
         variable.setGroupSymbol(variables);
-        TempMetadataID id = new TempMetadataID(variable.getName(), variable.getType());
+        TempMetadataID id = new TempMetadataID(variable.getName(), typeName.equalsIgnoreCase(SQLConstants.NonReserved.EXCEPTION)?Exception.class:variable.getType());
         id.setUpdatable(true);
         variable.setMetadataID(id);
         //TODO: this will cause the variables group to loose it's cache of resolved symbols
-        metadata.getMetadataStore().addElementToTempGroup(ProcedureReservedWords.VARIABLES, (ElementSymbol)variable.clone());
+        metadata.getMetadataStore().addElementToTempGroup(ProcedureReservedWords.VARIABLES, variable.clone());
     }
 
     private void handleUnresolvableDeclaration(ElementSymbol variable, String description) throws QueryResolverException {

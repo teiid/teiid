@@ -110,7 +110,7 @@ public abstract class LanguageVisitor {
         visit((AssignmentStatement)obj);
     }    
     public void visit(IfStatement obj) {}
-    public void visit(RaiseErrorStatement obj) {}
+    public void visit(RaiseStatement obj) {}
     public void visit(BranchingStatement obj) {}
     public void visit(WhileStatement obj) {}
     public void visit(LoopStatement obj) {}
@@ -145,4 +145,6 @@ public abstract class LanguageVisitor {
 
 	public void visit(Array array) {}
 	public void visit(ObjectTable objectTable) {}
+
+	public void visit(ExceptionExpression obj) {}
 }

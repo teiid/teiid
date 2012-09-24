@@ -34,6 +34,7 @@ import java.util.TreeMap;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
@@ -43,7 +44,6 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
-import org.teiid.query.parser.ParseException;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.TranslatorException;
@@ -134,7 +134,7 @@ public class SystemMetadata {
 			};
 			QueryParser.getQueryParser().parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
 			return factory;
-		} catch (ParseException e) {
+		} catch (QueryParserException e) {
 			throw new TeiidRuntimeException(e);
 		} finally {
 			try {

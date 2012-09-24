@@ -44,7 +44,7 @@ import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.DeclareStatement;
-import org.teiid.query.sql.proc.RaiseErrorStatement;
+import org.teiid.query.sql.proc.RaiseStatement;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TypeFacility;
@@ -1341,13 +1341,13 @@ public class TestSQLStringVisitor {
     }
 
     @Test public void testRaiseErrorStatement() {
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
-		helpTest(errStmt, "ERROR 'My Error';"); //$NON-NLS-1$
+    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
+		helpTest(errStmt, "RAISE 'My Error';"); //$NON-NLS-1$
     }  
     
     @Test public void testRaiseErrorStatementWithExpression() {
-        RaiseErrorStatement errStmt =   new RaiseErrorStatement(new ElementSymbol("a")); //$NON-NLS-1$
-        helpTest(errStmt, "ERROR a;"); //$NON-NLS-1$
+        RaiseStatement errStmt =   new RaiseStatement(new ElementSymbol("a")); //$NON-NLS-1$
+        helpTest(errStmt, "RAISE a;"); //$NON-NLS-1$
     }
     
     @Test public void testAssignmentStatement1() {
@@ -1393,12 +1393,12 @@ public class TestSQLStringVisitor {
         d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
     	CommandStatement cmdStmt =	new CommandStatement(d1);
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
+    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
     	Block b = new Block();
     	b.addStatement(cmdStmt);
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
-		helpTest(b, "BEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND"); //$NON-NLS-1$
+		helpTest(b, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testCreateUpdateProcedure1() {
@@ -1406,13 +1406,13 @@ public class TestSQLStringVisitor {
         d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
     	CommandStatement cmdStmt =	new CommandStatement(d1);
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
+    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
     	Block b = new Block();
     	b.addStatement(cmdStmt);
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
     
     @Test public void testCreateUpdateProcedure2() {
@@ -1420,13 +1420,13 @@ public class TestSQLStringVisitor {
         d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
     	CommandStatement cmdStmt =	new CommandStatement(d1);
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
+    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
     	Block b = new Block();
     	b.addStatement(cmdStmt);
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
 
     @Test public void testCreateUpdateProcedure3() {
@@ -1434,13 +1434,13 @@ public class TestSQLStringVisitor {
         d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$
     	CommandStatement cmdStmt =	new CommandStatement(d1);
     	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
-    	RaiseErrorStatement errStmt =	new RaiseErrorStatement(new Constant("My Error")); //$NON-NLS-1$
+    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
     	Block b = new Block();
     	b.addStatement(cmdStmt);
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nERROR 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
 
     @Test public void testSubqueryCompareCriteria1() {

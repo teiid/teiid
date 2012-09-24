@@ -194,7 +194,7 @@ public final class ProcedurePlanner implements CommandPlanner {
             {
             	ErrorInstruction error = new ErrorInstruction();
             	instruction = error;
-            	RaiseErrorStatement res = (RaiseErrorStatement)statement;
+            	RaiseStatement res = (RaiseStatement)statement;
                 
 				Expression asigExpr = res.getExpression();
 				error.setExpression(asigExpr);

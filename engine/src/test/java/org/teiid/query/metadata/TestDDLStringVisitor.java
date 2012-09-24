@@ -29,12 +29,12 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.query.parser.ParseException;
 import org.teiid.query.parser.TestDDLParser;
 
 @SuppressWarnings("nls")
@@ -243,7 +243,7 @@ public class TestDDLStringVisitor {
 		helpTest(ddl, expected);
 	}
 
-	private void helpTest(String ddl, String expected) throws ParseException {
+	private void helpTest(String ddl, String expected) throws QueryParserException {
 		Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();
 		String metadataDDL = DDLStringVisitor.getDDLString(s, null, null);
 		assertEquals(expected, metadataDDL);

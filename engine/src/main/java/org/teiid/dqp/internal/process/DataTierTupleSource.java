@@ -543,7 +543,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (response.getWarnings() != null) {
 			for (Exception warning : response.getWarnings()) {
 				SourceWarning sourceFailure = new SourceWarning(this.aqr.getModelName(), aqr.getConnectorName(), warning, partial);
-		        workItem.addSourceFailureDetails(sourceFailure);
+		        this.aqr.getCommandContext().addWarning(sourceFailure);
 			}
 		}
 		if (response.getFinalRow() >= 0) {

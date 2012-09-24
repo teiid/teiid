@@ -48,6 +48,7 @@ import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
@@ -57,6 +58,8 @@ import org.teiid.core.types.*;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
+import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.jdbc.TeiidSQLWarning;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -66,6 +69,7 @@ import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.proc.ExceptionExpression;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.XMLNamespaces.NamespaceItem;
 import org.teiid.query.sql.util.ValueIterator;
@@ -658,9 +662,37 @@ public class Evaluator {
 			   result[i] = internalEvaluate(exprs.get(i), tuple);
 		   }
 		   return new ArrayImpl(result);
+	   } else if (expression instanceof ExceptionExpression) {
+		   return evaluate(tuple, (ExceptionExpression)expression);
 	   } else {
 	        throw new TeiidComponentException(QueryPlugin.Event.TEIID30329, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30329, expression.getClass().getName()));
 	   }
+	}
+
+	private Object evaluate(List<?> tuple, ExceptionExpression ee)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
+		String msg = (String) internalEvaluate(ee.getMessage(), tuple);
+		String sqlState = ee.getDefaultSQLState();
+		if (ee.getSqlState() != null) {
+			sqlState = (String) internalEvaluate(ee.getSqlState(), tuple);
+		}
+		Integer errorCode = null;
+		if (ee.getErrorCode() != null) {
+			errorCode = (Integer) internalEvaluate(ee.getErrorCode(), tuple);
+		}
+		Exception parent = null;
+		if (ee.getParent() != null) {
+			parent = (Exception) internalEvaluate(ee.getParent(), tuple);
+		}
+		Exception result = null;
+		if (ee.isWarning()) {
+			result = new TeiidSQLWarning(msg, sqlState, errorCode!=null?errorCode:0, parent);
+		} else {
+			result = new TeiidSQLException(parent, msg, sqlState, errorCode!=null?errorCode:0);
+		}
+		result.setStackTrace(SourceWarning.EMPTY_STACK_TRACE);
+		return result;
 	}
 
 	private Object evaluateXMLParse(List<?> tuple, final XMLParse xp) throws ExpressionEvaluationException, BlockedException, TeiidComponentException {

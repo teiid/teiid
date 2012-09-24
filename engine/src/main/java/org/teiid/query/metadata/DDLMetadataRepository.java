@@ -21,10 +21,10 @@
  */
 package org.teiid.query.metadata;
 
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.parser.ParseException;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -36,7 +36,7 @@ public class DDLMetadataRepository extends BaseMetadataRepository {
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 		try {
 			QueryParser.getQueryParser().parseDDL(factory, factory.getRawMetadata());
-		} catch (ParseException e) {
+		} catch (QueryParserException e) {
 			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30386, e);
 		}
 		super.loadMetadata(factory, executionFactory, connectionFactory);

@@ -47,6 +47,7 @@ import org.teiid.net.ConnectionException;
 public class TeiidSQLException extends SQLException {
 
 	private static final long serialVersionUID = 3672305321346173922L;
+	private String teiidCode;
 
 	/**
      * No-arg constructor required by Externalizable semantics.
@@ -70,8 +71,8 @@ public class TeiidSQLException extends SQLException {
         return create(exception, exception.getMessage());
     }
         
-    public TeiidSQLException(Throwable ex, String reason, String sqlState) {
-        super(reason, sqlState); // passing the message to the super class constructor.
+    public TeiidSQLException(Throwable ex, String reason, String sqlState, int errorCode) {
+        super(reason, sqlState, errorCode); // passing the message to the super class constructor.
         initCause(ex);
     }
     
@@ -94,23 +95,41 @@ public class TeiidSQLException extends SQLException {
     public static TeiidSQLException create(Throwable exception, String message) {
 		message = getMessage(exception, message);
 		Throwable origException = exception;
-		if (exception instanceof TeiidSQLException) {
-			if (message.equals(exception.getMessage())) {
-				return (TeiidSQLException) exception;
-			}
+		if (exception instanceof TeiidSQLException 
+				&& message.equals(exception.getMessage())) {
+			return (TeiidSQLException) exception;
 		}
 		if (exception instanceof SQLException) {
 			return new TeiidSQLException((SQLException) exception, message, true);
 		}
 		String sqlState = SQLStates.DEFAULT;
-		TeiidException te = ExceptionUtil.getExceptionOfType(exception, TeiidException.class);
-		if (te != null && te.getCode() != null) {
-			sqlState = te.getCode();
-		} else {
-			exception = findRootException(exception);
-			sqlState = determineSQLState(exception, sqlState);
+		int errorCode = 0;
+		SQLException se = ExceptionUtil.getExceptionOfType(exception, SQLException.class);
+		if (se != null && se.getSQLState() != null) {
+			sqlState = se.getSQLState();
+			errorCode = se.getErrorCode();
 		}
-		return new TeiidSQLException(origException, message, sqlState);
+		TeiidException te = ExceptionUtil.getExceptionOfType(exception, TeiidException.class);
+		String code = null;
+		if (te != null && te.getCode() != null) {
+			code = te.getCode();
+			if (errorCode == 0) {
+				String intPart = code;
+				if (code.startsWith("TEIID")) { //$NON-NLS-1$
+					intPart = code.substring(5);
+				}
+				try {
+					errorCode = Integer.valueOf(intPart);
+				} catch (NumberFormatException e) {
+					
+				}
+			}
+		}
+		exception = findRootException(exception);
+		sqlState = determineSQLState(exception, sqlState);
+		TeiidSQLException tse = new TeiidSQLException(origException, message, sqlState, errorCode);
+		tse.teiidCode = code;
+		return tse;
 	}
 
     /** 
@@ -228,4 +247,8 @@ public class TeiidSQLException extends SQLException {
     public boolean isUsageErrorState() {
         return SQLStates.isUsageErrorState(getSQLState());
     }
+    
+    public String getTeiidCode() {
+		return teiidCode;
+	}
 }

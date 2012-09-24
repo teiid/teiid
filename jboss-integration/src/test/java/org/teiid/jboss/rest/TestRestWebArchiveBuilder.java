@@ -21,28 +21,24 @@
  */
 package org.teiid.jboss.rest;
 
+import static org.junit.Assert.*;
+
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Map;
-import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.parser.ParseException;
-import org.teiid.query.parser.QueryParser;
+import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -53,7 +49,7 @@ public class TestRestWebArchiveBuilder {
 		VDBMetaData vdb = VDBMetadataParser.unmarshell(new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		MetadataStore ms = new MetadataStore();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
-			MetadataFactory mf = buildMetadataFactory(model.getSchemaText(), model.getName());
+			MetadataFactory mf = TestDDLParser.helpParse(model.getSchemaText(), model.getName());
 			ms.addSchema(mf.getSchema());
 		}
 		
@@ -80,14 +76,4 @@ public class TestRestWebArchiveBuilder {
 		}
 	}
 
-	
-	public MetadataFactory buildMetadataFactory(String ddl, String model) throws ParseException {
-		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
-		new QueryParser().parseDDL(mf, ddl);
-		return mf;
-	}
-	
-	static Map<String, Datatype> getDataTypes() {
-		return SystemMetadata.getInstance().getRuntimeTypeMap();
-	}
 }

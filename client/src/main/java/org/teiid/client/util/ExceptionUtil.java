@@ -31,11 +31,10 @@ import org.teiid.core.TeiidRuntimeException;
 
 public class ExceptionUtil {
 	
-    @SuppressWarnings("unchecked")
 	public static <T extends Throwable> T getExceptionOfType(Throwable ex, Class<T> cls) {
         while (ex != null) {
             if (cls.isAssignableFrom(ex.getClass())) {
-                return (T)ex;
+                return cls.cast(ex);
             } 
             if (ex.getCause() == ex) {
             	break;

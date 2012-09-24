@@ -1461,11 +1461,39 @@ public class SQLStringVisitor extends LanguageVisitor {
         createAssignment(obj);
     }
 
-    public void visit( RaiseErrorStatement obj ) {
-        append(ERROR);
+    public void visit( RaiseStatement obj ) {
+        append(NonReserved.RAISE);
         append(SPACE);
         visitNode(obj.getExpression());
         append(";"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(ExceptionExpression exceptionExpression) {
+    	if (exceptionExpression.isWarning()) {
+    		append(SQLWARNING);
+    	} else {
+    		append(SQLEXCEPTION);
+    	}
+    	append(SPACE);
+    	visitNode(exceptionExpression.getMessage());
+    	if (exceptionExpression.getSqlState() != null) {
+    		append(SPACE);
+    		append(SQLSTATE);
+    		append(SPACE);
+    		append(exceptionExpression.getSqlState());
+    		if (exceptionExpression.getErrorCode() != null) {
+    			append(Tokens.COMMA);
+    			append(SPACE);
+    			append(exceptionExpression.getErrorCode());
+    		}
+    	}
+    	if (exceptionExpression.getParent() != null) {
+        	append(SPACE);
+        	append(NonReserved.EXCEPTION);
+        	append(SPACE);
+        	append(exceptionExpression.getParent());
+    	}
     }
 
     public void visit( BranchingStatement obj ) {

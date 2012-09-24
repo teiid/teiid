@@ -46,10 +46,12 @@ import org.teiid.query.function.FunctionForm;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.GroupInfo;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.proc.ExceptionExpression;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
@@ -403,6 +405,46 @@ public class ResolverVisitor extends LanguageVisitor {
 			handleException(e);
 		}
     }
+    
+    @Override
+    public void visit(ExceptionExpression obj) {
+    	try {
+    		if (obj.getErrorCode() != null) {
+    			obj.setErrorCode(ResolverUtil.convertExpression(obj.getErrorCode(), DataTypeManager.DefaultDataTypes.INTEGER, metadata));
+    		}
+			obj.setMessage(ResolverUtil.convertExpression(obj.getMessage(), DataTypeManager.DefaultDataTypes.STRING, metadata));
+			if (obj.getSqlState() != null) {
+				obj.setSqlState(ResolverUtil.convertExpression(obj.getSqlState(), DataTypeManager.DefaultDataTypes.STRING, metadata));
+			}
+			checkException(obj.getParent());
+		} catch (QueryResolverException e) {
+			handleException(e);
+		}
+    }
+
+	public static void checkException(Expression obj)
+			throws QueryResolverException {
+		if (obj == null || obj instanceof ExceptionExpression) {
+			return;
+		}
+		if (obj instanceof ElementSymbol) {
+			ElementSymbol es = (ElementSymbol)obj;
+			if (!(es.getMetadataID() instanceof TempMetadataID)) {
+				throw new QueryResolverException(QueryPlugin.Event.TEIID31120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31120, obj));
+			}
+			TempMetadataID tid = (TempMetadataID)es.getMetadataID();
+			if (tid.getType() != Exception.class) {
+				throw new QueryResolverException(QueryPlugin.Event.TEIID31120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31120, obj));
+			}
+		} else if (obj instanceof Constant) {
+			Constant c = (Constant)obj;
+			if (!(c.getValue() instanceof Exception)) {
+				throw new QueryResolverException(QueryPlugin.Event.TEIID31120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31120, obj));
+			}
+		} else {
+			throw new QueryResolverException(QueryPlugin.Event.TEIID31120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31120, obj));
+		}
+	}
     
     @Override
     public void visit(AggregateSymbol obj) {

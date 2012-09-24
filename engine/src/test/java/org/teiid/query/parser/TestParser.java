@@ -3010,9 +3010,23 @@ public class TestParser {
     }    
     
     @Test public void testErrorStatement() throws Exception {
-        RaiseErrorStatement errStmt = new RaiseErrorStatement(new Constant("Test only")); //$NON-NLS-1$
+    	ExceptionExpression ee = new ExceptionExpression();
+    	ee.setMessage(new Constant("Test only"));
+        RaiseStatement errStmt = new RaiseStatement(ee);
                  
-        helpStmtTest("ERROR 'Test only';", "ERROR 'Test only';", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("ERROR 'Test only';", "RAISE SQLEXCEPTION 'Test only';", //$NON-NLS-1$ //$NON-NLS-2$
+            errStmt);           
+    }
+    
+    @Test public void testRaiseErrorStatement() throws Exception {
+    	ExceptionExpression ee = new ExceptionExpression();
+    	ee.setMessage(new Constant("Test only"));
+    	ee.setWarning(true);
+    	ee.setSqlState(new Constant("100"));
+    	ee.setParent(new ElementSymbol("e"));
+        RaiseStatement errStmt = new RaiseStatement(ee);
+                 
+        helpStmtTest("RAISE SQLWARNING 'Test only' SQLSTATE '100' EXCEPTION e;", "RAISE SQLWARNING 'Test only' SQLSTATE '100' EXCEPTION e;", //$NON-NLS-1$ //$NON-NLS-2$
             errStmt);           
     }
     

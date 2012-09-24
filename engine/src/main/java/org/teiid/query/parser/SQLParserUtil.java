@@ -64,9 +64,9 @@ public class SQLParserUtil {
 		return literal;
 	}
 	
-	void convertToParameters(List<Expression> values, StoredProcedure storedProcedure) {
+	void convertToParameters(List<Expression> values, StoredProcedure storedProcedure, int paramIndex) {
 		for (Expression value : values) {
-			SPParameter parameter = new SPParameter(storedProcedure.getParameters().size() + 1, value);
+			SPParameter parameter = new SPParameter(paramIndex++, value);
 			parameter.setParameterType(SPParameter.IN);
 			storedProcedure.setParameter(parameter);
 		}

@@ -356,12 +356,16 @@ public class QueryParser {
         return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
     }
     
-    public void parseDDL(MetadataFactory factory, String ddl) throws ParseException {
+    public void parseDDL(MetadataFactory factory, String ddl) throws QueryParserException {
     	parseDDL(factory, new StringReader(ddl));
     }
     
-    public void parseDDL(MetadataFactory factory, Reader ddl) throws ParseException {
-    	getSqlParser(ddl).parseMetadata(factory);
+    public void parseDDL(MetadataFactory factory, Reader ddl) throws QueryParserException {
+    	try {
+			getSqlParser(ddl).parseMetadata(factory);
+		} catch (ParseException e) {
+			throw convertParserException(e);
+		}
     	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
     	for (FunctionMethod functionMethod : factory.getSchema().getFunctions().values()) {
 			if (!functions.add(functionMethod)) {

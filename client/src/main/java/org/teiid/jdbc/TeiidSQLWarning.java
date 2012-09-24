@@ -74,6 +74,10 @@ public class TeiidSQLWarning extends SQLWarning {
         this.modelName = modelName;
     }
     
+    public TeiidSQLWarning(String reason, String sqlState, int errorCode, Throwable ex) {
+        super(reason, sqlState, errorCode, ex); 
+    }
+    
     /**
      * 
      * @return the source name or null if the warning is not associated with a source

@@ -39,6 +39,7 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
+import org.teiid.query.sql.proc.ExceptionExpression;
 import org.teiid.query.sql.symbol.*;
 
 
@@ -442,6 +443,22 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     	List<Expression> exprs = array.getExpressions();
 		for (int i = 0; i < exprs.size(); i++) {
     		exprs.set(i, replaceExpression(exprs.get(i)));
+    	}
+    }
+    
+    @Override
+    public void visit(ExceptionExpression exceptionExpression) {
+    	if (exceptionExpression.getMessage() != null) {
+    		exceptionExpression.setMessage(replaceExpression(exceptionExpression.getMessage()));
+    	}
+    	if (exceptionExpression.getSqlState() != null) {
+    		exceptionExpression.setSqlState(replaceExpression(exceptionExpression.getSqlState()));
+    	}
+    	if (exceptionExpression.getErrorCode() != null) {
+    		exceptionExpression.setErrorCode(replaceExpression(exceptionExpression.getErrorCode()));
+    	}
+    	if (exceptionExpression.getParent() != null) {
+    		exceptionExpression.setParent(replaceExpression(exceptionExpression.getParent()));
     	}
     }
     

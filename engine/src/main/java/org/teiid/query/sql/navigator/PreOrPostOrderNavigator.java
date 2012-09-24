@@ -310,7 +310,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
         visitNode(obj.getOption());
         postVisitVisitor(obj);
     }
-    public void visit(RaiseErrorStatement obj) {
+    public void visit(RaiseStatement obj) {
         preVisitVisitor(obj);
         visitNode(obj.getExpression());
         postVisitVisitor(obj);
@@ -633,6 +633,16 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     	preVisitVisitor(array);
     	visitNodes(array.getExpressions());
     	postVisitVisitor(array);
+    }
+    
+    @Override
+    public void visit(ExceptionExpression exceptionExpression) {
+    	preVisitVisitor(exceptionExpression);
+    	visitNode(exceptionExpression.getMessage());
+    	visitNode(exceptionExpression.getSqlState());
+    	visitNode(exceptionExpression.getErrorCode());
+    	visitNode(exceptionExpression.getParent());
+    	postVisitVisitor(exceptionExpression);
     }
     
     public static void doVisit(LanguageObject object, LanguageVisitor visitor, boolean order) {
