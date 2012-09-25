@@ -408,10 +408,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(CreateProcedureCommand obj) {
         //check that the procedure does not contain references to itself
-        if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {
-        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_has_group_self_reference"),obj); //$NON-NLS-1$
-        }
-        this.createProc = obj;
+    	if (obj.getUpdateType() == null) {
+	        if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {
+	        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_has_group_self_reference"),obj); //$NON-NLS-1$
+	        }
+	        this.createProc = obj;
+    	}
     }
 
     public void visit(CompoundCriteria obj) {
