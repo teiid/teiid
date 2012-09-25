@@ -35,6 +35,7 @@ import org.teiid.query.sql.symbol.Expression;
 public class RaiseStatement extends Statement implements ExpressionStatement {
 	
 	private Expression expression;
+	private boolean warning;
 
 	public RaiseStatement() {
 	}
@@ -45,6 +46,11 @@ public class RaiseStatement extends Statement implements ExpressionStatement {
 	 */
 	public RaiseStatement(Expression message) {
 		expression = message;
+	}
+	
+	public RaiseStatement(Expression message, boolean warning) {
+		expression = message;
+		this.warning = warning;
 	}
         
     public void acceptVisitor(LanguageVisitor visitor) {
@@ -65,7 +71,7 @@ public class RaiseStatement extends Statement implements ExpressionStatement {
 
 	@Override
 	public RaiseStatement clone() {
-		return new RaiseStatement((Expression) this.expression.clone());
+		return new RaiseStatement((Expression) this.expression.clone(), warning);
 	}
 	
 	@Override
@@ -84,12 +90,20 @@ public class RaiseStatement extends Statement implements ExpressionStatement {
 		
 		RaiseStatement other = (RaiseStatement)obj;
 		
-		return other.expression.equals(this.expression);
+		return other.expression.equals(this.expression) && this.warning == other.warning;
 	}
 	
 	@Override
 	public Class<?> getExpectedType() {
 		return DataTypeManager.DefaultDataClasses.OBJECT;
+	}
+	
+	public boolean isWarning() {
+		return warning;
+	}
+	
+	public void setWarning(boolean warning) {
+		this.warning = warning;
 	}
     
 } // END CLASS

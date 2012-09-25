@@ -37,6 +37,7 @@ import java.util.Stack;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
@@ -56,6 +57,7 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.events.EventDistributor;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -69,11 +71,13 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
+import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.util.CommandContext;
@@ -357,21 +361,61 @@ public class ProcedurePlan extends ProcessorPlan {
                 this.pop(true);
                 continue;
             }
-            if (inst instanceof RepeatedInstruction) {
-    	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
-                RepeatedInstruction loop = (RepeatedInstruction)inst;
-                if (loop.testCondition(this)) {
-                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
-                    inst.process(this);
-                    this.push(loop.getNestedProgram());
-                    continue;
-                }
-                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
-                loop.postInstruction(this);
-            } else {
-            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
-                inst.process(this);
-            }
+	        try {
+	            if (inst instanceof RepeatedInstruction) {
+	    	        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing repeated instruction", inst); //$NON-NLS-1$
+	                RepeatedInstruction loop = (RepeatedInstruction)inst;
+	                if (loop.testCondition(this)) {
+	                    LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Passed condition, executing program " + loop.getNestedProgram()); //$NON-NLS-1$
+	                    inst.process(this);
+	                    this.push(loop.getNestedProgram());
+	                    continue;
+	                }
+	                LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Exiting repeated instruction", inst); //$NON-NLS-1$
+	                loop.postInstruction(this);
+	            } else {
+	            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
+	                inst.process(this);
+	            }
+	        } catch (Exception e) {
+	        	if (e instanceof BlockedException) {
+	        		throw (BlockedException)e;
+	        	}
+	        	while (program.getExceptionGroup() == null) {
+        			this.pop(false);
+	        		if (this.programs.empty()) {
+	        			//reached the top without a handler, so throw
+        				if (e instanceof RuntimeException) {
+    	        			throw (RuntimeException)e;
+    	        		}
+    	        		if (e instanceof TeiidComponentException) {
+    	        			throw (TeiidComponentException)e;
+    	        		}
+    	        		if (e instanceof TeiidProcessingException) {
+    	        			throw (TeiidProcessingException)e;
+    	        		}
+    	        		throw new ProcedureErrorInstructionException(QueryPlugin.Event.TEIID30167, e);
+	        		}
+        			program = peek();
+	        	}
+        		//assign variables
+        		if (program.getExceptionProgram() == null) {
+        			this.pop(true);
+        			continue;
+        		}
+	        	Program exceptionProgram = program.getExceptionProgram();
+	        	exceptionProgram.setStartedTxn(program.startedTxn());
+    			this.pop(null); //all the current program to go out of scope
+				this.push(exceptionProgram);	
+				TeiidSQLException tse = TeiidSQLException.create(e);
+				GroupSymbol gs = new GroupSymbol(program.getExceptionGroup());
+				this.currentVarContext.setValue(exceptionSymbol(gs, 0), tse.getSQLState());
+				this.currentVarContext.setValue(exceptionSymbol(gs, 1), tse.getErrorCode());
+				this.currentVarContext.setValue(exceptionSymbol(gs, 2), tse.getTeiidCode());
+				this.currentVarContext.setValue(exceptionSymbol(gs, 3), tse);
+				this.currentVarContext.setValue(exceptionSymbol(gs, 4), tse.getCause());
+				continue;
+	        }
             program.incrementProgramCounter();
 	    }
 
@@ -380,6 +424,12 @@ public class ProcedurePlan extends ProcessorPlan {
         }
         return lastTupleSource;
     }
+
+	private ElementSymbol exceptionSymbol(GroupSymbol gs, int pos) {
+		ElementSymbol es = UpdateProcedureResolver.exceptionGroup.get(pos).clone();
+		es.setGroupSymbol(gs);
+		return es;
+	}
 
     public void close()
         throws TeiidComponentException {
@@ -409,7 +459,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
 	public ProcessorPlan clone(){
-        ProcedurePlan plan = new ProcedurePlan((Program)originalProgram.clone());
+        ProcedurePlan plan = new ProcedurePlan(originalProgram.clone());
         plan.setOutputElements(this.getOutputElements());
         plan.setParams(params);
         plan.setOutParams(outParams);
@@ -565,13 +615,13 @@ public class ProcedurePlan extends ProcessorPlan {
      * @throws TeiidComponentException 
      * @throws XATransactionException 
      */
-    public void pop(boolean success) throws TeiidComponentException {
+    public void pop(Boolean success) throws TeiidComponentException {
     	Program program = this.programs.pop();
         if (this.currentVarContext.getParentContext() != null) {
         	this.currentVarContext = this.currentVarContext.getParentContext();
         }
     	program.getTempTableStore().removeTempTables();
-    	if (program.startedTxn() && this.blockContext != null) {
+    	if (success != null && program.startedTxn() && this.blockContext != null) {
     		TransactionService ts = this.getContext().getTransactionServer();
     		TransactionContext tc = this.blockContext;
     		this.blockContext = null;

@@ -26,12 +26,9 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.List;
-
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Criteria;
 
 
@@ -73,7 +70,7 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
      * Returns a deep clone
      */
     public WhileInstruction clone(){
-        return new WhileInstruction((Program)this.whileProgram.clone(), this.condition, this.label);
+        return new WhileInstruction(this.whileProgram.clone(), this.condition, this.label);
     }
 
     public String toString() {
@@ -102,11 +99,6 @@ public class WhileInstruction extends ProgramInstruction implements RepeatedInst
     }
 
     public void postInstruction(ProcedurePlan procEnv) throws TeiidComponentException {
-    }
-    
-    @Override
-    public void getChildPlans(List<ProcessorPlan> plans) {
-    	whileProgram.getChildPlans(plans);
     }
     
 }

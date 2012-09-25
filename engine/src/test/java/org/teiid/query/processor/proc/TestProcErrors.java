@@ -25,10 +25,12 @@ package org.teiid.query.processor.proc;
 import static org.junit.Assert.*;
 import static org.teiid.query.processor.proc.TestProcedureProcessor.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.junit.Test;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.jdbc.TeiidSQLException;
-import org.teiid.jdbc.TeiidSQLWarning;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
@@ -39,7 +41,7 @@ public class TestProcErrors {
 	
     @Test public void testInvalidException() throws Exception {
     	String ddl = 
-    			"create virtual procedure vproc (x integer) returns integer as begin declare object e = sqlwarning 'hello'; raise e; raise sqlexception 'hello world' sqlstate 'abc', 1 exception e; end;";
+    			"create virtual procedure vproc (x integer) returns integer as begin declare object e = sqlexception 'hello'; raise e; raise sqlexception 'hello world' sqlstate 'abc', 1 chain e; end;";
     	try {
     		TestProcedureResolving.createMetadata(ddl);
     		fail();
@@ -50,7 +52,7 @@ public class TestProcErrors {
 
     @Test public void testExceptionAndWarning() throws Exception {
     	String ddl = 
-    			"create virtual procedure vproc (x integer) returns integer as begin declare exception e = sqlwarning 'hello'; raise e; raise sqlexception 'hello world' sqlstate 'abc', 1 exception e; end;";
+    			"create virtual procedure vproc (x integer) returns integer as begin declare exception e = sqlexception 'hello'; raise sqlwarning e; raise sqlexception 'hello world' sqlstate 'abc', 1 chain e; end;";
     	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
 
     	String sql = "call vproc(1)"; //$NON-NLS-1$
@@ -63,7 +65,7 @@ public class TestProcErrors {
         	helpTestProcess(plan, null, dataManager, tm);
         	fail();
         } catch (TeiidProcessingException e) {
-            TeiidSQLWarning tsw = (TeiidSQLWarning) plan.getContext().getAndClearWarnings().get(0);
+            TeiidSQLException tsw = (TeiidSQLException) plan.getContext().getAndClearWarnings().get(0);
         	assertEquals("hello", tsw.getMessage());
         	
         	assertEquals(e.getCause().getCause(), tsw);
@@ -73,6 +75,29 @@ public class TestProcErrors {
         	assertEquals(1, tse.getErrorCode());
         }
         
+    }
+    
+    @Test public void testExceptionHandling() throws Exception {
+    	String ddl = 
+    			"create virtual procedure vproc (x integer) returns integer as begin " +
+    			"raise sqlexception 'hello world' sqlstate 'abc', 1;" +
+    			"exception e " +
+    			"raise sqlwarning sqlexception 'caught' chain e.exception; " +
+    			"\"return\" = 1;"+
+    			"end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+
+    	String sql = "call vproc(1)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+    	helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataManager, tm);
+    	
+    	TeiidSQLException tse = (TeiidSQLException)plan.getContext().getAndClearWarnings().get(0);
+    	assertEquals("caught", tse.getMessage());
+    	assertEquals("hello world", tse.getCause().getMessage());
     }
 	
 }

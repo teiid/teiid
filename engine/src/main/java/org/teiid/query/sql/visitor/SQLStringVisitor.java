@@ -47,6 +47,7 @@ import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.proc.*;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
@@ -1376,7 +1377,21 @@ public class SQLStringVisitor extends LanguageVisitor {
         	append(ATOMIC);
         }
         append("\n"); //$NON-NLS-1$
-        Iterator<Statement> stmtIter = statements.iterator();
+        addStatements(statements);
+        if (obj.getExceptionGroup() != null) {
+        	append(NonReserved.EXCEPTION);
+        	append(SPACE);
+        	outputDisplayName(obj.getExceptionGroup());
+        	append("\n"); //$NON-NLS-1$
+        	if (obj.getExceptionStatements() != null) {
+        		addStatements(obj.getExceptionStatements());
+        	}
+        }
+        append(END);
+    }
+
+	private void addStatements(List<Statement> statements) {
+		Iterator<Statement> stmtIter = statements.iterator();
         while (stmtIter.hasNext()) {
             // Add each statement
             addTabs(1);
@@ -1384,8 +1399,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append("\n"); //$NON-NLS-1$
         }
         addTabs(0);
-        append(END);
-    }
+	}
 
 	private void addLabel(Labeled obj) {
 		if (obj.getLabel() != null) {
@@ -1464,17 +1478,17 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( RaiseStatement obj ) {
         append(NonReserved.RAISE);
         append(SPACE);
+        if (obj.isWarning()) {
+        	append(SQLWARNING);
+            append(SPACE);
+        }
         visitNode(obj.getExpression());
         append(";"); //$NON-NLS-1$
     }
     
     @Override
     public void visit(ExceptionExpression exceptionExpression) {
-    	if (exceptionExpression.isWarning()) {
-    		append(SQLWARNING);
-    	} else {
-    		append(SQLEXCEPTION);
-    	}
+		append(SQLEXCEPTION);
     	append(SPACE);
     	visitNode(exceptionExpression.getMessage());
     	if (exceptionExpression.getSqlState() != null) {
@@ -1490,7 +1504,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
     	if (exceptionExpression.getParent() != null) {
         	append(SPACE);
-        	append(NonReserved.EXCEPTION);
+        	append(NonReserved.CHAIN);
         	append(SPACE);
         	append(exceptionExpression.getParent());
     	}
@@ -1525,7 +1539,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(") "); //$NON-NLS-1$
         append(AS);
         append(" "); //$NON-NLS-1$
-        append(obj.getCursorName());
+        outputDisplayName(obj.getCursorName());
         append("\n"); //$NON-NLS-1$
         addTabs(0);
         visitNode(obj.getBlock());

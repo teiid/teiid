@@ -103,6 +103,7 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     public void visit(Block obj) {
         preVisitVisitor(obj);
         visitNodes(obj.getStatements());
+        visitNodes(obj.getExceptionStatements());
         postVisitVisitor(obj);
     }
     public void visit(BranchingStatement obj) {

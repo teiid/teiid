@@ -122,10 +122,4 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
         procEnv.removeResults(rsName);
     }
     
-    @Override
-    public void getChildPlans(List<ProcessorPlan> plans) {
-    	super.getChildPlans(plans);
-    	this.loopProgram.getChildPlans(plans);
-    }
-
 }

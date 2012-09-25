@@ -807,7 +807,7 @@ public class TestProcedureResolving {
         String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
         
         helpFailUpdateProcedure(proc.toString(), userUpdateStr,
-                                     Table.TriggerEvent.UPDATE, "TEIID30124 Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$
+                                     Table.TriggerEvent.UPDATE, "TEIID30124 Loop cursor or exception group name loopCursor already exists."); //$NON-NLS-1$
     }
     
     @Test public void testTempGroupElementShouldNotBeResolable() {
@@ -978,7 +978,7 @@ public class TestProcedureResolving {
     
     //cursor starts with "#" Defect14924
     @Test public void testVirtualProcedureInvalid1() throws Exception {
-    	helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "TEIID30125 Cursor names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("EXEC pm1.vsp32()",RealMetadataFactory.example1Cached(), "TEIID30125 Cursor or exception group names cannot begin with \"#\" as that indicates the name of a temporary table: #mycursor.");   //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testVirtualProcedureWithOrderBy() throws Exception {
@@ -1002,7 +1002,7 @@ public class TestProcedureResolving {
     }
     
     @Test public void testLoopRedefinition2() throws Exception {
-        helpResolveException("EXEC pm1.vsp11()", RealMetadataFactory.example1Cached(), "TEIID30124 Nested Loop can not use the same cursor name as that of its parent."); //$NON-NLS-1$ //$NON-NLS-2$
+        helpResolveException("EXEC pm1.vsp11()", RealMetadataFactory.example1Cached(), "TEIID30124 Loop cursor or exception group name mycursor already exists."); //$NON-NLS-1$ //$NON-NLS-2$
     }
         
     @Test public void testVariableResolutionWithIntervening() throws Exception {

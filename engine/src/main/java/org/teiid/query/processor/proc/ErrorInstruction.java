@@ -24,14 +24,11 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.sql.SQLWarning;
-
-import org.teiid.client.ProcedureErrorInstructionException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogManager;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -42,6 +39,7 @@ import org.teiid.query.sql.symbol.Expression;
 public class ErrorInstruction extends ProgramInstruction {
 	
     private Expression expression;
+    private boolean warning;
     
 	/**
 	 * Constructor for DeclareInstruction.
@@ -52,6 +50,10 @@ public class ErrorInstruction extends ProgramInstruction {
 	public void setExpression(Expression expression) {
 		this.expression = expression;
 	}
+	
+	public void setWarning(boolean warning) {
+		this.warning = warning;
+	}
     
     /** 
      * @see org.teiid.query.processor.proc.ProgramInstruction#clone()
@@ -59,29 +61,33 @@ public class ErrorInstruction extends ProgramInstruction {
     public ErrorInstruction clone() {
         ErrorInstruction clone = new ErrorInstruction();
         clone.expression = expression;
+        clone.warning = warning;
         return clone;
     }
 	    
     public String toString() {
-        return "RAISE ERROR INSTRUCTION: " + expression; //$NON-NLS-1$
+        return "RAISE " + (warning?"WARNING":"ERROR") +" INSTRUCTION: " + expression; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
     }  
     
     public PlanNode getDescriptionProperties() {
-    	PlanNode node = new PlanNode("RAISE ERROR"); //$NON-NLS-1$
+    	PlanNode node = new PlanNode("RAISE " + (warning?"WARNING":"ERROR")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     	node.addProperty(PROP_EXPRESSION, this.expression.toString());
     	return node;
     }
     
     @Override
     public void process(ProcedurePlan env) throws TeiidComponentException,
-    		TeiidProcessingException {
+    		TeiidProcessingException, TeiidSQLException {
     	Object value = env.evaluateExpression(expression);
-        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Processing ErrorInstruction with the value :", value); //$NON-NLS-1$ 
-    	if (value instanceof SQLWarning) {
-    		env.getContext().addWarning((Exception)value);
-    		return;
-    	}
-        throw new ProcedureErrorInstructionException(QueryPlugin.Event.TEIID30167, (Exception) value); 
+        LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Processing RAISE with the value :", value); //$NON-NLS-1$
+        if (warning) {
+        	env.getContext().addWarning((Exception)value);
+        	return;
+        }
+        if (value == null) {
+        	throw new TeiidProcessingException();
+        }
+        throw TeiidSQLException.create((Exception)value);
     }
  
 }

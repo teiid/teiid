@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.client.plan.PlanNode;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
@@ -45,6 +44,8 @@ public class Program implements Cloneable, Labeled {
     private String label;
     private TempTableStore tempTables;
     private boolean startedTxn;
+    private String exceptionGroup;
+    private Program exceptionProgram;
 
 	/**
 	 * Constructor for Program.
@@ -149,7 +150,7 @@ public class Program implements Cloneable, Labeled {
     /**
      * Produces a deep clone.
      */
-    public Object clone(){
+    public Program clone(){
         Program program = new Program(atomic);
         program.counter = this.counter;
         
@@ -161,18 +162,31 @@ public class Program implements Cloneable, Labeled {
             program.programInstructions = clonedInstructions;
         }
         program.label = label;
+        program.exceptionGroup = this.exceptionGroup;
+        if (this.exceptionProgram != null) {
+        	program.exceptionProgram = this.exceptionProgram.clone();
+        }
         return program;
     }
 
     public PlanNode getDescriptionProperties() {
     	PlanNode props = new PlanNode("Program"); //$NON-NLS-1$
-        
+        if (label != null) {
+        	props.addProperty("Label", label); //$NON-NLS-1$
+        }
         if(this.programInstructions != null) {
         	for (int i = 0; i < programInstructions.size(); i++) {
                 ProgramInstruction inst = programInstructions.get(i);
                 PlanNode childProps = inst.getDescriptionProperties();
                 props.addProperty("Instruction " + i, childProps); //$NON-NLS-1$
             }
+        }
+        
+        if (this.exceptionGroup != null) {
+        	props.addProperty("EXCEPTION GROUP", this.exceptionGroup); //$NON-NLS-1$
+        	if (this.exceptionProgram != null) {
+        		props.addProperty("EXCEPTION HANDLER", this.exceptionProgram.getDescriptionProperties()); //$NON-NLS-1$
+        	}
         }
         return props;
     }
@@ -207,7 +221,12 @@ public class Program implements Cloneable, Labeled {
         StringBuilder str = new StringBuilder();   
             
         programToString(str);
-        
+        if (exceptionGroup != null) {
+        	str.append("\nEXCEPTION ").append(exceptionGroup).append("\n"); //$NON-NLS-1$ //$NON-NLS-2$
+        }
+        if (exceptionProgram != null) {
+        	exceptionProgram.programToString(str);
+        }
         return "PROGRAM counter " + this.counter + "\n" + str.toString(); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
 
@@ -248,11 +267,21 @@ public class Program implements Cloneable, Labeled {
         
         buffer.append(counterStr + line + "\n"); //$NON-NLS-1$
     }
-    
-    void getChildPlans(List<ProcessorPlan> plans) {
-    	for (ProgramInstruction instruction : programInstructions) {
-			instruction.getChildPlans(plans);
-		}
-    }
+     
+	public void setExceptionGroup(String exceptionGroup) {
+		this.exceptionGroup = exceptionGroup;
+	}
+
+	public void setExceptionProgram(Program exceptionBlock) {
+		this.exceptionProgram = exceptionBlock;
+	}
+	
+	public String getExceptionGroup() {
+		return exceptionGroup;
+	}
+	
+	public Program getExceptionProgram() {
+		return exceptionProgram;
+	}
         
 }

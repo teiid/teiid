@@ -23,6 +23,7 @@
 package org.teiid.query.optimizer;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -132,7 +133,29 @@ public final class ProcedurePlanner implements CommandPlanner {
         programBlock.setLabel(block.getLabel());
 
 		// plan each statement in the block
-        for (Statement statement : block.getStatements()) {
+        planStatements(parentProcCommand, block.getStatements(), metadata, debug, idGenerator,
+				capFinder, analysisRecord, context, programBlock);
+        
+        if (block.getExceptionGroup() != null) {
+        	programBlock.setExceptionGroup(block.getExceptionGroup());
+        	if (block.getExceptionStatements() != null) {
+        		Program exceptionBlock = new Program(false);
+                planStatements(parentProcCommand, block.getExceptionStatements(), metadata, debug, idGenerator,
+        				capFinder, analysisRecord, context, exceptionBlock);
+            	programBlock.setExceptionProgram(exceptionBlock);
+        	}
+        }
+
+        return programBlock;
+    }
+
+	private void planStatements(CreateProcedureCommand parentProcCommand,
+			List<Statement> stmts, QueryMetadataInterface metadata, boolean debug,
+			IDGenerator idGenerator, CapabilitiesFinder capFinder,
+			AnalysisRecord analysisRecord, CommandContext context,
+			Program programBlock) throws QueryPlannerException,
+			QueryMetadataException, TeiidComponentException {
+		for (Statement statement : stmts) {
 			Object instruction = planStatement(parentProcCommand, statement, metadata, debug, idGenerator, capFinder, analysisRecord, context);
             if(instruction instanceof ProgramInstruction){
                 programBlock.addInstruction((ProgramInstruction)instruction);
@@ -144,9 +167,7 @@ public final class ProcedurePlanner implements CommandPlanner {
                 }
             }
         }
-
-        return programBlock;
-    }
+	}
 
 	/**
 	 * <p> Plan a {@link Statement} object, depending on the type of the statement construct the appropriate
@@ -198,8 +219,9 @@ public final class ProcedurePlanner implements CommandPlanner {
                 
 				Expression asigExpr = res.getExpression();
 				error.setExpression(asigExpr);
+				error.setWarning(res.isWarning());
                 if(debug) {
-                	analysisRecord.println("\tERROR STATEMENT:\n" + statement); //$NON-NLS-1$ 
+                	analysisRecord.println("\tRAISE STATEMENT:\n" + statement); //$NON-NLS-1$ 
                 }
             	break;
             }

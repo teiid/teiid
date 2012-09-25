@@ -102,7 +102,7 @@ public class TeiidSQLException extends SQLException {
 		if (exception instanceof SQLException) {
 			return new TeiidSQLException((SQLException) exception, message, true);
 		}
-		String sqlState = SQLStates.DEFAULT;
+		String sqlState = null;
 		int errorCode = 0;
 		SQLException se = ExceptionUtil.getExceptionOfType(exception, SQLException.class);
 		if (se != null && se.getSQLState() != null) {
@@ -125,8 +125,13 @@ public class TeiidSQLException extends SQLException {
 				}
 			}
 		}
-		exception = findRootException(exception);
-		sqlState = determineSQLState(exception, sqlState);
+		if (sqlState == null) {
+			exception = findRootException(exception);
+			sqlState = determineSQLState(exception, sqlState);
+		}
+		if (sqlState == null) {
+			sqlState = SQLStates.DEFAULT;
+		}
 		TeiidSQLException tse = new TeiidSQLException(origException, message, sqlState, errorCode);
 		tse.teiidCode = code;
 		return tse;

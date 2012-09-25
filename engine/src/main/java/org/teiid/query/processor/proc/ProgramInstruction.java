@@ -22,12 +22,10 @@
 
 package org.teiid.query.processor.proc;
 
-import java.util.List;
-
 import org.teiid.client.plan.PlanNode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.jdbc.TeiidSQLException;
 
 
 /**
@@ -50,18 +48,11 @@ public abstract class ProgramInstruction implements Cloneable {
      * in turn manipulate the running program. A typical instruction should simply {@link
      * Program#incrementProgramCounter increment} the program counter of the current program, but specialized
      * instructions may add sub programs to the stack or not increment the counter (so that they are executed again.)
+     * @throws TeiidSQLException 
      */
     public abstract void process(ProcedurePlan env) 
-        throws TeiidComponentException, TeiidProcessingException;
+        throws TeiidComponentException, TeiidProcessingException, TeiidSQLException;
         
-    /**
-     * Finds all nested plans and returns them.
-     * @return List of ProcessorPlan 
-     * @since 4.2
-     */
-    public void getChildPlans(List<ProcessorPlan> plans) {
-    }
-    
     /**
      * Override Object.clone() to make the method public.  This method 
      * simply calls super.clone(), deferring to the default shallow

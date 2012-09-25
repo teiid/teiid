@@ -26,7 +26,6 @@ package org.teiid.query.processor.proc;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.List;
 import java.util.Map;
 
 import org.teiid.client.plan.PlanNode;
@@ -104,9 +103,4 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
         return plan;
     }
     
-    @Override
-    public void getChildPlans(List<ProcessorPlan> plans) {
-    	plans.add(this.plan);
-    }
-
 }

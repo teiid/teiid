@@ -59,7 +59,6 @@ import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.jdbc.TeiidSQLException;
-import org.teiid.jdbc.TeiidSQLWarning;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -685,12 +684,7 @@ public class Evaluator {
 		if (ee.getParent() != null) {
 			parent = (Exception) internalEvaluate(ee.getParent(), tuple);
 		}
-		Exception result = null;
-		if (ee.isWarning()) {
-			result = new TeiidSQLWarning(msg, sqlState, errorCode!=null?errorCode:0, parent);
-		} else {
-			result = new TeiidSQLException(parent, msg, sqlState, errorCode!=null?errorCode:0);
-		}
+		Exception result = new TeiidSQLException(parent, msg, sqlState, errorCode!=null?errorCode:0);
 		result.setStackTrace(SourceWarning.EMPTY_STACK_TRACE);
 		return result;
 	}

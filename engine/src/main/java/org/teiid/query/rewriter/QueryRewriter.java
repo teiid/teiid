@@ -242,7 +242,17 @@ public class QueryRewriter {
 	private Block rewriteBlock(Block block)
 								 throws TeiidComponentException, TeiidProcessingException{
 		List<Statement> statements = block.getStatements();
-        Iterator<Statement> stmtIter = statements.iterator();
+        List<Statement> newStmts = rewriteStatements(statements);
+        block.setStatements(newStmts);
+        if (block.getExceptionStatements() != null) {
+            block.setExceptionStatements(rewriteStatements(block.getExceptionStatements()));
+        }
+        return block;
+	 }
+
+	private List<Statement> rewriteStatements(List<Statement> statements)
+			throws TeiidComponentException, TeiidProcessingException {
+		Iterator<Statement> stmtIter = statements.iterator();
 
 		List<Statement> newStmts = new ArrayList<Statement>(statements.size());
 		// plan each statement in the block
@@ -250,11 +260,8 @@ public class QueryRewriter {
 			Statement stmnt = stmtIter.next();
 			rewriteStatement(stmnt, newStmts);
         }
-
-        block.setStatements(newStmts);
-
-        return block;
-	 }
+		return newStmts;
+	}
 
 	private void rewriteStatement(Statement statement, List<Statement> newStmts)
 								 throws TeiidComponentException, TeiidProcessingException{

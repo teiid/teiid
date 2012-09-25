@@ -35,6 +35,7 @@ import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.SupportConstants;
@@ -69,6 +70,21 @@ public class UpdateProcedureResolver implements CommandResolver {
 	public static class StatementNode {
 		CommandStatement cs;
 		List<StatementNode> children;
+	}
+	
+	public static final List<ElementSymbol> exceptionGroup;
+	static {
+		ElementSymbol es1 = new ElementSymbol("STATE"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.STRING);
+        ElementSymbol es2 = new ElementSymbol("ERRORCODE"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        ElementSymbol es3 = new ElementSymbol("TEIIDCODE"); //$NON-NLS-1$
+        es3.setType(DataTypeManager.DefaultDataClasses.STRING);
+        ElementSymbol es4 = new ElementSymbol(NonReserved.EXCEPTION);
+        es4.setType(Exception.class);
+        ElementSymbol es5 = new ElementSymbol(NonReserved.CHAIN);
+        es5.setType(Exception.class);
+        exceptionGroup = Arrays.asList(es1, es2, es3, es4, es5);
 	}
 	
     /**
@@ -145,6 +161,24 @@ public class UpdateProcedureResolver implements CommandResolver {
         for (Statement statement : block.getStatements()) {
             resolveStatement(command, statement, externalGroups, variables, metadata, sn);
         }
+        
+        if (block.getExceptionGroup() != null) {
+            //create a new variable and metadata context for this block so that discovered metadata is not visible else where
+        	store = metadata.getMetadataStore().clone();
+            metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
+            externalGroups = new GroupContext(externalGroups, null);
+            
+            //create a new variables group for this block
+            variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
+            isValidGroup(metadata, block.getExceptionGroup());
+            
+            if (block.getExceptionStatements() != null) {
+            	ProcedureContainerResolver.addScalarGroup(block.getExceptionGroup(), store, externalGroups, exceptionGroup, false);
+	            for (Statement statement : block.getExceptionStatements()) {
+	                resolveStatement(command, statement, externalGroups, variables, metadata, sn);
+	            }
+            }
+        }
     }
 
 	private void resolveStatement(CreateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, StatementNode sn)
@@ -208,12 +242,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 //this could be the last select statement, set the projected symbol
                 //on the virtual procedure command
                 if (subCommand.returnsResultSet() && sn != null) {
-                	updateDynamicAs(sn);
-                    
-            		sn.cs = cmdStmt;
-            		if (sn.children != null) {
-            			sn.children.clear();
-            		}
+                	clearReturnableStatement(sn, cmdStmt);
                 }
 
                 break;
@@ -254,6 +283,9 @@ public class UpdateProcedureResolver implements CommandResolver {
 	        		exprStmt.setExpression(ResolverUtil.convertExpression(exprStmt.getExpression(), varTypeName, metadata));     
 	        		if (statement.getType() == Statement.TYPE_ERROR) {
 	        			ResolverVisitor.checkException(exprStmt.getExpression());
+	        			if (!((RaiseStatement)statement).isWarning()) {
+	        				clearReturnableStatement(sn, null);
+	        			}
 	        		}
                 }
                 break;
@@ -270,15 +302,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 LoopStatement loopStmt = (LoopStatement) statement;
                 String groupName = loopStmt.getCursorName();
 
-                if (metadata.getMetadataStore().getTempGroupID(groupName) != null) {
-                     throw new QueryResolverException(QueryPlugin.Event.TEIID30124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30124));
-                }
-                
-	        	//check - cursor name should not start with #
-	        	if(GroupSymbol.isTempGroupName(loopStmt.getCursorName())){
-	        		String errorMsg = QueryPlugin.Util.getString("ResolveVariablesVisitor.reserved_word_for_temporary_used", loopStmt.getCursorName()); //$NON-NLS-1$
-	        		 throw new QueryResolverException(QueryPlugin.Event.TEIID30125, errorMsg);
-	        	}
+                isValidGroup(metadata, groupName);
                 Command cmd = loopStmt.getCommand();
                 resolveEmbeddedCommand(metadata, externalGroups, cmd);
                 List<Expression> symbols = cmd.getProjectedSymbols();
@@ -294,6 +318,28 @@ public class UpdateProcedureResolver implements CommandResolver {
                 break;
         }
     }
+
+	private void clearReturnableStatement(StatementNode sn,
+			CommandStatement cmdStmt) {
+		updateDynamicAs(sn);
+		
+		sn.cs = cmdStmt;
+		if (sn.children != null) {
+			sn.children.clear();
+		}
+	}
+
+	private void isValidGroup(TempMetadataAdapter metadata, String groupName)
+			throws QueryResolverException {
+		if (metadata.getMetadataStore().getTempGroupID(groupName) != null) {
+		     throw new QueryResolverException(QueryPlugin.Event.TEIID30124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30124, groupName));
+		}
+		
+		//check - cursor name should not start with #
+		if(GroupSymbol.isTempGroupName(groupName)){
+			 throw new QueryResolverException(QueryPlugin.Event.TEIID30125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30125, groupName));
+		}
+	}
 
 	private void updateDynamicAs(StatementNode sn) {
 		if (sn.cs != null && sn.cs.getCommand().getType() == Command.TYPE_DYNAMIC) {

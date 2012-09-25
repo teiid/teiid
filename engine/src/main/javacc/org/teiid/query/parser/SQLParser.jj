@@ -457,6 +457,7 @@ TOKEN : /* NonReserved words */
 |   <VARIADIC: "variadic">
 |   <EXCEPTION: "exception">
 |   <RAISE: "raise">
+|   <CHAIN: "chain">
 
 }
 /*
@@ -564,7 +565,7 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>)
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>)
     {
     	return getToken(0);
     }	
@@ -910,12 +911,14 @@ example={code:sql}RAISE SQLEXCEPTION '00A' 'something went wrong'{code}
 RaiseStatement raiseStatement(ParseInfo info) :
 {
     Expression err = null;
+    boolean warning = false;
 }
 { 
     <RAISE>
+    [<SQLWARNING> {warning = true;}]
     err = exceptionReference(info)
     {
-        return new RaiseStatement(err);       
+        return new RaiseStatement(err, warning);       
     }
 }
 
@@ -949,22 +952,20 @@ Expression exception(ParseInfo info) :
 	Expression sqlState = null;
 	Expression errCode = null;
 	Expression parent = null;
-	boolean warning = false;
 }
 {
-    (<SQLWARNING> {warning=true;}|<SQLEXCEPTION>)
+    <SQLEXCEPTION>
 	err = commonValueExpression(info)
 	[<SQLSTATE> sqlState = commonValueExpression(info)
      [<COMMA> errCode = commonValueExpression(info)]
     ]
-    [<EXCEPTION> parent = exceptionReference(info)]
+    [<CHAIN> parent = exceptionReference(info)]
 	{
 		ExceptionExpression ee = new ExceptionExpression();
 		ee.setMessage(err);
 		ee.setSqlState(sqlState);
 		ee.setErrorCode(errCode);
 		ee.setParent(parent);
-		ee.setWarning(warning);
 		return ee;
 	}	
 }
@@ -1013,7 +1014,7 @@ Statement delimitedStatement(ParseInfo info) :
     Statement stmt = null;
 }           
 {
-     (stmt = assignStatement(info) |
+     (LOOKAHEAD(2) stmt = assignStatement(info) |
 	  stmt = sqlStatement(info) |
       stmt = errorStatement(info) |
       stmt = raiseStatement(info) |
@@ -1036,15 +1037,24 @@ Block compoundStatement(ParseInfo info) :
     Statement stmt = null;  
     Block block = new Block();
     Boolean atomic = null;
+    String eId = null;
 }
 {   
     <BEGIN> [[<NOT> {atomic = Boolean.FALSE;}] <ATOMIC> {if (atomic == null) {atomic = Boolean.TRUE;}}]
-    (
+    (LOOKAHEAD(2)
       stmt = statement(info)
       {          
-	    block.addStatement(stmt);            	                	    
+	    block.addStatement(stmt, false);            	                	    
 	  }
  	)*
+ 	[<EXCEPTION> eId = id() {block.setExceptionGroup(validateAlias(eId));}
+ 	 (
+       stmt = statement(info)
+       {          
+	     block.addStatement(stmt, true);            	                	    
+	   }
+ 	 )*
+ 	]
     <END>
     {
         if (atomic != null) {
@@ -1200,13 +1210,13 @@ example={code:sql}x := 'b'{code}
 Statement assignStatement(ParseInfo info) :
 {
     LanguageObject value = null;
-    Token var = null;
+    String var = null;
     ElementSymbol elementID = null;
 }
 {
-    var = <ID>
+    var = id()
     {
-        elementID = new ElementSymbol(normalizeId(var.image));              
+        elementID = new ElementSymbol(var);              
     } 
     [<COLON>]<EQ>
     (value = assignStatementOperand(info) |

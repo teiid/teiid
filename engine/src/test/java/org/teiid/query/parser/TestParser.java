@@ -3021,12 +3021,11 @@ public class TestParser {
     @Test public void testRaiseErrorStatement() throws Exception {
     	ExceptionExpression ee = new ExceptionExpression();
     	ee.setMessage(new Constant("Test only"));
-    	ee.setWarning(true);
     	ee.setSqlState(new Constant("100"));
     	ee.setParent(new ElementSymbol("e"));
-        RaiseStatement errStmt = new RaiseStatement(ee);
+        RaiseStatement errStmt = new RaiseStatement(ee, true);
                  
-        helpStmtTest("RAISE SQLWARNING 'Test only' SQLSTATE '100' EXCEPTION e;", "RAISE SQLWARNING 'Test only' SQLSTATE '100' EXCEPTION e;", //$NON-NLS-1$ //$NON-NLS-2$
+        helpStmtTest("RAISE SQLWARNING SQLEXCEPTION 'Test only' SQLSTATE '100' chain e;", "RAISE SQLWARNING SQLEXCEPTION 'Test only' SQLSTATE '100' CHAIN e;", //$NON-NLS-1$ //$NON-NLS-2$
             errStmt);           
     }
     
@@ -5270,5 +5269,17 @@ public class TestParser {
     @Test public void testTextTableNegativeWidth() {        
         helpException("SELECT * from texttable(null columns x string width -1) as x"); 
 	}
+    
+    @Test public void testBlockExceptionHandling() throws ParseException {
+    	CommandStatement cmdStmt =	new CommandStatement(new Query(new Select(Arrays.asList(new MultipleElementSymbol())), new From(Arrays.asList(new UnaryFromClause(new GroupSymbol("x")))), null, null, null));
+    	AssignmentStatement assigStmt =	new AssignmentStatement(new ElementSymbol("a"), new Constant(new Integer(1))); //$NON-NLS-1$
+    	RaiseStatement errStmt =	new RaiseStatement(new Constant("My Error")); //$NON-NLS-1$
+    	Block b = new Block();
+    	b.setExceptionGroup("g");
+    	b.addStatement(cmdStmt);
+    	b.addStatement(assigStmt);
+    	b.addStatement(errStmt, true);
+    	helpStmtTest("BEGIN\nselect * from x;\na = 1;\nexception e\nERROR 'My Error';\nEND", "BEGIN\nSELECT * FROM x;\na = 1;\nEXCEPTION e\nRAISE SQLEXCEPTION 'My Error';\nEND", b); //$NON-NLS-1$
+    }
 
 }

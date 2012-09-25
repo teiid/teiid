@@ -36,7 +36,6 @@ public class ExceptionExpression implements Expression, LanguageObject {
 	private Expression sqlState;
 	private Expression errorCode;
 	private Expression parent;
-	private boolean warning;
 	
 	@Override
 	public Class<?> getType() {
@@ -58,13 +57,12 @@ public class ExceptionExpression implements Expression, LanguageObject {
 		return EquivalenceUtil.areEqual(message, other.message) 
 		&& EquivalenceUtil.areEqual(sqlState, other.sqlState)
 		&& EquivalenceUtil.areEqual(errorCode, other.errorCode)
-		&& EquivalenceUtil.areEqual(parent, other.parent)
-		&& warning == other.warning;
+		&& EquivalenceUtil.areEqual(parent, other.parent);
 	}
 	
 	@Override
 	public int hashCode() {
-		return HashCodeUtil.hashCode(warning?0:1, message, sqlState, errorCode);
+		return HashCodeUtil.hashCode(0, message, sqlState, errorCode);
 	}
 	
 	@Override
@@ -75,7 +73,6 @@ public class ExceptionExpression implements Expression, LanguageObject {
 	@Override
 	public ExceptionExpression clone() {
 		ExceptionExpression clone = new ExceptionExpression();
-		clone.warning = this.warning;
 		if (this.message != null) {
 			clone.message = (Expression) this.message.clone();
 		}
@@ -123,23 +120,12 @@ public class ExceptionExpression implements Expression, LanguageObject {
 		this.parent = parent;
 	}
 	
-	public boolean isWarning() {
-		return warning;
-	}
-	
-	public void setWarning(boolean warning) {
-		this.warning = warning;
-	}
-
 	@Override
 	public void acceptVisitor(LanguageVisitor visitor) {
 		visitor.visit(this);
 	}
 
 	public String getDefaultSQLState() {
-		if (isWarning()) {
-			return "01000";
-		}
 		return "50001";
 	}
 

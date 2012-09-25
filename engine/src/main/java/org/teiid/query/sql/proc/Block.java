@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.StringUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
@@ -46,6 +47,9 @@ public class Block extends Statement implements Labeled {
 	private List<Statement> statements;
 	private boolean atomic;
 	private String label;
+	
+	private String exceptionGroup;
+	private List<Statement> exceptionStatements;
 
 	/**
 	 * Constructor for Block.
@@ -92,11 +96,15 @@ public class Block extends Statement implements Labeled {
 	 * @param statement The <code>Statement</code> to be added to the block
 	 */
 	public void addStatement(Statement statement) {
+		addStatement(statement, false);
+	}
+	
+	public void addStatement(Statement statement, boolean exception) {
 		if (statement instanceof AssignmentStatement) {
 			AssignmentStatement stmt = (AssignmentStatement)statement;
 			Command cmd = stmt.getCommand();
 			if (cmd != null) {
-				statements.add(new CommandStatement(cmd));
+				internalAddStatement(new CommandStatement(cmd), exception);
 				stmt.setCommand(null);
 				stmt.setExpression(null);
 				if (stmt.getVariable().getShortName().equalsIgnoreCase(ProcedureReservedWords.ROWCOUNT) 
@@ -107,7 +115,18 @@ public class Block extends Statement implements Labeled {
 				stmt.setExpression(new ElementSymbol(fullName));
 			}
 		}
-		statements.add(statement);
+		internalAddStatement(statement, exception);
+	}
+
+	private void internalAddStatement(Statement statement, boolean exception) {
+		if (exception) {
+			if (this.exceptionStatements == null) {
+				exceptionStatements = new ArrayList<Statement>();
+			}
+			exceptionStatements.add(statement);
+		} else {
+			statements.add(statement);
+		}
 	}
 	
     // =========================================================================
@@ -125,9 +144,11 @@ public class Block extends Statement implements Labeled {
 	public Block clone() {		
 		Block copy = new Block();
 		copy.setAtomic(atomic);
-		for (Statement statement : statements) {
-			copy.addStatement((Statement)statement.clone());
+		copy.statements = LanguageObject.Util.deepClone(statements, Statement.class);
+		if (exceptionStatements != null) {
+			copy.exceptionStatements = LanguageObject.Util.deepClone(exceptionStatements, Statement.class);
 		}
+		copy.exceptionGroup = this.exceptionGroup;
 		copy.setLabel(label);
 		return copy;
 	}
@@ -154,7 +175,9 @@ public class Block extends Statement implements Labeled {
 		// Compare the statements on the block
         return this.atomic == other.atomic 
         && StringUtil.equalsIgnoreCase(label, other.label)
-        && EquivalenceUtil.areEqual(getStatements(), other.getStatements());
+        && EquivalenceUtil.areEqual(getStatements(), other.getStatements())
+        && EquivalenceUtil.areEqual(exceptionGroup, exceptionGroup)
+        && EquivalenceUtil.areEqual(exceptionStatements, exceptionStatements);
     }    
 
     /**
@@ -188,5 +211,21 @@ public class Block extends Statement implements Labeled {
     public int getType() {
     	return Statement.TYPE_COMPOUND;
     }
+    
+    public String getExceptionGroup() {
+		return exceptionGroup;
+	}
+    
+    public void setExceptionGroup(String exceptionGroup) {
+		this.exceptionGroup = exceptionGroup;
+	}
+    
+    public List<Statement> getExceptionStatements() {
+		return exceptionStatements;
+	}
+    
+    public void setExceptionStatements(List<Statement> exceptionStatements) {
+		this.exceptionStatements = exceptionStatements;
+	}
 
 }// END CLASS
