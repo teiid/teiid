@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SQLConstants;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -103,9 +104,10 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         for (Entry<ElementSymbol, Expression> entry : changing.entrySet()) {
         	ElementSymbol leftSymbol = entry.getKey().clone();
             leftSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            leftSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(leftSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-            	leftSymbol = leftSymbol.clone();
+            	leftSymbol = entry.getKey().clone();
             	leftSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(leftSymbol, entry.getValue());
             }
@@ -119,6 +121,7 @@ public class UpdateResolver extends ProcedureContainerResolver implements Variab
         while(defaultIter.hasNext()) {
             ElementSymbol varSymbol = defaultIter.next().clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.FALSE));
         }
         

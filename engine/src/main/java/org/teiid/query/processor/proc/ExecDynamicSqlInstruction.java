@@ -255,7 +255,11 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		localContext.getFlattenedContextMap(variableMap);
 		Map<ElementSymbol, Expression> nameValueMap = new HashMap<ElementSymbol, Expression>(variableMap.size());
 		for (Map.Entry<ElementSymbol, Object> entry : variableMap.entrySet()) {
-			nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+			if (entry.getValue() instanceof Expression) {
+				nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
+			} else {
+				nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+			}
 		}
 		return nameValueMap;
 	}
@@ -312,7 +316,11 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		// do a recursion check
 		// Add group to recursion stack
 		CommandContext context = procEnv.getContext();
-		context.pushCall(parentProcCommand.getVirtualGroup().getName());
+		if (parentProcCommand.getUpdateType() != null) {
+			context.pushCall(parentProcCommand.getUpdateType() + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
+		} else {
+			context.pushCall(parentProcCommand.getVirtualGroup().toString());
+		}
 	}
 
 	/**

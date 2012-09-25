@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -60,7 +61,7 @@ public class TestTriggerActions {
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
-        List[] expected = new List[] {Arrays.asList(1)};
+        List<?>[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
 	}
 	
@@ -79,8 +80,50 @@ public class TestTriggerActions {
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
-        List[] expected = new List[] {Arrays.asList(6)};
+        List<?>[] expected = new List[] {Arrays.asList(6)};
     	helpProcess(plan, context, dm, expected);
+	}
+	
+	@Test public void testDynamic() throws Exception {
+		TransformationMetadata metadata = TestUpdateValidator.example1();
+		TestUpdateValidator.createView("select '1' as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
+		t.setDeletePlan("FOR EACH ROW BEGIN ATOMIC END");
+		t.setUpdatePlan("");
+		t.setInsertPlan("FOR EACH ROW BEGIN execute immediate 'delete from gx where gx.x = new.x'; END");
+		
+		String sql = "insert into gx (x, y) select e1, e2 from pm1.g1";
+		
+		FakeDataManager dm = new FakeDataManager();
+		FakeDataStore.addTable("pm1.g1", dm, metadata);
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List<?>[] expected = new List[] {Arrays.asList(6)};
+    	helpProcess(plan, context, dm, expected);
+	}
+	
+	@Test public void testDynamicRecursion() throws Exception {
+		TransformationMetadata metadata = TestUpdateValidator.example1();
+		TestUpdateValidator.createView("select 'a' as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
+		t.setDeletePlan("FOR EACH ROW BEGIN ATOMIC insert into gx (x, y) values (old.x, old.y); END");
+		t.setUpdatePlan("");
+		t.setInsertPlan("FOR EACH ROW BEGIN execute immediate 'delete from gx where gx.x = new.x'; END");
+		
+		String sql = "insert into gx (x, y) select e1, e2 from pm1.g1";
+		
+		FakeDataManager dm = new FakeDataManager();
+		FakeDataStore.addTable("pm1.g1", dm, metadata);
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        try {
+	    	helpProcess(plan, context, dm, null);
+	    	fail();
+        } catch (QueryProcessingException e) {
+        	assertEquals("TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'delete from gx where gx.x = new.x'\" with the SQL statement \"'delete from gx where gx.x = new.x'\" due to: TEIID30347 There is a recursive invocation of group 'Insert gx'. Please correct the SQL.", e.getMessage());
+        }
 	}
 	
 	@Test public void testDelete() throws Exception {
@@ -99,7 +142,7 @@ public class TestTriggerActions {
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
-        List[] expected = new List[] {Arrays.asList(1)};
+        List<?>[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
 	}
 	
@@ -119,7 +162,7 @@ public class TestTriggerActions {
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
-        List[] expected = new List[] {Arrays.asList(1)};
+        List<?>[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
     	assertEquals("UPDATE pm1.g1 SET e2 = 5 WHERE e2 = 2", dm.getQueries().get(0));
 	}
@@ -161,7 +204,7 @@ public class TestTriggerActions {
 		CommandContext context = createCommandContext();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
-        List[] expected = new List[] {Arrays.asList(1)};
+        List<?>[] expected = new List[] {Arrays.asList(1)};
     	helpProcess(plan, context, dm, expected);
     	assertEquals("UPDATE pm1.g1 SET e2 = 1 WHERE e2 = 2", dm.getQueries().get(0));
 	}

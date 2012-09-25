@@ -73,7 +73,9 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
             elements = new ArrayList<ElementSymbol>(schema.size());
             for(int i=0; i< schema.size(); i++){
                 Expression element = (Expression)schema.get(i);
-                elements.add(new ElementSymbol(rsName + "." + Symbol.getShortName(element)));              //$NON-NLS-1$
+                ElementSymbol e = new ElementSymbol(rsName + Symbol.SEPARATOR + Symbol.getShortName(element));
+                e.setType(element.getType());
+				elements.add(e);              
             }
         }
         for(int i=0; i< elements.size(); i++){
@@ -86,7 +88,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
      */
     public LoopInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
-        return new LoopInstruction((Program)this.loopProgram.clone(), this.rsName, clonedPlan, label);
+        return new LoopInstruction(this.loopProgram.clone(), this.rsName, clonedPlan, label);
     }
     
     public String toString() {

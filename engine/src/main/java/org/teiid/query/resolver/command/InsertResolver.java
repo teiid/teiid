@@ -254,12 +254,13 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
             valIter = insert.getValues().iterator();
         }
         while (varIter.hasNext()) {
-            ElementSymbol varSymbol = varIter.next().clone();
-            
+            ElementSymbol next = varIter.next();
+			ElementSymbol varSymbol = next.clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.TRUE));
             if (!changingOnly) {
-            	varSymbol = varSymbol.clone();
+            	varSymbol = next.clone();
             	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(varSymbol, (Expression)valIter.next());
             }
@@ -271,13 +272,14 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 
         Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
-            ElementSymbol varSymbol = defaultIter.next().clone();
+        	ElementSymbol next = varIter.next();
+ 			ElementSymbol varSymbol = next.clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
+            varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
             result.put(varSymbol, new Constant(Boolean.FALSE));
-            
             if (!changingOnly) {
                 Expression value = ResolverUtil.getDefault(varSymbol, metadata);
-            	varSymbol = varSymbol.clone();
+            	varSymbol = next.clone();
             	varSymbol.getGroupSymbol().setName(SQLConstants.Reserved.NEW);
             	result.put(varSymbol, value);
             }

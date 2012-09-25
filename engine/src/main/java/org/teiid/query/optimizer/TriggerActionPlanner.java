@@ -97,7 +97,10 @@ public final class TriggerActionPlanner {
 		ProcessorPlan queryPlan = QueryOptimizer.optimizePlan(query, metadata, idGenerator, capFinder, analysisRecord, context);
 		result.setQueryPlan(queryPlan);
 		result.setLookupMap(RelationalNode.createLookupMap(query.getProjectedSymbols()));
-		ProcedurePlan rowProcedure = (ProcedurePlan)QueryOptimizer.optimizePlan(new CreateProcedureCommand(ta.getBlock()), metadata, idGenerator, capFinder, analysisRecord, context);
+		CreateProcedureCommand command = new CreateProcedureCommand(ta.getBlock());
+		command.setVirtualGroup(ta.getView());
+		command.setUpdateType(userCommand.getClass().getSimpleName());
+		ProcedurePlan rowProcedure = (ProcedurePlan)QueryOptimizer.optimizePlan(command, metadata, idGenerator, capFinder, analysisRecord, context);
 		result.setRowProcedure(rowProcedure);
 		return result;
 	}

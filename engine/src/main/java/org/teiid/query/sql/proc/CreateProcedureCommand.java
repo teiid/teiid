@@ -54,6 +54,8 @@ public class CreateProcedureCommand extends Command {
     
     private GroupSymbol virtualGroup;
 
+	private String updateType;
+
 	/**
 	 * Constructor for CreateUpdateProcedureCommand.
 	 */
@@ -138,6 +140,7 @@ public class CreateProcedureCommand extends Command {
         if (this.virtualGroup != null) {
         	copy.virtualGroup = this.virtualGroup.clone();
         }
+        copy.updateType = this.updateType; 
         this.copyMetadataState(copy);
 		return copy;
 	}
@@ -233,5 +236,13 @@ public class CreateProcedureCommand extends Command {
     public void setVirtualGroup(GroupSymbol virtualGroup) {
         this.virtualGroup = virtualGroup;
     }
+
+	public void setUpdateType(String updateType) {
+		this.updateType = updateType;
+	}
+	
+	public String getUpdateType() {
+		return updateType;
+	}
 
 } // END CLASS
