@@ -350,4 +350,15 @@ public class TestMetadataValidator {
 		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertTrue(printError(report), report.hasItems());
 	}
+	
+    @Test public void testResultSet() throws Exception {
+    	String ddl = "create virtual procedure vproc (x integer) returns table (y integer) as begin if (x = 1) select 1; else select 1, 2; end;";
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
+    }
 }

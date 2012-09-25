@@ -70,6 +70,7 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
+import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
 import org.teiid.query.sql.proc.WhileStatement;
@@ -110,13 +111,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
 	// State during validation
     private boolean isXML = false;	// only used for Query commands
-    
     private boolean inQuery;
+	private CreateProcedureCommand createProc;
     
     public void reset() {
         super.reset();
         this.isXML = false;
         this.inQuery = false;
+        this.createProc = null;
     }
 
     // ############### Visitor methods for language objects ##################
@@ -409,6 +411,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {
         	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_has_group_self_reference"),obj); //$NON-NLS-1$
         }
+        this.createProc = obj;
     }
 
     public void visit(CompoundCriteria obj) {
@@ -1462,6 +1465,24 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 	    		}
 			}
 		}
+    }
+    
+    @Override
+    public void visit(CommandStatement obj) {
+    	if (obj.isReturnable() && this.createProc != null) {
+    		List<? extends Expression> symbols = obj.getCommand().getProjectedSymbols();
+	        if (obj.getCommand() instanceof StoredProcedure) {
+	        	StoredProcedure sp = (StoredProcedure)obj.getCommand();
+	        	if (sp.isCallableStatement()) {
+	        		symbols = sp.getResultSetColumns();
+	        	}
+	        }
+    		try {
+				QueryResolver.validateProjectedSymbols(createProc.getVirtualGroup(), createProc.getResultSetColumns(), symbols);
+			} catch (QueryValidatorException e) {
+				handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31121, createProc.getVirtualGroup(), obj, e.getMessage()), obj);
+			}
+    	}
     }
     
     @Override

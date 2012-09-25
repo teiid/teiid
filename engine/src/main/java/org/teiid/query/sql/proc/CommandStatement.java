@@ -37,6 +37,7 @@ public class CommandStatement extends Statement implements SubqueryContainer {
 
 	// the command this statement represents
 	Command command;
+	private boolean returnable;
 
 	/**
 	 * Constructor for CommandStatement.
@@ -87,7 +88,9 @@ public class CommandStatement extends Statement implements SubqueryContainer {
 	 * @return Deep clone 
 	 */
 	public Object clone() {		
-		return new CommandStatement((Command)this.command.clone());
+		CommandStatement cs = new CommandStatement((Command)this.command.clone());
+		cs.returnable = this.returnable;
+		return cs;
 	}
 	
     /**
@@ -118,6 +121,14 @@ public class CommandStatement extends Statement implements SubqueryContainer {
     public int hashCode() {
     	// This hash code relies on the commands hash code
     	return this.getCommand().hashCode();
+	}
+    
+    public boolean isReturnable() {
+		return returnable;
+	}
+    
+    public void setReturnable(boolean returnable) {
+		this.returnable = returnable;
 	}
       
 } // END CLASS

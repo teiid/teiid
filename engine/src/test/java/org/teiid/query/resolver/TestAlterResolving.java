@@ -30,6 +30,7 @@ import org.teiid.query.sql.lang.AlterProcedure;
 import org.teiid.query.sql.lang.AlterTrigger;
 import org.teiid.query.sql.lang.AlterView;
 import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 
@@ -44,7 +45,7 @@ public class TestAlterResolving {
 	@Test public void testAlterProcedure() {
 		AlterProcedure alterProc = (AlterProcedure) helpResolve("alter procedure MMSP5 as begin select param1; end", RealMetadataFactory.exampleBQTCached());
 		assertNotNull(alterProc.getTarget().getMetadataID());
-		Query q = (Query)alterProc.getDefinition().getResultsCommand();
+		Query q = (Query)((CommandStatement)alterProc.getDefinition().getBlock().getStatements().get(0)).getCommand();
 		assertTrue(((ElementSymbol)q.getSelect().getSymbol(0)).isExternalReference());
 	}
 	

@@ -109,6 +109,7 @@ public class QueryResolver {
     		//if the subcommand is virtual stored procedure, it must have the same
             //projected symbol as its parent.
             cupCommand.setProjectedSymbols(proc.getProjectedSymbols());
+            cupCommand.setResultSetColumns(proc.getResultSetColumns());
     	}
     	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata());
     	return command;
@@ -471,8 +472,8 @@ public class QueryResolver {
 	}
 
 	public static void validateProjectedSymbols(GroupSymbol virtualGroup,
-			List<ElementSymbol> symbols,
-			List<Expression> projectedSymbols)
+			List<? extends Expression> symbols,
+			List<? extends Expression> projectedSymbols)
 			throws QueryValidatorException {
 		if (symbols.size() != projectedSymbols.size()) {
 			 throw new QueryValidatorException(QueryPlugin.Event.TEIID30066, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30066, virtualGroup, symbols.size(), projectedSymbols.size()));

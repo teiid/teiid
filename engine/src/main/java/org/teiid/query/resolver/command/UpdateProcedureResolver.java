@@ -22,6 +22,7 @@
 
 package org.teiid.query.resolver.command;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -64,7 +65,12 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 /**
  */
 public class UpdateProcedureResolver implements CommandResolver {
-
+	
+	public static class StatementNode {
+		CommandStatement cs;
+		List<StatementNode> children;
+	}
+	
     /**
      * @see org.teiid.query.resolver.CommandResolver#resolveCommand(org.teiid.query.sql.lang.Command, TempMetadataAdapter, boolean)
      */
@@ -73,7 +79,7 @@ public class UpdateProcedureResolver implements CommandResolver {
     	
     	if (command instanceof TriggerAction) {
     		TriggerAction ta = (TriggerAction)command;
-            resolveBlock(new CreateProcedureCommand(), ta.getBlock(), ta.getExternalGroupContexts(), metadata);
+            resolveBlock(new CreateProcedureCommand(), ta.getBlock(), ta.getExternalGroupContexts(), metadata, null);
     		return;
     	}
 
@@ -89,12 +95,42 @@ public class UpdateProcedureResolver implements CommandResolver {
         updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         symbols.add(updateCount);
 
-        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);         
-        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
+        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);    
+        StatementNode sn = new StatementNode();
+        resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata, sn);
+        
+        //validate the possible returned resultsets
+        if (procCommand.getResultSetColumns() == null || !procCommand.getResultSetColumns().isEmpty()) {
+            setReturnable(procCommand, sn);
+        }
     }
 
+	private void setReturnable(CreateProcedureCommand procCommand, StatementNode sn) {
+		if (sn.cs != null) {
+			sn.cs.setReturnable(true);
+			//this logic is for designer, which want's to populate a resultset from the proc text
+	        if (procCommand.getResultSetColumns() == null) {
+	        	List<? extends Expression> symbols = sn.cs.getCommand().getProjectedSymbols();
+		        if (sn.cs.getCommand() instanceof StoredProcedure) {
+		        	StoredProcedure sp = (StoredProcedure)sn.cs.getCommand();
+		        	if (sp.isCallableStatement()) {
+		        		symbols = sp.getResultSetColumns();
+		        	}
+		        }
+	        	procCommand.setResultSetColumns(symbols);
+	        	//TODO: what about out parameters
+	        	procCommand.setProjectedSymbols(symbols);
+	        }
+		}
+		if (sn.children != null) {
+			for (StatementNode child : sn.children) {
+				setReturnable(procCommand, child);
+			}
+		}
+	}
+
 	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext externalGroups, 
-                              TempMetadataAdapter metadata)
+                              TempMetadataAdapter metadata, org.teiid.query.resolver.command.UpdateProcedureResolver.StatementNode sn)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
@@ -107,11 +143,11 @@ public class UpdateProcedureResolver implements CommandResolver {
         GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
         
         for (Statement statement : block.getStatements()) {
-            resolveStatement(command, statement, externalGroups, variables, metadata);
+            resolveStatement(command, statement, externalGroups, variables, metadata, sn);
         }
     }
 
-	private void resolveStatement(CreateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata)
+	private void resolveStatement(CreateProcedureCommand command, Statement statement, GroupContext externalGroups, GroupSymbol variables, TempMetadataAdapter metadata, StatementNode sn)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving statement", statement}); //$NON-NLS-1$
 
@@ -123,9 +159,9 @@ public class UpdateProcedureResolver implements CommandResolver {
                 	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                 }
                 ResolverVisitor.resolveLanguageObject(ifCrit, null, externalGroups, metadata);
-            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata);
+            	resolveBlock(command, ifStmt.getIfBlock(), externalGroups, metadata, pushChild(sn));
                 if(ifStmt.hasElseBlock()) {
-                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata);
+                    resolveBlock(command, ifStmt.getElseBlock(), externalGroups, metadata, pushChild(sn));
                 }
                 break;
             case Statement.TYPE_COMMAND:
@@ -168,19 +204,16 @@ public class UpdateProcedureResolver implements CommandResolver {
                         dynCommand.setAsColumns(command.getProjectedSymbols());
                     }
                 }
-                
-                //don't bother using the metadata when it doesn't matter
-                if (command.getResultsCommand() != null && command.getResultsCommand().getType() == Command.TYPE_DYNAMIC) {
-                    DynamicCommand dynamicCommand = (DynamicCommand)command.getResultsCommand();
-                    if (!dynamicCommand.isAsClauseSet()) {
-                        dynamicCommand.setAsColumns(Collections.EMPTY_LIST);
-                    }
-                }
-                
-                if (subCommand.returnsResultSet()) {
-                    //this could be the last select statement, set the projected symbol
-                    //on the virtual procedure command
-                    command.setResultsCommand(subCommand);
+
+                //this could be the last select statement, set the projected symbol
+                //on the virtual procedure command
+                if (subCommand.returnsResultSet() && sn != null) {
+                	updateDynamicAs(sn);
+                    
+            		sn.cs = cmdStmt;
+            		if (sn.children != null) {
+            			sn.children.clear();
+            		}
                 }
 
                 break;
@@ -231,7 +264,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                 	resolveEmbeddedCommand(metadata, externalGroups, container.getCommand());
                 }
                 ResolverVisitor.resolveLanguageObject(whileCrit, null, externalGroups, metadata);
-                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata);
+                resolveBlock(command, whileStmt.getBlock(), externalGroups, metadata, pushChild(sn));
                 break;
             case Statement.TYPE_LOOP:
                 LoopStatement loopStmt = (LoopStatement) statement;
@@ -257,10 +290,36 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 ProcedureContainerResolver.addScalarGroup(groupName, store, externalGroups, symbols, false);
                 
-                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata);
+                resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, pushChild(sn));
                 break;
         }
     }
+
+	private void updateDynamicAs(StatementNode sn) {
+		if (sn.cs != null && sn.cs.getCommand().getType() == Command.TYPE_DYNAMIC) {
+		    DynamicCommand dynamicCommand = (DynamicCommand)sn.cs.getCommand();
+		    if (!dynamicCommand.isAsClauseSet()) {
+		        dynamicCommand.setAsColumns(Collections.EMPTY_LIST);
+		    }
+		}
+		if (sn.children != null) {
+			for (StatementNode child : sn.children) {
+				updateDynamicAs(child);
+			}
+		}
+	}
+
+	private StatementNode pushChild(StatementNode sn) {
+		if (sn != null) {
+			if (sn.children == null) {
+				sn.children = new ArrayList<StatementNode>();
+			}
+			StatementNode child = new StatementNode();
+			sn.children.add(child);
+			sn = child;
+		}
+		return sn;
+	}
 
 	private boolean isAssignable(TempMetadataAdapter metadata, SPParameter param)
 			throws TeiidComponentException, QueryMetadataException {

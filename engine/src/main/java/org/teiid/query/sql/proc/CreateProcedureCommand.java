@@ -22,18 +22,17 @@
 
 package org.teiid.query.sql.proc;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 
@@ -51,11 +50,10 @@ public class CreateProcedureCommand extends Command {
 	private Command userCommand;
 	
     private List projectedSymbols;
+    private List resultSetColumns;
     
     private GroupSymbol virtualGroup;
 
-    //command that returns resultset. For virtual procedure only.
-    private Command resultsCommand;
 	/**
 	 * Constructor for CreateUpdateProcedureCommand.
 	 */
@@ -132,7 +130,10 @@ public class CreateProcedureCommand extends Command {
             copy.setBlock(this.block.clone());
         }
         if (this.projectedSymbols != null) {
-            copy.setProjectedSymbols(new ArrayList(this.projectedSymbols));
+            copy.projectedSymbols = LanguageObject.Util.deepClone(this.projectedSymbols, Expression.class);
+        }
+        if (this.resultSetColumns != null) {
+            copy.resultSetColumns = LanguageObject.Util.deepClone(this.resultSetColumns, Expression.class);
         }
         if (this.virtualGroup != null) {
         	copy.virtualGroup = this.virtualGroup.clone();
@@ -199,21 +200,18 @@ public class CreateProcedureCommand extends Command {
         if(this.projectedSymbols != null){
             return this.projectedSymbols;
         }
-        if(this.resultsCommand == null){
-            //user may have not entered any query yet
-            return Collections.EMPTY_LIST;
-        }
-        List<? extends Expression> symbols = this.resultsCommand.getProjectedSymbols();
-        if (this.resultsCommand instanceof StoredProcedure) {
-        	StoredProcedure sp = (StoredProcedure)this.resultsCommand;
-        	if (sp.isCallableStatement()) {
-        		symbols = sp.getResultSetColumns();
-        	}
-        }
-        setProjectedSymbols(symbols);
-        return this.projectedSymbols;
+        //user may have not entered any query yet
+        return Collections.EMPTY_LIST;
 	}  
-
+	
+	public List getResultSetColumns() {
+		return resultSetColumns;
+	}
+	
+	public void setResultSetColumns(List resultSetColumns) {
+		this.resultSetColumns = resultSetColumns;
+	}
+	
     /**
      * @param projSymbols
      */
@@ -221,20 +219,6 @@ public class CreateProcedureCommand extends Command {
         projectedSymbols = projSymbols;
     }
 
-    /**
-     * @return Command
-     */
-    public Command getResultsCommand() {
-        return resultsCommand;
-    }
-
-    /**
-     * @param command
-     */
-    public void setResultsCommand(Command command) {
-        resultsCommand = command;
-    }
-	
 	/**
 	 * @see org.teiid.query.sql.lang.Command#areResultsCachable()
 	 */

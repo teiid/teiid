@@ -30,7 +30,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -629,7 +629,7 @@ public class TestProcedureProcessor {
                     
         // Create expected results
         List[] expected = new List[] {
-            Arrays.asList(1)};           
+            Arrays.asList("1")};           
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
@@ -804,13 +804,11 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
       }
 
-	private void addProc(TransformationMetadata metadata, String query)
-			throws QueryMetadataException {
+	private void addProc(TransformationMetadata metadata, String query) {
 		addProc(metadata, "sq2", query, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
 	}
 	
-	private void addProc(TransformationMetadata metadata, String name, String query, String[] rsCols, String[] rsTypes, String[] params, String[] paramTypes)
-	throws QueryMetadataException {
+	private void addProc(TransformationMetadata metadata, String name, String query, String[] rsCols, String[] rsTypes, String[] params, String[] paramTypes) {
 		Schema pm1 = metadata.getMetadataStore().getSchema("PM1"); //$NON-NLS-1$
 		pm1.getProcedures().remove(name.toUpperCase());
 		ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("rs1", rsCols, rsTypes);
@@ -837,7 +835,7 @@ public class TestProcedureProcessor {
         procedure.append("IF (mycursor.e2>5) \n"); //$NON-NLS-1$
         procedure.append("VARIABLES.e2_total=VARIABLES.e2_total+mycursor.e2;\n"); //$NON-NLS-1$
         procedure.append("END\n"); //$NON-NLS-1$
-        procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
+        procedure.append("SELECT cast(VARIABLES.e2_total as string);\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
         addProc(metadata, procedure.toString());
@@ -850,10 +848,10 @@ public class TestProcedureProcessor {
     	
         //Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { Integer.valueOf(66)}),  
+            Arrays.asList(new Object[] { "66"}),  
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
-      }
+    }
     
     @Test public void testDynamicCommandWithParameter() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
@@ -919,7 +917,7 @@ public class TestProcedureProcessor {
     	TransformationMetadata metadata = RealMetadataFactory.example1();
         
         addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-				        + "declare object VARIABLES.x; execute string 'SELECT xmlelement(name elem, x)'; select 1; END", new String[] { "e1", "e2" }
+				        + "declare object VARIABLES.x; execute string 'SELECT xmlelement(name elem, x)'; select '1', 2; END", new String[] { "e1", "e2" }
         , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
         
         String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
@@ -995,7 +993,7 @@ public class TestProcedureProcessor {
                                "TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'EXEC pm1.sq2(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq2(''First'')'\" due to: TEIID30347 There is a recursive invocation of group 'pm1.sq2'. Please correct the SQL.", metadata); //$NON-NLS-1$
     }
     
-    @Test public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
+    @Test(expected=QueryPlannerException.class) public void testDynamicCommandIncorrectProjectSymbolCount() throws Exception {
     	//Tests dynamic query with incorrect number of elements   
         TransformationMetadata metadata = RealMetadataFactory.example1();
         
@@ -1009,11 +1007,7 @@ public class TestProcedureProcessor {
 
         String userUpdateStr = "EXEC pm1.sq2('test')"; //$NON-NLS-1$
         
-        FakeDataManager dataMgr = exampleDataManager(metadata);
-
-        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
-    	
-        helpTestProcessFailure(plan, dataMgr, "TEIID30168 Couldn't execute the dynamic SQL command \"EXECUTE IMMEDIATE 'EXEC pm1.sq1(''First'')' AS e1 string, e2 integer\" with the SQL statement \"'EXEC pm1.sq1(''First'')'\" due to: The dynamic sql string contains an incorrect number of elements.", metadata); //$NON-NLS-1$
+        getProcedurePlan(userUpdateStr, metadata);
      }
     
     @Test public void testDynamicCommandPositional() throws Exception {
@@ -1106,7 +1100,7 @@ public class TestProcedureProcessor {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         
         addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                + "execute string 'select e1,e2 from pm5.g3' as e1 string, e2 integer INTO #temp; select * from #temp; END", new String[] { "e1", "e2"}, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.SHORT}, new String[0], new String[0]); //$NON-NLS-1$
+                + "execute string 'select e1,e2 from pm5.g3' as e1 string, e2 integer INTO #temp; select * from #temp; END", new String[] { "e1", "e2"}, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER}, new String[0], new String[0]); //$NON-NLS-1$
         
         String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
         
@@ -1210,7 +1204,7 @@ public class TestProcedureProcessor {
         procedure.append("select e1 into #temp from pm1.g1;\n"); //$NON-NLS-1$
         procedure.append("VARIABLES.e2_total=select count(*) from #temp;\n"); //$NON-NLS-1$
         procedure.append("END\n"); //$NON-NLS-1$
-        procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
+        procedure.append("SELECT cast(VARIABLES.e2_total as string);\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
         addProc(metadata, procedure.toString());
@@ -1223,7 +1217,7 @@ public class TestProcedureProcessor {
         
         //Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { Integer.valueOf(3)}),  
+            Arrays.asList("3"),  
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
@@ -1244,7 +1238,7 @@ public class TestProcedureProcessor {
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("e2_total=e2_total+mycursor.x;"); //$NON-NLS-1$
         procedure.append("END\n"); //$NON-NLS-1$
-        procedure.append("SELECT VARIABLES.e2_total;\n"); //$NON-NLS-1$
+        procedure.append("SELECT cast(VARIABLES.e2_total as string);\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
         addProc(metadata, procedure.toString());
@@ -1257,7 +1251,7 @@ public class TestProcedureProcessor {
         
         //Create expected results
         List[] expected = new List[] {
-            Arrays.asList(new Object[] { Integer.valueOf(76)}),  
+            Arrays.asList("76"),  
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
@@ -1312,7 +1306,7 @@ public class TestProcedureProcessor {
         procedure.append("BEGIN\n"); //$NON-NLS-1$
         procedure.append("create local temporary table t1 (e1 integer);\n"); //$NON-NLS-1$
         procedure.append("create local temporary table T1 (e1 integer);\n"); //$NON-NLS-1$
-        procedure.append("SELECT e1 from t1;\n"); //$NON-NLS-1$
+        procedure.append("SELECT cast(e1 as string) from t1;\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
         addProc(metadata, procedure.toString());
@@ -1339,7 +1333,7 @@ public class TestProcedureProcessor {
         procedure.append("select e1 into t1 from pm1.g1;\n"); //$NON-NLS-1$
         procedure.append("drop table t1;\n"); //$NON-NLS-1$
         procedure.append("drop table t1;\n"); //$NON-NLS-1$
-        procedure.append("SELECT 1;\n"); //$NON-NLS-1$
+        procedure.append("SELECT '1';\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
         addProc(metadata, procedure.toString());
@@ -1350,7 +1344,7 @@ public class TestProcedureProcessor {
 
         ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
         
-        helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataMgr, metadata); 
+        helpTestProcess(plan, new List[] {Arrays.asList("1")}, dataMgr, metadata); 
     }
     
     /**
@@ -1504,7 +1498,7 @@ public class TestProcedureProcessor {
         .append("insert into #temp (e1) values (convert(rand() * 1000, integer));\n") //$NON-NLS-1$
         .append("x = x + 1;\n") //$NON-NLS-1$
         .append("END\n") //$NON-NLS-1$
-        .append("SELECT * FROM #TEMP;\n") //$NON-NLS-1$
+        .append("SELECT cast(e1 as string) FROM #TEMP;\n") //$NON-NLS-1$
         .append("END"); //$NON-NLS-1$
         
         QueryMetadataInterface metadata = createProcedureMetadata(procedure.toString());
@@ -1517,11 +1511,11 @@ public class TestProcedureProcessor {
         
         
         helpTestProcess(plan, new List[] {
-            Arrays.asList(new Object[] {Integer.valueOf(240)}),
-            Arrays.asList(new Object[] {Integer.valueOf(637)})}, dataMgr, metadata);
+            Arrays.asList("240"),
+            Arrays.asList("637")}, dataMgr, metadata);
     }
 
-    private QueryMetadataInterface createProcedureMetadata(String procedure) throws QueryMetadataException {
+    private QueryMetadataInterface createProcedureMetadata(String procedure) {
     	TransformationMetadata metadata = RealMetadataFactory.example1();
     	addProc(metadata, "sq1", procedure, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
         return metadata;
@@ -1589,7 +1583,7 @@ public class TestProcedureProcessor {
         ColumnSet<Procedure> rs2 = RealMetadataFactory.createResultSet("pm1.rs2", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.XML }); //$NON-NLS-1$ //$NON-NLS-2$
         ProcedureParameter rs2p2 = RealMetadataFactory.createParameter("input", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.INTEGER);  //$NON-NLS-1$
         QueryNode sq2n1 = new QueryNode("CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
-                                        + "declare integer VARIABLES.x = proc.input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select convert(y, string); END"); //$NON-NLS-1$ 
+                                        + "declare integer VARIABLES.x = proc.input; declare xml y = SELECT * FROM xmltest.doc9 WHERE context(SupplierID, OrderID)=x OR OrderID='2'; select y; END"); //$NON-NLS-1$ 
         Procedure sq2 = RealMetadataFactory.createVirtualProcedure("proc", pm1, Arrays.asList(rs2p2), sq2n1);  //$NON-NLS-1$
         sq2.setResultSet(rs2);
 
@@ -1734,7 +1728,7 @@ public class TestProcedureProcessor {
         procedure += "         statement. */  "; //$NON-NLS-1$
         procedure += "      VARIABLES.var1 = L1.BCol3;\n"; //$NON-NLS-1$
         procedure += "   END\n"; //$NON-NLS-1$
-        procedure += "   SELECT VARIABLES.Var1 AS e1;\n"; //$NON-NLS-1$
+        procedure += "   SELECT cast(VARIABLES.Var1 as string) AS e1;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = createProcedureMetadata(procedure);
@@ -1742,7 +1736,7 @@ public class TestProcedureProcessor {
         FakeDataManager dataMgr = exampleDataManager(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
 
-        List[] expected = new List[] {Arrays.asList(new Object[] {Integer.valueOf(3)})};
+        List[] expected = new List[] {Arrays.asList("3")};
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
@@ -1776,7 +1770,8 @@ public class TestProcedureProcessor {
         		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
         		"END"; //$NON-NLS-1$
         	
-        QueryMetadataInterface metadata = createProcedureMetadata(proc);
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+    	addProc(metadata, "sq1", proc, new String[] { "e1", "e2", "e3", "e4" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER }, new String[0], new String[0]);
         String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager2(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata);
@@ -1822,7 +1817,8 @@ public class TestProcedureProcessor {
         		"   " + sql + ";" + //$NON-NLS-1$ //$NON-NLS-2$
         		"END"; //$NON-NLS-1$
 
-        QueryMetadataInterface metadata = createProcedureMetadata(proc);
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+    	addProc(metadata, "sq1", proc, new String[] { "e1", "e2", "e3", "e4" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.INTEGER }, new String[0], new String[0]);
         String userQuery = "SELECT * FROM (EXEC pm1.sq1()) as proc"; //$NON-NLS-1$
         FakeDataManager dataMgr = exampleDataManager2(metadata);
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
@@ -1860,7 +1856,7 @@ public class TestProcedureProcessor {
         		"BEGIN " + //$NON-NLS-1$
         		" create local temporary table t1 (e1 string);\n" + //$NON-NLS-1$
                 " select e1 into t1 from pm1.g1;\n" + //$NON-NLS-1$
-                " select e2 from (exec pm1.sq2((select max(e1) from t1))) x;\n" + //$NON-NLS-1$
+                " select cast(e2 as string) from (exec pm1.sq2((select max(e1) from t1))) x;\n" + //$NON-NLS-1$
         		"END"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = createProcedureMetadata(proc);
@@ -1869,7 +1865,7 @@ public class TestProcedureProcessor {
         ProcessorPlan plan = getProcedurePlan(userQuery, metadata, TestOptimizer.getGenericFinder());
 
         List[] expected = new List[] {
-                Arrays.asList( 51 ),
+                Arrays.asList( "51" ),
         };
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
@@ -1909,7 +1905,7 @@ public class TestProcedureProcessor {
         procedure.append("exec pm1.sq2(in1 || 'foo');\n"); //$NON-NLS-1$
         procedure.append("END"); //$NON-NLS-1$
         
-        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"in1"}, new String[] {DataTypeManager.DefaultDataTypes.INTEGER});        
+        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in1"}, new String[] {DataTypeManager.DefaultDataTypes.INTEGER});        
 
         String userUpdateStr = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
         

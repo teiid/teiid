@@ -22,6 +22,8 @@
 
 package org.teiid.query.sql.lang;
 
+import java.util.List;
+
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 
 
@@ -63,6 +65,10 @@ public abstract class ProcedureContainer extends Command implements TargetedComm
     
     public void setUpdateInfo(UpdateInfo updateInfo) {
 		this.updateInfo = updateInfo;
+	}
+
+	public List getResultSetColumns() {
+		return getProjectedSymbols();
 	}
     
 }

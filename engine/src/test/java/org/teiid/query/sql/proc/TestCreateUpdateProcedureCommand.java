@@ -22,27 +22,18 @@
 
 package org.teiid.query.sql.proc;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.query.resolver.TestResolver;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.unittest.RealMetadataFactory;
 
 
 /**
  *
  * @author gchadalavadaDec 9, 2002
  */
-@SuppressWarnings("nls")
-public class TestCreateUpdateProcedureCommand  extends TestCase {
+public class TestCreateUpdateProcedureCommand {
 
-	// ################################## FRAMEWORK ################################
-	
-	public TestCreateUpdateProcedureCommand(String name) { 
-		super(name);
-	}	
-	
 	// ################################## TEST HELPERS ################################	
 
 	public static final CreateProcedureCommand sample1() { 
@@ -59,7 +50,7 @@ public class TestCreateUpdateProcedureCommand  extends TestCase {
 
 	// ################################## ACTUAL TESTS ################################	
 
-	public void testGetBlock() {
+	@Test public void testGetBlock() {
 		CreateProcedureCommand b1 = sample1();
         assertTrue("Incorrect Block on command", b1.getBlock().equals(TestBlock.sample1())); //$NON-NLS-1$
 	}
@@ -97,14 +88,6 @@ public class TestCreateUpdateProcedureCommand  extends TestCase {
         CreateProcedureCommand s1 = new CreateProcedureCommand();
         CreateProcedureCommand s2 = (CreateProcedureCommand)s1.clone();
         UnitTestUtil.helpTestEquivalence(0, s1, s2);
-    }
-    
-    public void testProjectedSymbols() {
-    	CreateProcedureCommand cupc = new CreateProcedureCommand();
-    	StoredProcedure sp = (StoredProcedure)TestResolver.helpResolve("call TEIIDSP9(p1=>1, p2=>?)", RealMetadataFactory.exampleBQTCached());
-    	sp.setCallableStatement(true);
-    	cupc.setResultsCommand(sp);
-    	assertEquals(1, cupc.getProjectedSymbols().size());
     }
     
 }
