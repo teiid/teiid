@@ -730,8 +730,8 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public ResultSet executeStoredProcedure(CallableStatement statement,
-    		TranslatedCommand command, Class<?> returnType) throws SQLException {
-    	ResultSet rs = super.executeStoredProcedure(statement, command, returnType);
+    		List<Argument> preparedValues, Class<?> returnType) throws SQLException {
+    	ResultSet rs = super.executeStoredProcedure(statement, preparedValues, returnType);
     	if (!oracleSuppliedDriver || returnType != RefCursorType.class) {
     		return rs;
     	}

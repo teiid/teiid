@@ -23,26 +23,22 @@ package org.teiid.translator.olap;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.sql.DataSource;
 
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapWrapper;
-import org.teiid.language.Call;
+import org.teiid.language.Argument;
+import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TypeFacility;
 
 @Translator(name="olap", description="A translator for OLAP Cubes")
 public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connection> {
@@ -50,23 +46,13 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
 	public OlapExecutionFactory() {
 		setSourceRequiredForMetadata(false);
+		setSupportsNativeQueries(true);
+		setNativeQueryProcedureName(INVOKE_MDX);
 	}
 	
-	@Override
-	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
-		Procedure p = metadataFactory.addProcedure(INVOKE_MDX);
-		p.setAnnotation("Invokes a XMLA webservice with provided MDX query that returns an XML result"); //$NON-NLS-1$
-
-		// mdx query in xml form
-		ProcedureParameter param = metadataFactory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
-		param.setAnnotation("The MDX query to execute"); //$NON-NLS-1$
-		param.setNullType(NullType.Nullable);
-		metadataFactory.addProcedureResultSetColumn("tuple", TypeFacility.RUNTIME_NAMES.OBJECT, p); //$NON-NLS-1$		
-	}
-    
     @Override
-	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
-    	return new OlapQueryExecution(command, unwrap(connection), executionContext, this);
+   	public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
+    	return new OlapQueryExecution(arguments, command, unwrap(connection), executionContext, this);
 	}    
 
 	private OlapConnection unwrap(Connection conn) throws TranslatorException {

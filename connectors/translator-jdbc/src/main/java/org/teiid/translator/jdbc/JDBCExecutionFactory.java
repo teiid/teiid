@@ -140,6 +140,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		setSupportsInnerJoins(true);
 		setMaxInCriteriaSize(DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(DEFAULT_MAX_DEPENDENT_PREDICATES);
+		setSupportsNativeQueries(true);
 	}
     
 	@Override
@@ -205,6 +206,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     	obtainedConnection(conn);
     	return new JDBCQueryExecution(command, conn, executionContext, this);
     }
+    
+    @Override
+    public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
+    		throws TranslatorException {
+    	//TODO: This is not correct; this should be only called once for connection creation    	
+    	obtainedConnection(conn);
+    	return new JDBCDirectQueryExecution(arguments, command, conn, executionContext, this);
+    }    
     
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
@@ -717,15 +726,14 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
      * stored procedures differently, subclasses should override this method
      * if necessary.
      */
-    public ResultSet executeStoredProcedure(CallableStatement statement, TranslatedCommand command, Class<?> returnType) throws SQLException {
-        List params = command.getPreparedValues();
+    public ResultSet executeStoredProcedure(CallableStatement statement, List<Argument> preparedValues, Class<?> returnType) throws SQLException {
         int index = 1;
         
         if(returnType != null){
             registerSpecificTypeOfOutParameter(statement, returnType, index++);
         }
         
-        Iterator iter = params.iterator();
+        Iterator iter = preparedValues.iterator();
         while(iter.hasNext()){
             Argument param = (Argument)iter.next();
                     

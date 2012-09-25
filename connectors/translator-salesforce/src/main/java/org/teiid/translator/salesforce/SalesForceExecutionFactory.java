@@ -29,6 +29,7 @@ import java.util.List;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -49,6 +50,7 @@ import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.salesforce.execution.DeleteExecutionImpl;
+import org.teiid.translator.salesforce.execution.DirectQueryExecution;
 import org.teiid.translator.salesforce.execution.InsertExecutionImpl;
 import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
@@ -68,6 +70,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setSupportsOrderBy(false);
 		setSupportsOuterJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+		setSupportsNativeQueries(true);
 	}
 	
 	@TranslatorProperty(display="Audit Model Fields", advanced=true)
@@ -113,6 +116,12 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 			throws TranslatorException {
 		return new ProcedureExecutionParentImpl(command, connection, metadata, executionContext);
 	}
+
+	@Override
+	public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
+		 return new DirectQueryExecution(arguments, command, connection, metadata, executionContext);
+	}	
+	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, SalesforceConnection connection) throws TranslatorException {
 		MetadataProcessor processor = new MetadataProcessor(connection,metadataFactory, this);

@@ -35,7 +35,6 @@ import org.olap4j.OlapStatement;
 import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.teiid.language.Argument;
-import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -57,8 +56,10 @@ public class OlapQueryExecution implements ProcedureExecution {
     private CellSetAxis columnsAxis;
     private int colWidth;
     private ListIterator<Position> rowPositionIterator;
+    private String mdxQuery;
     
-	public OlapQueryExecution(Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory) {
+	public OlapQueryExecution(List<Argument> arguments, Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory) {
+		this.mdxQuery = (String) arguments.get(0).getArgumentValue().getValue();;
 		this.command = command;
 		this.connection = connection;
 		this.context = context;
@@ -68,11 +69,7 @@ public class OlapQueryExecution implements ProcedureExecution {
 	@Override
 	public void execute() throws TranslatorException {
 		try {
-			Call procedure = (Call) this.command;
-			List<Argument> arguments = procedure.getArguments();
-			String mdxQuery = (String) arguments.get(0).getArgumentValue().getValue();
 			stmt = this.connection.createStatement();
-			
 			cellSet = stmt.executeOlapQuery(mdxQuery);
 			CellSetAxis rowAxis = this.cellSet.getAxes().get(Axis.ROWS.axisOrdinal());
 			rowPositionIterator = rowAxis.iterator();

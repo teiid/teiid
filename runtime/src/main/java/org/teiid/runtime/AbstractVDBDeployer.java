@@ -45,6 +45,7 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
+import org.teiid.query.metadata.DirectQueryMetadataRepository;
 import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
@@ -76,11 +77,14 @@ public abstract class AbstractVDBDeployer {
 	private MetadataRepository<?, ?> getMetadataRepository(VDBMetaData vdb, ModelMetaData model, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		if (model.getSchemaSourceType() == null) {
 			if (!vdb.isDynamic()) {
+				defaultRepo.setNext(new DirectQueryMetadataRepository());
 				return defaultRepo;
 			}
 			
 			if (model.isSource()) {
-				return new NativeMetadataRepository();
+				NativeMetadataRepository repo =  new NativeMetadataRepository();
+				repo.setNext(new DirectQueryMetadataRepository());
+				return repo;
 			}
 			throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), null));
 		}
@@ -88,7 +92,8 @@ public abstract class AbstractVDBDeployer {
 		MetadataRepository<?, ?> first = null;
 		MetadataRepository<?, ?> current = null;
 		MetadataRepository<?, ?> previous = null;
-		StringTokenizer st = new StringTokenizer(model.getSchemaSourceType(), ","); //$NON-NLS-1$
+		String schemaTypes = model.getSchemaSourceType();
+		StringTokenizer st = new StringTokenizer(schemaTypes, ","); //$NON-NLS-1$
 		while (st.hasMoreTokens()) {
 			String repoType = st.nextToken().trim();
 			current = getMetadataRepository(repoType);
@@ -105,6 +110,12 @@ public abstract class AbstractVDBDeployer {
 			}
 			previous = current;
 			current = null;
+		}
+		
+		// TODO:there is good chance that the instances of metadata factory sharing is not good between models,
+		// may that be for chaining purposes, we should do metadata repository factory model here. 
+		if (model.getModelType() == ModelMetaData.Type.PHYSICAL) {
+			previous.setNext(new DirectQueryMetadataRepository());
 		}
 		return first;
 	}

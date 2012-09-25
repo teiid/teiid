@@ -114,6 +114,14 @@ public class RealMetadataFactory {
         Table lobTable = createPhysicalGroup("LobTbl", lob); //$NON-NLS-1$
         Table library = createPhysicalGroup("LOB_TESTING_ONE", lob); //$NON-NLS-1$
         
+        // add direct query procedure
+        ColumnSet<Procedure> nativeProcResults = createResultSet("bqt1.nativers", new String[] {"tuple"}, new String[] { DataTypeManager.DefaultDataTypes.OBJECT}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter nativeparam = createParameter("param", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        ProcedureParameter vardic = createParameter("varag", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.OBJECT); //$NON-NLS-1$
+        vardic.setVarArg(true);
+        Procedure nativeProc = createStoredProcedure("native", bqt1, Arrays.asList(nativeparam,vardic));  //$NON-NLS-1$ //$NON-NLS-2$
+        nativeProc.setResultSet(nativeProcResults);        
+        
         createElements( library, new String[] { "CLOB_COLUMN", "BLOB_COLUMN", "KEY_EMULATOR" }, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         		new String[] { DataTypeManager.DefaultDataTypes.CLOB, DataTypeManager.DefaultDataTypes.BLOB, DataTypeManager.DefaultDataTypes.INTEGER }); 
 
@@ -1013,6 +1021,13 @@ public class RealMetadataFactory {
         createVirtualProcedure("sqBadDefault", pm1, Arrays.asList(paramBadDefaultIn), sqnBadDefault);  //$NON-NLS-1$
         
         //end case 3281
+        
+        ColumnSet<Procedure> nativeProcResults = createResultSet("pm1.nativers", new String[] {"tuple"}, new String[] { DataTypeManager.DefaultDataTypes.OBJECT}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        ProcedureParameter nativeparam = createParameter("param", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.STRING); //$NON-NLS-1$
+        ProcedureParameter vardic = createParameter("varag", ParameterInfo.IN, DataTypeManager.DefaultDataTypes.OBJECT); //$NON-NLS-1$
+        vardic.setVarArg(true);
+        Procedure nativeProc = createStoredProcedure("native", pm1, Arrays.asList(nativeparam,vardic));  //$NON-NLS-1$ //$NON-NLS-2$
+        nativeProc.setResultSet(nativeProcResults);
         
         ColumnSet<Procedure> rs3 = createResultSet("pm1.rs3", new String[] { "e1", "e2" }, new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         Procedure sp1 = createStoredProcedure("sp1", pm1, null);  //$NON-NLS-1$ //$NON-NLS-2$

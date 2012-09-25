@@ -21,7 +21,8 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -35,9 +36,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.mockito.internal.progress.OngoingStubbing;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.mockito.stubbing.DeprecatedOngoingStubbing;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -100,9 +101,9 @@ public class TestExecutionReuse {
 	@Before public void setup() throws DataNotAvailableException, TranslatorException {
 		execution = Mockito.mock(FakeReusableExecution.class);
 		ec = null;
-		OngoingStubbing stubbing = Mockito.stub(execution.next()).toReturn((List) Arrays.asList((Object)null)).toReturn(null);
+		DeprecatedOngoingStubbing stubbing = Mockito.stub(execution.next()).toReturn((List) Arrays.asList((Object)null)).toReturn(null);
 		for (int i = 1; i < EXEC_COUNT; i++) {
-			stubbing.toReturn((List<Object>) Arrays.asList((Object)null)).toReturn(null);
+			stubbing.toReturn(Arrays.asList((Object)null)).toReturn(null);
 		}
 		Mockito.doAnswer(new Answer<Void>() {
 			@Override

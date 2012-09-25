@@ -64,7 +64,7 @@ public class JDBCProcedureExecution extends JDBCQueryExecution implements Proced
         try{
             //create parameter index map
             CallableStatement cstmt = getCallableStatement(sql);
-            this.results = this.executionFactory.executeStoredProcedure(cstmt, translatedComm, procedure.getReturnType());
+            this.results = this.executionFactory.executeStoredProcedure(cstmt, translatedComm.getPreparedValues(), procedure.getReturnType());
             addStatementWarnings();
         }catch(SQLException e){
              throw new TranslatorException(JDBCPlugin.Event.TEIID11004, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11004, sql));

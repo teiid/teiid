@@ -41,32 +41,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.naming.NamingException;
-import javax.naming.directory.BasicAttribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Exists;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.In;
-import org.teiid.language.Like;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
-import org.teiid.language.NamedTable;
-import org.teiid.language.Not;
-import org.teiid.language.OrderBy;
-import org.teiid.language.ScalarSubquery;
-import org.teiid.language.SearchedCase;
-import org.teiid.language.Select;
-import org.teiid.language.SortSpecification;
-import org.teiid.language.TableReference;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.logging.LogConstants;
@@ -113,7 +91,6 @@ public class IQueryToLdapSearchParser {
 	public LDAPSearchDetails translateSQLQueryToLDAPSearch(Select query) throws TranslatorException {
 			// Parse SELECT symbols.
 			// The columns will be translated into LDAP attributes of interest.
-			ArrayList<BasicAttribute> attributeList = getAttributesFromSelectSymbols(query);
 			ArrayList<Column> elementList = getElementsFromSelectSymbols(query);
 			
 			// Parse FROM table.
@@ -165,14 +142,9 @@ public class IQueryToLdapSearchParser {
 			}
 			
 			// Create Search Details
-			LDAPSearchDetails sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), attributeList, sortKeys, countLimit, elementList);
+			LDAPSearchDetails sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), sortKeys, countLimit, elementList);
 			// Search Details logging
-			try {
-				sd.printDetailsToLog();
-			} catch (NamingException nme) {
-				final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.searchDetailsLoggingError");  //$NON-NLS-1$
-				throw new TranslatorException(msg);
-			}
+			sd.printDetailsToLog();
 			
 			return sd;
 			
@@ -588,7 +560,7 @@ public class IQueryToLdapSearchParser {
     // GHH 20080326 - found that code to fall back on Name if NameInSource
 	// was null wasn't working properly, so replaced with tried and true
 	// code from another custom connector.
-	public String getNameFromElement(Column e) {
+	public static String getNameFromElement(Column e) {
 		String ldapAttributeName = null;
 		ldapAttributeName = e.getNameInSource();
 		if (ldapAttributeName == null || ldapAttributeName.equals("")) { //$NON-NLS-1$
@@ -614,28 +586,6 @@ public class IQueryToLdapSearchParser {
 		return selectElementList;
 	}
 	
-	/** 
-	 * Method to get attribute list from the supplied query
-	 * @param query the supplied Query
-	 * @return the list of attributes
-	 */
-	private ArrayList<BasicAttribute> getAttributesFromSelectSymbols(Select query) {
-		ArrayList<BasicAttribute> ldapAttributeList = new ArrayList<BasicAttribute>();
-			
-		Iterator<DerivedColumn> selectSymbolItr = query.getDerivedColumns().iterator();
-		int i=0;
-		while(selectSymbolItr.hasNext()) {
-			Column e = getElementFromSymbol(selectSymbolItr.next());
-			String ldapAttributeName = this.getNameFromElement(e);
-			Object ldapAttributeClass = e.getJavaType();
-
-			// Store the element's name and class type, so that we know what to look for in the search results.
-			BasicAttribute newAttr = new BasicAttribute(ldapAttributeName, ldapAttributeClass);
-			ldapAttributeList.add(newAttr);
-			i++;
-		}
-		return ldapAttributeList;
-	}
 	
     /**
      * Helper method for getting runtime {@link org.teiid.connector.metadata.runtime.Element} from a

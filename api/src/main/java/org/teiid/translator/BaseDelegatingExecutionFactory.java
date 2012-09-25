@@ -24,6 +24,7 @@ package org.teiid.translator;
 
 import java.util.List;
 
+import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.LanguageFactory;
@@ -451,4 +452,18 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsArrayType() {
 		return delegate.supportsArrayType();
 	}
+	@Override
+	public String getNativeQueryProcedureName() {
+		return delegate.getNativeQueryProcedureName();
+	}	
+	
+	public boolean supportsNativeQueries() {
+		return delegate.supportsNativeQueries();
+	}
+	@Override
+	public ResultSetExecution createDirectExecution(List<Argument> arguments,
+			Command command, ExecutionContext executionContext,
+			RuntimeMetadata metadata, C connection) throws TranslatorException {
+		 return delegate.createDirectExecution(arguments, command, executionContext, metadata, connection);
+	}	
 }

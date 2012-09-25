@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.naming.directory.Attribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
@@ -92,7 +91,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
     	// Get all of the actual values
         String contextName = searchDetails.getContextName();
         String contextFilter = searchDetails.getContextFilter();
-        List attrList = searchDetails.getAttributeList();
+        List attrList = searchDetails.getElementList();
         long countLimit = searchDetails.getCountLimit();
     	int searchScope = searchDetails.getSearchScope();
     	SortKey[] sortKeys = searchDetails.getSortKeys();
@@ -105,7 +104,7 @@ public class TestIQueryToLdapSearchParser extends TestCase {
     	Iterator iter = attrList.iterator();
     	Iterator eIter = expectedAttrNameList.iterator();
     	while(iter.hasNext()&&eIter.hasNext()) {
-			String actualName = ((Attribute)iter.next()).getID();
+			String actualName = IQueryToLdapSearchParser.getNameFromElement((Column)iter.next());
 			String expectedName = (String)eIter.next();
 			assertEquals(actualName, expectedName);
     	}

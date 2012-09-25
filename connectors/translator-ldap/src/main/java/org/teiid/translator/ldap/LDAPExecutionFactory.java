@@ -21,9 +21,12 @@
  */
 package org.teiid.translator.ldap;
 
+import java.util.List;
+
 import javax.naming.ldap.LdapContext;
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.language.Argument;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
@@ -59,6 +62,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public LDAPExecutionFactory() {
 		this.setMaxInCriteriaSize(1000);
 		this.setMaxDependentInPredicates(25); //no spec limit on query size, AD is 10MB for the query
+		setSupportsNativeQueries(true);
 	}
 	
     @TranslatorProperty(display="Default Search Base DN", description="Default Base DN for LDAP Searches")
@@ -98,6 +102,15 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public UpdateExecution createUpdateExecution(Command command,ExecutionContext executionContext, RuntimeMetadata metadata, LdapContext context)
 			throws TranslatorException {
 		return new LDAPUpdateExecution(command, context);
+	}	
+	
+	@Override
+	public ResultSetExecution createDirectExecution(List<Argument> arguments,Command command, ExecutionContext executionContext,RuntimeMetadata metadata, LdapContext context) throws TranslatorException {
+		String query = (String) arguments.get(0).getArgumentValue().getValue();
+		if (query.startsWith("search;")) { //$NON-NLS-1$
+			return new LDAPDirectSearchQueryExecution(arguments, this, executionContext, context);
+		}
+		return new LDAPDirectCreateUpdateDeleteQueryExecution(arguments, this, executionContext, context);
 	}	
 	
 	@Override

@@ -33,6 +33,7 @@ import javax.resource.cci.ConnectionFactory;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.util.ReflectionHelper;
+import org.teiid.language.Argument;
 import org.teiid.language.BatchedUpdates;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -113,8 +114,9 @@ public class ExecutionFactory<F, C> {
 	private int maxInSize = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	private int maxDependentInPredicates = DEFAULT_MAX_IN_CRITERIA_SIZE;
 	private boolean copyLobs;
-	
+	private boolean supportsNativeQueries;
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
+	private String nativeProcedureName = "native"; //$NON-NLS-1$
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -268,6 +270,13 @@ public class ExecutionFactory<F, C> {
      * @return An execution object that can use to execute the command
      */
 	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+		if (command instanceof Call) {
+			Call obj = (Call)command;
+			if (supportsNativeQueries() && obj.getMetadataObject().getName().equals(getNativeQueryProcedureName())) {
+				List<Argument> arguments = obj.getArguments();
+	    		return createDirectExecution(arguments, command, executionContext, metadata, connection);
+			}
+		}
 		if (command instanceof QueryExpression) {
 			return createResultSetExecution((QueryExpression)command, executionContext, metadata, connection);
 		}
@@ -291,6 +300,11 @@ public class ExecutionFactory<F, C> {
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 throw new TranslatorException(DataPlugin.Event.TEIID60001,  DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createUpdateExecution")); //$NON-NLS-1$
 	}   
+	
+	@SuppressWarnings("unused")
+	public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createDirectExecution")); //$NON-NLS-1$
+	}	
 	
     /** 
      * Support indicates connector can accept queries with SELECT DISTINCT
@@ -1035,5 +1049,31 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsArrayType() {
 		return false;
 	}
-
+	
+	/**
+	 * True, if this translator supports execution of source specific commands unaltered through 'native' procedure.
+	 * @return
+	 */
+	@TranslatorProperty(display="Supports Native Queries", description="True, if this translator supports execution of source specific commands unaltered through 'native' procedure", advanced=true)
+	public boolean supportsNativeQueries() {
+		return this.supportsNativeQueries;
+	}
+	
+	public void setSupportsNativeQueries(boolean state) {
+		this.supportsNativeQueries = state;
+	}
+	
+	/**
+	 * Defines the name of the procedure that need to be treated as "native" query processing procedure. This metadata or signature
+	 * of the procedure is defined automatically.
+	 * @return
+	 */
+	@TranslatorProperty(display="Name of the native query", description="The name of the procedure that is considered as the name of the direct query procedure", advanced=true)
+	public String getNativeQueryProcedureName() {
+		return this.nativeProcedureName;
+	}
+	
+	public void setNativeQueryProcedureName(String name) {
+		this.nativeProcedureName = name;
+	}	
 }

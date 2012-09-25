@@ -25,8 +25,6 @@ package org.teiid.translator.ldap;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import javax.naming.NamingException;
-import javax.naming.directory.Attribute;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
@@ -45,7 +43,6 @@ public class LDAPSearchDetails {
 	private String contextName;
 	private int searchScope;
 	private String contextFilter;
-	private ArrayList attributeList;
 	private SortKey[] keys;
 //	private LdapSortKey[] netscapeKeys;
 	// If limit is set to -1, this means no limit (return all rows)
@@ -62,12 +59,11 @@ public class LDAPSearchDetails {
 	 * @param limit
 	 * @param elementList
 	 */
-	public LDAPSearchDetails(String name, int searchScope, String filter, ArrayList attributeList, SortKey[] keys, long limit, ArrayList elementList) {
+	public LDAPSearchDetails(String name, int searchScope, String filter, SortKey[] keys, long limit, ArrayList elementList) {
 
 		this.contextName = name;
 		this.searchScope = searchScope;
 		this.contextFilter = filter;
-		this.attributeList = attributeList;
 		this.keys = keys;
 		this.limit = limit;
 		this.elementList = elementList;
@@ -95,14 +91,6 @@ public class LDAPSearchDetails {
 	 */
 	public String getContextFilter() {
 		return contextFilter;
-	}
-	
-	/**
-	 * get the attribute list
-	 * @return the attribute list
-	 */
-	public ArrayList getAttributeList() {
-		return attributeList;
 	}
 	
 	/**
@@ -150,7 +138,7 @@ public class LDAPSearchDetails {
 	/**
 	 * Print Method for Logging - (Detail level logging)
 	 */
-	public void printDetailsToLog() throws NamingException {
+	public void printDetailsToLog() {
 		// Log Search Scope
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Search context: " + contextName); //$NON-NLS-1$
 		if(searchScope == SearchControls.SUBTREE_SCOPE) {
@@ -163,11 +151,12 @@ public class LDAPSearchDetails {
 		
 		// Log Search Attributes
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR,"Search attributes: "); //$NON-NLS-1$	
-		Iterator itr = this.attributeList.iterator();
+		Iterator itr = this.elementList.iterator();
 		int i = 0;
 		while(itr.hasNext()) {
-			Attribute attr = (Attribute)itr.next();
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Attribute [" + i + "]: " + attr.getID() + " (" +attr.get().toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+			Column attr = (Column)itr.next();
+			String attrName = IQueryToLdapSearchParser.getNameFromElement(attr);
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Attribute [" + i + "]: " + attrName + " (" +attr.toString() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			i++;
 		}
 		
