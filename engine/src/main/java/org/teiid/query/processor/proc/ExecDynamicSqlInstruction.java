@@ -52,6 +52,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -92,6 +93,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 
 	// the metadata for this plan
 	private QueryMetadataInterface metadata;
+	private boolean returnable;
 
 	// The parent command
 	CreateProcedureCommand parentProcCommand;
@@ -101,12 +103,13 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	public ExecDynamicSqlInstruction(
 			CreateProcedureCommand parentProcCommand,
 			DynamicCommand command, QueryMetadataInterface metadata,
-			IDGenerator idGenerator, CapabilitiesFinder capFinder) {
+			IDGenerator idGenerator, CapabilitiesFinder capFinder, boolean returnable) {
 		this.parentProcCommand = parentProcCommand;
 		this.dynamicCommand = command;
 		this.metadata = metadata;
 		this.capFinder = capFinder;
 		this.idGenerator = idGenerator;
+		this.returnable = returnable;
 	}
 
 	/**
@@ -185,7 +188,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 							.createNonRecordingRecord(), procEnv
 							.getContext());
             
-			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan, dynamicCommand.getIntoGroup() != null) {
+			CreateCursorResultSetInstruction inst = new CreateCursorResultSetInstruction(null, commandPlan, dynamicCommand.getIntoGroup() != null?Mode.UPDATE:returnable?Mode.HOLD:Mode.NOHOLD) {
 				@Override
 				public void process(ProcedurePlan procEnv)
 						throws BlockedException, TeiidComponentException,
@@ -316,8 +319,8 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		// do a recursion check
 		// Add group to recursion stack
 		CommandContext context = procEnv.getContext();
-		if (parentProcCommand.getUpdateType() != null) {
-			context.pushCall(parentProcCommand.getUpdateType() + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
+		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
+			context.pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
 		} else {
 			context.pushCall(parentProcCommand.getVirtualGroup().toString());
 		}
@@ -328,7 +331,7 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 	 */
 	public ExecDynamicSqlInstruction clone() {
 		ExecDynamicSqlInstruction clone = new ExecDynamicSqlInstruction(
-				parentProcCommand, dynamicCommand, metadata, idGenerator, capFinder);
+				parentProcCommand, dynamicCommand, metadata, idGenerator, capFinder, returnable);
 		return clone;
 	}
 
@@ -340,6 +343,14 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		PlanNode props = new PlanNode("ExecDynamicSqlInstruction"); //$NON-NLS-1$
 		props.addProperty(PROP_SQL, dynamicCommand.toString()); 
 		return props;
+	}
+	
+	public boolean isReturnable() {
+		return returnable;
+	}
+	
+	public void setReturnable(boolean returnable) {
+		this.returnable = returnable;
 	}
 
 }

@@ -1381,6 +1381,20 @@ public class TestSQLStringVisitor {
 		helpTest(cmdStmt, "SELECT x FROM g;"); //$NON-NLS-1$
     }
     
+    @Test public void testCommandStatement1a() {
+        Query q1 = new Query();
+        Select select = new Select();
+        select.addSymbol(new ElementSymbol("x"));        //$NON-NLS-1$
+        q1.setSelect(select);        
+        From from = new From();
+        from.addGroup(new GroupSymbol("g")); //$NON-NLS-1$
+        q1.setFrom(from);
+            	
+    	CommandStatement cmdStmt =	new CommandStatement(q1);
+    	cmdStmt.setReturnable(false);
+		helpTest(cmdStmt, "SELECT x FROM g WITHOUT RETURN;"); //$NON-NLS-1$
+    }
+    
     @Test public void testCommandStatement2() {
         Delete d1 = new Delete();
         d1.setGroup(new GroupSymbol("g")); //$NON-NLS-1$

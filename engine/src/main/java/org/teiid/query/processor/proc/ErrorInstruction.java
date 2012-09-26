@@ -29,6 +29,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogManager;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.symbol.Expression;
 
 
@@ -85,7 +86,7 @@ public class ErrorInstruction extends ProgramInstruction {
         	return;
         }
         if (value == null) {
-        	throw new TeiidProcessingException();
+        	throw new TeiidProcessingException(QueryPlugin.Event.TEIID31122, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31122));
         }
         throw TeiidSQLException.create((Exception)value);
     }

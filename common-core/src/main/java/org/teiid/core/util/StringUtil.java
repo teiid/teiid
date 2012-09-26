@@ -74,18 +74,34 @@ public final class StringUtil {
      */
     public static final String LINE_SEPARATOR = System.getProperty(LINE_SEPARATOR_PROPERTY_NAME, Constants.NEW_LINE);
 
-    public static final Comparator CASE_INSENSITIVE_ORDER = String.CASE_INSENSITIVE_ORDER;
+    public static final Comparator<String> CASE_INSENSITIVE_ORDER = String.CASE_INSENSITIVE_ORDER;
+    
+    public static final Comparator<String> NULL_SAFE_CASE_INSENSITIVE_ORDER = new Comparator<String>() {
+		@Override
+		public int compare(String o1, String o2) {
+			if (o1 == null) {
+				if (o2 == null) {
+					return 0;
+				}
+				return -1;
+			}
+			if (o2 == null) {
+				return 1;
+			}
+			return String.CASE_INSENSITIVE_ORDER.compare(o1, o2);
+		}
+	};
 
-    public static final Comparator CASE_SENSITIVE_ORDER = new Comparator() {
+    public static final Comparator<String> CASE_SENSITIVE_ORDER = new Comparator<String>() {
         /** 
          * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
          * @since 4.2
          */
-        public int compare(Object o1, Object o2) {
+        public int compare(String o1, String o2) {
             if ( o1 == o2 ) {
                 return 0;
             }
-            return ((String)o1).compareTo((String)o2);
+            return o1.compareTo(o2);
         }
     };
     

@@ -37,7 +37,7 @@ public class CommandStatement extends Statement implements SubqueryContainer {
 
 	// the command this statement represents
 	Command command;
-	private boolean returnable;
+	private boolean returnable = true;
 
 	/**
 	 * Constructor for CommandStatement.

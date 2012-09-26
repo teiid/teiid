@@ -75,11 +75,6 @@ public abstract class Command implements LanguageObject {
 	public static final int TYPE_DELETE = 4;
 
 	/**
-	 * Represents any SQL statement, wrapped as a string
-	 */
-	public static final int TYPE_SQL = 5;
-
-	/**
 	 * Represents a stored procedure command
 	 */
     public static final int TYPE_STORED_PROCEDURE = 6;
@@ -349,4 +344,46 @@ public abstract class Command implements LanguageObject {
     public boolean returnsResultSet() {
         return false;
     }
+    
+    /**
+     * @return null if unknown, empty if results are not returned, or the resultset columns
+     */
+	public List<? extends Expression> getResultSetColumns() {
+		if (returnsResultSet()) {
+			return getProjectedSymbols();
+		}
+		return Collections.emptyList();
+	}
+	
+	//TODO: replace with enum
+	public static String getCommandToken(int commandType) {
+		switch (commandType) {
+		case Command.TYPE_INSERT:
+			return "I"; //$NON-NLS-1$
+		case Command.TYPE_UPDATE:
+			return "U"; //$NON-NLS-1$
+		case Command.TYPE_DELETE:
+			return "D"; //$NON-NLS-1$
+		case Command.TYPE_DROP:
+			return "DT"; //$NON-NLS-1$
+		case Command.TYPE_ALTER_PROC:
+			return "AP"; //$NON-NLS-1$
+		case Command.TYPE_ALTER_TRIGGER:
+			return "AT"; //$NON-NLS-1$
+		case Command.TYPE_ALTER_VIEW:
+			return "AV"; //$NON-NLS-1$
+		case Command.TYPE_CREATE:
+			return "CT"; //$NON-NLS-1$
+		case Command.TYPE_DYNAMIC:
+			return "Dy"; //$NON-NLS-1$
+		case Command.TYPE_QUERY:
+			return "S"; //$NON-NLS-1$
+		case Command.TYPE_STORED_PROCEDURE:
+			return "Sp"; //$NON-NLS-1$
+		case Command.TYPE_UPDATE_PROCEDURE:
+			return "Up"; //$NON-NLS-1$
+		}
+        return "?"; //$NON-NLS-1$
+    }
+
 }

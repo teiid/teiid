@@ -1469,7 +1469,7 @@ public class TestValidator {
                                 .append("BEGIN\n") //$NON-NLS-1$
                                 .append("CREATE LOCAL TEMPORARY TABLE x (column1 string);") //$NON-NLS-1$
                                 .append("execute string 'SELECT e1 FROM pm1.g2' as e1 string INTO x;\n") //$NON-NLS-1$
-                                .append("select column1 from x;\n") //$NON-NLS-1$
+                                .append("select cast(column1 as integer) from x;\n") //$NON-NLS-1$
                                 .append("END\n"); //$NON-NLS-1$
         
         QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();

@@ -29,7 +29,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -45,14 +47,28 @@ import org.teiid.metadata.Table;
 @SuppressWarnings("nls")
 public class TestMetadataUpdates {
 	
-	static Connection connection;
+	Connection connection;
     
     static final String VDB = "metadata";
+
+	private static FakeServer server;
     
-	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);    	
-    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", new DeployVDBParameter(null, getMetadataRepo()));
-    	connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
+	@BeforeClass public static void oneTimeSetUp() throws Exception {
+    	server = new FakeServer(true);    	
+    }
+	
+	@AfterClass public static void oneTimeTearDown() throws Exception {
+		server.stop();
+	}
+	
+	@Before public void setup() throws Exception {
+		server.undeployVDB(VDB);
+		server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/metadata.vdb", new DeployVDBParameter(null, getMetadataRepo()));
+		connection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$		
+	}
+	
+    @After public void tearDown() throws SQLException {
+    	connection.close();
     }
 
 	private static DefaultMetadataRepository getMetadataRepo() {
@@ -92,10 +108,6 @@ public class TestMetadataUpdates {
     	return repo;
 	}
     
-    @AfterClass public static void tearDown() throws SQLException {
-    	connection.close();
-    }
-
     @Test public void testViewMetadataRepositoryMerge() throws Exception {
     	Statement s = connection.createStatement();
     	ResultSet rs = s.executeQuery("select * from vw");
@@ -152,7 +164,6 @@ public class TestMetadataUpdates {
     	assertEquals(2011, rs.getInt(1));
     	
     	assertFalse(s.execute("alter procedure proc as begin select '2012'; end"));
-    	
     	//the sleep is needed to ensure that the plan is invalidated
     	Thread.sleep(100); 
     	

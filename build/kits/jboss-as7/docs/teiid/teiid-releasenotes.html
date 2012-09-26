@@ -57,7 +57,9 @@
   <li>TEIID-2187 the CONSTRAINT keyword is not correctly used in table DDL.  It should be replaced with a comma from scripts to be compatible with 8.2.  If desired, 8.2 now supports the CONSTRAINT keyword to provide a name for each constraint.
   <li>TEIID-2181 system tables no longer contain valid OIDs.  That responsibility has moved to the pg_catalog.
   <li>TEIID-1386 the SQLState and errorCode reported by a TeiidSQLException will typically be from the top level nested SQLException.  If there is also a nested TeiidException, the TeiidSQLException.teiidCode will be set to the TeiidException.getCode value and the TeiidSQLException.errorCode will be set
-  to the integer suffix of the teiidCode if possible.  
+  to the integer suffix of the teiidCode if possible.
+  <li>TEIID-2226 All statements that return result sets that are executed as command statements in a procedure are validated against the expected resultset columns of the procedure.
+      If the statement is not intended to be returnable, WITHOUT RETURN can be added to the end of the statement.
 </ul>
 
 <h4>from 8.0</h4>

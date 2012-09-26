@@ -265,6 +265,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected boolean detectTransactions = true;
 	private Boolean running;
 	private EmbeddedConfiguration config;
+	private SessionAwareCache<CachedResults> rs;
+	private SessionAwareCache<PreparedPlan> ppc;
 	
 	public EmbeddedServer() {
 
@@ -321,8 +323,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 		startVDBRepository();
 
-		SessionAwareCache<CachedResults> rs = new SessionAwareCache<CachedResults>("resultset", config.getCacheFactory(), SessionAwareCache.Type.RESULTSET, config.getMaxResultSetCacheStaleness()); //$NON-NLS-1$
-		SessionAwareCache<PreparedPlan> ppc = new SessionAwareCache<PreparedPlan>("preparedplan", config.getCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
+		rs = new SessionAwareCache<CachedResults>("resultset", config.getCacheFactory(), SessionAwareCache.Type.RESULTSET, config.getMaxResultSetCacheStaleness()); //$NON-NLS-1$
+		ppc = new SessionAwareCache<PreparedPlan>("preparedplan", config.getCacheFactory(), SessionAwareCache.Type.PREPAREDPLAN, 0); //$NON-NLS-1$
 		rs.setTupleBufferCache(bs.getTupleBufferCache());
 		this.dqp.setResultsetCache(rs);
 
@@ -378,6 +380,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				if (replicator != null) {
 					replicator.stop(vdb.getVDB().getAttachment(GlobalTableStore.class));
 				}
+				rs.clearForVDB(name, 1);
+				ppc.clearForVDB(name, 1);
 			}
 
 			@Override
@@ -500,6 +504,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 	
 	public void undeployVDB(String vdbName) {
+		checkStarted();
 		this.repo.removeVDB(vdbName, 1);
 	}
 

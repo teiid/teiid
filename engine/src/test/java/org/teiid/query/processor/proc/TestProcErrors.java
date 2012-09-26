@@ -74,7 +74,20 @@ public class TestProcErrors {
         	assertEquals("abc", tse.getSQLState());
         	assertEquals(1, tse.getErrorCode());
         }
+    }
+    
+    @Test public void testExceptionGroup() throws Exception {
+    	String ddl = 
+    			"create virtual procedure vproc () returns string as begin select 1/0; exception e \"return\" = e.state || ' ' || e.errorcode || ' ' || e.teiidcode || ' ' || cast(e.exception as string) || ' ' || cast(e.chain as string); end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+
+    	String sql = "call vproc()"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         
+    	helpTestProcess(plan, new List[] {Arrays.asList("50000 30328 TEIID30328 org.teiid.jdbc.TeiidSQLException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function / org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /")}, dataManager, tm);
     }
     
     @Test public void testExceptionHandling() throws Exception {
@@ -98,6 +111,40 @@ public class TestProcErrors {
     	TeiidSQLException tse = (TeiidSQLException)plan.getContext().getAndClearWarnings().get(0);
     	assertEquals("caught", tse.getMessage());
     	assertEquals("hello world", tse.getCause().getMessage());
+    }
+    
+    /**
+     * ensures that a processing error is trappable 
+     */
+    @Test public void testExceptionHandlingWithResultSet() throws Exception {
+    	String ddl = 
+    			"create virtual procedure proc2 (x integer) as begin atomic select 1; begin select 1/x; end exception e end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+
+    	String sql = "call proc2(0)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+    	helpTestProcess(plan, new List[] {Arrays.asList(1)}, dataManager, tm);
+    }
+    
+    /**
+     * ensures that the whole result is formed so that the error does not escape the handler
+     */
+    @Test public void testExceptionHandlingWithResultSet1() throws Exception {
+    	String ddl = 
+    			"create virtual procedure proc2 (x integer) as begin create local temporary table t (i integer); insert into t (i) values (1); declare integer y = 0; while (y < 16) begin insert into t (i) select 1 from t; y = y+1; end insert into t (i) values (0); select cast(1/i as string) from t; exception e end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+
+    	String sql = "call proc2(0)"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+    	helpTestProcess(plan, new List[0], dataManager, tm);
     }
 	
 }

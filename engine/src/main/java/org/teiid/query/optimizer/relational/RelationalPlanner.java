@@ -61,6 +61,7 @@ import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
 import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RulePushAggregates;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
@@ -581,13 +582,18 @@ public class RelationalPlanner {
 		if (c == null) {
 			c = QueryResolver.expandCommand(container, metadata, analysisRecord);
 			if (c != null) {
+				if (c instanceof CreateProcedureCommand) {
+					//TODO: find a better way to do this
+					((CreateProcedureCommand)c).setProjectedSymbols(container.getProjectedSymbols());
+				}
 		        Request.validateWithVisitor(new ValidationVisitor(), metadata, c);
 		        metadata.addToMetadataCache(metadataId, cacheString, c.clone());
 			}
 		} else {
 			c = (Command)c.clone();
 			if (c instanceof CreateProcedureCommand) {
-				((CreateProcedureCommand)c).setUserCommand(container);
+				//TODO: find a better way to do this
+				((CreateProcedureCommand)c).setProjectedSymbols(container.getProjectedSymbols());
 			}
 		}
 		if (c != null) {
@@ -1007,6 +1013,30 @@ public class RelationalPlanner {
 				actualMetadata = ((TempMetadataAdapter)metadata).getMetadata();
 			}
 			ProcessorPlan plan = QueryOptimizer.optimizePlan(toPlan, actualMetadata, idGenerator, capFinder, analysisRecord, context);
+			//hack for the optimizer not knowing the containing command when forming the plan
+			if (nestedCommand instanceof StoredProcedure && plan instanceof ProcedurePlan) {
+				StoredProcedure container = (StoredProcedure)nestedCommand;
+				ProcedurePlan pp = (ProcedurePlan)plan;
+				pp.setRequiresTransaction(container.getUpdateCount() > 0);
+        		if (container.returnParameters()) {
+        			List<ElementSymbol> outParams = new LinkedList<ElementSymbol>();
+        			for (SPParameter param : container.getParameters()) {
+						if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+							outParams.add(param.getParameterSymbol());
+						}
+					}
+        			for (SPParameter param : container.getParameters()) {
+						if (param.getParameterType() == SPParameter.INOUT || 
+								param.getParameterType() == SPParameter.OUT) {
+							outParams.add(param.getParameterSymbol());
+						}
+					}
+        			if (outParams.size() > 0) {
+        				pp.setOutParams(outParams);
+        			}
+        		}
+        		pp.setParams(container.getProcedureParameters());
+			}
 		    node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
 		}
 	}

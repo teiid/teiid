@@ -28,12 +28,12 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -52,6 +52,7 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DataTierTupleSource;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
@@ -70,6 +71,7 @@ import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
 import org.teiid.query.processor.relational.SubqueryAwareEvaluator;
 import org.teiid.query.resolver.command.UpdateProcedureResolver;
 import org.teiid.query.sql.ProcedureReservedWords;
@@ -93,6 +95,13 @@ public class ProcedurePlan extends ProcessorPlan {
 		TupleBuffer resultsBuffer;
 	}
 	
+	static ElementSymbol ROWCOUNT =
+		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
+	
+	static {
+		ROWCOUNT.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	}
+	
     private Program originalProgram;
 
 	// State initialized by processor
@@ -113,18 +122,11 @@ public class ProcedurePlan extends ProcessorPlan {
     private List<ElementSymbol> outParams;
     private QueryMetadataInterface metadata;
 
-    private Map<String, CursorState> cursorStates = new HashMap<String, CursorState>();
-
-	static ElementSymbol ROWCOUNT =
-		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
-	
-	static {
-		ROWCOUNT.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-	}
+    private Map<String, CursorState> cursorStates = new TreeMap<String, CursorState>(StringUtil.NULL_SAFE_CASE_INSENSITIVE_ORDER);
 
 	private VariableContext currentVarContext;
 
-    private TupleSource lastTupleSource;
+    private CursorState last;
     
     private List outputElements;
     
@@ -202,11 +204,10 @@ public class ProcedurePlan extends ProcessorPlan {
         evaluatedParams = false;
         cursorStates.clear();
         createVariableContext();
-        lastTupleSource = null;
+        last = null;
         
         done = false;
         currentState = null;
-
         finalTupleSource = null;
         beginBatch = 1;
         batchRows = null;
@@ -377,20 +378,16 @@ public class ProcedurePlan extends ProcessorPlan {
 	            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Executing instruction", inst); //$NON-NLS-1$
 	                inst.process(this);
 	            }
+	        } catch (RuntimeException e) {
+	        	throw e;
+	        } catch (TeiidComponentException e) {
+	        	throw e;
 	        } catch (Exception e) {
-	        	if (e instanceof BlockedException) {
-	        		throw (BlockedException)e;
-	        	}
+	        	//processing or teiidsqlexception
 	        	while (program.getExceptionGroup() == null) {
         			this.pop(false);
 	        		if (this.programs.empty()) {
 	        			//reached the top without a handler, so throw
-        				if (e instanceof RuntimeException) {
-    	        			throw (RuntimeException)e;
-    	        		}
-    	        		if (e instanceof TeiidComponentException) {
-    	        			throw (TeiidComponentException)e;
-    	        		}
     	        		if (e instanceof TeiidProcessingException) {
     	        			throw (TeiidProcessingException)e;
     	        		}
@@ -398,7 +395,6 @@ public class ProcedurePlan extends ProcessorPlan {
 	        		}
         			program = peek();
 	        	}
-        		//assign variables
         		if (program.getExceptionProgram() == null) {
         			this.pop(true);
         			continue;
@@ -419,10 +415,10 @@ public class ProcedurePlan extends ProcessorPlan {
             program.incrementProgramCounter();
 	    }
 
-        if(lastTupleSource == null){
+        if(last == null){
             return CollectionTupleSource.createNullTupleSource();
         }
-        return lastTupleSource;
+        return last.ts;
     }
 
 	private ElementSymbol exceptionSymbol(GroupSymbol gs, int pos) {
@@ -543,11 +539,16 @@ public class ProcedurePlan extends ProcessorPlan {
 		return this.currentVarContext;
     }
 
-    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, boolean keepRs)
+    public void executePlan(ProcessorPlan command, String rsName, Map<ElementSymbol, ElementSymbol> procAssignments, CreateCursorResultSetInstruction.Mode mode)
         throws TeiidComponentException, TeiidProcessingException {
     	
-        CursorState state = this.cursorStates.get(rsName.toUpperCase());
+        CursorState state = this.cursorStates.get(rsName);
         if (state == null) {
+        	if (this.currentState != null && this.currentState.processor.getProcessorPlan() != command) {
+        		//sanity check for non-deterministic paths
+        		removeState(this.currentState);
+        		this.currentState = null;
+        	}
         	if (this.currentState == null) {
 		        //this may not be the first time the plan is being run
 		        command.reset();
@@ -557,16 +558,17 @@ public class ProcedurePlan extends ProcessorPlan {
 		        state = new CursorState();
 		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
 		        state.ts = new BatchIterator(state.processor);
-		        if (procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
+		        if (mode == Mode.HOLD && procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
 		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements().subList(0, state.processor.getOutputElements().size() - procAssignments.size()), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
-		        } else if (this.blockContext != null) {
+		        } else if ((this.blockContext != null || this.programs.peek().isTrappingExceptions()) && (mode == Mode.HOLD || rsName != null)) {
 		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements(), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
 		        }
 	            this.currentState = state;
         	}
-        	//force execution to the first batch
+        	//force execution to the first batch to ensure that the plan is executed in the context of the procedure
         	this.currentState.ts.hasNext();
         	if (procAssignments != null) {
+        		//proc assignments force us to scroll through the entire results and save as we go
             	while (this.currentState.ts.hasNext()) {
             		if (this.currentState.currentRow != null && this.currentState.resultsBuffer != null) {
             			this.currentState.resultsBuffer.addTuple(this.currentState.currentRow.subList(0, this.currentState.resultsBuffer.getSchema().size()));
@@ -583,28 +585,49 @@ public class ProcedurePlan extends ProcessorPlan {
             		int index = this.currentState.processor.getOutputElements().indexOf(entry.getKey());
             		getCurrentVariableContext().setValue(entry.getValue(), DataTypeManager.transformValue(this.currentState.currentRow.get(index), entry.getValue().getType()));
 				}
-            	//no resultset
-            	if (this.currentState.resultsBuffer == null) {
-            		this.currentState.processor.closeProcessing();
-            		this.currentState = null;
-            		return;
-            	}
-            	this.currentState.resultsBuffer.close();
-            	this.currentState.ts = this.currentState.resultsBuffer.createIndexedTupleSource();
-            } else if (this.blockContext != null) {
-            	//process fully in a block transaction
+            } else if (this.currentState.resultsBuffer != null) {
+            	//result should be saved, typically to respect txn semantics
             	while (this.currentState.ts.hasNext()) {
             		List<?> tuple = this.currentState.ts.nextTuple();
         			this.currentState.resultsBuffer.addTuple(tuple);
+            	}	
+            } else if (mode == Mode.UPDATE) {
+        		List<?> t = this.currentState.ts.nextTuple();
+        		if (this.currentState.ts.hasNext()) {
+        			throw new AssertionError("Invalid update count result - more than 1 row returned"); //$NON-NLS-1$
+        		}
+        		removeState(this.currentState);
+        		this.currentState = null;
+        		int rowCount = 0;
+        		if (t != null) {
+        			rowCount = (Integer)t.get(0);
+        		}
+        		getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, rowCount);
+        		return;
+        	} 
+        	if (rsName == null && mode == Mode.NOHOLD) {
+        		//unnamed without hold
+        		//process fully, but don't save
+            	//TODO: could set the rowcount in this case
+            	while (this.currentState.ts.hasNext()) {
+            		this.currentState.ts.nextTuple();
             	}
+            	this.currentState = null;
+            	return;
+        	}
+        	if (this.currentState.resultsBuffer != null) {
+            	//close the results buffer and use a buffer backed tuplesource
             	this.currentState.resultsBuffer.close();
-            	this.currentState.ts = this.currentState.resultsBuffer.createIndexedTupleSource();
-            }
-	        this.cursorStates.put(rsName.toUpperCase(), this.currentState);
+            	this.currentState.ts = this.currentState.resultsBuffer.createIndexedTupleSource(true);
+        	}
+	        CursorState old = this.cursorStates.put(rsName, this.currentState);
+	        if (old != null) {
+	        	removeState(old);
+	        }
 	        //keep a reference to the tuple source
             //it may be the last one
-	        if (keepRs) {
-	        	this.lastTupleSource = this.currentState.ts;
+	        if (mode == Mode.HOLD) {
+	        	this.last = this.currentState;
 	        }
 	        this.currentState = null;
         }
@@ -647,6 +670,7 @@ public class ProcedurePlan extends ProcessorPlan {
     
     public void push(Program program) throws XATransactionException {
     	program.reset(this.getContext().getConnectionId());
+		program.setTrappingExceptions(program.getExceptionGroup() != null || (!this.programs.isEmpty() && this.programs.peek().isTrappingExceptions()));
     	TempTableStore tts = getTempTableStore();
 		getContext().setTempTableStore(program.getTempTableStore());
 		program.getTempTableStore().setParentTempTableStore(tts);
@@ -680,15 +704,13 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
     public List<?> getCurrentRow(String rsName) throws TeiidComponentException {
-        return getCursorState(rsName.toUpperCase()).currentRow;
+        return getCursorState(rsName).currentRow;
     }
 
     public boolean iterateCursor(String rsName)
         throws TeiidComponentException, TeiidProcessingException {
 
-        String rsKey = rsName.toUpperCase();
-
-        CursorState state = getCursorState(rsKey);
+        CursorState state = getCursorState(rsName);
         
         state.currentRow = state.ts.nextTuple();
         return (state.currentRow != null);
@@ -703,15 +725,21 @@ public class ProcedurePlan extends ProcessorPlan {
 	}
 
     public void removeResults(String rsName) {
-        String rsKey = rsName.toUpperCase();
-        CursorState state = this.cursorStates.remove(rsKey);
-        if (state != null) {
+		CursorState state = this.cursorStates.remove(rsName);
+        removeState(state);
+    }
+
+	private void removeState(CursorState state) {
+		if (state != null) {
         	state.processor.closeProcessing();
         	if (state.resultsBuffer != null) {
         		state.resultsBuffer.remove();
         	}
         }
-    }
+        if (state == last) {
+        	last = null;
+        }
+	}
 
     /**
      * Get the schema from the tuple source that
@@ -721,20 +749,14 @@ public class ProcedurePlan extends ProcessorPlan {
      * @throws QueryProcessorException if the list of elements is null
      */
     public List getSchema(String rsName) throws TeiidComponentException {
-
-        // get the tuple source
-        String rsKey = rsName.toUpperCase();
-        
-        CursorState cursorState = getCursorState(rsKey);
+        CursorState cursorState = getCursorState(rsName);
         // get the schema from the tuple source
         List schema = cursorState.processor.getOutputElements();
         return schema;
     }
 
     public boolean resultSetExists(String rsName) {
-        String rsKey = rsName.toUpperCase();
-        boolean exists = this.cursorStates.containsKey(rsKey);
-        return exists;
+        return this.cursorStates.containsKey(rsName);
     }
 
     public CommandContext getContext() {

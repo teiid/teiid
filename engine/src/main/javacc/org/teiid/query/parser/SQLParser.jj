@@ -906,7 +906,7 @@ RaiseStatement errorStatement(ParseInfo info) :
 /*
 name=raise statement
 description=Raises an error or warning with the given message.
-example={code:sql}RAISE SQLEXCEPTION '00A' 'something went wrong'{code}
+example={code:sql}RAISE SQLEXCEPTION 'something went wrong'{code}
 */
 RaiseStatement raiseStatement(ParseInfo info) :
 {
@@ -1187,7 +1187,7 @@ DeclareStatement declareStatement(ParseInfo info) :
     {
         variableID = new ElementSymbol(var);
     }
-    [[<COLON>]<EQ>
+    [<EQ>
      value = assignStatementOperand(info)
     ]
     
@@ -1205,28 +1205,31 @@ DeclareStatement declareStatement(ParseInfo info) :
 /*
 name=assignment statement
 description=Assigns a variable a value in a procedure.
-example={code:sql}x := 'b'{code}
+example={code:sql}x = 'b'{code}
 */
 Statement assignStatement(ParseInfo info) :
 {
     LanguageObject value = null;
     String var = null;
     ElementSymbol elementID = null;
+    boolean returnable=true;
 }
 {
     var = id()
     {
         elementID = new ElementSymbol(var);              
     } 
-    [<COLON>]<EQ>
+    <EQ>
     (value = assignStatementOperand(info) |
-     value = storedProcedure(info, 2) {
+     (value = storedProcedure(info, 2) [(<WITH>|<WITHOUT> {returnable = false;}) <RETURN>]) {
 		StoredProcedure storedProcedure = (StoredProcedure)value;
 	    SPParameter parameter = new SPParameter(1, SPParameter.RETURN_VALUE, "return"); //$NON-NLS-1$
 	    parameter.setExpression(elementID);
 		storedProcedure.setParameter(parameter);  
-		storedProcedure.setCalledWithReturn(true);            
-		return new CommandStatement(storedProcedure);      	    
+		storedProcedure.setCalledWithReturn(true);
+		CommandStatement cs = new CommandStatement(storedProcedure);
+		cs.setReturnable(returnable);
+		return cs;      	    
      }
     )
         
@@ -1265,7 +1268,7 @@ LanguageObject assignStatementOperand(ParseInfo info) :
 
 /*
 name=data statement
-description=A procedure statement that executes a SQL statement.  An update statement can have its update count accessed via the ROWS_UPDATED variable. 
+description=A procedure statement that executes a SQL statement.  An update statement can have its update count accessed via the ROWCOUNT variable. 
 */
 CommandStatement sqlStatement(ParseInfo info) :
 {
@@ -1273,14 +1276,17 @@ CommandStatement sqlStatement(ParseInfo info) :
     String var = null;
     ElementSymbol elementID = null;
     StoredProcedure storedProcedure = null;
+    boolean returnable = true;
 }
 {
     (LOOKAHEAD(2) cmd = userCommand(info) |
      cmd = dynamicCommand(info)
-    )
+    ) [(<WITH>|<WITHOUT> {returnable = false;}) <RETURN>]
   
     {
-    	return new CommandStatement(cmd);
+    	CommandStatement cs = new CommandStatement(cmd);
+    	cs.setReturnable(returnable);
+    	return cs;
     }   
 }
  

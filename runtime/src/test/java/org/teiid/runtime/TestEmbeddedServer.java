@@ -332,7 +332,8 @@ public class TestEmbeddedServer {
 		mmd1.setSchemaSourceType("ddl");
 		mmd1.setSchemaText("create view v as select 1; " +
 				"create virtual procedure proc () options (updatecount 2) as begin select * from v; end; " +
-				"create virtual procedure proc1 () as begin atomic select * from v; end; ");
+				"create virtual procedure proc1 () as begin atomic select * from v; end; " +
+				"create virtual procedure proc2 (x integer) as begin atomic select 1; begin select 1/x; end exception e end;");
 
 		es.deployVDB("test", mmd1);
 		
@@ -365,6 +366,14 @@ public class TestEmbeddedServer {
 		s.execute("set noexec on");
 		s.execute("select 1");
 		assertFalse(s.getResultSet().next());
+		
+		s.execute("set autoCommitTxn off");
+		s.execute("set noexec off");
+		s.execute("call proc2(0)");
+		//verify that the block txn was committed because the exception was caught
+		assertEquals(1, tm.txnHistory.size());
+		txn = tm.txnHistory.remove(0);
+		Mockito.verify(txn).commit();
 	}
 
 }

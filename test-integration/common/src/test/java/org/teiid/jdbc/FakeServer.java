@@ -201,10 +201,6 @@ public class FakeServer extends EmbeddedServer {
 		return this.repo.getLiveVDB(vdbName, 1);
 	}
 	
-	public void undeployVDB(String vdbName) {
-		this.repo.removeVDB(vdbName, 1);
-	}
-	
 	public ConnectionImpl createConnection(String embeddedURL) throws Exception {
 		return getDriver().connect(embeddedURL, null);
 	}

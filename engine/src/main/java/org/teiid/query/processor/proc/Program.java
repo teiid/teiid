@@ -46,6 +46,7 @@ public class Program implements Cloneable, Labeled {
     private boolean startedTxn;
     private String exceptionGroup;
     private Program exceptionProgram;
+    private boolean trappingExceptions = false;
 
 	/**
 	 * Constructor for Program.
@@ -117,6 +118,7 @@ public class Program implements Cloneable, Labeled {
         counter = 0;
         this.tempTables = new TempTableStore(sessionId, TransactionMode.ISOLATE_WRITES);
         this.startedTxn = false;
+        this.trappingExceptions = false;
     }
 
     int getProgramCounter(){
@@ -282,6 +284,14 @@ public class Program implements Cloneable, Labeled {
 	
 	public Program getExceptionProgram() {
 		return exceptionProgram;
+	}
+	
+	public boolean isTrappingExceptions() {
+		return trappingExceptions;
+	}
+	
+	public void setTrappingExceptions(boolean trappingExceptions) {
+		this.trappingExceptions = trappingExceptions;
 	}
         
 }

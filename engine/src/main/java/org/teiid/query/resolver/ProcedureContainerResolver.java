@@ -24,6 +24,7 @@ package org.teiid.query.resolver;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -270,7 +271,6 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		} else if (currentCommand instanceof CreateProcedureCommand) {
 			CreateProcedureCommand cupc = (CreateProcedureCommand)currentCommand;
 			cupc.setVirtualGroup(container);
-
 			if (type == Command.TYPE_STORED_PROCEDURE) {
 				StoredProcedureInfo info = metadata.getStoredProcedureInfoForProcedure(container.getName());
 		        // Create temporary metadata that defines a group based on either the stored proc
@@ -281,15 +281,22 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		        List<ElementSymbol> tempElements = new ArrayList<ElementSymbol>(info.getParameters().size());
 		        boolean[] updatable = new boolean[info.getParameters().size()];
 		        int i = 0;
+		        List<ElementSymbol> rsColumns = Collections.emptyList();
 		        for (SPParameter param : info.getParameters()) {
 		            if(param.getParameterType() != ParameterInfo.RESULT_SET) {
 		                ElementSymbol symbol = param.getParameterSymbol();
 		                tempElements.add(symbol);
 		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
+		            } else {
+		            	rsColumns = param.getResultSetColumns();
 		            }
 		        }
-
 		        ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+		        cupc.setResultSetColumns(rsColumns);
+		        //the relational planner will override this with the appropriate value
+		        cupc.setProjectedSymbols(rsColumns);
+			} else {
+    			cupc.setUpdateType(type);
 			}
 		}
 		

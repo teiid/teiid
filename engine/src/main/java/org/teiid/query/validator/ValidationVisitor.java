@@ -408,11 +408,14 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 
     public void visit(CreateProcedureCommand obj) {
         //check that the procedure does not contain references to itself
-    	if (obj.getUpdateType() == null) {
+    	if (obj.getUpdateType() == Command.TYPE_UNKNOWN) {
 	        if (GroupCollectorVisitor.getGroups(obj,true).contains(obj.getVirtualGroup())) {
 	        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Procedure_has_group_self_reference"),obj); //$NON-NLS-1$
 	        }
-	        this.createProc = obj;
+	        if (obj.getResultSetColumns() != null) {
+	        	//some unit tests bypass setting the columns
+		        this.createProc = obj;
+	        }
     	}
     }
 
@@ -1471,20 +1474,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(CommandStatement obj) {
-    	if (obj.isReturnable() && this.createProc != null) {
-    		List<? extends Expression> symbols = obj.getCommand().getProjectedSymbols();
-	        if (obj.getCommand() instanceof StoredProcedure) {
-	        	StoredProcedure sp = (StoredProcedure)obj.getCommand();
-	        	if (sp.isCallableStatement()) {
-	        		symbols = sp.getResultSetColumns();
-	        	}
-	        }
-    		try {
-				QueryResolver.validateProjectedSymbols(createProc.getVirtualGroup(), createProc.getResultSetColumns(), symbols);
-			} catch (QueryValidatorException e) {
-				handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31121, createProc.getVirtualGroup(), obj, e.getMessage()), obj);
-			}
+    	if (this.createProc == null || this.createProc.getResultSetColumns().isEmpty() || !obj.isReturnable() || !obj.getCommand().returnsResultSet()) {
+    		return;
     	}
+		List<? extends Expression> symbols = obj.getCommand().getResultSetColumns();
+		if (symbols == null && obj.getCommand() instanceof DynamicCommand) {
+			DynamicCommand cmd = (DynamicCommand)obj.getCommand();
+			cmd.setAsColumns(this.createProc.getResultSetColumns());
+			return;
+		}
+		try {
+			QueryResolver.validateProjectedSymbols(createProc.getVirtualGroup(), createProc.getResultSetColumns(), symbols);
+		} catch (QueryValidatorException e) {
+			handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31121, createProc.getVirtualGroup(), obj, e.getMessage()), obj);
+		}
     }
     
     @Override

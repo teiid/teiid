@@ -40,17 +40,21 @@ import org.teiid.query.sql.symbol.ElementSymbol;
  */
 public class CreateCursorResultSetInstruction extends ProgramInstruction {
 	
-	public static final String RS_NAME = "EXECSQL_INSTRUCTION"; //$NON-NLS-1$
+	public enum Mode {
+		UPDATE,
+		HOLD,
+		NOHOLD
+	}
 	
     protected String rsName;
     protected ProcessorPlan plan;
-    private boolean update;
+    private Mode mode;
     private Map<ElementSymbol, ElementSymbol> procAssignments;
     
-    public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, boolean update){
+    public CreateCursorResultSetInstruction(String rsName, ProcessorPlan plan, Mode mode){
         this.rsName = rsName;
         this.plan = plan;
-        this.update = update;
+        this.mode = mode;
     }
     
     public void setProcAssignments(
@@ -60,22 +64,8 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
     
     public void process(ProcedurePlan procEnv)
         throws BlockedException, TeiidComponentException, TeiidProcessingException {
-
-        if(procEnv.resultSetExists(rsName)) {
-            procEnv.removeResults(rsName);
-        }
-        
-        procEnv.executePlan(plan, rsName, procAssignments, !update);
-        
-        if (update) {
-        	boolean hasNext = procEnv.iterateCursor(rsName);
-    		if (hasNext) {
-    			procEnv.getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, procEnv.getCurrentRow(rsName).get(0));
-    		} else {
-    			procEnv.getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
-    		}
-    		procEnv.removeResults(rsName);
-        }
+    	
+        procEnv.executePlan(plan, rsName, procAssignments, mode);
     }
 
     /**
@@ -83,7 +73,7 @@ public class CreateCursorResultSetInstruction extends ProgramInstruction {
      */
     public CreateCursorResultSetInstruction clone(){
         ProcessorPlan clonedPlan = this.plan.clone();
-        CreateCursorResultSetInstruction clone = new CreateCursorResultSetInstruction(this.rsName, clonedPlan, update);
+        CreateCursorResultSetInstruction clone = new CreateCursorResultSetInstruction(this.rsName, clonedPlan, mode);
         clone.setProcAssignments(procAssignments);
         return clone;
     }

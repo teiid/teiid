@@ -125,7 +125,14 @@ public class IfInstruction extends ProgramInstruction {
     }
 
     public String toString() {
-        return "IF INSTRUCTION:"; //$NON-NLS-1$
+    	StringBuffer sb = new StringBuffer("IF INSTRUCTION: "); //$NON-NLS-1$
+    	sb.append(condition);
+    	sb.append("\n").append(ifProgram); //$NON-NLS-1$
+    	if (elseProgram!=null) {
+    		sb.append("\nELSE\n"); //$NON-NLS-1$
+    		sb.append(elseProgram);
+    	}
+    	return sb.toString();
     }
 
     public PlanNode getDescriptionProperties() {

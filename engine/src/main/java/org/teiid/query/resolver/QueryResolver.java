@@ -59,7 +59,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
-import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -102,14 +101,6 @@ public class QueryResolver {
     	Command command = cr.expandCommand(proc, metadata, analysisRecord);
     	if (command == null) {
     		return null;
-    	}
-		if (command instanceof CreateProcedureCommand) {
-    		CreateProcedureCommand cupCommand = (CreateProcedureCommand)command;
-		    cupCommand.setUserCommand(proc);
-    		//if the subcommand is virtual stored procedure, it must have the same
-            //projected symbol as its parent.
-            cupCommand.setProjectedSymbols(proc.getProjectedSymbols());
-            cupCommand.setResultSetColumns(proc.getResultSetColumns());
     	}
     	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata());
     	return command;

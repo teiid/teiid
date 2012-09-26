@@ -38,7 +38,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
-import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidComponentException;
@@ -1107,26 +1106,6 @@ public class TestQueryRewriter {
         helpTestRewriteCriteria("(pm1.g1.e1 = 1 and pm1.g1.e2 = 2) and (pm1.g1.e3 = 1 and pm1.g1.e4 = 2.0e0)", "(pm1.g1.e1 = '1') AND (pm1.g1.e2 = 2) AND (pm1.g1.e3 = TRUE) AND (pm1.g1.e4 = 2.0e0)"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testRewriteWhile() throws Exception {
-        
-        String procedure = "FOR EACH ROW\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n";       //$NON-NLS-1$
-        procedure = procedure + "while (1 = 1)\n"; //$NON-NLS-1$
-        procedure = procedure + "BEGIN\n"; //$NON-NLS-1$
-        procedure = procedure + "Select vm1.g1.e1 from vm1.g1;\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        procedure = procedure + "END\n"; //$NON-NLS-1$
-        
-        String userQuery = "Insert into vm1.g1 (e1, e2) values ('String', 1)"; //$NON-NLS-1$
-
-        try {       
-            getRewritenProcedure(procedure, userQuery, Table.TriggerEvent.INSERT);
-            fail("exception expected"); //$NON-NLS-1$
-        } catch (QueryValidatorException e) {
-            assertEquals("TEIID30367 Infinite loop detected, procedure will not be executed.", e.getMessage()); //$NON-NLS-1$
-        }
-    }
-    
     @Test public void testRewriteWhile1() throws Exception {
         
         String procedure = "FOR EACH ROW\n"; //$NON-NLS-1$
@@ -1194,6 +1173,17 @@ public class TestQueryRewriter {
         procedure1 += "end\n"; //$NON-NLS-1$
         
         String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nBEGIN ATOMIC\nSELECT e1 FROM pm1.g1;\nEND\nEND"; //$NON-NLS-1$
+        
+        helpTestRewriteCommand(procedure1, expected);
+    }
+    
+    @Test public void testExceptionHandling() {
+        String procedure1 = "CREATE virtual PROCEDURE begin "; //$NON-NLS-1$
+        procedure1 += "select 1/0;\n"; //$NON-NLS-1$
+        procedure1 += "exception e\n"; //$NON-NLS-1$
+        procedure1 += "end\n"; //$NON-NLS-1$
+        
+        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /';\nEXCEPTION e\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }

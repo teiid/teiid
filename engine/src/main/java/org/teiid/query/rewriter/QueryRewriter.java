@@ -232,15 +232,13 @@ public class QueryRewriter {
         return command;
 	}
     
-	private Command rewriteUpdateProcedure(CreateProcedureCommand command)
-								 throws TeiidComponentException, TeiidProcessingException{
+	private Command rewriteUpdateProcedure(CreateProcedureCommand command) throws TeiidComponentException {
 		Block block = rewriteBlock(command.getBlock());
         command.setBlock(block);
         return command;
 	}
 
-	private Block rewriteBlock(Block block)
-								 throws TeiidComponentException, TeiidProcessingException{
+	private Block rewriteBlock(Block block) throws TeiidComponentException {
 		List<Statement> statements = block.getStatements();
         List<Statement> newStmts = rewriteStatements(statements);
         block.setStatements(newStmts);
@@ -250,15 +248,23 @@ public class QueryRewriter {
         return block;
 	 }
 
-	private List<Statement> rewriteStatements(List<Statement> statements)
-			throws TeiidComponentException, TeiidProcessingException {
+	private List<Statement> rewriteStatements(List<Statement> statements) throws TeiidComponentException {
 		Iterator<Statement> stmtIter = statements.iterator();
 
 		List<Statement> newStmts = new ArrayList<Statement>(statements.size());
 		// plan each statement in the block
         while(stmtIter.hasNext()) {
 			Statement stmnt = stmtIter.next();
-			rewriteStatement(stmnt, newStmts);
+			try {
+				rewriteStatement(stmnt, newStmts);
+			} catch (TeiidProcessingException e) {
+				/*
+				 * defer the processing of the exception until runtime as there may be an exception handler
+				 */
+				RaiseStatement raise = new RaiseStatement(new Constant(e));
+				newStmts.add(raise);
+				break;
+			}
         }
 		return newStmts;
 	}
@@ -343,9 +349,7 @@ public class QueryRewriter {
                 crit = rewriteCriteria(crit);
                 
                 whileStatement.setCondition(crit);
-                if(crit.equals(TRUE_CRITERIA)) {
-                     throw new QueryValidatorException(QueryPlugin.Event.TEIID30367, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30367));
-                } else if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
+                if(crit.equals(FALSE_CRITERIA) || crit.equals(UNKNOWN_CRITERIA)) {
                     return;
                 } 
                 whileStatement.setBlock(rewriteBlock(whileStatement.getBlock()));
@@ -354,6 +358,9 @@ public class QueryRewriter {
                     return;
                 }
                 break;
+            case Statement.TYPE_COMPOUND:
+            	statement = rewriteBlock((Block) statement);
+            	break;
 		}
 		newStmts.add(statement);
 	}

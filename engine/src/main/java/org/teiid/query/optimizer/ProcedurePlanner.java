@@ -36,6 +36,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.*;
+import org.teiid.query.processor.proc.CreateCursorResultSetInstruction.Mode;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.DynamicCommand;
 import org.teiid.query.sql.lang.SPParameter;
@@ -97,7 +98,7 @@ public final class ProcedurePlanner implements CommandPlanner {
                 
         // create plan from program and initialized environment
         ProcedurePlan plan = new ProcedurePlan(programBlock);
-        
+        plan.setMetadata(metadata);
         plan.setOutputElements(cupc.getProjectedSymbols());
         
         if(debug) {
@@ -231,12 +232,9 @@ public final class ProcedurePlanner implements CommandPlanner {
 				ProcessorPlan commandPlan = cmdStmt.getCommand().getProcessorPlan();                
                 
 				if (command.getType() == Command.TYPE_DYNAMIC){
-					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder );
+					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder, cmdStmt.isReturnable() );
 				}else{
-					instruction = new CreateCursorResultSetInstruction(CreateCursorResultSetInstruction.RS_NAME, commandPlan, 
-							command.getType() == Command.TYPE_INSERT 
-							|| command.getType() == Command.TYPE_UPDATE
-							|| command.getType() == Command.TYPE_DELETE);
+					instruction = new CreateCursorResultSetInstruction(null, commandPlan, (!command.returnsResultSet()&&!(command instanceof StoredProcedure))?Mode.UPDATE:(cmdStmt.isReturnable()&&cmdStmt.getCommand().returnsResultSet())?Mode.HOLD:Mode.NOHOLD);
 					//handle stored procedure calls
 					if (command.getType() == Command.TYPE_STORED_PROCEDURE) {
 						StoredProcedure sp = (StoredProcedure)command;

@@ -22,9 +22,6 @@
 
 package org.teiid.query.optimizer;
 
-import java.util.LinkedList;
-import java.util.List;
-
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryResolverException;
@@ -40,21 +37,17 @@ import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.xml.XMLPlanner;
 import org.teiid.query.processor.ProcessorPlan;
-import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SPParameter;
-import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
-import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -111,14 +104,16 @@ public class QueryOptimizer {
 		switch (command.getType()) {
 		case Command.TYPE_UPDATE_PROCEDURE:
 			CreateProcedureCommand cupc = (CreateProcedureCommand)command;
-			if (cupc.getUserCommand() == null) {
+			if (cupc.getUpdateType() != Command.TYPE_UNKNOWN) {
 				//row update procedure
 				result = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
 			} else {
-				StoredProcedure c = (StoredProcedure)cupc.getUserCommand();
 				Object pid = cupc.getVirtualGroup().getMetadataID();
-				if (c != null) {
-					pid = c.getProcedureID();
+				if (pid instanceof TempMetadataID) {
+					TempMetadataID tid = (TempMetadataID)pid;
+					if (tid.getOriginalMetadataID() != null) {
+						pid = tid.getOriginalMetadataID();
+					}
 				}
 				String fullName = metadata.getFullName(pid);
 				fullName = "procedure cache:" + fullName; //$NON-NLS-1$
@@ -141,34 +136,6 @@ public class QueryOptimizer {
 					context.accessedPlanningObject(id);
 				}
 			}
-	        // propagate procedure parameters to the plan to allow runtime type checking
-	        ProcedureContainer container = (ProcedureContainer)cupc.getUserCommand();
-	        ProcedurePlan plan = (ProcedurePlan)result;
-	        if (container != null) {
-	        	if (container instanceof StoredProcedure) {
-	        		plan.setRequiresTransaction(container.getUpdateCount() > 0);
-	        		StoredProcedure sp = (StoredProcedure)container;
-	        		if (sp.returnParameters()) {
-	        			List<ElementSymbol> outParams = new LinkedList<ElementSymbol>();
-	        			for (SPParameter param : sp.getParameters()) {
-							if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-								outParams.add(param.getParameterSymbol());
-							}
-						}
-	        			for (SPParameter param : sp.getParameters()) {
-							if (param.getParameterType() == SPParameter.INOUT || 
-									param.getParameterType() == SPParameter.OUT) {
-								outParams.add(param.getParameterSymbol());
-							}
-						}
-	        			if (outParams.size() > 0) {
-	        				plan.setOutParams(outParams);
-	        			}
-	        		}
-	        		plan.setParams(sp.getProcedureParameters());
-	        	}
-	            plan.setMetadata(metadata);
-	        }
 	        break;
 		case Command.TYPE_BATCHED_UPDATE:
 			result = BATCHED_UPDATE_PLANNER.optimize(command, idGenerator, metadata, capFinder, analysisRecord, context);

@@ -99,7 +99,7 @@ public final class TriggerActionPlanner {
 		result.setLookupMap(RelationalNode.createLookupMap(query.getProjectedSymbols()));
 		CreateProcedureCommand command = new CreateProcedureCommand(ta.getBlock());
 		command.setVirtualGroup(ta.getView());
-		command.setUpdateType(userCommand.getClass().getSimpleName());
+		command.setUpdateType(userCommand.getType());
 		ProcedurePlan rowProcedure = (ProcedurePlan)QueryOptimizer.optimizePlan(command, metadata, idGenerator, capFinder, analysisRecord, context);
 		result.setRowProcedure(rowProcedure);
 		return result;

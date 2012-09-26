@@ -46,7 +46,7 @@ public class TestAlterValidation {
 	
 	@Test public void testValidateAlterProcedure() {
 		TestValidator.helpValidate("alter procedure spTest8a as begin select 1; end", new String[] {"spTest8a"}, RealMetadataFactory.exampleBQTCached());
-		TestValidator.helpValidate("alter procedure MMSP1 as begin select 1; end", new String[] {"BEGIN\nSELECT 1;\nEND"}, RealMetadataFactory.exampleBQTCached());
+		TestValidator.helpValidate("alter procedure MMSP1 as begin select 1; end", new String[] {"SELECT 1;"}, RealMetadataFactory.exampleBQTCached());
 	}
 	
 }

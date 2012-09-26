@@ -930,7 +930,6 @@ public class TestProcedureProcessor {
         	helpTestProcess(plan, null, dataMgr, metadata);
         	fail("exception expected");
         } catch (QueryProcessingException e) {
-        	assertTrue(e.getCause() instanceof QueryValidatorException);
         }
     }
 
@@ -2056,7 +2055,7 @@ public class TestProcedureProcessor {
     }
     
     @Test public void testNestedBlock() throws Exception {
-    	String ddl = "create virtual procedure proc (z STRING) returns table (x string, y string) as begin declare string x = z; select x; begin select x, x; end end;";
+    	String ddl = "create virtual procedure proc (z STRING) returns table (x string, y string) as begin declare string x = z; select x without return; begin select x, x; end end;";
     	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
         String sql = "call proc('a')"; //$NON-NLS-1$
 

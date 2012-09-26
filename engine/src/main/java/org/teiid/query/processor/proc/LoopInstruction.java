@@ -49,7 +49,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
     private String label;
     
     public LoopInstruction(Program loopProgram, String rsName, ProcessorPlan plan, String label) {
-        super(rsName, plan, false);
+        super(rsName, plan, Mode.NOHOLD);
         this.loopProgram = loopProgram;
         this.label = label;
     }
@@ -105,7 +105,7 @@ public class LoopInstruction extends CreateCursorResultSetInstruction implements
 
     public boolean testCondition(ProcedurePlan procEnv) throws TeiidComponentException, TeiidProcessingException {
         if(!procEnv.resultSetExists(rsName)) {
-            procEnv.executePlan(plan, rsName, null, false);            
+            procEnv.executePlan(plan, rsName, null, Mode.NOHOLD);            
         }
         
         return procEnv.iterateCursor(rsName);

@@ -47,7 +47,6 @@ import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.proc.*;
-import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
@@ -1418,6 +1417,12 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( CommandStatement obj ) {
         visitNode(obj.getCommand());
+        if (!obj.isReturnable()) {
+        	append(SPACE);
+        	append(WITHOUT);
+        	append(SPACE);
+        	append(RETURN);
+        }
         append(";"); //$NON-NLS-1$
     }
 

@@ -102,30 +102,15 @@ public class BatchedUpdateCommand extends Command {
     public String toString() {
         StringBuffer val = new StringBuffer("BatchedUpdate{"); //$NON-NLS-1$
         if (commands != null && commands.size() > 0) {
-            val.append(getCommandToken(commands.get(0)));
+            val.append(getCommandToken(commands.get(0).getType()));
             for (int i = 1; i < commands.size(); i++) {
-                val.append(',').append(getCommandToken(commands.get(i)));
+                val.append(',').append(getCommandToken(commands.get(i).getType()));
             }
         }
         val.append('}');
         return val.toString();
     }
     
-    private char getCommandToken(Command command) {
-        int commandType = command.getType();
-        if (commandType == Command.TYPE_INSERT) {
-            return 'I';
-        } else if (commandType == Command.TYPE_UPDATE) {
-            return 'U';
-        } else if (commandType == Command.TYPE_DELETE) {
-            return 'D';
-        } else if (commandType == Command.TYPE_QUERY) {
-            // SELECT INTO command
-            return 'S';
-        }
-        return '?';
-    }
-
 	public void setVariableContexts(List<VariableContext> variableContexts) {
 		this.variableContexts = variableContexts;
 	}

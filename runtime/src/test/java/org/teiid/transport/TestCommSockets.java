@@ -230,9 +230,10 @@ public class TestCommSockets {
 		assertEquals(2, stats.objectsRead); // handshake response, logon,
 		assertEquals(1, stats.sockets);
 		conn.cleanUp();
+		assertEquals(1, this.service.getActiveSessionsCount());
 		helpEstablishConnection(false, config, p);
 		conn.selectServerInstance(false);
-		assertEquals(2, this.service.getActiveSessions().size());
+		assertEquals(2, this.service.getActiveSessionsCount());
 		assertTrue(conn.isOpen(1000));
 		stats = listener.getStats();
 		assertEquals(7, stats.objectsRead); // ping (pool test), assert identity, ping (isOpen)

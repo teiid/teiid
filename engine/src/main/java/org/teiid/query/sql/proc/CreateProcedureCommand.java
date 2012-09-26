@@ -46,15 +46,12 @@ public class CreateProcedureCommand extends Command {
 	// top level block for the procedure
 	private Block block;
 	
-	// the command the user submitted against the virtual group being updated
-	private Command userCommand;
-	
     private List projectedSymbols;
-    private List resultSetColumns;
+    private List<? extends Expression> resultSetColumns;
     
     private GroupSymbol virtualGroup;
 
-	private String updateType;
+	private int updateType = Command.TYPE_UNKNOWN;
 
 	/**
 	 * Constructor for CreateUpdateProcedureCommand.
@@ -95,22 +92,6 @@ public class CreateProcedureCommand extends Command {
 	public void setBlock(Block block) {
 		this.block = block;
 	}
-
-	/**
-	 * Set the user's command to which this obj which is the subcommand
-	 * @param command The user's command
-	 */
-	public void setUserCommand(Command command) {
-		this.userCommand = command;
-	}
-
-	/**
-	 * Get the user's command to which this obj which is the subcommand
-	 * @return The user's command
-	 */	
-	public Command getUserCommand() {
-		return this.userCommand;	
-	}	
 
     // =========================================================================
     //                  P R O C E S S I N G     M E T H O D S
@@ -207,11 +188,11 @@ public class CreateProcedureCommand extends Command {
         return Collections.EMPTY_LIST;
 	}  
 	
-	public List getResultSetColumns() {
+	public List<? extends Expression> getResultSetColumns() {
 		return resultSetColumns;
 	}
 	
-	public void setResultSetColumns(List resultSetColumns) {
+	public void setResultSetColumns(List<? extends Expression> resultSetColumns) {
 		this.resultSetColumns = resultSetColumns;
 	}
 	
@@ -237,11 +218,12 @@ public class CreateProcedureCommand extends Command {
         this.virtualGroup = virtualGroup;
     }
 
-	public void setUpdateType(String updateType) {
-		this.updateType = updateType;
+	public void setUpdateType(int type) {
+		this.resultSetColumns = Collections.emptyList();
+		this.updateType = type;
 	}
 	
-	public String getUpdateType() {
+	public int getUpdateType() {
 		return updateType;
 	}
 
