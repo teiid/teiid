@@ -461,7 +461,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		return delegate.supportsNativeQueries();
 	}
 	@Override
-	public ResultSetExecution createDirectExecution(List<Argument> arguments,
+	public ProcedureExecution createDirectExecution(List<Argument> arguments,
 			Command command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 return delegate.createDirectExecution(arguments, command, executionContext, metadata, connection);

@@ -118,7 +118,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	}
 
 	@Override
-	public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
 		 return new DirectQueryExecution(arguments, command, connection, metadata, executionContext);
 	}	
 	

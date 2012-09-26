@@ -36,7 +36,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 
@@ -51,7 +51,7 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	}
 	
     @Override
-   	public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
+   	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
     	return new OlapQueryExecution(arguments, command, unwrap(connection), executionContext, this);
 	}    
 

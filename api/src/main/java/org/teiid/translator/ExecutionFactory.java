@@ -302,7 +302,7 @@ public class ExecutionFactory<F, C> {
 	}   
 	
 	@SuppressWarnings("unused")
-	public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 throw new TranslatorException(DataPlugin.Event.TEIID60001, DataPlugin.Util.gs(DataPlugin.Event.TEIID60001, "createDirectExecution")); //$NON-NLS-1$
 	}	
 	

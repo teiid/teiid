@@ -31,6 +31,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
@@ -50,6 +51,10 @@ import org.teiid.translator.jdbc.FunctionModifier;
 @Translator(name="jpa2", description="A translator for JPA2 based entities")
 public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory, EntityManager> {
 	private Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
+	
+	public JPA2ExecutionFactory() {
+		setSupportsNativeQueries(true);
+	}
 	
 	@Override
 	public void start() throws TranslatorException {
@@ -93,6 +98,12 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
 		return new JPQLUpdateExecution(command, executionContext, metadata, connection);
 	}
+	
+	@Override
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
+		 return new JPQLDirectQueryExecution(arguments, command, executionContext, metadata, connection);
+	}	
+	
 	
 	@Override
 	public void getMetadata(MetadataFactory mf, EntityManager em) throws TranslatorException {

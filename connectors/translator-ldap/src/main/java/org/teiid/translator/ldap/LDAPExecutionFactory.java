@@ -33,6 +33,7 @@ import org.teiid.language.Select;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -105,7 +106,7 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	}	
 	
 	@Override
-	public ResultSetExecution createDirectExecution(List<Argument> arguments,Command command, ExecutionContext executionContext,RuntimeMetadata metadata, LdapContext context) throws TranslatorException {
+	public ProcedureExecution createDirectExecution(List<Argument> arguments,Command command, ExecutionContext executionContext,RuntimeMetadata metadata, LdapContext context) throws TranslatorException {
 		String query = (String) arguments.get(0).getArgumentValue().getValue();
 		if (query.startsWith("search;")) { //$NON-NLS-1$
 			return new LDAPDirectSearchQueryExecution(arguments, this, executionContext, context);

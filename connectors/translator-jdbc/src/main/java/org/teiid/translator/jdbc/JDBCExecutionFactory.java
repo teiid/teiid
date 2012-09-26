@@ -208,7 +208,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     }
     
     @Override
-    public ResultSetExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
+    public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
     	//TODO: This is not correct; this should be only called once for connection creation    	
     	obtainedConnection(conn);

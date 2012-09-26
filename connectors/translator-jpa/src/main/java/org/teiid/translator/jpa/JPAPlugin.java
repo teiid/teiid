@@ -40,6 +40,7 @@ public class JPAPlugin {
     	TEIID14004,
     	TEIID14005,
     	TEIID14006,
-    	TEIID14007
+    	TEIID14007,
+    	TEIID14008
     }
 }
