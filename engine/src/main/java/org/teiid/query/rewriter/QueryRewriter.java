@@ -277,12 +277,20 @@ public class QueryRewriter {
 				ifStmt.setCondition(evalCrit);
 				if(evalCrit.equals(TRUE_CRITERIA)) {
 					Block ifblock = rewriteBlock(ifStmt.getIfBlock());
-					newStmts.addAll(ifblock.getStatements());
+					if (ifblock.isAtomic()) {
+						newStmts.add(ifblock);
+					} else {
+						newStmts.addAll(ifblock.getStatements());
+					}
 					return;
 				} else if(evalCrit.equals(FALSE_CRITERIA) || evalCrit.equals(UNKNOWN_CRITERIA)) {
 					if(ifStmt.hasElseBlock()) {
 						Block elseBlock = rewriteBlock(ifStmt.getElseBlock());
-						newStmts.addAll(elseBlock.getStatements());
+						if (elseBlock.isAtomic()) {
+							newStmts.add(elseBlock);
+						} else {
+							newStmts.addAll(elseBlock.getStatements());
+						}
 						return;
 					} 
                     return;
@@ -1186,8 +1194,14 @@ public class QueryRewriter {
 	            case CompareCriteria.LE:    
 	            case CompareCriteria.GE:    
 	            case CompareCriteria.EQ:
+	            	if (leftExpr instanceof Constant) {
+	            		return TRUE_CRITERIA;
+	            	}
 	            	return getSimpliedCriteria(criteria, criteria.getLeftExpression(), true, true);
 	            default:
+	            	if (leftExpr instanceof Constant) {
+	            		return FALSE_CRITERIA;
+	            	}
 	            	return getSimpliedCriteria(criteria, criteria.getLeftExpression(), false, true);
 			}
 		}

@@ -2054,6 +2054,18 @@ public class TestProcedureProcessor {
         List[] expected = new List[] { Arrays.asList("1") }; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataManager, tm);
     }
+    
+    @Test public void testNestedBlock() throws Exception {
+    	String ddl = "create virtual procedure proc (z STRING) returns table (x string, y string) as begin declare string x = z; select x; begin select x, x; end end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+        String sql = "call proc('a')"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { Arrays.asList("a", "a") }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
 
     private static final boolean DEBUG = false;
     

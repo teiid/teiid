@@ -1186,6 +1186,18 @@ public class TestQueryRewriter {
         helpTestRewriteCommand(procedure1, expected);
     }
     
+    @Test public void testRetainAtomic() {
+        String procedure1 = "CREATE virtual PROCEDURE "; //$NON-NLS-1$
+        procedure1 += "if (true)\n"; //$NON-NLS-1$
+        procedure1 += "begin atomic\n"; //$NON-NLS-1$
+        procedure1 += "select e1 from pm1.g1;\n"; //$NON-NLS-1$
+        procedure1 += "end\n"; //$NON-NLS-1$
+        
+        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nBEGIN ATOMIC\nSELECT e1 FROM pm1.g1;\nEND\nEND"; //$NON-NLS-1$
+        
+        helpTestRewriteCommand(procedure1, expected);
+    }
+    
     @Test public void testRewriteDeclare() {
         String procedure1 = "CREATE virtual PROCEDURE  "; //$NON-NLS-1$
         procedure1 += "BEGIN\n"; //$NON-NLS-1$

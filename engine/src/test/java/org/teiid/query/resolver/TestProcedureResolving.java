@@ -192,6 +192,24 @@ public class TestProcedureResolving {
         assertEquals("loopCursor", value.getGroupSymbol().getName()); //$NON-NLS-1$
     }
     
+    @Test(expected=QueryResolverException.class) public void testBlockResolving() throws Exception {
+        StringBuffer proc = new StringBuffer("FOR EACH ROW") //$NON-NLS-1$
+        .append("\nBEGIN") //$NON-NLS-1$
+        //note that this declare takes presedense over the proc INPUTS.e1 and CHANGING.e1 variables
+        .append("\n  declare integer e1 = 1;") //$NON-NLS-1$
+        .append("\n  BEGIN") //$NON-NLS-1$
+        //inside the scope of the loop, an unqualified e1 should resolve to the loop variable group
+        .append("\n    variables.e1 = e2;") //$NON-NLS-1$
+        .append("\n  END") //$NON-NLS-1$
+        .append("\nEND"); //$NON-NLS-1$
+        
+        String userUpdateStr = "UPDATE vm1.g1 SET e1='x'"; //$NON-NLS-1$
+        
+        helpResolveUpdateProcedure(proc.toString(), userUpdateStr,
+                                     Table.TriggerEvent.UPDATE);
+        
+    }
+    
 	// variable resolution, variable used in if statement, variable compared against
 	// different datatype element
     @Test public void testCreateUpdateProcedure4() {

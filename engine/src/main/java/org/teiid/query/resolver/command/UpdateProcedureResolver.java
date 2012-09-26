@@ -316,6 +316,9 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 resolveBlock(command, loopStmt.getBlock(), externalGroups, metadata, pushChild(sn));
                 break;
+            case Statement.TYPE_COMPOUND:
+            	resolveBlock(command, (Block)statement, externalGroups, metadata, sn);
+            	break;
         }
     }
 

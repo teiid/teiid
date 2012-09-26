@@ -31,7 +31,6 @@ import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -318,8 +317,14 @@ public final class ProcedurePlanner implements CommandPlanner {
                 instruction = new WhileInstruction(whileProgram, whileStmt.getCondition(), whileStmt.getLabel());
                 break;
             }
+            case Statement.TYPE_COMPOUND:
+            {
+            	Block block = (Block)statement;
+            	instruction = new BlockInstruction(planBlock(parentProcCommand, block, metadata, debug, idGenerator, capFinder, analysisRecord, context));
+            	break;
+            }
 			default:
-	        	 throw new QueryPlannerException(QueryPlugin.Event.TEIID30243, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30243, stmtType));
+	        	 throw new AssertionError("Error while planning update procedure, unknown statement type encountered: " + statement); //$NON-NLS-1$
 		}
 		return instruction;
     }
