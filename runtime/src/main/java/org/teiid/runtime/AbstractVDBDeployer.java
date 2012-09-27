@@ -40,12 +40,14 @@ import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
@@ -180,6 +182,16 @@ public abstract class AbstractVDBDeployer {
 		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
 			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
 		}
+	}
+	
+	protected MetadataFactory createMetadataFactory(VDBMetaData vdb,
+			ModelMetaData model) {
+		Map<String, Datatype> datatypes = this.getVDBRepository().getRuntimeTypeMap();
+		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
+		factory.setBuiltinDataTypes(this.getVDBRepository().getSystemStore().getDatatypes());
+		factory.getSchema().setPhysical(model.isSource());
+		factory.setParser(new QueryParser()); //for thread safety each factory gets it's own instance.
+		return factory;
 	}
 
 	/**

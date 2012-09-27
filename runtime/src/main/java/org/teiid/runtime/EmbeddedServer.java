@@ -31,7 +31,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -78,7 +77,6 @@ import org.teiid.jdbc.TeiidPreparedStatement;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
@@ -481,10 +479,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount) throws TranslatorException {
-		Map<String, Datatype> datatypes = this.repo.getRuntimeTypeMap();
-		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
-		factory.setBuiltinDataTypes(this.repo.getSystemStore().getDatatypes());
-		factory.getSchema().setPhysical(model.isSource());
+		MetadataFactory factory = createMetadataFactory(vdb, model);
 		
 		ExecutionFactory ef = null;
 		Object cf = null;

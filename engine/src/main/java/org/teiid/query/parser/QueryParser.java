@@ -35,6 +35,7 @@ import org.teiid.connector.DataPlugin;
 import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Parser;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -47,7 +48,7 @@ import org.teiid.query.sql.symbol.Expression;
  * input stream.  Putting multiple queries into the same stream will result
  * in unpredictable and most likely incorrect behavior.</p>
  */
-public class QueryParser {
+public class QueryParser implements Parser {
     
     private static ThreadLocal<QueryParser> QUERY_PARSER = new ThreadLocal<QueryParser>() {
         /** 
@@ -356,15 +357,15 @@ public class QueryParser {
         return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
     }
     
-    public void parseDDL(MetadataFactory factory, String ddl) throws QueryParserException {
+    public void parseDDL(MetadataFactory factory, String ddl) {
     	parseDDL(factory, new StringReader(ddl));
     }
     
-    public void parseDDL(MetadataFactory factory, Reader ddl) throws QueryParserException {
+    public void parseDDL(MetadataFactory factory, Reader ddl) {
     	try {
 			getSqlParser(ddl).parseMetadata(factory);
 		} catch (ParseException e) {
-			throw convertParserException(e);
+			throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID30386, convertParserException(e));
 		}
     	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
     	for (FunctionMethod functionMethod : factory.getSchema().getFunctions().values()) {

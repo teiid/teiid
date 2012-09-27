@@ -28,7 +28,6 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
-import org.teiid.CommandContext;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -37,7 +36,6 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -539,29 +537,15 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;
 	}	
 	
-	private FunctionMethod addFunction(String javaFunction, String name) {
+	private FunctionMethod addFunction(String javaFunction, String name) throws TranslatorException {
 		Method[] methods = FunctionMethods.class.getMethods();
 		for (Method method : methods) {
 			if (!method.getName().equals(javaFunction)) {
 				continue;
 			}
-			String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
-			Class<?>[] params = method.getParameterTypes();
-			String[] paramTypes = new String[params.length];
-			for (int i = 0; i < params.length; i++) {
-				paramTypes[i] = DataTypeManager.getDataTypeName(params[i]);
-			}
-			if (params.length > 0 && params[0] == CommandContext.class) {
-				paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
-			}
-			FunctionMethod func = FunctionMethod.createFunctionMethod(name, name, "pg", returnType, paramTypes); //$NON-NLS-1$
-			setUUID(func);
-			getSchema().addFunction(func);
-			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-			func.setInvocationMethod(javaFunction);
-			func.setPushdown(PushDown.CANNOT_PUSHDOWN);
-			func.setClassloader(classLoader);
-			func.setInvocationClass(FunctionMethods.class.getName());
+			FunctionMethod func = addFunction(name, method);
+			func.setCategory("pg"); //$NON-NLS-1$
+			func.setDescription(name);
 			return func;
 		}
 		throw new AssertionError("Could not find function"); //$NON-NLS-1$

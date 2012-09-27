@@ -22,15 +22,21 @@
 
 package org.teiid.metadata;
 
+import java.io.Reader;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
+import org.teiid.CommandContext;
 import org.teiid.connector.DataPlugin;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
@@ -56,6 +62,7 @@ public class MetadataFactory implements Serializable {
 	private Schema schema = new Schema();
 	private String idPrefix; 
 	private int count;
+	private transient Parser parser;
 	
 	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties importProperties, String rawMetadata) {
 		this.vdbName = vdbName;
@@ -400,6 +407,48 @@ public class MetadataFactory implements Serializable {
 	}
 	
 	/**
+	 * Adds a non-pushdown function based upon the given {@link Method}.
+	 * @param name
+	 * @param method
+	 * @return
+	 * @throws TranslatorException
+	 */
+	public FunctionMethod addFunction(String name, Method method) throws TranslatorException {
+		String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
+		Class<?>[] params = method.getParameterTypes();
+		String[] paramTypes = new String[params.length];
+		boolean nullOnNull = false;
+		for (int i = 0; i < params.length; i++) {
+			Class<?> clazz = params[i];
+			if (clazz.isPrimitive()) {
+				nullOnNull = true;
+				if      ( clazz == Boolean.TYPE   ) clazz = Boolean.class;
+	            else if ( clazz == Character.TYPE ) clazz = Character.class;
+	            else if ( clazz == Byte.TYPE      ) clazz = Byte.class;
+	            else if ( clazz == Short.TYPE     ) clazz = Short.class;
+	            else if ( clazz == Integer.TYPE   ) clazz = Integer.class;
+	            else if ( clazz == Long.TYPE      ) clazz = Long.class;
+	            else if ( clazz == Float.TYPE     ) clazz = Float.class;
+	            else if ( clazz == Double.TYPE    ) clazz = Double.class;
+			}
+			paramTypes[i] = DataTypeManager.getDataTypeName(clazz);
+		}
+		if (params.length > 0 && params[0] == CommandContext.class) {
+			paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
+		}
+		FunctionMethod func = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
+		setUUID(func);
+		getSchema().addFunction(func);
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		func.setInvocationMethod(method.getName());
+		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
+		func.setClassloader(classLoader);
+		func.setInvocationClass(method.getDeclaringClass().getName());
+		func.setNullOnNull(nullOnNull);
+		return func;
+	}
+	
+	/**
 	 * Set to false to disable correcting column and other names to be valid Teiid names.
 	 * @param autoCorrectColumnNames
 	 */
@@ -422,6 +471,12 @@ public class MetadataFactory implements Serializable {
 		return store;
 	}
 	
+	/**
+	 * Set the {@link Schema} to a different instance.  This is typically called
+	 * in special situations where the {@link MetadataFactory} logic is not used
+	 * to construct the {@link Schema}.
+	 * @param schema
+	 */
 	public void setSchema(Schema schema) {
 		this.schema = schema;
 	}
@@ -502,5 +557,22 @@ public class MetadataFactory implements Serializable {
 	 */
 	public Map<String, Datatype> getBuiltinDataTypes() {
 		return builtinDataTypes;
+	}
+	
+	/**
+	 * Parses, but does not close, the given {@link Reader} into this {@link MetadataFactory}
+	 * @param ddl
+	 * @throws ParseException
+	 */
+	public void parse(Reader ddl) throws ParseException {
+		this.parser.parseDDL(this, ddl);
+	}
+	
+	public void setParser(Parser parser) {
+		this.parser = parser;
+	}
+	
+	public Parser getParser() {
+		return parser;
 	}
 }

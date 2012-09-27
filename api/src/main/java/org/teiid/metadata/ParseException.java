@@ -19,22 +19,16 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.query.metadata;
 
-import java.io.StringReader;
+package org.teiid.metadata;
 
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.TranslatorException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.BundleUtil.Event;
 
-public class DDLMetadataRepository extends BaseMetadataRepository {
-	
-	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
-		if (factory.getRawMetadata() != null) {
-			factory.parse(new StringReader(factory.getRawMetadata()));
-		}
-		super.loadMetadata(factory, executionFactory, connectionFactory);
-	}	
+public class ParseException extends TeiidRuntimeException {
+	private static final long serialVersionUID = -7889770730039591817L;
 
+	public ParseException(Event event, Throwable cause) {
+		super(event, cause);
+	}
 }

@@ -53,10 +53,10 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.CompositeVDB;
@@ -69,8 +69,8 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -361,10 +361,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					cached = true;
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} else {
-					factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
-					factory.setBuiltinDataTypes(builtin);
-					factory.getSchema().setPhysical(model.isSource());
-					
+					factory = createMetadataFactory(vdb, model);
 					ExecutionFactory ef = null;
 					Object cf = null;
 					

@@ -34,6 +34,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
@@ -64,6 +65,7 @@ public class TestMetadataValidator {
 		
 		DDLMetadataRepository repo = new DDLMetadataRepository();
 		MetadataFactory mf = new MetadataFactory("myVDB",1, modelName, TestDDLParser.getDataTypes(), new Properties(), ddl);
+		mf.setParser(QueryParser.getQueryParser());
 		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		mf.getSchema().setPhysical(physical);
 		repo.loadMetadata(mf, null, null);

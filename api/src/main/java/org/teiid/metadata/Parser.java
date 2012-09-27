@@ -19,22 +19,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.query.metadata;
 
-import java.io.StringReader;
+package org.teiid.metadata;
 
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.TranslatorException;
+import java.io.Reader;
 
-public class DDLMetadataRepository extends BaseMetadataRepository {
+public interface Parser {
 	
-	@Override
-	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
-		if (factory.getRawMetadata() != null) {
-			factory.parse(new StringReader(factory.getRawMetadata()));
-		}
-		super.loadMetadata(factory, executionFactory, connectionFactory);
-	}	
-
+	/**
+	 * Parses the given {@link Reader} into the {@link MetadataFactory}.
+	 * The {@link Reader} will not be closed by this call.
+	 * @param factory
+	 * @param ddl
+	 * @throws ParseException
+	 */
+	void parseDDL(MetadataFactory factory, Reader ddl) throws ParseException;
 }
