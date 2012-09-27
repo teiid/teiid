@@ -1170,7 +1170,7 @@ IfStatement ifStatement(ParseInfo info) :
 /*
 name=declare statement
 description=A procedure declaration statement that creates a variable and optionally assigns a value.
-example={code:sql}DECLARE STRING x := 'a'{code}
+example={code:sql}DECLARE STRING x = 'a'{code}
 */
 DeclareStatement declareStatement(ParseInfo info) :
 {
