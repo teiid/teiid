@@ -275,6 +275,11 @@ public class TestEmbeddedServer {
 		
 		s.execute("update \"my-view\" set \"my-column\" = 'a'");
 		assertEquals(2, s.getUpdateCount());
+		
+		es.deployVDB("empty");
+		c = es.getDriver().connect("jdbc:teiid:empty", null);
+		s = c.createStatement();
+		s.execute("select * from tables");
 	}
 	
 	@Test(expected=VirtualDatabaseException.class) public void testDeploymentError() throws Exception {

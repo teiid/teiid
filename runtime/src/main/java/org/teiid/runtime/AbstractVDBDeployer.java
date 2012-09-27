@@ -44,8 +44,8 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.DDLMetadataRepository;
-import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
+import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
@@ -138,6 +138,10 @@ public abstract class AbstractVDBDeployer {
 			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {
 				loadCount.incrementAndGet();
 			}
+		}
+		if (loadCount.get() == 0) {
+			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
+			return;
 		}
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			MetadataRepository metadataRepository = model.getAttachment(MetadataRepository.class);
