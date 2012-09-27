@@ -95,7 +95,7 @@ public class SessionServiceImpl implements SessionService {
 		long currentTime = System.currentTimeMillis();
 		for (SessionMetadata info : sessionCache.values()) {
 			try {
-    			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 5) {
+    			if (!info.isEmbedded() && currentTime - info.getLastPingTime() > ServerConnection.PING_INTERVAL * 3) {
     				LogManager.logInfo(LogConstants.CTX_SECURITY, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40007, info.getSessionId()));
     				closeSession(info.getSessionId());
     			} else if (sessionExpirationTimeLimit > 0 && currentTime - info.getCreatedTime() > sessionExpirationTimeLimit) {
@@ -389,7 +389,7 @@ public class SessionServiceImpl implements SessionService {
         	public void run() {
         		monitorSessions();
         	}
-        }, 0, ServerConnection.PING_INTERVAL * 5);
+        }, ServerConnection.PING_INTERVAL * 3, ServerConnection.PING_INTERVAL * 2);
 	}
 
 	public void stop(){

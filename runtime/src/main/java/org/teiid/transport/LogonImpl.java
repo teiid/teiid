@@ -244,6 +244,11 @@ public class LogonImpl implements ILogon {
 
 	@Override
 	public void assertIdentity(SessionToken checkSession) throws InvalidSessionException, TeiidComponentException {
+		if (checkSession == null) {
+			//disassociate
+			this.updateDQPContext(new SessionMetadata());
+			return;
+		}
 		SessionMetadata sessionInfo = null;
 		try {
 			sessionInfo = this.service.validateSession(checkSession.getSessionID());
