@@ -128,7 +128,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(30, translators.size());
+		assertEquals(33, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		

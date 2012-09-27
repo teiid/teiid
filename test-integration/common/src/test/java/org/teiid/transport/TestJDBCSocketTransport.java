@@ -186,8 +186,8 @@ public class TestJDBCSocketTransport {
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		p.setProperty("org.teiid.sockets.soTimeout", "50");
-		p.setProperty("org.teiid.sockets.SynchronousTtl", "50");
+		p.setProperty("org.teiid.sockets.soTimeout", "200");
+		p.setProperty("org.teiid.sockets.SynchronousTtl", "100");
 		ConnectorManagerRepository cmr = server.getConnectorManagerRepository();
 		AutoGenDataService agds = new AutoGenDataService() {
 			@Override
@@ -196,7 +196,7 @@ public class TestJDBCSocketTransport {
 				return null;
 			}
 		};
-		agds.setSleep(100);
+		agds.setSleep(500); //wait longer than the synch ttl/soTimeout, we should still succeed
 		cmr.addConnectorManager("source", agds);
 		try {
 			conn = td.connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);
