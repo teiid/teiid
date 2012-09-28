@@ -31,7 +31,6 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
@@ -101,7 +100,6 @@ public class MapCacheExecutionFactory extends ObjectExecutionFactory {
 	   @Override
 		public void getMetadata(MetadataFactory metadataFactory, ObjectConnection conn)
 				throws TranslatorException {
-	 		JavaBeanMetadataProcessor processor = new JavaBeanMetadataProcessor();
-			processor.getMetadata(metadataFactory, this);
+
 		}
 }

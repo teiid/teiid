@@ -32,7 +32,6 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.object.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
@@ -170,12 +169,7 @@ public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFact
 	   @Override
 		public void getMetadata(MetadataFactory metadataFactory, ObjectConnection conn)
 				throws TranslatorException {
-		   if (this.isFullTextSearchingSupported()) {
-			   
-		   } else {
-			   JavaBeanMetadataProcessor processor = new JavaBeanMetadataProcessor();
-			   processor.getMetadata(metadataFactory, this);
-		   }
+
 		}
 	
 
