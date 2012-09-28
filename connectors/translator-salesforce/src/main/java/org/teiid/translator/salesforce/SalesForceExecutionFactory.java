@@ -70,7 +70,6 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		setSupportsOrderBy(false);
 		setSupportsOuterJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
-		setSupportsNativeQueries(true);
 	}
 	
 	@TranslatorProperty(display="Audit Model Fields", advanced=true)

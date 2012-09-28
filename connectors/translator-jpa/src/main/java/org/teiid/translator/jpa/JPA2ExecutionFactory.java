@@ -52,10 +52,6 @@ import org.teiid.translator.jdbc.FunctionModifier;
 public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory, EntityManager> {
 	private Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	
-	public JPA2ExecutionFactory() {
-		setSupportsNativeQueries(true);
-	}
-	
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
