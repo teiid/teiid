@@ -27,19 +27,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.naming.Context;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.mockito.Mock;
 import org.teiid.language.Select;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
@@ -110,6 +117,30 @@ public class TestMapCacheKeySearch extends BasicSearchTest {
 		
 		exec.close();
 		return rows;
+	}
+
+	@Test public void testGetMetadata() throws Exception {
+		
+		Map dts = SystemMetadata.getInstance().getSystemStore().getDatatypes();
+
+		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  dts, new Properties(), null);
+		
+		MapCacheExecutionFactory factory = new MapCacheExecutionFactory() {
+			
+		};
+		
+		factory.setCacheJndiName(JNDI_NAME);
+		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
+		factory.start();
+		
+		factory.getMetadata(mfactory, null);
+		
+		Map<String, Table> tables = mfactory.getSchema().getTables();
+		for (Iterator<Table> it=tables.values().iterator(); it.hasNext();) {
+			Table t = it.next();
+			System.out.println(t.getName() + " - " + (t.getSelectTransformation() != null ? t.getSelectTransformation() : t.getSQLString()));
+		}
+
 	}
 
 	

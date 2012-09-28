@@ -21,11 +21,10 @@
  */
 package org.teiid.translator.object.search;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.language.Select;
 import org.teiid.translator.object.ObjectExecutionFactory;
@@ -70,6 +69,7 @@ public class TestBasicKeySearchCriteria {
 		
 	}
 	
+	@Ignore(value="Or is unnecessary as the optimizer will use IN and it was not implemented correctly (the results were not cumulative and we have to restict pushdown support of comparisions to only the primary key as no post filtering is performed")
 	@Test public void test5Equals() throws Exception {
 
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade where Trade_Object.Trade.Name = 'MyName' and (Trade_Object.Trade.TradeId = '2' or  Trade_Object.Trade.Settled = 'true') or (Trade_Object.Trade.Settled = 'false' and Trade_Object.Trade.TradeId = 3) "); //$NON-NLS-1$
@@ -78,7 +78,6 @@ public class TestBasicKeySearchCriteria {
 		validateSearchCriteria(criteria.getCriterion(), 5, false, true);
 	}		
 
-	
 	@Test public void testQueryIncludeLegsNoCriteria() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"); //$NON-NLS-1$
 
@@ -141,7 +140,6 @@ public class TestBasicKeySearchCriteria {
 			assertNotNull(criteria.getColumn());
 			assertNotNull(criteria.getField());
 			assertNotNull(criteria.getOperator());
-			assertNotNull(criteria.getOperatorString());
 			assertNotNull(criteria.getTableName());
 			assertNotNull(criteria.getRuntimeType());
 			assertNotNull(criteria.getValue());

@@ -31,16 +31,7 @@ import org.infinispan.Cache;
 import org.infinispan.query.CacheQuery;
 import org.infinispan.query.Search;
 import org.infinispan.query.SearchManager;
-import org.teiid.language.AndOr;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Exists;
-import org.teiid.language.Expression;
-import org.teiid.language.In;
-import org.teiid.language.Like;
-import org.teiid.language.Literal;
-import org.teiid.language.Select;
+import org.teiid.language.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
@@ -64,7 +55,7 @@ public final class LuceneSearch   {
 			throws TranslatorException {
 		
 		SearchManager searchManager = Search
-				.getSearchManager((Cache) connection.getCache() );
+				.getSearchManager((Cache<?, ?>) connection.getCache() );
 
 		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(
 				connection.getFactory().getRootClass()).get();
@@ -145,7 +136,7 @@ public final class LuceneSearch   {
 
 			default:
 				final String msg = ObjectPlugin.Util
-						.getString("LuceneSearch.invalidOperator", new Object[] { op, "And, Or" }); //$NON-NLS-1$
+						.getString("LuceneSearch.invalidOperator", new Object[] { op, "And, Or" }); //$NON-NLS-1$ //$NON-NLS-2$
 				throw new TranslatorException(msg);
 			}
 
@@ -179,10 +170,10 @@ public final class LuceneSearch   {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing Comparison criteria."); //$NON-NLS-1$
-		Comparison.Operator op = ((Comparison) obj).getOperator();
+		Comparison.Operator op = obj.getOperator();
 
-		Expression lhs = ((Comparison) obj).getLeftExpression();
-		Expression rhs = ((Comparison) obj).getRightExpression();
+		Expression lhs = obj.getLeftExpression();
+		Expression rhs = obj.getRightExpression();
 
 		// joins between the objects in the same cache is not usable
 		if ((lhs instanceof ColumnReference && rhs instanceof ColumnReference)
@@ -231,7 +222,7 @@ public final class LuceneSearch   {
 
 		default:
 			final String msg = ObjectPlugin.Util
-					.getString("LuceneSearch.invalidOperator", new Object[] { op, "NE, EQ, GT, LT" }); //$NON-NLS-1$
+					.getString("LuceneSearch.invalidOperator", new Object[] { op, "NE, EQ, GT, LT" }); //$NON-NLS-1$ //$NON-NLS-2$
 			throw new TranslatorException(msg);
 		}
 		return true;
@@ -241,11 +232,11 @@ public final class LuceneSearch   {
 	public static boolean visit(In obj, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) throws TranslatorException {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
-		Expression lhs = ((In) obj).getLeftExpression();
+		Expression lhs = obj.getLeftExpression();
 
 		Column mdIDElement = ((ColumnReference) lhs).getMetadataObject();
 
-		List<Expression> rhsList = ((In) obj).getRightExpressions();
+		List<Expression> rhsList = obj.getRightExpressions();
 		boolean createdQuery = false;
 		for (Expression expr : rhsList) {
 
@@ -259,8 +250,8 @@ public final class LuceneSearch   {
 				createdQuery = true;
 			} else {
 				String msg = ObjectPlugin.Util.getString(
-						"LuceneSearch.Unsupported_expression",
-						new Object[] { expr, "IN" });
+						"LuceneSearch.Unsupported_expression", //$NON-NLS-1$
+						new Object[] { expr, "IN" }); //$NON-NLS-1$
 				throw new TranslatorException(msg);
 			}
 		}
@@ -271,8 +262,8 @@ public final class LuceneSearch   {
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 				"Parsing LIKE criteria."); //$NON-NLS-1$
 
-		Expression lhs = ((Like) obj).getLeftExpression();
-		Expression rhs = ((Like) obj).getRightExpression();
+		Expression lhs = obj.getLeftExpression();
+		Expression rhs = obj.getRightExpression();
 
 		Column c = null;
 		Expression literalExp = null;
@@ -289,11 +280,11 @@ public final class LuceneSearch   {
 
 			value = (String) escapeReservedChars(((Literal) literalExp)
 					.getValue());
-			createLikeQuery(c, value.replaceAll("%", ""), junction, queryBuilder); // "*"
+			createLikeQuery(c, value.replaceAll("%", ""), junction, queryBuilder); // "*" //$NON-NLS-1$ //$NON-NLS-2$
 		} else {
 			final String msg = ObjectPlugin.Util.getString(
-					"LuceneSearch.Unsupported_expression",
-					new Object[] { literalExp.toString(), "LIKE" });
+					"LuceneSearch.Unsupported_expression", //$NON-NLS-1$
+					new Object[] { literalExp.toString(), "LIKE" }); //$NON-NLS-1$
 			throw new TranslatorException(msg);
 		}
 

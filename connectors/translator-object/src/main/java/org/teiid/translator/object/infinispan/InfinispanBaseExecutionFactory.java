@@ -21,10 +21,6 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Properties;
-
 import javax.resource.cci.ConnectionFactory;
 
 import org.infinispan.Cache;
@@ -32,9 +28,11 @@ import org.infinispan.api.BasicCache;
 import org.infinispan.api.BasicCacheContainer;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.object.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
@@ -45,8 +43,6 @@ import org.teiid.translator.object.ObjectPlugin;
  *
  */
 public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFactory {
-	public static final String PROPERTIES_FILE = "META-INF" + File.separator
-			+ "datagrid.properties";
 
 	private String cacheName = null;
 	private String configurationFileName = null;
@@ -60,10 +56,8 @@ public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFact
 		super.start();
 		
 		if (this.getCacheName() == null || this.getCacheName().isEmpty()) {
-			String msg = ObjectPlugin.Util.getString(
-					"InfinispanBaseExecutionFactory.cacheNameNotDefined",
-					new Object[] {});
-			throw new TranslatorException(msg); //$NON-NLS-1$
+			String msg = ObjectPlugin.Util.getString("InfinispanBaseExecutionFactory.cacheNameNotDefined"); //$NON-NLS-1$
+			throw new TranslatorException(msg); 
 		}
 
 	}
@@ -164,14 +158,25 @@ public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFact
 
 		if (cache == null) {
 			String msg = ObjectPlugin.Util.getString(
-					"InfinispanBaseExecutionFactory.cacheNotFound", new Object[] { (getCacheName() != null ? getCacheName()
-							: "DefaultCache") });
-			throw new TranslatorException(msg); //$NON-NLS-1$
+					"InfinispanBaseExecutionFactory.cacheNotFound", new Object[] { (getCacheName() != null ? getCacheName() //$NON-NLS-1$
+							: "DefaultCache") }); //$NON-NLS-1$
+			throw new TranslatorException(msg); 
 		}
 
 		return cache;
 
 	}
+	
+	   @Override
+		public void getMetadata(MetadataFactory metadataFactory, ObjectConnection conn)
+				throws TranslatorException {
+		   if (this.isFullTextSearchingSupported()) {
+			   
+		   } else {
+			   JavaBeanMetadataProcessor processor = new JavaBeanMetadataProcessor();
+			   processor.getMetadata(metadataFactory, this);
+		   }
+		}
 	
 
 	@Override
@@ -181,18 +186,12 @@ public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFact
 		return new InfinispanConnectionImpl(this);
 	}
 	
-	protected String jdgProperty(String name) {
-		Properties props = new Properties();
-		try {
-			props.load(this.getClass().getClassLoader()
-					.getResourceAsStream(PROPERTIES_FILE));
-		} catch (IOException ioe) {
-			throw new RuntimeException(ioe);
-		}
-		return props.getProperty(name);
-	}
-
 	public void cleanUp() {
 
+	}
+	
+	@Override
+	public boolean supportsOrCriteria() {
+		return isFullTextSearchingSupported();
 	}
 }

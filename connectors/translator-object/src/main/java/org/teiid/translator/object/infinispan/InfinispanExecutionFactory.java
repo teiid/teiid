@@ -21,9 +21,7 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Properties;
 
 import org.infinispan.api.BasicCacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
@@ -56,9 +54,6 @@ import org.teiid.translator.object.ObjectPlugin;
  */
 @Translator(name = "infinispan-cache", description = "The Infinispan Cache Translator")
 public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
-	public static final String PROPERTIES_FILE = "META-INF" + File.separator
-			+ "datagrid.properties";
-
 	private boolean supportsLuceneSearching = false;
 
 	protected BasicCacheContainer cacheContainer = null;
@@ -78,8 +73,8 @@ public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
 			if (configFile == null || configFile.trim().length() == 0) {
 	   			String msg = ObjectPlugin.Util
     			.getString(
-    					"InfinispanExecutionFactory.undefinedHowToGetCache");
-        		throw new TranslatorException(msg); //$NON-NLS-1$	
+    					"InfinispanExecutionFactory.undefinedHowToGetCache"); //$NON-NLS-1$	
+        		throw new TranslatorException(msg); 
 			}
 			useJndi = false;
 			
@@ -147,10 +142,10 @@ public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
 				return (BasicCacheContainer) object;
 			}
 			String msg = ObjectPlugin.Util.getString(
-			"InfinispanExecutionFactory.unsupportedContainerType",
+			"InfinispanExecutionFactory.unsupportedContainerType",  //$NON-NLS-1$
 			new Object[] { object.getClass().getName(),
-					"BasicCacheContainer" });
-			throw new TranslatorException(msg); //$NON-NLS-1$
+					"BasicCacheContainer" });  //$NON-NLS-1$
+			throw new TranslatorException(msg);
 			
 			
 		}
@@ -165,17 +160,6 @@ public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
 		}
 		
 		return container;
-	}
-
-	protected String jdgProperty(String name) {
-		Properties props = new Properties();
-		try {
-			props.load(this.getClass().getClassLoader()
-					.getResourceAsStream(PROPERTIES_FILE));
-		} catch (IOException ioe) {
-			throw new RuntimeException(ioe);
-		}
-		return props.getProperty(name);
 	}
 
 	public void cleanUp() {

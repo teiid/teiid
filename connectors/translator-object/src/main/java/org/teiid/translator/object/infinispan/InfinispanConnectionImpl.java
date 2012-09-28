@@ -91,10 +91,8 @@ public  class InfinispanConnectionImpl extends BasicConnection implements Object
 			throws TranslatorException {
 		if (factory.isFullTextSearchingSupported()) {
 			return LuceneSearch.performSearch(command, this);
-		} else {
-		    return SearchByKey.performSearch(command, this);	
 		}
-		
+	    return SearchByKey.performSearch(command, this);	
 	}
 	
 	public BasicCache<String, Object> getCache()

@@ -115,7 +115,7 @@ public class InfinispanRemoteExecutionFactory extends
 		} else {
 			if (this.getRemoteServerList() == null
 					|| this.getRemoteServerList().isEmpty()
-					|| this.getRemoteServerList().equals("")) {
+					|| this.getRemoteServerList().equals("")) { //$NON-NLS-1$
 				container = new RemoteCacheManager();
 
 				LogManager

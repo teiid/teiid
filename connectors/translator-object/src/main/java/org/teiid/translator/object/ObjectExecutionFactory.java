@@ -22,8 +22,6 @@
 
 package org.teiid.translator.object;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 import javax.naming.Context;
@@ -51,7 +49,7 @@ import org.teiid.translator.TranslatorProperty;
 public abstract class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
-	public static final int MAX_SET_SIZE = 1000;
+	public static final int MAX_SET_SIZE = 10000;
 
 	// rootClassName identifies the name of the class that is identified by the
 	// unique key in the cache
@@ -81,9 +79,9 @@ public abstract class ObjectExecutionFactory extends
 		if (this.getRootClassName() == null
 				|| this.getRootClassName().trim().length() == -1) {
 			String msg = ObjectPlugin.Util.getString(
-					"ObjectExecutionFactory.rootClassNameNotDefined",
+					"ObjectExecutionFactory.rootClassNameNotDefined", //$NON-NLS-1$
 					new Object[] {});
-			throw new TranslatorException(msg); //$NON-NLS-1$
+			throw new TranslatorException(msg); 
 		}
 
 		try {
@@ -92,9 +90,9 @@ public abstract class ObjectExecutionFactory extends
 
 		} catch (ClassNotFoundException e) {
 			String msg = ObjectPlugin.Util.getString(
-					"ObjectExecutionFactory.rootClassNotFound",
+					"ObjectExecutionFactory.rootClassNotFound",  //$NON-NLS-1$
 					new Object[] { this.rootClassName });
-			throw new TranslatorException(msg); //$NON-NLS-1$
+			throw new TranslatorException(msg);
 		}
 
 	}
@@ -107,12 +105,6 @@ public abstract class ObjectExecutionFactory extends
 		
 		return new ObjectExecution((Select) command, metadata, this, (connection == null ? getConnection(null, executionContext) : connection) );
 
-	}
-
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public List getSupportedFunctions() {
-		return Collections.EMPTY_LIST;
 	}
 
 	@Override
@@ -140,10 +132,6 @@ public abstract class ObjectExecutionFactory extends
 	}
 
 	public boolean supportsInCriteria() {
-		return true;
-	}
-
-	public boolean supportsOrCriteria() {
 		return true;
 	}
 
@@ -189,11 +177,8 @@ public abstract class ObjectExecutionFactory extends
 	 * 
 	 * @param rootClassName
 	 */
-	public synchronized void setRootClassName(String rootClassName) {
-		if (this.rootClassName == null) {
-			this.rootClassName = rootClassName;
-
-		}
+	public void setRootClassName(String rootClassName) {
+		this.rootClassName = rootClassName;
 	}
 	
 	 /**
@@ -213,9 +198,7 @@ public abstract class ObjectExecutionFactory extends
      * @param jndiName the JNDI name of the {@link Map cache} instance that should be used
      * @see #setCacheJndiName(String)
      */
-    public synchronized void setCacheJndiName( String jndiName ) {
-        if (this.cacheJndiName == jndiName || this.cacheJndiName != null
-            && this.cacheJndiName.equals(jndiName)) return; // unchanged
+    public void setCacheJndiName( String jndiName ) {
         this.cacheJndiName = jndiName;
     }
 
@@ -241,28 +224,31 @@ public abstract class ObjectExecutionFactory extends
 		    if (jndiName != null && jndiName.trim().length() != 0) {
 		        try {
 		            Context context = null;
-		            if (context == null) {
-		                try {
-		                    context = new InitialContext();
-		                } catch (NamingException err) {
-		                    throw new TranslatorException(err);
-		                }
-		            }
+	                try {
+	                    context = new InitialContext();
+	                } catch (NamingException err) {
+	                    throw new TranslatorException(err);
+	                }
 		            cache = context.lookup(jndiName);
 		            
 		            if (cache == null) {
 		    			String msg = ObjectPlugin.Util.getString(
-		    					"ObjectExecutionFactory.cacheNotFoundinJNDI",
+		    					"ObjectExecutionFactory.cacheNotFoundinJNDI", //$NON-NLS-1$
 		    					new Object[] { jndiName });
-		    			throw new TranslatorException(msg); //$NON-NLS-1$
+		    			throw new TranslatorException(msg); 
 		            	
 		            } 		
-		        } catch (Throwable err) {
+		        } catch (Exception err) {
 		            if (err instanceof RuntimeException) throw (RuntimeException)err;
 		            throw new TranslatorException(err);
 		        }
 		    } 
 		    return cache;
 	    }	
+	
+	@Override
+	public boolean supportsOnlyLiteralComparison() {
+		return true;
+	}
 
 }

@@ -21,28 +21,21 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.naming.Context;
 
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.mockito.Mock;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
-import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.infinispan.search.SearchByKey;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 

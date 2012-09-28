@@ -56,30 +56,22 @@ public final class SearchByKey  {
 	}
 
 	private static List<Object> get(SearchCriterion criterion,
-			BasicCache<String, Object> cache, Class rootClass)
+			BasicCache<String, Object> cache, Class<?> rootClass)
 			throws TranslatorException {
 		List<Object> results = null;
 
 		if (criterion.getOperator() == SearchCriterion.Operator.ALL) {
-
-			if (cache instanceof RemoteCache) {
+			Map<String, Object> map = cache;
+			if (cache instanceof RemoteCache<?, ?>) {
 				RemoteCache<?, ?> rc = (RemoteCache<?, ?>) cache;
-		  		Map<?, ?> c = rc.getBulk();
-	    		results = new ArrayList<Object>();
-	    		for (Iterator it = c.keySet().iterator(); it.hasNext();) {
-	    			Object v = cache.get(it.next());
-	    			addValue(v, results, rootClass);	
-	    		}	
-	 
-			} else {
-				Set keys = cache.keySet();
-				results = new ArrayList<Object>();
-				for (Iterator it = keys.iterator(); it.hasNext();) {
-					Object v = cache.get(it.next());
-					addValue(v, results, rootClass);
-				}
+		  		map = (Map<String, Object>) rc.getBulk();
 			}
-
+			Set<String> keys = map.keySet();
+			results = new ArrayList<Object>();
+			for (Iterator<?> it = keys.iterator(); it.hasNext();) {
+				Object v = cache.get(it.next());
+				addValue(v, results, rootClass);
+			}
 			return results;
 		}
 
@@ -91,7 +83,6 @@ public final class SearchByKey  {
 			results = new ArrayList<Object>();
 		}
 	
-
 		if (criterion.getOperator().equals(SearchCriterion.Operator.EQUALS)) {
 
 			Object value = criterion.getValue();
@@ -120,7 +111,7 @@ public final class SearchByKey  {
 
 	}
 
-	private static void addValue(Object value, List<Object> results, Class rootNodeType) {
+	private static void addValue(Object value, List<Object> results, Class<?> rootNodeType) {
 		if (value != null && value.getClass().equals(rootNodeType)) {
 
 			if (value.getClass().isArray()) {
@@ -129,13 +120,13 @@ public final class SearchByKey  {
 				return;
 			}
 
-			if (value instanceof Collection) {
-				results.addAll((Collection) value);
+			if (value instanceof Collection<?>) {
+				results.addAll((Collection<?>) value);
 				return;
 			}
 
-			if (value instanceof Map) {
-				Map<?, Object> mapRows = (Map) value;
+			if (value instanceof Map<?, ?>) {
+				Map<?, ?> mapRows = (Map<?, ?>) value;
 				results.addAll(mapRows.values());
 				return;
 			}

@@ -81,7 +81,7 @@ public class ObjectExecution implements ResultSetExecution {
 						LogConstants.CTX_CONNECTOR,
 						"ObjectExecution calling search strategy : " + connection.getClass().getName()); //$NON-NLS-1$
 
-		return connection.performSearch((Select) query);
+		return connection.performSearch(query);
 
 	}
 

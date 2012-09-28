@@ -27,9 +27,11 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.JavaBeanMetadataProcessor;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.ObjectPlugin;
@@ -58,26 +60,19 @@ public class MapCacheExecutionFactory extends ObjectExecutionFactory {
           if (jndiName == null || jndiName.trim().length() == 0) {
 	    			String msg = ObjectPlugin.Util
 	    			.getString(
-	    					"MapCacheExecutionFactory.undefinedJndiName", new Object[] { });
-	        		throw new TranslatorException(msg); //$NON-NLS-1$
+	    					"MapCacheExecutionFactory.undefinedJndiName"); //$NON-NLS-1$
+	        		throw new TranslatorException(msg); 
 
           }				
 
 	}
 
-	@Override
-	public boolean supportsOnlyLiteralComparison() {
-		return true;
-	}
-	
-    
     protected synchronized Map<?,?> getCache() throws TranslatorException {
     	if (this.cache != null) return this.cache;
     	
     	Object object = findCacheUsingJNDIName();
-    	Map<?,?> cache = null;
     	
-		if (object instanceof Map) {
+		if (object instanceof Map<?,?>) {
 		    
 			cache = (Map<?,?>)object;
 			
@@ -85,14 +80,12 @@ public class MapCacheExecutionFactory extends ObjectExecutionFactory {
 
 		} else {
 			String msg = ObjectPlugin.Util.getString(
-					"MapCacheExecutionFactory.unexpectedCacheType",
-					new Object[] { (object == null ? "nullObject" : object.getClass().getName()), "Map" });
-			throw new TranslatorException(msg); //$NON-NLS-1$
+					"MapCacheExecutionFactory.unexpectedCacheType", //$NON-NLS-1$
+					new Object[] { (object == null ? "nullObject" : object.getClass().getName()), "Map" }); //$NON-NLS-1$ //$NON-NLS-2$ 
+			throw new TranslatorException(msg); 
 		}
     	
-    	this.cache = cache;
     	return this.cache;
-    	
     }
 	
  
@@ -104,4 +97,11 @@ public class MapCacheExecutionFactory extends ObjectExecutionFactory {
 		return new MapCacheConnection(this);
 
 	}
+	
+	   @Override
+		public void getMetadata(MetadataFactory metadataFactory, ObjectConnection conn)
+				throws TranslatorException {
+	 		JavaBeanMetadataProcessor processor = new JavaBeanMetadataProcessor();
+			processor.getMetadata(metadataFactory, this);
+		}
 }

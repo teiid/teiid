@@ -22,6 +22,7 @@
 package org.teiid.translator.object.search;
 
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.Table;
 
 public class SearchCriterion {
@@ -37,7 +38,6 @@ public class SearchCriterion {
 	private boolean isAnd = false;
 
 	private Operator operator;
-	private String operatorString;
 	private Column column;
 	private Object value;
 	private String runtimeType;
@@ -46,21 +46,17 @@ public class SearchCriterion {
 		this.operator = Operator.ALL;
 	}
 
-	public SearchCriterion(Column column, Object value, String operaterString,
-			String type) {
+	public SearchCriterion(Column column, Object value, String type) {
 		this.column = column;
 		this.value = value;
-		this.operatorString = operaterString;
 		this.runtimeType = type;
 		this.operator = Operator.EQUALS;
-
 	}
 
-	public SearchCriterion(Column column, Object value, String operaterString,
-			Operator operator, String type) {
-		this(column, value, operaterString, type);
+	public SearchCriterion(Column column, Object value, Operator operator,
+			String type) {
+		this(column, value, type);
 		this.operator = operator;
-
 	}
 
 	public Column getColumn() {
@@ -68,16 +64,12 @@ public class SearchCriterion {
 	}
 
 	public String getTableName() {
-		Object p = column.getParent();
+		ColumnSet<?> p = column.getParent();
 		if (p instanceof Table) {
 			Table t = (Table) p;
 			return t.getName();
-		} else {
-			// don't this would happen, but just in case at the moment
-			assert (p.getClass().getName() != null);
 		}
-
-		return null;
+		throw new AssertionError();
 	}
 
 	public String getField() {
@@ -98,15 +90,6 @@ public class SearchCriterion {
 
 	public void setOperator(Operator operator) {
 		this.operator = operator;
-	}
-
-	public String getOperatorString() {
-		return this.operatorString;
-	}
-
-	public void setOperatorString(String operatorString) {
-		this.operatorString = operatorString;
-
 	}
 
 	public String getRuntimeType() {
