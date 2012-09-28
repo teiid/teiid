@@ -103,6 +103,25 @@ public class TestTriggerActions {
     	helpProcess(plan, context, dm, expected);
 	}
 	
+	@Test public void testDynamicUpdate() throws Exception {
+		TransformationMetadata metadata = TestUpdateValidator.example1();
+		TestUpdateValidator.createView("select '1' as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
+		t.setDeletePlan("");
+		t.setUpdatePlan("FOR EACH ROW BEGIN execute immediate 'update pm1.g1 set e1 = new.x where e2 = new.y'; END");
+		t.setInsertPlan("");
+		
+		String sql = "update gx set x = 1 where y = 2";
+		
+		HardcodedDataManager dm = new HardcodedDataManager();
+		dm.addData("UPDATE pm1.g1 SET e1 = '1' WHERE e2 = 2", new List[] {Arrays.asList(1)});
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+    	helpProcess(plan, context, dm, expected);
+	}
+	
 	@Test public void testDynamicRecursion() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
 		TestUpdateValidator.createView("select 'a' as x, 2 as y", metadata, GX);

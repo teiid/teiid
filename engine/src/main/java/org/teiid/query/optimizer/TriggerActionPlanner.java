@@ -51,7 +51,7 @@ import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.TriggerAction;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.util.CommandContext;
 
 
@@ -109,18 +109,22 @@ public final class TriggerActionPlanner {
 			TriggerAction ta, QueryMetadataInterface metadata,
 			Map<ElementSymbol, Expression> params)
 			throws QueryMetadataException, TeiidComponentException {
-		QueryCommand query;
-		ArrayList<Expression> selectSymbols = new ArrayList<Expression>();
 		List<ElementSymbol> allSymbols = ResolverUtil.resolveElementsInGroup(ta.getView(), metadata);
+		GroupSymbol old = new GroupSymbol(SQLConstants.Reserved.OLD);
+		GroupSymbol newGroup = new GroupSymbol(SQLConstants.Reserved.NEW);
 		for (ElementSymbol elementSymbol : allSymbols) {
-			params.put(new ElementSymbol(SQLConstants.Reserved.OLD + Symbol.SEPARATOR + elementSymbol.getShortName()), elementSymbol);
+			ElementSymbol es = elementSymbol.clone();
+			es.setGroupSymbol(old);
+			params.put(es, elementSymbol);
 			if (userCommand instanceof Update) {
 				//default to old
-				params.put(new ElementSymbol(SQLConstants.Reserved.NEW + Symbol.SEPARATOR + elementSymbol.getShortName()), elementSymbol);
+				es = elementSymbol.clone();
+				es.setGroupSymbol(newGroup);
+				params.put(es, elementSymbol);
 			}
 		}
-		selectSymbols.addAll(LanguageObject.Util.deepClone(allSymbols, ElementSymbol.class));
-		query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(ta.getView()))), ((TranslatableProcedureContainer)userCommand).getCriteria(), null, null);
+		ArrayList<Expression> selectSymbols = new ArrayList<Expression>(LanguageObject.Util.deepClone(allSymbols, ElementSymbol.class));
+		QueryCommand query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(ta.getView()))), ((TranslatableProcedureContainer)userCommand).getCriteria(), null, null);
 		return query;
 	}
         
