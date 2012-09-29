@@ -34,7 +34,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
-import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
@@ -162,16 +161,7 @@ public class SQLParserUtil {
     	return true;
     }    
 
-    /**
-     * Check that this is a valid alias, remove quotes, and return updated
-     * alias string.
-     * @param id Metadata alias
-     */
-    String validateAlias(String id) throws ParseException {
-        return validateName(id, false);
-    }
-
-    private String validateName(String id, boolean element) throws ParseException {
+    String validateName(String id, boolean element) throws ParseException {
         if(id.indexOf('.') != -1) { 
             String key = "SQLParser.Invalid_alias"; //$NON-NLS-1$
             if (element) {
@@ -180,14 +170,6 @@ public class SQLParserUtil {
             throw new ParseException(QueryPlugin.Util.getString(key, id)); 
         }
         return id;
-    }
-    
-    /**
-     * Check that this is a valid element name, remove quotes
-     * @param id Metadata alias
-     */
-    String validateElementName(String id) throws ParseException {
-        return validateName(id, true);
     }
     
     static String removeEscapeChars(String str, String tickChar) {
@@ -304,38 +286,6 @@ public class SQLParserUtil {
     	return null;
     }
 
-    /**
-     * Helper for the FROM clause that takes the join type string and adds
-     * the join type to the From clause based on that type.
-     * @param groupID Left group ID
-     * @param rid Right group ID
-     * @param joinType Join type word from query
-     * @param from From clause to update
-     * @throws ParseException if parsing failed
-     */
-    JoinType getJoinType(Token joinTypeToken) throws ParseException {
-        if(joinTypeToken == null) { 
-            return JoinType.JOIN_INNER;
-        }   
-        String joinType = joinTypeToken.image;
-        if(joinType.equalsIgnoreCase(Reserved.INNER)) {
-            return JoinType.JOIN_INNER;
-        } else if(joinType.equalsIgnoreCase(Reserved.CROSS)) {
-            return JoinType.JOIN_CROSS;         
-        } else if(joinType.equalsIgnoreCase(Reserved.LEFT)) {
-            return JoinType.JOIN_LEFT_OUTER;
-        } else if(joinType.equalsIgnoreCase(Reserved.RIGHT)) {
-            return JoinType.JOIN_RIGHT_OUTER;
-        } else if(joinType.equalsIgnoreCase(Reserved.FULL)) {
-            return JoinType.JOIN_FULL_OUTER;
-        } else if(joinType.equalsIgnoreCase(Reserved.UNION)) {
-            return JoinType.JOIN_UNION;
-        } else {
-            Object[] params = new Object[] { joinType };
-            throw new ParseException(QueryPlugin.Util.getString("SQLParser.Unknown_join_type", params)); //$NON-NLS-1$
-        }
-    }
-    
     int getOperator(String opString) {
         if (opString.equals("=")) { //$NON-NLS-1$
             return CompareCriteria.EQ;
@@ -370,7 +320,7 @@ public class SQLParserUtil {
     	return new Block(stmt);
     }
     
-    void setColumnOptions(BaseColumn c)  throws ParseException {
+    void setColumnOptions(BaseColumn c)  throws MetadataException {
     	Map<String, String> props = c.getProperties();
 		setCommonProperties(c, props);
 		
@@ -384,7 +334,7 @@ public class SQLParserUtil {
     	}
     }
 
-	private void setColumnOptions(Column c, Map<String, String> props) throws ParseException {
+	private void setColumnOptions(Column c, Map<String, String> props) throws MetadataException {
 		String v = props.remove(DDLConstants.CASE_SENSITIVE); 
         if (v != null) {
         	c.setCaseSensitive(isTrue(v));
@@ -461,7 +411,7 @@ public class SQLParserUtil {
     			c.setScale(Integer.parseInt(matcher.group(4)));
     		}
     		else {
-    			throw new ParseException(QueryPlugin.Util.getString("udt_format_wrong", c.getName())); //$NON-NLS-1$
+    			throw new MetadataException(QueryPlugin.Util.getString("udt_format_wrong", c.getName())); //$NON-NLS-1$
     		}
     	}
     }
@@ -511,7 +461,7 @@ public class SQLParserUtil {
     }     
     
 	static void replaceProcedureWithFunction(MetadataFactory factory,
-			Procedure proc) throws ParseException {
+			Procedure proc) throws MetadataException {
 		FunctionMethod method = new FunctionMethod();
 		method.setName(proc.getName());
 		method.setPushdown(proc.isVirtual()?FunctionMethod.PushDown.CAN_PUSHDOWN:FunctionMethod.PushDown.MUST_PUSHDOWN);
@@ -519,7 +469,7 @@ public class SQLParserUtil {
 		ArrayList<FunctionParameter> ins = new ArrayList<FunctionParameter>();
 		for (ProcedureParameter pp:proc.getParameters()) {
 			if (pp.getType() == ProcedureParameter.Type.InOut || pp.getType() == ProcedureParameter.Type.Out) {
-				throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
+				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_in", proc.getName())); //$NON-NLS-1$
 			}
 			
 			FunctionParameter fp = new FunctionParameter(pp.getName(), pp.getRuntimeType(), pp.getAnnotation());
@@ -533,7 +483,7 @@ public class SQLParserUtil {
 		method.setInputParameters(ins);
 		
 		if (proc.getResultSet() != null || method.getOutputParameter() == null) {
-			throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_return", proc.getName())); //$NON-NLS-1$
+			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_return", proc.getName())); //$NON-NLS-1$
 		}
 		
 		method.setAnnotation(proc.getAnnotation());
@@ -580,12 +530,12 @@ public class SQLParserUtil {
         return Boolean.valueOf(text);
     }    
 	
-	Column getColumn(String columnName, Table table) throws ParseException {
+	Column getColumn(String columnName, Table table) throws MetadataException {
 		Column c = table.getColumnByName(columnName);
 		if (c != null) {
 			return c;
 		}
-		throw new ParseException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
+		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}
 	
 	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {
@@ -603,9 +553,8 @@ public class SQLParserUtil {
 		}
 	}
 	
-	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws ParseException{
+	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws MetadataException {
 		try {
-			name = validateElementName(name);
 			BaseColumn column = null;
 			if (rs) {
 				column = factory.addProcedureResultSetColumn(name, type.type, proc);
@@ -615,7 +564,7 @@ public class SQLParserUtil {
 					if (pp.getType() == Type.ReturnValue) {
 						added = true;
 						if (pp.getDatatype() != factory.getDataTypes().get(type.type)) {
-							throw new ParseException(QueryPlugin.Util.getString("SQLParser.proc_type_conflict", proc.getName(), pp.getDatatype(), type.type)); //$NON-NLS-1$
+							throw new MetadataException(QueryPlugin.Util.getString("SQLParser.proc_type_conflict", proc.getName(), pp.getDatatype(), type.type)); //$NON-NLS-1$
 						}
 					}
 				}
@@ -626,7 +575,7 @@ public class SQLParserUtil {
 			setTypeInfo(type, column);
 			return column;
 		} catch (TranslatorException e){
-			throw new ParseException(e.getMessage());
+			throw new MetadataException(e.getMessage());
 		}	
 	}
 
@@ -655,7 +604,7 @@ public class SQLParserUtil {
 	 	return key;
 	}
 	
-	KeyRecord addFBI(MetadataFactory factory, List<Expression> expressions, Table table, String name) throws ParseException {
+	KeyRecord addFBI(MetadataFactory factory, List<Expression> expressions, Table table, String name) throws MetadataException {
 		List<String> columnNames = new ArrayList<String>(expressions.size());
 		List<Boolean> nonColumnExpressions = new ArrayList<Boolean>(expressions.size());
 		boolean fbi = false;
@@ -674,7 +623,7 @@ public class SQLParserUtil {
 			table.addAttchment(MetadataFactory.class, factory);
 	    	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
 	    }catch(TranslatorException e){
-			throw new ParseException(e.getMessage());
+			throw new MetadataException(e.getMessage());
 		}
 	}
 	

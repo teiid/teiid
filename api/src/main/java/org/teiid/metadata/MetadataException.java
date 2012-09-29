@@ -22,16 +22,30 @@
 
 package org.teiid.metadata;
 
-import java.io.Reader;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.BundleUtil.Event;
 
-public interface Parser {
+public class MetadataException extends TeiidRuntimeException {
+	private static final long serialVersionUID = -7889770730039591817L;
+
+	public MetadataException(Event event, Throwable cause) {
+		super(event, cause);
+	}
 	
-	/**
-	 * Parses the given {@link Reader} into the {@link MetadataFactory}.
-	 * The {@link Reader} will not be closed by this call.
-	 * @param factory
-	 * @param ddl
-	 * @throws MetadataException
-	 */
-	void parseDDL(MetadataFactory factory, Reader ddl) throws MetadataException;
+	public MetadataException(Throwable cause) {
+		super(cause);
+	}
+	
+	public MetadataException(Event event, String message) {
+		super(event, message);
+	}
+	
+	public MetadataException(String message) {
+		super(message);
+	}
+
+	public MetadataException(Event event,
+			Throwable e, String message) {
+		super(event, e, message);
+	}
 }

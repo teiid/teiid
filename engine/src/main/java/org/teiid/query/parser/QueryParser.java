@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.teiid.api.exception.query.QueryParserException;
@@ -60,14 +61,11 @@ public class QueryParser implements Parser {
         }
     };
 
-	// Used in parsing TokenMgrError message
-	private static final String LINE_MARKER = "line "; //$NON-NLS-1$
-	private static final String COL_MARKER = "column "; //$NON-NLS-1$
-    
     private static final String XQUERY_DECLARE = "declare"; //$NON-NLS-1$
     private static final String XML_OPEN_BRACKET = "<"; //$NON-NLS-1$
 
 	private SQLParser parser;
+	private TeiidSQLParserTokenManager tm;
     
 	/**
 	 * Construct a QueryParser - this may be reused.
@@ -87,9 +85,13 @@ public class QueryParser implements Parser {
 	
 	private SQLParser getSqlParser(Reader sql) {
 		if(parser == null) {
-			parser = new SQLParser(sql);
+			JavaCharStream jcs = new JavaCharStream(sql);
+			tm = new TeiidSQLParserTokenManager(new JavaCharStream(sql));
+			parser = new SQLParser(tm);
+			parser.jj_input_stream = jcs;
 		} else {
 			parser.ReInit(sql);	
+			tm.reinit();
 		}
 		return parser;		
 	}
@@ -117,8 +119,8 @@ public class QueryParser implements Parser {
             return result;
         } catch(ParseException pe) {
             throw convertParserException(pe);
-        } catch(TokenMgrError tme) {
-            throw handleTokenMgrError(tme);
+        } finally {
+        	tm.reinit();
         }
 	}
 	
@@ -157,11 +159,8 @@ public class QueryParser implements Parser {
             	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, pe, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
             }
             throw convertParserException(pe);
-        } catch(TokenMgrError tme) {
-        	if(sql.startsWith(XML_OPEN_BRACKET) || sql.startsWith(XQUERY_DECLARE)) {
-            	 throw new QueryParserException(QueryPlugin.Event.TEIID30378, tme, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30378, sql));
-            }
-            throw handleTokenMgrError(tme);
+        } finally {
+        	tm.reinit();
         }
 		return result;
 	}
@@ -194,25 +193,34 @@ public class QueryParser implements Parser {
 
         } catch(ParseException pe) {
             throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            throw handleTokenMgrError(tme);
+        } finally {
+        	tm.reinit();
         }
         return result;
     }
 
     private QueryParserException convertParserException(ParseException pe) {
+    	if (pe.currentToken == null) {
+    		List<Token> preceeding = findPreceeding(parser.token, 1);
+    		if (!preceeding.isEmpty()) {
+    			pe.currentToken = preceeding.get(0);
+    		} else {
+    			pe.currentToken = parser.token;
+    		}
+        }
         QueryParserException qpe = new QueryParserException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31100, getMessage(pe, 1, 10)));
         qpe.setParseException(pe);
-        if (pe.currentToken == null) {
-        	pe.currentToken = parser.token;
-        }
         return qpe;
     }
         
-    public static String getMessage(ParseException pe, int maxTokenSequence, int maxExpansions) {
+    public String getMessage(ParseException pe, int maxTokenSequence, int maxExpansions) {
 		if (!pe.specialConstructor) {
-			return pe.getMessage();
+			if (pe.currentToken == null) {
+				return pe.getMessage();
+			}
+			StringBuilder sb = encountered(pe, 1);
+			sb.append(pe.getMessage());
+			return sb.toString();
 		}
 		StringBuffer expected = new StringBuffer();
 		int[][] expectedTokenSequences = pe.expectedTokenSequences;
@@ -227,21 +235,11 @@ public class QueryParser implements Parser {
 			}
 		});
 		int maxSize = expectedTokenSequences[0].length;
-		StringBuilder retval = new StringBuilder("Encountered \""); //$NON-NLS-1$
-		Token tok = currentToken.next;
-		for (int i = 0; i < maxSize; i++) {
-			if (i != 0)
-				retval.append(" "); //$NON-NLS-1$
-			if (tok.kind == 0) {
-				retval.append(tokenImage[0]);
-				break;
-			}
-			retval.append(pe.add_escapes(tok.image));
-			tok = tok.next;
+		StringBuilder retval = encountered(pe, maxSize);
+		if (currentToken.next.kind == -1) {
+			retval.append(QueryPlugin.Util.getString("QueryParser.lexicalError", currentToken.next.image)); //$NON-NLS-1$
+			return retval.toString();
 		}
-		retval.append("\" at line " + currentToken.next.beginLine + ", column " //$NON-NLS-1$ //$NON-NLS-2$
-				+ currentToken.next.beginColumn);
-		retval.append("." + eol); //$NON-NLS-1$
 		for (int i = 0; i < expectedTokenSequences.length; i++) {
 			boolean truncateStart = expectedTokenSequences[i].length == maxSize && maxSize > 1 && maxSize > maxTokenSequence;
 			int start = 0;
@@ -281,6 +279,118 @@ public class QueryParser implements Parser {
 		return retval.toString();
     }
 
+	private StringBuilder encountered(ParseException pe, int maxSize) {
+		StringBuilder retval = new StringBuilder("Encountered \""); //$NON-NLS-1$
+		Token currentToken = pe.currentToken;
+		List<Token> preceeding = findPreceeding(currentToken, 2);
+		if (!preceeding.isEmpty()) {
+			addTokenSequence(preceeding.size() + 1, retval, preceeding.get(0));
+		} else {
+			addTokenSequence(1, retval, currentToken);
+		}
+		if (currentToken.next.kind == -1) {
+			maxSize = 1;
+		}
+		retval.append(" [*]"); //$NON-NLS-1$
+		Token last = addTokenSequence(maxSize, retval, currentToken.next);
+		if (last.kind != 0) {
+			retval.append("[*]"); //$NON-NLS-1$
+			if (last.next == null) {
+				this.parser.getNextToken();
+			}
+			if (last.next != null) {
+				retval.append(" "); //$NON-NLS-1$
+				addTokenSequence(1, retval, last.next);
+			}
+		}
+		retval.append("\" at line ").append(currentToken.next.beginLine).append(", column ").append(currentToken.next.beginColumn); //$NON-NLS-1$ //$NON-NLS-2$
+		retval.append(".").append(pe.eol); //$NON-NLS-1$
+		return retval;
+	}
+
+	private List<Token> findPreceeding(Token currentToken, int count) {
+		LinkedList<Token> preceeding = new LinkedList<Token>();
+		Token tok = this.tm.head;
+		boolean found = false;
+		while (tok != null) {
+			if (tok == currentToken) {
+				found = true;
+				break;
+			}
+			preceeding.add(tok);
+			if (preceeding.size() > count) {
+				preceeding.removeFirst();
+			}
+			tok = tok.next;
+		}
+		if (!found) {
+			preceeding.clear();
+		}
+		return preceeding;
+	}
+
+	private Token addTokenSequence(int maxSize, StringBuilder retval,
+			Token tok) {
+		Token last = tok;
+		for (int i = 0; i < maxSize && tok != null; i++) {
+			if (i != 0)
+				retval.append(" "); //$NON-NLS-1$
+			if (tok.kind == 0) {
+				retval.append(SQLParserConstants.tokenImage[0]);
+				return tok;
+			}
+			last = tok;
+			add_escapes(tok.image, retval);
+			tok = tok.next;
+		}
+		return last;
+	}
+	
+	  /**
+	   * Used to convert raw characters to their escaped version
+	   * when these raw version cannot be used as part of an ASCII
+	   * string literal.  Also escapes double quotes.
+	   */
+	  protected void add_escapes(String str, StringBuilder retval) {
+	      for (int i = 0; i < str.length(); i++) {
+		      char ch = str.charAt(i); 
+	        switch (ch)
+	        {
+	           case 0 :
+	              continue;
+	           case '\b':
+	              retval.append("\\b"); //$NON-NLS-1$
+	              continue;
+	           case '\t':
+	              retval.append("\\t"); //$NON-NLS-1$
+	              continue;
+	           case '\n':
+	              retval.append("\\n"); //$NON-NLS-1$
+	              continue;
+	           case '\f':
+	              retval.append("\\f"); //$NON-NLS-1$
+	              continue;
+	           case '\r':
+	              retval.append("\\r"); //$NON-NLS-1$
+	              continue;
+	           case '\"':
+	              retval.append("\\\""); //$NON-NLS-1$
+	              continue;
+	           case '\\':
+	              retval.append("\\\\"); //$NON-NLS-1$
+	              continue;
+	           default:
+	              if (ch < 0x20 || ch > 0x7e) {
+	                 String s = "0000" + Integer.toString(ch, 16); //$NON-NLS-1$
+	                 retval.append("\\u" + s.substring(s.length() - 4, s.length())); //$NON-NLS-1$
+	              } else {
+	                 retval.append(ch);
+	              }
+	              continue;
+	        }
+	      }
+	   }
+
     /**
      * Takes a SQL string representing an SQL expression
      * and returns the object representation.
@@ -302,9 +412,8 @@ public class QueryParser implements Parser {
 
         } catch(ParseException pe) {
             throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            throw handleTokenMgrError(tme);
+        } finally {
+        	tm.reinit();
         }
         return result;
     }
@@ -322,41 +431,12 @@ public class QueryParser implements Parser {
 
         } catch(ParseException pe) {
             throw convertParserException(pe);
-
-        } catch(TokenMgrError tme) {
-            throw handleTokenMgrError(tme);
+        } finally {
+        	tm.reinit();
         }
         return result;
     }
 
-    private QueryParserException handleTokenMgrError(TokenMgrError tme) {
-//            LogManager.logError( LogConstants.CTX_QUERY_PARSER, tme, new Object[] {"Exception parsing: ", sql} );
-
-        // From TokenMgrError, here is format of lexical error:
-        //
-        // "Lexical error at line " + errorLine + ", column " + errorColumn +
-        // ".  Encountered: " + (EOFSeen ? "<EOF> " : ("\"" +
-        // addEscapes(String.valueOf(curChar)) + "\"") + " (" + (int)curChar + "), ") +
-        // "after : \"" + addEscapes(errorAfter) + "\""
-
-        String msg = tme.getMessage();
-        int index = msg.indexOf(LINE_MARKER);
-        if(index > 0) {
-            index += LINE_MARKER.length();
-            int lastIndex = msg.indexOf(",", index); //$NON-NLS-1$
-            
-            index = msg.indexOf(COL_MARKER, lastIndex);
-            if(index > 0) {
-                index += COL_MARKER.length();
-                lastIndex = msg.indexOf(".", index); //$NON-NLS-1$
-                
-                return new QueryParserException(QueryPlugin.Util.getString("QueryParser.lexicalError", tme.getMessage())); //$NON-NLS-1$
-            }
-
-        }
-        return new QueryParserException(QueryPlugin.Util.getString("QueryParser.parsingError", tme.getMessage())); //$NON-NLS-1$
-    }
-    
     public void parseDDL(MetadataFactory factory, String ddl) {
     	parseDDL(factory, new StringReader(ddl));
     }
@@ -366,11 +446,13 @@ public class QueryParser implements Parser {
 			getSqlParser(ddl).parseMetadata(factory);
 		} catch (ParseException e) {
 			throw new org.teiid.metadata.ParseException(QueryPlugin.Event.TEIID30386, convertParserException(e));
-		}
+		} finally {
+        	tm.reinit();
+        }
     	HashSet<FunctionMethod> functions = new HashSet<FunctionMethod>();
     	for (FunctionMethod functionMethod : factory.getSchema().getFunctions().values()) {
 			if (!functions.add(functionMethod)) {
-				throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
+				throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, functionMethod.getName()));
 			}
 		}
     }

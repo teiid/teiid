@@ -576,13 +576,17 @@ name=identifier
 description=Partial or full name of a single entity.
 example={code:sql}tbl.col{code}\n{code:sql}"tbl"."col"{code}
 */
-String id() :
+String id(Boolean validate) :
 {
 }
 {
   	(<ID>|nonReserved())
   	{
-  		return normalizeId(getToken(0).image);
+  		String id = normalizeId(getToken(0).image);
+  		if (validate != null) {
+  			return validateName(id, validate);
+  		}
+  		return id;
   	}
 }
 
@@ -637,7 +641,7 @@ Command createTrigger(ParseInfo info) :
   	
 }
 {
-	<CREATE> <TRIGGER> <ON> target = id() <INSTEAD> <OF> 
+	<CREATE> <TRIGGER> <ON> target = id(null) <INSTEAD> <OF> 
 	(event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 	<AS> triggerAction = forEachRowTriggerAction(info)
 	{
@@ -668,7 +672,7 @@ Command alter(ParseInfo info) :
 {
 	<ALTER>
 	(
-	 	(<VIEW> target = id() <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)) 
+	 	(<VIEW> target = id(null) <AS> { comment = getToken(1).specialToken; } command = queryExpression(info)) 
 	 	{
 	 	    if (comment != null) {
 		 	    command.setCacheHint(getQueryCacheOption(comment.image));
@@ -678,7 +682,7 @@ Command alter(ParseInfo info) :
 	 		alterView.setDefinition(command);
 	 		return alterView;	
 	 	}
-		| (<PROCEDURE> target = id() <AS> { comment = getToken(1).specialToken; } stmt = statement(info)) 
+		| (<PROCEDURE> target = id(null) <AS> { comment = getToken(1).specialToken; } stmt = statement(info)) 
 		{
 			CreateProcedureCommand cup = new CreateProcedureCommand(asBlock(stmt));
 			if (comment != null) {
@@ -689,7 +693,7 @@ Command alter(ParseInfo info) :
 			alterProc.setDefinition(cup);
 			return alterProc;
 		}
-		| (<TRIGGER> <ON> target = id() <INSTEAD> <OF> 
+		| (<TRIGGER> <ON> target = id(null) <INSTEAD> <OF> 
 		  (event = <INSERT> | event = <UPDATE> | event = <DELETE>) 
 		  ((<AS> triggerAction = forEachRowTriggerAction(info))
 		  |<ENABLED> {enabled=true;}| <DISABLED> {enabled=false;}))
@@ -796,7 +800,7 @@ Command dropTable(ParseInfo info) :
 }
 {
 	<DROP> <TABLE> 
-	table = id()
+	table = id(null)
 	{
 		drop.setTable(new GroupSymbol(table));
 		return drop;
@@ -814,11 +818,11 @@ Command createTempTable(ParseInfo info) :
 	String table = null;
 	String pkId = null;
 	Column col = null;
-	List<String> columnNames = null;
+	List<ElementSymbol> pk = null;
 }
 {
 	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
-	table = id()
+	table = id(null)
 	<LPAREN>
 	{
 		create.setTable(new GroupSymbol(table));
@@ -834,11 +838,9 @@ Command createTempTable(ParseInfo info) :
       }
     )*	
 	[<COMMA> <PRIMARY> <KEY> 
-	  columnNames = getColumnNames()
+	  pk = columnList(true, true)
 	  {
-	  	for (String id : columnNames) {
-	  		create.getPrimaryKey().add(new ElementSymbol(validateElementName(id)));
-	  	}
+	  	create.getPrimaryKey().addAll(pk);
 	  }	  
 	]
 	<RPAREN>
@@ -861,7 +863,7 @@ Column tableElement(ParseInfo info) :
 	boolean notNull = false;
 }
 {
-	 element = id()
+	 element = id(Boolean.TRUE)
 	 (
 	  type = parseDataType()
 	  |
@@ -875,7 +877,7 @@ Column tableElement(ParseInfo info) :
 	 [<NOT> <NULL> { notNull = true; }]
 	 {
 	    Column c = new Column();
-	    c.setName(validateElementName(element));
+	    c.setName(element);
 	    c.setRuntimeType(type.type);
 	    c.setAutoIncremented(autoIncrement);
 	    c.setNullType(notNull?NullType.No_Nulls:NullType.Nullable);
@@ -933,7 +935,7 @@ Expression exceptionReference(ParseInfo info) :
 	Expression ex;
 }
 {
-	id = id() {return new ElementSymbol(id);}
+	id = id(null) {return new ElementSymbol(id);}
 	|
 	ex = exception(info)
 	{
@@ -982,7 +984,7 @@ Statement statement(ParseInfo info) :
 }
 {
     (
-	 LOOKAHEAD(2) ([label = id() <COLON>] 
+	 LOOKAHEAD(2) ([label = id(null) <COLON>] 
 	  (
 	   stmt = loopStatement(info) |
 	   stmt = whileStatement(info) |
@@ -1047,7 +1049,7 @@ Block compoundStatement(ParseInfo info) :
 	    block.addStatement(stmt, false);            	                	    
 	  }
  	)*
- 	[<EXCEPTION> eId = id() {block.setExceptionGroup(validateAlias(eId));}
+ 	[<EXCEPTION> eId = id(Boolean.FALSE) {block.setExceptionGroup(eId);}
  	 (
        stmt = statement(info)
        {          
@@ -1078,10 +1080,10 @@ BranchingStatement branchingStatement(ParseInfo info) :
 {
  	(
  	 (
- 	  (mode = <BREAK> | mode = <CONTINUE>) [label = id()] 
+ 	  (mode = <BREAK> | mode = <CONTINUE>) [label = id(null)] 
  	 )
  	 | 
- 	 (mode = <LEAVE> label = id())
+ 	 (mode = <LEAVE> label = id(null))
  	)
  	{
  	    breakStmt.setMode(BranchingStatement.BranchingMode.valueOf(mode.image.toUpperCase()));
@@ -1132,7 +1134,7 @@ LoopStatement loopStatement(ParseInfo info) :
     query = queryExpression(info)
     <RPAREN>
     <AS>
-    cursor = id()
+    cursor = id(null)
     stmt = statement(info)
     {
         loopStmt = new LoopStatement(asBlock(stmt), query, cursor);   
@@ -1183,7 +1185,7 @@ DeclareStatement declareStatement(ParseInfo info) :
 {
     <DECLARE>
     (type = parseDataType() | <EXCEPTION> {type = new ParsedDataType(getToken(0).image);})
-    var = id()
+    var = id(null)
     {
         variableID = new ElementSymbol(var);
     }
@@ -1215,7 +1217,7 @@ Statement assignStatement(ParseInfo info) :
     boolean returnable=true;
 }
 {
-    var = id()
+    var = id(null)
     {
         elementID = new ElementSymbol(var);              
     } 
@@ -1355,7 +1357,7 @@ DynamicCommand dynamicCommand(ParseInfo info) :
 	elements = createElementsWithTypes(info)
 
 	 [<INTO>
-      groupID = id()
+      groupID = id(null)
       {
          group = new GroupSymbol(groupID);
       }
@@ -1402,21 +1404,19 @@ SetClauseList setClauseList(boolean shortName, ParseInfo info) :
 	Expression value = null;
 }
 {
-	element = id()
+	element = id(shortName?Boolean.TRUE:null)
     <EQ>
     value = expression(info)
     {
-    	String symbolName = shortName?validateElementName(element):element;
-        ElementSymbol symbol = new ElementSymbol(symbolName);
+        ElementSymbol symbol = new ElementSymbol(element);
         using.addClause(symbol, value);
     }
 	(<COMMA>
-	 element = id()
+	 element = id(null)
      <EQ>
      value = expression(info)
      {
-	      symbolName = shortName?validateElementName(element):element;
-          symbol = new ElementSymbol(symbolName);
+     	  symbol = new ElementSymbol(element);
           using.addClause(symbol, value);
      }
 	)*
@@ -1437,17 +1437,17 @@ List<TableFunctionReference.ProjectedColumn> createElementsWithTypes(ParseInfo i
 	List<TableFunctionReference.ProjectedColumn> elements = new ArrayList<TableFunctionReference.ProjectedColumn>();
 }
 {
-	 element = id()
+	 element = id(Boolean.TRUE)
 	 type = parseDataType()
 	 {
-	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type.type);
+	    TableFunctionReference.ProjectedColumn symbol = new TableFunctionReference.ProjectedColumn(element, type.type);
 		elements.add(symbol);
 	 }
 	 (LOOKAHEAD(2) <COMMA>
-		element = id()
+		element = id(Boolean.TRUE)
 		type = parseDataType()
 		{
-	      symbol = new TableFunctionReference.ProjectedColumn(validateElementName(element), type.type);
+	      symbol = new TableFunctionReference.ProjectedColumn(element, type.type);
 		  elements.add(symbol);
 		}
 	 )*
@@ -1481,7 +1481,7 @@ StoredProcedure callableStatement(ParseInfo info) :
 	   storedProcedure.setCalledWithReturn(true);
 	 }
 	]
-	<CALL> procName = id()
+	<CALL> procName = id(null)
 	{
 		storedProcedure.setProcedureName(procName);
 	}
@@ -1519,7 +1519,7 @@ StoredProcedure storedProcedure(ParseInfo info, int startIndex) :
 {
 	(
 		(<EXEC> | <EXECUTE> | <CALL>)
-		procName = id()
+		procName = id(null)
 		{
 			storedProcedure.setProcedureName(procName);
 		}
@@ -1561,7 +1561,7 @@ void executeNamedParams(ParseInfo info, StoredProcedure storedProcedure, int par
 	{
 		storedProcedure.setDisplayNamedParameters(true);
 	}
-	(name=id()
+	(name=id(null)
 	 <EQ> [<GT>]
 	 value = expression(info)
 		{
@@ -1572,7 +1572,7 @@ void executeNamedParams(ParseInfo info, StoredProcedure storedProcedure, int par
 			parameter = null;
 		}
 		(	<COMMA>
-		 	name=id()
+		 	name=id(null)
 	 		<EQ> [<GT>]
 	 		value = expression(info)
 			{
@@ -1602,9 +1602,9 @@ Insert insert(ParseInfo info) :
 }
 {
 	<INSERT> <INTO>
-	group = id()
+	group = id(null)
 
-	[LOOKAHEAD(<LPAREN> id()) columns = columnList(false) {
+	[LOOKAHEAD(<LPAREN> id(null)) columns = columnList(false, true) {
 	  insert.setVariables(columns);
 	}]
 
@@ -1636,40 +1636,6 @@ Insert insert(ParseInfo info) :
 		insert.setGroup(new GroupSymbol(group) );
 
 		return insert;
-	}
-}
-
-/*
-name=column list
-description=A list of column references.
-example={code:sql}(col1, col2, ...){code}
-*/
-List<ElementSymbol> columnList(boolean validate) :
-{
-	String element = null;
-	List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
-}
-{
-   <LPAREN>
-	element = id()
-	{
-		if (validate) {
-			element = validateElementName(element);
-		}
-		symbols.add(new ElementSymbol(element));
-	}
-	(	<COMMA>
-		element = id()
-		{
-			if (validate) {
-				element = validateElementName(element);
-			}
-			symbols.add(new ElementSymbol(element));
-		}
-	)*
-	<RPAREN>
-	{
-		return symbols;
 	}
 }
 
@@ -1714,7 +1680,7 @@ Update update(ParseInfo info) :
 }
 {
 	<UPDATE>
-	group = id()
+	group = id(null)
 	<SET>
 	setClauseList = setClauseList(false, info)
 	{
@@ -1753,7 +1719,7 @@ Delete delete(ParseInfo info) :
 }
 {
 	<DELETE> <FROM>
-	group = id()
+	group = id(null)
 	[criteria = where(info)]
 	[option = option(info)
 	  {
@@ -1811,11 +1777,11 @@ WithQueryCommand withListElement(ParseInfo info) :
    QueryCommand queryExpression = null;
 }
 {
-	name = id()
-	[ columns = columnList(true)] 
+	name = id(Boolean.FALSE)
+	[ columns = columnList(true, true)] 
 	<AS> <LPAREN> queryExpression = queryExpression(info) <RPAREN>
 	{
-	    return new WithQueryCommand(new GroupSymbol(validateAlias(name)), columns, queryExpression);
+	    return new WithQueryCommand(new GroupSymbol(name), columns, queryExpression);
 	}
 }
 
@@ -1891,7 +1857,7 @@ QueryCommand queryPrimary(ParseInfo info) :
 {
     (
         query=query(info) | 
-        (<TABLE> name=id() {
+        (<TABLE> name=id(null) {
            Query q = new Query();
            q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
            q.setFrom(new From(Arrays.asList(new UnaryFromClause(new GroupSymbol(name)))));
@@ -1953,7 +1919,7 @@ Into into(ParseInfo info) :
 }
 {	
 	<INTO>
-	(groupID=id())
+	(groupID=id(null))
 	{
     	into = new Into(new GroupSymbol(groupID));
 		return into;
@@ -2025,11 +1991,10 @@ Expression selectExpression(ParseInfo info) :
 	(	
 		// Expression
 		expression=expression(info)	
-		[[<AS>] alias=id() ]
+		[[<AS>] alias=id(Boolean.FALSE) ]
 	)
 	{		
 		if(alias != null) {
-			alias = validateAlias(alias); 
 			return new AliasSymbol(alias, expression);
 		}
 		return expression;
@@ -2050,12 +2015,9 @@ DerivedColumn derivedColumn(ParseInfo info) :
 	(	
 		// Expression
 		expression=expression(info)	
-		[<AS> alias=id() ]
+		[<AS> alias=id(Boolean.FALSE) ]
 	)
 	{		
-		if(alias != null) {
-			alias = validateAlias(alias); 
-		}
 		return new DerivedColumn(alias, expression);
 	}
 }
@@ -2143,7 +2105,7 @@ AggregateSymbol textAgg(ParseInfo info) :
 	]	
 	[
 	  <ENCODING>
-	  encoding = id() 
+	  encoding = id(null) 
 	]
 	[
 		orderBy = orderby(info)
@@ -2424,7 +2386,7 @@ XMLSerialize xmlSerialize(ParseInfo info) :
 	[
 		<AS> (<STRING> | <VARCHAR> | <CLOB> | <VARBINARY> | <BLOB>) { t = getToken(0);}
 	]
-	[ <ENCODING> enc = id() ]
+	[ <ENCODING> enc = id(null) ]
 	[ <VERSION> ver = stringVal() ]
 	[ ( <INCLUDING> {declr = true;}| <EXCLUDING> {declr = false;}) <XMLDECLARATION> ]
 	<RPAREN>
@@ -2460,12 +2422,12 @@ ArrayTable arrayTable(ParseInfo info) :
  	<COLUMNS>
  	columns = createElementsWithTypes(info) 
  	<RPAREN>
- 	[<AS>] aliasID=id()
+ 	[<AS>] aliasID=id(Boolean.FALSE)
  	{
  		ArrayTable result = new ArrayTable();
  		result.setArrayValue(array);
  		result.setColumns(columns);
- 		result.setName(validateAlias(aliasID));
+ 		result.setName(aliasID);
  		return result;
  	}
 }
@@ -2537,7 +2499,7 @@ TextTable textTable(ParseInfo info) :
 	  skip = intVal()
 	]
  	<RPAREN>
- 	[<AS>] aliasID=id()
+ 	[<AS>] aliasID=id(Boolean.FALSE)
  	{
  		TextTable result = new TextTable();
  		result.setFile(file);
@@ -2546,7 +2508,7 @@ TextTable textTable(ParseInfo info) :
  		result.setEscape(escape);
  		result.setHeader(header);
  		result.setSkip(skip);
- 		result.setName(validateAlias(aliasID));
+ 		result.setName(aliasID);
  		result.setQuote(quote);
  		result.setUsingRowDelimiter(useRowDelimiter);
  		result.setSelector(selector);
@@ -2569,7 +2531,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	Integer position = null;
 }
 {
-	name = id()
+	name = id(Boolean.TRUE)
 	datatype = parseDataType()
 	[ 
 	  	<WIDTH>
@@ -2587,7 +2549,7 @@ TextTable.TextColumn textColumn(ParseInfo info):
 	  	position = intVal() 
 	]
 	{
-		TextTable.TextColumn result = new TextTable.TextColumn(validateElementName(name), datatype.type, width, noTrim);
+		TextTable.TextColumn result = new TextTable.TextColumn(name, datatype.type, width, noTrim);
 		result.setSelector(selector);
 		result.setPosition(position);
 		return result;
@@ -2699,14 +2661,14 @@ ObjectTable objectTable(ParseInfo info) :
       }
     )*
  	<RPAREN>
- 	[<AS>] aliasID=id()
+ 	[<AS>] aliasID=id(Boolean.FALSE)
  	{
  		ObjectTable result = new ObjectTable();
  		result.setScriptingLanguage(lang);
  		result.setRowScript(rowScript);
  		result.setPassing(passingValues);
  		result.setColumns(columns);
- 		result.setName(validateAlias(aliasID));
+ 		result.setName(aliasID);
  		return result;
  	}
 }
@@ -2724,7 +2686,7 @@ ObjectTable.ObjectColumn objectColumn(ParseInfo info):
 	Expression defaultExpr = null;
 }
 {
-	name = id()
+	name = id(null)
     datatype = parseDataType()
 	path = stringVal()    
     [
@@ -2784,14 +2746,14 @@ XMLTable xmlTable(ParseInfo info) :
  	  )*
  	]
  	<RPAREN>
- 	[<AS>] aliasID=id()
+ 	[<AS>] aliasID=id(Boolean.FALSE)
  	{
  		XMLTable result = new XMLTable();
  		result.setXquery(xquery);
  		result.setNamespaces(xmlNamespaces);
  		result.setPassing(passingValues);
  		result.setColumns(columns);
- 		result.setName(validateAlias(aliasID));
+ 		result.setName(aliasID);
  		return result;
  	}
 }
@@ -2809,7 +2771,7 @@ XMLTable.XMLColumn xmlColumn(ParseInfo info):
 	Expression defaultExpr = null;
 }
 {
-	name = id()
+	name = id(null)
 	
 	((
 	  <FOR> <ORDINALITY> 
@@ -2871,10 +2833,10 @@ SubqueryFromClause subqueryFromClause(ParseInfo info) :
       command = storedProcedure(info, 1) )
 	<RPAREN>
 	[<AS>]
-	aliasID = id()
+	aliasID = id(Boolean.FALSE)
 	
 	{
-		SubqueryFromClause clause = new SubqueryFromClause(validateAlias(aliasID), command);
+		SubqueryFromClause clause = new SubqueryFromClause(aliasID, command);
         setFromClauseOptions(lparen, clause);
         clause.setTable(table);
         return clause;
@@ -2895,10 +2857,10 @@ UnaryFromClause unaryFromClause(ParseInfo info) :
 	UnaryFromClause clause = null;
 }
 {	
-	(groupID=id() {groupToken = getToken(0);} [[<AS>] aliasID=id()])
+	(groupID=id(null) {groupToken = getToken(0);} [[<AS>] aliasID=id(Boolean.FALSE)])
 	{
     	if(aliasID != null) {		
-            group = new GroupSymbol(validateAlias(aliasID), groupID);
+            group = new GroupSymbol(aliasID, groupID);
         } else {
 			group = new GroupSymbol(groupID);
         }
@@ -3551,35 +3513,35 @@ Option option(ParseInfo info) :
 	<OPTION>
 	(
 		<MAKEDEP>		
-		id=id()
+		id=id(null)
 		{
             option.addDependentGroup(id);
 		}
 		(<COMMA>
-			id=id()
+			id=id(null)
 			{
                 option.addDependentGroup(id);
 	        }
 		)* |
 		<MAKENOTDEP>		
-		id=id()
+		id=id(null)
 		{
             option.addNotDependentGroup(id);
 		}
 		(<COMMA>
-			id=id()
+			id=id(null)
 			{
                 option.addNotDependentGroup(id);
 	        }
 		)* |
 		
 		nocache	= <NOCACHE>		
-		[id=id()
+		[id=id(null)
 		{
             option.addNoCacheGroup(id);
 		}
 		(<COMMA>
-			id=id()
+			id=id(null)
 			{
                 option.addNoCacheGroup(id);
 	        }
@@ -3844,7 +3806,11 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
 	OrderBy orderBy = null;
 }
 {
-	<OVER> 
+	<OVER> { 
+	if (!(agg instanceof AggregateSymbol)) {
+	   		throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
+    	}
+    }
     <LPAREN> 
     [<PARTITION> <BY> partitionList = expressionList(info)]
     [orderBy = orderby(info)]
@@ -3852,9 +3818,6 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
     {
     	WindowFunction result = new WindowFunction();
     	WindowSpecification ws = new WindowSpecification();
-    	if (!(agg instanceof AggregateSymbol)) {
-	   		throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
-    	}
     	result.setFunction((AggregateSymbol)agg);
     	ws.setPartition(partitionList);
     	ws.setOrderBy(orderBy);
@@ -4122,7 +4085,7 @@ Expression function(ParseInfo info) :
 	| ( funcToken = <XMLPI>
 		<LPAREN>
 		(
-		 [LOOKAHEAD(1) <NAME>] literal = id()
+		 [LOOKAHEAD(1) <NAME>] literal = id(null)
 		)
 		{
 			args.add(new Constant(literal));	
@@ -4148,7 +4111,7 @@ Expression function(ParseInfo info) :
 			return expression;
 		}
 	|   
-	(	funcName = id()
+	(	funcName = id(null)
 		<LPAREN>
 		[<ALL> { distinct = false; } | <DISTINCT> {distinct = true;} ]
 		[ args = expressionList(info) ]
@@ -4241,7 +4204,7 @@ XMLElement xmlElement(ParseInfo info) :
 {
 	<XMLELEMENT> <LPAREN>
 	(
-	 [LOOKAHEAD(1) <NAME>] name = id()
+	 [LOOKAHEAD(1) <NAME>] name = id(null)
 	)
 	[
 		LOOKAHEAD(2) <COMMA> xmlNamespaces = xmlNamespaces(info)
@@ -4362,7 +4325,7 @@ XMLNamespaces.NamespaceItem namespaceItem() :
 }
 {
 	(
-		uri = stringVal() <AS> prefix = id()
+		uri = stringVal() <AS> prefix = id(null)
 		{
 			return new XMLNamespaces.NamespaceItem(uri, prefix);
 		}
@@ -4602,9 +4565,9 @@ void createNameSpace(MetadataFactory factory) :
 	String prefix = null;
 }
 { 
-	<SET> <NAMESPACE> uri = stringVal() <AS> prefix = id()
+	<SET> <NAMESPACE> uri = stringVal() <AS> prefix = id(Boolean.FALSE)
 	{
-		factory.addNamespace(validateAlias(prefix), uri);
+		factory.addNamespace(prefix, uri);
 	}
 }
 
@@ -4627,12 +4590,12 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 {
 	<CREATE> [<VIRTUAL> | <FOREIGN> {virtual = false;}] (<PROCEDURE> | <FUNCTION> {function = true;})
 	//the below is optional beacuse to allow the designer based metadata
-	(	procName = id()
+	(	procName = id(null)
 		{
 			try {
 				proc = factory.addProcedure(procName);
 			} catch(TranslatorException e){
-				throw new ParseException(e.getMessage());
+				throw new MetadataException(e);
 			}		
 		}
 	
@@ -4660,7 +4623,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 			proc.setFunction(function);
 			if (stmt != null){
 			    if (function || !virtual) {
-			         throw new ParseException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
+			         throw new MetadataException(QueryPlugin.Util.getString("SQLParser.function_def", procName));
 			    }
 				proc.setQueryPlan((comment != null?comment.image+" ":"") + stmt.toString());
 			}
@@ -4695,7 +4658,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	 |(<OUT> {ppType = ProcedureParameter.Type.Out;})
 	 |(<INOUT> {ppType = ProcedureParameter.Type.InOut;})
 	 |(<VARIADIC> {ppType = ProcedureParameter.Type.In ; vararg = true;}))]
-	name = id()
+	name = id(Boolean.TRUE)
 	type = parseDataType()
 	[<NOT> <NULL> {notNull = true;}]
 	[<RESULT>
@@ -4708,7 +4671,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	]
 	{
 		try {
-			param = factory.addProcedureParameter(validateElementName(name), type.type, ppType, proc);
+			param = factory.addProcedureParameter(name, type.type, ppType, proc);
 			setTypeInfo(type, param);
 			if (notNull) {
 				param.setNullType(Column.NullType.No_Nulls);
@@ -4717,7 +4680,7 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 				param.setVarArg(vararg);
 			}			
 		} catch (TranslatorException e){
-			throw new ParseException(e.getMessage());
+			throw new MetadataException(e);
 		}
 	}
 	[<DEFAULT_KEYWORD> defaultValue = stringVal() {param.setDefaultValue(defaultValue);}]
@@ -4741,7 +4704,7 @@ void procedureRsColumn(MetadataFactory factory, Procedure proc) :
 	BaseColumn column = null; 
 }
 {
-      name = id()
+      name = id(Boolean.TRUE)
 	  type = parseDataType()
 	  {
 	  	column = addProcColumn(factory, proc, name, type, true);
@@ -4771,13 +4734,13 @@ void createTable(MetadataFactory factory) :
 }
 {
 	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
-	tableName = id()
+	tableName = id(null)
 	{
 		try{
 		    table = factory.addTable(tableName);
 		    table.setVirtual(view);
 	    } catch(TranslatorException e){
-	    	throw new ParseException(e.getMessage());
+	    	throw new MetadataException(e);
 	    }
 	}
 	[<LPAREN>
@@ -4785,7 +4748,7 @@ void createTable(MetadataFactory factory) :
     (LOOKAHEAD(3) <COMMA>
       createColumn(factory, table)
     )*	
-    (<COMMA>{name=null;} [<CONSTRAINT> name = id()] (constraint = primaryKey(factory, table, name) | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) | constraint = foreignKey(factory, table, name))
+    (<COMMA>{name=null;} [<CONSTRAINT> name = id(null)] (constraint = primaryKey(factory, table, name) | constraint = constraint(factory, table, name, ParseInfo.DEFAULT_INSTANCE) | constraint = foreignKey(factory, table, name))
        [optionsClause(constraint, factory)
 	   {
 	      setCommonProperties(constraint, constraint.getProperties());
@@ -4802,7 +4765,7 @@ void createTable(MetadataFactory factory) :
 	{
 		if (query != null){
 		   if (!view) {
-     		   throw new ParseException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
+     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
 		   }
 		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
 		}
@@ -4833,20 +4796,15 @@ AbstractMetadataRecord foreignKey(MetadataFactory factory, Table table, String n
 }
 {
 	<FOREIGN> <KEY>
-	columnNames = getColumnNames()
-    {
-	    for (String col: columnNames) {
-	    	column = getColumn(col, table);
-	    }  
-    }
+	columnNames = columnList(true, false)
     <REFERENCES>
-    viewName = id()
-    [pkColumnNames = getColumnNames()]
+    viewName = id(null)
+    [pkColumnNames = columnList(true, false)]
     {
 	    try{
 		    return factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
 	    } catch (TranslatorException e){
-	    	throw new ParseException(e.getMessage());
+	    	throw new MetadataException(e);
 	    }
     }
 }
@@ -4864,18 +4822,15 @@ AbstractMetadataRecord primaryKey(MetadataFactory factory, Table table, String n
 }
 {
 	<PRIMARY> <KEY>
-	columnNames = getColumnNames()
+	columnNames = columnList(true, false)
     {
-	    for (String col: columnNames) {
-	    	column = getColumn(col, table);
-	    }
 	    if (table.getPrimaryKey() != null){
-	    	throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
+	    	throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 	 	}
 	 	try{
 	 		return factory.addPrimaryKey(name!=null?name:"PK", columnNames, table);
 	 	} catch(TranslatorException e){
-	 		throw new ParseException(e.getMessage());
+	 		throw new MetadataException(e);
 	 	}
     }
 }
@@ -4896,11 +4851,8 @@ AbstractMetadataRecord constraint(MetadataFactory factory, Table table, String n
 }
 {
 	(( type = <UNIQUE> | type = <ACCESSPATTERN>)
-	columnNames = getColumnNames()	    
+	columnNames = columnList(true, false)	    
 	{
-	    for (String col: columnNames) {
-	    	column = getColumn(col, table);
-	    }
 	    try{
 			if (type.image.equalsIgnoreCase("UNIQUE")) { 
 	    		return factory.addIndex(name != null?name:("UNIQUE"+table.getUniqueKeys().size()), false, columnNames, table);
@@ -4908,7 +4860,7 @@ AbstractMetadataRecord constraint(MetadataFactory factory, Table table, String n
 	    		return factory.addAccessPattern(name != null?name:("AP"+table.getAccessPatterns().size()), columnNames, table);
 	    	}
     	}catch(TranslatorException e){
-    		throw new ParseException(e.getMessage());
+    		throw new MetadataException(e);
     	}	    
     }) | (
     type = <INDEX>
@@ -4922,24 +4874,32 @@ AbstractMetadataRecord constraint(MetadataFactory factory, Table table, String n
 }
 
 /*
-name=column name list
+name=column list
 description=A list of column names.
 example={code:sql}(a, b){code}
 */
-ArrayList<String> getColumnNames() :
+List columnList(boolean validate, boolean asElementSymbols) :
 {
-	ArrayList list = new ArrayList<String>();
+	ArrayList list = new ArrayList();
 	String id = null;
 }
 {
 	<LPAREN>
-	  id = id()
+	  id = id(validate?Boolean.TRUE:null)
 	  {
-	  	list.add(id);
+		if (asElementSymbols) {
+			list.add(new ElementSymbol(id));
+		} else {
+	  		list.add(id);
+	  	}
 	  }
-	  (<COMMA> id = id()
+	  (<COMMA> id = id(validate?Boolean.TRUE:null)
 	   {
-		list.add(id);
+		if (asElementSymbols) {
+			list.add(new ElementSymbol(id));
+		} else {
+	  		list.add(id);
+	  	}
 	   }
 	  )*
 	 <RPAREN> 
@@ -4968,17 +4928,17 @@ void createColumn(MetadataFactory factory, Table table) :
 	Token word = null;
 }
 {
-	 element = id()
+	 element = id(Boolean.TRUE)
 	 (
 	  type = parseDataType()
 	  {
 	  	try{
-    		column = factory.addColumn(validateElementName(element), type.type, table);
+    		column = factory.addColumn(element, type.type, table);
     		column.setUpdatable(true);
 		    setTypeInfo(type, column);		    	
     		columnName.add(element);
     	}catch(TranslatorException e){
-    		throw new ParseException(e.getMessage());
+    		throw new MetadataException(e);
     	}
 	  }
 	 )
@@ -5004,12 +4964,12 @@ void createColumn(MetadataFactory factory, Table table) :
 		 		factory.addIndex("UNIQUE"+table.getIndexes().size(), false, columnName, table);
 		 	} else if (pk) {
 		    	if (table.getPrimaryKey() != null) {
-		    		throw new ParseException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
+		    		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 		    	}
 		 		factory.addPrimaryKey("PK", columnName, table);
 		 	}
     	}catch(TranslatorException e){
-    		throw new ParseException(e.getMessage());
+    		throw new MetadataException(e);
     	}	 	
 	     	 	
 	    column.setAutoIncremented(autoIncrement);
@@ -5043,7 +5003,7 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	String strVal = null;
 }
 {
-	 key = id()
+	 key = id(null)
 	 (value = nonNumericLiteral()
 	 | [strVal = plusMinus()] value = unsignedNumericLiteral(strVal))
 	 { 

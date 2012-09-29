@@ -31,7 +31,6 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.*;
-import org.teiid.metadata.ParseException;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -118,7 +117,7 @@ public class TestDDLParser {
 		assertEquals("hello", e6.getDefaultValue());
 	}
 	
-	@Test(expected=ParseException.class)
+	@Test(expected=MetadataException.class)
 	public void testDuplicatePrimarykey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer primary key, e2 varchar primary key)";
 		MetadataStore mds = new MetadataStore();
@@ -216,7 +215,7 @@ public class TestDDLParser {
 		assertEquals(table.getColumns().subList(1, 3), table.getAccessPatterns().get(1).getColumns());
 	}	
 	
-	@Test(expected=ParseException.class)
+	@Test(expected=MetadataException.class)
 	public void testWrongPrimarykey() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, PRIMARY KEY (e3))";
 
@@ -341,7 +340,7 @@ public class TestDDLParser {
 		assertEquals(fk.getPrimaryKey().getColumns(), s.getSchema("model").getTable("G1").getColumns());
 	}	
 	
-	@Test(expected=ParseException.class)
+	@Test(expected=MetadataException.class)
 	public void testTableWithPlan() throws Exception {
 		String ddl = "CREATE foreign table G1 as select 1";
 		MetadataStore mds = new MetadataStore();
@@ -515,7 +514,7 @@ public class TestDDLParser {
 		assertEquals("boolean", fm.getInputParameters().get(0).getType());
 	}
 	
-	@Test(expected=ParseException.class) public void testInvalidFunctionBody() throws Exception {
+	@Test(expected=MetadataException.class) public void testInvalidFunctionBody() throws Exception {
 		String ddl = "CREATE FUNCTION SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
 
 		Schema s = helpParse(ddl, "model").getSchema();
@@ -524,7 +523,7 @@ public class TestDDLParser {
 		assertTrue( fm.getInputParameters().get(0).isVarArg());
 	}
 	
-	@Test(expected=ParseException.class) public void testInvalidProcedureBody() throws Exception {
+	@Test(expected=MetadataException.class) public void testInvalidProcedureBody() throws Exception {
 		String ddl = "CREATE FOREIGN PROCEDURE SourceFunc(flag boolean) RETURNS varchar AS SELECT 'a';";
 
 		Schema s = helpParse(ddl, "model").getSchema();

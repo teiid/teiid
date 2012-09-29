@@ -151,7 +151,7 @@ public class MetadataFactory implements Serializable {
 			 throw new TranslatorException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
 		}
 		if (table.getColumnByName(name) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
 		}
 		Column column = new Column();
 		column.setName(name);
@@ -276,11 +276,10 @@ public class MetadataFactory implements Serializable {
 		return index;
 	}
 
-	private void assignColumn(Table table, ColumnSet<?> columns, String columnName)
-			throws TranslatorException {
+	private void assignColumn(Table table, ColumnSet<?> columns, String columnName) {
 		Column column = table.getColumnByName(columnName);
 		if (column == null) {
-			throw new TranslatorException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));				
+			throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));				
 		}
 		columns.getColumns().add(column);
 	}
@@ -386,7 +385,7 @@ public class MetadataFactory implements Serializable {
 	}
 
 	private void assignColumns(List<String> columnNames, Table table,
-			ColumnSet<?> columns) throws TranslatorException {
+			ColumnSet<?> columns) {
 		for (String columnName : columnNames) {
 			assignColumn(table, columns, columnName);
 		}
@@ -562,9 +561,9 @@ public class MetadataFactory implements Serializable {
 	/**
 	 * Parses, but does not close, the given {@link Reader} into this {@link MetadataFactory}
 	 * @param ddl
-	 * @throws ParseException
+	 * @throws MetadataException
 	 */
-	public void parse(Reader ddl) throws ParseException {
+	public void parse(Reader ddl) throws MetadataException {
 		this.parser.parseDDL(this, ddl);
 	}
 	

@@ -51,7 +51,7 @@ public class MetadataStore implements Serializable {
 	
 	public void addSchema(Schema schema) {
 		if (this.schemas.put(schema.getName(), schema) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60012, schema.getName()));
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60012, DataPlugin.Util.gs(DataPlugin.Event.TEIID60012, schema.getName()));
 		}		
 		this.schemaList.add(schema);
 	}

@@ -43,14 +43,14 @@ public class Schema extends AbstractMetadataRecord {
 	public void addTable(Table table) {
 		table.setParent(this);
 		if (this.tables.put(table.getName(), table) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName())); 
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60013, DataPlugin.Util.gs(DataPlugin.Event.TEIID60013, table.getName())); 
 		}
 	}
 	
 	public void addProcedure(Procedure procedure) {
 		procedure.setParent(this);
 		if (this.procedures.put(procedure.getName(), procedure) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName())); 
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60014, DataPlugin.Util.gs(DataPlugin.Event.TEIID60014, procedure.getName())); 
 		}
 	}
 	
@@ -58,7 +58,7 @@ public class Schema extends AbstractMetadataRecord {
 		function.setParent(this);
 		//TODO: ensure that all uuids are unique
 		if (this.functions.put(function.getUUID(), function) != null) {
-			throw new DuplicateRecordException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
+			throw new DuplicateRecordException(DataPlugin.Event.TEIID60015, DataPlugin.Util.gs(DataPlugin.Event.TEIID60015, function.getUUID()));
 		}
 	}	
 

@@ -36,7 +36,6 @@ import java.util.TreeMap;
 
 import org.teiid.UserDefinedAggregate;
 import org.teiid.core.CoreConstants;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.logging.LogConstants;
@@ -44,6 +43,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
@@ -313,6 +313,9 @@ public class FunctionTree {
         boolean requiresContext = false;
         // Defect 20007 - Ignore the invocation method if pushdown is not required.
         if (validateClass && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
+        	if (method.getInvocationClass() == null || method.getInvocationMethod() == null) {
+        		throw new MetadataException(QueryPlugin.Event.TEIID31123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31123, method.getName()));
+        	}
             try {
                 Class<?> methodClass = source.getInvocationClass(method.getInvocationClass(), method.getClassLoader()==null?Thread.currentThread().getContextClassLoader():method.getClassLoader());
                 ReflectionHelper helper = new ReflectionHelper(methodClass);
@@ -324,36 +327,36 @@ public class FunctionTree {
                 	requiresContext = true;
                 }
             } catch (ClassNotFoundException e) {
-            	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
+            	 throw new MetadataException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
             } catch (NoSuchMethodException e) {
-            	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30388, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30388, method, method.getInvocationClass(), method.getInvocationMethod()));
+            	 throw new MetadataException(QueryPlugin.Event.TEIID30388, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30388, method, method.getInvocationClass(), method.getInvocationMethod()));
             } catch (Exception e) {                
-                 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
+                 throw new MetadataException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
             } 
             if (invocationMethod != null) {
             	// Check return type is non void
         		Class<?> methodReturn = invocationMethod.getReturnType();
         		if(method.getAggregateAttributes() == null && methodReturn.equals(Void.TYPE)) {
-        			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30390, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30390, method.getName(), invocationMethod));
+        			 throw new MetadataException(QueryPlugin.Event.TEIID30390, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30390, method.getName(), invocationMethod));
         		}
 
         		// Check that method is public
         		int modifiers = invocationMethod.getModifiers();
         		if(! Modifier.isPublic(modifiers)) {
-        			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30391, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30391, method.getName(), invocationMethod));
+        			 throw new MetadataException(QueryPlugin.Event.TEIID30391, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30391, method.getName(), invocationMethod));
         		}
 
         		// Check that method is static
         		if(! Modifier.isStatic(modifiers)) {
         			if (method.getAggregateAttributes() == null) {
-        				throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30392, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30392, method.getName(), invocationMethod));
+        				throw new MetadataException(QueryPlugin.Event.TEIID30392, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30392, method.getName(), invocationMethod));
         			}
         		} else if (method.getAggregateAttributes() != null) {
-        			throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30600, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30600, method.getName(), invocationMethod));
+        			throw new MetadataException(QueryPlugin.Event.TEIID30600, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30600, method.getName(), invocationMethod));
         		}
         		
         		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(invocationMethod.getDeclaringClass()))) {
-    				throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
+    				throw new MetadataException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
             }
         }

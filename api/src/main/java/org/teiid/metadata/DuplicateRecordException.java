@@ -22,12 +22,14 @@
 
 package org.teiid.metadata;
 
-public class DuplicateRecordException extends AssertionError {
+import org.teiid.core.BundleUtil.Event;
+
+public class DuplicateRecordException extends MetadataException {
 
 	private static final long serialVersionUID = -1319489333975416115L;
 
-	public DuplicateRecordException(String msg) {
-		super(msg);
+	public DuplicateRecordException(Event e, String msg) {
+		super(e, msg);
 	}
 	
 }
