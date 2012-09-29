@@ -77,12 +77,22 @@ public class TestFunctionTree {
     
     @Test public void testLoadErrors() {
     	FunctionMethod method = new FunctionMethod(
-    			"dummy", null, null, PushDown.CAN_PUSHDOWN, "nonexistentClass", "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    			"dummy", null, null, PushDown.CAN_PUSHDOWN, null, "noMethod",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 	 	    	new ArrayList<FunctionParameter>(0), 
 	 	    	new FunctionParameter("output", DataTypeManager.DefaultDataTypes.STRING), false, Determinism.DETERMINISTIC); //$NON-NLS-1$
     	
     	//allowed, since we're not validating the class
     	new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method))));
+    	
+    	//should fail, no class
+    	try {
+    		new FunctionLibrary(RealMetadataFactory.SFM.getSystemFunctions(), new FunctionTree("foo", new UDFSource(Arrays.asList(method)), true));
+    		fail();
+    	} catch (TeiidRuntimeException e) {
+    		assertEquals("TEIID31123 Could not load non-FOREIGN UDF \"dummy\", since both invocation class and invocation method are required.", e.getMessage());
+    	}
+    	
+    	method.setInvocationClass("nonexistantClass");
     	
     	//should fail, no class
     	try {
