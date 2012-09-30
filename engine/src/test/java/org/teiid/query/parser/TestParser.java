@@ -2696,7 +2696,15 @@ public class TestParser {
 	
 	/** SELECT xx.yy%.a from xx.yy */
 	@Test public void testFailsWildcardInSelect(){
-		helpException("SELECT xx.yy%.a from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT xx.yy [*]%[*] .\" at line 1, column 13.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
+		helpException("SELECT xx.yy%.a from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT xx.yy[*]%[*].\" at line 1, column 13.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
+	}
+	
+	@Test public void testFailsWildcardInSelect1(){
+		helpException("SELECT % from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT [*]%[*] from\" at line 1, column 8.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
+	}
+	
+	@Test public void testInvalidToken(){
+		helpException("%", "");
 	}
 
 	/** SELECT a or b from g */

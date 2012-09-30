@@ -22,6 +22,8 @@
 
 package org.teiid.query.parser;
 
+import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
+
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -219,7 +221,14 @@ public class QueryParser implements Parser {
 				return pe.getMessage();
 			}
 			StringBuilder sb = encountered(pe, 1);
-			sb.append(pe.getMessage());
+			if (pe.currentToken.kind == INVALID_TOKEN) {
+				sb.append(QueryPlugin.Util.getString("QueryParser.lexicalError", pe.currentToken.image)); //$NON-NLS-1$
+			} else if (pe.currentToken.next != null && pe.currentToken.next.kind == -1) {
+				sb.append(QueryPlugin.Util.getString("QueryParser.lexicalError", pe.currentToken.next.image)); //$NON-NLS-1$
+			}
+			if (pe.getMessage() != null) {
+				sb.append(pe.getMessage());
+			}
 			return sb.toString();
 		}
 		StringBuffer expected = new StringBuffer();
@@ -236,7 +245,7 @@ public class QueryParser implements Parser {
 		});
 		int maxSize = expectedTokenSequences[0].length;
 		StringBuilder retval = encountered(pe, maxSize);
-		if (currentToken.next.kind == -1) {
+		if (currentToken.next.kind == INVALID_TOKEN) {
 			retval.append(QueryPlugin.Util.getString("QueryParser.lexicalError", currentToken.next.image)); //$NON-NLS-1$
 			return retval.toString();
 		}
@@ -288,22 +297,35 @@ public class QueryParser implements Parser {
 		} else {
 			addTokenSequence(1, retval, currentToken);
 		}
-		if (currentToken.next.kind == -1) {
-			maxSize = 1;
-		}
-		retval.append(" [*]"); //$NON-NLS-1$
-		Token last = addTokenSequence(maxSize, retval, currentToken.next);
-		if (last.kind != 0) {
-			retval.append("[*]"); //$NON-NLS-1$
-			if (last.next == null) {
-				this.parser.getNextToken();
+		if (currentToken.next != null) {
+			boolean space = true;
+			if (currentToken.next.kind == INVALID_TOKEN) {
+				maxSize = 1;
+				space = currentToken.endColumn + 1 != currentToken.next.beginColumn;
 			}
-			if (last.next != null) {
+			if (space) {
 				retval.append(" "); //$NON-NLS-1$
-				addTokenSequence(1, retval, last.next);
 			}
+			retval.append("[*]"); //$NON-NLS-1$
+			Token last = addTokenSequence(maxSize, retval, currentToken.next);
+			if (last.kind != 0) {
+				retval.append("[*]"); //$NON-NLS-1$
+				if (last.next == null) {
+					this.parser.getNextToken();
+				}
+				if (last.next != null) {
+					if (!space) {
+						space = last.endColumn + 1 != last.next.beginColumn;
+					}
+					if (space) {
+						retval.append(" "); //$NON-NLS-1$
+					}
+					addTokenSequence(1, retval, last.next);
+				}
+			}
+			currentToken = currentToken.next;
 		}
-		retval.append("\" at line ").append(currentToken.next.beginLine).append(", column ").append(currentToken.next.beginColumn); //$NON-NLS-1$ //$NON-NLS-2$
+		retval.append("\" at line ").append(currentToken.beginLine).append(", column ").append(currentToken.beginColumn); //$NON-NLS-1$ //$NON-NLS-2$
 		retval.append(".").append(pe.eol); //$NON-NLS-1$
 		return retval;
 	}

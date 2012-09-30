@@ -29,6 +29,7 @@ import java.io.IOException;
  */
 class TeiidSQLParserTokenManager extends SQLParserTokenManager {
 
+	static final int INVALID_TOKEN = -1;
 	int tokenCount = 0;
 	Token head;
 	
@@ -57,12 +58,12 @@ class TeiidSQLParserTokenManager extends SQLParserTokenManager {
 			return t;
 		} catch (TokenMgrError err) {
 			Token t = new Token();
-			t.kind = -1;
+			t.kind = INVALID_TOKEN;
 			t.beginColumn = this.input_stream.getBeginColumn();
 			t.beginLine = this.input_stream.getBeginLine();
-			t.endColumn = t.beginColumn+1;
+			t.endColumn = t.beginColumn;
 			t.endLine = t.beginLine;
-			t.image = new String(this.input_stream.buffer, this.input_stream.bufpos+1, 1);
+			t.image = this.input_stream.GetImage().substring(0, 1);
 			try {
 				//mark the char a consumed
 				this.input_stream.readChar();
