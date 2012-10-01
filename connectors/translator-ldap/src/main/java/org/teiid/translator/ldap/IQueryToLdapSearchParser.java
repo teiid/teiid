@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
@@ -49,9 +50,12 @@ import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Datatype;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.ldap.LDAPExecutionFactory.SearchDefaultScope;
 
 
@@ -60,6 +64,13 @@ import org.teiid.translator.ldap.LDAPExecutionFactory.SearchDefaultScope;
  * Utility class which translates a SQL query into an LDAP search.
  */
 public class IQueryToLdapSearchParser {
+	private static final String ATTRIBUTES = "attributes"; //$NON-NLS-1$
+	private static final String COUNT_LIMIT = "count-limit"; //$NON-NLS-1$
+	private static final String TIMEOUT = "timeout";//$NON-NLS-1$
+	private static final String SEARCH_SCOPE = "search-scope";//$NON-NLS-1$
+	private static final String CRITERIA = "filter";//$NON-NLS-1$
+	private static final String CONTEXT_NAME = "context-name";//$NON-NLS-1$	
+	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
 	LDAPExecutionFactory executionFactory;
 	
 	/**
@@ -89,23 +100,31 @@ public class IQueryToLdapSearchParser {
 	// TODO - change method for calling RESTRICT to also specify
 	// object class name (RESTRICT=inetOrgPerson)
 	public LDAPSearchDetails translateSQLQueryToLDAPSearch(Select query) throws TranslatorException {
-			// Parse SELECT symbols.
-			// The columns will be translated into LDAP attributes of interest.
-			ArrayList<Column> elementList = getElementsFromSelectSymbols(query);
-			
-			// Parse FROM table.
-			// Only one table is expected here.
-			List<TableReference> fromList = query.getFrom();
-			Iterator<TableReference> itr = fromList.iterator();
-			if(!itr.hasNext()) {
-	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.noTablesInFromError"); //$NON-NLS-1$
-				throw new TranslatorException(msg); 
-			}
-			TableReference fItm = itr.next();
-			if(itr.hasNext()) {
-	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.multiItemsInFromError"); //$NON-NLS-1$
-				throw new TranslatorException(msg); 
-			}
+		// Parse SELECT symbols.
+		// The columns will be translated into LDAP attributes of interest.
+		ArrayList<Column> elementList = getElementsFromSelectSymbols(query);
+		
+		// Parse FROM table.
+		// Only one table is expected here.
+		List<TableReference> fromList = query.getFrom();
+		Iterator<TableReference> itr = fromList.iterator();
+		if(!itr.hasNext()) {
+            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.noTablesInFromError"); //$NON-NLS-1$
+			throw new TranslatorException(msg); 
+		}
+		TableReference fItm = itr.next();
+		if(itr.hasNext()) {
+            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.multiItemsInFromError"); //$NON-NLS-1$
+			throw new TranslatorException(msg); 
+		}
+		
+		LDAPSearchDetails sd = null;
+		Table table = ((NamedTable)fItm).getMetadataObject();			
+		String nativeQuery = table.getProperty(TEIID_NATIVE_QUERY, false);
+    	if (nativeQuery != null) {
+    		sd =  buildRequest(nativeQuery);
+    	}
+    	else {
 			String contextName = getContextNameFromFromItem(fItm);
 			int searchScope = getSearchScopeFromFromItem(fItm);
 			// GHH 20080326 - added check for RESTRICT parameter in
@@ -142,11 +161,11 @@ public class IQueryToLdapSearchParser {
 			}
 			
 			// Create Search Details
-			LDAPSearchDetails sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), sortKeys, countLimit, elementList);
-			// Search Details logging
-			sd.printDetailsToLog();
-			
-			return sd;
+			sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), sortKeys, countLimit, elementList, 0);
+    	}
+		// Search Details logging	    	
+		sd.printDetailsToLog();
+		return sd;
 			
 	}
 	
@@ -598,5 +617,73 @@ public class IQueryToLdapSearchParser {
         return expr.getMetadataObject();
     }
 	
+	public LDAPSearchDetails buildRequest(String query) {
+		ArrayList<String> attributes = new ArrayList<String>();
+		ArrayList<Column> columns = new ArrayList<Column>();
+		String contextName = null;
+		String criteria = ""; //$NON-NLS-1$
+		String searchScope = this.executionFactory.getSearchDefaultScope().name();
+		int timeLimit = 0;
+		long countLimit = 0;
+		
+		StringTokenizer st = new StringTokenizer(query, ";"); //$NON-NLS-1$
+		while (st.hasMoreTokens()) {
+			String var = st.nextToken();
+			int index = var.indexOf('=');
+			if (index == -1) {
+				continue;
+			}
+			String key = var.substring(0, index).trim().toLowerCase();
+			String value = var.substring(index+1).trim();
+			
+			if (key.equalsIgnoreCase(CONTEXT_NAME)) {
+				contextName = value;
+			}
+			else if (key.equalsIgnoreCase(CRITERIA)) {
+				criteria = value;
+			}
+			else if (key.equalsIgnoreCase(SEARCH_SCOPE)) {
+				searchScope = value;
+			}
+			else if (key.equalsIgnoreCase(TIMEOUT)) {
+				timeLimit = Integer.parseInt(value);
+			}
+			else if (key.equalsIgnoreCase(COUNT_LIMIT)) {
+				countLimit = Long.parseLong(value);
+			}
+			else if (key.equalsIgnoreCase(ATTRIBUTES)) {
+				StringTokenizer attrTokens = new StringTokenizer(value, ","); //$NON-NLS-1$
+				while(attrTokens.hasMoreElements()) {
+					String name = attrTokens.nextToken().trim();
+					attributes.add(name);
+					
+					Column column = new Column();
+					column.setName(name);
+					Datatype type = new Datatype();
+					type.setName(TypeFacility.RUNTIME_NAMES.OBJECT);
+					type.setJavaClassName(Object.class.getCanonicalName());
+					column.setDatatype(type, true);
+					columns.add(column);
+				}
+			}
+		}
+		
+		int searchScopeInt = buildSearchScope(searchScope);
+		return new LDAPSearchDetails(contextName, searchScopeInt, criteria, null, countLimit, columns, timeLimit);
+	}    
 	
+	private int buildSearchScope(String searchScope) {
+		int searchScopeInt = 0;
+		// this could be one of OBJECT_SCOPE, ONELEVEL_SCOPE, SUBTREE_SCOPE
+		if (searchScope.equalsIgnoreCase("OBJECT_SCOPE")) { //$NON-NLS-1$
+			searchScopeInt = SearchControls.OBJECT_SCOPE;
+		}
+		else if (searchScope.equalsIgnoreCase("ONELEVEL_SCOPE")) {//$NON-NLS-1$
+			searchScopeInt = SearchControls.ONELEVEL_SCOPE;
+		}
+		else if (searchScope.equalsIgnoreCase("SUBTREE_SCOPE")) {//$NON-NLS-1$
+			searchScopeInt =  SearchControls.SUBTREE_SCOPE;
+		}
+		return searchScopeInt;
+	}	
 }

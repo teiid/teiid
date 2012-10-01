@@ -48,6 +48,7 @@ public class LDAPSearchDetails {
 	// If limit is set to -1, this means no limit (return all rows)
 	private long limit;
 	private ArrayList<Column> elementList;
+	private int timeLimit;
 	
 	/**
 	 * Constructor
@@ -59,7 +60,7 @@ public class LDAPSearchDetails {
 	 * @param limit
 	 * @param elementList
 	 */
-	public LDAPSearchDetails(String name, int searchScope, String filter, SortKey[] keys, long limit, ArrayList elementList) {
+	public LDAPSearchDetails(String name, int searchScope, String filter, SortKey[] keys, long limit, ArrayList elementList, int timeLimit) {
 
 		this.contextName = name;
 		this.searchScope = searchScope;
@@ -67,6 +68,7 @@ public class LDAPSearchDetails {
 		this.keys = keys;
 		this.limit = limit;
 		this.elementList = elementList;
+		this.timeLimit = timeLimit;
 	}
 	
 	/**
@@ -178,5 +180,17 @@ public class LDAPSearchDetails {
 				}
 			}
 		}
+	}
+	
+	public int getTimeLimit() {
+		return this.timeLimit;
+	}
+	
+	public String[] getAttributes() {
+		ArrayList<String> attributes = new ArrayList<String>();
+		for (Column c:elementList) {
+			attributes.add(c.getName());
+		}
+		return attributes.toArray(new String[attributes.size()]);
 	}
 }
