@@ -21,6 +21,7 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.language.*;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
@@ -36,7 +38,7 @@ import org.teiid.translator.salesforce.SalesForcePlugin;
 
 
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
-
+	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
 	public static final String AGG_PREFIX = "expr"; //$NON-NLS-1$
 	private Map<Integer, Expression> selectSymbolIndexToElement = new HashMap<Integer, Expression>();
 	private Map<String, Integer> selectSymbolNameToIndex = new HashMap<String, Integer>();
@@ -142,16 +144,24 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		if (!exceptions.isEmpty()) {
 			throw exceptions.get(0);
 		}
+				
 		StringBuilder result = new StringBuilder();
 		result.append(SELECT).append(SPACE);
 		addSelectSymbols(result);
 		result.append(SPACE);
-		result.append(FROM).append(SPACE);
-		result.append(table.getNameInSource()).append(SPACE);
-		addCriteriaString(result);
-		appendGroupByHaving(result);
-		//result.append(orderByClause).append(SPACE);
-		result.append(limitClause);
+
+		String nativeQuery = this.table.getProperty(TEIID_NATIVE_QUERY, false);
+    	if (nativeQuery != null) {
+    		result.append(nativeQuery);
+    	}
+    	else {
+			result.append(FROM).append(SPACE);
+			result.append(table.getNameInSource()).append(SPACE);
+			addCriteriaString(result);
+			appendGroupByHaving(result);
+			//result.append(orderByClause).append(SPACE);
+			result.append(limitClause);
+    	}
 		return result.toString();
 	}
 

@@ -98,15 +98,30 @@ public class JoinQueryVisitor extends SelectVisitor {
 		subselect.append(SELECT).append(SPACE);
 		addSelect(rightTableInJoin.getNameInSource(), subselect, false);
 		subselect.append(SPACE);
-		subselect.append(FROM).append(SPACE);
-		subselect.append(rightTableInJoin.getNameInSource()).append('s');
-		subselect.append(CLOSE).append(SPACE);
-		select.append(subselect);
-		select.append(FROM).append(SPACE);
-		select.append(leftTableInJoin.getNameInSource()).append(SPACE);
-		addCriteriaString(select);
-		appendGroupByHaving(select);
-		select.append(limitClause);
+
+		String nativeQuery = this.rightTableInJoin.getProperty(TEIID_NATIVE_QUERY, false);
+    	if (nativeQuery != null) {
+    		subselect.append(nativeQuery);
+    	}
+    	else {
+    		subselect.append(FROM).append(SPACE);
+    		subselect.append(rightTableInJoin.getNameInSource()).append('s');
+    	}
+    	subselect.append(CLOSE).append(SPACE);
+    	
+    	select.append(subselect);
+		
+		nativeQuery = this.leftTableInJoin.getProperty(TEIID_NATIVE_QUERY, false);
+    	if (nativeQuery != null) {
+    		select.append(nativeQuery);
+    	}
+    	else {
+	    	select.append(FROM).append(SPACE);
+			select.append(leftTableInJoin.getNameInSource()).append(SPACE);
+			addCriteriaString(select);
+			appendGroupByHaving(select);
+			select.append(limitClause);
+    	}
 		return select.toString();			
 	}
 
