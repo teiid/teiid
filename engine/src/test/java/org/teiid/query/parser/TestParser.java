@@ -2649,7 +2649,7 @@ public class TestParser {
 	}
 	
     @Test public void testLikeWithEscapeException(){
-        helpException("SELECT a from db.g where b like '#String' escape '#1'", "TEIID31100 Parsing error: Encountered \"like '#String' escape [*]'#1'[*] <EOF>\" at line 1, column 50.\nTEIID30398 LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
+        helpException("SELECT a from db.g where b like '#String' escape '#1'", "TEIID31100 Parsing error: Encountered \"like '#String' escape [*]'#1'[*]\" at line 1, column 50.\nTEIID30398 LIKE/SIMILAR TO ESCAPE value must be a single character: [#1].");  //$NON-NLS-1$ //$NON-NLS-2$
     }   
 
 	/** SELECT "date"."time" from db.g */
@@ -2696,15 +2696,15 @@ public class TestParser {
 	
 	/** SELECT xx.yy%.a from xx.yy */
 	@Test public void testFailsWildcardInSelect(){
-		helpException("SELECT xx.yy%.a from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT xx.yy[*]%[*].\" at line 1, column 13.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
+		helpException("SELECT xx.yy%.a from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT xx.yy[*]%[*].a\" at line 1, column 13.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
 	}
 	
 	@Test public void testFailsWildcardInSelect1(){
-		helpException("SELECT % from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT [*]%[*] from\" at line 1, column 8.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
+		helpException("SELECT % from xx.yy", "TEIID31100 Parsing error: Encountered \"SELECT [*]%[*] from xx.yy\" at line 1, column 8.\nLexical error. Character is not a valid token: % ");		 //$NON-NLS-1$
 	}
 	
 	@Test public void testInvalidToken(){
-		helpException("%", "");
+		helpException("%", "TEIID31100 Parsing error: Encountered \"[*]%[*]\" at line 1, column 1.\nLexical error. Character is not a valid token: % ");
 	}
 
 	/** SELECT a or b from g */
@@ -3244,7 +3244,7 @@ public class TestParser {
     
     //using clause should use short names
     @Test public void testDynamicCommandStatement3(){
-        helpException("create virtual procedure begin execute string z as a1 string, a2 integer into #g using variables.x=variables.y; end", "TEIID31100 Parsing error: Encountered \"into #g using [*]variables.x[*] =\" at line 1, column 88.\nInvalid simple identifier format: [variables.x]"); //$NON-NLS-1$ //$NON-NLS-2$       
+        helpException("create virtual procedure begin execute string z as a1 string, a2 integer into #g using variables.x=variables.y; end", "TEIID31100 Parsing error: Encountered \"into #g using [*]variables.x[*]=variables.y\" at line 1, column 88.\nInvalid simple identifier format: [variables.x]"); //$NON-NLS-1$ //$NON-NLS-2$       
     }
     
     //into clause requires as clause
@@ -4795,7 +4795,7 @@ public class TestParser {
     }
         
     @Test public void testCreateTempTable7() {
-        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Encountered \"table tempTable ( [*]c1.x[*] boolean\" at line 1, column 41.\nInvalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
+        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Encountered \"table tempTable ([*]c1.x[*] boolean,\" at line 1, column 41.\nInvalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
     }
     
     @Test public void testCreateTempTableWithPrimaryKey() {
@@ -4841,7 +4841,7 @@ public class TestParser {
     @Test public void testBadAlias() {
         String sql = "select a as a.x from foo"; //$NON-NLS-1$
         
-        helpException(sql, "TEIID31100 Parsing error: Encountered \"select a as [*]a.x[*] from\" at line 1, column 13.\nInvalid alias format: [a.x]"); //$NON-NLS-1$
+        helpException(sql, "TEIID31100 Parsing error: Encountered \"select a as [*]a.x[*] from foo\" at line 1, column 13.\nInvalid alias format: [a.x]"); //$NON-NLS-1$
     }
     
     @Test public void testNameSpacedFunctionName() {

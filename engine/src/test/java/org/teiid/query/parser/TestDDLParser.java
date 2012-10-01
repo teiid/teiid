@@ -29,7 +29,6 @@ import java.util.Properties;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.query.metadata.MetadataValidator;
@@ -651,7 +650,7 @@ public class TestDDLParser {
 		assertEquals("http://teiid.org", mf.getNamespaces().get("teiid"));
 	}		
 
-	public static MetadataFactory helpParse(String ddl, String model) throws QueryParserException {
+	public static MetadataFactory helpParse(String ddl, String model) {
 		MetadataFactory mf = new MetadataFactory(null, 1, model, getDataTypes(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf, ddl);
 		return mf;
@@ -666,5 +665,14 @@ public class TestDDLParser {
 		mf.addNamespace("x", "http://x");
 		assertEquals("{http://x}z", SQLParserUtil.resolvePropertyKey(mf, "x:z"));
 		assertEquals("y:z", SQLParserUtil.resolvePropertyKey(mf, "y:z"));
+	}
+	
+	@Test public void testCreateError() {
+		try {
+			helpParse("CREATE foreign FUNCTION convert(msg integer, type varchar) RETURNS varchar", "x");
+			fail();
+		} catch (org.teiid.metadata.ParseException e) {
+			assertEquals("TEIID30386 org.teiid.api.exception.query.QueryParserException: TEIID31100 Parsing error: Encountered \"CREATE foreign FUNCTION [*]convert[*](msg\" at line 1, column 25.\nWas expecting: id", e.getMessage());
+		}
 	}
 }

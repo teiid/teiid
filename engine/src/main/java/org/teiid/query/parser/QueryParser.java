@@ -22,19 +22,20 @@
 
 package org.teiid.query.parser;
 
+import static org.teiid.query.parser.SQLParserConstants.*;
 import static org.teiid.query.parser.TeiidSQLParserTokenManager.*;
 
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.connector.DataPlugin;
+import org.teiid.language.SQLConstants;
 import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
@@ -210,17 +211,23 @@ public class QueryParser implements Parser {
     			pe.currentToken = parser.token;
     		}
         }
-        QueryParserException qpe = new QueryParserException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31100, getMessage(pe, 1, 10)));
+        QueryParserException qpe = new QueryParserException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31100, getMessage(pe, 10)));
         qpe.setParseException(pe);
         return qpe;
     }
         
-    public String getMessage(ParseException pe, int maxTokenSequence, int maxExpansions) {
+    /**
+     * The default JavaCC message is not very good.  This method produces a much more readable result.
+     * @param pe
+     * @param maxExpansions
+     * @return
+     */
+    public String getMessage(ParseException pe, int maxExpansions) {
 		if (!pe.specialConstructor) {
 			if (pe.currentToken == null) {
 				return pe.getMessage();
 			}
-			StringBuilder sb = encountered(pe, 1);
+			StringBuilder sb = encountered(pe, pe.currentToken.next!=null?1:0);
 			if (pe.currentToken.kind == INVALID_TOKEN) {
 				sb.append(QueryPlugin.Util.getString("QueryParser.lexicalError", pe.currentToken.image)); //$NON-NLS-1$
 			} else if (pe.currentToken.next != null && pe.currentToken.next.kind == -1) {
@@ -231,99 +238,85 @@ public class QueryParser implements Parser {
 			}
 			return sb.toString();
 		}
-		StringBuffer expected = new StringBuffer();
-		int[][] expectedTokenSequences = pe.expectedTokenSequences;
-		String[] tokenImage = pe.tokenImage;
-		String eol = pe.eol;
-		Token currentToken = pe.currentToken;
-		HashSet<List<Integer>> expansions = new HashSet<List<Integer>>();
-		Arrays.sort(expectedTokenSequences, new Comparator<int[]>() {
-			@Override
-			public int compare(int[] o1, int[] o2) {
-				return o2.length - o1.length;
-			}
-		});
-		int maxSize = expectedTokenSequences[0].length;
-		StringBuilder retval = encountered(pe, maxSize);
+
+		Token currentToken = pe.currentToken; 
+
+		//if the next token is invalid, we wan to use a lexical message, not the sequences
 		if (currentToken.next.kind == INVALID_TOKEN) {
+			StringBuilder retval = encountered(pe, 1);
 			retval.append(QueryPlugin.Util.getString("QueryParser.lexicalError", currentToken.next.image)); //$NON-NLS-1$
 			return retval.toString();
 		}
-		for (int i = 0; i < expectedTokenSequences.length; i++) {
-			boolean truncateStart = expectedTokenSequences[i].length == maxSize && maxSize > 1 && maxSize > maxTokenSequence;
-			int start = 0;
-			if (truncateStart) {
-				start = expectedTokenSequences[i].length - maxTokenSequence;
+
+		//find the longest match chain an all possible end tokens
+		int[][] expectedTokenSequences = pe.expectedTokenSequences;
+		int[] ex = null;
+		Set<Integer> last = new TreeSet<Integer>();
+		outer : for (int i = 0; i < expectedTokenSequences.length; i++) {
+			if (ex == null || expectedTokenSequences[i].length > ex.length) {
+				ex = expectedTokenSequences[i];
+				last.clear();
+			} else if (expectedTokenSequences[i].length < ex.length) {
+				continue;
+			} else {
+				for (int j = 0; j < ex.length -1; j++) {
+					if (ex[j] != expectedTokenSequences[i][j]) {
+						continue outer; //TODO : not sure how to handle this case
+					}
+				}
 			}
-			List<Integer> expansion = new ArrayList<Integer>(Math.min(maxTokenSequence, expectedTokenSequences[i].length));
-			for (int j = start; j < start+maxTokenSequence; j++) {
-				expansion.add(expectedTokenSequences[i][j]);
-			}
-			if (!expansions.add(expansion) || (!truncateStart && expectedTokenSequences[i][start] == currentToken.next.kind)) {
+			last.add(expectedTokenSequences[i][expectedTokenSequences[i].length-1]);
+		}
+		if (ex == null) {
+			return pe.getMessage(); //shouldn't happen
+		}
+		
+		StringBuilder retval = encountered(pe, ex.length);
+		
+		//output the expected tokens condensing the id/non-reserved
+		retval.append("Was expecting: "); //$NON-NLS-1$ 
+		boolean id = last.contains(SQLParserConstants.ID);
+		int count = 0;
+		for (Integer t : last) {
+			String img = tokenImage[t];
+			if (id && img.startsWith("\"") //$NON-NLS-1$ 
+					&& Character.isLetter(img.charAt(1)) 
+					&& !SQLConstants.isReservedWord(img.substring(1, img.length()-1))) {
 				continue;
 			}
-			if (expansions.size() > maxExpansions) {
-				expected.append("...").append(eol).append("    "); //$NON-NLS-1$ //$NON-NLS-2$
+			if (count > 0) {
+				retval.append(" | "); //$NON-NLS-1$
+			}
+			count++;
+			if (t == SQLParserConstants.ID) {
+				retval.append("id"); //$NON-NLS-1$
+			} else {
+				retval.append(img);
+			}
+			if (count == maxExpansions) {
+				retval.append(" ..."); //$NON-NLS-1$
 				break;
 			}
-			if (truncateStart) {
-				expected.append("... "); //$NON-NLS-1$
-			}
-			int j = start;
-			for (; j < expectedTokenSequences[i].length && j < start+maxTokenSequence; j++) {
-				expected.append(tokenImage[expectedTokenSequences[i][j]])
-						.append(" "); //$NON-NLS-1$
-			}
-			if (j < expectedTokenSequences[i].length) {
-				expected.append("..."); //$NON-NLS-1$
-			}
-			expected.append(eol).append("    "); //$NON-NLS-1$
 		}
-		if (expansions.size() == 1) {
-			retval.append("Was expecting:" + eol + "    "); //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			retval.append("Was expecting one of:" + eol + "    "); //$NON-NLS-1$ //$NON-NLS-2$
-		}
-		retval.append(expected.toString());
 		return retval.toString();
     }
 
-	private StringBuilder encountered(ParseException pe, int maxSize) {
+	private StringBuilder encountered(ParseException pe, int offset) {
 		StringBuilder retval = new StringBuilder("Encountered \""); //$NON-NLS-1$
 		Token currentToken = pe.currentToken;
-		List<Token> preceeding = findPreceeding(currentToken, 2);
-		if (!preceeding.isEmpty()) {
-			addTokenSequence(preceeding.size() + 1, retval, preceeding.get(0));
-		} else {
-			addTokenSequence(1, retval, currentToken);
-		}
-		if (currentToken.next != null) {
-			boolean space = true;
-			if (currentToken.next.kind == INVALID_TOKEN) {
-				maxSize = 1;
-				space = currentToken.endColumn + 1 != currentToken.next.beginColumn;
-			}
-			if (space) {
-				retval.append(" "); //$NON-NLS-1$
-			}
-			retval.append("[*]"); //$NON-NLS-1$
-			Token last = addTokenSequence(maxSize, retval, currentToken.next);
-			if (last.kind != 0) {
-				retval.append("[*]"); //$NON-NLS-1$
-				if (last.next == null) {
-					this.parser.getNextToken();
-				}
-				if (last.next != null) {
-					if (!space) {
-						space = last.endColumn + 1 != last.next.beginColumn;
-					}
-					if (space) {
-						retval.append(" "); //$NON-NLS-1$
-					}
-					addTokenSequence(1, retval, last.next);
-				}
-			}
+		for (int i = 1; i < offset; i++) {
+			//TODO: for large offsets we don't have to call findPreceeding
 			currentToken = currentToken.next;
+		}
+		List<Token> preceeding = findPreceeding(currentToken, 2);
+		if (offset > 0 && !preceeding.isEmpty()) {
+			addTokenSequence(preceeding.size() + 1, retval, null, preceeding.get(0), false);
+		} else {
+			addTokenSequence(1, retval, null, currentToken, offset==0);
+		}
+		if (currentToken.next != null && offset>0) {
+			addTokenSequence(3, retval, currentToken, currentToken.next, true);
+			currentToken = currentToken.next; //move to the error token
 		}
 		retval.append("\" at line ").append(currentToken.beginLine).append(", column ").append(currentToken.beginColumn); //$NON-NLS-1$ //$NON-NLS-2$
 		retval.append(".").append(pe.eol); //$NON-NLS-1$
@@ -352,17 +345,26 @@ public class QueryParser implements Parser {
 	}
 
 	private Token addTokenSequence(int maxSize, StringBuilder retval,
-			Token tok) {
-		Token last = tok;
+			Token last, Token tok, boolean highlight) {
 		for (int i = 0; i < maxSize && tok != null; i++) {
-			if (i != 0)
+			if (last != null && last.endColumn + 1 != tok.beginColumn && tok.kind != SQLParserConstants.EOF) {
 				retval.append(" "); //$NON-NLS-1$
-			if (tok.kind == 0) {
-				retval.append(SQLParserConstants.tokenImage[0]);
-				return tok;
 			}
 			last = tok;
-			add_escapes(tok.image, retval);
+			if (i == 0 && highlight) {
+				retval.append("[*]"); //$NON-NLS-1$
+			}
+			if (tok.image != null && !tok.image.isEmpty()) {
+				add_escapes(tok.image, retval);
+				if (i == 0 && highlight) {
+					retval.append("[*]"); //$NON-NLS-1$
+				}
+			}
+			while (tok.next == null) {
+				if (this.parser.getNextToken() == null) {
+					break;
+				}
+			}
 			tok = tok.next;
 		}
 		return last;
