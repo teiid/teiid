@@ -279,7 +279,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 markInvalid(obj, (obj.isImplicit()?"(implicit) ":"") + obj.getName() + " function not supported by source"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 return;
             }
-            String name = obj.getFunctionDescriptor().getName();
+            String name = obj.getName();
             if (CapabilitiesUtil.supports(Capability.ONLY_FORMAT_LITERALS, modelID, metadata, capFinder) && parseFormat.contains(name)) {
             	if (!(obj.getArg(1) instanceof Constant)) {
             		markInvalid(obj, obj.getName() + " non-literal parse format function not supported by source"); //$NON-NLS-1$

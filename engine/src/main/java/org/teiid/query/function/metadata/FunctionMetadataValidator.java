@@ -150,7 +150,6 @@ public class FunctionMetadataValidator {
     public static final void validateName(String name) throws FunctionMetadataException {
         validateIsNotNull(name, "Name"); //$NON-NLS-1$
         validateLength(name, MAX_LENGTH, "Name"); //$NON-NLS-1$
-        validateNameCharacters(name, "Name"); //$NON-NLS-1$
     }
 
     /**
@@ -243,19 +242,6 @@ public class FunctionMetadataValidator {
 	 	if(string.length() > maxLength) {
 	 	 	 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30430, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30430,strName, new Integer(maxLength)));
 	 	}
-	}
-
-    /**
-     * Check that specified string uses valid allowed character set.  If not, an exception is thrown using
-     * strName for the exception message.
-     * @param name String to check
-     * @param strName String to use in exception message
-     * @throws FunctionMetadataException Thrown when string uses characters not in allowed character sets
-     */
-	private static final void validateNameCharacters(String name, String strName) throws FunctionMetadataException {
-		if (name.indexOf('.') > 0) {
-			 throw new FunctionMetadataException(QueryPlugin.Event.TEIID30431, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,strName, '.'));
-		}
 	}
 
     /**

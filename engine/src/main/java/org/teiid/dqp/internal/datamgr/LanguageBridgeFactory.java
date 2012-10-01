@@ -44,7 +44,6 @@ import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.SubqueryComparison.Quantifier;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -673,9 +672,9 @@ public class LanguageBridgeFactory {
 				return translate(caseExpr);
         	}
         	//check for translator pushdown functions, and use the name in source if possible
-        	if (function.getFunctionDescriptor().getPushdown() == PushDown.MUST_PUSHDOWN 
-        			&& function.getFunctionDescriptor().getSchema().equalsIgnoreCase(CoreConstants.SYSTEM_MODEL)
-        			&& function.getFunctionDescriptor().getMethod().getNameInSource() != null) {
+        	if (function.getFunctionDescriptor().getMethod().getNameInSource() != null && 
+        			(CoreConstants.SYSTEM_MODEL.equals(function.getFunctionDescriptor().getSchema()) 
+        					|| (function.getFunctionDescriptor().getMethod().getParent() != null && function.getFunctionDescriptor().getMethod().getParent().isPhysical()))        			) {
         		name = function.getFunctionDescriptor().getMethod().getNameInSource();
         	}
         } else {

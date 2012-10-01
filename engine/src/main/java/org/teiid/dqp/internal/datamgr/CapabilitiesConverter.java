@@ -120,14 +120,14 @@ public class CapabilitiesConverter {
             Iterator<String> iter = functions.iterator();
             while(iter.hasNext()) {
                 String func = iter.next();
-                tgtCaps.setFunctionSupport(func.toLowerCase(), true);
+                tgtCaps.setFunctionSupport(func, true);
             }
         }
         
         List<FunctionMethod> pushDowns = srcCaps.getPushDownFunctions();
         if(pushDowns != null && pushDowns.size() > 0) {
             for(FunctionMethod func:pushDowns) {
-                tgtCaps.setFunctionSupport(func.getName().toLowerCase(), true);
+                tgtCaps.setFunctionSupport(func.getName(), true);
             }
         }
         

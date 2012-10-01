@@ -29,12 +29,14 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
@@ -102,6 +104,13 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	
 	public String getName() {
 		return this.method.getName();				
+	}
+	
+	public String getFullName() {
+		if (CoreConstants.SYSTEM_MODEL.equals(this.schema)) {
+			return getName();
+		}
+		return this.schema + AbstractMetadataRecord.NAME_DELIM_CHAR + getName();
 	}
     
     public PushDown getPushdown() {
@@ -183,7 +192,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	public void checkNotPushdown() throws FunctionExecutionException {
 	    // Check for function we can't evaluate
 	    if(getPushdown() == PushDown.MUST_PUSHDOWN) {
-	         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, getName()));
+	         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, getFullName()));
 	    }
 	}
 
@@ -209,7 +218,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         // If descriptor is missing invokable method, find this VM's descriptor
         // give name and types from fd
         if(invocationMethod == null) {
-        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30382, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30382, getName()));
+        	 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30382, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30382, getFullName()));
         }
         
         // Invoke the method and return the result
@@ -270,9 +279,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
             }
             return importValue(result, getReturnType());
         } catch(ArithmeticException e) {
-    		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getName()));
+    		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName()));
         } catch(InvocationTargetException e) {
-             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e.getTargetException(), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getName()));
+             throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e.getTargetException(), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName()));
         } catch(IllegalAccessException e) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30385, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30385, method.toString()));
         } catch (TransformationException e) {
@@ -315,6 +324,10 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	
 	public void setCalledWithVarArgArrayParam(boolean calledWithVarArgArrayParam) {
 		this.calledWithVarArgArrayParam = calledWithVarArgArrayParam;
+	}
+	
+	public boolean isSystemFunction(String name) {
+		return this.getName().equalsIgnoreCase(name) && CoreConstants.SYSTEM_MODEL.equals(this.getSchema());
 	}
 	
 }

@@ -143,6 +143,40 @@ public class TestFunctionPushdown {
                 new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$         
 	}
 	
+	@Test public void testDDLMetadata1() throws Exception {
+		String ddl = "CREATE foreign FUNCTION sourceFunc(msg varchar) RETURNS varchar options (nameinsource 'a.sourcefunc') " +
+		              "CREATE foreign FUNCTION b.sourceFunc(msg varchar) RETURNS varchar " +
+				"CREATE foreign table X (Y varchar);";
+
+		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+		
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        capFinder.addCapabilities("phy", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan("SELECT sourceFunc(g_0.Y), phy.b.sourceFunc(g_0.Y) FROM phy.X AS g_0", metadata, null, capFinder, 
+                new String[] {"SELECT sourceFunc(g_0.Y), phy.b.sourceFunc(g_0.Y) FROM phy.X AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        //ensure that the source query contains the function schemas
+        HardcodedDataManager dm = new HardcodedDataManager(metadata);
+        dm.addData("SELECT a.sourcefunc(g_0.Y), b.sourceFunc(g_0.Y) FROM X AS g_0", new List[0]);
+        TestProcessor.helpProcess(plan, dm, new List[0]);
+	}
+	
+	@Test public void testDDLMetadataNameConflict() throws Exception {
+		String ddl = "CREATE foreign FUNCTION \"convert\"(msg integer, type varchar) RETURNS varchar " +
+				"CREATE foreign table X (Y integer);";
+
+		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+		
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        capFinder.addCapabilities("phy", caps); //$NON-NLS-1$
+        
+        helpPlan("select phy.convert(y, 'z') from x", metadata, null, capFinder, 
+                new String[] {"SELECT phy.convert(g_0.Y, 'z') FROM phy.X AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+	}
+	
 	@Test public void testConcat2() throws Exception {
 		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
 		

@@ -558,7 +558,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    	fd.setCalledWithVarArgArrayParam(true);
 	    }
 	    
-	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.CONVERT) || fd.getName().equalsIgnoreCase(FunctionLibrary.CAST)) {
+	    if(fd.isSystemFunction(FunctionLibrary.CONVERT) || fd.isSystemFunction(FunctionLibrary.CAST)) {
 	        String dataType = (String) ((Constant)args[1]).getValue();
 	        Class<?> dataTypeClass = DataTypeManager.getDataTypeClass(dataType);
 	        fd = library.findTypedConversionFunction(args[0].getType(), dataTypeClass);
@@ -571,10 +571,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	
 	             throw new QueryResolverException(QueryPlugin.Event.TEIID30071, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30071, new Object[] {DataTypeManager.getDataTypeName(srcTypeClass), dataType}));
 	        }
-	    } else if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
+	    } else if(fd.isSystemFunction(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
-	    } else if (FunctionLibrary.ARRAY_GET.equalsIgnoreCase(fd.getName()) && args[0].getType().isArray()) {
+	    } else if (fd.isSystemFunction(FunctionLibrary.ARRAY_GET) && args[0].getType().isArray()) {
 	    	//hack to use typed array values
 			fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
 	    } else if (Boolean.valueOf(fd.getMethod().getProperty(TEIID_PASS_THROUGH_TYPE, false))) {

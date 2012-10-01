@@ -162,7 +162,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     		String schema = obj.getFunctionDescriptor().getSchema();
     		if (schema != null && !isSystemSchema(schema)) {
     			Map<String, Function> map = new HashMap<String, Function>();
-    			map.put(schema + '.' + obj.getFunctionDescriptor().getName(), obj);
+    			map.put(obj.getFunctionDescriptor().getFullName(), obj);
     			validateEntitlements(PermissionType.EXECUTE, Context.FUNCTION, map);
     		}
     	}

@@ -93,7 +93,7 @@ public class TestFunctionMetadataValidator extends TestCase {
 	}
 	
 	public void testValidateNameFail3() {
-	    helpTestValidateNameFail("a.b"); //$NON-NLS-1$
+	    helpTestValidateName("a.b"); //$NON-NLS-1$
 	}
 	
 	public void testValidateFunction1() {

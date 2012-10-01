@@ -311,7 +311,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 			} catch (TeiidProcessingException e) {
 				handleException(e, obj);
 			}
-        } else if (obj.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {
+        } else if (obj.getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {
             if(!isXML) {
                 // can't use this pseudo-function in non-XML queries
                 handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.The_context_function_cannot_be_used_in_a_non-XML_command"), obj); //$NON-NLS-1$
@@ -323,13 +323,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 for (Iterator<Function> functions = FunctionCollectorVisitor.getFunctions(obj.getArg(1), false).iterator(); functions.hasNext();) {
                     Function function = functions.next();
                     
-                    if (function.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {
+                    if (function.getName().equalsIgnoreCase(FunctionLibrary.CONTEXT)) {
                         handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.Context_function_nested"), obj); //$NON-NLS-1$
                     }
                 }
             }
-    	} else if (obj.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
-                   obj.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
+    	} else if (obj.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
+                   obj.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
             if(isXML) {
                 if (!(obj.getArg(0) instanceof ElementSymbol)) {
                     // Arg must be an element symbol
@@ -339,7 +339,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 // can't use this pseudo-function in non-XML queries
                 handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.The_rowlimit_function_cannot_be_used_in_a_non-XML_command"), obj); //$NON-NLS-1$
             }
-        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE)) {
+        } else if(obj.getName().equalsIgnoreCase(SourceSystemFunctions.XPATHVALUE)) {
 	        // Validate the xpath value is valid
 	        if(obj.getArgs()[1] instanceof Constant) {
 	            Constant xpathConst = (Constant) obj.getArgs()[1];
@@ -349,7 +349,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 	handleValidationError(QueryPlugin.Util.getString("QueryResolver.invalid_xpath", e.getMessage()), obj); //$NON-NLS-1$
                 }
 	        }
-        } else if(obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.TO_BYTES) || obj.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.TO_CHARS)) {
+        } else if(obj.getName().equalsIgnoreCase(SourceSystemFunctions.TO_BYTES) || obj.getName().equalsIgnoreCase(SourceSystemFunctions.TO_CHARS)) {
         	try {
         		FunctionMethods.getCharset((String)((Constant)obj.getArg(1)).getValue());
         	} catch (IllegalArgumentException e) {
@@ -961,16 +961,16 @@ public class ValidationVisitor extends AbstractValidationVisitor {
             Expression expr = null;
             if (obj.getLeftExpression() instanceof Function) {
                 Function leftExpr = (Function)obj.getLeftExpression();
-                if (leftExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
-                    leftExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
+                if (leftExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
+                    leftExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
                     function = leftExpr;
                     expr = obj.getRightExpression();
                 }
             } 
             if (function == null && obj.getRightExpression() instanceof Function) {
                 Function rightExpr = (Function)obj.getRightExpression();
-                if (rightExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
-                    rightExpr.getFunctionDescriptor().getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
+                if (rightExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMIT) ||
+                    rightExpr.getName().equalsIgnoreCase(FunctionLibrary.ROWLIMITEXCEPTION)) {
                     function = rightExpr;
                     expr = obj.getLeftExpression();
                 }

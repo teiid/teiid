@@ -938,7 +938,7 @@ public class Evaluator {
 		if (passing.getExpression() instanceof Function) {
 			Function f = (Function)passing.getExpression();
 			//narrow optimization of json based documents to allow for lower overhead streaming
-			if (f.getFunctionDescriptor().getName().equalsIgnoreCase(SourceSystemFunctions.JSONTOXML)) {
+			if (f.getName().equalsIgnoreCase(SourceSystemFunctions.JSONTOXML)) {
 				String rootName = (String)this.evaluate(f.getArg(0), tuple);
 				Object lob = this.evaluate(f.getArg(1), tuple);
 				if (rootName == null || lob == null) {
@@ -1050,7 +1050,7 @@ public class Evaluator {
 	    fd.checkNotPushdown();	
 	    
 	    // Check for special lookup function
-	    if(fd.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
+	    if(function.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
 	        if(dataMgr == null) {
 	             throw new ComponentNotFoundException(QueryPlugin.Event.TEIID30342, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30342));
 	        }
