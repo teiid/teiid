@@ -49,6 +49,7 @@ public class TestLDAPDirectQueryExecution {
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new LDAPExecutionFactory();
+        TRANSLATOR.setSupportsNativeQueries(true);
         TRANSLATOR.start();
     }	
     

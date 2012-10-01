@@ -47,6 +47,7 @@ public class TestJPADirectQueryExecution {
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new JPA2ExecutionFactory();
+        TRANSLATOR.setSupportsNativeQueries(true);
         TRANSLATOR.start();
     }	
     
