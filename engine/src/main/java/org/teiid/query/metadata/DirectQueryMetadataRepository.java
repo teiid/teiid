@@ -40,14 +40,14 @@ public class DirectQueryMetadataRepository extends BaseMetadataRepository {
 
 		if (executionFactory != null && executionFactory.supportsNativeQueries()) {
 			Procedure p = factory.addProcedure(executionFactory.getNativeQueryProcedureName());
-			p.setAnnotation("Invokes translator with provided native query that returns result in array of values"); //$NON-NLS-1$
+			p.setAnnotation("Invokes translator with a native query that returns results in array of values"); //$NON-NLS-1$
 
 			ProcedureParameter param = factory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
 			param.setAnnotation("The native query to execute"); //$NON-NLS-1$
 			param.setNullType(NullType.No_Nulls);
 
 			param = factory.addProcedureParameter("variable", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
-			param.setAnnotation("Any number of varaibles, depends upon how a translator uses them individually"); //$NON-NLS-1$
+			param.setAnnotation("Any number of varaibles; usage will vary by translator"); //$NON-NLS-1$
 			param.setNullType(NullType.Nullable);
 			param.setVarArg(true);
 			

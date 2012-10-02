@@ -25,7 +25,6 @@
 
 package org.teiid.translator.jdbc;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -61,63 +60,40 @@ public class JDBCDirectQueryExecution extends JDBCQueryExecution implements Proc
     	List<Argument> parameters = this.arguments.subList(1, this.arguments.size());
     			
         LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Source sql", sourceSQL); //$NON-NLS-1$
-        boolean prepared = (sourceSQL.indexOf('?') != -1);
-        boolean callable = (sourceSQL.indexOf("call ") != -1); //$NON-NLS-1$
-        int paramCount = getParamCount(sourceSQL);
+        int paramCount = parameters.size();
         
         try {
-        	if (callable) {
-        		CallableStatement cstmt = getCallableStatement(sourceSQL);
-        		this.results = this.executionFactory.executeStoredProcedure(cstmt, parameters, TypeFacility.RUNTIME_TYPES.OBJECT);
-        		this.columnCount = this.results.getMetaData().getColumnCount();
-        	}
+        	Statement stmt;
+        	boolean hasResults = false;
+    	
+        	if(paramCount > 0) {
+            	PreparedStatement pstatement = getPreparedStatement(sourceSQL);
+            	for (int i = 0; i < paramCount; i++) {
+            		Argument arg = parameters.get(i);
+            		//TODO: if ParameterMetadata is supported we could use that type
+            		this.executionFactory.bindValue(pstatement, arg.getArgumentValue(), arg.getArgumentValue().getType(), i);
+            	}
+                stmt = pstatement;
+                hasResults = pstatement.execute();
+            }
         	else {
-            	Statement stmt;
-            	boolean hasResults = false;
-        	
-	        	if(prepared) {
-	            	PreparedStatement pstatement = getPreparedStatement(sourceSQL);
-	            	for (int i = 0; i < paramCount; i++) {
-	            		if (this.arguments.size()-1 < paramCount) {
-	            			throw new TranslatorException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11019, sourceSQL));
-	            		}
-	            		Argument arg = this.arguments.get(i+1);
-	            		pstatement.setObject(i+1, arg.getArgumentValue().getValue());
-	            	}
-	                stmt = pstatement;
-	                hasResults = pstatement.execute();
-	            }
-	        	else {
-	        		stmt = getStatement();
-	        		hasResults = stmt.execute(sourceSQL);
-	        	}
-	    		
-	        	if (hasResults) {
-	    			this.results = stmt.getResultSet();
-	    			this.columnCount = this.results.getMetaData().getColumnCount();
-	    		}
-	    		else {
-	    			this.updateCount = stmt.getUpdateCount();
-	    		}
+        		//TODO: when array support becomes more robust calling like "exec native('sql', ARRAY[]) could still be prepared
+        		stmt = getStatement();
+        		hasResults = stmt.execute(sourceSQL);
         	}
+    		
+        	if (hasResults) {
+    			this.results = stmt.getResultSet();
+    			this.columnCount = this.results.getMetaData().getColumnCount();
+    		}
+    		else {
+    			this.updateCount = stmt.getUpdateCount();
+    		}
             addStatementWarnings();
         } catch (SQLException e) {
              throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11008, e, sourceSQL);
         }
     }
-
-	private int getParamCount(String sourceSQL) {
-		int paramCount = 0;
-        int idx = -1;
-        while (true) {
-        	idx = sourceSQL.indexOf('?', idx+1);
-        	if (idx == -1) {
-        		break;
-        	}
-        	paramCount++;
-        }
-		return paramCount;
-	}
 
     @Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
@@ -153,6 +129,6 @@ public class JDBCDirectQueryExecution extends JDBCQueryExecution implements Proc
     
 	@Override
 	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;
+		return null;  //could support as an array of output values via given that the native procedure returns an array value
 	}
 }

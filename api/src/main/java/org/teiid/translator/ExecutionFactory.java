@@ -272,6 +272,11 @@ public class ExecutionFactory<F, C> {
 	public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, C connection) throws TranslatorException {
 		if (command instanceof Call) {
 			Call obj = (Call)command;
+			//TODO: our extension property support in designer makes ad-hoc properties impossible, so
+			//we just match based upon name.  it would be better to have the metadatarepository/tooling add a teiid property
+			//to explicitly set this proc as direct.
+			//the other approach would be to addd a native system stored procedure, but that would require
+			//special security semantics, whereas this proc can be secured on a schema basis
 			if (supportsNativeQueries() && obj.getMetadataObject().getName().equals(getNativeQueryProcedureName())) {
 				List<Argument> arguments = obj.getArguments();
 	    		return createDirectExecution(arguments, command, executionContext, metadata, connection);
@@ -1054,7 +1059,7 @@ public class ExecutionFactory<F, C> {
 	 * True, if this translator supports execution of source specific commands unaltered through 'native' procedure.
 	 * @return
 	 */
-	@TranslatorProperty(display="Supports Native Queries", description="True, if this translator supports execution of source specific commands unaltered through 'native' procedure", advanced=true)
+	@TranslatorProperty(display="Supports Native Queries", description="True, if this translator supports execution of source specific commands unaltered through a 'native' procedure", advanced=true)
 	public boolean supportsNativeQueries() {
 		return this.supportsNativeQueries;
 	}
@@ -1068,7 +1073,7 @@ public class ExecutionFactory<F, C> {
 	 * of the procedure is defined automatically.
 	 * @return
 	 */
-	@TranslatorProperty(display="Name of the native query", description="The name of the procedure that is considered as the name of the direct query procedure", advanced=true)
+	@TranslatorProperty(display="Name of the native query", description="The name of the direct query procedure", advanced=true)
 	public String getNativeQueryProcedureName() {
 		return this.nativeProcedureName;
 	}

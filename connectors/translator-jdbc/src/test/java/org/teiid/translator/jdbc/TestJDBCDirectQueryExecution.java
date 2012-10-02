@@ -24,14 +24,12 @@ package org.teiid.translator.jdbc;
 
 import static org.junit.Assert.*;
 
-import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
-
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -42,29 +40,6 @@ import org.teiid.translator.ResultSetExecution;
 
 @SuppressWarnings("nls")
 public class TestJDBCDirectQueryExecution {
-	
-	@Test public void testProcedureExecution() throws Exception {
-		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "exec native('{?=call spTest8a()}')"); //$NON-NLS-1$
-		Connection connection = Mockito.mock(Connection.class);
-		CallableStatement cs = Mockito.mock(CallableStatement.class);
-		ResultSet rs = Mockito.mock(ResultSet.class);
-		ResultSetMetaData rsm = Mockito.mock(ResultSetMetaData.class);
-		
-		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
-		Mockito.stub(cs.getResultSet()).toReturn(rs);
-		Mockito.stub(rs.getMetaData()).toReturn(rsm);
-		Mockito.stub(rsm.getColumnCount()).toReturn(1);
-		Mockito.stub(connection.prepareCall("{?=call spTest8a()}")).toReturn(cs); //$NON-NLS-1$
-		Mockito.stub(rs.next()).toReturn(true);
-		Mockito.stub(rs.getObject(1)).toReturn(5);
-		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
-		
-		JDBCExecutionFactory ef = new JDBCExecutionFactory();
-		ef.setSupportsNativeQueries(true);
-		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  Mockito.mock(ExecutionContext.class), Mockito.mock(RuntimeMetadata.class), connection);
-		execution.execute();
-		assertArrayEquals(new Object[] {5}, (Object[])execution.next().get(0));
-	}
 	
 	@Test public void testSelectExecution() throws Exception {
 		Command command = TranslationHelper.helpTranslate(TranslationHelper.BQT_VDB, "call native('select * from Source')"); //$NON-NLS-1$
