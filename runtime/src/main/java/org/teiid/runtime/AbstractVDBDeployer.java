@@ -55,7 +55,7 @@ import org.teiid.translator.TranslatorException;
 
 public abstract class AbstractVDBDeployer {
 	
-	private Map<String, MetadataRepository<?, ?>> repositories = new ConcurrentSkipListMap<String, MetadataRepository<?, ?>>(String.CASE_INSENSITIVE_ORDER);
+	protected ConcurrentSkipListMap<String, MetadataRepository<?, ?>> repositories = new ConcurrentSkipListMap<String, MetadataRepository<?, ?>>(String.CASE_INSENSITIVE_ORDER);
 	
 	public AbstractVDBDeployer() {
 		repositories.put("ddl", new DDLMetadataRepository()); //$NON-NLS-1$
