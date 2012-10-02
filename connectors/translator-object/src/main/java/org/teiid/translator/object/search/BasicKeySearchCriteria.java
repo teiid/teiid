@@ -24,6 +24,7 @@ package org.teiid.translator.object.search;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
