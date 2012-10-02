@@ -10,6 +10,7 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
+        <module name="org.jboss.teiid" />
         <module name="javax.persistence.api"/>
         <module name="org.hibernate"/>
         <module name="org.infinispan"/>

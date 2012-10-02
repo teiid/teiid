@@ -36,6 +36,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectPlugin;
 import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
 
@@ -328,7 +329,7 @@ public final class LuceneSearch   {
 	private static Query createEqualsQuery(Column column, Object value, boolean and,
 			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.keyword()
-				.onField(getNameInSourceFromColumn(column))
+				.onField(ObjectExecution.getNameInSourceFromColumn(column))
 				// .matching(value.toString() + "*")
 				.matching(value.toString()).createQuery();
 
@@ -346,7 +347,7 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(getNameInSourceFromColumn(column))
+				.onField(ObjectExecution.getNameInSourceFromColumn(column))
 				.above(value.toString()).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
@@ -356,7 +357,7 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(getNameInSourceFromColumn(column))
+				.onField(ObjectExecution.getNameInSourceFromColumn(column))
 				.below(value.toString()).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
@@ -365,18 +366,10 @@ public final class LuceneSearch   {
 	private static Query createLikeQuery(Column column, String value,
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.phrase()
-				.onField(getNameInSourceFromColumn(column)).sentence(value)
+				.onField(ObjectExecution.getNameInSourceFromColumn(column)).sentence(value)
 				.createQuery();
 		junction.should(queryKey);
 		return queryKey;
-	}
-
-	private static String getNameInSourceFromColumn(Column c) {
-		String name = c.getNameInSource();
-		if (name == null || name.trim().equals("")) { //$NON-NLS-1$
-			return c.getName();
-		}
-		return name;
 	}
 
 }

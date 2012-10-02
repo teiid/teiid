@@ -21,6 +21,9 @@
  */
 package org.teiid.translator.object;
 
+import static org.junit.Assert.*;
+
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
@@ -33,71 +36,59 @@ import org.teiid.translator.object.util.VDBUtility;
  * @author vhalbert
  *
  */
-
-@SuppressWarnings("nls")
-public abstract class BasicSearchTest extends BaseObjectTest {
+public abstract class BasicSearchTest {
 	
 	@Test public void testQueryGetAllTrades() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T"); //$NON-NLS-1$		
 		
-		List<Object> rows = performTest(command, TradesCacheSource.NUMTRADES);
-		
-		compareResultSet(rows);
+		performTest(command, TradesCacheSource.NUMTRADES);
 		
 	}		
 	
-	@Test public void testQueryGetAllTradesAndLegs() throws Exception {		
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"); //$NON-NLS-1$		
+	@Test public void testTradeProjection() throws Exception {		
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId From Trade_Object.Trade as T"); //$NON-NLS-1$		
 		
-		List<Object> rows = performTest(command, TradesCacheSource.NUMTRADES);
-		
-		compareResultSet(rows);
+		performTest(command, TradesCacheSource.NUMTRADES);
 		
 	}		
-	
-	@Test public void testQueryGetAllTradesLegsAndTransactions() throws Exception {		
-
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName, " + 
-				" N.LineItem " +
-				" From Trade_Object.Trade as T, Trade_Object.Leg as L, Trade_Object.Transaction as N " + 
-				" Where T.TradeId = L.TradeId and L.LegId = N.LegId "); //$NON-NLS-1$
-		
-		List<Object> rows = performTest(command, TradesCacheSource.NUMTRADES);
-		
-		compareResultSet(rows);
-	
-	}		
-
 	
 	@Test public void testQueryGetOneTrade() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId = '1'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
+		performTest(command, 1);
 		
 	}	
-	
-	@Test public void testQueryGetOneTradeAndLegs() throws Exception {		
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId and T.TradeId = '1'"); //$NON-NLS-1$		
-		
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
-		
-	}	
-	
 	
 	@Test public void testQueryInCriteria() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId in ('1', '3')"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 2);
-		
-		compareResultSet(rows);
+		performTest(command, 2);
 		
 	}	
 	
-	protected abstract List<Object> performTest(Select command, int rowcnt) throws Exception;
+	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
 
+		ObjectExecution exec = createExecution(command);
+		
+		exec.execute();
+		
+		List<Object> rows = new ArrayList<Object>();
+		
+		int cnt = 0;
+		List<Object> row = exec.next();
+	
+		while (row != null) {
+			rows.add(row);
+			++cnt;
+			row = exec.next();
+		}
+		
+		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
+		
+		exec.close();
+		return rows;
+	}
+
+	protected abstract ObjectExecution createExecution(Select command) throws Exception;
   
 }

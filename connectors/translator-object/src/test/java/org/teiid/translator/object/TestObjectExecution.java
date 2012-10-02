@@ -21,9 +21,9 @@
  */
 package org.teiid.translator.object;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import java.util.List;
 
@@ -64,23 +64,9 @@ public class TestObjectExecution {
 	
 
 	@Test public void testQueryRootObject() throws Exception {
-		execute( createExecution("select * From Trade_Object.Trade"), 3, 1);
+		execute( createExecution("select * From Trade_Object.Trade"), 3, 4);
 	}
 	
-	@Test public void testQueryIncludeLegs() throws Exception {		
-		execute( createExecution("select T.TradeId, T.Name as TradeName, L.Name as LegName From Trade_Object.Trade as T, Trade_Object.Leg as L Where T.TradeId = L.TradeId"), 
-				3, 1);
-
-	}	
-	
-	@Test public void testQueryGetAllTransactions() throws Exception {
-		execute( createExecution("select T.TradeId, T.Name as TradeName, L.Name as LegName, " + 
-				" N.LineItem " +
-				" From Trade_Object.Trade as T, Trade_Object.Leg as L, Trade_Object.Transaction N " + 
-				" Where T.TradeId = L.TradeId and L.LegId = N.LegId"),3, 1);
-	}		
-	
-
 	@Test	public void testAtomicSelects() throws Exception {
 
 		Thread[] threads = new Thread[20];

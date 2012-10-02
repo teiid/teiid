@@ -34,6 +34,7 @@ import org.infinispan.api.BasicCache;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ObjectPlugin;
 import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
 import org.teiid.translator.object.search.BasicKeySearchCriteria;
 import org.teiid.translator.object.search.SearchCriterion;
@@ -47,7 +48,7 @@ public final class SearchByKey  {
 	public static List<Object> performSearch(Select command, InfinispanConnectionImpl connection)
 			throws TranslatorException {
 
-		BasicCache<String, Object> cache = connection.getCache();
+		BasicCache<Object, Object> cache = connection.getCache();
 		BasicKeySearchCriteria bksc = BasicKeySearchCriteria.getInstance(
 				connection.getFactory(), command);
 
@@ -55,18 +56,18 @@ public final class SearchByKey  {
 
 	}
 
-	private static List<Object> get(SearchCriterion criterion,
-			BasicCache<String, Object> cache, Class<?> rootClass)
+	public static List<Object> get(SearchCriterion criterion,
+			Map<?, ?> cache, Class<?> rootClass)
 			throws TranslatorException {
 		List<Object> results = null;
 
 		if (criterion.getOperator() == SearchCriterion.Operator.ALL) {
-			Map<String, Object> map = cache;
+			Map<?, ?> map = cache;
 			if (cache instanceof RemoteCache<?, ?>) {
 				RemoteCache<?, ?> rc = (RemoteCache<?, ?>) cache;
-		  		map = (Map<String, Object>) rc.getBulk();
+		  		map = (Map<Object, Object>) rc.getBulk();
 			}
-			Set<String> keys = map.keySet();
+			Set<?> keys = map.keySet();
 			results = new ArrayList<Object>();
 			for (Iterator<?> it = keys.iterator(); it.hasNext();) {
 				Object v = cache.get(it.next());
@@ -87,8 +88,7 @@ public final class SearchByKey  {
 
 			Object value = criterion.getValue();
 
-			Object v = cache.get(value instanceof String ? value : value
-					.toString());
+			Object v = cache.get(value);
 			if (v != null) {
 				addValue(v, results, rootClass);
 			}
@@ -98,8 +98,7 @@ public final class SearchByKey  {
 			for (Iterator<Object> it = parms.iterator(); it.hasNext();) {
 				Object arg = it.next();
 				// the key is only supported in string format
-				Object v = cache.get(arg instanceof String ? arg : arg
-						.toString());
+				Object v = cache.get(arg);
 				if (v != null) {
 					addValue(v, results, rootClass);
 				}
@@ -111,29 +110,40 @@ public final class SearchByKey  {
 
 	}
 
-	private static void addValue(Object value, List<Object> results, Class<?> rootNodeType) {
-		if (value != null && value.getClass().equals(rootNodeType)) {
+	private static void addValue(Object value, List<Object> results, Class<?> rootNodeType) throws TranslatorException {
+		if (value == null) {
+			return;
+		}
+		if (!value.getClass().equals(rootNodeType)) {
+			// the object obtained from the cache has to be of the same root
+			// class type, otherwise, the modeling
+			// structure won't correspond correctly
+			String msg = ObjectPlugin.Util.getString(
+					"MapCacheConnection.unexpectedObjectTypeInCache",
+					new Object[] { value.getClass().getName(),
+							rootNodeType.getName() });
 
-			if (value.getClass().isArray()) {
-				List<Object> listRows = Arrays.asList((Object[]) value);
-				results.addAll(listRows);
-				return;
-			}
-
-			if (value instanceof Collection<?>) {
-				results.addAll((Collection<?>) value);
-				return;
-			}
-
-			if (value instanceof Map<?, ?>) {
-				Map<?, ?> mapRows = (Map<?, ?>) value;
-				results.addAll(mapRows.values());
-				return;
-			}
-
-			results.add(value);
+			throw new TranslatorException(msg);			
+		}
+		
+		if (value.getClass().isArray()) {
+			List<Object> listRows = Arrays.asList((Object[]) value);
+			results.addAll(listRows);
+			return;
 		}
 
+		if (value instanceof Collection<?>) {
+			results.addAll((Collection<?>) value);
+			return;
+		}
+
+		if (value instanceof Map<?, ?>) {
+			Map<?, ?> mapRows = (Map<?, ?>) value;
+			results.addAll(mapRows.values());
+			return;
+		}
+
+		results.add(value);
 	}
 
 }

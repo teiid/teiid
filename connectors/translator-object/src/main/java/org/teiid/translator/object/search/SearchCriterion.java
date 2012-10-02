@@ -72,10 +72,6 @@ public class SearchCriterion {
 		throw new AssertionError();
 	}
 
-	public String getField() {
-		return getNameInSourceFromColumn(this.column);
-	}
-
 	public Object getValue() {
 		return value;
 	}
@@ -121,14 +117,6 @@ public class SearchCriterion {
 
 	public boolean isAndCondition() {
 		return this.isAnd;
-	}
-
-	private String getNameInSourceFromColumn(Column c) {
-		String name = c.getNameInSource();
-		if (name == null || name.equals("")) { //$NON-NLS-1$
-			return c.getName();
-		}
-		return name;
 	}
 
 }

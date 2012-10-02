@@ -146,8 +146,8 @@ public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFact
 		this.configurationFileName = configurationFileName;
 	}
 	
-	public BasicCache<String, Object> getCache() throws TranslatorException {
-		BasicCache<String, Object> cache = null;
+	public BasicCache<Object, Object> getCache() throws TranslatorException {
+		BasicCache<Object, Object> cache = null;
 		BasicCacheContainer container = getCacheContainer();
 		if (getCacheName() != null) {
 			cache = container.getCache(getCacheName());
@@ -186,6 +186,11 @@ public abstract class InfinispanBaseExecutionFactory extends ObjectExecutionFact
 	
 	@Override
 	public boolean supportsOrCriteria() {
+		return isFullTextSearchingSupported();
+	}
+	
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
 		return isFullTextSearchingSupported();
 	}
 }

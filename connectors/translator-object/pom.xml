@@ -27,22 +27,28 @@
             <artifactId>teiid-common-core</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- TODO: could put teiidscript in api -->
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+            <scope>provided</scope>
+        </dependency>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-client</artifactId>
 			<type>test-jar</type>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency> 
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-metadata</artifactId>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>		 
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>
 			<artifactId>teiid-metadata</artifactId>
 			<type>test-jar</type>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>		       
         <dependency>
           <groupId>javax.resource</groupId>

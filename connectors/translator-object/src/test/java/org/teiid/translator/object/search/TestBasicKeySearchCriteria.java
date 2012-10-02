@@ -138,7 +138,6 @@ public class TestBasicKeySearchCriteria {
 		if (criteria.getOperator() != SearchCriterion.Operator.ALL) {
 		
 			assertNotNull(criteria.getColumn());
-			assertNotNull(criteria.getField());
 			assertNotNull(criteria.getOperator());
 			assertNotNull(criteria.getTableName());
 			assertNotNull(criteria.getRuntimeType());

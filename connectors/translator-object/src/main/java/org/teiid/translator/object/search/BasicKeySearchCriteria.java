@@ -133,15 +133,8 @@ public class BasicKeySearchCriteria extends HierarchyVisitor {
 	}
 
 	private void addSearchCriterion(SearchCriterion searchCriteria) {
-		// only searching on primary key is part of the criteria sent for cache
-		// lookup
-		// all other criteria will be used to filter the rows
-		assert (searchCriteria.getTableName() != null);
-
-		assert (searchCriteria.getField() != null);
-
 		if (this.criterion != null) {
-			throw new AssertionError("There should not be more than one predicate against the primary key"); //$NON-NLS-1$
+			throw new TeiidRuntimeException("There should not be more than one predicate against the primary key"); //$NON-NLS-1$
 		}
 
 		this.criterion = searchCriteria;

@@ -21,14 +21,9 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import javax.naming.Context;
 
@@ -88,36 +83,18 @@ public class TestInfinispanRemoteJndiKeySearch extends BasicSearchTest {
     public static void closeConnection() throws Exception {
         RemoteInfinispanTestHelper.releaseServer();
     }
-
-	
-	@Override
-	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
+    
+    @Override
+    protected ObjectExecution createExecution(Select command)
+    		throws Exception {
 	    when(jndi.lookup(JNDI_NAME)).thenReturn(container);
 	    
 	    Object t =  RemoteInfinispanTestHelper.getCacheManager().getCache(TradesCacheSource.TRADES_CACHE_NAME).get("1");
 
 	    assertNotNull(t);
 	    
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		exec.execute();
-		
-		List<Object> rows = new ArrayList<Object>();
-		
-		int cnt = 0;
-		List<Object> row = exec.next();
-	
-		while (row != null) {
-			rows.add(row);
-			++cnt;
-			row = exec.next();
-		}
-		
-		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
-		
-		exec.close();
-		return rows;
-	}
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+    }
 
 	
 }

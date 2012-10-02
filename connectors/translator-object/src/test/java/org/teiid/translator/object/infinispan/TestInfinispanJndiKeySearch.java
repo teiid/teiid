@@ -21,11 +21,7 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
@@ -72,33 +68,11 @@ public class TestInfinispanJndiKeySearch extends BasicSearchTest {
 		factory.setCacheName(TradesCacheSource.TRADES_CACHE_NAME);
 		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
 		factory.start();
-	    
-
     }
-
-	@Override
-	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
-
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		exec.execute();
-		
-		List<Object> rows = new ArrayList<Object>();
-		
-		int cnt = 0;
-		List<Object> row = exec.next();
 	
-		while (row != null) {
-			rows.add(row);
-			++cnt;
-			row = exec.next();
-		}
-		
-		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
-		
-		exec.close();
-		return rows;
+	@Override
+	protected ObjectExecution createExecution(Select command) throws TranslatorException {
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 	}
 
-	
 }

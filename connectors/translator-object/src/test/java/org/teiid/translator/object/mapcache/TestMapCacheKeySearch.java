@@ -21,14 +21,10 @@
  */
 package org.teiid.translator.object.mapcache;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -46,7 +42,6 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.ObjectExecutionFactory;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
@@ -96,27 +91,8 @@ public class TestMapCacheKeySearch extends BasicSearchTest {
     }
 	
 	@Override
-	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
-
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		exec.execute();
-		
-		List<Object> rows = new ArrayList<Object>();
-		
-		int cnt = 0;
-		List<Object> row = exec.next();
-	
-		while (row != null) {
-			rows.add(row);
-			++cnt;
-			row = exec.next();
-		}
-		
-		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
-		
-		exec.close();
-		return rows;
+	protected ObjectExecution createExecution(Select command) throws TranslatorException {
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 	}
 
 	@Test public void testGetMetadata() throws Exception {

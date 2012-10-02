@@ -21,18 +21,14 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-
-import java.util.ArrayList;
-import java.util.List;
+import static org.mockito.Mockito.*;
 
 import org.junit.BeforeClass;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.infinispan.search.SearchByKey;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
@@ -63,31 +59,10 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 
 
 	}
-
 	
 	@Override
-	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
-
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		exec.execute();
-		
-		List<Object> rows = new ArrayList<Object>();
-		
-		int cnt = 0;
-		List<Object> row = exec.next();
-	
-		while (row != null) {
-			rows.add(row);
-			++cnt;
-			row = exec.next();
-		}
-		
-		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
-		
-		exec.close();
-		return rows;
+	protected ObjectExecution createExecution(Select command) throws TranslatorException {
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 	}
-
 	
 }

@@ -95,11 +95,9 @@ public  class InfinispanConnectionImpl extends BasicConnection implements Object
 	    return SearchByKey.performSearch(command, this);	
 	}
 	
-	public BasicCache<String, Object> getCache()
+	public BasicCache<Object, Object> getCache()
 			throws TranslatorException {
 		return factory.getCache();
-
 	}
-	
 	
 }

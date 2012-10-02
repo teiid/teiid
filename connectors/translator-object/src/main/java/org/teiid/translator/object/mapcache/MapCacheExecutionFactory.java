@@ -66,28 +66,30 @@ public class MapCacheExecutionFactory extends ObjectExecutionFactory {
 
 	}
 
-    protected synchronized Map<?,?> getCache() throws TranslatorException {
-    	if (this.cache != null) return this.cache;
-    	
-    	Object object = findCacheUsingJNDIName();
-    	
-		if (object instanceof Map<?,?>) {
-		    
-			cache = (Map<?,?>)object;
-			
-            LogManager.logInfo(LogConstants.CTX_CONNECTOR, "=== Using CacheManager (obtained from JNDI ==="); //$NON-NLS-1$
+    protected Map<?,?> getCache() throws TranslatorException {
+    	if (this.cache == null) {
+    		synchronized (this) {
+    			if (this.cache != null) {
+    				return cache;
+    			}
+    	    	Object object = findCacheUsingJNDIName();
+    	    	
+    			if (object instanceof Map<?,?>) {
+    			    
+    				cache = (Map<?,?>)object;
+    				
+    	            LogManager.logInfo(LogConstants.CTX_CONNECTOR, "=== Using CacheManager (obtained from JNDI ==="); //$NON-NLS-1$
 
-		} else {
-			String msg = ObjectPlugin.Util.getString(
-					"MapCacheExecutionFactory.unexpectedCacheType", //$NON-NLS-1$
-					new Object[] { (object == null ? "nullObject" : object.getClass().getName()), "Map" }); //$NON-NLS-1$ //$NON-NLS-2$ 
-			throw new TranslatorException(msg); 
-		}
-    	
-    	return this.cache;
+    			} else {
+    				String msg = ObjectPlugin.Util.getString(
+    						"MapCacheExecutionFactory.unexpectedCacheType", //$NON-NLS-1$
+    						new Object[] { (object == null ? "nullObject" : object.getClass().getName()), "Map" }); //$NON-NLS-1$ //$NON-NLS-2$ 
+    				throw new TranslatorException(msg); 
+    			}
+			}
+    	}
+		return this.cache;
     }
-	
- 
     
 	@Override
 	public ObjectConnection getConnection(ConnectionFactory factory,

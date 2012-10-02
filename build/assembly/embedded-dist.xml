@@ -89,6 +89,7 @@
             <include>org.jboss.teiid.connectors:translator-olap</include>
             <include>org.jboss.teiid.connectors:translator-hive</include>
             <include>org.jboss.teiid.connectors:translator-jpa</include>
+            <include>org.jboss.teiid.connectors:translator-object</include>
         </includes>
 
         <binaries>        

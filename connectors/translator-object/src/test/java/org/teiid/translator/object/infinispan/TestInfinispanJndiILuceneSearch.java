@@ -21,11 +21,7 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
@@ -78,98 +74,55 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
     }
 
 	@Override
-	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
-		
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		exec.execute();
-		
-		List<Object> rows = new ArrayList<Object>();
-		
-		int cnt = 0;
-		List<Object> row = exec.next();
-	
-		while (row != null) {
-			rows.add(row);
-			++cnt;
-			row = exec.next();
-		}
-		
-		assertEquals("Did not get expected number of rows", rowcnt, cnt); //$NON-NLS-1$
-		
-		exec.close();
-		return rows;
+	protected ObjectExecution createExecution(Select command) throws TranslatorException {
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 	}
 	
 	@Test public void testQueryLikeCriteria1() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name From Trade_Object.Trade as T WHERE T.Name like 'TradeName%'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 3);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 3);
 	}	
 	
 	@Test public void testQueryLikeCriteria2() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name From Trade_Object.Trade as T WHERE T.Name like 'TradeName 2%'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 1);
 	}	
 	
 	@Test public void testQueryCompareEQBoolean() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name, T.Settled From Trade_Object.Trade as T WHERE T.Settled = 'false'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 2);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 2);
 	}	
 	
 	@Test public void testQueryCompareNEBoolean() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name, T.Settled From Trade_Object.Trade as T WHERE T.Settled <> 'false'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 1);
 	}		
 	
 	@Test public void testQueryRangeBetween() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId > '1' and T.TradeId < '3'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 1);
 	}
 
 	@Test public void testQueryRangeAbove() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId > '1'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 2);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 2);
 	}
 	
 	@Test public void testQueryRangeBelow() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId < '2'"); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 1);
 	}	
 	
 	@Test public void testQueryAnd() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId > '1' and T.Settled = 'false' "); //$NON-NLS-1$
 					
-		List<Object> rows = performTest(command, 1);
-		
-		compareResultSet(rows);
-		
+		performTest(command, 1);
 	}	
 }
