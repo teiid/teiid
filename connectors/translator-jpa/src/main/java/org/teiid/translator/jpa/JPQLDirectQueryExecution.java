@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -41,7 +40,7 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 
 public class JPQLDirectQueryExecution extends JPQLBaseExecution implements ProcedureExecution{
-	private Iterator resultsIterator;
+	private Iterator<?> resultsIterator;
 	private List<Argument> arguments;
 	private int updateCount = -1;
 	private boolean updateQuery;
@@ -55,22 +54,17 @@ public class JPQLDirectQueryExecution extends JPQLBaseExecution implements Proce
 	@Override
 	public void execute() throws TranslatorException {
 		String query = (String)arguments.get(0).getArgumentValue().getValue();
-		String firstToken = null;
-		
-		StringTokenizer st = new StringTokenizer(query, ";"); //$NON-NLS-1$
-		if (st.hasMoreTokens()) {
-			firstToken = st.nextToken();
-			if (!firstToken.equalsIgnoreCase("search") && !firstToken.equalsIgnoreCase("create") && !firstToken.equalsIgnoreCase("update") && !firstToken.equalsIgnoreCase("delete")) { //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-				throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14008));
-			}
+		if (query.length() < 7) {
+			throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14008));
 		}
-
+		String firstToken = query.substring(0, 6);
+		
 		String jpql = query.substring(7);
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "JPA Source-Query:", jpql); //$NON-NLS-1$
 
 		if (firstToken.equalsIgnoreCase("search")) { // //$NON-NLS-1$
 			Query queryCommand = this.enityManager.createQuery(jpql);
-			List results = queryCommand.getResultList();
+			List<?> results = queryCommand.getResultList();
 			this.resultsIterator = results.iterator();
 		}		
 		else if (firstToken.equalsIgnoreCase("create")) { // //$NON-NLS-1$
@@ -83,6 +77,8 @@ public class JPQLDirectQueryExecution extends JPQLBaseExecution implements Proce
 			Query queryCmd = this.enityManager.createQuery(jpql);
 			this.updateCount = queryCmd.executeUpdate();
 			this.updateQuery = true;
+		} else {
+			throw new TranslatorException(JPAPlugin.Util.gs(JPAPlugin.Event.TEIID14008));
 		}
 	}
 
