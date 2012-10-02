@@ -419,7 +419,7 @@ public class DDLStringVisitor {
 		}	
 		
 		// by default the search type is default data type search, so avoid it.
-		if (column.getSearchType() != null && !column.getSearchType().equals(column.getDatatype().getSearchType())) {
+		if (column.getSearchType() != null && (!column.getSearchType().equals(column.getDatatype().getSearchType()) || column.isSearchTypeSet())) {
 			addOption(options, SEARCHABLE, column.getSearchType().name());
 		}
 		

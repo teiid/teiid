@@ -113,6 +113,10 @@ public class Column extends BaseColumn implements Comparable<Column> {
     	}
         return searchType;
     }
+    
+    public boolean isSearchTypeSet() {
+    	return searchType != null;
+    }
 
     public String getFormat() {
         return format;

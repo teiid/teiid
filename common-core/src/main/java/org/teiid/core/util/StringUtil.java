@@ -998,4 +998,18 @@ public final class StringUtil {
 		return true;
 	}
 	
+	public static <T extends Enum<T>> T caseInsensitiveValueOf(Class<T> enumType, String name) {
+		try {
+			return Enum.valueOf(enumType, name);
+		} catch (IllegalArgumentException e) {
+			T[] vals = enumType.getEnumConstants();
+			for (T t : vals) {
+				if (name.equalsIgnoreCase(t.name())) {
+					return t;
+				}
+			}
+			throw e;
+		}
+	}
+	
 }

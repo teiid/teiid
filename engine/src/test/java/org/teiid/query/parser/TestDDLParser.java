@@ -31,6 +31,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.validator.ValidatorReport;
@@ -48,7 +49,7 @@ public class TestDDLParser {
 						"e1 integer primary key,\n" +
 						"e2 varchar(10) unique,\n" +
 						"e3 date not null unique,\n" +
-						"e4 decimal(12,3),\n" +
+						"e4 decimal(12,3) options (searchable 'unsearchable'),\n" +
 						"e5 integer auto_increment INDEX OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE 'NO'),\n" +
 						"e6 varchar index default 'hello')\n" +
 						"OPTIONS (CARDINALITY 12, UUID 'uuid2',  UPDATABLE 'true', FOO 'BAR', ANNOTATION 'Test Table')";
@@ -101,6 +102,7 @@ public class TestDDLParser {
 		assertEquals(false, e4.isAutoIncremented());
 		assertEquals(12, e4.getPrecision());
 		assertEquals(3, e4.getScale());
+		assertEquals(SearchType.Unsearchable, e4.getSearchType());
 		
 		assertEquals("e5", e5.getName());
 		assertEquals("int", e5.getDatatype().getName());

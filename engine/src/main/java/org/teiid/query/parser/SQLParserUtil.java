@@ -367,7 +367,7 @@ public class SQLParserUtil {
     	
     	v = props.remove(DDLConstants.SEARCHABLE);
     	if (v != null) {
-    		c.setSearchType(SearchType.valueOf(v.toUpperCase()));
+    		c.setSearchType(StringUtil.caseInsensitiveValueOf(SearchType.class, v));
     	}
     	
     	v = props.remove(DDLConstants.MIN_VALUE);
