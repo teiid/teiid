@@ -21,17 +21,111 @@
  */
 package org.teiid.metadata;
 
+import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.TranslatorException;
 
 /**
  * This class is being provided for sole reason to inject metadata as it used to be in previous 
  * teiid versions. Take a look at modified interface of the MetadataRepostiory interface.
+ * 
+ * If a {@link DefaultMetadataRepository} is used, it will inject metadata onto whatever has been
+ * loaded at that point in the repository chain.  Generally this means that a {@link DefaultMetadataRepository}
+ * should be last.
  */
 @SuppressWarnings("unused")
-public abstract class DefaultMetadataRepository implements MetadataRepository {
+@Deprecated
+public abstract class DefaultMetadataRepository<F, C> implements MetadataRepository<F, C> {
 
 	/**
+	 * Calls the specific getter methods of this class to populate metadata on schema being loaded.
+	 * If this method is overriden, the super method must be called to perform the metadata injection.
+	 */
+	public void loadMetadata(MetadataFactory factory, ExecutionFactory<F,C> executionFactory, F connectionFactory) throws TranslatorException {
+		String vdbName = factory.getVdbName();
+		int vdbVersion = factory.getVdbVersion();
+		Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
+						
+		this.startLoadVdb(vdbName, vdbVersion);
+		Schema schema = factory.getSchema();
+		records.add(schema);
+		for (Table t : schema.getTables().values()) {
+			records.add(t);
+			records.addAll(t.getColumns());
+			records.addAll(t.getAllKeys());
+			if (t.isPhysical()) {
+				TableStats stats = this.getTableStats(vdbName, vdbVersion, t);
+				if (stats != null) {
+					t.setTableStats(stats);
+				}
+				for (Column c : t.getColumns()) {
+					ColumnStats cStats = this.getColumnStats(vdbName, vdbVersion, c);
+					if (cStats != null) {
+						c.setColumnStats(cStats);
+					}
+				}
+			} else {
+				String def = this.getViewDefinition(vdbName, vdbVersion, t);
+				if (def != null) {
+					t.setSelectTransformation(def);
+				}
+				if (t.supportsUpdate()) {
+					def = this.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.INSERT);
+					if (def != null) {
+						t.setInsertPlan(def);
+					}
+					Boolean enabled = this.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.INSERT);
+					if (enabled != null) {
+						t.setInsertPlanEnabled(enabled);
+					}
+					def = this.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.UPDATE);
+					if (def != null) {
+						t.setUpdatePlan(def);
+					}
+					enabled = this.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.UPDATE);
+					if (enabled != null) {
+						t.setUpdatePlanEnabled(enabled);
+					}
+					def = this.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.DELETE);
+					if (def != null) {
+						t.setDeletePlan(def);
+					}
+					enabled = this.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.DELETE);
+					if (enabled != null) {
+						t.setDeletePlanEnabled(enabled);
+					}
+				}
+			}
+		}
+		for (Procedure p : schema.getProcedures().values()) {
+			records.add(p);
+			records.addAll(p.getParameters());
+			if (p.getResultSet() != null) {
+				records.addAll(p.getResultSet().getColumns());
+			}
+			if (p.isVirtual() && !p.isFunction()) {
+				String proc = this.getProcedureDefinition(vdbName, vdbVersion, p);
+				if (proc != null) {
+					p.setQueryPlan(proc);								
+				}
+			}
+		}
+	
+		for (AbstractMetadataRecord abstractMetadataRecord : records) {
+			LinkedHashMap<String, String> p = this.getProperties(vdbName, vdbVersion, abstractMetadataRecord);
+			if (p != null) {
+				abstractMetadataRecord.setProperties(p);
+			}
+		}
+		this.endLoadVdb(vdbName, vdbVersion);
+	}
+	
+	/**
 	 * Marks the start of vdb metadata loading
+	 * Note: this is called for every schema
 	 * @param vdbName
 	 * @param vdbVersion
 	 */
@@ -40,6 +134,7 @@ public abstract class DefaultMetadataRepository implements MetadataRepository {
 	
 	/**
 	 * Marks the end of vdb metadata loading
+	 * Note: this is called for every schema
 	 * @param vdbName
 	 * @param vdbVersion
 	 */

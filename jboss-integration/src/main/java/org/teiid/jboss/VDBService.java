@@ -476,25 +476,31 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		if (repo != null) {
 			return repo;
 		}
-		final Module module;
-        ClassLoader moduleLoader = this.getClass().getClassLoader();
-        ModuleLoader ml = Module.getCallerModuleLoader();
-        if (repoType != null && ml != null) {
-	        try {
-            	module = ml.loadModule(ModuleIdentifier.create(repoType));
-            	moduleLoader = module.getClassLoader();
-	        } catch (ModuleLoadException e) {
-	            throw new VirtualDatabaseException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
+		synchronized (this) {
+			final Module module;
+	        ClassLoader moduleLoader = this.vdb.getAttachment(ClassLoader.class);
+	        if (moduleLoader == null) {
+	        	moduleLoader = this.getClass().getClassLoader();
 	        }
-        }
-        
-        final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
-        if (serviceLoader != null) {
-        	for (MetadataRepository loader:serviceLoader) {
-        		return loader;
-        	}
-        }
-		return null;
+	        ModuleLoader ml = Module.getCallerModuleLoader();
+	        if (repoType != null && ml != null) {
+		        try {
+	            	module = ml.loadModule(ModuleIdentifier.create(repoType));
+	            	moduleLoader = module.getClassLoader();
+		        } catch (ModuleLoadException e) {
+		            throw new VirtualDatabaseException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50057, repoType));
+		        }
+	        }
+	        
+	        final ServiceLoader<MetadataRepository> serviceLoader =  ServiceLoader.load(MetadataRepository.class, moduleLoader);
+	        if (serviceLoader != null) {
+	        	for (MetadataRepository loader:serviceLoader) {
+	        		this.addMetadataRepository(repoType, loader);
+	        		return loader;
+	        	}
+	        }
+			return null;
+		}
 	}	
 
 }

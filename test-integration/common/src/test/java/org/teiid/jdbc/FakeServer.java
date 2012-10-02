@@ -35,6 +35,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.queue.FakeWorkManager;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.SimpleMock;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.UDFMetaData;
@@ -45,6 +46,7 @@ import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -54,6 +56,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.runtime.EmbeddedServer;
+import org.teiid.translator.TranslatorException;
 import org.teiid.transport.ClientServiceRegistryImpl;
 
 @SuppressWarnings({"nls"})
@@ -158,6 +161,14 @@ public class FakeServer extends EmbeddedServer {
         	ModelMetaData model = addModel(vdbMetaData, schema);
         	if (parameterObject.metadataRepo != null) {
         		model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
+        		//fakeserver does not load through the repository framework, so call load after the fact here.
+        		MetadataFactory mf = createMetadataFactory(vdbMetaData, model);
+        		mf.setSchema(schema);
+        		try {
+					parameterObject.metadataRepo.loadMetadata(mf, null, null);
+				} catch (TranslatorException e) {
+					throw new TeiidRuntimeException(e);
+				}
         	}
         }
                         

@@ -24,7 +24,6 @@ package org.teiid.deployers;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -38,7 +37,9 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.metadata.*;
+import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.CompositeMetadataStore;
@@ -233,85 +234,6 @@ public class CompositeVDB {
 		return mergedStore;
 	}
 		
-	private static void updateFromMetadataRepository(VDBMetaData vdb, Schema schema, DefaultMetadataRepository metadataRepository) {
-		String vdbName = vdb.getName();
-		int vdbVersion = vdb.getVersion();
-		Collection<AbstractMetadataRecord> records = new LinkedHashSet<AbstractMetadataRecord>();
-						
-		metadataRepository.startLoadVdb(vdbName, vdbVersion);
-		
-		records.add(schema);
-		for (Table t : schema.getTables().values()) {
-			records.add(t);
-			records.addAll(t.getColumns());
-			records.addAll(t.getAllKeys());
-			if (t.isPhysical()) {
-				TableStats stats = metadataRepository.getTableStats(vdbName, vdbVersion, t);
-				if (stats != null) {
-					t.setTableStats(stats);
-				}
-				for (Column c : t.getColumns()) {
-					ColumnStats cStats = metadataRepository.getColumnStats(vdbName, vdbVersion, c);
-					if (cStats != null) {
-						c.setColumnStats(cStats);
-					}
-				}
-			} else {
-				String def = metadataRepository.getViewDefinition(vdbName, vdbVersion, t);
-				if (def != null) {
-					t.setSelectTransformation(def);
-				}
-				if (t.supportsUpdate()) {
-					def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.INSERT);
-					if (def != null) {
-						t.setInsertPlan(def);
-					}
-					Boolean enabled = metadataRepository.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.INSERT);
-					if (enabled != null) {
-						t.setInsertPlanEnabled(enabled);
-					}
-					def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.UPDATE);
-					if (def != null) {
-						t.setUpdatePlan(def);
-					}
-					enabled = metadataRepository.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.UPDATE);
-					if (enabled != null) {
-						t.setUpdatePlanEnabled(enabled);
-					}
-					def = metadataRepository.getInsteadOfTriggerDefinition(vdbName, vdbVersion, t, Table.TriggerEvent.DELETE);
-					if (def != null) {
-						t.setDeletePlan(def);
-					}
-					enabled = metadataRepository.isInsteadOfTriggerEnabled(vdbName, vdbVersion, t, Table.TriggerEvent.DELETE);
-					if (enabled != null) {
-						t.setDeletePlanEnabled(enabled);
-					}
-				}
-			}
-		}
-		for (Procedure p : schema.getProcedures().values()) {
-			records.add(p);
-			records.addAll(p.getParameters());
-			if (p.getResultSet() != null) {
-				records.addAll(p.getResultSet().getColumns());
-			}
-			if (p.isVirtual() && !p.isFunction()) {
-				String proc = metadataRepository.getProcedureDefinition(vdbName, vdbVersion, p);
-				if (proc != null) {
-					p.setQueryPlan(proc);								
-				}
-			}
-		}
-	
-		for (AbstractMetadataRecord abstractMetadataRecord : records) {
-			LinkedHashMap<String, String> p = metadataRepository.getProperties(vdbName, vdbVersion, abstractMetadataRecord);
-			if (p != null) {
-				abstractMetadataRecord.setProperties(p);
-			}
-		}
-		metadataRepository.endLoadVdb(vdbName, vdbVersion);
-	}	
-	
 	VDBMetaData getOriginalVDB() {
 		return originalVDB;
 	}
@@ -323,13 +245,6 @@ public class CompositeVDB {
 		this.metadataloadFinished = true;
 		
 		MetadataStore mergedStore = getMetadataStore();
-		
-		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
-			MetadataRepository repo = model.getAttachment(MetadataRepository.class);
-			if (repo instanceof DefaultMetadataRepository) {
-				updateFromMetadataRepository(mergedVDB, mergedStore.getSchema(model.getName()), (DefaultMetadataRepository)repo);
-			}
-		}
 		
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
 		mergedVDB.addAttchment(QueryMetadataInterface.class, metadata);

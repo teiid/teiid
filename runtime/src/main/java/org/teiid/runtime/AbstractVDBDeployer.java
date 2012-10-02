@@ -22,6 +22,8 @@
 
 package org.teiid.runtime;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -44,6 +46,7 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.query.metadata.ChainingMetadataRepository;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
@@ -79,47 +82,31 @@ public abstract class AbstractVDBDeployer {
 	private MetadataRepository<?, ?> getMetadataRepository(VDBMetaData vdb, ModelMetaData model, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		if (model.getSchemaSourceType() == null) {
 			if (!vdb.isDynamic()) {
-				defaultRepo.setNext(new DirectQueryMetadataRepository());
 				return defaultRepo;
 			}
-			
 			if (model.isSource()) {
-				NativeMetadataRepository repo =  new NativeMetadataRepository();
-				repo.setNext(new DirectQueryMetadataRepository());
-				return repo;
+				return new ChainingMetadataRepository(Arrays.asList(new NativeMetadataRepository(), new DirectQueryMetadataRepository()));
 			}
 			throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), null));
 		}
-		
-		MetadataRepository<?, ?> first = null;
-		MetadataRepository<?, ?> current = null;
-		MetadataRepository<?, ?> previous = null;
 		String schemaTypes = model.getSchemaSourceType();
 		StringTokenizer st = new StringTokenizer(schemaTypes, ","); //$NON-NLS-1$
+		List<MetadataRepository<?, ?>> repos = new ArrayList<MetadataRepository<?,?>>(st.countTokens());
 		while (st.hasMoreTokens()) {
 			String repoType = st.nextToken().trim();
-			current = getMetadataRepository(repoType);
+			MetadataRepository<?, ?> current = getMetadataRepository(repoType);
 			if (current == null) {
 				throw new VirtualDatabaseException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40094, model.getName(), vdb.getName(), vdb.getVersion(), repoType));
 			}
-		
-			if (first == null) {
-				first = current;
-			}
-			
-			if (previous != null) {
-				previous.setNext(current);
-			}
-			previous = current;
-			current = null;
+			repos.add(current);
 		}
-		
-		// TODO:there is good chance that the instances of metadata factory sharing is not good between models,
-		// may that be for chaining purposes, we should do metadata repository factory model here. 
 		if (model.getModelType() == ModelMetaData.Type.PHYSICAL) {
-			previous.setNext(new DirectQueryMetadataRepository());
+			repos.add(new DirectQueryMetadataRepository());
 		}
-		return first;
+		if (repos.size() == 1) {
+			return repos.get(0);
+		}
+		return new ChainingMetadataRepository(repos);
 	}
 	
     protected ConnectorManager getConnectorManager(final ModelMetaData model, final ConnectorManagerRepository cmr) {

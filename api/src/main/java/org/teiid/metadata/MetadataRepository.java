@@ -109,10 +109,4 @@ public interface MetadataRepository<F,C> {
 	 */
 	void setProperty(String vdbName, int vdbVersion, AbstractMetadataRecord record, String name, String value);
 	
-	/**
-	 * Next repository in the repository chain. The implementation contract of this method dictates if this method is set then
-	 * Implementation class must delegete the call to 'next' instance after it is done with the processing of the call.
-	 * @param next
-	 */
-	void setNext(MetadataRepository<?, ?> next);
 }

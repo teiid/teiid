@@ -34,15 +34,17 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
+import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.DefaultMetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.TableStats;
+import org.teiid.metadata.Table.TriggerEvent;
 
 @SuppressWarnings("nls")
 public class TestMetadataUpdates {
@@ -72,39 +74,82 @@ public class TestMetadataUpdates {
     }
 
 	private static DefaultMetadataRepository getMetadataRepo() {
-		DefaultMetadataRepository repo = Mockito.mock(DefaultMetadataRepository.class);
-    	Mockito.stub(repo.getViewDefinition(Mockito.anyString(), Mockito.anyInt(), (Table)Mockito.anyObject())).toAnswer(new Answer<String>() {
-    		@Override
-    		public String answer(InvocationOnMock invocation) throws Throwable {
-    			Table t = (Table)invocation.getArguments()[2];
-    			if (t.getName().equals("vw")) {
+		DefaultMetadataRepository repo = new DefaultMetadataRepository() {
+
+			@Override
+			public void setColumnStats(String vdbName, int vdbVersion,
+					Column column, ColumnStats columnStats) {
+				
+			}
+
+			@Override
+			public void setInsteadOfTriggerDefinition(String vdbName,
+					int vdbVersion, Table table, TriggerEvent triggerOperation,
+					String triggerDefinition) {
+				
+			}
+
+			@Override
+			public void setInsteadOfTriggerEnabled(String vdbName,
+					int vdbVersion, Table table, TriggerEvent triggerOperation,
+					boolean enabled) {
+				
+			}
+
+			@Override
+			public void setProcedureDefinition(String vdbName, int vdbVersion,
+					Procedure procedure, String procedureDefinition) {
+				
+			}
+
+			@Override
+			public void setProperty(String vdbName, int vdbVersion,
+					AbstractMetadataRecord record, String name, String value) {
+				
+			}
+
+			@Override
+			public void setTableStats(String vdbName, int vdbVersion,
+					Table table, TableStats tableStats) {
+				
+			}
+
+			@Override
+			public void setViewDefinition(String vdbName, int vdbVersion,
+					Table table, String viewDefinition) {
+				
+			}
+			
+			@Override
+			public String getViewDefinition(String vdbName, int vdbVersion,
+					Table table) {
+				if (table.getName().equals("vw")) {
     				return "select '2011'";
     			}
     			return null;
-    		}
-		});
-    	Mockito.stub(repo.getProcedureDefinition(Mockito.anyString(), Mockito.anyInt(), (Procedure)Mockito.anyObject())).toAnswer(new Answer<String>() {
-    		@Override
-    		public String answer(InvocationOnMock invocation) throws Throwable {
-    			Procedure t = (Procedure)invocation.getArguments()[2];
-    			if (t.getName().equals("proc")) {
+			}
+			
+			@Override
+			public String getProcedureDefinition(String vdbName,
+					int vdbVersion, Procedure procedure) {
+    			if (procedure.getName().equals("proc")) {
     				return "create virtual procedure begin select '2011'; if ((call isLoggable())) call logMsg(msg=>'hello'); end";
     			}
     			return null;
-    		}
-		});
-    	Mockito.stub(repo.getInsteadOfTriggerDefinition(Mockito.anyString(), Mockito.anyInt(), (Table)Mockito.anyObject(), (Table.TriggerEvent) Mockito.anyObject())).toAnswer(new Answer<String>() {
-    		@Override
-    		public String answer(InvocationOnMock invocation) throws Throwable {
+			}
+			
+			@Override
+			public String getInsteadOfTriggerDefinition(String vdbName,
+					int vdbVersion, Table table, TriggerEvent triggerOperation) {
 				return "for each row select 1/0;";
-    		}
-		});
-    	Mockito.stub(repo.isInsteadOfTriggerEnabled(Mockito.anyString(), Mockito.anyInt(), (Table)Mockito.anyObject(), (Table.TriggerEvent) Mockito.anyObject())).toAnswer(new Answer<Boolean>() {
-    		@Override
-    		public Boolean answer(InvocationOnMock invocation) throws Throwable {
+			}
+			
+			@Override
+			public Boolean isInsteadOfTriggerEnabled(String vdbName,
+					int vdbVersion, Table table, TriggerEvent triggerOperation) {
 				return Boolean.TRUE;
-    		}
-		});
+			}
+		};
     	return repo;
 	}
     
