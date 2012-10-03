@@ -37,6 +37,7 @@ import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.visitor.SQLStringVisitor;
+import org.teiid.language.visitor.SQLStringVisitor.Substitutor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -410,14 +411,34 @@ public class TestSQLStringVisitor  {
     
     @Test public void testNativeParsing() throws Exception {
     	String sql = "select $1 from $2";
-    	List<Object> parts = SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)));
-    	assertEquals(Arrays.asList((Object)"select ", 0, " from ", 1), parts);
+    	String expected = "select *0 from *1";
+    	helpTestNativeParsing(sql, expected);
     }
+
+	private void helpTestNativeParsing(String sql, String expected) {
+		StringBuilder sb = new StringBuilder();
+    	
+    	Substitutor sub = new Substitutor() {
+			@Override
+			public void substitute(Argument arg, StringBuilder builder, int index) {
+				builder.append("*").append(index);
+			}
+		};
+		
+    	SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)), sb, sub);
+    	assertEquals(expected, sb.toString());
+	}
     
     @Test public void testNativeParsing1() throws Exception {
     	String sql = "select $$1 from $$$2";
-    	List<Object> parts = SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)));
-    	assertEquals(Arrays.asList((Object)"select ", "$1", " from ", "$", 1), parts);
+    	String expected = "select $1 from $*1";
+    	helpTestNativeParsing(sql, expected);
+    }
+    
+    @Test(expected=IllegalArgumentException.class) public void testNativeParsing2() throws Exception {
+    	String sql = "select $$1 from $$$3";
+    	String expected = "select $1 from $*1";
+    	helpTestNativeParsing(sql, expected);
     }
 
 }

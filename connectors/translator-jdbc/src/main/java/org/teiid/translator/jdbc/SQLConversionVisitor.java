@@ -52,7 +52,7 @@ import org.teiid.translator.TypeFacility;
  * This visitor takes an ICommand and does DBMS-specific conversion on it
  * to produce a SQL String.  This class is expected to be subclassed.
  */
-public class SQLConversionVisitor extends SQLStringVisitor{
+public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringVisitor.Substitutor {
 	public static final String TEIID_NON_PREPARED = AbstractMetadataRecord.RELATIONAL_URI + "non-prepared"; //$NON-NLS-1$
 
     private static DecimalFormat DECIMAL_FORMAT = 
@@ -178,23 +178,11 @@ public class SQLConversionVisitor extends SQLStringVisitor{
     	if (p != null) {
 	    	String nativeQuery = p.getProperty(TEIID_NATIVE_QUERY, false);
 	    	if (nativeQuery != null) {
-	    		List<Object> parts = parseNativeQueryParts(nativeQuery, obj.getArguments());
 	    		this.prepared = !Boolean.valueOf(p.getProperty(TEIID_NON_PREPARED, false));
 	    		if (this.prepared) {
 	    			this.preparedValues = new ArrayList<Object>();
 	    		}
-	    		for (Object o : parts) {
-	    			if (o instanceof String) {
-	    				buffer.append(o);
-	    			} else {
-	    				if (this.prepared) {
-	    					buffer.append('?');
-	    					this.preparedValues = obj.getArguments();
-	    				} else {
-	    					visit(obj.getArguments().get((Integer)o));
-	    				}
-	    			}
-	    		}
+	    		parseNativeQueryParts(nativeQuery, obj.getArguments(), buffer, this);
 	    		return;
 	    	}
     	}
@@ -393,6 +381,16 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	    	}
 		}
 		super.appendBaseName(obj);
+	}
+
+	@Override
+	public void substitute(Argument arg, StringBuilder builder, int index) {
+		if (this.prepared) {
+			buffer.append('?');
+			this.preparedValues.add(arg);
+		} else {
+			visit(arg);
+		}
 	}
 	
 }

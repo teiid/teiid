@@ -35,6 +35,7 @@ import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -87,7 +88,11 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
-		return super.createProcedureExecution(command, executionContext, metadata, connection);
+		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+		if (nativeQuery != null) {
+			return new JPQLDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery, false);
+		}
+		throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
 	}
 
 	@Override
@@ -97,9 +102,8 @@ public class JPA2ExecutionFactory extends ExecutionFactory<EntityManagerFactory,
 	
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, EntityManager connection) throws TranslatorException {
-		 return new JPQLDirectQueryExecution(arguments, command, executionContext, metadata, connection);
+		 return new JPQLDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
 	}	
-	
 	
 	@Override
 	public void getMetadata(MetadataFactory mf, EntityManager em) throws TranslatorException {

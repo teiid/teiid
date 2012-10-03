@@ -32,6 +32,7 @@ import javax.xml.namespace.QName;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
+import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -89,15 +90,14 @@ public class DirectQueryExecution implements ProcedureExecution  {
 	public void execute() throws TranslatorException {
 		if (query.startsWith(SEARCH)) { 
 			StringBuilder buffer = new StringBuilder();
-			List<Object> parts = SQLStringVisitor.parseNativeQueryParts(query, arguments);
-			for (Object o : parts) {
-				if (o instanceof String) {
-					buffer.append(o);
-				} else {
-					Integer i = (Integer)o;
-					CriteriaVisitor.appendLiteralValue(buffer, arguments.get(i).getArgumentValue());
+			SQLStringVisitor.parseNativeQueryParts(query, arguments, buffer, new SQLStringVisitor.Substitutor() {
+				
+				@Override
+				public void substitute(Argument arg, StringBuilder builder, int index) {
+					Literal argumentValue = arg.getArgumentValue();
+					CriteriaVisitor.appendLiteralValue(builder, argumentValue);
 				}
-			}
+			});
 			doSelect(buffer.toString().substring(7));
 		}
 		else if (query.startsWith("create;")) { //$NON-NLS-1$

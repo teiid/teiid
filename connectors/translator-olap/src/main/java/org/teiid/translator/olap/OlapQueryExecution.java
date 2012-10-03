@@ -24,6 +24,7 @@ package org.teiid.translator.olap;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -37,6 +38,7 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
+import org.teiid.language.Literal;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -65,15 +67,24 @@ public class OlapQueryExecution implements ProcedureExecution {
 		this.mdxQuery = mdxQuery;
 		if (arguments.size() > 0 || !returnsArray) { //TODO this is a hack at backwards compatibility 
 			StringBuilder buffer = new StringBuilder();
-			List<Object> parts = SQLStringVisitor.parseNativeQueryParts(this.mdxQuery, arguments);
-			for (Object o : parts) {
-				if (o instanceof String) {
-					buffer.append(o);
-				} else {
-					Integer i = (Integer)o;
-					buffer.append(arguments.get(i).getArgumentValue().getValue());
+			SQLStringVisitor.parseNativeQueryParts(mdxQuery, arguments, buffer, new SQLStringVisitor.Substitutor() {
+				
+				@Override
+				public void substitute(Argument arg, StringBuilder builder, int index) {
+					Literal argumentValue = arg.getArgumentValue();
+					Object value = argumentValue.getValue();
+					if (value == null || value instanceof Number || value instanceof Boolean || value instanceof String) {
+						builder.append(argumentValue);
+					} else if (value instanceof Date) {
+						//bind as a string literal
+						builder.append(new Literal(value.toString(), String.class));
+					} else {
+						//bind as a string literal using the teiid format - this is likely not what the user wants
+						builder.append(new Literal(argumentValue.toString(), String.class));
+					}
 				}
-			}
+			});
+			this.mdxQuery = buffer.toString();
 		}
 		this.command = command;
 		this.connection = connection;

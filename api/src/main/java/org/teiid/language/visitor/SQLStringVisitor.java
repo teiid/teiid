@@ -26,7 +26,6 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -980,26 +979,29 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	return false;
     }
     
-	public static List<Object> parseNativeQueryParts(String nativeQuery, List<Argument> list) {
+    public interface Substitutor {
+    	void substitute(Argument arg, StringBuilder builder, int index);
+    }
+    
+	public static void parseNativeQueryParts(String nativeQuery, List<Argument> list, StringBuilder stringBuilder, Substitutor substitutor) {
 		Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
-		List<Object> parts = new LinkedList<Object>();
 		Matcher m = pattern.matcher(nativeQuery);
 		for (int i = 0; i < nativeQuery.length();) {
 			if (!m.find(i)) {
-				parts.add(nativeQuery.substring(i));
+				stringBuilder.append(nativeQuery.substring(i));
 				break;
 			}
 			if (m.start() != i) {
-				parts.add(nativeQuery.substring(i, m.start()));
+				stringBuilder.append(nativeQuery.substring(i, m.start()));
 			}
 			String match = m.group();
 			int end = match.lastIndexOf('$');
 			if ((end&0x1) == 1) {
 				//escaped
-				parts.add(match.substring((end+1)/2)); 
+				stringBuilder.append(match.substring((end+1)/2)); 
 			} else {
 				if (end != 0) {
-					parts.add(match.substring(0, end/2));
+					stringBuilder.append(match.substring(0, end/2));
 				}
 				int index = Integer.parseInt(match.substring(end + 1))-1;
 				if (index < 0 || index >= list.size()) {
@@ -1009,10 +1011,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 				if (arg.getDirection() != Direction.IN) {
 					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
 				}
-				parts.add(index);
+				substitutor.substitute(arg, stringBuilder, index);
 			}
 			i = m.end();
 		}
-		return parts;
 	}
 }
