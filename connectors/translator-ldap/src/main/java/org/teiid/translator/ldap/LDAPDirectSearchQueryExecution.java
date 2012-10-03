@@ -28,6 +28,7 @@ import javax.naming.directory.SearchControls;
 import javax.naming.ldap.LdapContext;
 
 import org.teiid.language.Argument;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
@@ -35,16 +36,26 @@ import org.teiid.translator.TranslatorException;
 
 public class LDAPDirectSearchQueryExecution extends LDAPSyncQueryExecution implements ProcedureExecution {
 	
-	private List<Argument> arguments;
+	private String query;
+	private boolean returnsArray = true;
 	
-	public LDAPDirectSearchQueryExecution(List<Argument> arguments, LDAPExecutionFactory factory, ExecutionContext executionContext, LdapContext connection) {
+	public LDAPDirectSearchQueryExecution(List<Argument> arguments, LDAPExecutionFactory factory, ExecutionContext executionContext, LdapContext connection, String query, boolean returnsArray) {
 		super(null, factory, executionContext, connection);
-		this.arguments = arguments;
+		//perform substitution
+		StringBuilder sb = new StringBuilder();
+		SQLStringVisitor.parseNativeQueryParts(query.substring(7), arguments, sb, new SQLStringVisitor.Substitutor() {
+			
+			@Override
+			public void substitute(Argument arg, StringBuilder builder, int index) {
+				builder.append(IQueryToLdapSearchParser.escapeReservedChars(IQueryToLdapSearchParser.getExpressionString(arg.getArgumentValue())));
+			}
+		});
+		this.query = sb.toString();
+		this.returnsArray = returnsArray;
 	}
 	
 	@Override
 	public void execute() throws TranslatorException {
-		String query = (String)arguments.get(0).getArgumentValue().getValue();
 		IQueryToLdapSearchParser parser = new IQueryToLdapSearchParser(this.executionFactory);
 		LDAPSearchDetails details = parser.buildRequest(query);
 		// Create and configure the new search context.
@@ -67,9 +78,12 @@ public class LDAPDirectSearchQueryExecution extends LDAPSyncQueryExecution imple
 		if (vals == null) {
 			return null;
 		}
-		List<Object[]> row = new ArrayList<Object[]>(1);
-		row.add(vals.toArray(new Object[vals.size()]));
-		return row;
+		if (returnsArray) {
+			List<Object[]> row = new ArrayList<Object[]>(1);
+			row.add(vals.toArray(new Object[vals.size()]));
+			return row;
+		}
+		return vals;
 	}
 	
 	@Override

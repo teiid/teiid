@@ -37,12 +37,6 @@ import org.junit.Test;
  */
 public class TestStringUtil {
 
-	//  ********* H E L P E R   M E T H O D S  *********
-	public void helpTestEncloseInSingleQuotes(String input, String expectedResult){
-	    String result = StringUtil.enclosedInSingleQuotes(input);
-	    assertEquals("Unexpected encloseInSignleQuotes result", expectedResult, result ); //$NON-NLS-1$
-	}
-
 	public void helpTestComputeDisplayableForm(String input, String expectedResult){
 	    String result = StringUtil.computeDisplayableForm(input, input);
 	    assertEquals("Unexpected ComputeDisplayableForm result", expectedResult, result ); //$NON-NLS-1$
@@ -71,11 +65,6 @@ public class TestStringUtil {
 	public void helpTestTruncString(String input, int length, String expectedResult){
 	    String result = StringUtil.truncString(input, length);
 	    assertEquals("Unexpected TruncString result", expectedResult, result ); //$NON-NLS-1$
-	}
-
-	//  ********* T E S T   S U I T E   M E T H O D S  *********
-	@Test public void testEncloseInSingleQuotes() {
-	    helpTestEncloseInSingleQuotes("testString", "\'testString\'"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test public void testComputeDisplayableForm1() {
@@ -226,41 +215,6 @@ public class TestStringUtil {
 		assertEquals(" semicolons", tokens.get(4)); //$NON-NLS-1$
 		assertEquals(" there", tokens.get(5)); //$NON-NLS-1$
 		assertEquals(" are 7 tokens.", tokens.get(6)); //$NON-NLS-1$
-    }
-
-    @Test public void testSplitOnEntireString() {
-        List<String> result = StringUtil.splitOnEntireString("thisNEXTcanNEXTbe", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(3, result.size());
-        assertEquals("this", result.get(0)); //$NON-NLS-1$
-        assertEquals("can", result.get(1)); //$NON-NLS-1$
-        assertEquals("be", result.get(2)); //$NON-NLS-1$
-
-    }
-
-    @Test public void testSplitOnEntireStringEmptyString() {
-        List<String> result = StringUtil.splitOnEntireString("", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(1, result.size());
-        assertEquals("", result.get(0)); //$NON-NLS-1$
-    }
-
-    @Test public void testSplitOnEntireStringEntireStringIsDelimiter() {
-        List<String> result = StringUtil.splitOnEntireString("NEXT", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(2, result.size());
-        assertEquals("", result.get(0)); //$NON-NLS-1$
-        assertEquals("", result.get(1)); //$NON-NLS-1$
-    }
-
-    @Test public void testSplitOnEntireStringEmptyDelimiter() {
-        List<String> result = StringUtil.splitOnEntireString("test", ""); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(1, result.size());
-        assertEquals("test", result.get(0)); //$NON-NLS-1$
-    }
-
-    @Test public void testSplitOnEntireStringEndsWithDelimiter() {
-        List<String> result = StringUtil.splitOnEntireString("testNEXT", "NEXT"); //$NON-NLS-1$ //$NON-NLS-2$
-        assertEquals(2, result.size());
-        assertEquals("test", result.get(0)); //$NON-NLS-1$
-        assertEquals("", result.get(1)); //$NON-NLS-1$
     }
 
     @Test public void testIndexOfIgnoreCase() {

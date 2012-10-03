@@ -45,12 +45,12 @@ import java.util.StringTokenizer;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.SortKey;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.Table;
@@ -70,7 +70,6 @@ public class IQueryToLdapSearchParser {
 	private static final String SEARCH_SCOPE = "search-scope";//$NON-NLS-1$
 	private static final String CRITERIA = "filter";//$NON-NLS-1$
 	private static final String CONTEXT_NAME = "context-name";//$NON-NLS-1$	
-	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
 	LDAPExecutionFactory executionFactory;
 	
 	/**
@@ -119,50 +118,43 @@ public class IQueryToLdapSearchParser {
 		}
 		
 		LDAPSearchDetails sd = null;
-		Table table = ((NamedTable)fItm).getMetadataObject();			
-		String nativeQuery = table.getProperty(TEIID_NATIVE_QUERY, false);
-    	if (nativeQuery != null) {
-    		sd =  buildRequest(nativeQuery);
-    	}
-    	else {
-			String contextName = getContextNameFromFromItem(fItm);
-			int searchScope = getSearchScopeFromFromItem(fItm);
-			// GHH 20080326 - added check for RESTRICT parameter in
-			// NameInSource of from item
-			String classRestriction = getRestrictToNamedClass(fItm);
-					
-			// Parse the WHERE clause.
-			// Create an equivalent LDAP search filter.
-			List<String> searchStringList = new LinkedList<String>();
-			searchStringList = getSearchFilterFromWhereClause(query.getWhere(), searchStringList);
-			StringBuilder filterBuilder = new StringBuilder();
-			for (String string : searchStringList) {
-				filterBuilder.append(string);
-			}
-			// GHH 20080326 - if there is a class restriction,
-			// add it to the search filter
-			if (classRestriction != null && classRestriction.trim().length()>0) {
-				filterBuilder.insert(0, "(&").append("(objectClass=").append(classRestriction).append("))");  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$
-			}
-			
-			// Parse the ORDER BY clause.
-			// Create an ordered sort list.
-			OrderBy orderBy = query.getOrderBy();
-			// Referenced the JNDI standard...arguably, this should not be done inside this
-			// class, and we should make our own key class. In practice, this makes things simpler.
-			SortKey[] sortKeys = getSortKeysFromOrderByClause(orderBy);
-			
-			// Parse LIMIT clause. 
-			// Note that offsets are not supported.
-			Limit limit = query.getLimit();
-			long countLimit = -1;
-			if(limit != null) {
-				countLimit = limit.getRowLimit();
-			}
-			
-			// Create Search Details
-			sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), sortKeys, countLimit, elementList, 0);
-    	}
+		String contextName = getContextNameFromFromItem(fItm);
+		int searchScope = getSearchScopeFromFromItem(fItm);
+		// GHH 20080326 - added check for RESTRICT parameter in
+		// NameInSource of from item
+		String classRestriction = getRestrictToNamedClass(fItm);
+				
+		// Parse the WHERE clause.
+		// Create an equivalent LDAP search filter.
+		List<String> searchStringList = new LinkedList<String>();
+		searchStringList = getSearchFilterFromWhereClause(query.getWhere(), searchStringList);
+		StringBuilder filterBuilder = new StringBuilder();
+		for (String string : searchStringList) {
+			filterBuilder.append(string);
+		}
+		// GHH 20080326 - if there is a class restriction,
+		// add it to the search filter
+		if (classRestriction != null && classRestriction.trim().length()>0) {
+			filterBuilder.insert(0, "(&").append("(objectClass=").append(classRestriction).append("))");  //$NON-NLS-1$  //$NON-NLS-2$  //$NON-NLS-3$
+		}
+		
+		// Parse the ORDER BY clause.
+		// Create an ordered sort list.
+		OrderBy orderBy = query.getOrderBy();
+		// Referenced the JNDI standard...arguably, this should not be done inside this
+		// class, and we should make our own key class. In practice, this makes things simpler.
+		SortKey[] sortKeys = getSortKeysFromOrderByClause(orderBy);
+		
+		// Parse LIMIT clause. 
+		// Note that offsets are not supported.
+		Limit limit = query.getLimit();
+		long countLimit = -1;
+		if(limit != null) {
+			countLimit = limit.getRowLimit();
+		}
+		
+		// Create Search Details
+		sd = new LDAPSearchDetails(contextName, searchScope, filterBuilder.toString(), sortKeys, countLimit, elementList, 0);
 		// Search Details logging	    	
 		sd.printDetailsToLog();
 		return sd;
@@ -371,42 +363,33 @@ public class IQueryToLdapSearchParser {
 				expressionName = mdIDElement.getName();
 			}
 		} else if(e instanceof Literal) {
-			try {
-				if(((Literal)e).getType().equals(Class.forName(Timestamp.class.getName()))) {
-					LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Found an expression that uses timestamp; converting to LDAP string format."); //$NON-NLS-1$
-					Timestamp ts = (Timestamp)((Literal)e).getValue();
-					Date dt = new Date(ts.getTime());
-					//TODO: Fetch format if provided.
-					SimpleDateFormat sdf = new SimpleDateFormat(LDAPConnectorConstants.ldapTimestampFormat);
-					expressionName = sdf.format(dt);
-					LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Timestamp to stsring is: " + expressionName); //$NON-NLS-1$
-				}
-				else {
-					expressionName = ((Literal)e).getValue().toString();
-				}
-			} catch (ClassNotFoundException cce) {
-	            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.timestampClassNotFoundError"); //$NON-NLS-1$
-				throw new TranslatorException(cce, msg); 
-			}
-				
+			expressionName = getExpressionString((Literal)e);
 		} else {
-			if(e instanceof AggregateFunction) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12001)); 
-			} else if(e instanceof Function) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12005)); 
-			} else if(e instanceof ScalarSubquery) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12006)); 
-			} else if (e instanceof SearchedCase) {
-				LogManager.logError(LogConstants.CTX_CONNECTOR, LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12007)); 
-			}
-            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError"); //$NON-NLS-1$
+            final String msg = LDAPPlugin.Util.getString("IQueryToLdapSearchParser.unsupportedElementError", e.getClass().getSimpleName()); //$NON-NLS-1$
 			throw new TranslatorException(msg + e.toString()); 
 		}
 		expressionName = escapeReservedChars(expressionName);
 		return expressionName;
 	}
+
+	static String getExpressionString(Literal l) {
+		if(l.getValue() instanceof Timestamp) {
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Found an expression that uses timestamp; converting to LDAP string format."); //$NON-NLS-1$
+			Timestamp ts = (Timestamp)l.getValue();
+			Date dt = new Date(ts.getTime());
+			//TODO: Fetch format if provided.
+			SimpleDateFormat sdf = new SimpleDateFormat(LDAPConnectorConstants.ldapTimestampFormat);
+			String expressionName = sdf.format(dt);
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Timestamp to string is: " + expressionName); //$NON-NLS-1$
+			return expressionName;
+		}
+		if (l.getValue() != null) {
+			return l.getValue().toString();
+		}
+		return "null";  //$NON-NLS-1$
+	}
 	
-	private String escapeReservedChars(String expr) {
+	static String escapeReservedChars(String expr) {
 		StringBuffer sb = new StringBuffer();
         for (int i = 0; i < expr.length(); i++) {
             char curChar = expr.charAt(i);
@@ -617,23 +600,21 @@ public class IQueryToLdapSearchParser {
         return expr.getMetadataObject();
     }
 	
-	public LDAPSearchDetails buildRequest(String query) {
+	public LDAPSearchDetails buildRequest(String query) throws TranslatorException {
 		ArrayList<String> attributes = new ArrayList<String>();
 		ArrayList<Column> columns = new ArrayList<Column>();
 		String contextName = null;
 		String criteria = ""; //$NON-NLS-1$
 		String searchScope = this.executionFactory.getSearchDefaultScope().name();
 		int timeLimit = 0;
-		long countLimit = 0;
-		
-		StringTokenizer st = new StringTokenizer(query, ";"); //$NON-NLS-1$
-		while (st.hasMoreTokens()) {
-			String var = st.nextToken();
+		long countLimit = -1;
+		List<String> parts = StringUtil.tokenize(query, ';');
+		for (String var : parts) {
 			int index = var.indexOf('=');
 			if (index == -1) {
-				continue;
+				throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12013, var));
 			}
-			String key = var.substring(0, index).trim().toLowerCase();
+			String key = var.substring(0, index).trim();
 			String value = var.substring(index+1).trim();
 			
 			if (key.equalsIgnoreCase(CONTEXT_NAME)) {
@@ -665,6 +646,8 @@ public class IQueryToLdapSearchParser {
 					column.setDatatype(type, true);
 					columns.add(column);
 				}
+			} else {
+				throw new TranslatorException(LDAPPlugin.Util.gs(LDAPPlugin.Event.TEIID12013, var));
 			}
 		}
 		

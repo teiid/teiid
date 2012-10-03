@@ -21,8 +21,7 @@
  */
 package org.teiid.translator.ldap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 
@@ -38,6 +37,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
@@ -54,7 +54,7 @@ public class TestLDAPDirectQueryExecution {
     }	
     
     @Test public void testSearch() throws Exception {
-        String input = "exec native('search;context-name=corporate;filter=(objectClass=*);count-limit=5;timout=6;search-scope=ONELEVEL_SCOPE;attributes=uid,cn')"; 
+        String input = "exec native('search;context-name=corporate;filter=(objectClass=*);count-limit=5;timeout=6;search-scope=ONELEVEL_SCOPE;attributes=uid,cn')"; 
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -71,13 +71,37 @@ public class TestLDAPDirectQueryExecution {
         assertEquals("corporate", details.getContextName());
         assertEquals("(objectClass=*)", details.getContextFilter());
         assertEquals(5, details.getCountLimit());
+        assertEquals(6, details.getTimeLimit());
         assertEquals(1, details.getSearchScope());
         assertEquals(2, details.getElementList().size());
         assertEquals("uid", details.getElementList().get(0).getName());
         assertEquals("cn", details.getElementList().get(1).getName());
-    }    
+    }
     
-    @Test public void testWithoutMarker() throws Exception {
+    @Test public void testSearchDefaultsAndEscaping() throws Exception {
+        String input = "exec native('search;context-name=corporate;filter=(;;)')"; 
+
+        TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
+        Command command = util.parseCommand(input);
+        ExecutionContext ec = Mockito.mock(ExecutionContext.class);
+        RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
+        LdapContext connection = Mockito.mock(LdapContext.class);
+        LdapContext ctx = Mockito.mock(LdapContext.class);
+        Mockito.stub(connection.lookup("corporate")).toReturn(ctx);
+        
+        LDAPDirectSearchQueryExecution execution = (LDAPDirectSearchQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+        execution.execute();
+        LDAPSearchDetails details = execution.getDelegate().getSearchDetails();
+        
+        assertEquals("corporate", details.getContextName());
+        assertEquals("(;)", details.getContextFilter());
+        assertEquals(-1, details.getCountLimit());
+        assertEquals(0, details.getTimeLimit());
+        assertEquals(1, details.getSearchScope());
+        assertEquals(0, details.getElementList().size());
+    } 
+    
+    @Test(expected=TranslatorException.class) public void testWithoutMarker() throws Exception {
         String input = "exec native('context-name=corporate;filter=(objectClass=*);count-limit=5;timout=6;search-scope=ONELEVEL_SCOPE;attributes=uid,cn')"; 
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
@@ -88,12 +112,9 @@ public class TestLDAPDirectQueryExecution {
         LdapContext ctx = Mockito.mock(LdapContext.class);
         Mockito.stub(connection.lookup("corporate")).toReturn(ctx);
         
-        try {
-			LDAPDirectSearchQueryExecution execution = (LDAPDirectSearchQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-			execution.execute();
-			fail("the above should have thrown exception");
-		} catch (ClassCastException e) {
-		}
+		Execution execution = TRANSLATOR.createExecution(command, ec, rm, connection);
+		assertTrue(!(execution instanceof LDAPDirectSearchQueryExecution));
+		execution.execute();
     }    
     
     @Test public void testDelete() throws Exception {
@@ -167,7 +188,7 @@ public class TestLDAPDirectQueryExecution {
 		assertEquals(new BigDecimal("3.0"), createItemArgument.getValue().get("three").get());
     }
     
-    @Test public void testCreateFail() throws Exception {
+    @Test(expected=TranslatorException.class) public void testCreateFail() throws Exception {
         String input = "exec native('create;uid=doe,ou=people,o=teiid.org;attributes=one,two,three', 'one')"; 
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
@@ -178,11 +199,7 @@ public class TestLDAPDirectQueryExecution {
         LdapContext ctx = Mockito.mock(LdapContext.class);
         Mockito.stub(connection.lookup("")).toReturn(ctx);
         
-        try {
-			LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-			execution.execute();
-			fail("should have failed because there are not enough values");
-		} catch (TranslatorException e) {
-		}
+		LDAPDirectCreateUpdateDeleteQueryExecution execution = (LDAPDirectCreateUpdateDeleteQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+		execution.execute();
     }    
 }

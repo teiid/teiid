@@ -109,18 +109,6 @@ public final class StringUtil {
         return LINE_SEPARATOR;
     }
 
-    /**
-     * Utility to return a string enclosed in ''.
-     * Creation date: (12/2/99 12:05:10 PM)
-     */
-    public static String enclosedInSingleQuotes(String aString) {
-    	StringBuffer sb = new StringBuffer();
-    	sb.append(SINGLE_QUOTE);
-    	sb.append(aString);
-    	sb.append(SINGLE_QUOTE);
-    	return sb.toString();
-    }
-
 	/**
 	 * Join string pieces and separate with a delimiter.  Similar to the perl function of
 	 * the same name.  If strings or delimiter are null, null is returned.  Otherwise, at
@@ -131,7 +119,7 @@ public final class StringUtil {
 	 * @param delimiter Delimiter to put between string pieces
 	 * @return One merged string
 	 */
-	public static String join(List strings, String delimiter) {
+	public static String join(List<String> strings, String delimiter) {
 		if(strings == null || delimiter == null) {
 			return null;
 		}
@@ -147,7 +135,7 @@ public final class StringUtil {
 		// put the piece and a delimiter after it.  An iterator is used to walk the list.
 		int most = strings.size()-1;
 		if(strings.size() > 1) {
-			Iterator iter = strings.iterator();
+			Iterator<String> iter = strings.iterator();
 			for(int i=0; i<most; i++) {            
 				str.append(iter.next());
 				str.append(delimiter);
@@ -215,64 +203,6 @@ public final class StringUtil {
         return l;
     }
     
-    /**
-     * Break a string into pieces based on matching the full delimiter string in the text.
-     * The delimiter is not included in the returned strings.
-     * @param target The text to break up.
-     * @param delimiter The sub-string which is used to break the target.
-     * @return List of String from the target.
-     */
-    public static List<String> splitOnEntireString(String target, String delimiter) {
-        ArrayList<String> result = new ArrayList<String>();
-        if (delimiter.length() > 0) {
-            int index = 0;
-            int indexOfNextMatch = target.indexOf(delimiter);
-            while (indexOfNextMatch > -1) {
-                result.add(target.substring(index, indexOfNextMatch));
-                index = indexOfNextMatch + delimiter.length();
-                indexOfNextMatch = target.indexOf(delimiter, index);
-            }
-            if (index <= target.length()) {
-                result.add(target.substring(index));
-            }
-        } else {
-            result.add(target);
-        }
-        return result;
-    }
-
-	/**
-	 * Split a string into pieces based on delimiters preserving spaces in
-     * quoted substring as on element in the returned list.   The delimiters are
-     * not included in the returned strings.
-	 * @see #join
-	 *
-	 * @param str Full string
-	 * @param splitter Characters to split on
-	 * @return List of String pieces from full string
-	 */
-	public static List splitPreservingQuotedSubstring(String str, String splitter) {
-		ArrayList l = new ArrayList();
-		StringTokenizer tokens = new StringTokenizer(str, splitter);
-        StringBuffer token = new StringBuffer();
-		while(tokens.hasMoreTokens()) {
-            token.setLength(0);
-            token.append(tokens.nextToken());
-            if ( token.charAt(0) == '"' ) {
-                token.deleteCharAt(0);
-                while ( tokens.hasMoreTokens() ) {
-                    token.append(Constants.SPACE + tokens.nextToken()); 
-                    if ( token.charAt(token.length() -1) == '"' ) {
-                        token.deleteCharAt(token.length() - 1);
-                        break;
-                    }
-                }
-            }
-			l.add(token.toString().trim());
-		}
-		return l;				
-	}
-	
 	/*
 	 * Replace a single occurrence of the search string with the replace string
 	 * in the source string. If any of the strings is null or the search string
@@ -353,10 +283,10 @@ public final class StringUtil {
         if (strLength > maxCharPerLine) {
             StringBuffer sb = new StringBuffer(str.length()+(strLength/maxCharPerLine)+1);
             strLength = 0;
-            List tokens = StringUtil.split(str,Constants.SPACE);
-            Iterator itr = tokens.iterator();
+            List<String> tokens = StringUtil.split(str,Constants.SPACE);
+            Iterator<String> itr = tokens.iterator();
             while (itr.hasNext()) {
-                String token = (String) itr.next();
+                String token = itr.next();
                 if ( strLength+token.length() > maxCharPerLine ) {
 //                    sb.append(getLineSeparator());
                     sb.append(Constants.NEW_LINE);
@@ -389,36 +319,6 @@ public final class StringUtil {
 		return l;
     }
     
-    /**
-     * Return the number of tokens in a string that are seperated by the delimiter.
-     *
-     * @param str String to be tokenized
-     * @param delimiter Characters which are delimit tokens
-     * @return Number of tokens seperated by the delimiter
-     */
-    public static int getTokenCount(String str, String delimiter) {
-        StringTokenizer tokens = new StringTokenizer(str, delimiter);
-        return tokens.countTokens();
-    }    
-    
-    /**
-     * Return the number of occurrences of token string that occurs in input string.
-     * Note: token is case sensitive.
-     * 
-     * @param input
-     * @param token
-     * @return int
-     */
-    public static int occurrences(String input, String token) {
-        int num = 0;
-        int index = input.indexOf(token);
-        while (index >= 0) {
-            num++;
-            index = input.indexOf(token, index+1);
-        }
-        return num;
-    }
-
 	/**
 	 * Return the last token in the string.
 	 *
@@ -456,32 +356,6 @@ public final class StringUtil {
         return str.substring(0,endIndex);
     }
 	
-	/**
-	 * Compute a displayable form of the specified string.  This algorithm
-     * attempts to create a string that contains words that begin with uppercase
-     * characters and that are separated by a single space.  For example,
-     * the following are the outputs of some sample inputs:
-     * <li>"aName" is converted to "A Name"</li>
-     * <li>"Name" is converted to "Name"</li>
-     * <li>"NAME" is converted to "NAME"</li>
-     * <li>"theName" is converted to "The Name"</li>
-     * <li>"theBIGName" is converted to "The BIG Name"</li>
-     * <li>"the BIG Name" is converted to "The BIG Name"</li>
-     * <li>"the big Name" is converted to "The Big Name"</li>
-     * <li>"theBIG" is converted to "The BIG"</li>
-     * <li>"SQLIndex" is converted to "SQL Index"</li>
-     * <li>"SQLIndexT" is converted to "SQL Index T"</li>
-     * <li>"SQLIndex T" is converted to "SQL Index T"</li>
-     * <li>"SQLIndex t" is converted to "SQL Index T"</li>
-	 *
-	 * @param str String to be converted; may be null
-     * @return the displayable form of <code>str</code>, or an empty string if
-     * <code>str</code> is either null or zero-length; never null
-	 */
-	public static String computeDisplayableForm(String str) {
-        return computeDisplayableForm(str, Constants.EMPTY_STRING);
-    }
-
 	/**
 	 * Compute a displayable form of the specified string.  This algorithm
      * attempts to create a string that contains words that begin with uppercase
@@ -570,33 +444,6 @@ public final class StringUtil {
         }
 
         return newName.toString();
-    }
-
-    /**
-	 * @since 3.0
-	 */
-    public static String computeDisplayableFormOfConstant(final String text) {
-        return computeDisplayableFormOfConstant(text, Constants.EMPTY_STRING);
-    }
-
-    /**
-     * @since 3.0
-     */
-    public static String computeDisplayableFormOfConstant(final String text, final String defaultValue) {
-        if (text == null  ||  text.length() == 0) {
-            return defaultValue;
-        }
-        final StringBuffer buf = new StringBuffer();
-        String token;
-        for (final StringTokenizer iter = new StringTokenizer(text, "_");  iter.hasMoreTokens();) { //$NON-NLS-1$
-            token = iter.nextToken().toLowerCase();
-            if (buf.length() > 0) {
-                buf.append(' ');
-            }
-            buf.append(Character.toUpperCase(token.charAt(0)));
-            buf.append(token.substring(1));
-        }
-        return buf.toString();
     }
 
     public static String computePluralForm(String str) {
@@ -785,28 +632,6 @@ public final class StringUtil {
                 | Pattern.UNICODE_CASE);
     }
 
-    /**
-     * Removes extraneous whitespace from a string. By it's nature, it will be trimmed also. 
-     * @param raw
-     * @return
-     * @since 5.0
-     */
-    public static String collapseWhitespace(String raw) {
-        StringBuffer rv = new StringBuffer(raw.length());
-
-        StringTokenizer izer = new StringTokenizer(raw, " "); //$NON-NLS-1$
-        while (izer.hasMoreTokens()) {
-            String tok = izer.nextToken();
-            // Added one last check here so we don't append a "space" on the end of the string
-            rv.append(tok);
-            if( izer.hasMoreTokens() ) {
-                rv.append(' ');
-            }
-        } // endwhile
-
-        return rv.toString();
-    }
-    
     /**
      * If input == null OR input.length() < desiredLength, pad to desiredLength with spaces.  
      * If input.length() > desiredLength, chop at desiredLength.
@@ -1010,6 +835,34 @@ public final class StringUtil {
 			}
 			throw e;
 		}
+	}
+	
+	public static List<String> tokenize(String str, char delim) {
+		ArrayList<String> result = new ArrayList<String>();
+		StringBuilder current = new StringBuilder();
+		boolean escaped = false;
+		for (int i = 0; i < str.length(); i++) {
+			char c = str.charAt(i);
+			if (c == delim) {
+				if (escaped) {
+					current.append(c);
+					escaped = false;
+				} else {
+					escaped = true;
+				}
+			} else {
+				if (escaped && current.length() > 0) {
+					result.add(current.toString());
+					current.setLength(0);
+					escaped = false;
+				}
+				current.append(c);
+			}
+		}
+		if (current.length()>0) {
+			result.add(current.toString());
+		}
+		return result;
 	}
 	
 }

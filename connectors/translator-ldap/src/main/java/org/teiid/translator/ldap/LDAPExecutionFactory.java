@@ -27,9 +27,11 @@ import javax.naming.ldap.LdapContext;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.Argument;
+import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
@@ -108,10 +110,24 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 	public ProcedureExecution createDirectExecution(List<Argument> arguments,Command command, ExecutionContext executionContext,RuntimeMetadata metadata, LdapContext context) throws TranslatorException {
 		String query = (String) arguments.get(0).getArgumentValue().getValue();
 		if (query.startsWith("search;")) { //$NON-NLS-1$
-			return new LDAPDirectSearchQueryExecution(arguments, this, executionContext, context);
+			return new LDAPDirectSearchQueryExecution(arguments.subList(1, arguments.size()), this, executionContext, context, query, true);
 		}
-		return new LDAPDirectCreateUpdateDeleteQueryExecution(arguments, this, executionContext, context);
+		return new LDAPDirectCreateUpdateDeleteQueryExecution(arguments.subList(1, arguments.size()), this, executionContext, context, query, true);
 	}	
+	
+	@Override
+	public ProcedureExecution createProcedureExecution(Call command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			LdapContext connection) throws TranslatorException {
+		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+    	if (nativeQuery != null) {
+    		if (nativeQuery.startsWith("search;")) { //$NON-NLS-1$
+    			return new LDAPDirectSearchQueryExecution(command.getArguments(), this, executionContext, connection, nativeQuery, false);
+    		}
+    		return new LDAPDirectCreateUpdateDeleteQueryExecution(command.getArguments(), this, executionContext, connection, nativeQuery, false);
+    	}
+    	throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
+	}
 	
 	@Override
     public boolean supportsCompareCriteriaEquals() {

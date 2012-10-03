@@ -35,10 +35,10 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -246,25 +246,6 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         		expectedCountLimit, expectedSearchScope, expectedSortKeys);
     }
     
-    public void testNativeQueryExtension() throws Exception {
-        LDAPSearchDetails searchDetails = helpGetSearchDetails("SELECT * FROM LdapModel.Employee"); //$NON-NLS-1$
-        
-        String expectedContextName = "corporate"; //$NON-NLS-1$
-        String expectedContextFilter = "(objectClass=*)"; //$NON-NLS-1$
-        
-        List expectedAttrNameList = new ArrayList();
-        expectedAttrNameList.add("uid"); //$NON-NLS-1$
-        expectedAttrNameList.add("cn"); //$NON-NLS-1$
-        
-        long expectedCountLimit = 5;
-        int expectedSearchScope = SearchControls.ONELEVEL_SCOPE;
-        SortKey[] expectedSortKeys = null;
-        
-        helpTestSearchDetails(searchDetails, expectedContextName, expectedContextFilter, expectedAttrNameList,
-        		expectedCountLimit, expectedSearchScope, expectedSortKeys);
-        
-    }    
-
 	private LDAPSearchDetails helpGetSearchDetails(String queryString) throws TranslatorException {
     	QueryMetadataInterface metadata = exampleLdap();
     	
@@ -311,19 +292,6 @@ public class TestIQueryToLdapSearchParser extends TestCase {
         for(int i=1; i<2; i++) {
             cols.get(i).setSearchType(SearchType.Unsearchable);
         }
-        
-        Table employees = RealMetadataFactory.createPhysicalGroup("Employee", ldapModel); //$NON-NLS-1$
-        List<Column> employeeCols = RealMetadataFactory.createElements(employees, elemNames, elemTypes);
-        for(int i=0; i<2; i++) {
-            Column obj = employeeCols.get(i);
-            obj.setNameInSource(nameInSource[i]);
-        }
-        
-        // Set column-specific properties
-        for(int i=1; i<2; i++) {
-        	employeeCols.get(i).setSearchType(SearchType.Unsearchable);
-        } 
-        employees.setProperty(IQueryToLdapSearchParser.TEIID_NATIVE_QUERY, "context-name=corporate;filter=(objectClass=*);count-limit=5;timout=6;search-scope=ONELEVEL_SCOPE;attributes=uid,cn"); //$NON-NLS-1$
         
         // Create the facade from the store
         return new TransformationMetadata(null, new CompositeMetadataStore(metadataStore), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
