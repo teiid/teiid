@@ -45,7 +45,6 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Table;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.validator.ValidatorReport;
-import org.teiid.translator.TranslatorException;
 
 public class SystemMetadata {
 	
@@ -123,15 +122,11 @@ public class SystemMetadata {
 		vdb.addModel(mmd);
 		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/"+name+".sql"); //$NON-NLS-1$ //$NON-NLS-2$
 		try {
-			MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), name, typeMap, p, null) {
-				@Override
-				public Table addTable(String name) throws TranslatorException {
-					Table t = super.addTable(name);
-					t.setSystem(true);
-					return t;
-				}
-			};
+			MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), name, typeMap, p, null);
 			QueryParser.getQueryParser().parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+			for (Table t : factory.getSchema().getTables().values()) {
+				t.setSystem(true);
+			}
 			return factory;
 		} finally {
 			try {

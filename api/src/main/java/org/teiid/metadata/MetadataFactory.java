@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,9 @@ import java.util.TreeMap;
 import org.teiid.CommandContext;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 
@@ -49,6 +50,10 @@ import org.teiid.translator.TypeFacility;
  * TODO: add support for unique constraints
  */
 public class MetadataFactory implements Serializable {
+	private static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
+	private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
+	private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
+
 	private static final long serialVersionUID = 8590341087771685630L;
 	
 	private String vdbName;
@@ -56,13 +61,23 @@ public class MetadataFactory implements Serializable {
 	private Map<String, Datatype> dataTypes;
 	private Map<String, Datatype> builtinDataTypes;
 	private boolean autoCorrectColumnNames = true;
-	private Map<String, String> namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+	private Map<String, String> namespaces;
 	private String rawMetadata;
 	private Properties importProperties;
 	private Schema schema = new Schema();
 	private String idPrefix; 
 	private int count;
 	private transient Parser parser;
+	
+	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
+	
+	public static final Map<String, String> BUILTIN_NAMESPACES;
+	static {
+		Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		map.put(TEIID_RELATIONAL, AbstractMetadataRecord.RELATIONAL_URI.substring(1, AbstractMetadataRecord.RELATIONAL_URI.length()-1));
+		map.put(TEIID_SF, SF_URI.substring(1, SF_URI.length()-1));
+		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
+	}
 	
 	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties importProperties, String rawMetadata) {
 		this.vdbName = vdbName;
@@ -124,9 +139,9 @@ public class MetadataFactory implements Serializable {
 	 * Add a table with the given name to the model.  
 	 * @param name
 	 * @return
-	 * @throws TranslatorException 
+	 * @throws MetadataException 
 	 */
-	public Table addTable(String name) throws TranslatorException {
+	public Table addTable(String name) {
 		Table table = new Table();
 		table.setTableType(Table.Type.Table);
 		table.setName(name);
@@ -141,14 +156,14 @@ public class MetadataFactory implements Serializable {
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
 	 * @param table
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public Column addColumn(String name, String type, ColumnSet<?> table) throws TranslatorException {
+	public Column addColumn(String name, String type, ColumnSet<?> table) {
 		if (autoCorrectColumnNames) {
 			name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
 			//TODO: for now this is not used
-			 throw new TranslatorException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
+			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
 		}
 		if (table.getColumnByName(name) != null) {
 			throw new DuplicateRecordException(DataPlugin.Event.TEIID60016, DataPlugin.Util.gs(DataPlugin.Event.TEIID60016, table.getFullName() + AbstractMetadataRecord.NAME_DELIM_CHAR + name));
@@ -164,10 +179,10 @@ public class MetadataFactory implements Serializable {
 	}
 
 	private Datatype setColumnType(String type,
-			BaseColumn column) throws TranslatorException {
+			BaseColumn column) {
 		Datatype datatype = dataTypes.get(type);
 		if (datatype == null) {
-			 throw new TranslatorException(DataPlugin.Event.TEIID60009, DataPlugin.Util.gs(DataPlugin.Event.TEIID60009, type));
+			 throw new MetadataException(DataPlugin.Event.TEIID60009, DataPlugin.Util.gs(DataPlugin.Event.TEIID60009, type));
 		}
 		column.setDatatype(datatype, true);
 		return datatype;
@@ -179,9 +194,9 @@ public class MetadataFactory implements Serializable {
 	 * @param columnNames
 	 * @param table
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public KeyRecord addPrimaryKey(String name, List<String> columnNames, Table table) throws TranslatorException {
+	public KeyRecord addPrimaryKey(String name, List<String> columnNames, Table table) {
 		KeyRecord primaryKey = new KeyRecord(KeyRecord.Type.Primary);
 		primaryKey.setParent(table);
 		primaryKey.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -198,9 +213,9 @@ public class MetadataFactory implements Serializable {
 	 * @param columnNames
 	 * @param table
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public KeyRecord addAccessPattern(String name, List<String> columnNames, Table table) throws TranslatorException {
+	public KeyRecord addAccessPattern(String name, List<String> columnNames, Table table) {
 		KeyRecord ap = new KeyRecord(KeyRecord.Type.AccessPattern);
 		ap.setParent(table);
 		ap.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -218,9 +233,9 @@ public class MetadataFactory implements Serializable {
 	 * @param columnNames
 	 * @param table
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, Table table) throws TranslatorException {
+	public KeyRecord addIndex(String name, boolean nonUnique, List<String> columnNames, Table table) {
 		KeyRecord index = new KeyRecord(nonUnique?KeyRecord.Type.Index:KeyRecord.Type.Unique);
 		index.setParent(table);
 		index.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -243,9 +258,9 @@ public class MetadataFactory implements Serializable {
 	 * @param nonColumnExpressions a Boolean list indicating when expressions are non-column expressions
 	 * @param table
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public KeyRecord addFunctionBasedIndex(String name, List<String> expressions, List<Boolean> nonColumnExpressions, Table table) throws TranslatorException {
+	public KeyRecord addFunctionBasedIndex(String name, List<String> expressions, List<Boolean> nonColumnExpressions, Table table) {
 		KeyRecord index = new KeyRecord(KeyRecord.Type.Index);
 		index.setParent(table);
 		index.setColumns(new ArrayList<Column>(expressions.size()));
@@ -291,9 +306,9 @@ public class MetadataFactory implements Serializable {
 	 * @param referenceTable - schema qualified reference table name
 	 * @param table
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public ForeignKey addForiegnKey(String name, List<String> columnNames, String referenceTable, Table table) throws TranslatorException {
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, String referenceTable, Table table) {
 		return addForiegnKey(name, columnNames, null, referenceTable, table);
 	}
 
@@ -307,9 +322,9 @@ public class MetadataFactory implements Serializable {
 	 * @param table
 	 * @param addUniqueConstraint - if true, if the referenced table columns do not match with either PK, or FK then a UNIQUE index on reference table is created.
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */	
-	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) throws TranslatorException {
+	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setParent(table);
 		foreignKey.setColumns(new ArrayList<Column>(columnNames.size()));
@@ -326,9 +341,9 @@ public class MetadataFactory implements Serializable {
 	 * Add a procedure with the given name to the model.  
 	 * @param name
 	 * @return
-	 * @throws TranslatorException 
+	 * @throws MetadataException 
 	 */
-	public Procedure addProcedure(String name) throws TranslatorException {
+	public Procedure addProcedure(String name) {
 		Procedure procedure = new Procedure();
 		procedure.setName(name);
 		setUUID(procedure);
@@ -344,9 +359,9 @@ public class MetadataFactory implements Serializable {
 	 * @param parameterType should be one of {@link ProcedureParameter.Type}
 	 * @param procedure
 	 * @return
-	 * @throws TranslatorException 
+	 * @throws MetadataException 
 	 */
-	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) throws TranslatorException {
+	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) {
 		ProcedureParameter param = new ProcedureParameter();
 		param.setName(name);
 		setUUID(param);
@@ -371,9 +386,9 @@ public class MetadataFactory implements Serializable {
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
 	 * @param procedure
 	 * @return
-	 * @throws TranslatorException 
+	 * @throws MetadataException 
 	 */
-	public Column addProcedureResultSetColumn(String name, String type, Procedure procedure) throws TranslatorException {
+	public Column addProcedureResultSetColumn(String name, String type, Procedure procedure) {
 		if (procedure.getResultSet() == null) {
 			ColumnSet<Procedure> resultSet = new ColumnSet<Procedure>();
 			resultSet.setParent(procedure);
@@ -395,9 +410,9 @@ public class MetadataFactory implements Serializable {
 	 * Add a function with the given name to the model.  
 	 * @param name
 	 * @return
-	 * @throws TranslatorException 
+	 * @throws MetadataException 
 	 */
-	public FunctionMethod addFunction(String name) throws TranslatorException {
+	public FunctionMethod addFunction(String name) {
 		FunctionMethod function = new FunctionMethod();
 		function.setName(name);
 		setUUID(function);
@@ -410,9 +425,9 @@ public class MetadataFactory implements Serializable {
 	 * @param name
 	 * @param method
 	 * @return
-	 * @throws TranslatorException
+	 * @throws MetadataException
 	 */
-	public FunctionMethod addFunction(String name, Method method) throws TranslatorException {
+	public FunctionMethod addFunction(String name, Method method) {
 		String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
 		Class<?>[] params = method.getParameterTypes();
 		String[] paramTypes = new String[params.length];
@@ -456,6 +471,15 @@ public class MetadataFactory implements Serializable {
 	}
 	
 	public void addNamespace(String prefix, String uri) {
+		if (StringUtil.startsWithIgnoreCase(prefix, TEIID_RESERVED)) { 
+			throw new MetadataException(DataPlugin.Event.TEIID60017, DataPlugin.Util.gs(DataPlugin.Event.TEIID60017, prefix));
+		}
+		if (uri == null || uri.indexOf('}') != -1) {
+			throw new MetadataException(DataPlugin.Event.TEIID60018, DataPlugin.Util.gs(DataPlugin.Event.TEIID60018, uri));
+		}
+		if (this.namespaces == null) {
+			 this.namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		}
 		this.namespaces.put(prefix, uri);
 	}
 	
@@ -540,7 +564,15 @@ public class MetadataFactory implements Serializable {
 		return vdbVersion;
 	}	
 	
+	/**
+	 * Get the namespace map.  Will be an unmodifiable empty map if {@link #addNamespace(String, String)}
+	 * has not been called successfully.
+	 * @return
+	 */
 	public Map<String, String> getNamespaces() {
+		if (this.namespaces == null) {
+			return Collections.emptyMap();
+		}
 		return namespaces;
 	}
 	

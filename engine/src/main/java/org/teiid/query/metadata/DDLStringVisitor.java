@@ -28,7 +28,9 @@ import static org.teiid.query.metadata.DDLConstants.*;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -42,6 +44,7 @@ import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -68,6 +71,14 @@ public class DDLStringVisitor {
 	private boolean includeProcedures = true;
 	private boolean includeFunctions = true;
 	private Pattern filter;
+	private Map<String, String> prefixMap;
+	
+	private final static Map<String, String> BUILTIN_PREFIXES = new HashMap<String, String>();
+	static {
+		for (Map.Entry<String, String> entry : MetadataFactory.BUILTIN_NAMESPACES.entrySet()) {
+			BUILTIN_PREFIXES.put(entry.getValue(), entry.getKey());
+		}
+	}
 	
     public static String getDDLString(Schema schema, EnumSet<SchemaObjectType> types, String regexPattern) {
     	DDLStringVisitor visitor = new DDLStringVisitor(types, regexPattern);
@@ -466,8 +477,30 @@ public class DDLStringVisitor {
 		if (sb.length() != 0) {
 			sb.append(COMMA).append(SPACE);
 		}
-		if (value instanceof String) {
-			value = TICK + StringUtil.replaceAll((String)value, TICK, TICK + TICK) + TICK;
+		if (value != null) {
+			value = new Constant(value);
+		} else {
+			value = Constant.NULL_CONSTANT;
+		}
+		if (key != null && key.length() > 2 && key.charAt(0) == '{') { 
+			int index = key.indexOf('}');
+			if (index > 1) {
+				String uri = key.substring(1, index);
+				key = key.substring(index + 1, key.length());
+				String prefix = BUILTIN_PREFIXES.get(uri);
+				if (prefix == null) {
+					if (prefixMap == null) {
+						prefixMap = new LinkedHashMap<String, String>();
+					} else {
+						prefix = this.prefixMap.get(uri);
+					}
+					if (prefix == null) {
+						prefix = "n"+this.prefixMap.size(); //$NON-NLS-1$
+						this.prefixMap.put(uri, prefix); 
+					}
+				}
+				key = prefix + ":" + key; //$NON-NLS-1$
+			}
 		}
 		sb.append(SQLStringVisitor.escapeSinglePart(key)).append(SPACE).append(value);
 	}
@@ -644,6 +677,14 @@ public class DDLStringVisitor {
 	}
 
     public String toString() {
+    	if (this.prefixMap != null) {
+    		StringBuilder sb = new StringBuilder();
+    		for (Map.Entry<String, String> entry : this.prefixMap.entrySet()) {
+    			sb.append("SET NAMESPACE '").append(StringUtil.replaceAll(entry.getKey(), "'", "''")).append('\'') //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+    			.append(" AS " ).append(SQLStringVisitor.escapeSinglePart(entry.getValue())).append(";\n"); //$NON-NLS-1$  //$NON-NLS-2$
+    		}
+    		return sb.append("\n").toString() + buffer.toString(); //$NON-NLS-1$
+    	}
         return buffer.toString();
     }
 }

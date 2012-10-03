@@ -4592,11 +4592,7 @@ CreateProcedureCommand createDDLProcedure(MetadataFactory factory, ParseInfo inf
 	//the below is optional beacuse to allow the designer based metadata
 	(	procName = id(null)
 		{
-			try {
-				proc = factory.addProcedure(procName);
-			} catch(TranslatorException e){
-				throw new MetadataException(e);
-			}		
+			proc = factory.addProcedure(procName);
 		}
 	
 		<LPAREN>
@@ -4670,18 +4666,14 @@ void procedureParameter(MetadataFactory factory, Procedure proc) :
 	  }
 	]
 	{
-		try {
-			param = factory.addProcedureParameter(name, type.type, ppType, proc);
-			setTypeInfo(type, param);
-			if (notNull) {
-				param.setNullType(Column.NullType.No_Nulls);
-			}
-			if (vararg) {
-				param.setVarArg(vararg);
-			}			
-		} catch (TranslatorException e){
-			throw new MetadataException(e);
+		param = factory.addProcedureParameter(name, type.type, ppType, proc);
+		setTypeInfo(type, param);
+		if (notNull) {
+			param.setNullType(Column.NullType.No_Nulls);
 		}
+		if (vararg) {
+			param.setVarArg(vararg);
+		}			
 	}
 	[<DEFAULT_KEYWORD> defaultValue = stringVal() {param.setDefaultValue(defaultValue);}]
 	[optionsClause(param, factory)
@@ -4736,12 +4728,8 @@ void createTable(MetadataFactory factory) :
 	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
 	tableName = id(null)
 	{
-		try{
-		    table = factory.addTable(tableName);
-		    table.setVirtual(view);
-	    } catch(TranslatorException e){
-	    	throw new MetadataException(e);
-	    }
+	    table = factory.addTable(tableName);
+	    table.setVirtual(view);
 	}
 	[<LPAREN>
     createColumn(factory, table)
@@ -4801,11 +4789,7 @@ AbstractMetadataRecord foreignKey(MetadataFactory factory, Table table, String n
     viewName = id(null)
     [pkColumnNames = columnList(true, false)]
     {
-	    try{
-		    return factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
-	    } catch (TranslatorException e){
-	    	throw new MetadataException(e);
-	    }
+	    return factory.addForiegnKey(name != null?name:("FK"+table.getForeignKeys().size()), columnNames, pkColumnNames, viewName, table);   
     }
 }
 
@@ -4827,11 +4811,7 @@ AbstractMetadataRecord primaryKey(MetadataFactory factory, Table table, String n
 	    if (table.getPrimaryKey() != null){
 	    	throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
 	 	}
-	 	try{
-	 		return factory.addPrimaryKey(name!=null?name:"PK", columnNames, table);
-	 	} catch(TranslatorException e){
-	 		throw new MetadataException(e);
-	 	}
+ 		return factory.addPrimaryKey(name!=null?name:"PK", columnNames, table);
     }
 }
 
@@ -4853,15 +4833,11 @@ AbstractMetadataRecord constraint(MetadataFactory factory, Table table, String n
 	(( type = <UNIQUE> | type = <ACCESSPATTERN>)
 	columnNames = columnList(true, false)	    
 	{
-	    try{
-			if (type.image.equalsIgnoreCase("UNIQUE")) { 
-	    		return factory.addIndex(name != null?name:("UNIQUE"+table.getUniqueKeys().size()), false, columnNames, table);
-	    	} else if (type.image.equalsIgnoreCase("ACCESSPATTERN")) { 
-	    		return factory.addAccessPattern(name != null?name:("AP"+table.getAccessPatterns().size()), columnNames, table);
-	    	}
-    	}catch(TranslatorException e){
-    		throw new MetadataException(e);
-    	}	    
+		if (type.image.equalsIgnoreCase("UNIQUE")) { 
+    		return factory.addIndex(name != null?name:("UNIQUE"+table.getUniqueKeys().size()), false, columnNames, table);
+    	} else if (type.image.equalsIgnoreCase("ACCESSPATTERN")) { 
+    		return factory.addAccessPattern(name != null?name:("AP"+table.getAccessPatterns().size()), columnNames, table);
+    	}
     }) | (
     type = <INDEX>
     <LPAREN>
@@ -4932,14 +4908,10 @@ void createColumn(MetadataFactory factory, Table table) :
 	 (
 	  type = parseDataType()
 	  {
-	  	try{
-    		column = factory.addColumn(element, type.type, table);
-    		column.setUpdatable(true);
-		    setTypeInfo(type, column);		    	
-    		columnName.add(element);
-    	}catch(TranslatorException e){
-    		throw new MetadataException(e);
-    	}
+		column = factory.addColumn(element, type.type, table);
+		column.setUpdatable(true);
+	    setTypeInfo(type, column);		    	
+		columnName.add(element);
 	  }
 	 )
 	 [<NOT> <NULL> { column.setNullType(Column.NullType.No_Nulls); }]
@@ -4957,20 +4929,16 @@ void createColumn(MetadataFactory factory, Table table) :
 	   }
 	 ]
 	 {
-	 	try{
-		    if (index){
-		 		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table);
-		 	} else if (unique){
-		 		factory.addIndex("UNIQUE"+table.getIndexes().size(), false, columnName, table);
-		 	} else if (pk) {
-		    	if (table.getPrimaryKey() != null) {
-		    		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
-		    	}
-		 		factory.addPrimaryKey("PK", columnName, table);
-		 	}
-    	}catch(TranslatorException e){
-    		throw new MetadataException(e);
-    	}	 	
+	    if (index){
+	 		factory.addIndex("INDEX"+table.getIndexes().size(), true, columnName, table);
+	 	} else if (unique){
+	 		factory.addIndex("UNIQUE"+table.getIndexes().size(), false, columnName, table);
+	 	} else if (pk) {
+	    	if (table.getPrimaryKey() != null) {
+	    		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.pk_exists", table.getName()));
+	    	}
+	 		factory.addPrimaryKey("PK", columnName, table);
+	 	}
 	     	 	
 	    column.setAutoIncremented(autoIncrement);
 	 }

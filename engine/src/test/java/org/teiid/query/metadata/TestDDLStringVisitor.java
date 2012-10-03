@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Schema;
@@ -48,7 +47,7 @@ public class TestDDLStringVisitor {
 				"	e2 string(10),\n" + 
 				"	e3 date NOT NULL,\n" + 
 				"	e4 bigdecimal(12,3),\n" + 
-				"	e5 integer AUTO_INCREMENT OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE false),\n" + 
+				"	e5 integer AUTO_INCREMENT OPTIONS (UUID 'uuid', NAMEINSOURCE 'nis', SELECTABLE FALSE),\n" + 
 				"	e6 string DEFAULT 'hello',\n" +
 				"	PRIMARY KEY(e1),\n" +
 				"	UNIQUE(e2),\n" +
@@ -243,7 +242,7 @@ public class TestDDLStringVisitor {
 		helpTest(ddl, expected);
 	}
 
-	private void helpTest(String ddl, String expected) throws QueryParserException {
+	private void helpTest(String ddl, String expected) {
 		Schema s = TestDDLParser.helpParse(ddl, "model").getSchema();
 		String metadataDDL = DDLStringVisitor.getDDLString(s, null, null);
 		assertEquals(expected, metadataDDL);
@@ -261,6 +260,12 @@ public class TestDDLStringVisitor {
 	@Test public void testViewFBI() throws Exception {
 		String ddl = "CREATE View G1( \"a e1\" integer, \"a e2\" varchar, INDEX (\"a e1\", upper(\"a e2\"))) AS select e1, e2 from foo.bar";
 		String expected = "CREATE VIEW G1 (\n	\"a e1\" integer,\n	\"a e2\" string,\n	INDEX(\"a e1\", upper(\"a e2\"))\n)\nAS\nSELECT e1, e2 FROM foo.bar;";
+		helpTest(ddl, expected);
+	}
+	
+	@Test public void testNamespaces() throws Exception {
+		String ddl = "set namespace 'some long thing' as x; CREATE View G1(a integer, b varchar) options (\"teiid_rel:x\" false, \"x:z\" 'stringval') AS select e1, e2 from foo.bar";
+		String expected = "SET NAMESPACE 'some long thing' AS n0;\n\nCREATE VIEW G1 (\n	a integer,\n	b string\n) OPTIONS (\"teiid_rel:x\" 'false', \"n0:z\" 'stringval')\nAS\nSELECT e1, e2 FROM foo.bar;";
 		helpTest(ddl, expected);
 	}
 }

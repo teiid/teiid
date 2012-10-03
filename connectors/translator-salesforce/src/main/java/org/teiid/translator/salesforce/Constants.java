@@ -1,5 +1,7 @@
 package org.teiid.translator.salesforce;
 
+import org.teiid.metadata.MetadataFactory;
+
 public interface Constants {
 
 	public static final String PICKLIST_TYPE = "picklist"; //$NON-NLS-1$
@@ -40,14 +42,12 @@ public interface Constants {
 
 	public static final String EMAIL_TYPE = "email"; //$NON-NLS-1$
 
-	public static final String EXTENSION_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
-
 	public static final String RESTRICTED_PICKLIST_TYPE = "restrictedpicklist"; //$NON-NLS-1$
 	
 	public static final String RESTRICTED_MULTISELECT_PICKLIST_TYPE = "restrictedmultiselectpicklist"; //$NON-NLS-1$
 
-	public static final String SUPPORTS_QUERY = EXTENSION_URI +"Supports Query";//$NON-NLS-1$
+	public static final String SUPPORTS_QUERY = MetadataFactory.SF_URI +"Supports Query";//$NON-NLS-1$
 	
-	public static final String SUPPORTS_RETRIEVE = EXTENSION_URI +"Supports Retrieve";//$NON-NLS-1$
+	public static final String SUPPORTS_RETRIEVE = MetadataFactory.SF_URI +"Supports Retrieve";//$NON-NLS-1$
 
 }

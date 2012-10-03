@@ -48,7 +48,6 @@ import org.teiid.query.sql.proc.Statement;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.translator.TranslatorException;
 
 public class SQLParserUtil {
 	
@@ -554,29 +553,25 @@ public class SQLParserUtil {
 	}
 	
 	BaseColumn addProcColumn(MetadataFactory factory, Procedure proc, String name, ParsedDataType type, boolean rs) throws MetadataException {
-		try {
-			BaseColumn column = null;
-			if (rs) {
-				column = factory.addProcedureResultSetColumn(name, type.type, proc);
-			} else {
-				boolean added = false;
-				for (ProcedureParameter pp : proc.getParameters()) {
-					if (pp.getType() == Type.ReturnValue) {
-						added = true;
-						if (pp.getDatatype() != factory.getDataTypes().get(type.type)) {
-							throw new MetadataException(QueryPlugin.Util.getString("SQLParser.proc_type_conflict", proc.getName(), pp.getDatatype(), type.type)); //$NON-NLS-1$
-						}
+		BaseColumn column = null;
+		if (rs) {
+			column = factory.addProcedureResultSetColumn(name, type.type, proc);
+		} else {
+			boolean added = false;
+			for (ProcedureParameter pp : proc.getParameters()) {
+				if (pp.getType() == Type.ReturnValue) {
+					added = true;
+					if (pp.getDatatype() != factory.getDataTypes().get(type.type)) {
+						throw new MetadataException(QueryPlugin.Util.getString("SQLParser.proc_type_conflict", proc.getName(), pp.getDatatype(), type.type)); //$NON-NLS-1$
 					}
 				}
-				if (!added) {
-					column = factory.addProcedureParameter(name, type.type, ProcedureParameter.Type.ReturnValue, proc);
-				}
 			}
-			setTypeInfo(type, column);
-			return column;
-		} catch (TranslatorException e){
-			throw new MetadataException(e.getMessage());
-		}	
+			if (!added) {
+				column = factory.addProcedureParameter(name, type.type, ProcedureParameter.Type.ReturnValue, proc);
+			}
+		}
+		setTypeInfo(type, column);
+		return column;
 	}
 
 	void setTypeInfo(ParsedDataType type, BaseColumn column) {
@@ -595,7 +590,10 @@ public class SQLParserUtil {
 	 	int index = key.indexOf(':');
 	 	if (index > 0 && index < key.length() - 1) {
 	 		String prefix = key.substring(0, index);
-	 		String uri = factory.getNamespaces().get(prefix);
+	 		String uri = MetadataFactory.BUILTIN_NAMESPACES.get(prefix);
+	 		if (uri == null) {
+	 			uri = factory.getNamespaces().get(prefix);
+	 		}
 	 		if (uri != null) {
 	 			key = '{' +uri + '}' + key.substring(index + 1, key.length());
 	 		}
@@ -619,12 +617,8 @@ public class SQLParserUtil {
 				fbi = true;
 			}
 		}
-		try{
-			table.addAttchment(MetadataFactory.class, factory);
-	    	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
-	    }catch(TranslatorException e){
-			throw new MetadataException(e.getMessage());
-		}
+		table.addAttchment(MetadataFactory.class, factory);
+    	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
 	}
 	
 	static class  ParsedDataType{

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.language.*;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
@@ -38,7 +37,6 @@ import org.teiid.translator.salesforce.SalesForcePlugin;
 
 
 public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVisitor {
-	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
 	public static final String AGG_PREFIX = "expr"; //$NON-NLS-1$
 	private Map<Integer, Expression> selectSymbolIndexToElement = new HashMap<Integer, Expression>();
 	private Map<String, Integer> selectSymbolNameToIndex = new HashMap<String, Integer>();
