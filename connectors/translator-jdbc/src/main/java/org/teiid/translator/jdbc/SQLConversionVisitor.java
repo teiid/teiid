@@ -198,9 +198,11 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 	    				if (obj.getArguments().get(i).getDirection() != Direction.IN) {
 	    					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", i+1)); //$NON-NLS-1$
 	    				}
-	    				buffer.append('?');
 	    				if (this.prepared) {
+	    					buffer.append('?');
 	    					this.preparedValues = obj.getArguments();
+	    				} else {
+	    					this.visit(obj.getArguments().get(i).getArgumentValue());
 	    				}
 	    			}
 	    		}
@@ -219,7 +221,7 @@ public class SQLConversionVisitor extends SQLStringVisitor{
 		Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
 		List<Object> parts = new LinkedList<Object>();
 		Matcher m = pattern.matcher(nativeQuery);
-		for (int i = 0; i < nativeQuery.length(); i++) {
+		for (int i = 0; i < nativeQuery.length();) {
 			if (!m.find(i)) {
 				parts.add(nativeQuery.substring(i));
 				break;

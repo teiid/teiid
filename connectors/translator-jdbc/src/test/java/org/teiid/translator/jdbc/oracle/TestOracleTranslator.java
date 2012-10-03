@@ -799,6 +799,7 @@ public class TestOracleTranslator {
             DataTypeManager.DefaultDataTypes.STRING,
         };
         RealMetadataFactory.createElements(x, elemNames, elemTypes);
+        
         List<Column> cols = RealMetadataFactory.createElements(table, elemNames, elemTypes);
         cols.get(1).setAutoIncremented(true);
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
@@ -812,6 +813,11 @@ public class TestOracleTranslator {
         Procedure p = RealMetadataFactory.createStoredProcedure("proc", foo, Arrays.asList(in1));
         p.setResultSet(rs3);
         p.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select x from y where z = $1");
+        
+        p = RealMetadataFactory.createStoredProcedure("proc1", foo, Arrays.asList(RealMetadataFactory.createParameter("in1", SPParameter.IN, DataTypeManager.DefaultDataTypes.STRING)));
+        p.setResultSet(RealMetadataFactory.createResultSet("proc.rs1", new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.INTEGER })); //$NON-NLS-1$ //$NON-NLS-2$
+        p.setProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, "select $1 from y");
+        p.setProperty(SQLConversionVisitor.TEIID_NON_PREPARED, "true");
 
         CompositeMetadataStore store = new CompositeMetadataStore(metadataStore);
         return new TransformationMetadata(null, store, null, RealMetadataFactory.SFM.getSystemFunctions(), null);
@@ -914,6 +920,15 @@ public class TestOracleTranslator {
 	@Test public void testNativeQueryProc() throws Exception {
 		String input = "call proc(2)"; //$NON-NLS-1$
         String output = "select x from y where z = ?"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+	@Test public void testNativeQueryProcNonPrepared() throws Exception {
+		String input = "call proc1('col')"; //$NON-NLS-1$
+        String output = "select 'col' from y"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
