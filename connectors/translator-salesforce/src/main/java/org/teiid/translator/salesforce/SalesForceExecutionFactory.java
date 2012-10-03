@@ -56,7 +56,6 @@ import org.teiid.translator.salesforce.execution.InsertExecutionImpl;
 import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
-import org.teiid.translator.salesforce.execution.visitors.CriteriaVisitor;
 
 @Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
@@ -117,27 +116,14 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 		Procedure metadataObject = command.getMetadataObject();
 		String nativeQuery = metadataObject.getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
 		if (nativeQuery != null) {
-			if (nativeQuery.startsWith(DirectQueryExecution.SEARCH)) {
-				StringBuilder buffer = new StringBuilder();
-	    		List<Object> parts = SQLStringVisitor.parseNativeQueryParts(nativeQuery, command.getArguments());
-	    		for (Object o : parts) {
-	    			if (o instanceof String) {
-	    				buffer.append(o);
-	    			} else {
-	    				Integer i = (Integer)o;
-	    				CriteriaVisitor.appendLiteralValue(buffer, command.getArguments().get(i).getArgumentValue());
-	    			}
-	    		}
-	    		nativeQuery = buffer.toString();
-			} 
-			return new DirectQueryExecution(command.getArguments(), command, connection, metadata, executionContext, nativeQuery);
+			return new DirectQueryExecution(command.getArguments(), command, connection, metadata, executionContext, nativeQuery, false);
     	}
 		return new ProcedureExecutionParentImpl(command, connection, metadata, executionContext);
 	}
 
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
-		 return new DirectQueryExecution(arguments.subList(1, arguments.size()), command, connection, metadata, executionContext, (String)arguments.get(0).getArgumentValue().getValue());
+		 return new DirectQueryExecution(arguments.subList(1, arguments.size()), command, connection, metadata, executionContext, (String)arguments.get(0).getArgumentValue().getValue(), true);
 	}	
 	
 	@Override

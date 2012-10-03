@@ -32,6 +32,7 @@ import javax.xml.namespace.QName;
 
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -40,6 +41,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.salesforce.SalesForcePlugin;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.Util;
+import org.teiid.translator.salesforce.execution.visitors.CriteriaVisitor;
 import org.w3c.dom.Element;
 
 import com.sforce.soap.partner.QueryResult;
@@ -62,6 +64,7 @@ public class DirectQueryExecution implements ProcedureExecution  {
 	private int updateCount = -1;
 	private boolean updateQuery = false;
 	private String query; 
+	private boolean returnsArray = true;
 	
 	/**
 	 * 
@@ -72,19 +75,30 @@ public class DirectQueryExecution implements ProcedureExecution  {
 	 * @param context
 	 * @param query
 	 */
-	public DirectQueryExecution(List<Argument> arguments, Command command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context, String query) {
+	public DirectQueryExecution(List<Argument> arguments, Command command, SalesforceConnection connection, RuntimeMetadata metadata, ExecutionContext context, String query, boolean returnsArray) {
 		this.arguments = arguments;
 		this.command = command;
 		this.connection = connection;
 		this.metadata = metadata;
 		this.context = context;
 		this.query = query;
+		this.returnsArray = returnsArray;
 	}
-
+	
 	@Override
 	public void execute() throws TranslatorException {
 		if (query.startsWith(SEARCH)) { 
-			doSelect(query.substring(7));
+			StringBuilder buffer = new StringBuilder();
+			List<Object> parts = SQLStringVisitor.parseNativeQueryParts(query, arguments);
+			for (Object o : parts) {
+				if (o instanceof String) {
+					buffer.append(o);
+				} else {
+					Integer i = (Integer)o;
+					CriteriaVisitor.appendLiteralValue(buffer, arguments.get(i).getArgumentValue());
+				}
+			}
+			doSelect(buffer.toString().substring(7));
 		}
 		else if (query.startsWith("create;")) { //$NON-NLS-1$
 			doInsert(query.substring(7));
@@ -150,9 +164,12 @@ public class DirectQueryExecution implements ProcedureExecution  {
 		if (vals == null) {
 			return null;
 		}
-		List<Object[]> row = new ArrayList<Object[]>(1);
-		row.add(vals.toArray(new Object[vals.size()]));
-		return row;		
+		if (returnsArray) {
+			List<Object[]> row = new ArrayList<Object[]>(1);
+			row.add(vals.toArray(new Object[vals.size()]));
+			return row;		
+		}
+		return vals;
 	}
 	
 	private List<?> getRow(QueryResult result) throws TranslatorException {

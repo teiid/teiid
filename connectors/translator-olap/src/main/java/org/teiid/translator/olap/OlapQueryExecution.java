@@ -23,6 +23,7 @@ package org.teiid.translator.olap;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -36,6 +37,7 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.teiid.language.Argument;
 import org.teiid.language.Command;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
@@ -57,13 +59,27 @@ public class OlapQueryExecution implements ProcedureExecution {
     private int colWidth;
     private ListIterator<Position> rowPositionIterator;
     private String mdxQuery;
+    private boolean returnsArray;
     
-	public OlapQueryExecution(List<Argument> arguments, Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory) {
-		this.mdxQuery = (String) arguments.get(0).getArgumentValue().getValue();;
+	public OlapQueryExecution(List<Argument> arguments, Command command, OlapConnection connection, ExecutionContext context, OlapExecutionFactory executionFactory, String mdxQuery, boolean returnsArray) {
+		this.mdxQuery = mdxQuery;
+		if (arguments.size() > 0 || !returnsArray) { //TODO this is a hack at backwards compatibility 
+			StringBuilder buffer = new StringBuilder();
+			List<Object> parts = SQLStringVisitor.parseNativeQueryParts(this.mdxQuery, arguments);
+			for (Object o : parts) {
+				if (o instanceof String) {
+					buffer.append(o);
+				} else {
+					Integer i = (Integer)o;
+					buffer.append(arguments.get(i).getArgumentValue().getValue());
+				}
+			}
+		}
 		this.command = command;
 		this.connection = connection;
 		this.context = context;
 		this.executionFactory = executionFactory;
+		this.returnsArray = returnsArray;
 	}
 	
 	@Override
@@ -124,9 +140,12 @@ public class OlapQueryExecution implements ProcedureExecution {
 			Cell cell = cellSet.getCell(colPos, rowPosition);
 			result[i++] = cell.getValue();
 		}	
-		ArrayList<Object[]> results = new ArrayList<Object[]>(1);
-		results.add(result);
-		return results;
+		if (returnsArray) {
+			ArrayList<Object[]> results = new ArrayList<Object[]>(1);
+			results.add(result);
+			return results;
+		}
+		return Arrays.asList(result);
     }  
     
     @Override

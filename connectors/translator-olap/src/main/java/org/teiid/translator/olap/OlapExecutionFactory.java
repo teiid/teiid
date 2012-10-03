@@ -30,7 +30,9 @@ import javax.sql.DataSource;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapWrapper;
 import org.teiid.language.Argument;
+import org.teiid.language.Call;
 import org.teiid.language.Command;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.RuntimeMetadata;
@@ -52,8 +54,19 @@ public class OlapExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
     @Override
    	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection connection) throws TranslatorException {
-    	return new OlapQueryExecution(arguments, command, unwrap(connection), executionContext, this);
+    	return new OlapQueryExecution(arguments.subList(1, arguments.size()), command, unwrap(connection), executionContext, this, (String) arguments.get(0).getArgumentValue().getValue(), true);
 	}    
+    
+    @Override
+    public ProcedureExecution createProcedureExecution(Call command,
+    		ExecutionContext executionContext, RuntimeMetadata metadata,
+    		Connection connection) throws TranslatorException {
+    	String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+    	if (nativeQuery != null) {
+    		return new OlapQueryExecution(command.getArguments(), command, unwrap(connection), executionContext, this, nativeQuery, false);
+    	}
+    	throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
+    }
 
 	private OlapConnection unwrap(Connection conn) throws TranslatorException {
     	try {
