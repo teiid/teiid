@@ -45,7 +45,6 @@ public class SalesForcePlugin {
     public static enum Event implements BundleUtil.Event{
     	TEIID13001,
     	TEIID13002,
-    	TEIID13003,
     	TEIID13004,
     	TEIID13005,
     }

@@ -32,41 +32,9 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
-import org.teiid.dqp.internal.datamgr.TestAggregateImpl;
-import org.teiid.dqp.internal.datamgr.TestCompareCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestDeleteImpl;
-import org.teiid.dqp.internal.datamgr.TestElementImpl;
-import org.teiid.dqp.internal.datamgr.TestExistsCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestFunctionImpl;
-import org.teiid.dqp.internal.datamgr.TestGroupByImpl;
-import org.teiid.dqp.internal.datamgr.TestGroupImpl;
-import org.teiid.dqp.internal.datamgr.TestInCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestInsertImpl;
-import org.teiid.dqp.internal.datamgr.TestIsNullCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestJoinImpl;
-import org.teiid.dqp.internal.datamgr.TestLikeCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestLiteralImpl;
-import org.teiid.dqp.internal.datamgr.TestNotCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestOrderByImpl;
-import org.teiid.dqp.internal.datamgr.TestProcedureImpl;
-import org.teiid.dqp.internal.datamgr.TestQueryImpl;
-import org.teiid.dqp.internal.datamgr.TestScalarSubqueryImpl;
-import org.teiid.dqp.internal.datamgr.TestSearchedCaseExpressionImpl;
-import org.teiid.dqp.internal.datamgr.TestSelectSymbolImpl;
-import org.teiid.dqp.internal.datamgr.TestSetQueryImpl;
-import org.teiid.dqp.internal.datamgr.TestSubqueryCompareCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestSubqueryInCriteriaImpl;
-import org.teiid.dqp.internal.datamgr.TestUpdateImpl;
-import org.teiid.dqp.internal.datamgr.TstLanguageBridgeFactory;
-import org.teiid.language.AggregateFunction;
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.Insert;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Literal;
-import org.teiid.language.Select;
+import org.teiid.dqp.internal.datamgr.*;
+import org.teiid.language.*;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.RuntimeMetadata;
@@ -438,6 +406,18 @@ public class TestSQLStringVisitor  {
     	
     	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
     	assertEquals("SELECT trim('x' FROM g_0.StringKey) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testNativeParsing() throws Exception {
+    	String sql = "select $1 from $2";
+    	List<Object> parts = SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)));
+    	assertEquals(Arrays.asList((Object)"select ", 0, " from ", 1), parts);
+    }
+    
+    @Test public void testNativeParsing1() throws Exception {
+    	String sql = "select $$1 from $$$2";
+    	List<Object> parts = SQLStringVisitor.parseNativeQueryParts(sql, Arrays.asList(new Argument(Direction.IN, null, String.class, null), new Argument(Direction.IN, null, String.class, null)));
+    	assertEquals(Arrays.asList((Object)"select ", "$1", " from ", "$", 1), parts);
     }
 
 }

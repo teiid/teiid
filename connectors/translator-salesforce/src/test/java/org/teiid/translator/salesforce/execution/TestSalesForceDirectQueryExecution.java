@@ -21,9 +21,7 @@
  */
 package org.teiid.translator.salesforce.execution;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,7 +100,7 @@ public class TestSalesForceDirectQueryExecution {
         
     }    
     
-    @Test public void testWithoutMarker() throws Exception {
+    @Test(expected=TranslatorException.class) public void testWithoutMarker() throws Exception {
         String input = "exec native('salesforce query')"; 
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
@@ -111,16 +109,12 @@ public class TestSalesForceDirectQueryExecution {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
         
-        try {
-        	DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-			execution.execute();
-			fail("the above should have thrown exception");
-		} catch (TranslatorException e) {
-		}
+    	DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+		execution.execute();
     }    
     
     @Test public void testDelete() throws Exception {
-        String input = "exec native('delete;ids=id1,id2')"; 
+        String input = "exec native('delete;', 'id1','id2')"; 
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
         Command command = util.parseCommand(input);
@@ -192,7 +186,7 @@ public class TestSalesForceDirectQueryExecution {
 		assertArrayEquals(new Object[] {23}, (Object[])execution.next().get(0));
     }
     
-    @Test public void testCreateFail() throws Exception {
+    @Test(expected=TranslatorException.class) public void testCreateFail() throws Exception {
     	String input = "exec native('create;id=pk;type=table;attributes=one,two,three', 'one')"; 
 
         TranslationUtility util = FakeTranslationFactory.getInstance().getExampleTranslationUtility();
@@ -201,11 +195,7 @@ public class TestSalesForceDirectQueryExecution {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         SalesforceConnection connection = Mockito.mock(SalesforceConnection.class);
         
-        try {
-        	DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
-			execution.execute();
-			fail("should have failed because there are not enough values");
-		} catch (TranslatorException e) {
-		}
+    	DirectQueryExecution execution = (DirectQueryExecution)TRANSLATOR.createExecution(command, ec, rm, connection);
+		execution.execute();
     }    
 }

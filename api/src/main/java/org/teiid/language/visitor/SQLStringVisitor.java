@@ -26,11 +26,15 @@ import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
+import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -45,7 +49,8 @@ import org.teiid.metadata.Table;
  * are not reusable, and are not thread-safe.
  */
 public class SQLStringVisitor extends AbstractLanguageVisitor {
-   
+	public static final String TEIID_NATIVE_QUERY = AbstractMetadataRecord.RELATIONAL_URI + "native-query"; //$NON-NLS-1$
+	
     private Set<String> infixFunctions = new HashSet<String>(Arrays.asList("%", "+", "-", "*", "+", "/", "||", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ 
     		"&", "|", "^", "#"));   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ 
 	
@@ -974,4 +979,40 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     protected boolean useSelectLimit() {
     	return false;
     }
+    
+	public static List<Object> parseNativeQueryParts(String nativeQuery, List<Argument> list) {
+		Pattern pattern = Pattern.compile("\\$+\\d+"); //$NON-NLS-1$
+		List<Object> parts = new LinkedList<Object>();
+		Matcher m = pattern.matcher(nativeQuery);
+		for (int i = 0; i < nativeQuery.length();) {
+			if (!m.find(i)) {
+				parts.add(nativeQuery.substring(i));
+				break;
+			}
+			if (m.start() != i) {
+				parts.add(nativeQuery.substring(i, m.start()));
+			}
+			String match = m.group();
+			int end = match.lastIndexOf('$');
+			if ((end&0x1) == 1) {
+				//escaped
+				parts.add(match.substring((end+1)/2)); 
+			} else {
+				if (end != 0) {
+					parts.add(match.substring(0, end/2));
+				}
+				int index = Integer.parseInt(match.substring(end + 1))-1;
+				if (index < 0 || index >= list.size()) {
+					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
+				}
+				Argument arg = list.get(index);
+				if (arg.getDirection() != Direction.IN) {
+					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
+				}
+				parts.add(index);
+			}
+			i = m.end();
+		}
+		return parts;
+	}
 }

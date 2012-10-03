@@ -33,6 +33,7 @@ import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
@@ -55,10 +56,10 @@ import org.teiid.translator.salesforce.execution.InsertExecutionImpl;
 import org.teiid.translator.salesforce.execution.ProcedureExecutionParentImpl;
 import org.teiid.translator.salesforce.execution.QueryExecutionImpl;
 import org.teiid.translator.salesforce.execution.UpdateExecutionImpl;
+import org.teiid.translator.salesforce.execution.visitors.CriteriaVisitor;
 
 @Translator(name="salesforce", description="A translator for Salesforce")
 public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFactory, SalesforceConnection> {
-
 	private static final String SALESFORCE = "salesforce"; //$NON-NLS-1$
 	private static final String EXCLUDES = "excludes";//$NON-NLS-1$
 	private static final String INCLUDES = "includes";//$NON-NLS-1$
@@ -113,12 +114,30 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	@Override
 	public ProcedureExecution createProcedureExecution(Call command,ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection)
 			throws TranslatorException {
+		Procedure metadataObject = command.getMetadataObject();
+		String nativeQuery = metadataObject.getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+		if (nativeQuery != null) {
+			if (nativeQuery.startsWith(DirectQueryExecution.SEARCH)) {
+				StringBuilder buffer = new StringBuilder();
+	    		List<Object> parts = SQLStringVisitor.parseNativeQueryParts(nativeQuery, command.getArguments());
+	    		for (Object o : parts) {
+	    			if (o instanceof String) {
+	    				buffer.append(o);
+	    			} else {
+	    				Integer i = (Integer)o;
+	    				CriteriaVisitor.appendLiteralValue(buffer, command.getArguments().get(i).getArgumentValue());
+	    			}
+	    		}
+	    		nativeQuery = buffer.toString();
+			} 
+			return new DirectQueryExecution(command.getArguments(), command, connection, metadata, executionContext, nativeQuery);
+    	}
 		return new ProcedureExecutionParentImpl(command, connection, metadata, executionContext);
 	}
 
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
-		 return new DirectQueryExecution(arguments, command, connection, metadata, executionContext);
+		 return new DirectQueryExecution(arguments.subList(1, arguments.size()), command, connection, metadata, executionContext, (String)arguments.get(0).getArgumentValue().getValue());
 	}	
 	
 	@Override

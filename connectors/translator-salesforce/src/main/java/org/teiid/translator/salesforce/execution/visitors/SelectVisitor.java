@@ -150,18 +150,12 @@ public class SelectVisitor extends CriteriaVisitor implements IQueryProvidingVis
 		addSelectSymbols(result);
 		result.append(SPACE);
 
-		String nativeQuery = this.table.getProperty(TEIID_NATIVE_QUERY, false);
-    	if (nativeQuery != null) {
-    		result.append(nativeQuery);
-    	}
-    	else {
-			result.append(FROM).append(SPACE);
-			result.append(table.getNameInSource()).append(SPACE);
-			addCriteriaString(result);
-			appendGroupByHaving(result);
-			//result.append(orderByClause).append(SPACE);
-			result.append(limitClause);
-    	}
+		result.append(FROM).append(SPACE);
+		result.append(table.getNameInSource()).append(SPACE);
+		addCriteriaString(result);
+		appendGroupByHaving(result);
+		//result.append(orderByClause).append(SPACE);
+		result.append(limitClause);
 		return result.toString();
 	}
 

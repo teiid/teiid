@@ -308,44 +308,15 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         } else if (expr instanceof Literal) {
         	Literal literal = (Literal)expr;
         	if (literal.getValue() == null) {
-        		if (raw) {
-        			return null;
-        		}
-        		return "NULL"; //$NON-NLS-1$
+    			if (raw) {
+    				return null;
+    			}
+    			return "NULL"; //$NON-NLS-1$
     		}
-        	if (raw) {
-        		return literal.getValue().toString();
-        	}
-        	if (literal.getValue().getClass().equals(Boolean.class)) {
-        		result.append(((Boolean)literal.getValue()).toString());
-        	} else if (literal.getValue().getClass().equals(java.sql.Timestamp.class)) {
-        		Timestamp datetime = (java.sql.Timestamp)literal.getValue();
-        		String value = datetime.toString();
-        		int fractionalPlace = value.lastIndexOf('.');
-        		int fractionalLength = value.length() - fractionalPlace - 1;
-				if (fractionalLength > 3) {
-        			value = value.substring(0, fractionalPlace + 3);
-        		} else if (fractionalLength < 3) {
-        			value += "00".substring(fractionalLength - 1); //$NON-NLS-1$
-        		}
-        		result.append(value).setCharAt(result.length()-value.length()+10, 'T');
-        		Calendar c = TimestampWithTimezone.getCalendar();
-        		c.setTime(datetime);
-        		int minutes = (c.get(Calendar.ZONE_OFFSET) +
-        			     c.get(Calendar.DST_OFFSET)) / 60000;
-        		int val = minutes/60;
-        		result.append(String.format("%1$+03d", val)); //$NON-NLS-1$
-        		result.append(':');
-        		val = minutes%60;
-    			result.append(val/10);
-    			result.append(val%10);
-        	} else if (literal.getValue().getClass().equals(java.sql.Time.class)) {
-        		result.append(literal.getValue()).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
-        	} else if (literal.getValue().getClass().equals(java.sql.Date.class)) {
-        		result.append(literal.getValue());
-        	} else {
-        		result.append(expr.toString());
-        	}
+    		if (raw) {
+    			return literal.getValue().toString();
+    		}
+        	appendLiteralValue(result, literal);
         } else if (expr instanceof AggregateFunction) {
         	appendAggregateFunction(result, (AggregateFunction)expr);
         } else {
@@ -353,6 +324,39 @@ public class CriteriaVisitor extends HierarchyVisitor implements ICriteriaVisito
         }
         return result.toString();
     }
+
+	public static void appendLiteralValue(StringBuilder result, Literal literal) {
+		if (literal.getValue().getClass().equals(Boolean.class)) {
+			result.append(((Boolean)literal.getValue()).toString());
+		} else if (literal.getValue().getClass().equals(java.sql.Timestamp.class)) {
+			Timestamp datetime = (java.sql.Timestamp)literal.getValue();
+			String value = datetime.toString();
+			int fractionalPlace = value.lastIndexOf('.');
+			int fractionalLength = value.length() - fractionalPlace - 1;
+			if (fractionalLength > 3) {
+				value = value.substring(0, fractionalPlace + 3);
+			} else if (fractionalLength < 3) {
+				value += "00".substring(fractionalLength - 1); //$NON-NLS-1$
+			}
+			result.append(value).setCharAt(result.length()-value.length()+10, 'T');
+			Calendar c = TimestampWithTimezone.getCalendar();
+			c.setTime(datetime);
+			int minutes = (c.get(Calendar.ZONE_OFFSET) +
+				     c.get(Calendar.DST_OFFSET)) / 60000;
+			int val = minutes/60;
+			result.append(String.format("%1$+03d", val)); //$NON-NLS-1$
+			result.append(':');
+			val = minutes%60;
+			result.append(val/10);
+			result.append(val%10);
+		} else if (literal.getValue().getClass().equals(java.sql.Time.class)) {
+			result.append(literal.getValue()).append(".000").append(Util.getDefaultTimeZoneString()); //$NON-NLS-1$
+		} else if (literal.getValue().getClass().equals(java.sql.Date.class)) {
+			result.append(literal.getValue());
+		} else {
+			result.append(literal.toString());
+		}
+	}
     
 	protected void appendAggregateFunction(StringBuilder result,
 			AggregateFunction af) {

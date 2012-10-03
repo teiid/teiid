@@ -35,7 +35,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.language.Command;
 import org.teiid.language.Select;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
@@ -49,9 +51,8 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.salesforce.Constants;
 import org.teiid.translator.salesforce.SalesForceExecutionFactory;
@@ -115,17 +116,6 @@ public class TestVisitors {
             obj.setNameInSource(contactNameInSource[i]);
         }
         
-        Table nativeTable = RealMetadataFactory.createPhysicalGroup("Native", salesforceModel); //$NON-NLS-1$
-        nativeTable.setNameInSource("Native"); //$NON-NLS-1$
-        nativeTable.setProperty("Supports Query", Boolean.TRUE.toString()); //$NON-NLS-1$
-        nativeTable.setProperty(SelectVisitor.TEIID_NATIVE_QUERY, "FROM MyTable WHERE Anything='goes'");
-        
-        List<Column> contactCols2 = RealMetadataFactory.createElements(nativeTable, elemNames, elemTypes);
-        for(int i=0; i<2; i++) {
-            Column obj = contactCols2.get(i);
-            obj.setNameInSource(contactNameInSource[i]);
-        }        
-        
         List<ProcedureParameter> params = new LinkedList<ProcedureParameter>();
         params.add(RealMetadataFactory.createParameter("type", SPParameter.IN, TypeFacility.RUNTIME_NAMES.STRING));
         params.add(RealMetadataFactory.createParameter("start", SPParameter.IN, TypeFacility.RUNTIME_NAMES.TIMESTAMP));
@@ -133,6 +123,13 @@ public class TestVisitors {
         
         Procedure getUpdated = RealMetadataFactory.createStoredProcedure("GetUpdated", salesforceModel, params);
         getUpdated.setResultSet(RealMetadataFactory.createResultSet("rs", new String[] {"updated"}, new String[] {TypeFacility.RUNTIME_NAMES.STRING}));
+
+        params = new LinkedList<ProcedureParameter>();
+        params.add(RealMetadataFactory.createParameter("x", SPParameter.IN, TypeFacility.RUNTIME_NAMES.STRING));
+        
+        Procedure nativeProc = RealMetadataFactory.createStoredProcedure("native", salesforceModel, params);
+        nativeProc.setProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, "search;select accountname from account where accountid = $1");
+        nativeProc.setResultSet(RealMetadataFactory.createResultSet("rs", new String[] {"accountname"}, new String[] {TypeFacility.RUNTIME_NAMES.STRING}));
         
         return new TransformationMetadata(null, new CompositeMetadataStore(store), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
     }    
@@ -269,7 +266,7 @@ public class TestVisitors {
 	}
 
 	private void helpTest(String sql, String expected) throws Exception {
-		Select command = (Select)translationUtility.parseCommand(sql); 
+		Command command = translationUtility.parseCommand(sql); 
 		SalesForceExecutionFactory factory = new SalesForceExecutionFactory();
         ExecutionContext ec = Mockito.mock(ExecutionContext.class);
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
@@ -278,7 +275,7 @@ public class TestVisitors {
         ArgumentCaptor<String> queryArgument = ArgumentCaptor.forClass(String.class);
         Mockito.stub(connection.query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean())).toReturn(Mockito.mock(QueryResult.class));
         
-		ResultSetExecution execution = factory.createResultSetExecution(command, ec, rm, connection);
+		Execution execution = factory.createExecution(command, ec, rm, connection);
 		execution.execute();
 
 		Mockito.verify(connection, Mockito.times(1)).query(queryArgument.capture(), Mockito.anyInt(), Mockito.anyBoolean());
@@ -286,15 +283,10 @@ public class TestVisitors {
 		assertEquals(expected, queryArgument.getValue().trim());
 	}
 	
-	@Test public void testNativeQuery() throws Exception {
-		String sql = "select name, accountid From Native";
-		String source = "SELECT Native.ContactName, Native.AccountId FROM MyTable WHERE Anything='goes'";
+	@Test public void testNativeProc() throws Exception {
+		String sql = "exec native('1')";
+		String source = "select accountname from account where accountid = '1'";
 		helpTest(sql, source);
 	}
 	
-	@Test public void testNativeQueryWithJoin() throws Exception {
-		String sql = "select n.name, n.accountid, a.industry From Native n left outer join Account a on n.ContactID = a.id";
-		String expected = "SELECT Native.ContactName, Native.AccountId, (SELECT Account.Industry FROM Accounts) FROM MyTable WHERE Anything='goes'";
-		helpTest(sql, expected);
-	}	
 }

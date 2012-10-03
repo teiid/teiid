@@ -35,6 +35,7 @@ import org.teiid.language.Literal;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.salesforce.Util;
 
 
 public class InsertVisitor extends CriteriaVisitor {
@@ -69,7 +70,7 @@ public class InsertVisitor extends CriteriaVisitor {
 					Literal literalValue = (Literal)value;
 					val = literalValue.getValue().toString();
 					if(null != val && !val.isEmpty()) {
-						val = this.stripQutes(val);
+						val = Util.stripQutes(val);
 					}
 				} else {
 					val = value.toString();
@@ -89,13 +90,5 @@ public class InsertVisitor extends CriteriaVisitor {
 	public List<JAXBElement> getMessageElements() {
 		return elements;
 	}
-	
-	private String stripQutes(String id) {
-		if((id.startsWith("'") && id.endsWith("'"))) {
-			id = id.substring(1,id.length()-1);
-		} else if ((id.startsWith("\"") && id.endsWith("\""))) {
-			id = id.substring(1,id.length()-1);
-		}
-		return id;
-	}
+
 }

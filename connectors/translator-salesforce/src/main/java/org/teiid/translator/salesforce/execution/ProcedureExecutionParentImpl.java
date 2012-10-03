@@ -24,6 +24,7 @@ package org.teiid.translator.salesforce.execution;
 
 import java.util.List;
 
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Call;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -82,7 +83,7 @@ public class ProcedureExecutionParentImpl implements ProcedureExecution, Procedu
 		} else if(GET_DELETED.equalsIgnoreCase(name)) {
 			execution = new GetDeletedExecutionImpl(this);
 		} else {
-			throw new AssertionError("Unknown procedure " + getCommand().getProcedureName() + " with name in source " + getCommand().getMetadataObject().getNameInSource()); //$NON-NLS-1$ //$NON-NLS-2$
+			throw new TeiidRuntimeException("Unknown procedure " + getCommand().getProcedureName() + " with name in source " + name); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		execution.execute(this);
 	}
