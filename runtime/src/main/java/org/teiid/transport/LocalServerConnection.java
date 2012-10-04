@@ -193,4 +193,8 @@ public class LocalServerConnection implements ServerConnection {
 	public boolean supportsContinuous() {
 		return true;
 	}
+	
+	public DQPWorkContext getWorkContext() {
+		return workContext;
+	}
 }

@@ -26,7 +26,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -164,7 +163,7 @@ public class TeiidDriver implements Driver {
 
         parseURL(url, info);
 
-        for (String property: JDBCURL.KNOWN_PROPERTIES) {
+        for (String property: JDBCURL.KNOWN_PROPERTIES.keySet()) {
         	DriverPropertyInfo dpi = new DriverPropertyInfo(property, info.getProperty(property));
         	if (property.equals(BaseDataSource.VDB_NAME)) {
         		dpi.required = true;
@@ -199,7 +198,7 @@ public class TeiidDriver implements Driver {
             }
             Properties optionalParams = jdbcURL.getProperties();
             JDBCURL.normalizeProperties(info);
-            Enumeration keys = optionalParams.keys();
+            Enumeration<?> keys = optionalParams.keys();
             while (keys.hasMoreElements()) {
                 String propName = (String)keys.nextElement();
                 // Don't let the URL properties override the passed-in Properties object.
@@ -229,7 +228,7 @@ public class TeiidDriver implements Driver {
         return false;
     }
 
-	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+	public Logger getParentLogger() {
 		return logger;
 	}
 }

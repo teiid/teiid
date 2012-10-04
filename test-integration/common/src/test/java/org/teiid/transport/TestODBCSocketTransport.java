@@ -391,4 +391,27 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		ResultSet rs = s.executeQuery("select indkey FROM pg_index");
 		TestMMDatabaseMetaData.compareResultSet(rs);
 	}
+	
+	@Test public void test_pg_client_encoding() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select pg_client_encoding()");
+		rs.next();
+		assertEquals("UTF8", rs.getString(1));
+
+		s.execute("set client_encoding UTF8");
+		rs = s.executeQuery("select pg_client_encoding()");
+		rs.next();
+		assertEquals("UTF8", rs.getString(1));
+	}
+	
+	/**
+	 * Ensures that the client is notified about the change.  However the driver will
+	 * throw an exception as it requires UTF8
+	 * @throws Exception
+	 */
+	@Test(expected=SQLException.class) public void test_pg_client_encoding1() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("set client_encoding LATIN1");
+	}
+
 }

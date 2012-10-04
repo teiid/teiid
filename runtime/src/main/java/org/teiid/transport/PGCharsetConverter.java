@@ -72,7 +72,15 @@ public class PGCharsetConverter {
 	}
 	
 	public static Charset getCharset(String name) {
-		return charSetMap.get(name);
+		Charset cs = charSetMap.get(name);
+		if (cs == null) {
+			try {
+				return Charset.forName(name);
+			} catch (IllegalArgumentException e) {
+				return null;
+			}
+		}
+		return cs;
 	}
 	
 }

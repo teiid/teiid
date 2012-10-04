@@ -45,6 +45,7 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.net.ConnectionException;
 import org.teiid.query.function.SystemFunctionManager;
@@ -53,7 +54,6 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.RuntimePlugin;
-import org.teiid.translator.TranslatorException;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -234,7 +234,7 @@ public class VDBRepository implements Serializable{
 		try {
 			PgCatalogMetadataStore pg = new PgCatalogMetadataStore(CoreConstants.ODBC_MODEL, getRuntimeTypeMap());
 			return pg.asMetadataStore();
-		} catch (TranslatorException e) {
+		} catch (MetadataException e) {
 			LogManager.logError(LogConstants.CTX_DQP, e, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40002));
 		}
 		return null;

@@ -177,13 +177,16 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 			}			
 		}
 	}
-    
+
+	public static final String DEFAULT_ENCODING = "UTF8";
+	public static final String CLIENT_ENCODING = "client_encoding";
+
     private ChannelBuffer dataOut;
 	private OutputStreamWriter writer;
 
     private Properties props;    
     private Charset encoding = Charset.forName("UTF-8");
-    private String clientEncoding = "UTF8";
+    private String clientEncoding = DEFAULT_ENCODING;
     private ReflectionHelper clientProxy = new ReflectionHelper(ODBCClientRemote.class);
     private ChannelHandlerContext ctx;
     private MessageEvent message;
@@ -231,7 +234,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	@Override
 	public void initialized(Properties props) {
 		this.props = props;
-		setEncoding(props.getProperty("client_encoding", "UTF8"));
+		setEncoding(props.getProperty("client_encoding", this.clientEncoding), true);
 	}
 	
 	@Override
@@ -301,13 +304,24 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		sendReadyForQuery(inTransaction, failedTransaction);
 	}
 	
-	public void setEncoding(String value) {
+	public void setEncoding(String value, boolean init) {
+		if (value == null || value.equals(this.clientEncoding)) {
+			return;
+		}
+		this.clientEncoding = value;
 		Charset cs = PGCharsetConverter.getCharset(value);
 		if (cs != null) {
 			this.encoding = cs;
-			this.clientEncoding = value;
-			//TODO: for non-init this should send a parameter status
+			if (!init) {
+				sendParameterStatus(CLIENT_ENCODING, value);
+			}
+		} else {
+			LogManager.logWarning(LogConstants.CTX_ODBC, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40105, value));
 		}
+	}
+	
+	public String getClientEncoding() {
+		return clientEncoding;
 	}
 	
 	public Charset getEncoding() {

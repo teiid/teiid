@@ -28,7 +28,6 @@ import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -59,7 +58,9 @@ import org.teiid.net.socket.AuthenticationType;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.query.parser.SQLParserUtil;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.ODBCClientInstance;
+import org.teiid.transport.PgBackendProtocol;
 import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStream;
 
 /**
@@ -224,14 +225,14 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 				info.put("password", password); //$NON-NLS-1$
 			}
 			
-			this.connection =  (ConnectionImpl)driver.connect(url, info);
+			this.connection =  driver.connect(url, info);
+			//Propagate so that we can use in pg methods
+			((LocalServerConnection)this.connection.getServerConnection()).getWorkContext().getSession().addAttchment(ODBCServerRemoteImpl.class, this);
 			int hash = this.connection.getConnectionId().hashCode();
-			Enumeration keys = this.props.propertyNames();
+			Enumeration<?> keys = this.props.propertyNames();
 			while (keys.hasMoreElements()) {
 				String key = (String)keys.nextElement();
-				Statement stmt = this.connection.createStatement();
-				stmt.execute("SET " + key + " '" + this.props.getProperty(key) + "'"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				stmt.close();
+				this.connection.setExecutionProperty(key, this.props.getProperty(key));
 			}
 			this.client.authenticationSucess(hash, hash);
 			ready();
@@ -851,30 +852,12 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		String encoding = getEncoding();
 		if (encoding != null) {
 			//this may be unnecessary
-			this.client.setEncoding(encoding);
+			this.client.setEncoding(encoding, false);
 		}
 	}
 	
-	private String getEncoding() {
-		StatementImpl t = null;
-		try {
-			t = connection.createStatement();
-			ResultSet rs = t.executeQuery("show client_encoding"); //$NON-NLS-1$
-			if (rs.next()) {
-				return rs.getString(1);
-			}
-		} catch (Exception e) {
-			//don't care
-		} finally {
-			try {
-				if (t != null) {
-					t.close();
-				}
-			} catch (SQLException e) {
-				
-			}
-		}
-		return null;
+	public String getEncoding() {
+		return this.connection.getExecutionProperty(PgBackendProtocol.CLIENT_ENCODING);
 	}
 	
     private final class QueryWorkItem implements Runnable {

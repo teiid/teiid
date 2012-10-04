@@ -445,7 +445,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         				this.getMMConnection().getServerConnection().cleanUp();
         			}
         		} else {
-        			JDBCURL.addNormalizedProperty(key, value, this.driverConnection.getExecutionProperties());
+        			this.driverConnection.setExecutionProperty(key, value);
         		}
         		this.updateCounts = new int[] {0};
         		return booleanFuture(false);
@@ -589,7 +589,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 					new String[] {DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING});
 			return booleanFuture(true);
 		}
-		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperties().getProperty(JDBCURL.getValidKey(show))));
+		List<List<String>> records = Collections.singletonList(Collections.singletonList(driverConnection.getExecutionProperty(show)));
 		createResultSet(records, new String[] {show}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
 		return booleanFuture(true);
 	}

@@ -187,6 +187,14 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
         return this.propInfo;
     }
     
+    public void setExecutionProperty(String key, String value) {
+    	JDBCURL.addNormalizedProperty(key, value, getExecutionProperties());
+    }
+    
+    public String getExecutionProperty(String key) {
+    	return this.getExecutionProperties().getProperty(JDBCURL.getValidKey(key));
+    }
+    
     DQP getDQP() {
     	return this.dqp;
     }
@@ -420,7 +428,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
      * <p>This method gets the ServerConnection object wrapped by this object.</p>
      * @return ServerConnection object
      */
-    ServerConnection getServerConnection() throws SQLException {
+    public ServerConnection getServerConnection() throws SQLException {
         //Check to see the connection is open
         checkConnection();
         return serverConn;
