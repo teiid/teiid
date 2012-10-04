@@ -279,5 +279,14 @@ public class TestDB2SqlTranslator {
                 input, output, 
                 TRANSLATOR);
     }
+    
+    @Test public void testDB2ForI() throws Exception {
+    	DB2ExecutionFactory db2 = new DB2ExecutionFactory();
+    	db2.setdB2ForI(true);
+    	assertFalse(db2.supportsFunctionsInGroupBy());
+    	assertFalse(db2.supportsElementaryOlapOperations());
+    	db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1);    	
+    	assertTrue(db2.supportsElementaryOlapOperations());
+    }
 
 }

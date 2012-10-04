@@ -32,6 +32,7 @@ import org.teiid.language.Literal;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
 import org.teiid.translator.jdbc.FunctionModifier;
 
 @Translator(name="db2", description="A translator for IBM DB2 Database")
@@ -39,9 +40,13 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	public static final String EIGHT_0 = "8.0"; //$NON-NLS-1$
 	public static final String NINE_1 = "9.1"; //$NON-NLS-1$
+
+	public static final String FIVE_4 = "5.4"; //$NON-NLS-1$
+	public static final String SIX_1 = "6.1"; //$NON-NLS-1$
+	
+	private boolean dB2ForI;
 	
 	public DB2ExecutionFactory() {
-		setDatabaseVersion(EIGHT_0);
 	}
 	
 	@Override
@@ -115,7 +120,7 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 
 	@Override
 	public boolean supportsFunctionsInGroupBy() {
-		return true;
+		return !dB2ForI;
 	}
 
 	@Override
@@ -135,7 +140,19 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	@Override
 	public boolean supportsElementaryOlapOperations() {
-		return getDatabaseVersion().compareTo(NINE_1) >= 0;
+		return getDatabaseVersion().compareTo(isdB2ForI()?SIX_1:NINE_1) >= 0;
+	}
+	
+	@Override
+	public String getDatabaseVersion() {
+		String version = super.getDatabaseVersion();
+		if (version != null) {
+			return version;
+		}
+		if (dB2ForI) {
+			return FIVE_4;
+		}
+		return EIGHT_0;
 	}
 	
 	@Override
@@ -149,6 +166,15 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 				return Arrays.asList("STRIP(", p.get(2), ", ", ((Literal)p.get(0)).getValue(), ", ", p.get(1), ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 			}
 		});
+	}
+	
+	@TranslatorProperty(display="Is DB2 for i", description="If the server is DB2 for i (formally known as DB2/AS).",advanced=true)
+	public boolean isdB2ForI() {
+		return dB2ForI;
+	}
+	
+	public void setdB2ForI(boolean dB2ForI) {
+		this.dB2ForI = dB2ForI;
 	}
 	
 }
