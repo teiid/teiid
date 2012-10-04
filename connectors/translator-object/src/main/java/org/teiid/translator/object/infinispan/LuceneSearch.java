@@ -19,10 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object.infinispan.search;
+package org.teiid.translator.object.infinispan;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.lucene.search.Query;
 import org.hibernate.search.query.dsl.BooleanJunction;
@@ -38,7 +39,6 @@ import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectPlugin;
-import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
 
 /**
  * LuceneSearch will parse the WHERE criteria and build the search query(s)
@@ -52,14 +52,13 @@ import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
 public final class LuceneSearch   {
 
 
-	public static List<Object> performSearch(Select command, InfinispanConnectionImpl connection)
+	public static List<Object> performSearch(Select command, Map<?, ?> cache, Class<?> type)
 			throws TranslatorException {
 		
 		SearchManager searchManager = Search
-				.getSearchManager((Cache<?, ?>) connection.getCache() );
+				.getSearchManager((Cache<?, ?>) cache );
 
-		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(
-				connection.getFactory().getRootClass()).get();
+		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(type).get();
 
 		BooleanJunction<BooleanJunction> junction = queryBuilder.bool();
 		boolean createdQueries = buildQueryFromWhereClause(command.getWhere(),
@@ -72,8 +71,7 @@ public final class LuceneSearch   {
 			query = queryBuilder.all().createQuery();
 		}
 
-		CacheQuery cacheQuery = searchManager.getQuery(query,
-				connection.getFactory().getRootClass()); // rootNodeType
+		CacheQuery cacheQuery = searchManager.getQuery(query, type); // rootNodeType
 
 		List<Object> results = cacheQuery.list();
 		if (results == null || results.isEmpty()) {
@@ -329,7 +327,7 @@ public final class LuceneSearch   {
 	private static Query createEqualsQuery(Column column, Object value, boolean and,
 			boolean not, BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.keyword()
-				.onField(ObjectExecution.getNameInSourceFromColumn(column))
+				.onField(ObjectExecution.getNameInSource(column))
 				// .matching(value.toString() + "*")
 				.matching(value.toString()).createQuery();
 
@@ -347,7 +345,7 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(ObjectExecution.getNameInSourceFromColumn(column))
+				.onField(ObjectExecution.getNameInSource(column))
 				.above(value.toString()).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
@@ -357,7 +355,7 @@ public final class LuceneSearch   {
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 
 		Query queryKey = queryBuilder.range()
-				.onField(ObjectExecution.getNameInSourceFromColumn(column))
+				.onField(ObjectExecution.getNameInSource(column))
 				.below(value.toString()).excludeLimit().createQuery();
 		junction.must(queryKey);
 		return queryKey;
@@ -366,7 +364,7 @@ public final class LuceneSearch   {
 	private static Query createLikeQuery(Column column, String value,
 			BooleanJunction<BooleanJunction> junction, QueryBuilder queryBuilder) {
 		Query queryKey = queryBuilder.phrase()
-				.onField(ObjectExecution.getNameInSourceFromColumn(column)).sentence(value)
+				.onField(ObjectExecution.getNameInSource(column)).sentence(value)
 				.createQuery();
 		junction.should(queryKey);
 		return queryKey;

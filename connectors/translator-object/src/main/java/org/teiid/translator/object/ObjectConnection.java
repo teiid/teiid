@@ -21,14 +21,12 @@
  */
 package org.teiid.translator.object;
 
-import java.util.List;
+import java.util.Map;
 
-import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
 
 /**
- * Each ObjectConnection implementation represents a connection instance and is responsible for
- * implementing the data source search language specifics for searching its cache.
+ * Each ObjectConnection implementation represents a connection to a set of maps or caches
  * 
  * @author vhalbert
  *
@@ -36,11 +34,15 @@ import org.teiid.translator.TranslatorException;
 public interface ObjectConnection  {
 	
 	/**
-	 * Call to perform the search on the cache identified by this connection instance
-	 * @param command
-	 * @return List of Objects
+	 * Return the map containing the desired objects
 	 * @throws TranslatorException
 	 */
-	public List<Object> performSearch(Select command) throws TranslatorException;
+	public Map<?, ?> getMap(String name) throws TranslatorException;
+	
+	/**
+	 * Return the type of the desired objects
+	 * @throws TranslatorException
+	 */
+	public Class<?> getType(String name) throws TranslatorException;
 
 }

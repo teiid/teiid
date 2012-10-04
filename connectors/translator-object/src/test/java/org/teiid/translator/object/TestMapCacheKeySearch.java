@@ -19,60 +19,87 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object.infinispan;
+package org.teiid.translator.object;
 
+import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
-import org.infinispan.manager.CacheContainer;
-import org.infinispan.manager.DefaultCacheManager;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
+
+import javax.naming.Context;
+
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
+import org.junit.Test;
+import org.mockito.Mock;
 import org.teiid.language.Select;
+import org.teiid.metadata.Datatype;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.BasicSearchTest;
-import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
+
 @SuppressWarnings("nls")
-public class TestInfinispanJndiKeySearch extends BasicSearchTest {
-    private static CacheContainer container = null;
+public class TestMapCacheKeySearch extends BasicSearchTest {	      
+
+	protected static final String JNDI_NAME = "java/MyCacheManager";
+	   
+	private static TradesCacheSource source  = TradesCacheSource.loadCache();
 	private static ExecutionContext context;
-    
-    private InfinispanExecutionFactory factory = null;
-		
+	
+	private ObjectExecutionFactory factory = null;
+	
+	@Mock
+	private static Context jndi;
+
+	protected static boolean print = false;
+	
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
-	       // Create the cache manager ...
-		container = new DefaultCacheManager("infinispan_persistent_config.xml"); 
-		
-		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
+	    
 		context = mock(ExecutionContext.class);
-		 
+		
+        // Set up the mock JNDI ...
+		jndi = mock(Context.class);
+        when(jndi.lookup(anyString())).thenReturn(null);
+        when(jndi.lookup(JNDI_NAME)).thenReturn(source);
+
 	}
+	
+	@Before public void beforeEach() throws Exception{	
+		 
+		factory = new ObjectExecutionFactory();
 
-	@Before public void beforeEachTest() throws Exception{	
-        
-		factory = new InfinispanExecutionFactory() {
-
-			@Override
-			protected Object findCacheUsingJNDIName()
-					throws TranslatorException {
-				return container;
-			}
-			
-		};
-
-		factory.setCacheJndiName("JNDINAME");
-		factory.setCacheName(TradesCacheSource.TRADES_CACHE_NAME);
-		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
 		factory.start();
+
     }
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, source);
+	}
+
+	@Ignore
+	@Test public void testGetMetadata() throws Exception {
+		
+		Map<String, Datatype> dts = SystemMetadata.getInstance().getSystemStore().getDatatypes();
+
+		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  dts, new Properties(), null);
+		
+		factory.getMetadata(mfactory, null);
+		
+		Map<String, Table> tables = mfactory.getSchema().getTables();
+		for (Iterator<Table> it=tables.values().iterator(); it.hasNext();) {
+			Table t = it.next();
+		}
+
 	}
 
 }

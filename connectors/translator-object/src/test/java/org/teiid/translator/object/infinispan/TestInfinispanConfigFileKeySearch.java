@@ -23,22 +23,49 @@ package org.teiid.translator.object.infinispan;
 
 import static org.mockito.Mockito.*;
 
+import java.util.Map;
+
+import org.infinispan.manager.CacheContainer;
+import org.infinispan.manager.DefaultCacheManager;
 import org.junit.BeforeClass;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
+import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
     
+	static final class InfinispanConnection implements ObjectConnection {
+		private final CacheContainer container;
+
+		InfinispanConnection(CacheContainer container) {
+			this.container = container;
+		}
+
+		@Override
+		public Class<?> getType(String name) throws TranslatorException {
+			return Trade.class;
+		}
+
+		@Override
+		public Map<?, ?> getMap(String name) throws TranslatorException {
+			//the real connection should use the name in source to get the cache
+			return container.getCache(TradesCacheSource.TRADES_CACHE_NAME);
+		}
+	}
+
 	private static ExecutionContext context;
 
     
     private static InfinispanExecutionFactory factory = null;
+    
+    private static ObjectConnection conn;
 		
 
 	@BeforeClass
@@ -49,20 +76,18 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 		
 		factory = new InfinispanExecutionFactory();
 
-		factory.setConfigurationFileName("./src/test/resources/infinispan_persistent_config.xml");
+		final DefaultCacheManager container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml");
 
-		factory.setCacheName(TradesCacheSource.TRADES_CACHE_NAME);
-		factory.setRootClassName(TradesCacheSource.TRADE_CLASS_NAME);
 		factory.start();
 		
-		TradesCacheSource.loadCache(factory.getCacheContainer().getCache(TradesCacheSource.TRADES_CACHE_NAME));
+		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
 
-
+		conn = new InfinispanConnection(container);
 	}
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
 	}
 	
 }

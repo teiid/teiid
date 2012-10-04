@@ -43,7 +43,7 @@ public class RemoteInfinispanTestHelper {
     private static int count = 0;
     private static  DefaultCacheManager CACHEMANAGER = null;
 
-    public static synchronized HotRodServer createServer() throws IOException {
+    public static synchronized HotRodServer createServer() {
         count++;
         if (server == null) {
         	Configuration c = new ConfigurationBuilder().clustering().cacheMode(CacheMode.REPL_SYNC).eviction().maxEntries(7).build();

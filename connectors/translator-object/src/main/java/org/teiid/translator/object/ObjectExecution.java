@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
@@ -34,9 +35,11 @@ import javax.script.SimpleScriptContext;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.DerivedColumn;
+import org.teiid.language.NamedTable;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.eval.TeiidScriptEngine;
@@ -50,21 +53,23 @@ import org.teiid.translator.TranslatorException;
 public class ObjectExecution implements ResultSetExecution {
 
 	private static final String OBJECT_NAME = "o"; //$NON-NLS-1$
-	private Select query;
-	private ObjectConnection connection;
+	protected Select query;
+	protected ObjectConnection connection;
 	private ArrayList<CompiledScript> projects;
 	private ScriptContext sc = new SimpleScriptContext();
 	private static TeiidScriptEngine scriptEngine = new TeiidScriptEngine();
 	private Iterator<Object> resultsIt = null;
+	private ObjectExecutionFactory factory;
 
 	public ObjectExecution(Select query, RuntimeMetadata metadata,
 			ObjectExecutionFactory factory, ObjectConnection connection) throws TranslatorException {
+		this.factory = factory;
 		this.query = query;
 		this.connection = connection;
 		projects = new ArrayList<CompiledScript>(query.getDerivedColumns().size());
 		for (DerivedColumn dc : query.getDerivedColumns()) {
 			Column c = ((ColumnReference) dc.getExpression()).getMetadataObject();
-			String name = getNameInSourceFromColumn(c);
+			String name = getNameInSource(c);
 			if (name.equalsIgnoreCase("this")) { //$NON-NLS-1$
 				projects.add(null);
 			} else {
@@ -81,13 +86,16 @@ public class ObjectExecution implements ResultSetExecution {
 	public void execute() throws TranslatorException {
 
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR,
-				"ObjectExecution command: " + query.toString()); //$NON-NLS-1$
+				"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
 
-		List<Object> results = executeQuery();
+		String nameInSource = getNameInSource(((NamedTable)query.getFrom().get(0)).getMetadataObject());
+		Map<?, ?> map = this.connection.getMap(nameInSource);
+		Class<?> type = this.connection.getType(nameInSource);
+	    List<Object> results = factory.search(query, map, type); 	
 
 		if (results != null && results.size() > 0) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
-					"ObjectExecution number of returned objects is : " + results.size()); //$NON-NLS-1$
+					"ObjectExecution number of returned objects is :", results.size()); //$NON-NLS-1$
 
 		} else {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,
@@ -97,18 +105,6 @@ public class ObjectExecution implements ResultSetExecution {
 		}
 
 		this.resultsIt = results.iterator();
-	}
-
-	protected List<Object> executeQuery()
-			throws TranslatorException {
-
-		LogManager
-				.logTrace(
-						LogConstants.CTX_CONNECTOR,
-						"ObjectExecution calling search strategy : " + connection.getClass().getName()); //$NON-NLS-1$
-
-		return connection.performSearch(query);
-
 	}
 
 	@Override
@@ -146,7 +142,7 @@ public class ObjectExecution implements ResultSetExecution {
 	public void cancel() throws TranslatorException {
 	}
 	
-	public static String getNameInSourceFromColumn(Column c) {
+	public static String getNameInSource(AbstractMetadataRecord c) {
 		String name = c.getNameInSource();
 		if (name == null || name.trim().isEmpty()) {
 			return c.getName();

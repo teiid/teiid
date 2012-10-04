@@ -21,16 +21,14 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
-import org.infinispan.api.BasicCacheContainer;
-import org.infinispan.manager.DefaultCacheManager;
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
+import org.teiid.language.Select;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
-import org.teiid.translator.object.ObjectPlugin;
+import org.teiid.translator.object.ObjectExecutionFactory;
 
 /**
  * InfinispanExecutionFactory is the translator that will access an Infinispan local cache.
@@ -53,45 +51,16 @@ import org.teiid.translator.object.ObjectPlugin;
  *
  */
 @Translator(name = "infinispan-cache", description = "The Infinispan Cache Translator")
-public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
+public class InfinispanExecutionFactory extends ObjectExecutionFactory {
 	private boolean supportsLuceneSearching = false;
 
-	protected BasicCacheContainer cacheContainer = null;
-	private boolean useJndi = true;
-	
 	public InfinispanExecutionFactory() {
 		super();
-	}
-	
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-		
-		String configFile = this.getConfigurationFileName();
-		String jndiName = getCacheJndiName();
-		if ( jndiName == null || jndiName.trim().length() == 0) {
-			if (configFile == null || configFile.trim().length() == 0) {
-	   			String msg = ObjectPlugin.Util
-    			.getString(
-    					"InfinispanExecutionFactory.undefinedHowToGetCache"); //$NON-NLS-1$	
-        		throw new TranslatorException(msg); 
-			}
-			useJndi = false;
-			
-		} else {
-			useJndi = true;
-		}			
-
-	}
-	
-	public boolean isAlive() {
-		return (cacheContainer != null ? true : false);
 	}
 	
 	public boolean isFullTextSearchingSupported() {
 		return this.supportsLuceneSearching;
 	}
-
 
 	/**
 	 * Indicates if Hibernate Search and Apache Lucene are used to index and
@@ -108,61 +77,28 @@ public class InfinispanExecutionFactory extends InfinispanBaseExecutionFactory {
 		this.supportsLuceneSearching = supportsLuceneSearching;
 	}
 
-
-	/**
-	 * Method for obtaining the CacheContainer. This method will be called to
-	 * create a container based on the <code>configurationFileName</code>
-	 * specified.
-	 * 
-	 * @return BasicCacheContainer
-	 * @throws TranslatorException
-	 *             if there an issue obtaining the cache
-	 * @see #getCache()
-	 */
-	protected synchronized BasicCacheContainer getCacheContainer()
-			throws TranslatorException {
-		if (this.cacheContainer != null) return this.cacheContainer;
-		
-		this.cacheContainer = createCacheContainer();
-		
-		return this.cacheContainer;
-
+	@Override
+	public boolean supportsOrCriteria() {
+		return isFullTextSearchingSupported();
 	}
 	
-	private BasicCacheContainer createCacheContainer() throws TranslatorException {
-		BasicCacheContainer container = null;
-
-		if (useJndi) {
-			Object object = findCacheUsingJNDIName();
-			if (object instanceof BasicCacheContainer) {
-				LogManager
-				.logInfo(LogConstants.CTX_CONNECTOR,
-						"=== Using CacheContainer (loaded from Jndi) ==="); //$NON-NLS-1$
-
-				return (BasicCacheContainer) object;
-			}
-			String msg = ObjectPlugin.Util.getString(
-			"InfinispanExecutionFactory.unsupportedContainerType",  //$NON-NLS-1$
-			new Object[] { object.getClass().getName(),
-					"BasicCacheContainer" });  //$NON-NLS-1$
-			throw new TranslatorException(msg);
-			
-			
-		}
-		try {
-			container = new DefaultCacheManager(
-					this.getConfigurationFileName());
-			LogManager
-					.logInfo(LogConstants.CTX_CONNECTOR,
-							"=== Using DefaultCacheManager (loaded by configuration) ==="); //$NON-NLS-1$
-		} catch (IOException e) {
-			throw new TranslatorException(e);
-		}
-		
-		return container;
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
+		return isFullTextSearchingSupported();
 	}
-
-	public void cleanUp() {
-		this.cacheContainer = null;
+	
+	@Override
+	public boolean supportsLikeCriteria() {
+		// at this point, i've been unable to get the Like to work.
+		return false;
+	}
+	
+	@Override
+	public List<Object> search(Select query, Map<?, ?> map, Class<?> type)
+			throws TranslatorException {
+		if (this.supportsLuceneSearching) {
+			return LuceneSearch.performSearch(query, map, type);
+		}
+		return super.search(query, map, type);
 	}
 }

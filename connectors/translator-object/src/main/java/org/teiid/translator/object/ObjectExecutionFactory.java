@@ -22,11 +22,9 @@
 
 package org.teiid.translator.object;
 
+import java.util.List;
 import java.util.Map;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.QueryExpression;
@@ -35,8 +33,8 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.TranslatorProperty;
 
 
 /**
@@ -46,20 +44,13 @@ import org.teiid.translator.TranslatorProperty;
  * @author vhalbert
  * 
  */
-public abstract class ObjectExecutionFactory extends
+@Translator(name = "map-cache", description = "Searches a Map for Objects")
+public class ObjectExecutionFactory extends
 		ExecutionFactory<ConnectionFactory, ObjectConnection> {
 
 	public static final int MAX_SET_SIZE = 10000;
 
-	// rootClassName identifies the name of the class that is identified by the
-	// unique key in the cache
-	private String rootClassName = null;
-	private Class<?> rootClass = null;
-	private String cacheJndiName;
-
-
 	public ObjectExecutionFactory() {
-
 		setSourceRequiredForMetadata(false);
 		setMaxInCriteriaSize(MAX_SET_SIZE);
 		setMaxDependentInPredicates(1);
@@ -69,42 +60,13 @@ public abstract class ObjectExecutionFactory extends
 		setSupportsInnerJoins(false);
 		setSupportsFullOuterJoins(false);
 		setSupportsOuterJoins(false);
-
-	}
-
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-
-		if (this.getRootClassName() == null
-				|| this.getRootClassName().trim().length() == -1) {
-			String msg = ObjectPlugin.Util.getString(
-					"ObjectExecutionFactory.rootClassNameNotDefined", //$NON-NLS-1$
-					new Object[] {});
-			throw new TranslatorException(msg); 
-		}
-
-		try {
-			rootClass = Class.forName(rootClassName.trim(), true, getClass()
-					.getClassLoader());
-
-		} catch (ClassNotFoundException e) {
-			String msg = ObjectPlugin.Util.getString(
-					"ObjectExecutionFactory.rootClassNotFound",  //$NON-NLS-1$
-					new Object[] { this.rootClassName });
-			throw new TranslatorException(msg);
-		}
-
 	}
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			ObjectConnection connection) throws TranslatorException {
-
-		
-		return new ObjectExecution((Select) command, metadata, this, (connection == null ? getConnection(null, executionContext) : connection) );
-
+		return new ObjectExecution((Select) command, metadata, this, connection);
 	}
 
 	@Override
@@ -122,11 +84,6 @@ public abstract class ObjectExecutionFactory extends
 		return false;
 	}
 
-	@Override
-	public boolean supportsConvert(int fromType, int toType) {
-		return false;
-	}
-
 	public boolean supportsCompareCriteriaEquals() {
 		return true;
 	}
@@ -136,119 +93,12 @@ public abstract class ObjectExecutionFactory extends
 	}
 
 	@Override
-	public boolean supportsLikeCriteria() {
-		// at this point, i've been unable to get the Like to work.
-		return false;
-	}
-
-	@Override
-	public boolean supportsNotCriteria() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsSubqueryInOn() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsOrderBy() {
-		return false;
-	}
-	
-	/**
-	 * Call to get the class name of the root object in the cache. This
-	 * identifies the name of the class that is identified by the unique key in
-	 * the cache
-	 * 
-	 * @return
-	 */
-	@TranslatorProperty(display = "Root ClassName of Cached Object", advanced = true)
-	public String getRootClassName() {
-		return this.rootClassName;
-	}
-
-	/**
-	 * Call to set the root class name for the cache accessed by this factory
-	 * instance.
-	 * <p>
-	 * If the root class name has already been set, subsequent calls will have
-	 * no effect.
-	 * 
-	 * @param rootClassName
-	 */
-	public void setRootClassName(String rootClassName) {
-		this.rootClassName = rootClassName;
-	}
-	
-	 /**
-     * Get the JNDI name for the  {@link Map cache}  instance that should be used as the data source.
-     * 
-     * @return the JNDI name of the {@link Map cache} instance that should be used,
-     * @see #setCacheJndiName(String)
-     */
-	@TranslatorProperty(display = "CacheJndiName", advanced = true)
-    public String getCacheJndiName() {
-        return cacheJndiName;
-    }
-
-    /**
-     * Set the JNDI name to a {@link Map cache} instance that should be used as this source.
-     * 
-     * @param jndiName the JNDI name of the {@link Map cache} instance that should be used
-     * @see #setCacheJndiName(String)
-     */
-    public void setCacheJndiName( String jndiName ) {
-        this.cacheJndiName = jndiName;
-    }
-
-	/**
-	 * Call to get the class specified by calling
-	 * {@link #setRootClassName(String)}
-	 * 
-	 * @return Class
-	 */
-	public Class<?> getRootClass() {
-		return this.rootClass;
-	}
-	
-	/**
-	 * Utility method available to all implementations to find the Cache via JNDI.
-	 * @return Object located via JNDI
-	 * @throws TranslatorException
-	 */
-	protected Object findCacheUsingJNDIName() throws TranslatorException {
-		  	
-		    Object cache = null;
-		    String jndiName = getCacheJndiName();
-		    if (jndiName != null && jndiName.trim().length() != 0) {
-		        try {
-		            Context context = null;
-	                try {
-	                    context = new InitialContext();
-	                } catch (NamingException err) {
-	                    throw new TranslatorException(err);
-	                }
-		            cache = context.lookup(jndiName);
-		            
-		            if (cache == null) {
-		    			String msg = ObjectPlugin.Util.getString(
-		    					"ObjectExecutionFactory.cacheNotFoundinJNDI", //$NON-NLS-1$
-		    					new Object[] { jndiName });
-		    			throw new TranslatorException(msg); 
-		            	
-		            } 		
-		        } catch (Exception err) {
-		            if (err instanceof RuntimeException) throw (RuntimeException)err;
-		            throw new TranslatorException(err);
-		        }
-		    } 
-		    return cache;
-	    }	
-	
-	@Override
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
+	}
+
+	public List<Object> search(Select query, Map<?, ?> map, Class<?> type) throws TranslatorException {
+		return SearchByKey.get(query.getWhere(), map, type);
 	}
 
 }

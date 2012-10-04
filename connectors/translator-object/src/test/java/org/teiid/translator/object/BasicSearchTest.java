@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.language.Select;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
@@ -41,35 +42,40 @@ public abstract class BasicSearchTest {
 	@Test public void testQueryGetAllTrades() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T"); //$NON-NLS-1$		
 		
-		performTest(command, TradesCacheSource.NUMTRADES);
+		performTest(command, TradesCacheSource.NUMTRADES, 4);
 		
 	}		
 	
 	@Test public void testTradeProjection() throws Exception {		
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId From Trade_Object.Trade as T"); //$NON-NLS-1$		
 		
-		performTest(command, TradesCacheSource.NUMTRADES);
+		performTest(command, TradesCacheSource.NUMTRADES, 1);
 		
 	}		
 	
 	@Test public void testQueryGetOneTrade() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId = '1'"); //$NON-NLS-1$
 					
-		performTest(command, 1);
+		performTest(command, 1, 2);
 		
 	}	
 	
 	@Test public void testQueryInCriteria() throws Exception {	
 		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId in ('1', '3')"); //$NON-NLS-1$
 					
-		performTest(command, 2);
+		performTest(command, 2, 2);
 		
 	}	
 	
-	protected List<Object> performTest(Select command, int rowcnt) throws Exception {
+	protected List<Object> performTest(Select command, int rowcnt, int colCount) throws Exception {
 
 		ObjectExecution exec = createExecution(command);
 		
+		return performTest(rowcnt, colCount, exec);
+	}
+
+	static List<Object> performTest(int rowcnt, int colCount, ObjectExecution exec)
+			throws TranslatorException {
 		exec.execute();
 		
 		List<Object> rows = new ArrayList<Object>();
@@ -79,6 +85,7 @@ public abstract class BasicSearchTest {
 	
 		while (row != null) {
 			rows.add(row);
+			assertEquals(colCount, row.size());
 			++cnt;
 			row = exec.next();
 		}

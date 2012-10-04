@@ -20,24 +20,25 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.translator.object.infinispan.search;
+package org.teiid.translator.object;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.infinispan.api.BasicCache;
 import org.infinispan.client.hotrod.RemoteCache;
-import org.teiid.language.Select;
+import org.teiid.core.util.Assertion;
+import org.teiid.language.Comparison;
+import org.teiid.language.Condition;
+import org.teiid.language.Expression;
+import org.teiid.language.In;
+import org.teiid.language.Literal;
+import org.teiid.language.Comparison.Operator;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectPlugin;
-import org.teiid.translator.object.infinispan.InfinispanConnectionImpl;
-import org.teiid.translator.object.search.BasicKeySearchCriteria;
-import org.teiid.translator.object.search.SearchCriterion;
 
 /**
  * SearchByKey is a simple ObjectConnection that enables querying the cache by
@@ -45,23 +46,12 @@ import org.teiid.translator.object.search.SearchCriterion;
  */
 public final class SearchByKey  {
 
-	public static List<Object> performSearch(Select command, InfinispanConnectionImpl connection)
-			throws TranslatorException {
-
-		BasicCache<Object, Object> cache = connection.getCache();
-		BasicKeySearchCriteria bksc = BasicKeySearchCriteria.getInstance(
-				connection.getFactory(), command);
-
-		return get(bksc.getCriterion(), cache, connection.getFactory().getRootClass());
-
-	}
-
-	public static List<Object> get(SearchCriterion criterion,
+	public static List<Object> get(Condition criterion,
 			Map<?, ?> cache, Class<?> rootClass)
 			throws TranslatorException {
 		List<Object> results = null;
 
-		if (criterion.getOperator() == SearchCriterion.Operator.ALL) {
+		if (criterion == null) {
 			Map<?, ?> map = cache;
 			if (cache instanceof RemoteCache<?, ?>) {
 				RemoteCache<?, ?> rc = (RemoteCache<?, ?>) cache;
@@ -76,73 +66,58 @@ public final class SearchByKey  {
 			return results;
 		}
 
-		if (criterion.getCriterion() != null) {
-			results = get(criterion.getCriterion(), cache, rootClass);
-		}
-
-		if (results == null) {
-			results = new ArrayList<Object>();
-		}
+		results = new ArrayList<Object>();
 	
-		if (criterion.getOperator().equals(SearchCriterion.Operator.EQUALS)) {
+		if (criterion instanceof Comparison) {
+			Comparison obj = (Comparison)criterion;
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
+			"Parsing Comparison criteria."); //$NON-NLS-1$
+			Comparison.Operator op = obj.getOperator();
+		
+			Assertion.assertTrue(op == Operator.EQ);
+			Expression rhs = obj.getRightExpression();
+		
+			Literal literal = (Literal)rhs;
 
-			Object value = criterion.getValue();
-
-			Object v = cache.get(value);
+			Object v = cache.get(literal.getValue());
 			if (v != null) {
 				addValue(v, results, rootClass);
 			}
-		} else if (criterion.getOperator().equals(SearchCriterion.Operator.IN)) {
+		} else {
+			Assertion.assertTrue(criterion instanceof In, "unexpected condition " + criterion); //$NON-NLS-1$
+			In obj = (In)criterion;
+			Assertion.assertTrue(!obj.isNegated());
+			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing IN criteria."); //$NON-NLS-1$
 
-			List<Object> parms = (List) criterion.getValue();
-			for (Iterator<Object> it = parms.iterator(); it.hasNext();) {
-				Object arg = it.next();
-				// the key is only supported in string format
-				Object v = cache.get(arg);
+			List<Expression> rhsList = obj.getRightExpressions();
+
+			for (Expression expr : rhsList) {
+				Literal literal = (Literal) expr;
+
+				Object v = cache.get(literal.getValue());
 				if (v != null) {
 					addValue(v, results, rootClass);
 				}
 			}
-
-		}
-
+		} 
 		return results;
-
 	}
 
 	private static void addValue(Object value, List<Object> results, Class<?> rootNodeType) throws TranslatorException {
 		if (value == null) {
 			return;
 		}
-		if (!value.getClass().equals(rootNodeType)) {
+		if (!rootNodeType.isAssignableFrom(value.getClass())) {
 			// the object obtained from the cache has to be of the same root
 			// class type, otherwise, the modeling
 			// structure won't correspond correctly
 			String msg = ObjectPlugin.Util.getString(
-					"MapCacheConnection.unexpectedObjectTypeInCache",
+					"MapCacheConnection.unexpectedObjectTypeInCache", //$NON-NLS-1$
 					new Object[] { value.getClass().getName(),
 							rootNodeType.getName() });
 
 			throw new TranslatorException(msg);			
 		}
-		
-		if (value.getClass().isArray()) {
-			List<Object> listRows = Arrays.asList((Object[]) value);
-			results.addAll(listRows);
-			return;
-		}
-
-		if (value instanceof Collection<?>) {
-			results.addAll((Collection<?>) value);
-			return;
-		}
-
-		if (value instanceof Map<?, ?>) {
-			Map<?, ?> mapRows = (Map<?, ?>) value;
-			results.addAll(mapRows.values());
-			return;
-		}
-
 		results.add(value);
 	}
 

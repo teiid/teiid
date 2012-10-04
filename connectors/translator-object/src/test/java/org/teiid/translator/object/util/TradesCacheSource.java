@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.infinispan.api.BasicCache;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.testdata.Leg;
 import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.testdata.Transaction;
@@ -40,8 +42,8 @@ import org.teiid.translator.object.testdata.Transaction;
  * @author vhalbert
  *
  */
-@SuppressWarnings("rawtypes")
-public class TradesCacheSource extends HashMap <Object, Object> {
+@SuppressWarnings("nls")
+public class TradesCacheSource extends HashMap <Object, Object> implements ObjectConnection {
 	
 	/**
 	 * 
@@ -145,5 +147,15 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 		List<Object> objs = new ArrayList<Object>(1);
 		objs.add(super.get(key));
 		return objs;
+	}
+
+	@Override
+	public Map<?, ?> getMap(String name) throws TranslatorException {
+		return this;
+	}
+
+	@Override
+	public Class<?> getType(String name) throws TranslatorException {
+		return Trade.class;
 	}
 }

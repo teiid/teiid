@@ -27,7 +27,7 @@ import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.RuntimeMetadata;
 
-
+@SuppressWarnings("nls")
 public class VDBUtility {
 
 	public static TranslationUtility TRANSLATION_UTILITY = null;

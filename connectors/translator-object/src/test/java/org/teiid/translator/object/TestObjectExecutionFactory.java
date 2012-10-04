@@ -21,7 +21,7 @@
  */
 package org.teiid.translator.object;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
@@ -33,7 +33,6 @@ import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
@@ -62,8 +61,6 @@ public class TestObjectExecutionFactory {
     }
 
 	@Test public void testFactory() throws Exception {
-		factory.setRootClassName(Trade.class.getName());
-	
 		factory.start();
 			
 		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
@@ -72,10 +69,6 @@ public class TestObjectExecutionFactory {
 	}
 	
 	@Test public void testFactoryLoadingJarClassNames() throws Exception {
-	
-		
-		factory.setRootClassName(Trade.class.getName());
-		
 		factory.start();
 			
 		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
@@ -87,8 +80,6 @@ public class TestObjectExecutionFactory {
 	@Test public void testGetMetadata() throws Exception {
 		
 		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-								
-		factory.setRootClassName(Trade.class.getName());
 		
 		factory.start();
 		

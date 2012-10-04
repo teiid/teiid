@@ -59,6 +59,7 @@ import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -799,37 +800,7 @@ public final class FunctionMethods {
 	// ================== Function = replace =====================
 
 	public static Object replace(String string, String subString, String replaceString) {
-		// Check some simple cases that require no work
-		if(subString.length() > string.length() || string.length() == 0 || subString.length() == 0) {
-			return string;
-		}
-
-		StringBuffer result = new StringBuffer();
-		int index = 0;
-
-		while(true) {
-			int newIndex = string.indexOf(subString, index);
-			if(newIndex < 0) {
-				// No more replacement sections, grab from old index to end of string
-				result.append( string.substring(index));
-
-				// Break out of loop
-				break;
-
-			}
-			// Matched the substring at newIndex
-
-			// First append section from old index to new
-			result.append( string.substring( index, newIndex));
-
-			// Then append replacement section for sub
-			result.append( replaceString );
-
-			// Then move the index counter forward
-			index = newIndex + subString.length();
-		}
-
-		return result.toString();
+		return StringUtil.replaceAll(string, subString, replaceString);
 	}
 
 	// ================== Function = insert =====================
