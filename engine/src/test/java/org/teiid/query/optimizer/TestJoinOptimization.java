@@ -52,6 +52,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings("nls")
 public class TestJoinOptimization {
@@ -1046,6 +1047,65 @@ public class TestJoinOptimization {
             		"SELECT g_0.IntKey AS c_0 FROM BQT1.SmallB AS g_0 ORDER BY c_0"}, 
             ComparisonMode.EXACT_COMMAND_STRING );
 
+    }
+    
+    @Test public void testJoinNullHandling() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities bqt1 = new BasicSourceCapabilities();
+        bqt1.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        bqt1.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.HIGH);
+        bqt1.setCapabilitySupport(Capability.QUERY_ORDERBY_NULL_ORDERING, true);
+
+        BasicSourceCapabilities bqt2 = new BasicSourceCapabilities();
+        bqt2.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        bqt2.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.HIGH);
+
+        capFinder.addCapabilities("BQT1", bqt1); //$NON-NLS-1$
+        capFinder.addCapabilities("BQT2", bqt2); //$NON-NLS-1$
+
+        String sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla full outer join bqt2.smalla on (bqt1.smalla.intkey = bqt2.smalla.intkey)"; //$NON-NLS-1$
+        
+        // can't push order by to bqt2 as there is no compensating action available.
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT BQT2.SmallA.IntKey FROM BQT2.SmallA", "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA ORDER BY BQT1.SmallA.IntKey NULLS FIRST"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // Join
+                1,      // MergeJoin
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });
+        
+        sql = "select bqt1.smalla.intkey, bqt2.smalla.intkey from bqt1.smalla left outer join bqt2.smalla on (bqt1.smalla.intkey = bqt2.smalla.intkey)"; //$NON-NLS-1$
+        
+        // can push order by to bqt2 by adding a null filter
+        plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), new String[] {"SELECT BQT2.SmallA.IntKey FROM BQT2.SmallA ORDER BY BQT2.SmallA.IntKey", "SELECT BQT1.SmallA.IntKey FROM BQT1.SmallA ORDER BY BQT1.SmallA.IntKey NULLS FIRST"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                2,      // Access
+                0,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // Join
+                1,      // MergeJoin
+                0,      // Null
+                0,      // PlanExecution
+                1,      // Project
+                1,      // Select
+                0,      // Sort
+                0       // UnionAll
+            });
     }
         
 }

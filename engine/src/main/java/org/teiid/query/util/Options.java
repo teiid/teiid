@@ -23,19 +23,18 @@
 package org.teiid.query.util;
 
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * A holder for options
  */
 public class Options {
 
-	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$ 
-	public static final String LANGUAGES_DEFAULT = "org.teiid.languagesWithoutDataRoles"; //$NON-NLS-1$
+	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$
+	public static final String PUSHDOWN_DEFAULT_NULL_ORDER = "org.teiid.pushdownDefaultNullOrder"; //$NON-NLS-1$ 
 
 	private Properties properties;
-	private Set<String> languages;
 	private boolean subqueryUnnestDefault;
+	private boolean pushdownDefaultNullOrder;
 	
 	public Properties getProperties() {
 		return properties;
@@ -43,14 +42,6 @@ public class Options {
 	
 	public void setProperties(Properties properties) {
 		this.properties = properties;
-	}
-	
-	public void setLanguages(Set<String> languages) {
-		this.languages = languages;
-	}
-	
-	public Set<String> getLanguages() {
-		return languages;
 	}
 	
 	public boolean isSubqueryUnnestDefault() {
@@ -65,5 +56,18 @@ public class Options {
 		this.subqueryUnnestDefault = s;
 		return this;
 	} 
+	
+	public boolean isPushdownDefaultNullOrder() {
+		return pushdownDefaultNullOrder;
+	}
+	
+	public void setPushdownDefaultNullOrder(boolean virtualizeDefaultNullOrdering) {
+		this.pushdownDefaultNullOrder = virtualizeDefaultNullOrdering;
+	}
+	
+	public Options pushdownDefaultNullOrder(boolean p) {
+		this.pushdownDefaultNullOrder = p;
+		return this;
+	}
 
 }

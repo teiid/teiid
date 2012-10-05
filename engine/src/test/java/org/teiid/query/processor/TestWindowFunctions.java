@@ -38,6 +38,7 @@ import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.ProjectNode;
 import org.teiid.query.processor.relational.WindowFunctionProjectNode;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.ExecutionFactory.NullOrder;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestWindowFunctions {
@@ -99,6 +100,7 @@ public class TestWindowFunctions {
     	caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
     	caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
     	caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+    	caps.setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.UNKNOWN);
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e1) over (order by e1 nulls first) as y from pm1.g1", //$NON-NLS-1$
                                       RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps),
                                       new String[] {
