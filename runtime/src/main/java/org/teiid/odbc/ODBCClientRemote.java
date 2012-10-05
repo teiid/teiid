@@ -33,7 +33,7 @@ public interface ODBCClientRemote {
 	
 	void initialized(Properties props);
 	
-	void setEncoding(String value);
+	void setEncoding(String value, boolean init);
 	
 	//	AuthenticationCleartextPassword (B)
 	void useClearTextAuthentication();

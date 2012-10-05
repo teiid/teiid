@@ -92,15 +92,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     	return this.actualMetadata.getSessionMetadata();
     }
     
-    public QueryMetadataInterface getDesignTimeMetadata() {
-    	if (isSession()) {
-    		return this.actualMetadata.getDesignTimeMetadata();
-    	}
-    	return super.getDesignTimeMetadata();
-    }
-    
     @Override
     protected QueryMetadataInterface createDesignTimeMetadata() {
+    	if (isSession()) {
+    		return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), new TempMetadataStore());
+    	}
 		return new TempMetadataAdapter(this.actualMetadata.getDesignTimeMetadata(), tempStore, materializationTables, queryNodes);
     }
     

@@ -98,7 +98,7 @@ class SourceState {
         return currentTuple;
     }
     
-    public void reset() throws TeiidComponentException {
+    public void reset() throws TeiidComponentException, TeiidProcessingException {
         this.getIterator().reset();
         this.getIterator().mark();
         this.currentTuple = null;
@@ -127,17 +127,22 @@ class SourceState {
     	return this.getTupleBuffer().getRowCount();
     }
 
-    IndexedTupleSource getIterator() throws TeiidComponentException {
+    IndexedTupleSource getIterator() throws TeiidComponentException, TeiidProcessingException {
         if (this.iterator == null) {
             if (this.buffer != null) {
                 iterator = buffer.createIndexedTupleSource();
             } else {
-                // return a TupleBatch tuplesource iterator
-                BatchIterator bi = new BatchIterator(this.source);
-                if (implicitBuffer != ImplicitBuffer.NONE) {
-                	bi.setBuffer(createSourceTupleBuffer(), implicitBuffer == ImplicitBuffer.ON_MARK);
-                }
-                this.iterator = bi;
+            	if (this.source.hasFinalBuffer()) {
+            		this.buffer = this.source.getFinalBuffer(-1);
+                    iterator = buffer.createIndexedTupleSource();
+            	} else {
+	                // return a TupleBatch tuplesource iterator
+	                BatchIterator bi = new BatchIterator(this.source);
+	                if (implicitBuffer != ImplicitBuffer.NONE) {
+	                	bi.setBuffer(createSourceTupleBuffer(), implicitBuffer == ImplicitBuffer.ON_MARK);
+	                }
+	                this.iterator = bi;
+            	}
             }
         }
         return this.iterator;
@@ -239,7 +244,7 @@ class SourceState {
 		this.maxProbeMatch = 1;
 	}
 	
-	public void setMaxProbePosition() throws TeiidComponentException {
+	public void setMaxProbePosition() throws TeiidComponentException, TeiidProcessingException {
 		this.getIterator().setPosition(this.getMaxProbeMatch());
 		this.currentTuple = null;
 	}

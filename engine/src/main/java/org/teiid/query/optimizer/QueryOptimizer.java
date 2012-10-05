@@ -82,13 +82,14 @@ public class QueryOptimizer {
 		
         boolean debug = analysisRecord.recordDebug();
         
-        TempMetadataStore tempMetadata = command.getTemporaryMetadata();
-        if (tempMetadata != null) {
-        	metadata = new TempMetadataAdapter(metadata, tempMetadata);
-        } else if (!(metadata instanceof TempMetadataAdapter)) {
+        if (!(metadata instanceof TempMetadataAdapter)) {
         	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
         }
-                
+        
+        if (context.getMetadata() == null) {
+        	context.setMetadata(metadata);
+        }
+        
         // Create an ID generator that can be used for all plans to generate unique data node IDs
         if(idGenerator == null) {
             idGenerator = new IDGenerator();

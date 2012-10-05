@@ -271,7 +271,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
         
         if (needsCorrection) {
             PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
-            projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, new ArrayList(outputSymbols));
+            projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, new ArrayList<Expression>(outputSymbols));
             childNode.addAsParent(projectNode);
             correctOutputElements(joinNode, outputSymbols, projectNode);
         }        
@@ -279,18 +279,19 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
     }
 
     private static PlanNode createSortNode(List<Expression> orderSymbols,
-                                           Collection outputElements) {
+                                           Collection<Expression> outputElements) {
         PlanNode sortNode = NodeFactory.getNewNode(NodeConstants.Types.SORT);
-        sortNode.setProperty(NodeConstants.Info.SORT_ORDER, new OrderBy(orderSymbols));
-        sortNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList(outputElements));
+        OrderBy order = new OrderBy(orderSymbols);
+		sortNode.setProperty(NodeConstants.Info.SORT_ORDER, order);
+        sortNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputElements));
         return sortNode;
     }
 
     private static void correctOutputElements(PlanNode endNode,
-                                              Collection outputElements,
+                                              Collection<Expression> outputElements,
                                               PlanNode startNode) {
         while (startNode != endNode) {
-            startNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList(outputElements));
+            startNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputElements));
             startNode = startNode.getParent();
         }
     }

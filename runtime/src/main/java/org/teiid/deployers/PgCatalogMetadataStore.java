@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Properties;
 
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -36,16 +37,17 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.resolver.util.ResolverVisitor;
-import org.teiid.translator.TranslatorException;
+import org.teiid.transport.PgBackendProtocol;
 
 public class PgCatalogMetadataStore extends MetadataFactory {
 	private static final long serialVersionUID = 2158418324376966987L;
 
-	public PgCatalogMetadataStore(String modelName, Map<String, Datatype> dataTypes) throws TranslatorException {
+	public PgCatalogMetadataStore(String modelName, Map<String, Datatype> dataTypes) {
 		super(modelName, 1, modelName, dataTypes, new Properties(), null); 
 		add_pg_namespace();			
 		add_pg_class();			
@@ -66,9 +68,11 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		FunctionMethod func = addFunction("asPGVector", "asPGVector"); //$NON-NLS-1$ //$NON-NLS-2$
 		func.setProperty(ResolverVisitor.TEIID_PASS_THROUGH_TYPE, Boolean.TRUE.toString());
 		addFunction("getOid", "getOid"); //$NON-NLS-1$ //$NON-NLS-2$
+		func = addFunction("pg_client_encoding", "pg_client_encoding"); //$NON-NLS-1$ //$NON-NLS-2$
+		func.setDeterminism(Determinism.COMMAND_DETERMINISTIC);
 	}
 	
-	private Table createView(String name) throws TranslatorException {
+	private Table createView(String name) {
 		Table t = addTable(name);
 		t.setSystem(true);
 		t.setSupportsUpdate(false);
@@ -78,7 +82,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	//index access methods
-	private Table add_pg_am() throws TranslatorException {
+	private Table add_pg_am() {
 		Table t = createView("pg_am"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("amname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -90,7 +94,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 
 	// column default values
-	private Table add_pg_attrdef() throws TranslatorException {
+	private Table add_pg_attrdef() {
 		Table t = createView("pg_attrdef"); //$NON-NLS-1$ 
 
 		addColumn("adrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -110,7 +114,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	 * table columns ("attributes")
 	 * see also {@link ODBCServerRemoteImpl} getPGColInfo for the mod calculation
 	 */
-	private Table add_pg_attribute() throws TranslatorException {
+	private Table add_pg_attribute() {
 		Table t = createView("pg_attribute"); //$NON-NLS-1$ 
 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -175,7 +179,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	// tables, indexes, sequences ("relations")
-	private Table add_pg_class() throws TranslatorException {
+	private Table add_pg_class() {
 		Table t = createView("pg_class"); //$NON-NLS-1$ 
 		
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -231,7 +235,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	// additional index information
-	private Table add_pg_index() throws TranslatorException {
+	private Table add_pg_index() {
 		Table t = createView("pg_index"); //$NON-NLS-1$ 
 		
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -275,7 +279,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 
 	// schemas
-	private Table add_pg_namespace() throws TranslatorException {
+	private Table add_pg_namespace() {
 		Table t = createView("pg_namespace"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("nspname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -289,7 +293,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	// functions and procedures
-	private Table add_pg_proc() throws TranslatorException {
+	private Table add_pg_proc() {
 		Table t = createView("pg_proc"); //$NON-NLS-1$ 
 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -355,7 +359,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 
 	// triggers
-	private Table add_pg_trigger() throws TranslatorException  {
+	private Table add_pg_trigger()  {
 		Table t = createView("pg_trigger"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("tgconstrrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -381,7 +385,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 	}
 	
 	//data types
-	private Table add_pg_type() throws TranslatorException {
+	private Table add_pg_type() {
 		Table t = createView("pg_type"); //$NON-NLS-1$ 
 		// Data type name
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
@@ -452,7 +456,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;		
 	}
 	
-	private Table add_pg_database() throws TranslatorException  {
+	private Table add_pg_database()  {
 		Table t = createView("pg_database"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("datname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -478,7 +482,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;
 	}
 	
-	private Table add_pg_user() throws TranslatorException  {
+	private Table add_pg_user()  {
 		Table t = createView("pg_user"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("usename", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -493,7 +497,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;
 	}
 	
-	private Table add_matpg_relatt() throws TranslatorException  {
+	private Table add_matpg_relatt()  {
 		Table t = createView("matpg_relatt"); //$NON-NLS-1$ 
 		addColumn("attrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("attnum", DataTypeManager.DefaultDataTypes.SHORT, t); //$NON-NLS-1$ 
@@ -514,7 +518,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;
 	}
 	
-	private Table add_matpg_datatype() throws TranslatorException  {
+	private Table add_matpg_datatype()  {
 		Table t = createView("matpg_datatype"); //$NON-NLS-1$ 
 		addColumn("oid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		addColumn("typname", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
@@ -537,7 +541,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		return t;
 	}	
 	
-	private FunctionMethod addFunction(String javaFunction, String name) throws TranslatorException {
+	private FunctionMethod addFunction(String javaFunction, String name) {
 		Method[] methods = FunctionMethods.class.getMethods();
 		for (Method method : methods) {
 			if (!method.getName().equals(javaFunction)) {
@@ -579,6 +583,19 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 			VDBMetaData metadata = (VDBMetaData) cc.getVdb();
 			TransformationMetadata tm = metadata.getAttachment(TransformationMetadata.class);
 			return tm.getMetadataStore().getOid(uid);
+		}
+		
+		public static String pg_client_encoding(org.teiid.CommandContext cc) {
+			SessionMetadata session = (SessionMetadata)cc.getSession();
+			ODBCServerRemoteImpl server = session.getAttachment(ODBCServerRemoteImpl.class);
+			String encoding = null;
+			if (server != null) {
+				encoding = server.getEncoding();
+			}
+			if (encoding == null) {
+				return PgBackendProtocol.DEFAULT_ENCODING;
+			}
+			return encoding;
 		}
 	}
 }

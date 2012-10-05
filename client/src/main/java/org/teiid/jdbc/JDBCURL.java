@@ -69,9 +69,9 @@ public class JDBCURL {
 		return result;
 	}
 	
-    public static final Set<String> KNOWN_PROPERTIES = getKnownProperties();
+    public static final Map<String, String> KNOWN_PROPERTIES = getKnownProperties();
     
-    private static Set<String> getKnownProperties() {
+    private static Map<String, String> getKnownProperties() {
     	Set<String> props = new HashSet<String>(Arrays.asList(
     	        BaseDataSource.APP_NAME,
     	        BaseDataSource.VDB_NAME,
@@ -87,7 +87,11 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
     	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS));
     	props.addAll(EXECUTION_PROPERTIES.keySet());
-    	return Collections.unmodifiableSet(props);
+    	Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+    	for (String string : props) {
+			result.put(string, string);
+		}
+    	return Collections.unmodifiableMap(result);
     }
     
     private String vdbName;
@@ -290,11 +294,10 @@ public class JDBCURL {
     }
 
     public static String getValidKey(String key) {
-    	for (String prop : KNOWN_PROPERTIES) {
-    		if (prop.equalsIgnoreCase(key)) {
-    			return prop;
-    		}
-        }
+    	String result = KNOWN_PROPERTIES.get(key);
+    	if (result != null) {
+    		return result;
+    	}
     	return key;
     }
     

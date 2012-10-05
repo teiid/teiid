@@ -86,14 +86,12 @@ public class TestStatement {
 	
 	@Test public void testSetStatement() throws Exception {
 		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
-		Properties p = new Properties();
-		Mockito.stub(conn.getExecutionProperties()).toReturn(p);
 		StatementImpl statement = new StatementImpl(conn, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 		assertFalse(statement.execute("set foo bar")); //$NON-NLS-1$
-		assertEquals("bar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
+		Mockito.verify(conn).setExecutionProperty("foo", "bar");
 		
 		assertFalse(statement.execute("set foo 'b''ar'")); //$NON-NLS-1$
-		assertEquals("b'ar", p.get("foo")); //$NON-NLS-1$ //$NON-NLS-2$
+		Mockito.verify(conn).setExecutionProperty("foo", "b'ar");
 	}
 	
 	@Test public void testSetPayloadStatement() throws Exception {

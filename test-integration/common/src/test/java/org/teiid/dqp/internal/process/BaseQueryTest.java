@@ -56,9 +56,6 @@ public abstract class BaseQueryTest extends TestCase {
         
     protected void doProcess(QueryMetadataInterface metadata, String sql, CapabilitiesFinder capFinder, ProcessorDataManager dataManager, List[] expectedResults, boolean debug) throws Exception {
     	CommandContext context = createCommandContext();
-    	if (context.getMetadata() == null) {
-    		context.setMetadata(metadata);
-    	}
         Command command = TestOptimizer.helpGetCommand(sql, metadata, null);
 
         // plan

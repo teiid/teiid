@@ -1047,5 +1047,5 @@ public class TestJoinOptimization {
             ComparisonMode.EXACT_COMMAND_STRING );
 
     }
-        
+    
 }
