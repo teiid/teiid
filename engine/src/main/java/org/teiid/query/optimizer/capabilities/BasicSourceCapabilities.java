@@ -29,7 +29,6 @@ import java.util.TreeMap;
 
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ExecutionFactory.Format;
-import org.teiid.translator.ExecutionFactory.NullOrder;
 
 /**
  */
@@ -46,8 +45,6 @@ public class BasicSourceCapabilities implements SourceCapabilities, Serializable
      * Construct a basic capabilities object.
      */
     public BasicSourceCapabilities() {
-    	//for test compatibility we'll assume low, this does get replaced by a proper value at runtime
-    	setSourceProperty(Capability.QUERY_ORDERBY_DEFAULT_NULL_ORDER, NullOrder.LOW);
     }
 
     public boolean supportsCapability(Capability capability) {

@@ -34,11 +34,9 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
@@ -50,19 +48,15 @@ import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.sql.lang.CompareCriteria;
-import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.IsNullCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
-import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.translator.ExecutionFactory.NullOrder;
 
 
 /**
@@ -255,40 +249,12 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
                 joinNode.setProperty(joinNode.getFirstChild() == childNode ? NodeConstants.Info.IS_LEFT_DISTINCT : NodeConstants.Info.IS_RIGHT_DISTINCT, true);
         	}
 	        if (attemptPush && RuleRaiseAccess.canRaiseOverSort(sourceNode, metadata, capFinder, sortNode, null, false)) {
-	        	boolean push = true;
-	        	Object model = RuleRaiseAccess.getModelIDFromAccess(sourceNode, metadata);
-				NullOrder order = CapabilitiesUtil.getDefaultNullOrder(model, metadata, capFinder);
-	        	if (order != NullOrder.LOW && order != NullOrder.FIRST) {
-	        		//TODO: check the metadata and query structure to see if nulls are possible	        		
-	        		JoinType joinType = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
-	        		if (joinType == JoinType.JOIN_INNER || joinType == JoinType.JOIN_SEMI || ((joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_ANTI_SEMI) && joinNode.getLastChild() == childNode)) {
-	        			//just filter nulls on the teiid side
-		        		CompoundCriteria crit = new CompoundCriteria();
-		        		for (Expression expression : orderSymbols) {
-		        			IsNullCriteria inc = new IsNullCriteria((Expression) expression.clone());
-		        			inc.setNegated(true);
-							crit.addCriteria(inc);
-						}
-		        		PlanNode critNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		        		critNode.setProperty(NodeConstants.Info.OUTPUT_COLS, new ArrayList<Expression>(outputSymbols));
-		        		critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
-		        		sourceNode.addAsParent(critNode);
-	        		} else if (CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_NULL_ORDERING, model, metadata, capFinder)) {
-		        		for (OrderByItem item : ((OrderBy)sortNode.getProperty(NodeConstants.Info.SORT_ORDER)).getOrderByItems()) {
-	        				item.setNullOrdering(NullOrdering.FIRST);
-	        			}
-	        		} else {
-	        			push = false;
-	        		}
+	            sourceNode.getFirstChild().addAsParent(sortNode);
+	            
+	            if (needsCorrection) {
+	                correctOutputElements(joinNode, outputSymbols, sortNode);
 	            }
-	        	if (push) {
-		            sourceNode.getFirstChild().addAsParent(sortNode);
-		            
-		            if (needsCorrection) {
-		                correctOutputElements(joinNode, outputSymbols, sortNode);
-		            }
-		            return true;
-	        	}
+	            return true;
 	        }
         } else if (sourceNode.getType() == NodeConstants.Types.GROUP) {
         	sourceNode.addAsParent(sortNode);
