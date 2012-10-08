@@ -14,6 +14,7 @@ To build Teiid
 - install JDK 1.6 or higher
 - install maven 3 - http://maven.apache.org/download.html
 - Create a github account and fork Teiid 
+
 	git clone https://github.com/<yourname>/teiid.git
 	cd teiid
 	mvn clean install -P release
