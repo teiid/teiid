@@ -15,9 +15,8 @@ To build Teiid
 - install maven 3 - http://maven.apache.org/download.html
 - Create a github account and fork Teiid 
 
-	git clone https://github.com/<yourname>/teiid.git
-	cd teiid
-	mvn clean install -P release
+	$ git clone https://github.com/<yourname>/teiid.git
+	$ cd teiid
+	$ mvn clean install -P release
 
 you can find the deployment artifacts in the "teiid/build/target" directory once the build is completed.
-
