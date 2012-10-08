@@ -453,10 +453,9 @@ public class MetadataFactory implements Serializable {
 		FunctionMethod func = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
 		setUUID(func);
 		getSchema().addFunction(func);
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		func.setInvocationMethod(method.getName());
 		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
-		func.setClassloader(classLoader);
+		func.setMethod(method);
 		func.setInvocationClass(method.getDeclaringClass().getName());
 		func.setNullOnNull(nullOnNull);
 		return func;

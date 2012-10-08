@@ -25,7 +25,6 @@ package org.teiid.query.function.source;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
@@ -34,8 +33,8 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
-import org.teiid.query.function.FunctionMetadataSource;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.SourceSystemFunctions;
 
@@ -44,20 +43,18 @@ import org.teiid.translator.SourceSystemFunctions;
  * This metadata source has metadata for the hard-coded system functions.  All
  * system functions are described by this metadata.
  */
-public class SystemSource implements FunctionMetadataSource, FunctionCategoryConstants {
+public class SystemSource extends UDFSource implements FunctionCategoryConstants {
 
     /** The name of the invocation class for all of the system functions. */
     private static final String FUNCTION_CLASS = FunctionMethods.class.getName(); 
     private static final String XML_FUNCTION_CLASS = XMLSystemFunctions.class.getName(); 
     private static final String SECURITY_FUNCTION_CLASS = SecuritySystemFunctions.class.getName(); 
     
-    /** Cached list of system function metadata, created in constructor */
-    private List<org.teiid.metadata.FunctionMethod> functions = new ArrayList<org.teiid.metadata.FunctionMethod>();
-    
     /**
      * Construct a source of system metadata.
      */
     public SystemSource(boolean allowEnvFunction) {
+    	super(new ArrayList<FunctionMethod>());
 		// +, -, *, /
         addArithmeticFunction(SourceSystemFunctions.ADD_OP, QueryPlugin.Util.getString("SystemSource.Add_desc"), "plus", QueryPlugin.Util.getString("SystemSource.Add_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
         addArithmeticFunction(SourceSystemFunctions.SUBTRACT_OP, QueryPlugin.Util.getString("SystemSource.Subtract_desc"), "minus", QueryPlugin.Util.getString("SystemSource.Subtract_result_desc")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
@@ -1092,16 +1089,6 @@ public class SystemSource implements FunctionMetadataSource, FunctionCategoryCon
     public Collection<org.teiid.metadata.FunctionMethod> getFunctionMethods() {
         return this.functions;
 	}
-    
-    /**
-     * Sources are returned from the system classpath.
-     * @param className Name of class
-     * @return Class reference  
-     * @throws ClassNotFoundException If class could not be found
-     */
-    public Class<?> getInvocationClass(String className, ClassLoader classloader) throws ClassNotFoundException {
-        return Class.forName(className, true, classloader);    
-    }
     
     public static FunctionMethod createSyntheticMethod(String name, String description, String category, 
             String invocationClass, String invocationMethod, FunctionParameter[] inputParams, 

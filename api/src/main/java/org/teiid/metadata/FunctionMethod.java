@@ -22,6 +22,7 @@
 
 package org.teiid.metadata;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -102,13 +103,13 @@ public class FunctionMethod extends AbstractMetadataRecord {
     private String invocationMethod;
     private boolean nullOnNull;
     private AggregateAttributes aggregateAttributes;
+    private transient Method method;
     
     private Determinism determinism = Determinism.DETERMINISTIC;
     
     protected List<FunctionParameter> inParameters = new ArrayList<FunctionParameter>(2);
     private FunctionParameter outputParameter;
     private Schema parent;
-    private ClassLoader classLoader;
         
     public FunctionMethod() {
     }
@@ -449,14 +450,6 @@ public class FunctionMethod extends AbstractMetadataRecord {
     	return parent;
     }
     
-    public ClassLoader getClassLoader() {
-    	return this.classLoader;
-    }
-    
-    public void setClassloader(ClassLoader classloader) {
-    	this.classLoader = classloader;
-    }
-    
     /**
      * Gets the {@link AggregateAttributes} for this function if it 
      * represents an aggregate function.  Must be null for non-aggregates.
@@ -508,6 +501,14 @@ public class FunctionMethod extends AbstractMetadataRecord {
 			aa.setDecomposable(decomposable);
 			function.setAggregateAttributes(aa);
 		}
+	}
+	
+	public Method getMethod() {
+		return method;
+	}
+	
+	public void setMethod(Method method) {
+		this.method = method;
 	}
 
 }
