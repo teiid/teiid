@@ -561,32 +561,31 @@ public final class FunctionMethods {
      * @throws FunctionExecutionException
      */
     public static Object timestampDiff(String intervalType, Timestamp ts1Obj, Timestamp ts2Obj)  {
-        long ts1 = ts1Obj.getTime() / 1000 * 1000000000 + ts1Obj.getNanos();
-        long ts2 = ts2Obj.getTime() / 1000 * 1000000000 + ts2Obj.getNanos();
+        long ts1 = ts1Obj.getTime() / 1000;
+        long ts2 = ts2Obj.getTime() / 1000;
         
         long tsDiff = ts2 - ts1;
 
         long count = 0;
         if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_FRAC_SECOND)) {
-            count = tsDiff;
+            count = tsDiff * 1000000000 + ts2Obj.getNanos() - ts1Obj.getNanos();
         } else { 
-        	tsDiff = tsDiff / 1000000; //convert to milliseconds
             if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_SECOND)) {
-                count = tsDiff / 1000;
+                count = tsDiff;
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MINUTE)) {
-                count = (tsDiff / 1000) / 60;
+                count = tsDiff / 60;
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
-                count = (tsDiff / 1000) / (60*60);
+                count = tsDiff / (60*60);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY)) {
-                count = (tsDiff / 1000) / (60*60*24);
+                count = tsDiff / (60*60*24);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
-                count = (tsDiff / 1000) / (60*60*24*7);
+                count = tsDiff / (60*60*24*7);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_MONTH)) {
-                count = (tsDiff / 1000) / (60*60*24*30);
+                count = tsDiff / (60*60*24*30);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_QUARTER)) {
-                count = (tsDiff / 1000) / (60*60*24*91);
+                count = tsDiff / (60*60*24*91);
             } else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_YEAR)) {
-                count = (tsDiff / 1000) / (60*60*24*365);
+                count = tsDiff / (60*60*24*365);
             }    
         }
         return new Long(count);

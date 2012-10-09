@@ -24,10 +24,13 @@ package org.teiid.query.function;
 
 import static org.junit.Assert.*;
 
+import java.sql.Timestamp;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
@@ -62,6 +65,12 @@ public class TestFunctionMethods {
 	@Test public void testIso8601Week2() {
 		assertEquals(1, FunctionMethods.dayOfWeek(TimestampUtil.createDate(111, 10, 28)));
 	}
-
-
+	
+	
+	@Test public void testTimestampDiffTimeStamp_ErrorUsingEndDate2304() throws Exception {
+		assertEquals(Long.valueOf(106752), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_DAY, 
+				new Timestamp(TimestampUtil.createDate(112, 0, 1).getTime()),
+				new Timestamp(TimestampUtil.createDate(404, 3, 13).getTime())));
+	}
+		 
 }
