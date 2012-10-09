@@ -36,8 +36,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
@@ -1513,6 +1513,16 @@ public class SQLStringVisitor extends LanguageVisitor {
         	append(SPACE);
         	append(exceptionExpression.getParent());
     	}
+    }
+    
+    @Override
+    public void visit(ReturnStatement obj) {
+    	append(RETURN);
+    	if (obj.getExpression() != null) {
+    		append(SPACE);
+    		visitNode(obj.getExpression());
+    	}
+    	append(Tokens.SEMICOLON);
     }
 
     public void visit( BranchingStatement obj ) {

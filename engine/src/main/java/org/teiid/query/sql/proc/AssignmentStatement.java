@@ -153,7 +153,7 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
 	 * @return Deep clone 
 	 */
 	public Object clone() {
-		AssignmentStatement clone = new AssignmentStatement((ElementSymbol) this.variable.clone(), (Expression) this.value.clone());
+		AssignmentStatement clone = new AssignmentStatement(this.variable.clone(), (Expression) this.value.clone());
 		return clone;
 	}
 
@@ -201,7 +201,10 @@ public class AssignmentStatement extends Statement implements ExpressionStatemen
     
     @Override
     public Class<?> getExpectedType() {
-    	return getVariable().getType();
+    	if (this.variable == null) {
+    		return null;
+    	}
+    	return this.variable.getType();
     }
     
       

@@ -73,7 +73,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
-@SuppressWarnings({"unchecked", "nls"})
+@SuppressWarnings({"unchecked", "rawtypes", "nls"})
 public class TestProcedureProcessor {
 	
     public static ProcessorPlan getProcedurePlan(String userQuery, QueryMetadataInterface metadata) throws Exception {
@@ -2064,6 +2064,24 @@ public class TestProcedureProcessor {
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         List[] expected = new List[] { Arrays.asList("a", "a") }; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    @Test public void testReturnStatement() throws Exception {
+    	String ddl = "create virtual procedure proc (OUT a string RESULT, z STRING) returns table (x string, y string) as begin declare string x = z; select x without return; if (z = 'a') return 2; else if (z = 'b') return; begin select x, x; end end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+        String sql = "{? = call proc('a')}"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        List[] expected = new List[] { Arrays.asList(null, null, "2") }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+        
+        sql = "{? = call proc('b')}"; //$NON-NLS-1$
+        plan = getProcedurePlan(sql, tm);
+        expected = new List[] { Arrays.asList(null, null, null) }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+
     }
 
     private static final boolean DEBUG = false;

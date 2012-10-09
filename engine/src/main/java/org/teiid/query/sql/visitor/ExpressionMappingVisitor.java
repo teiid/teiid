@@ -40,6 +40,7 @@ import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.AssignmentStatement;
 import org.teiid.query.sql.proc.ExceptionExpression;
+import org.teiid.query.sql.proc.ReturnStatement;
 import org.teiid.query.sql.symbol.*;
 
 
@@ -459,6 +460,13 @@ public class ExpressionMappingVisitor extends LanguageVisitor {
     	}
     	if (exceptionExpression.getParent() != null) {
     		exceptionExpression.setParent(replaceExpression(exceptionExpression.getParent()));
+    	}
+    }
+    
+    @Override
+    public void visit(ReturnStatement obj) {
+    	if (obj.getExpression() != null) {
+    		obj.setExpression(replaceExpression(obj.getExpression()));
     	}
     }
     

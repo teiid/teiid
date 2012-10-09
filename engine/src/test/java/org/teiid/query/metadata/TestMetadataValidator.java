@@ -319,48 +319,48 @@ public class TestMetadataValidator {
 	@Test public void testInvalidVarArgs() throws Exception {
 		// note here the unique here does not matter for non-existent reference columns, only primary key counted.
 		String ddl = "CREATE FOREIGN FUNCTION f1(VARIADIC e1 integer, e2 varchar) RETURNS varchar;";
-		
-		buildModel("pm1", true, this.vdb, this.store, ddl);
-		
-		buildTransformationMetadata();
-		
-		ValidatorReport report = new ValidatorReport();
-		report = new MetadataValidator().validate(this.vdb, this.store);
-		assertTrue(printError(report), report.hasItems());
+		helpTest(ddl, true);
 	}
 	
 	@Test public void testFBIResolveError() throws Exception {
 		String ddl = "CREATE view G1(e1 integer, e2 varchar, CONSTRAINT fbi INDEX (UPPER(e3))) options (materialized true) as select 1, 'a'";
-
-		buildModel("pm1", true, this.vdb, this.store, ddl);
-		
-		buildTransformationMetadata();
-		
-		ValidatorReport report = new ValidatorReport();
-		report = new MetadataValidator().validate(this.vdb, this.store);
-		assertTrue(printError(report), report.hasItems());
+		helpTest(ddl, true);
 	}
 	
 	@Test public void testFBISubquery() throws Exception {
 		String ddl = "CREATE view G1(e1 integer, e2 varchar, CONSTRAINT fbi INDEX ((select 1))) options (materialized true) as select 1, 'a'";
-
-		buildModel("pm1", true, this.vdb, this.store, ddl);
-		
-		buildTransformationMetadata();
-		
-		ValidatorReport report = new ValidatorReport();
-		report = new MetadataValidator().validate(this.vdb, this.store);
-		assertTrue(printError(report), report.hasItems());
+		helpTest(ddl, true);
 	}
 	
     @Test public void testResultSet() throws Exception {
     	String ddl = "create virtual procedure vproc (x integer) returns table (y integer) as begin if (x = 1) select 1; else select 1, 2; end;";
+    	helpTest(ddl, true);
+    }
+    
+    @Test public void testReturnResolving() throws Exception {
+    	String ddl = "create procedure proc (x integer) returns string as return x;\n";
+		helpTest(ddl, false);
+    }
+    
+    @Test public void testReturnResolving1() throws Exception {
+    	String ddl = "create procedure proc (x integer) as return x;\n";
+		helpTest(ddl, true);
+    }
+
+	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, ddl);
 		
 		buildTransformationMetadata();
 		
 		ValidatorReport report = new ValidatorReport();
 		report = new MetadataValidator().validate(this.vdb, this.store);
-		assertTrue(printError(report), report.hasItems());
-    }
+		if (expectErrors) {
+			assertTrue(printError(report), report.hasItems());
+		} else {
+			assertFalse(printError(report), report.hasItems());
+		}
+		return report;
+	}
+
+    
 }

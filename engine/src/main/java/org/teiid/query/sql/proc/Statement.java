@@ -92,6 +92,8 @@ public abstract class Statement implements LanguageObject {
     public static final int TYPE_COMPOUND = 11;
     
     public static final int TYPE_LEAVE = 12;
+
+	public static final int TYPE_RETURN = 13;
     
 	/**
 	 * Return type of statement to make it easier to build switch statements by statement type.

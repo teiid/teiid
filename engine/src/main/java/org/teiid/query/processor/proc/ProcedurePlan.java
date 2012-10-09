@@ -42,11 +42,11 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ArrayImpl;
@@ -55,8 +55,8 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.DataTierTupleSource;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
@@ -801,6 +801,9 @@ public class ProcedurePlan extends ProcessorPlan {
     }
                
     public Program peek() {
+    	if (this.programs.isEmpty()) {
+    		return null;
+    	}
         return programs.peek();
     }
     

@@ -41,13 +41,13 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
+import org.teiid.core.types.Transform;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.language.SQLConstants;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -59,15 +59,15 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
-import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria.PlannedResult;
+import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.LanguageObject.Util;
+import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.PredicateCriteria.Negatable;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
@@ -79,10 +79,10 @@ import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
-import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateMapping;
@@ -312,6 +312,7 @@ public class QueryRewriter {
             case Statement.TYPE_ERROR: 
             case Statement.TYPE_DECLARE:
             case Statement.TYPE_ASSIGNMENT:
+            case Statement.TYPE_RETURN:
 				ExpressionStatement exprStmt = (ExpressionStatement) statement;
 				// replace variables to references, these references are later
 				// replaced in the processor with variable values

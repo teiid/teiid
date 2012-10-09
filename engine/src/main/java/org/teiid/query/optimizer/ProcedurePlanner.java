@@ -196,11 +196,15 @@ public final class ProcedurePlanner implements CommandPlanner {
 		switch(stmtType) {
 			case Statement.TYPE_ASSIGNMENT:
             case Statement.TYPE_DECLARE:
+            case Statement.TYPE_RETURN:
             {
+            	AssignmentStatement assignStmt = (AssignmentStatement)statement;
+            	
+            	if (stmtType == Statement.TYPE_RETURN && assignStmt.getVariable() == null) {
+                	return new ReturnInstruction();
+                }
                 AssignmentInstruction assignInstr = new AssignmentInstruction();
                 instruction = assignInstr;
-                
-                AssignmentStatement assignStmt = (AssignmentStatement)statement;
                 
                 assignInstr.setVariable(assignStmt.getVariable());
                 
@@ -208,6 +212,10 @@ public final class ProcedurePlanner implements CommandPlanner {
                 assignInstr.setExpression(asigExpr);
                 if(debug) {
                 	analysisRecord.println("\tASSIGNMENT\n" + statement); //$NON-NLS-1$
+                }
+                if (stmtType == Statement.TYPE_RETURN) {
+                	ReturnInstruction ri = new ReturnInstruction();
+                	instruction = new ProgramInstruction[] {assignInstr, ri};
                 }
 				break;
             }

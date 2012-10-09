@@ -1086,6 +1086,6 @@ public class TestProcedureResolving {
         sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
         assertEquals("EXEC proc(1)", sp.toString());
         assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(2).getExpression());
-    }
+    }    
     
 }

@@ -1716,5 +1716,9 @@ public class TestSQLStringVisitor {
     	Array array = new Array(TypeFacility.RUNTIME_TYPES.INTEGER, Arrays.asList(new ElementSymbol("e1"), new Constant(1)));
         helpTest(array, "(e1, 1)");             //$NON-NLS-1$
     }
+    
+    @Test public void testReturnStatement() throws QueryParserException {
+		helpTest(QueryParser.getQueryParser().parseProcedure("begin if (true) return 1; return; end", false), "CREATE VIRTUAL PROCEDURE\nBEGIN\nIF(TRUE)\nBEGIN\nRETURN 1;\nEND\nRETURN;\nEND");
+    }
 
 }

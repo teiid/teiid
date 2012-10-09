@@ -147,4 +147,6 @@ public abstract class LanguageVisitor {
 	public void visit(ObjectTable objectTable) {}
 
 	public void visit(ExceptionExpression obj) {}
+
+	public void visit(ReturnStatement obj) {}
 }

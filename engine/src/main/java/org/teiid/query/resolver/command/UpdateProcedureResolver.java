@@ -221,6 +221,7 @@ public class UpdateProcedureResolver implements CommandResolver {
             case Statement.TYPE_ERROR:
             case Statement.TYPE_ASSIGNMENT:
             case Statement.TYPE_DECLARE:
+            case Statement.TYPE_RETURN:
 				ExpressionStatement exprStmt = (ExpressionStatement) statement;
                 //first resolve the value.  this ensures the value cannot use the variable being defined
             	if (exprStmt.getExpression() != null) {
@@ -232,17 +233,30 @@ public class UpdateProcedureResolver implements CommandResolver {
             	}
                 
                 //second resolve the variable
-                if(statement.getType() == Statement.TYPE_DECLARE) {
-                    collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
-                } else if (statement.getType() == Statement.TYPE_ASSIGNMENT) {
-                	AssignmentStatement assStmt = (AssignmentStatement)statement;
+            	switch (statement.getType()) {
+            	case Statement.TYPE_DECLARE:
+            		collectDeclareVariable((DeclareStatement)statement, variables, metadata, externalGroups);
+            		break;
+            	case Statement.TYPE_ASSIGNMENT:
+            		AssignmentStatement assStmt = (AssignmentStatement)statement;
                     ResolverVisitor.resolveLanguageObject(assStmt.getVariable(), null, externalGroups, metadata);
                     if (!metadata.elementSupports(assStmt.getVariable().getMetadataID(), SupportConstants.Element.UPDATE)) {
                          throw new QueryResolverException(QueryPlugin.Event.TEIID30121, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30121, assStmt.getVariable()));
                     }
                     //don't allow variable assignments to be external
                     assStmt.getVariable().setIsExternalReference(false);
-                }
+                    break;
+            	case Statement.TYPE_RETURN:
+            		ReturnStatement rs = (ReturnStatement)statement;
+            		if (rs.getExpression() != null) {
+            			if (command.getReturnVariable() == null) {
+            				throw new QueryResolverException(QueryPlugin.Event.TEIID31125, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31125, rs));
+            			}
+            			rs.setVariable(command.getReturnVariable().clone());
+            		}
+            		//else - we don't currently require the use of return for backwards compatibility
+            		break;
+            	}
                 
                 //third ensure the type matches
                 if (exprStmt.getExpression() != null) {

@@ -1021,7 +1021,8 @@ Statement delimitedStatement(ParseInfo info) :
       stmt = errorStatement(info) |
       stmt = raiseStatement(info) |
 	  stmt = declareStatement(info) |
-	  stmt = branchingStatement(info)
+	  stmt = branchingStatement(info) |
+	  stmt = returnStatement(info)
 	 )
 	 <SEMICOLON>
 	 {
@@ -1089,6 +1090,22 @@ BranchingStatement branchingStatement(ParseInfo info) :
  	    breakStmt.setMode(BranchingStatement.BranchingMode.valueOf(mode.image.toUpperCase()));
  	    breakStmt.setLabel(label);
  		return breakStmt;
+ 	}
+} 	
+
+/*
+name=return statement
+description=A return statement.
+example={code:sql}RETURN 1{code}
+*/
+ReturnStatement returnStatement(ParseInfo info) :
+{
+    Expression ex = null;
+}
+{
+ 	<RETURN> [ex = expression(info)]
+ 	{
+ 	    return new ReturnStatement(ex);
  	}
 } 	
 

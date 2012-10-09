@@ -41,10 +41,11 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TempMetadataID.Type;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.GroupContext;
@@ -247,10 +248,11 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	
 	/**
 	 * Set the appropriate "external" metadata for the given command
+	 * @throws QueryResolverException 
 	 */
 	public static void findChildCommandMetadata(Command currentCommand,
 			GroupSymbol container, int type, QueryMetadataInterface metadata)
-			throws QueryMetadataException, TeiidComponentException {
+			throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 		//find the childMetadata using a clean metadata store
 	    TempMetadataStore childMetadata = new TempMetadataStore();
 	    TempMetadataAdapter tma = new TempMetadataAdapter(metadata, childMetadata);
@@ -287,11 +289,17 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		                ElementSymbol symbol = param.getParameterSymbol();
 		                tempElements.add(symbol);
 		                updatable[i++] = param.getParameterType() != ParameterInfo.IN;  
+		                if (param.getParameterType() == ParameterInfo.RETURN_VALUE) {
+		                	cupc.setReturnVariable(symbol);
+		                }
 		            } else {
 		            	rsColumns = param.getResultSetColumns();
 		            }
 		        }
-		        ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+		        GroupSymbol gs = ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
+		        if (cupc.getReturnVariable() != null) {
+		        	ResolverVisitor.resolveLanguageObject(cupc.getReturnVariable(), Arrays.asList(gs), metadata);
+		        }
 		        cupc.setResultSetColumns(rsColumns);
 		        //the relational planner will override this with the appropriate value
 		        cupc.setProjectedSymbols(rsColumns);
