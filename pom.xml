@@ -41,9 +41,9 @@
         <version.junit>4.10</version.junit>
 	</properties>
 	<scm>
-        <connection>scm:svn:https://anonsvn.jboss.org/repos/teiid/trunk</connection>
-		<developerConnection>scm:svn:https://svn.jboss.org/repos/teiid/trunk</developerConnection>
-		<url>http://anonsvn.jboss.org/repos/teiid/trunk</url>
+        <connection>scm:git:git://github.com/teiid/teiid.git</connection>
+        <developerConnection>scm:git:git@github.com:teiid/teiid.git</developerConnection>
+        <url>http://github.com/teiid/teiid</url>
 	</scm>
 	<licenses>
 		<license>
@@ -246,7 +246,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.4</version>
+			<version>${version.junit}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
