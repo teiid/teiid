@@ -61,8 +61,8 @@ public class FakeFunctionMetadataSource implements FunctionMetadataSource {
         return methods;
     }
     
-    public Class<?> getInvocationClass(String className, ClassLoader cl) throws ClassNotFoundException { 
-        return Class.forName(className, true, cl); 
+    public Class<?> getInvocationClass(String className) throws ClassNotFoundException { 
+        return Class.forName(className, true, this.getClass().getClassLoader()); 
     }
     
     // dummy function

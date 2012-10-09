@@ -81,8 +81,8 @@ public class CompositeVDB {
 	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
 		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
-			for (Map.Entry<String, Collection<FunctionMethod>> entry : udf.getFunctions().entrySet()) {
-				udfs.add(new FunctionTree(entry.getKey(), new UDFSource(entry.getValue()), true, udf.getClassLoader()));
+			for (Map.Entry<String, UDFSource> entry : udf.getFunctions().entrySet()) {
+				udfs.add(new FunctionTree(entry.getKey(), entry.getValue(), true));
 			}
 		}
 		
@@ -91,7 +91,11 @@ public class CompositeVDB {
 			compositeStore.merge(s);
 			for (Schema schema:s.getSchemas().values()) {
 				if (!schema.getFunctions().isEmpty()) {
-					udfs.add(new FunctionTree(schema.getName(), new UDFSource(schema.getFunctions().values()), true, udf.getClassLoader()));
+					UDFSource source = new UDFSource(schema.getFunctions().values());
+					if (udf != null) {
+						source.setClassLoader(udf.getClassLoader());
+					}
+					udfs.add(new FunctionTree(schema.getName(), source, true));
 				}
 			}
 		}

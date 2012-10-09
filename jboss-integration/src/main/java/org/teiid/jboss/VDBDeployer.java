@@ -39,7 +39,6 @@ import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
-import org.jboss.modules.Module;
 import org.jboss.modules.ModuleClassLoader;
 import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.Service;
@@ -136,15 +135,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		deployment.addAttchment(ClassLoader.class, classLoader);
 		deployment.addAttchment(ScriptEngineManager.class, new ScriptEngineManager(classLoader));
 		
-		// check if this is a VDB with index files, if there are then build the TransformationMetadata
 		UDFMetaData udf = deploymentUnit.removeAttachment(TeiidAttachments.UDF_METADATA);
-		if (udf != null) {
-			final Module module = deploymentUnit.getAttachment(Attachments.MODULE);
-			if (module != null) {
-				udf.setFunctionClassLoader(module.getClassLoader());
-			}
-			deployment.addAttchment(UDFMetaData.class, udf);
+		if (udf == null) {
+			udf = new UDFMetaData();
 		}
+		udf.setFunctionClassLoader(classLoader);
+		deployment.addAttchment(UDFMetaData.class, udf);
 		
 		// set up the metadata repositories for each models
 		IndexMetadataRepository indexRepo = null;

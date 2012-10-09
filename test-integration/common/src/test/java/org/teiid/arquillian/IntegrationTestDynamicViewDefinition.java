@@ -28,6 +28,9 @@ import java.io.FileInputStream;
 import java.util.Properties;
 
 import org.jboss.arquillian.junit.Arquillian;
+import org.jboss.shrinkwrap.api.ShrinkWrap;
+import org.jboss.shrinkwrap.api.exporter.ZipExporter;
+import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,5 +78,20 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		execute("SELECT * FROM Sys.Columns WHERE tablename='stock'"); //$NON-NLS-1$
 		assertRowCount(2);
     }
+	
+	@Test public void testUdfClasspath() throws Exception {
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "func.jar")
+			      .addClasses(SampleFunctions.class);
+		admin.deploy("func.jar", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		admin.deploy("dynamicfunc-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicfunc-vdb.xml")));
+		
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-func", 1, 3));
+		
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-func@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT func('a')"); //$NON-NLS-1$
+		assertRowCount(1);
+	}
 
 }

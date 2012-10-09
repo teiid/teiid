@@ -23,39 +23,50 @@ package org.teiid.deployers;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.query.function.UDFSource;
 
 
 public class UDFMetaData {
-	protected HashMap<String, Collection <FunctionMethod>> methods = new HashMap<String, Collection<FunctionMethod>>();	
+	protected TreeMap<String, UDFSource> methods = new TreeMap<String, UDFSource>(String.CASE_INSENSITIVE_ORDER);	
 	private ClassLoader classLoader;
-		
-	public Map<String, Collection <FunctionMethod>> getFunctions(){
+	
+	public Map<String, UDFSource> getFunctions(){
 		return this.methods;
 	}
-	
+
 	public void addFunctions(String name, Collection <FunctionMethod> funcs){
 		if (funcs.isEmpty()) {
 			return;
 		}
-		Collection <FunctionMethod> old = this.methods.put(name, funcs);
-		if (old != null) {
-			ArrayList<FunctionMethod> combined = new ArrayList<FunctionMethod>(old);
-			combined.addAll(funcs);
-			this.methods.put(name, combined);
+		UDFSource udfSource = this.methods.get(name);
+		if (udfSource != null) {
+			//this is ambiguous about as to what classloader to use, but we assume the first is good and that the user will have set 
+			//the Java method if that's not the case
+			ArrayList<FunctionMethod> allMethods = new ArrayList<FunctionMethod>(udfSource.getFunctionMethods());
+			allMethods.addAll(funcs);
+			ClassLoader cl = udfSource.getClassLoader();
+			udfSource = new UDFSource(allMethods);
+			udfSource.setClassLoader(cl);
+		} else {
+			udfSource = new UDFSource(funcs);
+			udfSource.setClassLoader(classLoader);
 		}
+		this.methods.put(name, udfSource);
 	}
 	
 	public void addFunctions(UDFMetaData funcs){
-		for (Map.Entry<String, Collection<FunctionMethod>> entry : funcs.getFunctions().entrySet()) {
-			addFunctions(entry.getKey(), entry.getValue());
-		}
+		this.methods.putAll(funcs.methods);
+		this.classLoader = funcs.classLoader;
 	}
 
 	public void setFunctionClassLoader(ClassLoader functionClassLoader) {
+		for (UDFSource udf : methods.values()) {
+			udf.setClassLoader(functionClassLoader);
+		}
 		this.classLoader = functionClassLoader;
 	}
 	
