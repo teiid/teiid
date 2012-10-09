@@ -32,6 +32,7 @@ import org.teiid.common.buffer.LobManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
+import org.teiid.core.util.HashCodeUtil;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Procedure;
@@ -48,10 +49,10 @@ import org.teiid.query.optimizer.TriggerActionPlanner;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
@@ -63,15 +64,15 @@ import org.teiid.query.optimizer.relational.rules.RulePushAggregates;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.AccessNode;
-import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.LanguageObject.Util;
+import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
@@ -85,8 +86,8 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
-import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 /**
@@ -110,9 +111,37 @@ public class RelationalPlanner {
 	private PlanHints hints = new PlanHints();
 	private Option option;
 	private SourceHint sourceHint;
-	private static ThreadLocal<Boolean> planningLoop = new ThreadLocal<Boolean>() {
-		protected Boolean initialValue() {
-			return Boolean.FALSE;
+	
+	private static class PlanningStackEntry {
+		Command command;
+		GroupSymbol group;
+
+		public PlanningStackEntry(Command command, GroupSymbol group) {
+			this.command = command;
+			this.group = group;
+		}
+
+		@Override
+		public int hashCode() {
+			return HashCodeUtil.hashCode(group.getMetadataID().hashCode(), command.getType());
+		}
+		
+		public boolean equals(Object obj) {
+			if (obj == this) {
+				return true;
+			}
+			if (!(obj instanceof PlanningStackEntry)) {
+				return false;
+			}
+			PlanningStackEntry other = (PlanningStackEntry)obj;
+			return group.getMetadataID().equals(other.group.getMetadataID())
+					&& command.getType() == other.command.getType();
+		}
+	}
+	
+	private static ThreadLocal<HashSet<PlanningStackEntry>> planningStack = new ThreadLocal<HashSet<PlanningStackEntry>>() {
+		protected HashSet<PlanningStackEntry> initialValue() {
+			return new LinkedHashSet<PlanningStackEntry>();
 		}
 	};
 	
@@ -622,7 +651,7 @@ public class RelationalPlanner {
 			}
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
-			addNestedCommand(sourceNode, container.getGroup(), container, c, false);
+			addNestedCommand(sourceNode, container.getGroup(), container, c, false, true);
 		} else if (!container.getGroup().isTempTable() && //we hope for the best, and do a specific validation for subqueries below
 				container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
 				&& !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
@@ -632,22 +661,13 @@ public class RelationalPlanner {
 				 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
 			}
 			
-			try {
-				if (planningLoop.get()) {
-					 throw new QueryPlannerException(QueryPlugin.Event.TEIID30254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30254, container));
-				}
-				planningLoop.set(Boolean.TRUE);
-				
-				//treat this as an update procedure
-				if (container instanceof Update) {
-					c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
-				} else {
-					c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
-				}
-				addNestedCommand(sourceNode, container.getGroup(), container, c, false);
-			} finally {
-				planningLoop.set(Boolean.FALSE);
+			//treat this as an update procedure
+			if (container instanceof Update) {
+				c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
+			} else {
+				c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
 			}
+			addNestedCommand(sourceNode, container.getGroup(), container, c, false, true);
 			return false;
 		}
 		
@@ -866,7 +886,7 @@ public class RelationalPlanner {
             	if (parent.getType() != NodeConstants.Types.JOIN && nestedCommand.getSourceHint() != null && sourceHint == null) {
         			sourceHint = nestedCommand.getSourceHint();
             	}
-            	addNestedCommand(node, group, nestedCommand, nestedCommand, true);
+            	addNestedCommand(node, group, nestedCommand, nestedCommand, true, true);
             }
             parent.addLastChild(node);
         } else if(clause instanceof JoinPredicate) {
@@ -907,7 +927,7 @@ public class RelationalPlanner {
             	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
             }
             node.addGroup(group);
-            addNestedCommand(node, group, nestedCommand, nestedCommand, true);
+            addNestedCommand(node, group, nestedCommand, nestedCommand, true, false);
 			if (nestedCommand instanceof SetQuery) {
 				Map<ElementSymbol, List<Set<Constant>>> partitionInfo = PartitionAnalyzer.extractPartionInfo((SetQuery)nestedCommand, ResolverUtil.resolveElementsInGroup(group, metadata));
 				if (!partitionInfo.isEmpty()) {
@@ -982,7 +1002,7 @@ public class RelationalPlanner {
 	}
 
 	private void addNestedCommand(PlanNode node,
-			GroupSymbol group, Command nestedCommand, Command toPlan, boolean merge) throws TeiidComponentException, QueryMetadataException, TeiidProcessingException {
+			GroupSymbol group, Command nestedCommand, Command toPlan, boolean merge, boolean isStackEntry) throws TeiidComponentException, QueryMetadataException, TeiidProcessingException {
 		if (nestedCommand instanceof QueryCommand) {
 			//remove unnecessary order by
         	QueryCommand queryCommand = (QueryCommand)nestedCommand;
@@ -994,50 +1014,69 @@ public class RelationalPlanner {
         		merge = false;
         	}
         }
-		node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
-
-		if (merge && nestedCommand instanceof Query && QueryResolver.isXMLQuery((Query)nestedCommand, metadata)) {
-			merge = false;
+		Set<PlanningStackEntry> entries = null;
+		PlanningStackEntry entry = null;
+		if (isStackEntry) {
+			entries = planningStack.get();
+			entry = new PlanningStackEntry(nestedCommand, group);
+			if (!entries.add(entry)) {
+				if (toPlan.getType() == Command.TYPE_UPDATE_PROCEDURE && !metadata.isVirtualGroup(group.getMetadataID())) {
+					//must be a compensating update/delete
+					throw new QueryPlannerException(QueryPlugin.Event.TEIID30254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30254, nestedCommand));
+				}
+				throw new QueryPlannerException(QueryPlugin.Event.TEIID31124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31124, nestedCommand.getClass().getSimpleName(), group.getNonCorrelationName()));
+			}
 		}
-
-		if (merge) {
-			mergeTempMetadata(nestedCommand, parentCommand);
-		    PlanNode childRoot = generatePlan(nestedCommand, false);
-		    node.addFirstChild(childRoot);
-			List<Expression> projectCols = nestedCommand.getProjectedSymbols();
-			SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
-			node.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
-		} else {
-			QueryMetadataInterface actualMetadata = metadata;
-			if (actualMetadata instanceof TempMetadataAdapter) {
-				actualMetadata = ((TempMetadataAdapter)metadata).getMetadata();
+		try {
+			node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
+	
+			if (merge && nestedCommand instanceof Query && QueryResolver.isXMLQuery((Query)nestedCommand, metadata)) {
+				merge = false;
 			}
-			ProcessorPlan plan = QueryOptimizer.optimizePlan(toPlan, actualMetadata, idGenerator, capFinder, analysisRecord, context);
-			//hack for the optimizer not knowing the containing command when forming the plan
-			if (nestedCommand instanceof StoredProcedure && plan instanceof ProcedurePlan) {
-				StoredProcedure container = (StoredProcedure)nestedCommand;
-				ProcedurePlan pp = (ProcedurePlan)plan;
-				pp.setRequiresTransaction(container.getUpdateCount() > 0);
-        		if (container.returnParameters()) {
-        			List<ElementSymbol> outParams = new LinkedList<ElementSymbol>();
-        			for (SPParameter param : container.getParameters()) {
-						if (param.getParameterType() == SPParameter.RETURN_VALUE) {
-							outParams.add(param.getParameterSymbol());
+	
+			if (merge) {
+				mergeTempMetadata(nestedCommand, parentCommand);
+			    PlanNode childRoot = generatePlan(nestedCommand, false);
+			    node.addFirstChild(childRoot);
+				List<Expression> projectCols = nestedCommand.getProjectedSymbols();
+				SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);
+				node.setProperty(NodeConstants.Info.SYMBOL_MAP, map);
+			} else {
+				QueryMetadataInterface actualMetadata = metadata;
+				if (actualMetadata instanceof TempMetadataAdapter) {
+					actualMetadata = ((TempMetadataAdapter)metadata).getMetadata();
+				}
+				ProcessorPlan plan = QueryOptimizer.optimizePlan(toPlan, actualMetadata, idGenerator, capFinder, analysisRecord, context);
+				//hack for the optimizer not knowing the containing command when forming the plan
+				if (nestedCommand instanceof StoredProcedure && plan instanceof ProcedurePlan) {
+					StoredProcedure container = (StoredProcedure)nestedCommand;
+					ProcedurePlan pp = (ProcedurePlan)plan;
+					pp.setRequiresTransaction(container.getUpdateCount() > 0);
+	        		if (container.returnParameters()) {
+	        			List<ElementSymbol> outParams = new LinkedList<ElementSymbol>();
+	        			for (SPParameter param : container.getParameters()) {
+							if (param.getParameterType() == SPParameter.RETURN_VALUE) {
+								outParams.add(param.getParameterSymbol());
+							}
 						}
-					}
-        			for (SPParameter param : container.getParameters()) {
-						if (param.getParameterType() == SPParameter.INOUT || 
-								param.getParameterType() == SPParameter.OUT) {
-							outParams.add(param.getParameterSymbol());
+	        			for (SPParameter param : container.getParameters()) {
+							if (param.getParameterType() == SPParameter.INOUT || 
+									param.getParameterType() == SPParameter.OUT) {
+								outParams.add(param.getParameterSymbol());
+							}
 						}
-					}
-        			if (outParams.size() > 0) {
-        				pp.setOutParams(outParams);
-        			}
-        		}
-        		pp.setParams(container.getProcedureParameters());
+	        			if (outParams.size() > 0) {
+	        				pp.setOutParams(outParams);
+	        			}
+	        		}
+	        		pp.setParams(container.getProcedureParameters());
+				}
+			    node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
 			}
-		    node.setProperty(NodeConstants.Info.PROCESSOR_PLAN, plan);
+		} finally {
+			if (entries != null) {
+				entries.remove(entry);
+			}
 		}
 	}
 

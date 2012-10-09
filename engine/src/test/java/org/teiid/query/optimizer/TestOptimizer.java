@@ -6690,6 +6690,14 @@ public class TestOptimizer {
     	assertEquals("[QueryAnnotation<Relational Planner, LOW,hello pm1,world Unknown: 0(groups=[]>]", record.getAnnotations().toString());
     }
     
+	@Test public void testRecursiveView() throws Exception {
+		String ddl = "CREATE view x (y string) as (select * from x)";
+
+		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+		
+		getPlan(helpGetCommand("select * from x", metadata, null), metadata, getGenericFinder(), null, false, null);		
+	}
+    
 	public static final boolean DEBUG = false;
 
 }
