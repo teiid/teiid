@@ -1,0 +1,9 @@
+<vdb name="dynamic-func" version= "1">
+    <property name="lib" value="deployment.func.jar"/>
+    <model visible = "true" type = "VIRTUAL" name = "portfolio">
+         <metadata type = "DDL"><![CDATA[
+              CREATE function func (val string) returns integer options (JAVA_CLASS 'org.teiid.arquillian.SampleFunctions',  JAVA_METHOD 'doSomething');
+         ]]>
+         </metadata>
+    </model>
+</vdb>

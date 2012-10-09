@@ -81,7 +81,7 @@ public class FunctionTree {
      * @param source The metadata source
      */
     public FunctionTree(String name, FunctionMetadataSource source) {
-    	this(name, source, false, null);
+    	this(name, source, false);
     }
     
     /**
@@ -89,19 +89,12 @@ public class FunctionTree {
      * @param source The metadata source
      */
     public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass) {
-    	this(name, source, validateClass, null);
-    }
-    
-    public FunctionTree(String name, FunctionMetadataSource source, boolean validateClass, ClassLoader defaultClassloader) {
         // Load data structures
     	this.validateClass = validateClass;
     	boolean system = CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name) || CoreConstants.SYSTEM_ADMIN_MODEL.equalsIgnoreCase(name);
         Collection<FunctionMethod> functions = source.getFunctionMethods();
     	for (FunctionMethod method : functions) {
 			if (!containsIndistinguishableFunction(method)){
-				if (method.getClassLoader() == null) {
-					method.setClassloader(defaultClassloader);
-				}
                 // Add to tree
                 addFunction(name, source, method, system);
 			} else if (!CoreConstants.SYSTEM_MODEL.equalsIgnoreCase(name)) {
@@ -309,30 +302,34 @@ public class FunctionTree {
         	inputTypes.set(inputTypes.size() - 1, DataTypeManager.getArrayType(inputTypes.get(inputTypes.size() - 1)));
         }
 
-        Method invocationMethod = null;
+        Method invocationMethod = method.getMethod();
         boolean requiresContext = false;
         // Defect 20007 - Ignore the invocation method if pushdown is not required.
         if (validateClass && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
-        	if (method.getInvocationClass() == null || method.getInvocationMethod() == null) {
-        		throw new MetadataException(QueryPlugin.Event.TEIID31123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31123, method.getName()));
+        	if (invocationMethod == null) {
+	        	if (method.getInvocationClass() == null || method.getInvocationMethod() == null) {
+	        		throw new MetadataException(QueryPlugin.Event.TEIID31123, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31123, method.getName()));
+	        	}
+	            try {
+	                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass());
+	                ReflectionHelper helper = new ReflectionHelper(methodClass);
+	                try {
+	                	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
+	                } catch (NoSuchMethodException e) {
+	                    inputTypes.add(0, CommandContext.class);
+	                	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
+	                	requiresContext = true;
+	                }
+	            } catch (ClassNotFoundException e) {
+	            	 throw new MetadataException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
+	            } catch (NoSuchMethodException e) {
+	            	 throw new MetadataException(QueryPlugin.Event.TEIID30388, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30388, method, method.getInvocationClass(), method.getInvocationMethod()));
+	            } catch (Exception e) {                
+	                 throw new MetadataException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
+	            } 
+        	} else {
+        		requiresContext = (invocationMethod.getParameterTypes().length > 0 && org.teiid.CommandContext.class.isAssignableFrom(invocationMethod.getParameterTypes()[0]));
         	}
-            try {
-                Class<?> methodClass = source.getInvocationClass(method.getInvocationClass(), method.getClassLoader()==null?Thread.currentThread().getContextClassLoader():method.getClassLoader());
-                ReflectionHelper helper = new ReflectionHelper(methodClass);
-                try {
-                	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
-                } catch (NoSuchMethodException e) {
-                    inputTypes.add(0, CommandContext.class);
-                	invocationMethod = helper.findBestMethodWithSignature(method.getInvocationMethod(), inputTypes);
-                	requiresContext = true;
-                }
-            } catch (ClassNotFoundException e) {
-            	 throw new MetadataException(QueryPlugin.Event.TEIID30387, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30387, method.getName(), method.getInvocationClass()));
-            } catch (NoSuchMethodException e) {
-            	 throw new MetadataException(QueryPlugin.Event.TEIID30388, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30388, method, method.getInvocationClass(), method.getInvocationMethod()));
-            } catch (Exception e) {                
-                 throw new MetadataException(QueryPlugin.Event.TEIID30389, e,QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30389, method, method.getInvocationClass(), method.getInvocationMethod()));
-            } 
             if (invocationMethod != null) {
             	// Check return type is non void
         		Class<?> methodReturn = invocationMethod.getReturnType();
@@ -358,6 +355,7 @@ public class FunctionTree {
         		if (method.getAggregateAttributes() != null && !(UserDefinedAggregate.class.isAssignableFrom(invocationMethod.getDeclaringClass()))) {
     				throw new MetadataException(QueryPlugin.Event.TEIID30601, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30601, method.getName(), method.getInvocationClass(), UserDefinedAggregate.class.getName()));
         		}
+	            method.setMethod(invocationMethod);
             }
         }
 

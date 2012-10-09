@@ -24,6 +24,7 @@ package org.teiid.query.function;
 import java.util.Collection;
 
 import org.teiid.core.CoreConstants;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.function.source.SystemSource;
@@ -40,16 +41,16 @@ public class SystemFunctionManager {
     	if(systemFunctionTree == null) { 
 	    	// Create the system source and add it to the source list
 	    	SystemSource systemSource = new SystemSource(this.allowEnvFunction);
-	
+	    	systemSource.setClassLoader(classLoader);
 			// Validate the system source - should never fail
 	    	ValidatorReport report = new ValidatorReport("Function Validation"); //$NON-NLS-1$
-	        Collection functionMethods = systemSource.getFunctionMethods();
+	        Collection<FunctionMethod> functionMethods = systemSource.getFunctionMethods();
 	    	FunctionMetadataValidator.validateFunctionMethods(functionMethods,report);
 			if(report.hasItems()) {
 			    // Should never happen as SystemSourcTe doesn't change
 			    System.err.println(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 			}
-			systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true, this.classLoader);
+			systemFunctionTree = new FunctionTree(CoreConstants.SYSTEM_MODEL, systemSource, true);
     	}
     	return systemFunctionTree;
     }

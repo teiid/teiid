@@ -32,6 +32,7 @@ import org.jboss.vfs.VirtualFile;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.function.metadata.FunctionMetadataValidator;
 import org.teiid.query.validator.ValidatorReport;
@@ -63,7 +64,7 @@ public class FileUDFMetaData extends UDFMetaData {
 		if(report.hasItems()) {
 		    throw new IOException(QueryPlugin.Util.getString("ERR.015.001.0005", report)); //$NON-NLS-1$
 		}
-		this.methods.put(name, udfMethods);
+		this.methods.put(name, new UDFSource(udfMethods));
 	}
 	
 
