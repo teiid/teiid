@@ -43,17 +43,17 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
+import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.SubqueryContainer;
-import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -809,7 +809,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 return false;
             }
             
-            Collection<SubqueryContainer> scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(converted);
+            Collection<SubqueryContainer<?>> scalarSubqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(converted);
             if (!scalarSubqueries.isEmpty()){
                 return false;
             }

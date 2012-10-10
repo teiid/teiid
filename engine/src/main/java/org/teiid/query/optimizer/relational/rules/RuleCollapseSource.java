@@ -48,10 +48,10 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.RelationalPlan;
@@ -418,8 +418,8 @@ public final class RuleCollapseSource implements OptimizerRule {
         }        
     }
 
-	private void prepareSubqueries(List<SubqueryContainer> containers) {
-		for (SubqueryContainer container : containers) {
+	private void prepareSubqueries(List<SubqueryContainer<?>> containers) {
+		for (SubqueryContainer<?> container : containers) {
 		    prepareSubquery(container);
 		}
 	}

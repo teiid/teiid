@@ -53,7 +53,7 @@ public class TestSystemPerformance extends AbstractQueryTest {
 		ModelMetaData mmm = new ModelMetaData();
 		mmm.setName("test");
 		mmm.setSchemaSourceType("native");
-		mmm.addSourceMapping("x", "hardcoded", null);
+		mmm.addSourceMapping("x", "hc", null);
 		HardCodedExecutionFactory hardCodedExecutionFactory = new HardCodedExecutionFactory() {
 			@Override
 			public void getMetadata(MetadataFactory metadataFactory, Object conn)
@@ -75,7 +75,7 @@ public class TestSystemPerformance extends AbstractQueryTest {
 				return false;
 			}
 		};
-		es.addTranslator(hardCodedExecutionFactory);
+		es.addTranslator("hc", hardCodedExecutionFactory);
 		es.deployVDB("test", mmm);
 	}
 	

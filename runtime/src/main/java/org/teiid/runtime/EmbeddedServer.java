@@ -47,8 +47,8 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.BundleUtil.Event;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -77,14 +77,17 @@ import org.teiid.jdbc.TeiidPreparedStatement;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.sql.lang.Command;
@@ -426,9 +429,30 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	/**
-	 * Add an {@link ExecutionFactory}.  The {@link ExecutionFactory#start()} method
-	 * should have already been called.
+	 * Adds a default instance of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.  
 	 * @param ef
+	 */
+	public void addTranslator(Class<ExecutionFactory<?, ?>> clazz) {
+		Translator t = clazz.getAnnotation(Translator.class);
+		String name = clazz.getName();
+		if (t != null) {
+			name = t.name();
+		}
+		try {
+			addTranslator(name, clazz.newInstance());
+		} catch (InstantiationException e) {
+			throw new TeiidRuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new TeiidRuntimeException(e);
+		}
+	}
+	
+	/**
+	 * Add an {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
+	 * @param ef
+	 * @deprecated
+	 * @see {@link #addTranslator(String, ExecutionFactory)} or {@link #addTranslator(Class)}
+	 * if the translator has overrides or multiple translators of a given type are needed.
 	 */
 	public void addTranslator(ExecutionFactory<?, ?> ef) {
 		Translator t = ef.getClass().getAnnotation(Translator.class);
@@ -439,7 +463,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		addTranslator(name, ef);
 	}
 	
-	void addTranslator(String name, ExecutionFactory<?, ?> ef) {
+	/**
+	 * Add a named {@link ExecutionFactory}.
+	 * @param name
+	 * @param ef
+	 */
+	public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
 		translators.put(name, ef);
 	}
 
@@ -492,6 +521,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 		} catch (TranslatorException e) {
 			//cf not available
+		}
+		
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+			LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
 		metadataRepository.loadMetadata(factory, ef, cf);		
@@ -548,6 +581,28 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	@Override
 	protected VDBRepository getVDBRepository() {
 		return this.repo;
+	}
+	
+	/**
+	 * Get the effective ddl text for the given schema 
+	 * @param vdbName
+	 * @param schemaName
+	 * @return the ddl or null if the vdb/schema does not exist
+	 */
+	public String getSchemaDdl(String vdbName, String schemaName) {
+		VDBMetaData vdb = repo.getVDB(vdbName, 1);
+		if (vdb == null) {
+			return null;
+		}
+		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		if (metadata == null) {
+			return null;
+		}
+		Schema schema = metadata.getMetadataStore().getSchema(schemaName);
+		if (schema == null) {
+			return null;
+		}
+		return DDLStringVisitor.getDDLString(schema, null, null); 
 	}
 	
 }

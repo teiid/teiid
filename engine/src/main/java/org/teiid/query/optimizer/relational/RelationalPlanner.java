@@ -284,7 +284,7 @@ public class RelationalPlanner {
         Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP)) {
-            List<SubqueryContainer> subqueryContainers = node.getSubqueryContainers();
+            List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
             if (subqueryContainers.isEmpty()){
             	continue;
             }
@@ -292,7 +292,7 @@ public class RelationalPlanner {
             if (node.getType() == NodeConstants.Types.JOIN) {
             	localGroupSymbols = getGroupSymbols(node);
             }
-            for (SubqueryContainer container : subqueryContainers) {
+            for (SubqueryContainer<?> container : subqueryContainers) {
                 //a clone is needed here because the command could get modified during planning
                 Command subCommand = (Command)container.getCommand().clone(); 
                 ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
@@ -489,7 +489,7 @@ public class RelationalPlanner {
 
             plan = rule.execute(plan, metadata, capFinder, rules, analysisRecord, context);
             if(debug) {
-                analysisRecord.println("\nAFTER: \n" + plan); //$NON-NLS-1$
+                analysisRecord.println("\nAFTER: \n" + plan.nodeToString(true)); //$NON-NLS-1$
             }
         }
         return plan;

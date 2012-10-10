@@ -280,6 +280,9 @@ public class TestEmbeddedServer {
 		c = es.getDriver().connect("jdbc:teiid:empty", null);
 		s = c.createStatement();
 		s.execute("select * from tables");
+		
+		assertNotNull(es.getSchemaDdl("empty", "SYS"));
+		assertNull(es.getSchemaDdl("empty", "xxx"));
 	}
 	
 	@Test(expected=VirtualDatabaseException.class) public void testDeploymentError() throws Exception {

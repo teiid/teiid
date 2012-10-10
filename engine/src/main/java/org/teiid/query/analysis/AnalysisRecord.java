@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.ListIterator;
 
 import org.teiid.client.plan.Annotation;
-import org.teiid.client.plan.PlanNode;
 import org.teiid.client.plan.Annotation.Priority;
+import org.teiid.client.plan.PlanNode;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
@@ -237,9 +237,9 @@ public class AnalysisRecord {
 		int index = 0;
 		for (LanguageObject languageObject : objects) {
 			values.add(languageObject.toString());
-			List<SubqueryContainer> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(objects);
-			for (ListIterator<SubqueryContainer> iterator = subqueries.listIterator(); iterator.hasNext();) {
-				SubqueryContainer subqueryContainer = iterator.next();
+			List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(objects);
+			for (ListIterator<SubqueryContainer<?>> iterator = subqueries.listIterator(); iterator.hasNext();) {
+				SubqueryContainer<?> subqueryContainer = iterator.next();
 				node.addProperty(key + " Subplan " + index++, subqueryContainer.getCommand().getProcessorPlan().getDescriptionProperties()); //$NON-NLS-1$
 			}
 		}
