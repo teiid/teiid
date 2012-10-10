@@ -43,10 +43,10 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -265,12 +265,25 @@ public class RulePushAggregates implements
 			throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
 		LinkedHashSet<AggregateSymbol> compositeAggs = new LinkedHashSet<AggregateSymbol>();
 		boolean hasExpressionMapping = false;
-		for (Expression ex : aggMap.values()) {
-			if (ex instanceof AggregateSymbol) {
-				compositeAggs.add((AggregateSymbol) ex);
+		SymbolMap oldGroupingMap = (SymbolMap) groupNode.getProperty(Info.SYMBOL_MAP);
+		/* we operate over the old group node map since the aggMap is based only
+		 * upon the aggs for the target node and not all of the possible aggregates,
+		 * which will cause a failure if we introduce an expression mapping
+		 */
+		for (Expression ex : oldGroupingMap.asMap().values()) {
+			if (!(ex instanceof AggregateSymbol)) {
+				continue;
+			}
+			Expression mappedAgg = aggMap.get(ex);
+			if (mappedAgg != null) {
+				if (mappedAgg instanceof AggregateSymbol) {
+					compositeAggs.add((AggregateSymbol) mappedAgg);
+				} else {
+					compositeAggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(mappedAgg, false));
+					hasExpressionMapping = true;
+				}	
 			} else {
-				compositeAggs.addAll(AggregateSymbolCollectorVisitor.getAggregates(ex, false));
-				hasExpressionMapping = true;
+				compositeAggs.add((AggregateSymbol) ex);
 			}
 		}
 		if (!hasExpressionMapping) {
@@ -279,7 +292,6 @@ public class RulePushAggregates implements
 		} else {
 			//if new expressions are created we insert a view to handle the projection
 			groupNode.getGroups().clear();
-			SymbolMap oldGroupingMap = (SymbolMap) groupNode.getProperty(Info.SYMBOL_MAP);
 			GroupSymbol oldGroup = oldGroupingMap.asMap().keySet().iterator().next().getGroupSymbol();
 			SymbolMap groupingMap = RelationalPlanner.buildGroupingNode(compositeAggs, (List<? extends Expression>) groupNode.getProperty(Info.GROUP_COLS), groupNode, context, idGenerator);
 			ArrayList<Expression> projectCols = new ArrayList<Expression>(oldGroupingMap.asMap().size());
@@ -289,7 +301,9 @@ public class RulePushAggregates implements
 				Expression ses = null;
 				if (entry.getValue() instanceof AggregateSymbol) {
 					Expression ex = aggMap.get(entry.getValue());
-					if (ex instanceof AggregateSymbol) {
+					if (ex == null) {
+						ses = inverseMap.get(entry.getValue());
+					} else if (ex instanceof AggregateSymbol) {
 						ses = inverseMap.get(ex);
 					} else {
 						ExpressionMappingVisitor.mapExpressions(ex, inverseMap);

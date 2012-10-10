@@ -55,7 +55,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestValidator;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings({"nls", "unchecked"})
+@SuppressWarnings({"nls", "unchecked", "rawtypes"})
 public class TestAggregateProcessing {
 
 	static void sampleDataBQT3(FakeDataManager dataMgr) throws Exception {
@@ -624,6 +624,25 @@ public class TestAggregateProcessing {
 		fm.setAggregateAttributes(aa);
 		s.getFunctions().put(fm.getName(), fm);
 		return aa;
+	}
+	
+	@Test public void testMultiCount() throws Exception {
+		// Create query
+		String sql = "SELECT count(pm1.g1.e2), count(pm2.g2.e2) from pm1.g1, pm2.g2 where pm1.g1.e1 = pm2.g2.e1"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(3, 2),
+		};
+
+		// Construct data manager with data
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		
+		dataManager.addData("SELECT g_0.e1 AS c_0, COUNT(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0", new List<?>[] {Arrays.asList("a", 6), Arrays.asList("b", 5)});
+		
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
+		helpProcess(plan, dataManager, expected);
 	}
 
 }
