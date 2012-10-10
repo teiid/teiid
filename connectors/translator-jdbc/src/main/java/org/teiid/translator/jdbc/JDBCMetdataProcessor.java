@@ -41,15 +41,7 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.BaseColumn;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.DuplicateRecordException;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.Table;
+import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TranslatorException;
@@ -93,6 +85,7 @@ public class JDBCMetdataProcessor {
 	private boolean useProcedureSpecificName;
 	private boolean useCatalogName = true;
 	private boolean autoCreateUniqueConstraints = true;
+	private boolean useQualifiedName = true;
 	
 	private Set<String> unsignedTypes = new HashSet<String>();
 	private String quoteString;
@@ -143,7 +136,7 @@ public class JDBCMetdataProcessor {
 	}
 
 	private void getProcedures(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing procedures"); //$NON-NLS-1$
 		ResultSet procedures = metadata.getProcedures(catalog, schemaPattern, procedureNamePattern);
 		int rsColumns = procedures.getMetaData().getColumnCount();
@@ -227,7 +220,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private Map<String, TableInfo> getTables(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing tables"); //$NON-NLS-1$
 		ResultSet tables = metadata.getTables(catalog, schemaPattern, tableNamePattern, tableTypes);
 		Map<String, TableInfo> tableMap = new HashMap<String, TableInfo>();
@@ -257,7 +250,7 @@ public class JDBCMetdataProcessor {
 
 	private void getColumns(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Map<String, TableInfo> tableMap)
-			throws SQLException, TranslatorException {
+			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing columns"); //$NON-NLS-1$
 		boolean singleSchema = schemaPattern != null && !schemaPattern.contains("_") && !schemaPattern.contains("%"); //$NON-NLS-1$ //$NON-NLS-2$
 		if ((excludeTables == null && schemaPattern == null && tableNamePattern == null) //getting everything
@@ -276,7 +269,7 @@ public class JDBCMetdataProcessor {
 
 	private void processColumns(MetadataFactory metadataFactory,
 			Map<String, TableInfo> tableMap, ResultSet columns)
-			throws SQLException, TranslatorException {
+			throws SQLException {
 		int rsColumns = columns.getMetaData().getColumnCount();
 		while (columns.next()) {
 			String tableCatalog = columns.getString(1);
@@ -351,7 +344,7 @@ public class JDBCMetdataProcessor {
 
 	private void getPrimaryKeys(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables)
-			throws SQLException, TranslatorException {
+			throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing primary keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
 			ResultSet pks = metadata.getPrimaryKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
@@ -445,17 +438,17 @@ public class JDBCMetdataProcessor {
 			uniqueKey = pkTable.getPrimaryKey();
 		} else {
 			for (KeyRecord record : pkTable.getUniqueKeys()) {
-				if (keyMatches(new ArrayList(referencedKeyColumns.values()), record)) {
+				if (keyMatches(new ArrayList<String>(referencedKeyColumns.values()), record)) {
 					uniqueKey = record;
 					break;
 				}
 			}
-			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(new ArrayList(referencedKeyColumns.values()), pkTable.getPrimaryKey())) {
+			if (uniqueKey == null && pkTable.getPrimaryKey() != null && keyMatches(new ArrayList<String>(referencedKeyColumns.values()), pkTable.getPrimaryKey())) {
 				uniqueKey = pkTable.getPrimaryKey();
 			}
 		}
 		if (uniqueKey == null && create) {
-			uniqueKey = factory.addIndex(name + "_unique", false, new ArrayList(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
+			uniqueKey = factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
 		}
 		return uniqueKey;
 	}
@@ -473,7 +466,7 @@ public class JDBCMetdataProcessor {
 	}	
 
 	private void getIndexes(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
 			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, false, importApproximateIndexes);
@@ -519,11 +512,13 @@ public class JDBCMetdataProcessor {
 	
 	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
 		String fullName = (quoted?quoteName(objectName):objectName);
-		if (schemaName != null && schemaName.length() > 0) {
-			fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
-		}
-		if (useCatalogName && catalogName != null && catalogName.length() > 0) {
-			fullName = (quoted?quoteName(catalogName):catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+		if (useQualifiedName) {
+			if (schemaName != null && schemaName.length() > 0) {
+				fullName = (quoted?quoteName(schemaName):schemaName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+			}
+			if (useCatalogName && catalogName != null && catalogName.length() > 0) {
+				fullName = (quoted?quoteName(catalogName):catalogName) + AbstractMetadataRecord.NAME_DELIM_CHAR + fullName;
+			}
 		}
 		return fullName;
 	}
@@ -596,6 +591,10 @@ public class JDBCMetdataProcessor {
 	
 	public void setExcludeTables(String excludeTables) {
 		this.excludeTables = Pattern.compile(excludeTables, Pattern.DOTALL | Pattern.CASE_INSENSITIVE);
+	}
+	
+	public void setUseQualifiedName(boolean useQualifiedName) {
+		this.useQualifiedName = useQualifiedName;
 	}
 	
 }
