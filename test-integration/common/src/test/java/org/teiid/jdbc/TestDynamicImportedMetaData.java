@@ -163,6 +163,27 @@ public class TestDynamicImportedMetaData {
     	assertEquals("\"x\".\"dup\"", t.getNameInSource());
     }
     
+    @Test public void testUseQualified() throws Exception {
+    	MetadataFactory mf = createMetadataFactory("x", new Properties());
+    	
+    	Table dup = mf.addTable("dup");
+    	
+    	mf.addColumn("x", DataTypeManager.DefaultDataTypes.STRING, dup);
+    	
+    	MetadataStore ms = mf.asMetadataStore();
+    	
+    	server.deployVDB("test", ms);
+    	Connection conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$
+    	
+    	//neither the name nor name in source should be qualified
+    	Properties importProperties = new Properties();
+    	importProperties.setProperty("importer.useQualifiedName", Boolean.FALSE.toString());
+    	
+    	mf = getMetadata(importProperties, conn);
+    	Table t = mf.asMetadataStore().getSchemas().get("TEST").getTables().get("DUP");
+    	assertEquals("\"dup\"", t.getNameInSource());
+    }
+    
     @Test
     public void testDDLMetadata() throws Exception {
     	String ddl = "CREATE FOREIGN PROCEDURE getTextFiles(IN pathAndPattern varchar) RETURNS (file clob, filpath string) OPTIONS(UUID 'uuid')";
