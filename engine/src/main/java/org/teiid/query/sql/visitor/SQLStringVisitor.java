@@ -354,7 +354,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( IsNullCriteria obj ) {
         Expression expr = obj.getExpression();
-        visitNode(expr);
+        appendNested(expr);
         append(SPACE);
         append(IS);
         append(SPACE);
@@ -483,7 +483,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( MatchCriteria obj ) {
-        visitNode(obj.getLeftExpression());
+    	visitNode(obj.getLeftExpression());
 
         append(SPACE);
         if (obj.isNegated()) {
@@ -515,7 +515,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append("'"); //$NON-NLS-1$
         }
     }
-
+    
     public void visit( NotCriteria obj ) {
         append(NOT);
         append(" ("); //$NON-NLS-1$
@@ -833,7 +833,7 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( SetCriteria obj ) {
         // variable
-        visitNode(obj.getExpression());
+    	appendNested(obj.getExpression());
 
         // operator and beginning of list
         append(SPACE);
@@ -863,6 +863,21 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
         append(")"); //$NON-NLS-1$
     }
+    
+    /**
+     * Condition operators have lower precedence than LIKE/SIMILAR/IS
+     * @param ex
+     */
+	private void appendNested(Expression ex) {
+		boolean useParens = ex instanceof Criteria;
+    	if (useParens) {
+    		append(Tokens.LPAREN);
+    	}
+        visitNode(ex);
+        if (useParens) {
+        	append(Tokens.RPAREN);
+        }
+	}
 
     public void visit( SetQuery obj ) {
         addCacheHint(obj.getCacheHint());

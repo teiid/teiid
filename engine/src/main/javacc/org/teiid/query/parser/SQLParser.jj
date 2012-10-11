@@ -3052,7 +3052,7 @@ Token operator() :
 /*
 name=comparison predicate
 description=A value comparison.
-example={code:sql}x = 'a'{code}
+example={code:sql}= 'a'{code}
 */
 CompareCriteria compareCrit(ParseInfo info, Expression expression) :
 {

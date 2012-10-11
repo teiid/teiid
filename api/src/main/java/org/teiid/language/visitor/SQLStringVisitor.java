@@ -450,7 +450,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(In obj) {
-        append(obj.getLeftExpression());
+    	appendNested(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)
                   .append(NOT);
@@ -509,7 +509,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
     
     public void visit(IsNull obj) {
-        append(obj.getExpression());
+    	appendNested(obj.getExpression());
         buffer.append(Tokens.SPACE)
               .append(IS)
               .append(Tokens.SPACE);
@@ -519,6 +519,21 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
         }
         buffer.append(NULL);
     }
+    
+    /**
+     * Condition operators have lower precedence than LIKE/SIMILAR/IS
+     * @param ex
+     */
+	private void appendNested(Expression ex) {
+		boolean useParens = ex instanceof Condition;
+    	if (useParens) {
+    		buffer.append(Tokens.LPAREN);
+    	}
+        append(ex);
+        if (useParens) {
+        	buffer.append(Tokens.RPAREN);
+        }
+	}
 
     public void visit(Join obj) {
         TableReference leftItem = obj.getLeftItem();
@@ -578,7 +593,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     }
 
     public void visit(Like obj) {
-        append(obj.getLeftExpression());
+    	append(obj.getLeftExpression());
         if (obj.isNegated()) {
             buffer.append(Tokens.SPACE)
                   .append(NOT);

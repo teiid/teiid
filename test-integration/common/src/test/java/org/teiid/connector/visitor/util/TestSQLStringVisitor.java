@@ -135,7 +135,7 @@ public class TestSQLStringVisitor  {
     @Test public void testVisitConvertFunctionOracleStyle() throws Exception {
         String expected = "convert(columnA, integer)"; //$NON-NLS-1$
         
-        List<? extends Expression> params = Arrays.asList(new ColumnReference(null, "columnA", null, String.class), new Literal("integer", String.class));
+        List<? extends Expression> params = Arrays.asList((Expression)new ColumnReference(null, "columnA", null, String.class), new Literal("integer", String.class));
         Function test = new Function("convert", params, Integer.class); //$NON-NLS-1$
         
         assertEquals(expected, getString(test)); 
@@ -439,6 +439,13 @@ public class TestSQLStringVisitor  {
     	String sql = "select $$1 from $$$3";
     	String expected = "select $1 from $*1";
     	helpTestNativeParsing(sql, expected);
+    }
+    
+    @Test public void testConditionNesting() throws Exception {
+    	String sql = "select (intkey = intnum) is null, (intkey < intnum) in (true, false) from bqt1.smalla";
+    	
+    	Command command = FakeTranslationFactory.getInstance().getBQTTranslationUtility().parseCommand(sql, true, true);
+    	assertEquals("SELECT (g_0.IntKey = g_0.IntNum) IS NULL, (g_0.IntKey < g_0.IntNum) IN (TRUE, FALSE) FROM SmallA AS g_0", command.toString()); //$NON-NLS-1$
     }
 
 }

@@ -295,11 +295,11 @@ public class TestSQLStringVisitor {
    		Insert insert = new Insert();
    		insert.setGroup(new GroupSymbol("m.g1"));      //$NON-NLS-1$
    		
-   		List vars = new ArrayList();
+   		List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
    		vars.add(new ElementSymbol("e1")); //$NON-NLS-1$
    		vars.add(new ElementSymbol("e2")); //$NON-NLS-1$
    		insert.setVariables(vars);
-   		List values = new ArrayList();
+   		List<Constant> values = new ArrayList<Constant>();
    		values.add(new Constant(new Integer(5)));
    		values.add(new Constant("abc")); //$NON-NLS-1$
    		insert.setValues(values);
@@ -685,7 +685,7 @@ public class TestSQLStringVisitor {
 	@Test public void testSetCriteria1() {
 		SetCriteria sc = new SetCriteria();
 		sc.setExpression(new ElementSymbol("e1"));		 //$NON-NLS-1$
-		sc.setValues(new ArrayList());
+		sc.setValues(new ArrayList<Expression>());
 		
 		helpTest(sc, "e1 IN ()"); //$NON-NLS-1$
 	}
@@ -693,7 +693,7 @@ public class TestSQLStringVisitor {
 	@Test public void testSetCriteria2() {
 		SetCriteria sc = new SetCriteria();
 		sc.setExpression(new ElementSymbol("e1"));	 //$NON-NLS-1$
-		ArrayList values = new ArrayList();	
+		ArrayList<Expression> values = new ArrayList<Expression>();	
 		values.add(new ElementSymbol("e2")); //$NON-NLS-1$
 		values.add(new Constant("abc")); //$NON-NLS-1$
 		sc.setValues(values);
@@ -704,7 +704,7 @@ public class TestSQLStringVisitor {
 	@Test public void testSetCriteria3() {
 		SetCriteria sc = new SetCriteria();
 		sc.setExpression(new ElementSymbol("e1"));	 //$NON-NLS-1$
-		ArrayList values = new ArrayList();	
+		ArrayList<Expression> values = new ArrayList<Expression>();	
 		values.add(null);
 		values.add(new Constant("b")); //$NON-NLS-1$
 		sc.setValues(values);
@@ -715,7 +715,7 @@ public class TestSQLStringVisitor {
     @Test public void testSetCriteria4() {
         SetCriteria sc = new SetCriteria();
         sc.setExpression(new ElementSymbol("e1"));   //$NON-NLS-1$
-        ArrayList values = new ArrayList(); 
+        ArrayList<Expression> values = new ArrayList<Expression>(); 
         values.add(new ElementSymbol("e2")); //$NON-NLS-1$
         values.add(new Constant("abc")); //$NON-NLS-1$
         sc.setValues(values);
@@ -1507,7 +1507,7 @@ public class TestSQLStringVisitor {
     }
     
     @Test public void testDynamicCommand() {
-		List symbols = new ArrayList();
+		List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
 	
 	    ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
 	    a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -1719,6 +1719,12 @@ public class TestSQLStringVisitor {
     
     @Test public void testReturnStatement() throws QueryParserException {
 		helpTest(QueryParser.getQueryParser().parseProcedure("begin if (true) return 1; return; end", false), "CREATE VIRTUAL PROCEDURE\nBEGIN\nIF(TRUE)\nBEGIN\nRETURN 1;\nEND\nRETURN;\nEND");
+    }
+    
+    @Test public void testConditionNesting() throws Exception {
+    	String sql = "select (intkey = intnum) is null, (intkey < intnum) in (true, false) from bqt1.smalla";
+    	
+    	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT (intkey = intnum) IS NULL, (intkey < intnum) IN (TRUE, FALSE) FROM bqt1.smalla"); //$NON-NLS-1$
     }
 
 }
