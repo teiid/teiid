@@ -1,5 +1,5 @@
-/*
- * JBoss, Home of Professional Open Source.
+/*ode.Id_ADD
+ * JBoss, Home of Professional Open != Source.
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
@@ -1099,9 +1099,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (session.getApplicationName() != null) {
 				node.get(APPLICATION_NAME).set(session.getApplicationName());
 			}
+			
 			node.get(CREATED_TIME).set(session.getCreatedTime());
-			node.get(CLIENT_HOST_NAME).set(session.getClientHostName());
-			node.get(IP_ADDRESS).set(session.getIPAddress());
+			
+			if (session.getClientHostName() != null) {
+				node.get(CLIENT_HOST_NAME).set(session.getClientHostName());
+			}
+			if (session.getIPAddress() != null) {
+				node.get(IP_ADDRESS).set(session.getIPAddress());
+			}
 			node.get(LAST_PING_TIME).set(session.getLastPingTime());
 			node.get(SESSION_ID).set(session.getSessionId());
 			node.get(USER_NAME).set(session.getUserName());
@@ -1126,8 +1132,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				session.setApplicationName(node.get(APPLICATION_NAME).asString());
 			}
 			session.setCreatedTime(node.get(CREATED_TIME).asLong());
-			session.setClientHostName(node.get(CLIENT_HOST_NAME).asString());
-			session.setIPAddress(node.get(IP_ADDRESS).asString());
+			
+			if (node.has(CLIENT_HOST_NAME)) {
+				session.setClientHostName(node.get(CLIENT_HOST_NAME).asString());
+			}
+			
+			if (node.has(IP_ADDRESS)) {
+				session.setIPAddress(node.get(IP_ADDRESS).asString());
+			}
+			
 			session.setLastPingTime(node.get(LAST_PING_TIME).asLong());
 			session.setSessionId(node.get(SESSION_ID).asString());
 			session.setUserName(node.get(USER_NAME).asString());

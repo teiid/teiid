@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -53,14 +54,25 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.service.SessionServiceException;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.ConnectionProfile;
+import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
 import org.teiid.services.SessionServiceImpl;
-import org.teiid.transport.*;
+import org.teiid.transport.ClientServiceRegistry;
+import org.teiid.transport.ClientServiceRegistryImpl;
+import org.teiid.transport.LocalServerConnection;
+import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.SocketListener;
 
 public class TransportService implements Service<ClientServiceRegistry>, ClientServiceRegistry {
 	private enum Protocol {teiid, pg};
@@ -161,7 +173,26 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     		}
     		else if (protocol == Protocol.pg) {
         		getVdbRepository().odbcEnabled();
-        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon);
+        		TeiidDriver driver = new TeiidDriver();
+        		driver.setEmbeddedProfile(new ConnectionProfile() {
+					@Override
+					public ConnectionImpl connect(String url, Properties info) throws TeiidSQLException {
+						try {
+							LocalServerConnection sc = new LocalServerConnection(info, true){
+								@Override
+								protected ClientServiceRegistry getClientServiceRegistry() {
+									return csr;
+								}
+							};
+							return new ConnectionImpl(sc, info, url);
+						} catch (CommunicationException e) {
+							throw TeiidSQLException.create(e);
+						} catch (ConnectionException e) {
+							throw TeiidSQLException.create(e);
+						}
+					}
+				});
+        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
         		this.socketListener = odbc;
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
