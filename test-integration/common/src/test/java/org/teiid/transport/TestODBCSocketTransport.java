@@ -128,13 +128,13 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			addr = new InetSocketAddress(0);
 			config.setBindAddress(addr.getHostName());
 			config.setPortNumber(addr.getPort());
-			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class));
-			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
 			FakeServer server = new FakeServer(true);
+			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class), server.getDriver());
+			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
+			
 			server.setUseCallingThread(false);
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 			
-			odbcTransport.setDriver(server.getDriver());
 		}
 		
 		public void stop() {
