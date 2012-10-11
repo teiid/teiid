@@ -38,11 +38,11 @@ public class ODBCSocketListener extends SocketListener {
 	private TeiidDriver driver;
 	private ILogon logonService;
 	
-	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, ILogon logon) {
+	public ODBCSocketListener(InetSocketAddress address, SocketConfiguration config, final ClientServiceRegistryImpl csr, StorageManager storageManager, int maxLobSize, ILogon logon, TeiidDriver driver) {
 		//the clientserviceregistry isn't actually used by ODBC 
 		super(address, config, csr, storageManager);
 		this.maxLobSize = maxLobSize;
-		this.driver = new TeiidDriver();
+		this.driver = driver;
 		this.logonService = logon;
 	}
 	
