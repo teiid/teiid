@@ -27,10 +27,10 @@ import java.util.List;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -185,7 +185,7 @@ public class BatchCollector {
      * Flush the batch by giving it to the buffer manager.
      */
     private void flushBatch(TupleBatch batch) throws TeiidComponentException, TeiidProcessingException {
-    	if (batch.getRowCount() == 0 && !batch.getTerminationFlag()) {
+    	if (batch.getRowCount() == 0 && batch.getTermination() == TupleBatch.NOT_TERMINATED) {
     		return;
     	}
     	flushBatchDirect(batch, true);

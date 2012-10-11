@@ -24,6 +24,7 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,15 +83,14 @@ public class LimitNode extends RelationalNode {
                 }
             }
             
-            List[] tuples = null;
+            List<List<?>> tuples = null;
             
             if (rowCounter > offset) {
-                List[] originalTuples = batch.getAllTuples();
+                List<List<?>> originalTuples = batch.getTuples();
                 int rowsToKeep = rowCounter - offset;
-                tuples = new List[rowsToKeep];
-                System.arraycopy(originalTuples, batch.getRowCount() - rowsToKeep, tuples, 0, tuples.length);
+                tuples = new ArrayList<List<?>>(originalTuples.subList(batch.getRowCount() - rowsToKeep, batch.getRowCount()));
             } else {
-                tuples = new List[0]; //empty batch
+                tuples = Collections.emptyList();
             }
             TupleBatch resultBatch = new TupleBatch(1, tuples);
             resultBatch.setTerminationFlag(batch.getTerminationFlag());
@@ -101,16 +101,15 @@ public class LimitNode extends RelationalNode {
             batch = getChildren()[0].nextBatch(); // Can throw BlockedException
         }
         
-        List[] tuples = null;
+        List<List<?>> tuples = null;
         
         if (limit < 0 || rowCounter + batch.getRowCount() <= limit) {
             // Passthrough
-           tuples = batch.getAllTuples();
+           tuples = batch.getTuples();
         } else {
             // Partial batch
-            List[] originalTuples = batch.getAllTuples();
-            tuples = new List[limit - rowCounter];
-            System.arraycopy(originalTuples, 0, tuples, 0, tuples.length);
+            List<List<?>> originalTuples = batch.getTuples();
+            tuples = new ArrayList<List<?>>(originalTuples.subList(0, limit - rowCounter));
         }
         
         TupleBatch resultBatch = new TupleBatch(rowCounter+1, tuples);

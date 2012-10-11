@@ -42,7 +42,9 @@ import org.teiid.jdbc.RequestOptions;
  */
 public class RequestMessage implements Externalizable {
 
-    public static final int DEFAULT_FETCH_SIZE = 2048;
+    private static final RequestOptions DEFAULT_REQUEST_OPTIONS = new RequestOptions();
+
+	public static final int DEFAULT_FETCH_SIZE = 2048;
     
     /** Transaction auto wrap constant - never wrap a command execution in a transaction */
     public static final String TXN_WRAP_OFF = "OFF"; //$NON-NLS-1$
@@ -422,7 +424,7 @@ public class RequestMessage implements Externalizable {
 
 	public RequestOptions getRequestOptions() {
 		if (this.requestOptions == null) {
-			this.requestOptions = new RequestOptions();
+			this.requestOptions = DEFAULT_REQUEST_OPTIONS;
 		}
 		return this.requestOptions;
 	}

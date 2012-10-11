@@ -26,8 +26,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.core.util.Assertion;
-
 
 /** 
  * @since 4.3
@@ -39,19 +37,18 @@ public class BatchResults {
 	}
 		
 	static class Batch{
-	    private List[] batch;
+	    private List<?>[] batch;
 	    private int beginRow;
 	    private int endRow;
 	    private boolean isLast;
 	    private int lastRow = -1;
 	    
-	    Batch(List[] batch, int beginRow, int endRow, boolean isLast){
+	    Batch(List<?>[] batch, int beginRow, int endRow){
 	        this.batch = batch;
 	        this.beginRow = beginRow;
-	        this.endRow = endRow;
-	        this.isLast = isLast;
-	        if (isLast) {
-	        	this.lastRow = endRow;
+	        this.endRow = this.beginRow + this.batch.length - 1;
+	        if (endRow != this.endRow) {
+	        	this.isLast = true;
 	        }
 	    }
 	    
@@ -67,7 +64,7 @@ public class BatchResults {
 	        return batch.length;
 	    }
 	    
-	    List getRow(int index) {
+	    List<?> getRow(int index) {
 	        return batch[index - beginRow];
 	    }
 	    
@@ -95,10 +92,7 @@ public class BatchResults {
     private int highestRowNumber;
     private BatchFetcher batchFetcher;
     private int savedBatches = DEFAULT_SAVED_BATCHES;
-    
-    public BatchResults(List[] batch, int beginRow, int endRow, boolean isLast) {
-    	this.setBatch(new Batch(batch, beginRow, endRow, isLast));
-    }
+    private boolean tailLast;
     
     public BatchResults(BatchFetcher batchFetcher, Batch batch, int savedBatches) {
 		this.batchFetcher = batchFetcher;
@@ -110,7 +104,7 @@ public class BatchResults {
      * Moving forward through the results it's expected that the batches are arbitrarily size.
      * Moving backward through the results it's expected that the batches will match the fetch size.
      */
-	public List getCurrentRow() throws SQLException {
+	public List<?> getCurrentRow() throws SQLException {
 		if (currentRow != null) {
 			return currentRow;
 		}
@@ -128,14 +122,21 @@ public class BatchResults {
 			if (i != 0) {
 				batches.add(0, batches.remove(i));
 			}
-			currentRow = batch.getRow(this.currentRowNumber);
+			setCurrentRow(batch);
 			return currentRow;
 		}
 		requestBatchAndWait(this.currentRowNumber);
     	Batch batch = batches.get(0);
-        currentRow = batch.getRow(this.currentRowNumber);
+    	setCurrentRow(batch);
         return currentRow;
     }
+
+	private void setCurrentRow(Batch batch) {
+		currentRow = batch.getRow(this.currentRowNumber);
+		if (batch.isLast() && batch.getEndRow() == this.currentRowNumber) {
+			currentRow = null;
+		}
+	}
     
 	private void requestNextBatch() throws SQLException {
 		requestBatchAndWait(highestRowNumber + 1);
@@ -230,12 +231,12 @@ public class BatchResults {
 		if (batches.size() == savedBatches) {
         	batches.remove(savedBatches - 1);
         }
-		Assertion.assertTrue(batch.getLength() != 0 || batch.isLast());
 		if (batch.getLastRow() != -1) {
             this.lastRowNumber = batch.getLastRow();
             this.highestRowNumber = batch.getLastRow();
         } else {
         	highestRowNumber = Math.max(batch.getEndRow(), highestRowNumber);
+        	tailLast = batch.isLast();
         }
         this.batches.add(0, batch);
 	}
@@ -281,6 +282,10 @@ public class BatchResults {
 			this.currentRow = null;
 		}
 		this.currentRowNumber = currentRowNumber;
+	}
+	
+	public boolean isTailLast() {
+		return tailLast;
 	}
        
 }

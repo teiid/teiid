@@ -116,7 +116,7 @@ public class ProcedurePlan extends ProcessorPlan {
     // Temp state for final results
     private TupleSource finalTupleSource;
     private int beginBatch = 1;
-    private List<Object> batchRows;
+    private List<List<?>> batchRows;
     private boolean lastBatch = false;
     private LinkedHashMap<ElementSymbol, Expression> params;
     private List<ElementSymbol> outParams;
@@ -466,7 +466,7 @@ public class ProcedurePlan extends ProcessorPlan {
 
 	private void addBatchRow(List<?> row, boolean last) {
         if(this.batchRows == null) {
-            this.batchRows = new ArrayList<Object>(this.batchSize/4);
+            this.batchRows = new ArrayList<List<?>>(this.batchSize/4);
         }
         if (!last && this.outParams != null) {
         	List<Object> newRow = Arrays.asList(new Object[row.size() + this.outParams.size()]);

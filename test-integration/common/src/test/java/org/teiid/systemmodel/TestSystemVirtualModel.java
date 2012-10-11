@@ -40,6 +40,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.AsynchPositioningException;
+import org.teiid.jdbc.ContinuousStatementCallback;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.RequestOptions;
 import org.teiid.jdbc.StatementCallback;
@@ -194,6 +195,71 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 			}
 		}, new RequestOptions());
 		assertEquals(7905, result.get().intValue());
+	}
+	
+	@Test public void testAsynchContinuousEmpty() throws Exception {
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute("select * from SYS.Schemas where 1 = 0", new ContinuousStatementCallback() {
+			
+			int execCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) throws SQLException {
+				fail();
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(execCount);
+			}
+			
+			@Override
+			public void beforeNextExecution(Statement s) throws SQLException {
+				execCount++;
+				assertEquals(-1, s.getResultSet().unwrap(TeiidResultSet.class).available());
+				if (execCount == 1024) {
+					s.close();
+				}
+			}
+		}, new RequestOptions().continuous(true));
+		assertEquals(1024, result.get().intValue());
+	}
+	
+	@Test public void testAsynchContinuousNonEmpty() throws Exception {
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute("select 1", new ContinuousStatementCallback() {
+			
+			int execCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) throws SQLException {
+				assertEquals(0, rs.unwrap(TeiidResultSet.class).available());
+				s.close();
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(execCount);
+			}
+			
+			@Override
+			public void beforeNextExecution(Statement s) throws SQLException {
+				execCount++;
+			}
+		}, new RequestOptions().continuous(true));
+		assertEquals(0, result.get().intValue());
 	}
 	
 	@Test public void testAsynchContinuous() throws Exception {

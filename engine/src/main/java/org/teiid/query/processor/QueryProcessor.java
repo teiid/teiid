@@ -22,13 +22,15 @@
 
 package org.teiid.query.processor;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -144,20 +146,26 @@ public class QueryProcessor implements BatchProducer {
 
 	            if (continuous) {
 	        		result.setRowOffset(rowOffset);
-	        		rowOffset = result.getEndRow() + 1;
-
+	        		
 	        		if (result.getTerminationFlag()) {
-	        			result.setTerminationFlag(false);
+	        			result.setTermination(TupleBatch.ITERATION_TERMINATED);
+	        			ArrayList<Object> terminationTuple = new ArrayList<Object>(this.getOutputElements().size());
+	        			Collections.fill(terminationTuple, null);
+	        			result.getTuples().add(terminationTuple);
 	        			this.context.getTupleSourceCache().close();
 		        		this.processPlan.close();
 		        		this.processPlan.reset();
 		        		this.context.incrementReuseCount();
 		        		this.open = false;	
 	        		}
+	        		
+	        		rowOffset = result.getEndRow() + 1;
 	            }
         		
-	        	if(result.getTerminationFlag()) {
-	        		done = true;
+	        	if(result.getTermination() != TupleBatch.NOT_TERMINATED) {
+	        		if (result.getTerminationFlag()) {
+	        			done = true;
+	        		}
 	        		break;
 	        	}
 	        	

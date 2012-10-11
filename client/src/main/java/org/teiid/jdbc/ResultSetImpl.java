@@ -418,8 +418,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	private Batch getCurrentBatch(ResultsMessage currentResultMsg) {
 		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
-		boolean isLast = currentResultMsg.getResultsList().size() == 0 || currentResultMsg.getFinalRow() == currentResultMsg.getLastRow();
-		Batch result = new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow(), isLast);
+		Batch result = new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow());
 		result.setLastRow(currentResultMsg.getFinalRow());
 		return result;
 	}
@@ -436,7 +435,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public int available() throws SQLException {
 		int current = batchResults.getCurrentRowNumber();
 		int highest = batchResults.getHighestRowNumber();
-		return highest - current - getOffset();
+		return highest - current - getOffset() - (batchResults.isTailLast()?1:0);
 	}
 	
 	protected int getOffset() {

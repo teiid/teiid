@@ -35,16 +35,16 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledFuture;
 
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.client.util.ResultsReceiver;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -58,14 +58,14 @@ import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
-import org.teiid.jdbc.SQLStates;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.jdbc.EnhancedTimer.Task;
+import org.teiid.jdbc.SQLStates;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -670,48 +670,56 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		ResultsReceiver<ResultsMessage> receiver = null;
 		boolean result = true;
 		synchronized (this) {
-			if (this.resultsReceiver == null
-					|| (this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
-					|| (this.transactionState == TransactionState.ACTIVE)) {
-				return result;
-			}
+			if (batch == null || !this.requestMsg.getRequestOptions().isContinuous()) {
+				if (this.resultsReceiver == null
+						|| (this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
+						|| (this.transactionState == TransactionState.ACTIVE)) {
+					return result;
+				}
+			
+				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
+					LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
 		
-			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-				LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			}
-	
-			//TODO: support fetching more than 1 batch
-			boolean fromBuffer = false;
-    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
-	    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
-	    			batch = savedBatch;
-	    		} else {
-	    			batch = resultsBuffer.getBatch(begin);
+				//TODO: support fetching more than 1 batch
+				boolean fromBuffer = false;
+	    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
+		    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
+		    			batch = savedBatch;
+		    		} else {
+		    			batch = resultsBuffer.getBatch(begin);
+		    		}
+		    		savedBatch = null;
+		    		fromBuffer = true;
+		    	}
+	    		int count = this.end - this.begin + 1;
+	    		if (batch.getRowCount() > count) {
+	    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
+	    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
+	    			boolean last = false;
+	    			if (endRow == batch.getEndRow()) {
+	    				last = batch.getTerminationFlag();
+	    			} else if (fromBuffer && isForwardOnly()) {
+	        			savedBatch = batch;
+	    			}
+	                List<List<?>> memoryRows = batch.getTuples();
+	                batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
+	                batch.setTerminationFlag(last);
+	    		} else if (!fromBuffer){
+	    			result = !isForwardOnly();
 	    		}
-	    		savedBatch = null;
-	    		fromBuffer = true;
-	    	}
-    		int count = this.end - this.begin + 1;
-    		if (batch.getRowCount() > count) {
-    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
-    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
-    			boolean last = false;
-    			if (endRow == batch.getEndRow()) {
-    				last = batch.getTerminationFlag();
-    			} else if (fromBuffer && isForwardOnly()) {
-        			savedBatch = batch;
-    			}
-                List<List<?>> memoryRows = batch.getTuples();
-                batch = new TupleBatch(beginRow, memoryRows.subList(beginRow - batch.getBeginRow(), endRow - batch.getBeginRow() + 1));
-                batch.setTerminationFlag(last);
-    		} else if (!fromBuffer){
-    			result = !isForwardOnly();
-    		}
+			} else {
+				result = false;
+			}
 	        int finalRowCount = (this.resultsBuffer.isFinal()&&!this.requestMsg.getRequestOptions().isContinuous())?this.resultsBuffer.getRowCount():(batch.getTerminationFlag()?batch.getEndRow():-1);
 	        
 	        response = createResultsMessage(batch.getTuples(), this.originalCommand.getProjectedSymbols());
 	        response.setFirstRow(batch.getBeginRow());
-	        response.setLastRow(batch.getEndRow());
+	        if (batch.getTermination() == TupleBatch.ITERATION_TERMINATED) {
+	        	response.setLastRow(batch.getEndRow() - 1);
+	        } else {
+	        	response.setLastRow(batch.getEndRow());
+	        }
 	        response.setUpdateResult(this.returnsUpdateCount);
 	        // set final row
 	        response.setFinalRow(finalRowCount);
