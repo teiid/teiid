@@ -47,6 +47,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.postgresql.Driver;
 import org.teiid.adminapi.*;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
@@ -514,6 +515,31 @@ public class IntegrationTestDeployment {
 		AdminUtil.waitForVDBLoad(admin, "error", 1, 3);
 		VDB vdb = admin.getVDB("error", 1);
 		assertEquals(Status.FAILED, vdb.getStatus());
+	}
+
+	@Test
+	public void testODBCConnectionSuccess() throws Exception {
+		admin.deploy("bqt.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		Driver d = new Driver();
+		Properties p = new Properties();
+		p.setProperty("user", "user");
+		p.setProperty("password", "user");
+		Connection c = d.connect("jdbc:postgresql://127.0.0.1:35432/bqt", p);
+		c.close();
+	}
+	
+	@Test
+	public void testODBCConnectionFailure() throws Exception {
+		admin.deploy("bqt.vdb",new FileInputStream(UnitTestUtil.getTestDataFile("bqt.vdb")));
+		Driver d = new Driver();
+		Properties p = new Properties();
+		p.setProperty("user", "user");
+		p.setProperty("password", "notpassword");
+		try {
+			d.connect("jdbc:postgresql://127.0.0.1:35432/bqt", p);
+			fail("failed due to bad credentials");
+		} catch (SQLException e) {
+		}
 	}
 
 }
