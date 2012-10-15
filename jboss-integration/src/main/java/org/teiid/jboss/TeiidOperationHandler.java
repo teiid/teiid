@@ -214,6 +214,9 @@ class ListSessions extends TeiidOperationHandler{
 		if (operation.hasDefined(OperationsConstants.VDB_VERSION) && operation.hasDefined(OperationsConstants.VDB_NAME)) {
 			vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 			version = operation.get(OperationsConstants.VDB_VERSION).asInt();
+			if (!isValidVDB(context, vdbName, version)) {
+				throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, version)));				
+			}
 			filter = true;
 		}
 		
@@ -347,7 +350,10 @@ class ListRequestsPerVDB extends TeiidOperationHandler{
 		ModelNode result = context.getResult();
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
-			for (TransportService t: this.transports) {
+		if (!isValidVDB(context, vdbName, vdbVersion)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));				
+		}
+		for (TransportService t: this.transports) {
 			List<RequestMetadata> requests = t.getRequestsUsingVDB(vdbName,vdbVersion);
 			for (RequestMetadata request:requests) {
 				if (request.sourceRequest()) {
@@ -563,6 +569,9 @@ class ClearCache extends BaseCachehandler {
 		if (operation.hasDefined(OperationsConstants.VDB_NAME) && operation.hasDefined(OperationsConstants.VDB_VERSION)) {
 			String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 			int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
+			if (!isValidVDB(context, vdbName, vdbVersion)) {
+				throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));				
+			}
 			LogManager.logInfo(LogConstants.CTX_DQP, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50005, cacheType, vdbName, vdbVersion));
 			cache.clearForVDB(vdbName, vdbVersion);
 		}
@@ -746,6 +755,10 @@ class ExecuteQuery extends TeiidOperationHandler{
 		String sql = operation.get(OperationsConstants.SQL_QUERY).asString();
 		int timeout = operation.get(OperationsConstants.TIMEOUT_IN_MILLI).asInt();
 		
+		if (!isValidVDB(context, vdbName, vdbVersion)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));				
+		}
+				
 		result.set(executeQuery(vdbName, vdbVersion, sql, timeout, new ModelNode()));
 	}
 
@@ -924,7 +937,12 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 
 		VDBMetaData vdb = repo.getVDB(vdbName, vdbVersion);
-		VDBMetadataMapper.INSTANCE.wrap(vdb, result);
+		if (vdb != null) {
+			VDBMetadataMapper.INSTANCE.wrap(vdb, result);
+		}
+		else {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));				
+		}
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
@@ -970,15 +988,15 @@ class GetSchema extends BaseOperationHandler<VDBRepository>{
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
 		String modelName = operation.get(OperationsConstants.MODEL_NAME).asString();
-
+		
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("no_vdb_found", vdbName, vdbVersion))); //$NON-NLS-1$
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));
 		}
 		
 		EnumSet<SchemaObjectType> schemaTypes = null;
 		if (vdb.getModel(modelName) == null){
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("no_model_found", vdbName, vdbVersion, modelName))); //$NON-NLS-1$
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50097, vdbName, vdbVersion, modelName)));
 		}
 		
 		if (operation.hasDefined(OperationsConstants.ENTITY_TYPE)) {
@@ -1129,6 +1147,10 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 
 		String vdbName = operation.get(OperationsConstants.VDB_NAME).asString();
 		int vdbVersion = operation.get(OperationsConstants.VDB_VERSION).asInt();
+		
+		if (!isValidVDB(context, vdbName, vdbVersion)) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));				
+		}
 
 		ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.vdbServiceName(vdbName, vdbVersion));
         return RuntimeVDB.class.cast(sc.getValue());	
@@ -1520,5 +1542,5 @@ class ReadRARDescription extends TeiidOperationHandler {
 		reply.get(TYPE).set(ModelType.LIST);	
 		// this is incomplete
 		reply.get(VALUE_TYPE).set(ModelType.STRING);		
-	}		
+	}
 }

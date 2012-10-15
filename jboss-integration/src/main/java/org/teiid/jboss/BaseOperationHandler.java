@@ -36,6 +36,10 @@ import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.dmr.ModelNode;
+import org.jboss.msc.service.ServiceController;
+import org.teiid.adminapi.VDB;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.deployers.VDBRepository;
 
 public abstract class BaseOperationHandler<T> implements DescriptionProvider, OperationStepHandler {
 	private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
@@ -101,4 +105,14 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
 	
 	protected void describeParameters(@SuppressWarnings("unused") ModelNode operationNode, @SuppressWarnings("unused")ResourceBundle bundle) {
 	}
+	
+	boolean isValidVDB(OperationContext context, String vdbName, int vdbVersion) {
+	    ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
+	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());	
+		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
+		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
+			return false;
+		}
+		return true;
+	}	
 }
