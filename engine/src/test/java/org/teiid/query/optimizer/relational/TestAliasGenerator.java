@@ -24,9 +24,13 @@ package org.teiid.query.optimizer.relational;
 
 import static org.junit.Assert.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.Test;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
@@ -46,13 +50,20 @@ public class TestAliasGenerator {
                           String expected, 
                           boolean aliasGroups,
                           boolean stripColumnAliases, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException {
-        Command command = TestResolver.helpResolve(sql, metadata);
+    	AliasGenerator visitor = new AliasGenerator(aliasGroups, stripColumnAliases);
+    	return helpTest(sql, expected, metadata, visitor);
+    }
+
+	private Command helpTest(String sql, String expected,
+			QueryMetadataInterface metadata, AliasGenerator visitor)
+			throws TeiidComponentException, TeiidProcessingException {
+		Command command = TestResolver.helpResolve(sql, metadata);
         command = QueryRewriter.rewrite(command, metadata, null);
         command = (Command) command.clone();
-        command.acceptVisitor(new AliasGenerator(aliasGroups, stripColumnAliases));
+        command.acceptVisitor(visitor);
         assertEquals(expected, command.toString());
         return command;
-    }
+	}
 
     /**
      * Ensures that views are named with v_ even without metadata
@@ -173,6 +184,26 @@ public class TestAliasGenerator {
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(RealMetadataFactory.exampleBQTCached());
         org.teiid.language.Command c = lbf.translate(command);
         assertEquals("SELECT SmallA.IntKey, SmallA.StringKey FROM SmallA ORDER BY SmallA.IntKey, SmallA.StringKey", c.toString());
+    }
+    
+    @Test public void testKeepAliases() throws Exception {
+    	String sql = "select g.intkey as a, g.stringkey as b from BQT1.SmallA g, BQT1.SmallB ORDER BY a, b"; //$NON-NLS-1$
+        String expected = "SELECT g.IntKey AS c_0, g.StringKey AS c_1 FROM BQT1.SmallA AS g, BQT1.SmallB AS g_1 ORDER BY c_0, c_1"; //$NON-NLS-1$
+        AliasGenerator av = new AliasGenerator(true, false);
+        Map<String, String> aliasMap = new HashMap<String, String>();
+        aliasMap.put("g", "g");
+        av.setAliasMapping(aliasMap);
+        helpTest(sql, expected, RealMetadataFactory.exampleBQTCached(), av);
+    }
+    
+    @Test(expected=TeiidRuntimeException.class) public void testKeepAliases1() throws Exception {
+    	String sql = "select g_1.intkey as a, g_1.stringkey as b from BQT1.SmallA g_1, BQT1.SmallB ORDER BY a, b"; //$NON-NLS-1$
+        String expected = "SELECT g.IntKey AS c_0, g.StringKey AS c_1 FROM BQT1.SmallA AS g ORDER BY c_0, c_1"; //$NON-NLS-1$
+        AliasGenerator av = new AliasGenerator(true, false);
+        Map<String, String> aliasMap = new HashMap<String, String>();
+        aliasMap.put("g_1", "g_1");
+        av.setAliasMapping(aliasMap);
+        helpTest(sql, expected, RealMetadataFactory.exampleBQTCached(), av);
     }
     
 }

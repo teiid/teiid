@@ -29,8 +29,26 @@ import org.teiid.core.util.EquivalenceUtil;
 
 public class SourceHint {
 	
+	public static class SpecificHint {
+		String hint;
+		boolean useAliases;
+
+		public SpecificHint(String hint, boolean useAliases) {
+			this.hint = hint;
+			this.useAliases = useAliases;
+		}
+		
+		public String getHint() {
+			return hint;
+		}
+		public boolean isUseAliases() {
+			return useAliases;
+		}
+	}
+	
+	private boolean useAliases;
 	private String generalHint;
-	private Map<String, String> sourceHints;
+	private Map<String, SpecificHint> sourceHints;
 	
 	public String getGeneralHint() {
 		return generalHint;
@@ -40,22 +58,38 @@ public class SourceHint {
 		this.generalHint = generalHint;
 	}
 	
-	public void setSourceHint(String translatorName, String hint) {
+	public void setSourceHint(String translatorName, String hint, boolean useAliases) {
 		if (this.sourceHints == null) {
-			this.sourceHints = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+			this.sourceHints = new TreeMap<String, SpecificHint>(String.CASE_INSENSITIVE_ORDER);
 		}
-		this.sourceHints.put(translatorName, hint);
+		this.sourceHints.put(translatorName, new SpecificHint(hint, useAliases));
 	}
 	
-	public String getSourceHint(String sourceName) {
+	public SpecificHint getSpecificHint(String sourceName) {
 		if (this.sourceHints == null) {
 			return null;
 		}
 		return this.sourceHints.get(sourceName);
 	}
+
+	public String getSourceHint(String sourceName) {
+		SpecificHint sp = getSpecificHint(sourceName);
+		if (sp != null) {
+			return sp.getHint();
+		}
+		return null;
+	}
 	
-	public Map<String, String> getSourceHints() {
+	public Map<String, SpecificHint> getSpecificHints() {
 		return sourceHints;
+	}
+	
+	public boolean isUseAliases() {
+		return useAliases;
+	}
+	
+	public void setUseAliases(boolean useAliases) {
+		this.useAliases = useAliases;
 	}
 	
 	@Override

@@ -30,10 +30,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.core.util.Assertion;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -46,8 +49,8 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.FrameUtil;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
@@ -62,6 +65,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -70,8 +74,9 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
-import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
+import org.teiid.query.util.CommandContext;
 
 
 public class PlanToProcessConverter {
@@ -82,6 +87,7 @@ public class PlanToProcessConverter {
 	
 	//state for detecting and reusing source queries
 	private Map<Command, AccessNode> sharedCommands = new HashMap<Command, AccessNode>();
+	private CommandContext context;
 	private static AtomicInteger sharedId = new AtomicInteger();
 	
 	public static class SharedStateKey {
@@ -89,11 +95,12 @@ public class PlanToProcessConverter {
 		int expectedReaders;
 	}
 	
-	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder) {
+	public PlanToProcessConverter(QueryMetadataInterface metadata, IDGenerator idGenerator, AnalysisRecord analysisRecord, CapabilitiesFinder capFinder, CommandContext context) {
 		this.metadata = metadata;
 		this.idGenerator = idGenerator;
 		this.analysisRecord = analysisRecord;
 		this.capFinder = capFinder;
+		this.context = context;
 	}
 	
     public RelationalPlan convert(PlanNode planNode)
@@ -331,7 +338,7 @@ public class PlanToProcessConverter {
                         ev = EvaluatableVisitor.needsEvaluation(command);
                         aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     }
-                    
+                    setRoutingName(aNode, node, command);
                     if (command instanceof QueryCommand) {
 	                    try {
 	                        command = (Command)command.clone();
@@ -339,16 +346,34 @@ public class PlanToProcessConverter {
 	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
 	                        boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
 	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
-	                        command.acceptVisitor(new AliasGenerator(aliasGroups, !aliasColumns));
+	                        AliasGenerator visitor = new AliasGenerator(aliasGroups, !aliasColumns);
+	                        SourceHint sh = context.getSourceHint();
+                        	if (sh != null && aliasGroups) {
+                        		VDBMetaData vdb = context.getDQPWorkContext().getVDB();
+                            	ModelMetaData model = vdb.getModel(aNode.getModelName());
+                            	List<String> sourceNames = model.getSourceNames();
+                            	SpecificHint sp = null;
+                            	if (sourceNames.size() == 1) {
+                            		sp = sh.getSpecificHint(sourceNames.get(0));
+                            	}
+	                        	if (sh.isUseAliases() || (sp != null && sp.isUseAliases())) {
+	                        		visitor.setAliasMapping(context.getAliasMapping());
+	                        	}
+	                        }
+							command.acceptVisitor(visitor);
 	                    } catch (QueryMetadataException err) {
 	                         throw new TeiidComponentException(QueryPlugin.Event.TEIID30249, err);
+	                    } catch (TeiidRuntimeException e) {
+	                    	if (e.getCause() instanceof QueryPlannerException) {
+	                    		throw (QueryPlannerException)e.getCause();
+	                    	}
+	                    	throw e;
 	                    }
                     }
                     aNode.setCommand(command);
                     if (minimizeProject() && !aNode.isShouldEvaluate()) {
                     	aNode.minimizeProject(command);
                     }
-                    setRoutingName(aNode, node);
                     //check if valid to share this with other nodes
                     if (ev != null && ev.getDeterminismLevel().compareTo(Determinism.COMMAND_DETERMINISTIC) >= 0 && command.areResultsCachable()) {
                     	checkForSharedSourceCommand(aNode);
@@ -626,14 +651,13 @@ public class PlanToProcessConverter {
         return processNode;
     }
 
-	private void setRoutingName(AccessNode accessNode, PlanNode node)
+	private void setRoutingName(AccessNode accessNode, PlanNode node, Command command)
 		throws QueryPlannerException, TeiidComponentException {
 
 		// Look up connector binding name
 		try {
 			Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
 			if(modelID == null || modelID instanceof TempMetadataID) {
-				Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
 				if(command instanceof StoredProcedure){
 					modelID = ((StoredProcedure)command).getModelID();
 				}else{

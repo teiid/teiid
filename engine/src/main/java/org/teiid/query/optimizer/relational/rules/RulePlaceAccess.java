@@ -74,7 +74,7 @@ public final class RulePlaceAccess implements
 
         for (PlanNode sourceNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE)) {
             addAccessNode(metadata, sourceNode, capFinder, addtionalRules);
-            addAlias(sourceNode, groups, metadata);
+            addAlias(sourceNode, context, groups, metadata);
         }
 
         if (addtionalRules[0]) {
@@ -167,7 +167,7 @@ public final class RulePlaceAccess implements
      * @throws TeiidComponentException
      * @throws QueryPlannerException
      */
-    private void addAlias(PlanNode sourceNode,
+    private void addAlias(PlanNode sourceNode, CommandContext cc,
                           Set<String> groups,
                           QueryMetadataInterface metadata) throws QueryMetadataException,
                                                           TeiidComponentException,
@@ -191,7 +191,10 @@ public final class RulePlaceAccess implements
 
         GroupSymbol group = sourceNode.getGroups().iterator().next();
 
-        if (groups.add(group.getName().toUpperCase())) {
+        if (groups.add(group.getName())) {
+        	if (group.getDefinition() != null) {
+            	cc.getAliasMapping().put(group.getName(), group.getName());
+            }
             return; // this is the first instance of the group
         }
 
@@ -203,6 +206,10 @@ public final class RulePlaceAccess implements
         }
 
         GroupSymbol newGroup = recontextSymbol(group, groups);
+
+        if (group.getDefinition() != null) {
+        	cc.getAliasMapping().put(newGroup.getName(), group.getName());
+        }
 
         //the expressions in the map will all be element symbols
         Map<ElementSymbol, Expression> replacementSymbols = FrameUtil.buildSymbolMap(group, newGroup, metadata);

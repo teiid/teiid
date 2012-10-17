@@ -163,7 +163,7 @@ public class RelationalPlanner {
         	planToProcessConverter = context.getPlanToProcessConverter();
         }
         if (planToProcessConverter == null) {
-        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder);
+        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
         }
 		
 		//plan with
@@ -224,7 +224,7 @@ public class RelationalPlanner {
 
         // Build rule set based on hints
         RuleStack rules = buildRules();
-
+        context.setSourceHint(sourceHint);
         // Run rule-based optimizer
         plan = executeRules(rules, plan);
 

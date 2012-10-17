@@ -23,22 +23,26 @@
 package org.teiid.query.optimizer.relational;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.core.TeiidRuntimeException;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.Symbol;
-import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 import org.teiid.query.sql.util.SymbolMap;
 
 
@@ -52,7 +56,10 @@ import org.teiid.query.sql.util.SymbolMap;
  */
 public class AliasGenerator extends PreOrderNavigator {
     
-    private static class NamingVisitor extends LanguageVisitor {
+    private static final String table_prefix = "g_"; //$NON-NLS-1$
+	private static final String view_prefix = "v_"; //$NON-NLS-1$
+
+	private static class NamingVisitor extends LanguageVisitor {
 
         private class SQLNamingContext {
             SQLNamingContext parent;
@@ -174,6 +181,7 @@ public class AliasGenerator extends PreOrderNavigator {
     private int groupIndex;
     private int viewIndex;
     private boolean stripColumnAliases;
+	private Map<String, String> aliasMapping;
 
     public AliasGenerator(boolean aliasGroups) {
     	this(aliasGroups, false);
@@ -243,6 +251,14 @@ public class AliasGenerator extends PreOrderNavigator {
             visitor.namingContext.aliasColumns = !stripColumnAliases;
         }        
         visitNode(obj.getFrom());
+        if (this.aliasMapping != null) {
+        	HashSet<String> newSymbols = new HashSet<String>();
+        	for (Map.Entry<String, String> entry : this.visitor.namingContext.groupNames.entrySet()) {
+        		if (!newSymbols.add(entry.getValue())) {
+        			throw new TeiidRuntimeException(new QueryPlannerException(QueryPlugin.Event.TEIID31126, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31126, entry.getValue())));
+        		}
+        	}
+        }
         visitNode(obj.getCriteria());
         visitNode(obj.getGroupBy());
         visitNode(obj.getHaving());
@@ -279,9 +295,23 @@ public class AliasGenerator extends PreOrderNavigator {
     private String recontextGroup(GroupSymbol symbol, boolean virtual) {
         String newAlias = null;
         if (virtual) {
-            newAlias = "v_" + viewIndex++; //$NON-NLS-1$
+            newAlias = view_prefix + viewIndex++; 
         } else {
-            newAlias = "g_" + groupIndex++; //$NON-NLS-1$
+            newAlias = table_prefix + groupIndex++; 
+        }
+        if (this.aliasMapping != null && symbol.getDefinition() != null) {
+        	String oldAlias = this.aliasMapping.get(symbol.getName());
+        	if (oldAlias != null) {
+        		newAlias = oldAlias;
+            	if (newAlias.startsWith(table_prefix) || newAlias.startsWith(view_prefix)) {
+            		try {
+            			Integer.parseInt(newAlias.substring(2, newAlias.length()));
+            			throw new TeiidRuntimeException(new QueryPlannerException(QueryPlugin.Event.TEIID31127, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31127, newAlias)));
+            		} catch (NumberFormatException e) {
+            			
+            		}
+            	}
+        	}
         }
         visitor.namingContext.groupNames.put(symbol.getName(), newAlias);
         return newAlias;
@@ -364,5 +394,9 @@ public class AliasGenerator extends PreOrderNavigator {
     	//we need to follow references to correct correlated variables
         visitNode(obj.getExpression());
     }
+
+	public void setAliasMapping(Map<String, String> aliasMapping) {
+		this.aliasMapping = aliasMapping;
+	}
 
 }

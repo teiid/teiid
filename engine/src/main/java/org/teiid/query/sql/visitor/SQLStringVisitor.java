@@ -43,6 +43,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
+import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -755,13 +756,21 @@ public class SQLStringVisitor extends LanguageVisitor {
         	append(SPACE);
         	append(BEGIN_HINT);
         	append("sh"); //$NON-NLS-1$
+			if (sh.isUseAliases()) {
+				append(SPACE);
+				append("KEEP ALIASES"); //$NON-NLS-1$
+			}
         	if (sh.getGeneralHint() != null) {
         		appendSourceHintValue(sh.getGeneralHint());
         	}
-        	if (sh.getSourceHints() != null) {
-        		for (Map.Entry<String, String> entry : sh.getSourceHints().entrySet()) {
+        	if (sh.getSpecificHints() != null) {
+        		for (Map.Entry<String, SpecificHint> entry : sh.getSpecificHints().entrySet()) {
         			append(entry.getKey());
-        			appendSourceHintValue(entry.getValue());
+        			if (entry.getValue().isUseAliases()) {
+        				append(SPACE);
+        				append("KEEP ALIASES"); //$NON-NLS-1$
+        			}
+        			appendSourceHintValue(entry.getValue().getHint());
         		}
         	}
         	append(END_HINT);

@@ -66,8 +66,8 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.QueryOptimizer;
 import org.teiid.query.optimizer.TestOptimizer;
-import org.teiid.query.optimizer.TestRuleRaiseNull;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.TestRuleRaiseNull;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -96,7 +96,7 @@ import org.teiid.query.validator.Validator;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings({"nls", "unchecked"})
+@SuppressWarnings({"nls", "unchecked", "rawtypes"})
 public class TestProcessor {
 
 	// ################################## TEST HELPERS ################################

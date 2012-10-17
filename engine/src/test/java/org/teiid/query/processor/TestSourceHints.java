@@ -30,11 +30,13 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -49,6 +51,18 @@ public class TestSourceHints {
         
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager("foo", "leading"), expected);
+	}
+	
+	@Test public void testKeepAliases() throws Exception {
+		String sql = "SELECT /*+ sh KEEP ALIASES bar:'leading(g)' */ e1 from pm1.g1 g order by e1 limit 1"; //$NON-NLS-1$
+		CommandContext cc = TestProcessor.createCommandContext();
+		cc.setDQPWorkContext(new DQPWorkContext());
+		cc.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
+		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), null, true, cc);
+		TestOptimizer.checkAtomicQueries(new String[] {"SELECT g.e1 AS c_0 FROM pm1.g1 AS g ORDER BY c_0"}, plan);
+        
+        List<?>[] expected = new List[] {};
+        helpProcess(plan, manager(null, "leading(g)"), expected);
 	}
 	
 	@Test public void testHintInView() {

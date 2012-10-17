@@ -63,6 +63,7 @@ import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -75,7 +76,7 @@ import org.teiid.query.validator.ValidatorReport;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.SourceSystemFunctions;
 
-@SuppressWarnings({"nls", "unchecked"})
+@SuppressWarnings({"nls"})
 public class TestOptimizer {
 
     public interface DependentJoin {}
@@ -163,7 +164,7 @@ public class TestOptimizer {
         return helpPlan(sql, md, null, getGenericFinder(), expectedAtomic, mode);
     }
 	
-    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, boolean shouldSucceed) {
+    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List<String> bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, boolean shouldSucceed) {
         Command command;
         try {
             command = helpGetCommand(sql, md, bindings);
@@ -174,14 +175,14 @@ public class TestOptimizer {
         return helpPlanCommand(command, md, capFinder, null, expectedAtomic, shouldSucceed ? ComparisonMode.CORRECTED_COMMAND_STRING : ComparisonMode.FAILED_PLANNING);
     } 
     
-    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, ComparisonMode mode) throws TeiidComponentException, TeiidProcessingException {
+    public static ProcessorPlan helpPlan(String sql, QueryMetadataInterface md, List<String> bindings, CapabilitiesFinder capFinder, String[] expectedAtomic, ComparisonMode mode) throws TeiidComponentException, TeiidProcessingException {
         Command command = helpGetCommand(sql, md, bindings);
 
         return helpPlanCommand(command, md, capFinder, null, expectedAtomic, mode);
     } 
 
     
-    public static Command helpGetCommand(String sql, QueryMetadataInterface md, List bindings) throws TeiidComponentException, TeiidProcessingException { 
+    public static Command helpGetCommand(String sql, QueryMetadataInterface md, List<String> bindings) throws TeiidComponentException, TeiidProcessingException { 
 		if(DEBUG) System.out.println("\n####################################\n" + sql);	 //$NON-NLS-1$
 		Command command = null;
 		if (bindings != null && !bindings.isEmpty()) {
@@ -193,7 +194,7 @@ public class TestOptimizer {
 		
         ValidatorReport repo = Validator.validate(command, md);
 
-        Collection failures = new ArrayList();
+        Collection<LanguageObject> failures = new ArrayList<LanguageObject>();
         repo.collectInvalidObjects(failures);
         if (failures.size() > 0){
             fail("Exception during validation (" + repo); //$NON-NLS-1$
@@ -237,7 +238,7 @@ public class TestOptimizer {
 
     public static void checkAtomicQueries(String[] expectedAtomic,
                                            ProcessorPlan plan, QueryMetadataInterface md, CapabilitiesFinder capFinder) {
-        Set actualQueries = getAtomicQueries(plan);
+        Set<String> actualQueries = getAtomicQueries(plan);
         
         HashSet<String> expectedQueries = new HashSet<String>();
         
@@ -247,8 +248,8 @@ public class TestOptimizer {
             Command command;
             try {
                 command = helpGetCommand(sql, md, null);
-                Collection groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
-                final GroupSymbol symbol = (GroupSymbol)groups.iterator().next();
+                Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, false);
+                final GroupSymbol symbol = groups.iterator().next();
                 Object modelId = md.getModelID(symbol.getMetadataID());
                 boolean supportsGroupAliases = CapabilitiesUtil.supportsGroupAliases(modelId, md, capFinder);
                 boolean supportsProjection = CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelId, md, capFinder);
@@ -328,7 +329,7 @@ public class TestOptimizer {
     
     // Counts are (mostly) alphabetical:
     //   Access, DependentAccess, DependentSelect, DependentProject, DupRemove, Grouping, NestedLoopJoinStrategy, Null, PlanExecution, Project, Select, Sort, UnionAll
-    private static final Class[] COUNT_TYPES = new Class[] {
+    private static final Class<?>[] COUNT_TYPES = new Class[] {
         AccessNode.class,
         DependentAccessNode.class,
         DependentSelectNode.class,
@@ -349,7 +350,7 @@ public class TestOptimizer {
         checkNodeTypes(root, expectedCounts, COUNT_TYPES);
     }    
     
-    public static void checkNodeTypes(ProcessorPlan root, int[] expectedCounts, Class[] types) {
+    public static void checkNodeTypes(ProcessorPlan root, int[] expectedCounts, Class<?>[] types) {
         if(! (root instanceof RelationalPlan)) {
             return;
         }
@@ -429,7 +430,7 @@ public class TestOptimizer {
         }
     }         
     
-    private static void updateCounts(Class nodeClass, int[] counts, Class[] types) {
+    private static void updateCounts(Class<?> nodeClass, int[] counts, Class<?>[] types) {
         for(int i=0; i<types.length; i++) {
             if(types[i].equals(nodeClass)) {
                 counts[i] = counts[i] + 1;
@@ -511,7 +512,7 @@ public class TestOptimizer {
 		QueryNode vm1g3n1 = new QueryNode("SELECT * FROM pm1.g2"); //$NON-NLS-1$ //$NON-NLS-2$
 		Table vm1g3 = RealMetadataFactory.createUpdatableVirtualGroup("g3", vm1, vm1g3n1); //$NON-NLS-1$
 
-        QueryNode vm1g4n1 = new QueryNode("SELECT pm1.g1.e1, pm1.g2.e1 FROM pm1.g1, pm1.g2 WHERE pm1.g1.e1=pm1.g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
+        QueryNode vm1g4n1 = new QueryNode("SELECT pm1.g1.e1,  g2.e1 FROM pm1.g1, pm1.g2 g2 WHERE pm1.g1.e1= g2.e1"); //$NON-NLS-1$ //$NON-NLS-2$
         Table vm1g4 = RealMetadataFactory.createUpdatableVirtualGroup("g4", vm1, vm1g4n1); //$NON-NLS-1$
 
         QueryNode vm1g5n1 = new QueryNode("SELECT DISTINCT pm1.g1.e1 FROM pm1.g1 ORDER BY pm1.g1.e1"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -1013,7 +1014,7 @@ public class TestOptimizer {
     }
     
     @Test public void testPushMatchCritWithReference() throws Exception {
-        List bindings = new ArrayList();
+        List<String> bindings = new ArrayList<String>();
         bindings.add("pm1.g2.e1"); //$NON-NLS-1$
         helpPlan("select e1 FROM pm1.g1 WHERE e1 LIKE ?", example1(), bindings, null,  //$NON-NLS-1$
             new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0 WHERE g_0.e1 LIKE pm1.g2.e1" }, ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$

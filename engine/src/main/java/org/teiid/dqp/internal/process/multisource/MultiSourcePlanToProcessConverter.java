@@ -80,7 +80,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 			IDGenerator idGenerator, AnalysisRecord analysisRecord,
 			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
 			DQPWorkContext workContext, CommandContext context) {
-		super(metadata, idGenerator, analysisRecord, capFinder);
+		super(metadata, idGenerator, analysisRecord, capFinder, context);
 		this.multiSourceModels = multiSourceModels;
 		this.workContext = workContext;
 	}

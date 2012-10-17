@@ -45,8 +45,8 @@ import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
@@ -108,6 +108,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private Determinism determinismLevel = Determinism.DETERMINISTIC;
 	    
 	    private Set<String> groups;
+	    private Map<String, String> aliasMapping;
 	    
 	    private long timeSliceEnd = Long.MAX_VALUE;
 	    
@@ -434,9 +435,16 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public Set<String> getGroups() {
 		if (globalState.groups == null) {
-			globalState.groups = new HashSet<String>();
+			globalState.groups = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 		}
 		return globalState.groups;
+	}
+	
+	public Map<String, String> getAliasMapping() {
+		if (globalState.aliasMapping == null) {
+			globalState.aliasMapping = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		}
+		return globalState.aliasMapping;
 	}
 	
 	public long getTimeSliceEnd() {

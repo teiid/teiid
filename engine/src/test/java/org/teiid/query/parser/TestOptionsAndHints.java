@@ -81,7 +81,7 @@ public class TestOptionsAndHints {
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.getRightClause().setMakeDep(true);
@@ -106,7 +106,7 @@ public class TestOptionsAndHints {
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.getLeftClause().setMakeDep(true);
@@ -133,11 +133,11 @@ public class TestOptionsAndHints {
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         ElementSymbol c = new ElementSymbol("c");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.getLeftClause().setMakeDep(true);
-        List crits2 = new ArrayList();
+        List<Object> crits2 = new ArrayList<Object>();
         crits2.add(new CompareCriteria(a, CompareCriteria.EQ, c));
         JoinPredicate jp2 = new JoinPredicate(jp, new UnaryFromClause(g3), JoinType.JOIN_LEFT_OUTER, crits2);
         jp2.getRightClause().setMakeDep(true);
@@ -200,7 +200,7 @@ public class TestOptionsAndHints {
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.getRightClause().setMakeNotDep(true);
@@ -225,7 +225,7 @@ public class TestOptionsAndHints {
         ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.getLeftClause().setMakeNotDep(true);
@@ -252,11 +252,11 @@ public class TestOptionsAndHints {
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         ElementSymbol c = new ElementSymbol("c");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.getLeftClause().setMakeNotDep(true);
-        List crits2 = new ArrayList();
+        List<Object> crits2 = new ArrayList<Object>();
         crits2.add(new CompareCriteria(a, CompareCriteria.EQ, c));
         JoinPredicate jp2 = new JoinPredicate(jp, new UnaryFromClause(g3), JoinType.JOIN_LEFT_OUTER, crits2);
         jp2.getRightClause().setMakeNotDep(true);
@@ -368,10 +368,10 @@ public class TestOptionsAndHints {
     @Test public void testInsertWithOption() {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
-        List vars = new ArrayList();
+        List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
         vars.add(new ElementSymbol("a"));         //$NON-NLS-1$
         insert.setVariables(vars);
-        List values = new ArrayList();
+        List<Reference> values = new ArrayList<Reference>();
         values.add(new Reference(0));
         insert.setValues(values);
         Option option = new Option();
@@ -620,7 +620,7 @@ public class TestOptionsAndHints {
         SubqueryFromClause sfc = new SubqueryFromClause("x", query2);//$NON-NLS-1$
         sfc.setOptional(true);
         
-        List criteria = new ArrayList();
+        List<Object> criteria = new ArrayList<Object>();
         criteria.add(new CompareCriteria(new ElementSymbol("t1.a"), AbstractCompareCriteria.EQ, new ElementSymbol("x.a")));//$NON-NLS-1$//$NON-NLS-2$
         JoinPredicate joinPredicate = new JoinPredicate(ufc, sfc, JoinType.JOIN_INNER, criteria);
         from.addClause(joinPredicate);
@@ -644,7 +644,7 @@ public class TestOptionsAndHints {
         UnaryFromClause ufc2 = new UnaryFromClause();
         ufc2.setGroup(new GroupSymbol("t3")); //$NON-NLS-1$
         
-        List criteria = new ArrayList();
+        List<Object> criteria = new ArrayList<Object>();
         criteria.add(new CompareCriteria(new ElementSymbol("t2.a"), AbstractCompareCriteria.EQ, new ElementSymbol("t3.a")));//$NON-NLS-1$//$NON-NLS-2$
         JoinPredicate joinPredicate = new JoinPredicate(ufc, ufc2, JoinType.JOIN_INNER, criteria);
         joinPredicate.setOptional(true);
@@ -682,7 +682,7 @@ public class TestOptionsAndHints {
         UnaryFromClause ufc2 = new UnaryFromClause();
         ufc2.setGroup(new GroupSymbol("t3")); //$NON-NLS-1$
         
-        List criteria = new ArrayList();
+        List<Object> criteria = new ArrayList<Object>();
         criteria.add(new CompareCriteria(new ElementSymbol("x.a"), AbstractCompareCriteria.EQ, new ElementSymbol("t3.a")));//$NON-NLS-1$//$NON-NLS-2$
         JoinPredicate joinPredicate = new JoinPredicate(sfc, ufc2, JoinType.JOIN_INNER, criteria);
         joinPredicate.setOptional(true);
@@ -712,7 +712,7 @@ public class TestOptionsAndHints {
         ufc2.setGroup(new GroupSymbol("t2")); //$NON-NLS-1$
         ufc2.setOptional(true);
         
-        List criteria = new ArrayList();
+        List<Object> criteria = new ArrayList<Object>();
         criteria.add(new CompareCriteria(new ElementSymbol("t1.a"), AbstractCompareCriteria.EQ, new ElementSymbol("t2.a")));//$NON-NLS-1$//$NON-NLS-2$
         JoinPredicate joinPredicate = new JoinPredicate(ufc, ufc2, JoinType.JOIN_LEFT_OUTER, criteria);
 
@@ -720,7 +720,7 @@ public class TestOptionsAndHints {
         ufc3.setGroup(new GroupSymbol("t3")); //$NON-NLS-1$
         ufc3.setOptional(true);
 
-        criteria = new ArrayList();
+        criteria = new ArrayList<Object>();
         criteria.add(new CompareCriteria(new ElementSymbol("t1.a"), AbstractCompareCriteria.EQ, new ElementSymbol("t3.a")));//$NON-NLS-1$//$NON-NLS-2$
         JoinPredicate joinPredicate2 = new JoinPredicate(joinPredicate, ufc3, JoinType.JOIN_LEFT_OUTER, criteria);
 
@@ -907,11 +907,11 @@ public class TestOptionsAndHints {
         ElementSymbol b = new ElementSymbol("b");  //$NON-NLS-1$
         ElementSymbol c = new ElementSymbol("c");  //$NON-NLS-1$
         
-        List crits = new ArrayList();
+        List<Object> crits = new ArrayList<Object>();
         crits.add(new CompareCriteria(a, CompareCriteria.EQ, b));
         JoinPredicate jp = new JoinPredicate(new UnaryFromClause(g1), new UnaryFromClause(g2), JoinType.JOIN_INNER, crits);
         jp.setMakeDep(true);
-        List crits2 = new ArrayList();
+        List<Object> crits2 = new ArrayList<Object>();
         crits2.add(new CompareCriteria(a, CompareCriteria.EQ, c));
         JoinPredicate jp2 = new JoinPredicate(jp, new UnaryFromClause(g3), JoinType.JOIN_LEFT_OUTER, crits2);
         From from = new From();
@@ -1084,6 +1084,9 @@ public class TestOptionsAndHints {
         
         sql = "(SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
         assertEquals("(SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString()); 
+        
+        sql = "(SELECT /*+ sh keep aliases:'foo' oracle keep aliases:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
+        assertEquals("(SELECT /*+sh KEEP ALIASES:'foo' oracle KEEP ALIASES:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());
     }
 
 }

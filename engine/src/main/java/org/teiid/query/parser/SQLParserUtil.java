@@ -226,8 +226,8 @@ public class SQLParserUtil {
         return hint;
 	}
 	
-	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
-	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^:]+):((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(\\s+KEEP ALIASES)?\\s*(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
+	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^: ]+)(\\s+KEEP ALIASES)?\\s*:((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	
 	SourceHint getSourceHint(Token t) {
 		String comment = getComment(t);
@@ -236,7 +236,10 @@ public class SQLParserUtil {
 			return null;
 		}
 		SourceHint sourceHint = new SourceHint();
-		String generalHint = matcher.group(1);
+		if (matcher.group(1) != null) {
+			sourceHint.setUseAliases(true);
+		}
+		String generalHint = matcher.group(2);
 		if (generalHint != null) {
 			sourceHint.setGeneralHint(normalizeStringLiteral(generalHint));
 		}
@@ -244,7 +247,7 @@ public class SQLParserUtil {
 		matcher = SOURCE_HINT_ARG.matcher(comment);
 		while (matcher.find(end)) {
 			end = matcher.end();
-			sourceHint.setSourceHint(matcher.group(1), normalizeStringLiteral(matcher.group(2)));
+			sourceHint.setSourceHint(matcher.group(1), normalizeStringLiteral(matcher.group(3)), matcher.group(2) != null);
 		}
 		return sourceHint;
 	}
