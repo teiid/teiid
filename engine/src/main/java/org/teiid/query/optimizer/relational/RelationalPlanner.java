@@ -137,6 +137,11 @@ public class RelationalPlanner {
 			return group.getMetadataID().equals(other.group.getMetadataID())
 					&& command.getType() == other.command.getType();
 		}
+		
+		@Override
+		public String toString() {
+			return command.getClass().getSimpleName() + " " + group.getNonCorrelationName().toString(); //$NON-NLS-1$
+		}
 	}
 	
 	private static ThreadLocal<HashSet<PlanningStackEntry>> planningStack = new ThreadLocal<HashSet<PlanningStackEntry>>() {
@@ -1024,7 +1029,7 @@ public class RelationalPlanner {
 					//must be a compensating update/delete
 					throw new QueryPlannerException(QueryPlugin.Event.TEIID30254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30254, nestedCommand));
 				}
-				throw new QueryPlannerException(QueryPlugin.Event.TEIID31124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31124, nestedCommand.getClass().getSimpleName(), group.getNonCorrelationName()));
+				throw new QueryPlannerException(QueryPlugin.Event.TEIID31124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31124, nestedCommand.getClass().getSimpleName(), group.getNonCorrelationName(), planningStack));
 			}
 		}
 		try {
