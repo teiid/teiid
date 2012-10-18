@@ -51,8 +51,8 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -233,7 +233,7 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setGlobalTableStore(this.globalTables);
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
-					metadata, idGenerator, analysisRecord, capabilitiesFinder,
+					metadata, idGenerator, getAnalysisRecord(), capabilitiesFinder,
 					multiSourceModels, workContext, context);
             context.setPlanToProcessConverter(modifier);
         }
@@ -394,7 +394,7 @@ public class Request implements SecurityFunctionEvaluator {
 
         List<Reference> references = ReferenceCollectorVisitor.getReferences(command);
         
-        this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
+        getAnalysisRecord();
                 
         resolveCommand(command);
 
@@ -455,6 +455,13 @@ public class Request implements SecurityFunctionEvaluator {
         }
         LogManager.logDetail(LogConstants.CTX_DQP, new Object[] { QueryPlugin.Util.getString("BasicInterceptor.ProcessTree_for__4"), requestId, processPlan }); //$NON-NLS-1$
     }
+
+	private AnalysisRecord getAnalysisRecord() {
+		if (this.analysisRecord == null) {
+			this.analysisRecord = new AnalysisRecord(requestMsg.getShowPlan() != ShowPlan.OFF, requestMsg.getShowPlan() == ShowPlan.DEBUG);
+		}
+		return this.analysisRecord;
+	}
 
     public void processRequest() 
         throws TeiidComponentException, TeiidProcessingException {

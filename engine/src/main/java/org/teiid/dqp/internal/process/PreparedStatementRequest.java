@@ -94,16 +94,17 @@ public class PreparedStatementRequest extends Request {
         prepPlan = prepPlanCache.get(id);
         
         if (prepPlan != null) {
+        	//already in cache. obtain the values from cache
+            analysisRecord = prepPlan.getAnalysisRecord();
         	ProcessorPlan cachedPlan = prepPlan.getPlan();
         	this.userCommand = prepPlan.getCommand();
         	if (validateAccess(requestMsg.getCommands(), userCommand, CommandType.PREPARED)) {
         		LogManager.logDetail(LogConstants.CTX_DQP, requestId, "AuthorizationValidator indicates that the prepared plan for command will not be used"); //$NON-NLS-1$
             	prepPlan = null;
+            	analysisRecord = null;
             } else {
 	        	LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Query exist in cache: ", sqlQuery }); //$NON-NLS-1$
 	            processPlan = cachedPlan.clone();
-	            //already in cache. obtain the values from cache
-	            analysisRecord = prepPlan.getAnalysisRecord();
             }
         }
         

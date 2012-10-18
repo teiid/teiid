@@ -25,6 +25,7 @@ package org.teiid.runtime;
 import static org.junit.Assert.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -382,6 +383,39 @@ public class TestEmbeddedServer {
 		assertEquals(1, tm.txnHistory.size());
 		txn = tm.txnHistory.remove(0);
 		Mockito.verify(txn).commit();
+	}
+	
+	@Test public void testMultiSourcePreparedDynamicUpdate() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.addTranslator("t", new ExecutionFactory<Void, Void>());
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create view v (i integer) OPTIONS (UPDATABLE true) as select 1; " +
+				"create trigger on v instead of update as for each row begin atomic " +
+				"IF (CHANGING.i)\n" +
+                "EXECUTE IMMEDIATE 'select \"new\".i'; " +
+				"end; ");
+		mmd1.setSupportsMultiSourceBindings(true);
+		mmd1.addSourceMapping("x", "t", null);
+		mmd1.addSourceMapping("y", "t", null);
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		PreparedStatement ps = c.prepareStatement("update v set i = ? where i = ?");
+		ps.setInt(1, 2);
+		ps.setInt(2, 1);
+		assertEquals(1, ps.executeUpdate());
+		ps.setInt(1, 3);
+		ps.setInt(2, 1);
+		assertEquals(1, ps.executeUpdate());
 	}
 
 }
