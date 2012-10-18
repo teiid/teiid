@@ -37,7 +37,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import javax.transaction.RollbackException;
 import javax.transaction.Synchronization;
@@ -538,6 +537,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			AtomicInteger loadCount) throws TranslatorException {
 		Map<String, Datatype> datatypes = this.repo.getBuiltinDatatypes();
 		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
+		factory.setBuiltinDataTypes(this.repo.getSystemStore().getDatatypes());
 		factory.getSchema().setPhysical(model.isSource());
 		
 		ExecutionFactory ef = null;

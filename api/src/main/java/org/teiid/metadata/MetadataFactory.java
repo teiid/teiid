@@ -24,7 +24,6 @@ package org.teiid.metadata;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +47,7 @@ public class MetadataFactory implements Serializable {
 	private String vdbName;
 	private int vdbVersion;
 	private Map<String, Datatype> dataTypes;
+	private Map<String, Datatype> builtinDataTypes;
 	private boolean autoCorrectColumnNames = true;
 	private Map<String, String> namespaces = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	private String rawMetadata;
@@ -56,10 +56,11 @@ public class MetadataFactory implements Serializable {
 	private String idPrefix; 
 	private int count;
 	
-	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> dataTypes, Properties importProperties, String rawMetadata) {
+	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties importProperties, String rawMetadata) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
-		this.dataTypes = dataTypes;
+		this.dataTypes = runtimeTypes;
+		this.builtinDataTypes = runtimeTypes;
 		schema.setName(schemaName);
 		long msb = longHash(vdbName, 0);
 		msb = 31*msb + vdbVersion;
@@ -359,7 +360,7 @@ public class MetadataFactory implements Serializable {
 	
 	public void mergeInto (MetadataStore store) {
 		store.addSchema(this.schema);
-		store.addDataTypes(this.dataTypes.values());
+		store.addDataTypes(this.builtinDataTypes.values());
 	}
 	
 	public MetadataStore asMetadataStore() {
@@ -372,21 +373,56 @@ public class MetadataFactory implements Serializable {
 		this.schema = schema;
 	}
 
+	/**
+	 * get runtime types keyed by runtime name, which is 
+	 * a type name known to the Teiid engine
+	 * @return
+	 */
 	public Map<String, Datatype> getDataTypes() {
 		return dataTypes;
 	}
 	
-	void addDataTypes(Collection<Datatype> types) {
-		for (Datatype type: types) {
-			addDatatype(type);
+	/**
+	 * To be called if the MetadataFactory is deserialized to set the canonical system
+	 * type value.
+	 * @param dt
+	 * @param builtin
+	 */
+	public void correctDatatypes(Map<String, Datatype> dt, Map<String, Datatype> builtin) {
+		this.dataTypes = dt;
+		this.builtinDataTypes = builtin;
+		for (Table t : this.schema.getTables().values()) {
+			correctDataTypes(t.getColumns());
+		}
+		for (Procedure p : this.schema.getProcedures().values()) {
+			correctDataTypes(p.getParameters());
+			if (p.getResultSet() != null) {
+				correctDataTypes(p.getResultSet().getColumns());
+			}
+		}
+	}
+
+	private void correctDataTypes(List<? extends BaseColumn> cols) {
+		if (cols == null) {
+			return;
+		}
+		for (BaseColumn c : cols) {
+			if (c.getDatatype() == null) {
+				continue;
+			}
+			Datatype dt = this.builtinDataTypes.get(c.getDatatype().getName());
+			if (dt != null) {
+				c.setDatatype(dt);
+			} else {
+				//must be an enterprise type
+				//if it's used in a single schema, we're ok, but when used in multiple there's an issue
+				addDatatype(dt);
+			}
 		}
 	}
 	
 	public void addDatatype(Datatype datatype) {
-		if (this.dataTypes == null) {
-			this.dataTypes = new TreeMap<String, Datatype>();
-		}
-		this.dataTypes.put(datatype.getName(), datatype);
+		this.builtinDataTypes.put(datatype.getName(), datatype);
 	}
 
 	public String getVdbName() {
@@ -399,5 +435,19 @@ public class MetadataFactory implements Serializable {
 	
 	public Map<String, String> getNamespaces() {
 		return namespaces;
+	}
+	
+	public void setBuiltinDataTypes(Map<String, Datatype> builtinDataTypes) {
+		this.builtinDataTypes = builtinDataTypes;
+	}
+
+	/**
+	 * get all built-in types, known to Designer and defined in the system metadata.
+	 * The entries are keyed by type name, which is typically the xsd type name. 
+	 * @see #getDataTypes() for run-time types
+	 * @return
+	 */
+	public Map<String, Datatype> getBuiltinDataTypes() {
+		return builtinDataTypes;
 	}
 }

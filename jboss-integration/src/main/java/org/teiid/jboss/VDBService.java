@@ -76,7 +76,6 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
-import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.TransformationMetadata.Resource;
@@ -340,23 +339,20 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			@Override
 			public void run() {
 				
-				boolean metadataLoaded = false;
 				boolean cached = false;
 				Exception ex = null;
-				
+				// designer based models define data types based on their built in data types, which are system vdb data types
+				Map<String, Datatype> datatypes = getVDBRepository().getBuiltinDatatypes();
+				Map<String, Datatype> builtin = getVDBRepository().getSystemStore().getDatatypes();
 				final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 				MetadataFactory factory = getSerializer().loadSafe(cachedFile, MetadataFactory.class);
 				if (factory != null) {
-					metadataLoaded = true;
+					factory.correctDatatypes(datatypes, builtin);
 					cached = true;
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-				}
-				
-				if (!metadataLoaded) {
-					boolean indexStore = (metadataRepo instanceof IndexMetadataRepository);
-					// designer based models define data types based on their built in data types, which are system vdb data types
-					Map<String, Datatype> datatypes = indexStore?getVDBRepository().getSystemStore().getDatatypes():getVDBRepository().getBuiltinDatatypes();
+				} else {
 					factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
+					factory.setBuiltinDataTypes(builtin);
 					factory.getSchema().setPhysical(model.isSource());
 					
 					ExecutionFactory ef = null;
@@ -374,14 +370,13 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					try {
 						metadataRepo.loadMetadata(factory, ef, cf);		
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
-						metadataLoaded = true;
 					} catch (Exception e) {
 						ex = e;
 					}
 				}
 		    					
 				synchronized (vdb) {
-			    	if (metadataLoaded) {
+			    	if (ex == null) {
 			    		if (!cached) {
 				    		// cache the schema to disk
 							cacheMetadataStore(model, factory);
