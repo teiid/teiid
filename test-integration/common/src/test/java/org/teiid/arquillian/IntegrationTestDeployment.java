@@ -31,6 +31,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -312,10 +313,10 @@ public class IntegrationTestDeployment {
 	
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
-		String[] array  = {"teiid-connector-file.rar", "teiid-local", "teiid", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"};
+		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-connector-infinispan.rar", "teiid-connector-file.rar", "teiid-local", "teiid", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
-		assertArrayEquals(array, templates.toArray(new String[templates.size()]));
+		assertEquals(vals, templates);
 	}
 	
 	@Test

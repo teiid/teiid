@@ -117,6 +117,7 @@
             <include>org.jboss.teiid.connectors:connector-ldap</include>
             <include>org.jboss.teiid.connectors:connector-salesforce</include>
             <include>org.jboss.teiid.connectors:connector-ws</include>
+            <include>org.jboss.teiid.connectors:connector-infinispan</include>
         </includes>
 
         <binaries>        

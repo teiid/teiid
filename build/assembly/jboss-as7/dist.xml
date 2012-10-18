@@ -160,6 +160,7 @@
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
             <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
             <include>org.jboss.teiid.connectors:connector-ws:rar</include>
+            <include>org.jboss.teiid.connectors:connector-infinispan:rar</include>
         </includes>
 
         <binaries>   

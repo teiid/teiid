@@ -31,6 +31,7 @@ import org.infinispan.server.hotrod.HotRodServer;
 
 /**
  */
+@SuppressWarnings("nls")
 public class RemoteInfinispanTestHelper {
 	protected static final String CACHE_NAME = "test";  //$NON-NLS-1$
     protected static final int PORT = 11311;

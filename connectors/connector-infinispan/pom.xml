@@ -36,7 +36,6 @@
         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
-             <version>1.5</version>
               <scope>provided</scope>
         </dependency>   
  
@@ -73,9 +72,14 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>      
-            <version>4.4</version>
             <scope>test</scope>
-        </dependency>     
+        </dependency> 
+        
+        <dependency>
+            <groupId>org.jboss.modules</groupId>
+            <artifactId>jboss-modules</artifactId>
+            <scope>provided</scope>
+        </dependency>    
     </dependencies>
     
     <build>

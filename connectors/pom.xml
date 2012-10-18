@@ -107,5 +107,6 @@
     <module>translator-hive</module>
     <module>translator-jpa</module>
     <module>translator-object</module>
+    <module>connector-infinispan</module>
   </modules>
 </project>

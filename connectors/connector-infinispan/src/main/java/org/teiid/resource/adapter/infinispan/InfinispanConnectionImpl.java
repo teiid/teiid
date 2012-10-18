@@ -59,15 +59,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	 */
 	public boolean isAlive() {
 		boolean alive = (config == null ? false : config.getCacheManager() != null);
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Cache Connection is alive: " + alive); //$NON-NLS-1$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Cache Connection is alive:", alive); //$NON-NLS-1$
 		return (alive);
 	}	
 	
     @Override
 	public Map<?, ?> getMap(String name) throws TranslatorException {
     	Map<?,?> m = null;
-		LogManager
-		.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap : " + name +  "==="); //$NON-NLS-1$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap:", name, "==="); //$NON-NLS-1$ //$NON-NLS-2$
 
 		m = config.getCacheManager().getCache();
 		
@@ -78,7 +77,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
     		}
     		
     		if (m == null) {
-                final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (name != null ? name : "Default") ); //$NON-NLS-1$
+                final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
                 throw new TranslatorException(msg);
     		}
     		
@@ -87,17 +86,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 
 	@Override
 	public Class<?> getType(String name) throws TranslatorException {		
-		LogManager
-		.logTrace(LogConstants.CTX_CONNECTOR,
-				"=== GetType : " + name +  "==="); //$NON-NLS-1$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType :", name,  "==="); //$NON-NLS-1$ //$NON-NLS-2$
 
 		Class<?> type = config.getCacheType(name);
 		if (type != null) {
 			return type;
 		}
-        final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.typeNotFound", (name != null ? name : "Default") ); //$NON-NLS-1$
+        final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.typeNotFound", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
         throw new TranslatorException(msg);
 	}
-
 
 }

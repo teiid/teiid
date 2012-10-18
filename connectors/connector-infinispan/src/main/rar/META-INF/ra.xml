@@ -41,6 +41,12 @@
                <config-property-name>CacheTypeMap</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>  
+            
+            <config-property>
+               <description>{$display:"Module",$description:"Module defining the cache classes"}</description>
+               <config-property-name>module</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
                 
             <config-property>
                <description>{$display:"Server List",$description:"Server List (host:port[;host:port...]) to connect to"}</description>

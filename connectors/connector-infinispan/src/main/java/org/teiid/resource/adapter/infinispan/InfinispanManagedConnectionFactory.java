@@ -40,7 +40,9 @@ import org.infinispan.api.BasicCacheContainer;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
-import org.teiid.core.TeiidRuntimeException;
+import org.jboss.modules.Module;
+import org.jboss.modules.ModuleIdentifier;
+import org.jboss.modules.ModuleLoadException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
@@ -56,11 +58,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String configurationFileNameForLocalCache = null;
 	private String hotrodClientPropertiesFile = null;
 	private String cacheJndiName=null;
-	@SuppressWarnings("rawtypes")
-	private Map<String, Class> typeMap = null;
+	private Map<String, Class<?>> typeMap = null;
 	private String cacheTypes = null;
 	private BasicCacheContainer cacheContainer = null;
-
+	private String module;
 	
 	@Override
 	public BasicConnectionFactory<InfinispanConnectionImpl> createConnectionFactory() throws ResourceException {
@@ -76,13 +77,39 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			
 		}
 		
-		 createCacheContainer();
+		createCacheContainer();
+
+		ClassLoader cl = null;
+		if (module != null) {
+			Module m;
+			try {
+				m = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(module));
+			} catch (ModuleLoadException e) {
+				throw new ResourceException(e);
+			}
+			cl = m.getClassLoader();
+		} else {
+			cl = Thread.currentThread().getContextClassLoader();
+		}
+		List<String> types = StringUtil.getTokens(this.cacheTypes, ","); //$NON-NLS-1$
+		typeMap = new HashMap<String, Class<?>>();
+		for (String type : types) {
+			final List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
+			final String cacheName = mapped.get(0);
+			final String className = mapped.get(1);
+
+			try {
+				typeMap.put(cacheName, Class.forName(className, true, cl));
+			} catch (ClassNotFoundException e) {
+				throw new ResourceException(e);
+			}
+		}
 
 		return new BasicConnectionFactory<InfinispanConnectionImpl>() {
 			
 			private static final long serialVersionUID = 2579916624625349535L;
 
-		 @Override
+			@Override
 			public InfinispanConnectionImpl getConnection() throws ResourceException {
 				return new InfinispanConnectionImpl(InfinispanManagedConnectionFactory.this);
 			}
@@ -107,31 +134,18 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	 *            the cache type mappings passed in the form of <code>cacheName:ClassName[;cacheName:ClassName...]</code>
 	 * @see #getCacheTypeMap()
 	 */
-	@SuppressWarnings("rawtypes")
 	public void setCacheTypeMap(
 			String cacheTypeMap) {
-		if (this.cacheTypes == cacheTypeMap
-				|| this.cacheTypes != null
-				&& this.cacheTypes.equals(cacheTypeMap))
-			return; // unchanged
 		this.cacheTypes = cacheTypeMap;
-		
-		List<String> types = StringUtil.getTokens(this.cacheTypes, ",");
-		typeMap = new HashMap<String,Class>(types.size());
-		for(String type : types) {
-			final List<String> mapped = StringUtil.getTokens(type, ":");
-			final String cacheName = mapped.get(0);
-			final String className = mapped.get(1);
-
-			try {
-				typeMap.put(cacheName, Class.forName(className));
-			} catch (ClassNotFoundException e) {
-				throw new TeiidRuntimeException("Class hasn't been added to the classpath: "+ e.getMessage());//$NON-NLS-1$
-			}
-			
-		}
 	}  
 	
+	public void setModule(String module) {
+		this.module = module;
+	}
+	
+	public String getModule() {
+		return module;
+	}
 	
 	public Class<?> getCacheType(String cacheName) {
 		return typeMap.get(cacheName);
@@ -154,8 +168,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
      * @param remoteServerList the server list in appropriate <code>server:port;server2:port2</code> format.
      */
     public void setRemoteServerList( String remoteServerList ) {
-        if (this.remoteServerList == remoteServerList || this.remoteServerList != null
-            && this.remoteServerList.equals(remoteServerList)) return; // unchanged
         this.remoteServerList = remoteServerList;
     }
     
@@ -182,10 +194,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	 */
 	public void setConfigurationFileNameForLocalCache(
 			String configurationFileName) {
-		if (this.configurationFileNameForLocalCache == configurationFileName
-				|| this.configurationFileNameForLocalCache != null
-				&& this.configurationFileNameForLocalCache.equals(configurationFileName))
-			return; // unchanged
 		this.configurationFileNameForLocalCache = configurationFileName;
 	}  
 	
@@ -212,10 +220,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	 */
 	public void setHotRodClientPropertiesFile(
 			String propertieFileName) {
-		if (this.hotrodClientPropertiesFile == propertieFileName
-				|| this.hotrodClientPropertiesFile != null
-				&& this.hotrodClientPropertiesFile.equals(propertieFileName))
-			return; // unchanged
 		this.hotrodClientPropertiesFile = propertieFileName;
 	}  	
 	
@@ -277,10 +281,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
 		} else {
 			if (this.getRemoteServerList() != null
-					|| !this.getRemoteServerList().isEmpty()) { //$NON-NLS-1$
+					|| !this.getRemoteServerList().isEmpty()) {
 				
 				Properties props = new Properties();
-				props.put("infinispan.client.hotrod.server_list", this.getRemoteServerList());
+				props.put("infinispan.client.hotrod.server_list", this.getRemoteServerList()); //$NON-NLS-1$
 				container = new RemoteCacheManager(props);
 				container.start();
 				LogManager
@@ -327,7 +331,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	            
 				LogManager
 				.logInfo(LogConstants.CTX_CONNECTOR,
-						"=== Using CacheContainer (obtained by JNDI: " + jndiName + " ==="); //$NON-NLS-1$
+						"=== Using CacheContainer (obtained by JNDI: " + jndiName + " ==="); //$NON-NLS-1$ //$NON-NLS-2$
 
 	            
 	           return   (BasicCacheContainer) cache;

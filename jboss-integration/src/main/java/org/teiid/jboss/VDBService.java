@@ -53,10 +53,10 @@ import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.deployers.CompositeVDB;
@@ -69,8 +69,8 @@ import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
-import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
+import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.jboss.rest.ResteasyEnabler;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -302,6 +302,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	}
 	
+	@SuppressWarnings({"rawtypes","unchecked"})
 	static ExecutionFactory<Object, Object> getExecutionFactory(String name, TranslatorRepository vdbRepo, TranslatorRepository repo, VDBMetaData deployment, IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map, HashSet<String> building) throws ConnectorManagerException {
 		if (!building.add(name)) {
 			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50076, deployment.getName(), deployment.getVersion(), building));
@@ -328,7 +329,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					String delegateName = delegator.getDelegateName();
 					if (delegateName != null) {
 						ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
-						((DelegatingExecutionFactory) ef).setDelegate(delegate);
+						((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
 					}
 				}
 				map.put(translator, ef);
@@ -339,6 +340,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	}
 
+	@SuppressWarnings({"rawtypes","unchecked"})
     protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
 
     	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); 
@@ -469,7 +471,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	/**
 	 * Override for module based loading
 	 */
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings("rawtypes")
 	@Override
 	protected MetadataRepository<?, ?> getMetadataRepository(String repoType) throws VirtualDatabaseException {
 		MetadataRepository<?, ?> repo = super.getMetadataRepository(repoType);

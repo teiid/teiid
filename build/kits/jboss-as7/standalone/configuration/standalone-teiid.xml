@@ -320,7 +320,6 @@
             <translator name="hive" module="org.jboss.teiid.translator.hive"/>
             <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
             <translator name="infinispan-cache" module="org.jboss.teiid.translator.object"/>
-            <translator name="infinispanremote-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
             
             
