@@ -44,7 +44,6 @@ public class RuntimeMetadataPlugin {
 
 	public static enum Event implements BundleUtil.Event {
 		TEIID80000,
-		TEIID80001,
 		TEIID80002,
 		TEIID80003,
 		TEIID80004

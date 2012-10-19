@@ -1108,12 +1108,6 @@ public class TestFunction {
         Double d = (Double)FunctionMethods.rand(new CommandContext(), new Integer(100));
         assertEquals(new Double(0.7220096548596434), d);
         
-        try {
-            FunctionMethods.rand(new CommandContext(), new Double(34.5));
-            fail("should have failed to take a double"); //$NON-NLS-1$
-        } catch (FunctionExecutionException e) {            
-        }   
-
         FunctionMethods.rand(new CommandContext());            
     }
     

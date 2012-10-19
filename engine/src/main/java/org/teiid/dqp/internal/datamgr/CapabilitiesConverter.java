@@ -81,7 +81,6 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_DISTINCT, srcCaps.supportsAggregatesDistinct());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_SCALAR, srcCaps.supportsScalarSubqueries());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, srcCaps.supportsCorrelatedSubqueries());
-        tgtCaps.setCapabilitySupport(Capability.QUERY_CASE, srcCaps.supportsCaseExpressions());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, srcCaps.supportsSearchedCaseExpressions());
         tgtCaps.setCapabilitySupport(Capability.QUERY_UNION, srcCaps.supportsUnions());
         tgtCaps.setCapabilitySupport(Capability.QUERY_INTERSECT, srcCaps.supportsIntersect());

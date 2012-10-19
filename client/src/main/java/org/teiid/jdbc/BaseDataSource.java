@@ -350,11 +350,7 @@ public abstract class BaseDataSource extends WrapperImpl implements javax.sql.Da
      * @see javax.sql.XADataSource#getXAConnection(java.lang.String, java.lang.String)
      */
     public XAConnection getXAConnection(final String userName, final String password) throws java.sql.SQLException {
-    	return XAConnectionImpl.newInstance(new XAConnectionImpl.ConnectionSource() {
-
-            public ConnectionImpl createConnection() throws SQLException {
-                return (ConnectionImpl)getConnection(userName, password);
-            }});
+    	return new XAConnectionImpl((ConnectionImpl) getConnection(userName, password));
     }
     
     public PooledConnection getPooledConnection() throws SQLException {

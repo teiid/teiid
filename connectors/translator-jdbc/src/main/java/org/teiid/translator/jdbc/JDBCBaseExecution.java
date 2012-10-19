@@ -53,6 +53,7 @@ public abstract class JDBCBaseExecution implements Execution  {
     protected Connection connection;
     protected ExecutionContext context;
     protected JDBCExecutionFactory executionFactory;
+    protected Command command;
 
     // Derived from properties
     protected boolean trimString;
@@ -65,7 +66,7 @@ public abstract class JDBCBaseExecution implements Execution  {
     // Constructors
     // ===========================================================================================================================
 
-    protected JDBCBaseExecution(Connection connection, ExecutionContext context, JDBCExecutionFactory jef) {
+    protected JDBCBaseExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory jef) {
         this.connection = connection;
         this.context = context;
 
@@ -73,6 +74,7 @@ public abstract class JDBCBaseExecution implements Execution  {
         
         trimString = jef.isTrimStrings();
         fetchSize = context.getBatchSize();
+        this.command = command;
     }
     
     /**
@@ -143,7 +145,7 @@ public abstract class JDBCBaseExecution implements Execution  {
 
     protected void setSizeContraints(Statement statement) {
     	try {
-			statement.setFetchSize(fetchSize);
+    		executionFactory.setFetchSize(command, context, statement, fetchSize);
 		} catch (SQLException e) {
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
     			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId(), " could not set fetch size: ", fetchSize); //$NON-NLS-1$
@@ -193,15 +195,15 @@ public abstract class JDBCBaseExecution implements Execution  {
     
     public void addStatementWarnings() throws SQLException {
     	SQLWarning warning = this.statement.getWarnings();
-    	while (warning != null) {
-    		SQLWarning toAdd = warning;
-    		warning = toAdd.getNextWarning();
-    		toAdd.setNextException(null);
-    		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
-    			LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
-    		}
-    		context.addWarning(toAdd);
-    	}
+    	if (warning != null) {
+			context.addWarning(warning);
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_CONNECTOR, MessageLevel.DETAIL)) {
+		    	while (warning != null) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, context.getRequestId() + " Warning: ", warning); //$NON-NLS-1$
+		    		warning = warning.getNextWarning();
+		    	}
+			}
+		}
     	this.statement.clearWarnings();
     }
 }

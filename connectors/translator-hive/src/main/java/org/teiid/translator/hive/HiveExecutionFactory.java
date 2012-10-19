@@ -128,17 +128,6 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     }	
 	
     @Override
-    public boolean supportsBetweenCriteria() {
-        return false;
-    }
-
-    @Override
-    public boolean supportsCaseExpressions() {
-    	//https://issues.apache.org/jira/browse/HIVE-164
-        return true;
-    }
-
-    @Override
     public boolean supportsCorrelatedSubqueries() {
     	//https://issues.apache.org/jira/browse/HIVE-784
         return false;

@@ -90,18 +90,18 @@ public class MappingChoiceNode extends MappingBaseNode {
     }
 
     public MappingChoiceNode addChoiceNode(MappingChoiceNode elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30453, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30453));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }
 
     public MappingSequenceNode addSequenceNode(MappingSequenceNode elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30454, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30454));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }
     
     public MappingElement addChildElement(MappingElement elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30455, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30455));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }    
     
     public MappingSourceNode addSourceNode(MappingSourceNode elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30456, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30456));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }     
 }

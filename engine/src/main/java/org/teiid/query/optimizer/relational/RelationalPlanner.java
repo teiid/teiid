@@ -649,10 +649,10 @@ public class RelationalPlanner {
 					} else if (subqueryContainer instanceof ExistsCriteria) {
 						((ExistsCriteria) subqueryContainer).setShouldEvaluate(true);
 					} else {
-						 throw new QueryPlannerException(QueryPlugin.Event.TEIID30255, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30255, container));
+						 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
 					}
 				} else {
-					 throw new QueryPlannerException(QueryPlugin.Event.TEIID30256, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30256, container));
+					 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
 				}
     		}
 			ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);

@@ -336,7 +336,7 @@ public class TempTableStore {
         					return tempTable;
         				}
         			} else if (tempTable.getActive().get() != 0) {
-        				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30228, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30228, tempTableID));
+        				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30227, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30227, tempTableID));
     				}
     			}
     		} else if (transactionMode == TransactionMode.ISOLATE_READS) {

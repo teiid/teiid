@@ -26,10 +26,32 @@ import java.sql.SQLWarning;
 
 
 /**
- * Teiid specific SQLWarning
- */
+ * Teiid specific SQLWarning<br>
+ * If the cause was a source SQLWarning, then you may need to consult
+ * the warning chain to get all warnings, see the example below.
+ * 
+<code><pre>
+//warning will be an instanceof TeiidSQLWarning to convey model/source information
+SQLWarning warning = stmt.getWarnings();
 
+while (warning != null) {
+  Exception e = warning.getCause();
+  if (cause instanceof SQLWarning) {
+    //childWarning should now be the head of the source warning chain
+    SQLWarning childWarning = (SQLWarning)cause;
+    while (childWarning != null) {
+      //do something with childWarning
+      childWarning = childWarning.getNextWarning();
+    }
+  }
+  warning = warning.getNextWarning();
+}
+</pre></code>
+ * 
+ */
 public class TeiidSQLWarning extends SQLWarning {
+	
+	private static final long serialVersionUID = -7080782561220818997L;
 	
 	private String modelName = "UNKNOWN"; // variable stores the name of the model for the atomic query //$NON-NLS-1$
 	private String sourceName = "UNKNOWN"; // variable stores name of the connector binding //$NON-NLS-1$

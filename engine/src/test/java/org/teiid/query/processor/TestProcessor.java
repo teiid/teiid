@@ -46,7 +46,6 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.util.ExecutorUtils;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
@@ -247,7 +246,7 @@ public class TestProcessor {
         if (!(dataManager instanceof TempTableDataManager)) {
     	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>();
     	    cache.setTupleBufferCache(bufferMgr);
-        	dataManager = new TempTableDataManager(dataManager, bufferMgr, ExecutorUtils.getDirectExecutor(), cache);
+        	dataManager = new TempTableDataManager(dataManager, bufferMgr, cache);
         }        
         if (context.getQueryProcessorFactory() == null) {
         	context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(bufferMgr, dataManager, new DefaultCapabilitiesFinder(), null, context.getMetadata()));

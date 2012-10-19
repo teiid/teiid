@@ -32,6 +32,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Table;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.validator.ValidatorFailure;
@@ -266,4 +267,34 @@ public class TestMetadataValidator {
 		assertEquals("G1", store.getSchema("vm1").getTable("G2").getMaterializedTable().getName());
 	}	
 	
+	
+	@Test
+	public void testSkipDocumentModel() throws Exception {
+		ModelMetaData model = new ModelMetaData();
+		model.setName("xmlstuff"); 	
+		model.setModelType(Model.Type.VIRTUAL);
+		vdb.addModel(model);
+		
+		MetadataFactory mf = new MetadataFactory("myVDB",1, "xmlstuff", TestDDLParser.getDataTypes(), new Properties(), null);
+		mf.setPhysical(false);
+		
+		Table t = mf.addTable("xmldoctable");
+		t.setTableType(Table.Type.Document);
+		mf.addColumn("c1", "string", t);
+		t.setSelectTransformation("some dummy stuff, should not be validated");
+		t.setVirtual(true);
+		
+		Table t2 = mf.addTable("xmldoctable2");
+		t2.setTableType(Table.Type.XmlMappingClass);
+		mf.addColumn("c1", "string", t2);
+		t2.setSelectTransformation("some dummy stuff, should not be validated");	
+		t2.setVirtual(true);
+		mf.mergeInto(store);	
+		
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = MetadataValidator.validate(this.vdb, this.store);
+		assertFalse(printError(report), report.hasItems());
+	}	
 }

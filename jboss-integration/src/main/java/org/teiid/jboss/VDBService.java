@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,6 +72,7 @@ import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.metadata.TransformationMetadata.Resource;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.translator.DelegatingExecutionFactory;
@@ -86,9 +88,11 @@ class VDBService implements Service<VDBMetaData> {
 	protected final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
 	protected final InjectedValue<ObjectReplicator> objectReplicatorInjector = new InjectedValue<ObjectReplicator>();
 	private VDBLifeCycleListener vdbListener;
+	private LinkedHashMap<String, Resource> visibilityMap;
 	
-	public VDBService(VDBMetaData metadata) {
+	public VDBService(VDBMetaData metadata, LinkedHashMap<String, Resource> visibilityMap) {
 		this.vdb = metadata;
+		this.visibilityMap = visibilityMap;
 	}
 	
 	@Override
@@ -109,6 +113,7 @@ class VDBService implements Service<VDBMetaData> {
 			String type = data.getType();
 			VDBTranslatorMetaData parent = getTranslatorRepository().getTranslatorMetaData(type);
 			data.setModuleName(parent.getModuleName());
+			data.addAttchment(ClassLoader.class, parent.getAttachment(ClassLoader.class));
 			
 			Set<String> keys = parent.getProperties().stringPropertyNames();
 			for (String key:keys) {
@@ -135,12 +140,13 @@ class VDBService implements Service<VDBMetaData> {
 				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
 					return;
 				}
+				VDBMetaData vdbInstance = vdb.getVDB();
 				// add object replication to temp/matview tables
-				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
+				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdbInstance.getAttachment(TransformationMetadata.class));
 				if (objectReplicatorInjector.getValue() != null) {
 					try {
 						gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-						vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
+						vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					} catch (Exception e) {
 						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
 					}
@@ -156,7 +162,7 @@ class VDBService implements Service<VDBMetaData> {
 		
 		try {
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(this.vdb, store, udf, cmr);
+			getVDBRepository().addVDB(this.vdb, store, visibilityMap, udf, cmr);
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(IntegrationPlugin.Event.TEIID50032.name(), e);
 		}		
@@ -170,8 +176,13 @@ class VDBService implements Service<VDBMetaData> {
 				throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50086, model.getName(), vdb.getName(), vdb.getVersion()));
 			}
 			model.addAttchment(MetadataRepository.class, metadataRepository);
-			loadMetadata(this.vdb, model, cmr, metadataRepository, store);
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was being loaded from its repository in separate thread"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {
+				loadMetadata(this.vdb, model, cmr, metadataRepository, store);
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was being loaded from its repository in separate thread"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			}
+			else {
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " skipped being loaded because of its type ", model.getModelType()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$				
+			}
 		}
 		
 		synchronized (this.vdb) {
@@ -418,44 +429,28 @@ class VDBService implements Service<VDBMetaData> {
 	}
 	
 	public void addDataRole(String policyName, String mappedRole) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50058, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50058, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);		
 		
 		policy.addMappedRoleName(mappedRole);
 		save();
 	}
 	
 	public void remoteDataRole(String policyName, String mappedRole) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50059, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50059, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);
 		
 		policy.removeMappedRoleName(mappedRole);
 		save();
 	}	
 	
 	public void addAnyAuthenticated(String policyName) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50060, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50060, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);		
 		
 		policy.setAnyAuthenticated(true);
 		save();
 	}	
 	
 	public void removeAnyAuthenticated(String policyName) throws AdminProcessingException{
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
-		
-		if (policy == null) {
-			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50061, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50061, policyName, this.vdb.getName(), this.vdb.getVersion()));
-		}		
+		DataPolicyMetadata policy = getPolicy(vdb, policyName);
 		
 		policy.setAnyAuthenticated(false);
 		save();
@@ -493,6 +488,16 @@ class VDBService implements Service<VDBMetaData> {
 		}
 	}
 	
+	static DataPolicyMetadata getPolicy(VDBMetaData vdb, String policyName)
+			throws AdminProcessingException {
+		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		
+		if (policy == null) {
+			 throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50051, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50051, policyName, vdb.getName(), vdb.getVersion()));
+		}
+		return policy;
+	}
+
 	@SuppressWarnings("serial")
 	static class TranslatorNotFoundException extends TeiidException {
 		public TranslatorNotFoundException(String msg) {

@@ -61,19 +61,7 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.metadata.Column;
-import org.teiid.metadata.ColumnStats;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.ForeignKey;
-import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.KeyRecord;
-import org.teiid.metadata.MetadataRepository;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.Schema;
-import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
+import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TempMetadataID;
@@ -182,7 +170,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			return processSystemQuery(context, command, workItem.getDqpWorkContext());
 		}
 		
-		AtomicRequestMessage aqr = createRequest(context.getProcessorID(), command, modelName, connectorBindingId, nodeID);
+		AtomicRequestMessage aqr = createRequest(workItem, command, modelName, connectorBindingId, nodeID);
 		aqr.setCommandContext(context);
 		SourceHint sh = context.getSourceHint();
 		if (sh != null) {
@@ -572,11 +560,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return result;
 	}
 	
-	private AtomicRequestMessage createRequest(Object processorId,
+	private AtomicRequestMessage createRequest(RequestWorkItem workItem,
 			Command command, String modelName, String connectorBindingId, int nodeID)
-			throws TeiidProcessingException, TeiidComponentException {
-		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)processorId);
-		
+			throws TeiidComponentException {
 	    RequestMessage request = workItem.requestMsg;
 		// build the atomic request based on original request + context info
         AtomicRequestMessage aqr = new AtomicRequestMessage(request, workItem.getDqpWorkContext(), nodeID);

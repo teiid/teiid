@@ -56,7 +56,7 @@ public class ObjectToAnyTransform extends Transform {
         
         if (transform == null || transform instanceof ObjectToAnyTransform) {
             Object[] params = new Object[] { getSourceType(), targetClass, value};
-              throw new TransformationException(CorePlugin.Event.TEIID10075, CorePlugin.Util.gs(CorePlugin.Event.TEIID10075, params));
+              throw new TransformationException(CorePlugin.Event.TEIID10076, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, params));
         }
         
         try {

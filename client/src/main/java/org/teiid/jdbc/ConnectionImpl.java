@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -100,6 +101,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
     // the last query annotations
     private Collection<Annotation> annotations;
     private Properties connectionProps;
+    private Properties payload;
         
     public ConnectionImpl(ServerConnection serverConn, Properties info, String url) { 
     	this.connectionProps = info;
@@ -828,6 +830,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 	}
 	
 	public void recycleConnection() {
+		this.payload = null;
         try {
         	//close all open statements
         	this.closeStatements();
@@ -1007,4 +1010,40 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		}
 	}
 
+	public void abort(Executor executor) throws SQLException {
+		if (closed) {
+			return;
+		}
+		//TODO: ensure that threads are released.  In theory they will be since close effectively cancels current executions
+		close();
+	}
+
+	public int getNetworkTimeout() throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
+
+	public String getSchema() throws SQLException {
+		return null;
+	}
+
+	/**
+	 * @see query timeouts and the synchronousTtl setting if using socket connections
+	 */
+	public void setNetworkTimeout(Executor executor, int milliseconds)
+			throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
+	}
+
+	public void setSchema(String schema) throws SQLException {
+		
+	}
+	
+	public Properties getPayload() {
+		return payload;
+	}
+	
+	public void setPayload(Properties payload) {
+		this.payload = payload;
+	}
+	
 }

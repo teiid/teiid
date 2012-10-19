@@ -672,7 +672,7 @@ public class ResolverVisitor extends LanguageVisitor {
 		
 		if (commonType == null) {
 	        // Neither are aggs, but types can't be reconciled
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30073, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30073, new Object[] { leftTypeName, rightTypeName, ccrit }));
+	         throw new QueryResolverException(QueryPlugin.Event.TEIID30072, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30072, new Object[] { leftTypeName, rightTypeName, ccrit }));
 		}
 		ccrit.setLeftExpression(ResolverUtil.convertExpression(leftExpression, leftTypeName, commonType, metadata) );
 		ccrit.setRightExpression(ResolverUtil.convertExpression(rightExpression, rightTypeName, commonType, metadata) );
@@ -855,7 +855,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    }
 	    String thenTypeName = ResolverUtil.getCommonType((String[])thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30080, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30080, "THEN/ELSE", obj));//$NON-NLS-1$
+	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "THEN/ELSE", obj));//$NON-NLS-1$
 	    }
 	    obj.setExpression(ResolverUtil.convertExpression(obj.getExpression(), whenTypeName, metadata));
 	    ArrayList whens = new ArrayList(whenCount);
@@ -941,7 +941,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    // 3. Perform implicit type conversions
 	    String thenTypeName = ResolverUtil.getCommonType(thenTypeNames.toArray(new String[thenTypeNames.size()]));
 	    if (thenTypeName == null) {
-	         throw new QueryResolverException(QueryPlugin.Event.TEIID30081, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30081, "THEN/ELSE", obj)); //$NON-NLS-1$
+	         throw new QueryResolverException(QueryPlugin.Event.TEIID30079, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30079, "THEN/ELSE", obj)); //$NON-NLS-1$
 	    }
 	    ArrayList thens = new ArrayList(whenCount);
 	    for (int i = 0; i < whenCount; i++) {

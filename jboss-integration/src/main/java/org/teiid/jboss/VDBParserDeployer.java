@@ -27,7 +27,11 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
@@ -39,7 +43,6 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.VdbConstants;
 import org.teiid.metadata.index.IndexMetadataStore;
-import org.teiid.runtime.RuntimePlugin;
 
 
 /**

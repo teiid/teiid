@@ -31,7 +31,6 @@ import java.util.Map;
 
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingAttribute;
 import org.teiid.query.mapping.xml.MappingCriteriaNode;
@@ -104,7 +103,7 @@ public class XMLProjectionMinimizer {
 	                MappingSourceNode parent = element.getParentSourceNode();
 	                collectElementSymbols(element, bindings, parent);
 	    		} catch (TeiidException e) {
-	    			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30298, e);
+	    			 throw new TeiidRuntimeException(e);
 	    		}
 	    	}
 	
@@ -176,7 +175,7 @@ public class XMLProjectionMinimizer {
 	        			}
 	        		}
 	    		} catch (TeiidException e) {
-	    			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30299, e);
+	    			 throw new TeiidRuntimeException(e);
 	    		}
 	    	}
 

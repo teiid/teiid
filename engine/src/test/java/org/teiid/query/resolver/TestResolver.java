@@ -1405,7 +1405,7 @@ public class TestResolver {
     }   
         
     @Test public void testFailedConversion_defect9725() throws Exception{
-    	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "Error Code:TEIID30073 Message:TEIID30073 The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available:  pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
+    	helpResolveException("select * from pm3.g1 where pm3.g1.e4 > {b 'true'}", "Error Code:TEIID30072 Message:TEIID30072 The expressions in this criteria are being compared but are of differing types (timestamp and boolean) and no implicit conversion is available: pm3.g1.e4 > TRUE"); //$NON-NLS-1$ //$NON-NLS-2$
     } 
             
     @Test public void testLookupFunction() {     

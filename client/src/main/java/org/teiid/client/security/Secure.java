@@ -20,33 +20,21 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.connector;
+package org.teiid.client.security;
 
-import java.util.ResourceBundle;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.teiid.core.BundleUtil;
+@Target({ElementType.METHOD})
+@Retention(RetentionPolicy.RUNTIME)
+@Inherited
+@Documented
+public @interface Secure {
+	
+	boolean optional() default false;
 
-public class DataPlugin { 
-
-    public static final String PLUGIN_ID = DataPlugin.class.getPackage().getName(); 
-
-	public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,
-	                                                     PLUGIN_ID + ".i18n", ResourceBundle.getBundle(PLUGIN_ID + ".i18n")); //$NON-NLS-1$ //$NON-NLS-2$
-
-	public static enum Event implements BundleUtil.Event {
-		TEIID60000,
-		TEIID60001,
-		TEIID60002,
-		TEIID60003,
-		TEIID60004,
-		TEIID60005,
-		TEIID60008,
-		TEIID60009,
-		TEIID60010,
-		TEIID60011,	
-		TEIID60012,
-		TEIID60013,
-		TEIID60014,
-		TEIID60015
-	}
 }

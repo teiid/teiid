@@ -377,15 +377,6 @@ public class ExecutionFactory<F, C> {
     }
 
     /** 
-     * Support indicates connector accepts criteria of form (element BETWEEN constant AND constant)
-     * <br>NOT CURRENTLY USED - between is rewritten as compound compare criteria
-     * @since 4.0
-     */
-    public boolean supportsBetweenCriteria() {
-    	return false;
-    }
-    
-    /** 
      * Support indicates connector accepts criteria of form (element = constant) 
      * @since 3.1 SP2
      */
@@ -633,16 +624,6 @@ public class ExecutionFactory<F, C> {
     }
     
     /**
-     * Support indicates connector can accept queries with non-searched
-     * CASE <expression> WHEN <expression> ... END
-     * <br>NOT CURRENTLY USED - case is pushed down as searched case
-     * @since 4.0
-     */
-    public boolean supportsCaseExpressions() {
-    	return false;
-    }
-
-    /**
      * Support indicates connector can accept queries with searched CASE WHEN <criteria> ... END
      * @since 4.0
      */
@@ -685,7 +666,10 @@ public class ExecutionFactory<F, C> {
     /**
      * Get list of all supported function names.  Arithmetic functions have names like
      * &quot;+&quot;.  
-     * @see SourceSystemFunctions
+     * @see SourceSystemFunctions for a listing of system pushdown functions.  Note that
+     * not all system functions are listed as some functions will use a common name
+     * such as CONCAT vs. the || operator, and other functions will be rewritten and
+     * not pushed down, such as SPACE.
      * @since 3.1 SP3    
      */        
     public List<String> getSupportedFunctions() {
@@ -835,9 +819,9 @@ public class ExecutionFactory<F, C> {
 		} catch (TeiidException e) {
 			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		} catch (IllegalAccessException e) {
-			 throw new TranslatorException(DataPlugin.Event.TEIID60006, e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		} catch(InstantiationException e) {
-			 throw new TranslatorException(DataPlugin.Event.TEIID60007, e);
+			 throw new TranslatorException(DataPlugin.Event.TEIID60005, e);
 		}    	
     } 
     

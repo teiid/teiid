@@ -24,8 +24,6 @@ package org.teiid.adminapi.impl;
 import java.net.URL;
 import java.util.*;
 
-import javax.xml.bind.annotation.*;
-
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
@@ -34,15 +32,6 @@ import org.teiid.adminapi.impl.ModelMetaData.ValidationError;
 import org.teiid.core.util.StringUtil;
 
 
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = "", propOrder = {
-    "description",
-    "JAXBProperties",
-    "models",
-    "translators",
-    "dataPolicies"
-})
-@XmlRootElement(name = "vdb")
 public class VDBMetaData extends AdminObjectImpl implements VDB {
 
 	private static final String VERSION_DELIM = "."; //$NON-NLS-1$
@@ -53,7 +42,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	 * This simulating a list over a map. JAXB requires a list and performance recommends
 	 * map and we would like to keep one variable to represent both. 
 	 */
-	@XmlElement(name = "model", required = true, type = ModelMetaData.class)
 	protected ListOverMap<ModelMetaData> models = new ListOverMap<ModelMetaData>(new KeyBuilder<ModelMetaData>() {
 		private static final long serialVersionUID = 846247100420118961L;
 
@@ -63,7 +51,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});
 	
-	@XmlElement(name = "translator", required = true, type = VDBTranslatorMetaData.class)
 	protected ListOverMap<VDBTranslatorMetaData> translators = new ListOverMap<VDBTranslatorMetaData>(new KeyBuilder<VDBTranslatorMetaData>() {
 		private static final long serialVersionUID = 3890502172003653563L;
 
@@ -73,7 +60,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});	
 	
-	@XmlElement(name = "data-role", required = true, type = DataPolicyMetadata.class)
 	protected ListOverMap<DataPolicyMetadata> dataPolicies = new ListOverMap<DataPolicyMetadata>(new KeyBuilder<DataPolicyMetadata>() {
 		private static final long serialVersionUID = 4954591545242715254L;
 
@@ -83,10 +69,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 		}
 	});	
 	
-	@XmlAttribute(name = "version", required = true)
 	private int version = 1;
 	
-	@XmlElement(name = "description")
 	protected String description;
 	
 	private String fileUrl = null;
@@ -96,7 +80,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private boolean removed;
 	private long queryTimeout = Long.MIN_VALUE;
 
-	@XmlAttribute(name = "name", required = true)
 	public String getName() {
 		return super.getName();
 	}
@@ -300,7 +283,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	// This one manages the JAXB binding
 	@Override
-	@XmlElement(name = "property", type = PropertyMetadata.class)
 	public List<PropertyMetadata> getJAXBProperties(){
 		return super.getJAXBProperties();
 	}

@@ -73,13 +73,13 @@ public class TempTableResolver implements CommandResolver {
                  throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
             }
         	if (metadata.getMetadata().hasProcedure(group.getName())) {
-        		 throw new QueryResolverException(QueryPlugin.Event.TEIID30119, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30119, group.getName()));
+        		 throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
         	}
             
             //now we will be more specific for temp groups
             TempMetadataID id = metadata.getMetadataStore().getTempGroupID(group.getName());
             if (id != null && !metadata.isTemporaryTable(id)) {
-                 throw new QueryResolverException(QueryPlugin.Event.TEIID30120, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30120, group.getName()));
+                 throw new QueryResolverException(QueryPlugin.Event.TEIID30118, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30118, group.getName()));
             }
             //if we get here then either the group does not exist or has already been defined as a temp table
             //if it has been defined as a temp table, that's ok we'll use this as the new definition and throw an

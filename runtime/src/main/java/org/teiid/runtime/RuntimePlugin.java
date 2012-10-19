@@ -35,13 +35,11 @@ public class RuntimePlugin {
     	TEIID40001, // undefined translator properties
     	TEIID40002, // failed to load ODBC metadata
     	TEIID40003, // VDB Active
-    	TEIID40004, // VDB validity errors
     	TEIID40005, // datasource or translator not found
     	TEIID40006, // VDB inactive
     	TEIID40007, // keep alive failed
     	TEIID40008, // expired session
     	TEIID40009, // terminate session
-    	TEIID40010, // odbc error
     	TEIID40011, // processing error
     	TEIID40012, // data source not found
     	TEIID40013, // replication failed

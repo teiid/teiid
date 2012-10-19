@@ -106,7 +106,7 @@ public class XMLQueryPlanner {
                     }
                     
                 } catch (Exception e) {
-                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30292, e);
+                     throw new TeiidRuntimeException(e);
                 } 
             }     
             
@@ -132,7 +132,7 @@ public class XMLQueryPlanner {
                     ProcessorPlan queryPlan = optimizePlan(cmd, planEnv);
                     rsInfo.setPlan(queryPlan);                    
                 } catch (Exception e) {
-                     throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30293, e);
+                     throw new TeiidRuntimeException(e);
                 }
             }
         };

@@ -27,15 +27,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.FutureTask;
 
+import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.client.security.SessionToken;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
@@ -47,13 +47,14 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.events.EventDistributor;
+import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
@@ -85,24 +86,32 @@ import org.teiid.query.util.CommandContext;
  */
 public class TempTableDataManager implements ProcessorDataManager {
 	
-    private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
+	public interface RequestExecutor {
+		void execute(String command, List<?> parameters);
+	}
+	
+	private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
 	private static final String REFRESHMATVIEW = ".refreshmatview"; //$NON-NLS-1$
 	public static final String CODE_PREFIX = "#CODE_"; //$NON-NLS-1$
-	
+	private static String REFRESH_SQL = SQLConstants.Reserved.CALL + ' ' + CoreConstants.SYSTEM_ADMIN_MODEL + REFRESHMATVIEW + "(?, ?)"; //$NON-NLS-1$
+
 	private ProcessorDataManager processorDataManager;
     private BufferManager bufferManager;
 	private SessionAwareCache<CachedResults> cache;
-    private Executor executor;
+    private RequestExecutor executor;
     
     private EventDistributor eventDistributor;
-
+	
     public TempTableDataManager(ProcessorDataManager processorDataManager, BufferManager bufferManager, 
-    		Executor executor, SessionAwareCache<CachedResults> cache){
+    		SessionAwareCache<CachedResults> cache){
         this.processorDataManager = processorDataManager;
         this.bufferManager = bufferManager;
-        this.executor = executor;
         this.cache = cache;
     }
+    
+    public void setExecutor(RequestExecutor executor) {
+		this.executor = executor;
+	}
     
     public void setEventDistributor(EventDistributor eventDistributor) {
 		this.eventDistributor = eventDistributor;
@@ -396,11 +405,12 @@ public class TempTableDataManager implements ProcessorDataManager {
 				}
 			}
 			if (load) {
-				if (!info.isValid()) {
+				if (!info.isValid() || executor == null) {
 					//blocking load
 					loadGlobalTable(context, group, tableName, globalStore);
 				} else {
-					loadAsynch(context, group, tableName, globalStore);
+					info.setAsynchLoad();
+					loadAsynch(context, tableName);
 				}
 			} 
 			table = globalStore.getTempTableStore().getOrCreateTempTable(tableName, query, bufferManager, false, false, context);
@@ -417,16 +427,25 @@ public class TempTableDataManager implements ProcessorDataManager {
 		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 	}
 
-	private void loadAsynch(final CommandContext context,
-			final GroupSymbol group, final String tableName, final GlobalTableStore globalStore) {
-		Callable<Integer> toCall = new Callable<Integer>() {
+	private void loadAsynch(final CommandContext context, final String tableName) {
+		SessionMetadata session = createTemporarySession(context.getUserName(), "asynch-mat-view-load", context.getDQPWorkContext().getVDB()); //$NON-NLS-1$
+		session.setSubject(context.getSubject());
+		session.setSecurityDomain(context.getSession().getSecurityDomain());
+		DQPWorkContext workContext = new DQPWorkContext();
+		workContext.setAdmin(true);
+		DQPWorkContext current = context.getDQPWorkContext();
+		workContext.setSession(session);
+		workContext.setPolicies(current.getAllowedDataPolicies());
+		workContext.setSecurityHelper(current.getSecurityHelper());
+		final String viewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
+		workContext.runInContext(new Runnable() {
+
 			@Override
-			public Integer call() throws Exception {
-				return loadGlobalTable(context, group, tableName, globalStore);
+			public void run() {
+				executor.execute(REFRESH_SQL, Arrays.asList(viewName, Boolean.FALSE.toString()));
 			}
-		};
-		FutureTask<Integer> task = new FutureTask<Integer>(toCall);
-		executor.execute(task);
+			
+		});
 	}
 
 	private int loadGlobalTable(CommandContext context,
@@ -514,5 +533,27 @@ public class TempTableDataManager implements ProcessorDataManager {
 	@Override
 	public EventDistributor getEventDistributor() {
 		return this.eventDistributor;
+	}
+
+	/**
+	 * Create an unauthenticated session
+	 * @param userName
+	 * @param app
+	 * @param vdb
+	 * @return
+	 */
+	public static SessionMetadata createTemporarySession(String userName, String app, VDBMetaData vdb) {
+		long creationTime = System.currentTimeMillis();
+	    SessionMetadata newSession = new SessionMetadata();
+	    newSession.setSessionToken(new SessionToken(userName));
+	    newSession.setSessionId(newSession.getSessionToken().getSessionID());
+	    newSession.setUserName(userName);
+	    newSession.setCreatedTime(creationTime);
+	    newSession.setApplicationName(app); 
+	    newSession.setVDBName(vdb.getName());
+	    newSession.setVDBVersion(vdb.getVersion());
+	    newSession.setVdb(vdb);
+	    newSession.setEmbedded(true);
+		return newSession;
 	}
 }

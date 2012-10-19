@@ -28,12 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 
 import org.teiid.adminapi.AdminObject;
 
-@XmlAccessorType(XmlAccessType.NONE)
 public abstract class AdminObjectImpl implements AdminObject, Serializable {
 
 	private static final long serialVersionUID = -6381303538713462682L;

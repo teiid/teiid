@@ -24,11 +24,6 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlType;
-
 /**
  * <pre>
  * &lt;complexType name="property">
@@ -43,14 +38,10 @@ import javax.xml.bind.annotation.XmlType;
  * 
  * 
  */
-@XmlAccessorType(XmlAccessType.NONE)
-@XmlType(name = "property")
 public class PropertyMetadata implements Serializable{
 	private static final long serialVersionUID = -5040224539939758816L;
 	
-	@XmlAttribute(name = "name", required = true)
     protected String name;
-    @XmlAttribute(name = "value", required = true)
     protected String value;
     
     public PropertyMetadata() {

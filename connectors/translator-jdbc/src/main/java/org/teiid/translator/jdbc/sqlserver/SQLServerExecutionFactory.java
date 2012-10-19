@@ -287,4 +287,9 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
     
+    @Override
+    protected boolean setFetchSizeOnCallableStatements() {
+    	return true;
+    }
+    
 }

@@ -23,6 +23,7 @@
 package org.teiid.query.mapping.xml;
 
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.Assertion;
 import org.teiid.query.QueryPlugin;
 
 
@@ -120,30 +121,26 @@ public class MappingDocument extends MappingBaseNode {
     }     
     
     public MappingAllNode addAllNode(MappingAllNode elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30458, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30458));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }
 
     public MappingChoiceNode addChoiceNode(MappingChoiceNode elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30459, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30459));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }
 
     public MappingSequenceNode addSequenceNode(MappingSequenceNode elem) {
-         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30460, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30460));
+         throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30452, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30452));
     }
     
     public MappingElement addChildElement(MappingElement elem) {
-        if (elem == null) {
-             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30461, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30461));
-        }        
+    	Assertion.isNotNull(elem);
         fixCardinality(elem);
         setRoot(elem);
         return elem;
     }    
     
     public MappingSourceNode addSourceNode(MappingSourceNode elem) {
-        if (elem == null) {
-             throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30462, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30462));
-        }
+        Assertion.isNotNull(elem);
         setRoot(elem);
         return elem;
     }

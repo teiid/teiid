@@ -75,7 +75,8 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.DISCOVERY_STRATEGY,
     	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
     	        TeiidURL.CONNECTION.JAAS_NAME,
-    	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME));
+    	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
+    	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS));
     	props.addAll(EXECUTION_PROPERTIES);
     	return Collections.unmodifiableSet(props);
     }

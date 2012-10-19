@@ -646,6 +646,14 @@ public final class PropertiesUtils {
     '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };
 
+    public static String toHex(byte[] bytes) {
+    	StringBuilder sb = new StringBuilder(bytes.length * 2);
+    	for (byte b : bytes) {
+			sb.append(toHex(b >>> 4));
+			sb.append(toHex(b));
+		}
+    	return sb.toString();
+    }
 
     public static final void copyProperty(Properties srcProperties, String srcPropName, Properties tgtProperties, String tgtPropName) {
         if(srcProperties == null || srcPropName == null || tgtProperties == null || tgtPropName == null) {

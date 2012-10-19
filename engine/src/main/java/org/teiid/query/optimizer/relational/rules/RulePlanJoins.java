@@ -22,16 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -376,7 +367,7 @@ public class RulePlanJoins implements OptimizerRule {
     private void planForDependencies(JoinRegion joinRegion) throws QueryPlannerException {
                 
         if (joinRegion.getJoinSourceNodes().isEmpty()) {
-             throw new QueryPlannerException(QueryPlugin.Event.TEIID30276, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30276, joinRegion.getUnsatisfiedAccessPatterns()));
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30275, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30275, joinRegion.getUnsatisfiedAccessPatterns()));
         }
         
         HashSet<GroupSymbol> currentGroups = new HashSet<GroupSymbol>();
@@ -435,7 +426,7 @@ public class RulePlanJoins implements OptimizerRule {
         }
         
         if (!dependentNodes.isEmpty()) {
-             throw new QueryPlannerException(QueryPlugin.Event.TEIID30277, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30277, joinRegion.getUnsatisfiedAccessPatterns()));
+             throw new QueryPlannerException(QueryPlugin.Event.TEIID30275, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30275, joinRegion.getUnsatisfiedAccessPatterns()));
         }
         
     }

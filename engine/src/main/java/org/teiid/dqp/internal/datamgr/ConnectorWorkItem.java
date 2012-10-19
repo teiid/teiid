@@ -64,7 +64,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private AtomicRequestID id;
     private ConnectorManager manager;
     private AtomicRequestMessage requestMsg;
-    private ExecutionFactory connector;
+    private ExecutionFactory<Object, Object> connector;
     private QueryMetadataInterface queryMetadata;
     
     /* Created on new request */
@@ -212,6 +212,9 @@ public class ConnectorWorkItem implements ConnectorWork {
 	        // Translate the command
 	        Command command = this.requestMsg.getCommand();
 	        this.expectedColumns = command.getProjectedSymbols().size();
+	        if (command instanceof StoredProcedure) {
+	        	this.expectedColumns = ((StoredProcedure)command).getResultSetColumns().size();
+	        }
 	        LanguageBridgeFactory factory = new LanguageBridgeFactory(queryMetadata);
 	        factory.setConvertIn(!this.connector.supportsInCriteria());
 	        org.teiid.language.Command translatedCommand = factory.translate(command);

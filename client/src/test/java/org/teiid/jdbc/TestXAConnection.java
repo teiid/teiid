@@ -42,12 +42,7 @@ public class TestXAConnection {
 
 		final ConnectionImpl mmConn = TestConnection.getMMConnection();
 
-		XAConnectionImpl xaConn = new XAConnectionImpl(new XAConnectionImpl.ConnectionSource() {
-			@Override
-			public ConnectionImpl createConnection() throws SQLException {
-				return mmConn;
-			}
-		});
+		XAConnectionImpl xaConn = new XAConnectionImpl(mmConn);
 		
 		Connection conn = xaConn.getConnection();
 		StatementImpl stmt = (StatementImpl)conn.createStatement();
@@ -68,14 +63,9 @@ public class TestXAConnection {
 	}
 	
 	@Test public void testNotification() throws Exception {
-		XAConnectionImpl xaConn = new XAConnectionImpl(new XAConnectionImpl.ConnectionSource() {
-			@Override
-			public ConnectionImpl createConnection() throws SQLException {
-				ConnectionImpl c = Mockito.mock(ConnectionImpl.class);
-				Mockito.doThrow(new SQLException(new InvalidSessionException())).when(c).commit();
-				return c;
-			}
-		});
+		ConnectionImpl conn = Mockito.mock(ConnectionImpl.class);
+		Mockito.doThrow(new SQLException(new InvalidSessionException())).when(conn).commit();
+		XAConnectionImpl xaConn = new XAConnectionImpl(conn);
 		ConnectionEventListener cel = Mockito.mock(ConnectionEventListener.class);
 		xaConn.addConnectionEventListener(cel);
 		Connection c = xaConn.getConnection();

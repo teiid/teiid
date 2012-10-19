@@ -446,14 +446,13 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     /**
      * <p>Gets a description of the access rights for a column of the given name.
-     * Catalog, schema and table names are not used to narrow down the search,
-     * but the schema name should match the virtualdatabasename used to obtain
+     * Catalog name should match the virtualdatabasename used to obtain
      * this driver connection.</p>
      * @param name of the catalog to which columns belong.
      * @param name of the schema to which columns belong.
      * @param name of the table to which columns belong.
      * @param name pattern to be matched by column names.
-     * @return ResultSet containing column privilage information.
+     * @return ResultSet containing column privilege information.
      * @throws SQLException if there is an error obtaining server results
      */
     public ResultSet getColumnPrivileges(String catalog, String schema, String table, String columnName) throws SQLException {
@@ -487,9 +486,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
 
     /**
      * <p>Get's the metadata information about the columns whose names match the given
-     * columnNamePattern. Catalog, schema and tableNamePattern are not used to
-     * narrow down the search, but Catalog and schema names should match the
-     * virtualdatabasename and version used to obtain this driver connection.</p>
+     * columnNamePattern. Catalog names should match the
+     * virtualdatabasename used to obtain this driver connection.</p>
      * <p> The ResultSet returned by this method contains the following additional
      * columns that are not specified in the JDBC specification.</p>
      * <OL>
@@ -594,9 +592,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     /**
      * <p>Gets the description of the foreign key columns in the table foreignTable.
      * These foreign key columns reference primary key columns of primaryTable.
-     * Catalog and schema information is not used to narrow down the search, but
-     * Catalog and schema names(primary and foreign) should match the
-     * virtualdatabasename and version used to obtain this driver connection.
+     * Catalog names(primary and foreign) should match the
+     * virtualdatabasename used to obtain this driver connection.
      * @param name of the catalog containing primary keys.
      * @param name of the schema containing primary keys.
      * @param name of the table containing primary keys.
@@ -1985,7 +1982,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
     }
 
     public boolean supportsGroupByUnrelated() throws SQLException {
-        return false;
+        return true;
     }
 
     public boolean supportsIntegrityEnhancementFacility() throws SQLException {
@@ -2004,22 +2001,10 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * <p>Checks whether mixed-case unquoted SQL identifiers used in SQL statements are
-     * case sensitive</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsMixedCaseIdentifiers() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether mixed-case quoted SQL identifiers used in SQL statements are
-     * case sensitive</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsMixedCaseQuotedIdentifiers() throws SQLException {
         return false;
     }
@@ -2028,36 +2013,20 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return false;
     }
 
-    /**
-     * <p>Are multiple ResultSets from a single execute supported?</p>
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
     public boolean supportsMultipleResultSets() throws SQLException {
         return false;
     }
 
-    /**
-     * Retrieves whether it is possible to have multiple ResultSet objects
-     * returned from a CallableStatement object simultaneously.
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     * @throws SQLException, should never occur
-     */
     public boolean supportsMultipleOpenResults() throws SQLException {
         return false;
     }
 
-    /**
-     * <p>Checks whether multiple transactions open at once on different connectons</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsMultipleTransactions() throws SQLException {
         return true;
     }
 
     public boolean supportsNamedParameters() throws SQLException {
-        return false;
+        return true;
     }
 
     public boolean supportsNonNullableColumns() throws SQLException {
@@ -2076,11 +2045,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * <p>Checks whether an ORDER BY clause can use columns that are not in the SELECT clause.</p>
-     * @return if so return true, else false.
-     * @throws SQLException, should never occur.
-     */
     public boolean supportsOrderByUnrelated() throws SQLException {
         return true;
     }
@@ -2115,7 +2079,6 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      * @param intValue holdability
      * @return boolean true if so; false otherwise
      * @throws SQLException, should never occur
-
      */
     public boolean supportsResultSetHoldability(int holdability) throws SQLException {
         return false;
@@ -2353,5 +2316,15 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         		prepareQuery.close();
         	}
         }
+	}
+
+	public boolean generatedKeyAlwaysReturned() throws SQLException {
+		return false;
+	}
+
+	public ResultSet getPseudoColumns(String catalog, String schemaPattern,
+			String tableNamePattern, String columnNamePattern)
+			throws SQLException {
+		throw SqlUtil.createFeatureNotSupportedException();
 	}
 }

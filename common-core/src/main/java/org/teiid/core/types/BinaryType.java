@@ -24,9 +24,8 @@ package org.teiid.core.types;
 
 import java.util.Arrays;
 
-import javax.xml.bind.DatatypeConverter;
-
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.PropertiesUtils;
 
 public final class BinaryType implements Comparable<BinaryType> {
 	
@@ -102,7 +101,7 @@ public final class BinaryType implements Comparable<BinaryType> {
 	
 	@Override
 	public String toString() {
-		return DatatypeConverter.printHexBinary(bytes);
+		return PropertiesUtils.toHex(bytes);
 	}
 	
 	public BlobType toBlob() {

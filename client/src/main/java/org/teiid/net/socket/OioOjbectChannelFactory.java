@@ -49,7 +49,7 @@ import org.teiid.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	
 	private final static int STREAM_BUFFER_SIZE = 1<<15;
-	private final static int MAX_OBJECT_SIZE = 1 << 25;
+	private final static int DEFAULT_MAX_OBJECT_SIZE = 1 << 25;
 	
 	private static Logger log = Logger.getLogger("org.teiid.client.sockets"); //$NON-NLS-1$
 	
@@ -59,7 +59,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private ObjectInputStream inputStream;
 		private Object readLock = new Object();
 
-		private OioObjectChannel(Socket socket) throws IOException {
+		private OioObjectChannel(Socket socket, int maxObjectSize) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
 			this.socket = socket;
             BufferedOutputStream bos = new BufferedOutputStream( socket.getOutputStream(), STREAM_BUFFER_SIZE);
@@ -69,7 +69,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
             outputStream.flush();
             final ClassLoader cl = this.getClass().getClassLoader();
             BufferedInputStream bis = new BufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE);
-            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, MAX_OBJECT_SIZE);
+            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, maxObjectSize);
 		}
 
 		@Override
@@ -145,6 +145,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	private boolean conserveBandwidth;
 	private int soTimeout = 3000;
 	private volatile SSLSocketFactory sslSocketFactory;
+	private int maxObjectSize = DEFAULT_MAX_OBJECT_SIZE;
 
 	public OioOjbectChannelFactory(Properties props) {
 		this.props = props;
@@ -176,7 +177,7 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	    socket.setTcpNoDelay(!conserveBandwidth); // enable Nagle's algorithm to conserve bandwidth
 	    socket.connect(address);
 	    socket.setSoTimeout(soTimeout);
-	    return new OioObjectChannel(socket);
+	    return new OioObjectChannel(socket, maxObjectSize);
 	}
 	
 	public int getSendBufferSize() {
@@ -205,6 +206,10 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 	
 	public void setSoTimeout(int soTimeout) {
 		this.soTimeout = soTimeout;
+	}
+	
+	public void setMaxObjectSize(int maxObjectSize) {
+		this.maxObjectSize = maxObjectSize;
 	}
 
 	public int getSoTimeout() {

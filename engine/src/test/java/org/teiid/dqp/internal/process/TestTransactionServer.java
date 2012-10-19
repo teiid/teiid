@@ -35,7 +35,6 @@ import org.teiid.adminapi.Transaction;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
 import org.teiid.common.queue.FakeWorkManager;
-import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.TransactionContext;
 
 public class TestTransactionServer {
@@ -234,7 +233,7 @@ public class TestTransactionServer {
             server.start(THREAD1, XID1, Integer.MAX_VALUE, 100,false);
             fail("exception expected"); //$NON-NLS-1$
         } catch (XATransactionException ex) {
-            assertEquals("Error Code:TEIID30519 Message:TEIID30519 Unknown flags", ex.getMessage()); //$NON-NLS-1$
+            assertEquals("Error Code:TEIID30519 Message:TEIID30519 Unknown START flags", ex.getMessage()); //$NON-NLS-1$
         }
     }
 
