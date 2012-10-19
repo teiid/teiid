@@ -29,6 +29,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -48,14 +49,19 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.language.Command;
+import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.runtime.EmbeddedServer.ConnectionFactoryProvider;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -415,6 +421,76 @@ public class TestEmbeddedServer {
 		assertEquals(1, ps.executeUpdate());
 		ps.setInt(1, 3);
 		ps.setInt(2, 1);
+		assertEquals(1, ps.executeUpdate());
+	}
+	
+	@Test public void testDynamicUpdate() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.addTranslator("t", new ExecutionFactory<Void, Void>() {
+		
+			@Override
+			public boolean supportsCompareCriteriaEquals() {
+				return true;
+			}
+			
+			@Override
+			public boolean isSourceRequired() {
+				return false;
+			}
+			
+			@Override
+			public UpdateExecution createUpdateExecution(Command command,
+					ExecutionContext executionContext,
+					RuntimeMetadata metadata, Void connection)
+					throws TranslatorException {
+				Collection<Literal> values = CollectorVisitor.collectObjects(Literal.class, command);
+				assertEquals(2, values.size());
+				for (Literal literal : values) {
+					assertFalse(literal.getValue() instanceof Reference);
+				}
+				return new UpdateExecution() {
+					
+					@Override
+					public void execute() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public void close() {
+						
+					}
+					
+					@Override
+					public void cancel() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public int[] getUpdateCounts() throws DataNotAvailableException,
+							TranslatorException {
+						return new int[] {1};
+					}
+				};
+			}
+		});
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("accounts");
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("dynamic_update.sql")));
+		mmd1.addSourceMapping("y", "t", null);
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		PreparedStatement ps = c.prepareStatement("update hello1 set SchemaName=? where Name=?");
+		ps.setString(1,"test1223");
+	    ps.setString(2,"Columns");
 		assertEquals(1, ps.executeUpdate());
 	}
 

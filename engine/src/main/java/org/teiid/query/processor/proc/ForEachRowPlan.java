@@ -23,6 +23,7 @@
 package org.teiid.query.processor.proc;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
@@ -46,7 +48,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 	private ProcessorPlan queryPlan;
 	private ProcedurePlan rowProcedure;
 	private Map<ElementSymbol, Expression> params;
-	private Map lookupMap;
+	private Map<Expression, Integer> lookupMap;
 	
 	private ProcessorDataManager dataMgr;
     private BufferManager bufferMgr;
@@ -106,12 +108,13 @@ public class ForEachRowPlan extends ProcessorPlan {
 				rowProcedure.reset();
 				CommandContext context = getContext().clone();
 				this.rowProcessor = new QueryProcessor(rowProcedure, context, this.bufferMgr, this.dataMgr);
+				Evaluator eval = new Evaluator(Collections.emptyMap(), dataMgr, context);
 				for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
 					Integer index = (Integer)this.lookupMap.get(entry.getValue());
 					if (index != null) {
 						rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), this.currentTuple.get(index));
 					} else {
-						rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), entry.getValue());
+						rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
 					}
 				}
 			}
@@ -142,7 +145,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 		this.params = params;
 	}
 	
-	public void setLookupMap(Map symbolMap) {
+	public void setLookupMap(Map<Expression, Integer> symbolMap) {
 		this.lookupMap = symbolMap;
 	}
 	
