@@ -1,0 +1,13 @@
+<vdb name="reuse1" version= "1">
+    <import-vdb name="reuse" version="1"/>
+    <model visible = "true" type = "VIRTUAL" name = "portfolio2">
+         <metadata type = "DDL"><![CDATA[
+              CREATE VIEW stock2 (
+                symbol varchar,
+                price decimal
+                ) AS 
+                  select * from stock1;
+         ]]>
+         </metadata>
+    </model>
+</vdb>

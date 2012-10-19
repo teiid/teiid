@@ -153,6 +153,40 @@ public class TestCompositeVDB {
 		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
 	}
 	
+	@Test public void testDeepNesting() throws Exception {
+		VDBRepository repo = new VDBRepository();
+		repo.setSystemStore(RealMetadataFactory.example1Cached().getMetadataStore());
+		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
+		MetadataStore metadataStore = new MetadataStore();
+		RealMetadataFactory.createPhysicalModel("x", metadataStore);
+		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
+		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
+		cmr.addConnectorManager("x", new ConnectorManager("y", "z"));
+		repo.addVDB(vdb, metadataStore, null, null, cmr);
+		
+		metadataStore = new MetadataStore();
+		RealMetadataFactory.createPhysicalModel("y", metadataStore);
+		vdb = createVDBMetadata(metadataStore, "ex");
+		VDBImportMetadata vdbImport = new VDBImportMetadata();
+		vdbImport.setName("bqt");
+		vdb.getVDBImports().add(vdbImport);
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		
+		VDBMetaData vdbInstance = repo.getVDB("ex", 1);
+		assertTrue(!vdbInstance.getAttachment(ConnectorManagerRepository.class).getConnectorManagers().isEmpty());
+		
+		metadataStore = new MetadataStore();
+		RealMetadataFactory.createPhysicalModel("z", metadataStore);
+		vdb = createVDBMetadata(metadataStore, "ex1");
+		vdbImport = new VDBImportMetadata();
+		vdbImport.setName("ex");
+		vdb.getVDBImports().add(vdbImport);
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		
+		vdbInstance = repo.getVDB("ex1", 1);
+		assertTrue(!vdbInstance.getAttachment(ConnectorManagerRepository.class).getConnectorManagers().isEmpty());
+	}
+	
 	@Test
 	public void testSourceMetadataStoreFunction() throws Exception {
 		helpResolve("SELECT bqt1.reverse(BQT1.SmallA.INTKEY) FROM BQT1.SmallA");

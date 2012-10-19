@@ -61,7 +61,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
 		
 		Properties props = new Properties();
-		props.setProperty("ParentDirectory", "../docs/teiid/examples/dynamicvdb-portfolio/data");
+		props.setProperty("ParentDirectory", "../../build/kits/jboss-as7/docs/teiid/examples/dynamicvdb-portfolio/data");
 		props.setProperty("AllowParentPaths", "true");
 		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
 		
@@ -70,6 +70,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic@mm://localhost:31000;user=user;password=user", null);
+		execute("SELECT * FROM Stock"); //$NON-NLS-1$
 		
 		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
 		this.internalResultSet.next();
@@ -84,6 +85,13 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		execute("SELECT count(*) FROM Sys.Columns"); //$NON-NLS-1$
 		this.internalResultSet.next();
 		assertTrue(this.internalResultSet.getInt(1) > cols);
+		
+		
+		admin.deploy("reuse1-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("reuse1-vdb.xml")));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "reuse1", 1, 3));
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:reuse1@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT * FROM Stock2"); //$NON-NLS-1$
     }
 
 }

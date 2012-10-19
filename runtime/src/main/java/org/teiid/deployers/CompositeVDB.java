@@ -147,13 +147,17 @@ public class CompositeVDB {
 			}
 			
 			// add models
-			for (Model m:importedVDB.getVDB().getModels()) {
+			for (Model m:childVDB.getModels()) {
 				if (newMergedVDB.addModel((ModelMetaData)m) != null) {
 					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40085, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40085, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), m.getName()));
 				}
 				newMergedVDB.getImportedModels().add(m.getName());
 			}
-			for (Map.Entry<String, ConnectorManager> entry : importedVDB.cmr.getConnectorManagers().entrySet()) {
+			ConnectorManagerRepository childCmr = childVDB.getAttachment(ConnectorManagerRepository.class);
+			if (childCmr == null) {
+				throw new AssertionError("childVdb had not connector manager repository"); //$NON-NLS-1$
+			}
+			for (Map.Entry<String, ConnectorManager> entry : childCmr.getConnectorManagers().entrySet()) {
 				if (mergedRepo.getConnectorManagers().put(entry.getKey(), entry.getValue()) != null) {
 					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40086, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40086, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), entry.getKey()));
 				}
