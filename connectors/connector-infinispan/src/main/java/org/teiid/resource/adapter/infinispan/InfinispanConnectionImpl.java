@@ -24,8 +24,6 @@ package org.teiid.resource.adapter.infinispan;
 
 import java.util.Map;
 
-import javax.resource.ResourceException;
-
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -68,14 +66,10 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
     @Override
 	public Map<?, ?> getMap(String name) throws TranslatorException {
     	Map<?,?> m = null;
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap:", name, "==="); //$NON-NLS-1$ //$NON-NLS-2$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap:", (name != null ? name : "Default"), "==="); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-		try {
-			m = config.getCache(name);
-		} catch (ResourceException e) {
-			throw new TranslatorException(e);
-		}
-    		
+		m = config.getCache(name);
+   		
 		if (m == null) {
             final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
             throw new TranslatorException(msg);
