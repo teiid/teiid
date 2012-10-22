@@ -24,6 +24,8 @@ package org.teiid.resource.adapter.infinispan;
 
 import java.util.Map;
 
+import javax.resource.ResourceException;
+
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -58,7 +60,7 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	 * @return boolean true if CacheContainer has been started
 	 */
 	public boolean isAlive() {
-		boolean alive = (config == null ? false : config.getCacheManager() != null);
+		boolean alive = (config == null ? false : config.isAlive());
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Infinispan Cache Connection is alive:", alive); //$NON-NLS-1$
 		return (alive);
 	}	
@@ -68,20 +70,18 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
     	Map<?,?> m = null;
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap:", name, "==="); //$NON-NLS-1$ //$NON-NLS-2$
 
-		m = config.getCacheManager().getCache();
+		try {
+			m = config.getCache(name);
+		} catch (ResourceException e) {
+			throw new TranslatorException(e);
+		}
+    		
+		if (m == null) {
+            final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
+            throw new TranslatorException(msg);
+		}
 		
-    		if (name == null) {
-    			m = config.getCacheManager().getCache();
-    		} else {
-    			m = config.getCacheManager().getCache(name);
-    		}
-    		
-    		if (m == null) {
-                final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
-                throw new TranslatorException(msg);
-    		}
-    		
-    		return m;
+		return m;
 	}
 
 	@Override

@@ -23,6 +23,8 @@ package org.teiid.resource.adapter.infinispan;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +38,6 @@ import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
 import org.infinispan.Cache;
-import org.infinispan.api.BasicCacheContainer;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
@@ -50,7 +51,20 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
-
+/**
+ * The InfinispanManagedConnectionFactory exposes the Infinispan CacheManager in
+ * order to obtain a cache by the {@link InfinispanConnectionImpl connection}.
+ * <p>
+ * Because Infinispan has various CacheManagers and they can be implemented
+ * differently based on clustering, remote access, or just basic default cache
+ * manager, it was easier to use reflections to get the cache, because they all
+ * implement the same methods for cache access. And this makes the connector
+ * logic simpler without having to know (or keep up with) which type of cache manager
+ * is being used.
+ * 
+ * @author vhalbert
+ * 
+ */
 public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFactory {
 
 	private static final long serialVersionUID = -9153717006234080627L;
@@ -60,7 +74,13 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String cacheJndiName=null;
 	private Map<String, Class<?>> typeMap = null;
 	private String cacheTypes = null;
-	private BasicCacheContainer cacheContainer = null;
+	
+	private Object cacheManager;
+	
+	private Method getCacheMethod = null;
+	private Method getCacheByNameMethod = null;
+	private Method isAliveMethod = null;
+
 	private String module;
 	
 	@Override
@@ -240,24 +260,46 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     public void setCacheJndiName( String jndiName ) {
         this.cacheJndiName = jndiName;
     }
+    
+    @SuppressWarnings("unchecked")
+	protected Map<Object,Object> getCache(String cacheName) throws ResourceException {
+    	if (cacheManager != null) {
+    		if (cacheName == null) {    			
+    			return (Map<Object, Object>) executeMethod(this.getCacheMethod, cacheManager, new Object[] {});
+    		} else {   			
+    			return (Map<Object, Object>) executeMethod(this.getCacheByNameMethod, cacheManager, new Object[] {cacheName});
+    		}   		
+    	}
+    	
+    	return null;
 
-    
-    
-    protected BasicCacheContainer getCacheManager() {
-    	return  this.cacheContainer;
     }
-  
+
+    protected boolean isAlive() {
+    	if (this.cacheManager != null) {
+    		if (this.isAliveMethod != null) {
+    			try {
+					Object obj = executeMethod(this.isAliveMethod, cacheManager, null);
+					return Boolean.getBoolean(obj.toString());
+				} catch (ResourceException e) {
+					return false;
+				}
+    		}
+    	}
+    	return false;
+    }
     
     protected void createCacheContainer() throws ResourceException {
-    		this.cacheContainer=this.getLocalCacheContainer();
-    		if (this.cacheContainer == null) {
-    			this.cacheContainer= createRemoteCacheContainer();
-    		}
+    	createLocalCacheContainer();
+		if (this.cacheManager == null) {
+			createRemoteCacheContainer();
+		}
+    	deriveMethods();	
+    	
     }
     
-	private RemoteCacheManager createRemoteCacheContainer() throws ResourceException {
+	private void createRemoteCacheContainer() throws ResourceException {
 		
-		RemoteCacheManager container = null;
 		if (this.getHotRodClientPropertiesFile() != null) {
 			File f = new File(this.getHotRodClientPropertiesFile());
 			if (! f.exists()) {
@@ -266,9 +308,11 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			}
 			try {
 				Properties props = PropertiesUtils.load(f.getAbsolutePath());
-				container = new RemoteCacheManager(props);
-				container.start();
-				container.getCache();
+				RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
+				remoteCacheManager.start();
+				remoteCacheManager.getCache();
+				
+				cacheManager = remoteCacheManager;
 			} catch (MalformedURLException e) {
 				throw new ResourceException(e);
 			} catch (IOException e) {
@@ -285,24 +329,23 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 				
 				Properties props = new Properties();
 				props.put("infinispan.client.hotrod.server_list", this.getRemoteServerList()); //$NON-NLS-1$
-				container = new RemoteCacheManager(props);
-				container.start();
+				RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
+				remoteCacheManager.start();
+				
+				cacheManager = remoteCacheManager;
 				LogManager
 				.logInfo(LogConstants.CTX_CONNECTOR,
 						"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
 			}
 		}
 
-		return container;
     }
-	protected BasicCacheContainer getLocalCacheContainer() throws ResourceException {
-	  	
+	protected synchronized void createLocalCacheContainer() throws ResourceException {
+		
 	    Object cache = null;
-		if (this.getConfigurationFileNameForLocalCache() != null) {
-			
-			DefaultCacheManager container;
+		if (this.getConfigurationFileNameForLocalCache() != null) {	
 			try {
-				container = new DefaultCacheManager(
+				cacheManager = new DefaultCacheManager(
 						this.getConfigurationFileNameForLocalCache());
 			} catch (IOException e) {
 				throw new ResourceException(e);
@@ -310,7 +353,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			LogManager
 					.logInfo(LogConstants.CTX_CONNECTOR,
 							"=== Using DefaultCacheManager (loaded by configuration) ==="); //$NON-NLS-1$
-			return container;
 
 		} 
 		
@@ -326,22 +368,90 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	            cache = context.lookup(jndiName);
 
 	            if (cache == null) {
-	    				throw new ResourceException("Unable to find cache using JNDI: " + jndiName);  //$NON-NLS-1$	            	
+					throw new ResourceException(InfinispanPlugin.Util.getString("InfinispanManagedConnectionFactory.unableToFindCacheUsingJNDI", jndiName)); //$NON-NLS-1$
 	            } 	
 	            
 				LogManager
 				.logInfo(LogConstants.CTX_CONNECTOR,
-						"=== Using CacheContainer (obtained by JNDI: " + jndiName + " ==="); //$NON-NLS-1$ //$NON-NLS-2$
-
+						"=== Using CacheContainer (obtained by JNDI: " + jndiName + " ==="); //$NON-NLS-1
 	            
-	           return   (BasicCacheContainer) cache;
+				cacheManager  = cache;
 	        } catch (Exception err) {
 	            if (err instanceof RuntimeException) throw (RuntimeException)err;
 	            throw new ResourceException(err);
 	        }
 	    } 
-	    return null;
     }	
+	
+	/**
+	 * DeriveMethods is used to identify the methods to use based on the
+	 * CacheManager being used.
+	 * 
+	 * @throws ResourceException
+	 */
+	private void deriveMethods() throws ResourceException {
+
+		try {
+			this.getCacheMethod = this.cacheManager.getClass()
+					.getDeclaredMethod("getCache");  //$NON-NLS-1$
+			this.getCacheByNameMethod = this.cacheManager.getClass()
+					.getDeclaredMethod("getCache", String.class);  //$NON-NLS-1$
+		} catch (SecurityException e1) {
+			throw new ResourceException(e1);
+		} catch (NoSuchMethodException e1) {
+			throw new ResourceException(e1);
+		}
+
+		try {
+			this.isAliveMethod = this.cacheManager.getClass().getMethod(
+					"isStarted");  //$NON-NLS-1$
+
+		} catch (SecurityException e) {
+			throw new ResourceException(e);
+		} catch (NoSuchMethodException e) {
+			try {
+				this.isAliveMethod = this.cacheManager.getClass()
+						.getMethod("isDefaultRunning");  //$NON-NLS-1$
+			} catch (SecurityException e1) {
+				throw new ResourceException(e1);
+			} catch (NoSuchMethodException e1) {
+				// do nothing
+			}
+		}
+	}
+	
+	/**
+	 * Call to execute the method
+	 * 
+	 * @param m
+	 *            is the method to execute
+	 * @param api
+	 *            is the object to execute the method on
+	 * @param parms
+	 *            are the parameters to pass when the method is executed
+	 * @return Object return value
+	 * @throws Exception
+	 */
+	private static Object executeMethod(Method m, Object api, Object[] parms)
+			throws ResourceException {
+		try {
+			if (parms != null) {
+				return m.invoke(api, parms);
+			}
+			return m.invoke(api, (Object[]) null);
+		} catch (InvocationTargetException x) {
+			x.printStackTrace();
+			Throwable cause = x.getCause();
+			System.err.format("invocation of %s failed: %s%n",
+					"set" + m.getName(), cause.getMessage());
+			LogManager.logError(LogConstants.CTX_CONNECTOR, "Error calling "
+					+ m.getName() + ":" + cause.getMessage());
+			throw new ResourceException(x.getMessage());
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new ResourceException(e.getMessage());
+		}
+	}
 	
 	@Override
 	public int hashCode() {
