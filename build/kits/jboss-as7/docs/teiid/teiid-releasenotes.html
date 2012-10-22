@@ -62,7 +62,7 @@
   to the integer suffix of the teiidCode if possible.
   <li>TEIID-2226 All statements that return result sets that are executed as command statements in a procedure are validated against the expected resultset columns of the procedure.
       If the statement is not intended to be returnable, WITHOUT RETURN can be added to the end of the statement.
-  <li>TEIID-2235 The MetadataRepository.setNext was removed.  Also if an instance of a DefaultMetadataRepository is used, it will only affect metadata already loaded in the repository chain.
+  <li>TEIID-2235 The MetadataRepository.setNext method was removed and MetadataRepository was converted to an abstract class rather than an interface.  Also if an instance of a DefaultMetadataRepository is used, it will only affect metadata already loaded in the repository chain.
   <li>TEIID-2237 teiid_ is a reserved DDL namespace prefix and the MetadataFactory class no longer throws TranslatorExceptions, instead the unchecked MetadataException is thrown.
   <li>TEIID-2243 by default Teiid will not pushdown the default null sort order of nulls low when no null sort order is specified.  Set the system property org.teiid.pushdownDefaultNullOrder to true mimic the 8.1 and older release behavior.
 </ul>
@@ -71,7 +71,7 @@
 <ul>
   <li>org.teiid.metadata.Schema holds FunctionMethods by uuid rather than name to accommodate overridden method signatures.
   <li>MetadataFactory no longer extends Schema.  Use the MetadataFactory.getSchema method to get the target Schema.
-  <li>DDL created VIRTUAL pushdown functions should be referenced in the ExecutionFactory.getSupportedFunctions by their full <schema>.<function> name.
+  <li>DDL created VIRTUAL pushdown functions should be referenced in the ExecutionFactory.getSupportedFunctions by their full schema.function name.
   <li>DDL functions/procedures defined without the VIRTUAL keyword are by default VIRTUAL.  Use the FOREIGN keyword to indicate that they are source specific.
   <li>FunctionMethod.getFullName returns the proper schema, not category qualified name.
   <li>VDB.getUrl has been removed.

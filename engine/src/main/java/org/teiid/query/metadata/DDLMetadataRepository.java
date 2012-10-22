@@ -24,17 +24,17 @@ package org.teiid.query.metadata;
 import java.io.StringReader;
 
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class DDLMetadataRepository extends BaseMetadataRepository {
+public class DDLMetadataRepository extends MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 		if (factory.getRawMetadata() != null) {
 			factory.parse(new StringReader(factory.getRawMetadata()));
 		}
-		super.loadMetadata(factory, executionFactory, connectionFactory);
 	}	
 
 }

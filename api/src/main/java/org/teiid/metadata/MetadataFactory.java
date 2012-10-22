@@ -35,6 +35,8 @@ import java.util.Properties;
 import java.util.TreeMap;
 
 import org.teiid.CommandContext;
+import org.teiid.adminapi.Model;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
@@ -63,11 +65,12 @@ public class MetadataFactory implements Serializable {
 	private boolean autoCorrectColumnNames = true;
 	private Map<String, String> namespaces;
 	private String rawMetadata;
-	private Properties importProperties;
+	private Properties modelProperties;
 	private Schema schema = new Schema();
 	private String idPrefix; 
 	private int count;
 	private transient Parser parser;
+	private transient ModelMetaData model;
 	
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	
@@ -79,7 +82,12 @@ public class MetadataFactory implements Serializable {
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
 	
-	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties importProperties, String rawMetadata) {
+	public MetadataFactory(String vdbName, int vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
+		this(vdbName, vdbVersion, model.getName(), runtimeTypes, model.getProperties(), model.getSchemaText());
+		this.model = model;
+	}
+	
+	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties modelProperties, String rawMetadata) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.dataTypes = runtimeTypes;
@@ -90,7 +98,7 @@ public class MetadataFactory implements Serializable {
 		msb = longHash(schemaName, msb);
 		idPrefix = "tid:" + hex(msb, 12); //$NON-NLS-1$
 		setUUID(schema);	
-		this.importProperties = importProperties;
+		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
 	}
 
@@ -108,13 +116,26 @@ public class MetadataFactory implements Serializable {
 		long hi = 1L << (hexLength * 4);
 		return Long.toHexString(hi | (val & (hi - 1))).substring(1);
     }
-		
+
+	/**
+	 * @deprecated
+	 * @return
+	 * @see #getModelProperties()
+	 */
 	public Properties getImportProperties() {
-		return importProperties;
+		return modelProperties;
+	}
+	
+	public Properties getModelProperties() {
+		return modelProperties;
 	}
 	
 	public String getRawMetadata() {
 		return this.rawMetadata;
+	}
+	
+	public Model getModel() {
+		return model;
 	}
 	
 	protected void setUUID(AbstractMetadataRecord record) {
@@ -600,6 +621,10 @@ public class MetadataFactory implements Serializable {
 	
 	public void setParser(Parser parser) {
 		this.parser = parser;
+	}
+	
+	public void setModel(ModelMetaData model) {
+		this.model = model;
 	}
 	
 	public Parser getParser() {

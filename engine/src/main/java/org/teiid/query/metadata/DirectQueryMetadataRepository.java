@@ -21,10 +21,11 @@
  */
 package org.teiid.query.metadata;
 
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
@@ -33,7 +34,7 @@ import org.teiid.translator.TypeFacility;
 /**
  * This Metadata repository adds the "native" procedure to all the execution factories that support them. 
  */
-public class DirectQueryMetadataRepository extends BaseMetadataRepository {
+public class DirectQueryMetadataRepository extends MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
@@ -53,6 +54,5 @@ public class DirectQueryMetadataRepository extends BaseMetadataRepository {
 			
 			factory.addProcedureResultSetColumn("tuple", TypeFacility.RUNTIME_NAMES.OBJECT, p); //$NON-NLS-1$		
 		}
-		super.loadMetadata(factory, executionFactory, connectionFactory);
 	}	
 }

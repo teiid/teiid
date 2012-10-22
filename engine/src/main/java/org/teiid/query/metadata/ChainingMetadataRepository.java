@@ -33,12 +33,12 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.TableStats;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class ChainingMetadataRepository implements MetadataRepository<Object, Object> {
+public class ChainingMetadataRepository extends MetadataRepository<Object, Object> {
 
 	final ArrayList<MetadataRepository<Object, Object>> repositories;
 

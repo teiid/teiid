@@ -362,6 +362,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					factory.correctDatatypes(datatypes, builtin);
 					cached = true;
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					model.addAttchment(MetadataFactory.class, factory);
 				} else {
 					factory = createMetadataFactory(vdb, model);
 					ExecutionFactory ef = null;

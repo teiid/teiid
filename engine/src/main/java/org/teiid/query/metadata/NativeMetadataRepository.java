@@ -24,12 +24,13 @@ package org.teiid.query.metadata;
 import javax.resource.ResourceException;
 
 import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.query.QueryPlugin;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class NativeMetadataRepository extends BaseMetadataRepository {
+public class NativeMetadataRepository extends MetadataRepository {
 
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
@@ -61,7 +62,6 @@ public class NativeMetadataRepository extends BaseMetadataRepository {
 		} finally {
 			executionFactory.closeConnection(connection, connectionFactory);
 		}
-		super.loadMetadata(factory, executionFactory, connectionFactory);		
 	}
 	
 }

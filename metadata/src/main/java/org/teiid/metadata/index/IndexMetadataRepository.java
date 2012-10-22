@@ -24,11 +24,11 @@ package org.teiid.metadata.index;
 import java.io.IOException;
 
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.query.metadata.BaseMetadataRepository;
+import org.teiid.metadata.MetadataRepository;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.TranslatorException;
 
-public class IndexMetadataRepository extends BaseMetadataRepository {
+public class IndexMetadataRepository extends MetadataRepository {
 	
 	private IndexMetadataStore idxStore;
 	
@@ -50,7 +50,5 @@ public class IndexMetadataRepository extends BaseMetadataRepository {
 		} catch (IOException e) {
 			throw new TranslatorException(e);
 		}
-		
-		super.loadMetadata(factory, executionFactory, connectionFactory);
 	}
 }

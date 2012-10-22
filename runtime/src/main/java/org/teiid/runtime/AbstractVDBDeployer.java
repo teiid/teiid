@@ -174,7 +174,7 @@ public abstract class AbstractVDBDeployer {
 	protected MetadataFactory createMetadataFactory(VDBMetaData vdb,
 			ModelMetaData model) {
 		Map<String, Datatype> datatypes = this.getVDBRepository().getRuntimeTypeMap();
-		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), model.getName(), datatypes, model.getProperties(), model.getSchemaText());
+		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), datatypes, model);
 		factory.setBuiltinDataTypes(this.getVDBRepository().getSystemStore().getDatatypes());
 		factory.getSchema().setPhysical(model.isSource());
 		factory.setParser(new QueryParser()); //for thread safety each factory gets it's own instance.

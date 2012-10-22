@@ -29,7 +29,7 @@ import org.teiid.translator.TranslatorException;
 /**
  * A hook for externalizing view, procedure, and other metadata.
  */
-public interface MetadataRepository<F,C> {
+public abstract class MetadataRepository<F,C> {
 
 	/**
 	 * Loads the schema information for the vdb for the given schemaName. Loads table, procedures, functions, indexes etc.
@@ -39,7 +39,7 @@ public interface MetadataRepository<F,C> {
 	 * @return
 	 * @throws TranslatorException to indicate a recoverable error, otherwise a RuntimeException
 	 */
-	void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException;
+	public abstract void loadMetadata(MetadataFactory factory, ExecutionFactory<F, C> executionFactory, F connectionFactory) throws TranslatorException;
 
 	/**
 	 * Call back function, when "alter view" definition is called 
@@ -48,7 +48,7 @@ public interface MetadataRepository<F,C> {
 	 * @param table
 	 * @param viewDefinition
 	 */
-	void setViewDefinition(String vdbName, int vdbVersion, Table table, String viewDefinition);
+	public void setViewDefinition(String vdbName, int vdbVersion, Table table, String viewDefinition) {}
 	
 	/**
 	 * Call back function, when "alter trigger" is called 
@@ -58,7 +58,7 @@ public interface MetadataRepository<F,C> {
 	 * @param triggerOperation
 	 * @param triggerDefinition
 	 */
-	void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition);
+	public void setInsteadOfTriggerDefinition(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, String triggerDefinition) {}
 	
 	/**
 	 * Callback function, when "alter trigger" is called to enable or disable a trigger
@@ -68,17 +68,17 @@ public interface MetadataRepository<F,C> {
 	 * @param triggerOperation
 	 * @param enabled
 	 */
-	void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled);
+	public void setInsteadOfTriggerEnabled(String vdbName, int vdbVersion, Table table, Table.TriggerEvent triggerOperation, boolean enabled) {}
 	
 	
 	/**
 	 * Call back function, when "alter procedure" is called to set the procedure definition
 	 * @param vdbName
 	 * @param vdbVersion
-	 * @param table
+	 * @param procedure
 	 * @param procedureDefinition
 	 */
-	void setProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure, String procedureDefinition);
+	public void setProcedureDefinition(String vdbName, int vdbVersion, Procedure procedure, String procedureDefinition) {}
 		
 	/**
 	 * Set the {@link TableStats} for the given table
@@ -87,7 +87,7 @@ public interface MetadataRepository<F,C> {
 	 * @param table
 	 * @param tableStats
 	 */
-	void setTableStats(String vdbName, int vdbVersion, Table table, TableStats tableStats);
+	public void setTableStats(String vdbName, int vdbVersion, Table table, TableStats tableStats) {}
 	
 	
 	/**
@@ -97,7 +97,7 @@ public interface MetadataRepository<F,C> {
 	 * @param column
 	 * @param columnStats
 	 */
-	void setColumnStats(String vdbName, int vdbVersion, Column column, ColumnStats columnStats);
+	public void setColumnStats(String vdbName, int vdbVersion, Column column, ColumnStats columnStats) {}
 	
 	/**
 	 * Set an extension metadata property for a given record.
@@ -107,6 +107,6 @@ public interface MetadataRepository<F,C> {
 	 * @param name
 	 * @param value
 	 */
-	void setProperty(String vdbName, int vdbVersion, AbstractMetadataRecord record, String name, String value);
+	public void setProperty(String vdbName, int vdbVersion, AbstractMetadataRecord record, String name, String value) {}
 	
 }
