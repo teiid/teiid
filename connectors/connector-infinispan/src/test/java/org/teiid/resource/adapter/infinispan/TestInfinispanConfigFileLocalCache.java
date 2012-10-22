@@ -46,7 +46,7 @@ public class TestInfinispanConfigFileLocalCache {
 		
 		// initialize container and cache
 		factory.createCacheContainer();
-		factory.getCacheManager().getCache(RemoteInfinispanTestHelper.CACHE_NAME).put("1", new Long(12345678));
+		factory.getCache(RemoteInfinispanTestHelper.CACHE_NAME).put("1", new Long(12345678));
 
 	}
 	
