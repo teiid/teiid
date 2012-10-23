@@ -36,9 +36,9 @@ public interface Logger {
      */
     boolean isEnabled(String context, int msgLevel);
 
-    void log(int level, String context, Object msg);
+    void log(int level, String context, Object... msg);
     
-    void log(int level, String context, Throwable t, Object msg);
+    void log(int level, String context, Throwable t, Object... msg);
 
     /**
      * Shut down this listener, requesting it clean up and release any resources it

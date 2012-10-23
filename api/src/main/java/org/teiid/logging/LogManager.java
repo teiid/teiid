@@ -347,13 +347,10 @@ public final class LogManager {
      * @param message the individual parts of the log message; the message is
      * not logged if this parameter is null
      */
-    public static void log(int msgLevel, String context, Throwable e, Object message) {
+    public static void log(int msgLevel, String context, Throwable e, Object... message) {
 		if (!isMessageToBeRecorded(context, msgLevel)) {
 			return;
 		} 
-		if (message != null && message.getClass().isArray()) {
-			message = new LogMessage((Object[]) message);
-		}
     	logListener.log(msgLevel, context, e, message);
     }
 
@@ -386,7 +383,7 @@ public final class LogManager {
 		if (msgParts == null || msgParts.length == 0 || !isMessageToBeRecorded(context, level)) {
 			return;
 		} 
-		logListener.log(level, context, msgParts.length == 1? msgParts[0] : new LogMessage(msgParts));
+		logListener.log(level, context, msgParts);
     }
 
     

@@ -22,8 +22,11 @@
 
 package org.teiid.jboss;
 
+import java.util.logging.LogRecord;
+
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
+import org.teiid.core.util.StringUtil;
 import org.teiid.logging.MessageLevel;
 
 public class JBossLogger implements org.teiid.logging.Logger {
@@ -39,15 +42,32 @@ public class JBossLogger implements org.teiid.logging.Logger {
 	}
 
 	@Override
-	public void log(int level, String context, Object msg) {
+	public void log(int level, String context, Object... msg) {
 		Logger logger = getLogger(context);
-		logger.log(convert2JbossLevel(level), msg);
+		Level jbossLevel = convert2JbossLevel(level);
+		
+		if (msg.length == 1 && msg[0] instanceof String) {
+    		logger.log(jbossLevel, msg[0].toString());
+    	}
+    	else {
+    		logger.log(jbossLevel, msg[0].toString(), msg);
+    	}		
 	}
 
 	@Override
-	public void log(int level, String context, Throwable t, Object msg) {
+	public void log(int level, String context, Throwable t, Object... msg) {
 		Logger logger = getLogger(context);
-		logger.log(convert2JbossLevel(level), msg, t);
+		Level jbossLevel = convert2JbossLevel(level);
+		
+		if (msg.length == 0) {
+			logger.log(jbossLevel, null, t);
+		}
+		else if (msg.length == 1 && msg[0] instanceof String) {
+			logger.log(jbossLevel, msg[0].toString(), t);	
+		}
+    	else {
+    		logger.log(jbossLevel, msg[0].toString(), msg);
+    	}		
 	}
 	
 	/**
