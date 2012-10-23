@@ -43,6 +43,7 @@ import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 import javax.resource.ResourceException;
 
+import org.jboss.as.security.vault.RuntimeVaultReader;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
@@ -117,7 +118,12 @@ public class LDAPConnectionImpl extends BasicConnection implements LdapContext  
 
 			connenv.put(Context.SECURITY_AUTHENTICATION, LDAP_AUTH_TYPE);
 			connenv.put(Context.SECURITY_PRINCIPAL, this.config.getLdapAdminUserDN());
-			connenv.put(Context.SECURITY_CREDENTIALS, this.config.getLdapAdminUserPassword());
+			String passcode = this.config.getLdapAdminUserPassword();
+    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
+    		if (vaultReader.isVaultFormat(passcode)) {
+    			passcode = vaultReader.retrieveFromVault(passcode);
+    		}
+			connenv.put(Context.SECURITY_CREDENTIALS, passcode);
 		} else {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "LDAP Username DN was blank; performing anonymous bind."); //$NON-NLS-1$
 			connenv.put(Context.SECURITY_AUTHENTICATION, "none"); //$NON-NLS-1$
