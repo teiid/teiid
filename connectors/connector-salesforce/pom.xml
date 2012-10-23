@@ -62,7 +62,17 @@
             <artifactId>cxf-rt-ws-policy</artifactId>
             <version>2.4.2</version>
             <scope>provided</scope>        
-        </dependency>        
+        </dependency> 
+        <dependency>
+            <groupId>org.jboss.as</groupId>
+            <artifactId>jboss-as-security</artifactId>
+            <scope>provided</scope>        
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.as</groupId>
+            <artifactId>jboss-as-server</artifactId>
+            <scope>provided</scope>
+        </dependency> 
     </dependencies>
 
     <build>

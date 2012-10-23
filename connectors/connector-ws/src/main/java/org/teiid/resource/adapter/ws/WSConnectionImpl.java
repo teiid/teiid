@@ -43,8 +43,8 @@ import javax.xml.ws.Dispatch;
 import javax.xml.ws.EndpointReference;
 import javax.xml.ws.Response;
 import javax.xml.ws.Service;
-import javax.xml.ws.WebServiceException;
 import javax.xml.ws.Service.Mode;
+import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
@@ -54,6 +54,7 @@ import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.DispatchImpl;
+import org.jboss.as.security.vault.RuntimeVaultReader;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -273,7 +274,12 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		
 		if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
 			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, mcf.getAuthUserName());
-			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, mcf.getAuthPassword());
+			String passcode = mcf.getAuthPassword();
+    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
+    		if (vaultReader.isVaultFormat(passcode)) {
+    			passcode = vaultReader.retrieveFromVault(passcode);
+    		}
+			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, passcode);
 		}
 		
 		if (mcf.getRequestTimeout() != -1L){
