@@ -111,12 +111,12 @@ public class TestLogManager extends TestCase {
         public ListLogger() {
         }
         
-        public void log(int level, String context, Object msg){
-            this.messages.add(msg.toString());
+        public void log(int level, String context, Object... msg){
+            this.messages.add(msg[0].toString());
         }
         
-		public void log(int level, String context, Throwable t, Object msg) {
-            this.messages.add(msg.toString());
+		public void log(int level, String context, Throwable t, Object... msg) {
+            this.messages.add(msg[0].toString());
 		}        
 
         public void shutdown() {
