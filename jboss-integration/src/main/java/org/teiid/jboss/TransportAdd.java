@@ -30,7 +30,6 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 import javax.naming.InitialContext;
-import javax.naming.NamingException;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
 import org.jboss.as.controller.OperationContext;
@@ -46,6 +45,7 @@ import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
+import org.jboss.as.security.vault.RuntimeVaultReader;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.ServiceBuilder;
@@ -268,7 +268,12 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	}
     	
     	if (Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystorePassword(Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node));
+    		String passcode = Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node);
+    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
+    		if (vaultReader.isVaultFormat(passcode)) {
+    			passcode = vaultReader.retrieveFromVault(passcode);
+    		}
+    		ssl.setKeystorePassword(passcode);
     	}	
     	
     	if (Element.SSL_KETSTORE_TYPE_ATTRIBUTE.isDefined(node)) {
@@ -279,7 +284,12 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     		ssl.setTruststoreFilename(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.asString(node));
     	}
     	if (Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
-    		ssl.setTruststorePassword(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node));
+    		String passcode = Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node);
+    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
+    		if (vaultReader.isVaultFormat(passcode)) {
+    			passcode = vaultReader.retrieveFromVault(passcode);
+    		}
+    		ssl.setTruststorePassword(passcode);
     	}
 		socket.setSSLConfiguration(ssl);
 		return socket;
