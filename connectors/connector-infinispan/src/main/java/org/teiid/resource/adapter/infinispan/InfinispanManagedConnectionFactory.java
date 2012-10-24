@@ -24,6 +24,7 @@ package org.teiid.resource.adapter.infinispan;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,18 +96,20 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			cl = Thread.currentThread().getContextClassLoader();
 		}
 		List<String> types = StringUtil.getTokens(this.cacheTypes, ","); //$NON-NLS-1$
-		typeMap = new HashMap<String, Class<?>>();
+		Map<String, Class<?>> tm = new HashMap<String, Class<?>>();
 		for (String type : types) {
 			final List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
 			final String cacheName = mapped.get(0);
 			final String className = mapped.get(1);
 
 			try {
-				typeMap.put(cacheName, Class.forName(className, true, cl));
+				tm.put(cacheName, Class.forName(className, true, cl));
 			} catch (ClassNotFoundException e) {
 				throw new ResourceException(e);
 			}
 		}
+		
+		typeMap = Collections.unmodifiableMap(tm);
 
 		return new BasicConnectionFactory<InfinispanConnectionImpl>() {
 			
@@ -152,6 +155,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	
 	public Class<?> getCacheType(String cacheName) {
 		return typeMap.get(cacheName);
+	}
+	
+	public Map<String, Class<?>> getMapOfCacheTypes() {
+		return this.typeMap;
 	}
     
 	/**

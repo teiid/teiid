@@ -58,6 +58,12 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 			//the real connection should use the name in source to get the cache
 			return container.getCache(TradesCacheSource.TRADES_CACHE_NAME);
 		}
+
+		@Override
+		public Map<String, Class<?>> getMapOfCacheTypes() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
 
 	private static ExecutionContext context;
