@@ -2010,8 +2010,8 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( XMLSerialize obj ) {
         append(XMLSERIALIZE);
         append(Tokens.LPAREN);
-        if (obj.isDocument() != null) {
-            if (obj.isDocument()) {
+        if (obj.getDocument() != null) {
+            if (obj.getDocument()) {
                 append(NonReserved.DOCUMENT);
             } else {
                 append(NonReserved.CONTENT);

@@ -76,9 +76,9 @@ import org.teiid.query.sql.util.ValueIteratorSource;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.WSConnection.Util;
 
@@ -841,7 +841,7 @@ public class Evaluator {
 			return null;
 		}
 		try {
-			if (xs.isDocument() == null || !xs.isDocument()) {
+			if (!xs.isDocument()) {
 				return XMLSystemFunctions.serialize(xs, value);
 			}
 			if (value.getType() == Type.UNKNOWN) {
