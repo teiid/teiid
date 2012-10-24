@@ -32,12 +32,12 @@ import javax.xml.ws.soap.SOAPBinding;
 
 import org.teiid.core.BundleUtil;
 import org.teiid.language.Call;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ProcedureExecution;
@@ -50,7 +50,7 @@ import org.teiid.translator.WSConnection;
 @Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
 	
-	private static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
+	static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
 
 	public enum Binding {
 		HTTP(HTTPBinding.HTTP_BINDING), 
@@ -115,8 +115,8 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     }
     
 	@Override
-    public final List getSupportedFunctions() {
-        return Collections.EMPTY_LIST;
+    public final List<String> getSupportedFunctions() {
+        return Collections.emptyList();
     }
 	
 	@Override

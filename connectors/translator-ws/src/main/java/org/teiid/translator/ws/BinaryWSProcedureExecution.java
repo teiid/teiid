@@ -33,8 +33,8 @@ import java.util.List;
 
 import javax.activation.DataSource;
 import javax.xml.ws.Dispatch;
-import javax.xml.ws.WebServiceException;
 import javax.xml.ws.Service.Mode;
+import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
@@ -135,7 +135,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
+		if (returnValue != null && procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
 			try {
 				result = new BlobType(new StreamingBlob(returnValue.getInputStream()));
 			} catch (IOException e) {

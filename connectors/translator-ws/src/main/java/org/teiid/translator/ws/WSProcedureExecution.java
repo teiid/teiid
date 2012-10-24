@@ -159,7 +159,7 @@ public class WSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
+		if (returnValue != null && procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
 			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
 			XMLType xml = new XMLType(sqlXml);
 			xml.setType(Type.DOCUMENT);
