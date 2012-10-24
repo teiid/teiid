@@ -4,3 +4,4 @@ target
 .classpath
 bin
 build.xml
+.DS_Store
