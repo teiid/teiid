@@ -46,9 +46,9 @@ import net.sf.saxon.value.Value;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -61,9 +61,9 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.xquery.saxon.XQueryEvaluator;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.Result;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression.RowProcessor;
+import org.teiid.query.xquery.saxon.XQueryEvaluator;
 
 /**
  * Handles xml table processing.
@@ -246,6 +246,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 					}
 				}
 			};
+			this.buffer.setRowSourceLock(this);
 			this.getContext().getExecutor().execute(r);
 			return;
 		}

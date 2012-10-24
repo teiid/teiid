@@ -33,11 +33,13 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.Executor;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
@@ -56,6 +58,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestSQLXMLProcessing {
@@ -439,6 +442,43 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableStreamingTiming() throws Exception {
+    	String sql = "select xmlserialize(x.object_value as string), y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>')) as x, (select 1 as x) as y"; //$NON-NLS-1$
+        
+        final List<?>[] expected = new List<?>[] {
+        		Arrays.asList("<b xmlns=\"\" x=\"1\"/>", 1),
+        		Arrays.asList("<b xmlns=\"\" x=\"2\"/>", 1)
+        };    
+    
+        final CommandContext cc = createCommandContext();
+        final ResultsFuture<Runnable> r = new ResultsFuture<Runnable>();
+        Executor ex = new Executor() {
+        	
+			@Override
+			public void execute(Runnable command) {
+				r.getResultsReceiver().receiveResults(command);
+			}
+		};
+        cc.setExecutor(ex);
+		final ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
+		final ResultsFuture<Void> result = new ResultsFuture<Void>();
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				try {
+					doProcess(plan, dataManager, expected, cc);
+					result.getResultsReceiver().receiveResults(null);
+				} catch (Throwable e) {
+					result.getResultsReceiver().exceptionOccurred(e);
+				}
+			}
+		};
+		t.start();
+		Runnable runnable = r.get();
+		runnable.run();
+		result.get();
+    }
+    
     @Test public void testXmlNameEscaping() throws Exception {
     	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
         
@@ -581,9 +621,9 @@ public class TestSQLXMLProcessing {
     }
     
 	private ProcessorPlan process(String sql, List<?>[] expected) throws Exception {
-        ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), createCommandContext());
-        
-        helpProcess(plan, createCommandContext(), dataManager, expected);
+        CommandContext cc = createCommandContext();
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), cc);
+        helpProcess(plan, cc, dataManager, expected);
         return plan;
 	}
 	

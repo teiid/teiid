@@ -31,6 +31,8 @@ import java.util.TreeMap;
 import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
@@ -76,6 +78,7 @@ public class TupleBuffer {
 
 	private LobManager lobManager;
 	private String uuid;
+	private Object rowSourceLock;
 	
 	public TupleBuffer(BatchManager manager, String id, List<? extends Expression> schema, LobManager lobManager, int batchSize) {
 		this.manager = manager;
@@ -83,6 +86,10 @@ public class TupleBuffer {
 		this.schema = schema;
 		this.lobManager = lobManager;
 		this.batchSize = batchSize;		
+	}
+	
+	public void setRowSourceLock(Object rowSourceLock) {
+		this.rowSourceLock = rowSourceLock;
 	}
 	
 	public void setInlineLobs(boolean inline) {
@@ -316,11 +323,23 @@ public class TupleBuffer {
 		return new AbstractTupleSource() {
 			
 			@Override
-			protected List<?> finalRow() throws BlockedException {
+			protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
 				if(isFinal) {
 		            return null;
 		        } 
-		        throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
+				if (rowSourceLock == null) { 
+					throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
+				}
+				synchronized (rowSourceLock) {
+					while (!isFinal && available() < 1) {
+						try {
+							rowSourceLock.wait();
+						} catch (InterruptedException e) {
+							throw new TeiidRuntimeException(e);
+						}
+					}
+					return getCurrentTuple();
+				}
 			}
 			
 			@Override
