@@ -31,7 +31,6 @@ import org.apache.cxf.Bus;
 import org.apache.cxf.bus.spring.SpringBusFactory;
 import org.apache.cxf.configuration.Configurer;
 import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
-import org.jboss.as.security.vault.RuntimeVaultReader;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
@@ -107,12 +106,7 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 
 			@Override
 			public SalesforceConnectionImpl getConnection() throws ResourceException {
-				String passcode = getPassword();
-	    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
-	    		if (vaultReader.isVaultFormat(passcode)) {
-	    			passcode = vaultReader.retrieveFromVault(passcode);
-	    		}
-				return new SalesforceConnectionImpl(getUsername(), passcode, getAsURL(), SalesForceManagedConnectionFactory.this);
+				return new SalesforceConnectionImpl(getUsername(), getPassword(), getAsURL(), SalesForceManagedConnectionFactory.this);
 			}
 		};
 	}

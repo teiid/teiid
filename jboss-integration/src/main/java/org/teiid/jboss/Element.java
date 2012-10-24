@@ -22,13 +22,18 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.net.socket.SocketUtil;
@@ -117,11 +122,11 @@ enum Element {
 	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites", ModelType.STRING, false, null),
 	SSL_KETSTORE_ELEMENT("keystore"),
 	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name", ModelType.STRING, false, null),
-	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.STRING, false, null),
+	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.EXPRESSION, false, null),
 	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type", ModelType.STRING, false, "JKS"),
 	SSL_TRUSTSTORE_ELEMENT("truststore"),
 	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name", ModelType.STRING, false, null),
-	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password", ModelType.STRING, false, null),	
+	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password", ModelType.EXPRESSION, false, null),	
 
 	// Translator
     TRANSLATOR_ELEMENT("translator"),
@@ -205,6 +210,9 @@ enum Element {
         	else if (ModelType.STRING == this.modelType) {
         		node.get(type, name, DEFAULT).set(this.defaultValue);
         	}
+        	else if (ModelType.EXPRESSION == this.modelType) {
+        		node.get(type, name, DEFAULT).set(this.defaultValue);
+        	}        	
         	else {
         		 throw new AssertionError(this.modelType);
         	}
@@ -229,6 +237,9 @@ enum Element {
     		else if (ModelType.BOOLEAN == this.modelType) {
     			model.get(getModelName()).set(operation.get(getModelName()).asBoolean());
     		}
+    		else if (ModelType.EXPRESSION == this.modelType) {
+    			model.get(getModelName()).setExpression(operation.get(getModelName()).asString());
+    		}    		
     		else {
     			throw new AssertionError(this.modelType);
     		}
@@ -237,25 +248,25 @@ enum Element {
     
     public boolean isDefined(ModelNode node) {
     	if ( node.hasDefined(getModelName())) {
-    		return !asString(node).isEmpty();
+    		return !node.get(getModelName()).asString().isEmpty();
     	}
     	return false;
     }
     
-    public int asInt(ModelNode node) {
-    	return node.get(getModelName()).asInt();
+    public int asInt(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asInt();
     }
     
-    public long asLong(ModelNode node) {
-    	return node.get(getModelName()).asLong();
+    public long asLong(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asLong();
     }
     
-    public String asString(ModelNode node) {
-    	return node.get(getModelName()).asString();
+    public String asString(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asString();
     }
     
-    public boolean asBoolean(ModelNode node) {
-    	return node.get(getModelName()).asBoolean();
+    public boolean asBoolean(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asBoolean();
     }
     
     public boolean isLike(ModelNode node) {
