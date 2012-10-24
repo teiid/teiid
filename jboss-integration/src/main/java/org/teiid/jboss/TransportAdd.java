@@ -21,7 +21,11 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,15 +41,14 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
 import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.as.naming.service.BinderService;
 import org.jboss.as.network.SocketBinding;
 import org.jboss.as.security.plugins.SecurityDomainContext;
-import org.jboss.as.security.vault.RuntimeVaultReader;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.inject.ConcurrentMapInjector;
 import org.jboss.msc.service.ServiceBuilder;
@@ -139,8 +142,8 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	    	
     	String socketBinding = null;
 		if (Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.isDefined(operation)) {
-			socketBinding = Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.asString(operation);
-    		transport.setSocketConfig(buildSocketConfiguration(operation));
+			socketBinding = Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.asString(operation, context);
+    		transport.setSocketConfig(buildSocketConfiguration(context, operation));
 		}
 		else {
 			transport.setEmbedded(true);
@@ -149,28 +152,28 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	
     	List<String> domainList = Collections.emptyList();
    		if (Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.isDefined(operation)) {
-    		String domains = Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation);
+    		String domains = Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation, context);
     		domainList = Arrays.asList(domains.split(","));//$NON-NLS-1$
     	}  
    		transport.setAuthenticationDomains(domainList);
    		
    		if (Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.isDefined(operation)) {
-   			transport.setSessionMaxLimit(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.asLong(operation));
+   			transport.setSessionMaxLimit(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.asLong(operation, context));
    		}
     	
    		if (Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.isDefined(operation)) {
-   			transport.setSessionExpirationTimeLimit(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation));
+   			transport.setSessionExpirationTimeLimit(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation, context));
    		}   		
    		if (Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.isDefined(operation)) {
    			transport.setAuthenticationType(AuthenticationType.GSS);
-   			transport.setKrb5Domain(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation));
+   			transport.setKrb5Domain(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation, context));
    		}
    		else {
    			transport.setAuthenticationType(AuthenticationType.CLEARTEXT);
    		}
    		
    		if (Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.isDefined(operation)) {
-   			transport.setMaxODBCLobSizeAllowed(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.asInt(operation));
+   			transport.setMaxODBCLobSizeAllowed(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.asInt(operation, context));
    		}
    		
     	ServiceBuilder<ClientServiceRegistry> transportBuilder = target.addService(TeiidServiceNames.transportServiceName(transportName), transport);
@@ -221,75 +224,65 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 		}
 	}	
 	
-	private SocketConfiguration buildSocketConfiguration(ModelNode node) {
+	private SocketConfiguration buildSocketConfiguration(final OperationContext context, ModelNode node) throws OperationFailedException {
 		
 		SocketConfiguration socket = new SocketConfiguration();
 
 		if (Element.TRANSPORT_PROTOCOL_ATTRIBUTE.isDefined(node)) {
-			socket.setProtocol(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.asString(node));
+			socket.setProtocol(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.asString(node, context));
 		}
 				
    		if (Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.isDefined(node)) {
-    		socket.setMaxSocketThreads(Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.asInt(node));
+    		socket.setMaxSocketThreads(Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.asInt(node, context));
     	}
    		
     	if (Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.isDefined(node)) {
-    		socket.setInputBufferSize(Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.asInt(node));
+    		socket.setInputBufferSize(Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.asInt(node, context));
     	}	
     	
     	if (Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.isDefined(node)) {
-    		socket.setOutputBufferSize(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.asInt(node));
+    		socket.setOutputBufferSize(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.asInt(node, context));
     	}		   
     	
     	SSLConfiguration ssl = new SSLConfiguration();
 
     	if (Element.SSL_MODE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node));
+    		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node, context));
     	}
     	
     	if (Element.SSL_SSL_PROTOCOL_ATTRIBUTE.isDefined(node)) {
-    		ssl.setSslProtocol(Element.SSL_SSL_PROTOCOL_ATTRIBUTE.asString(node));
+    		ssl.setSslProtocol(Element.SSL_SSL_PROTOCOL_ATTRIBUTE.asString(node, context));
     	}	    	
     	
     	if (Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeymanagementAlgorithm(Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.asString(node));
+    		ssl.setKeymanagementAlgorithm(Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.asString(node, context));
     	}    	
     	
     	if (Element.SSL_AUTH_MODE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setAuthenticationMode(Element.SSL_AUTH_MODE_ATTRIBUTE.asString(node));
+    		ssl.setAuthenticationMode(Element.SSL_AUTH_MODE_ATTRIBUTE.asString(node, context));
     	}
     	
     	if (Element.SSL_KETSTORE_NAME_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystoreFilename(Element.SSL_KETSTORE_NAME_ATTRIBUTE.asString(node));
+    		ssl.setKeystoreFilename(Element.SSL_KETSTORE_NAME_ATTRIBUTE.asString(node, context));
     	}	
     	
     	if (Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.isDefined(node)) {
-    		ssl.setEnabledCipherSuites(Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.asString(node));
+    		ssl.setEnabledCipherSuites(Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.asString(node, context));
     	}
     	
     	if (Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
-    		String passcode = Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node);
-    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
-    		if (vaultReader.isVaultFormat(passcode)) {
-    			passcode = vaultReader.retrieveFromVault(passcode);
-    		}
-    		ssl.setKeystorePassword(passcode);
+    		ssl.setKeystorePassword(Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node, context));
     	}	
     	
     	if (Element.SSL_KETSTORE_TYPE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystoreType(Element.SSL_KETSTORE_TYPE_ATTRIBUTE.asString(node));
+    		ssl.setKeystoreType(Element.SSL_KETSTORE_TYPE_ATTRIBUTE.asString(node, context));
     	}		
 
     	if (Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.isDefined(node)) {
-    		ssl.setTruststoreFilename(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.asString(node));
+    		ssl.setTruststoreFilename(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.asString(node, context));
     	}
     	if (Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
-    		String passcode = Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node);
-    		RuntimeVaultReader vaultReader = new RuntimeVaultReader();
-    		if (vaultReader.isVaultFormat(passcode)) {
-    			passcode = vaultReader.retrieveFromVault(passcode);
-    		}
-    		ssl.setTruststorePassword(passcode);
+    		ssl.setTruststorePassword(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node, context));
     	}
 		socket.setSSLConfiguration(ssl);
 		return socket;
