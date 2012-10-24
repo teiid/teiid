@@ -41,6 +41,7 @@
 	<li>TEIID-1386 <b>Procedure exception handling</b> - the Teiid procedure language now supports exception handling and emitting SQLWarnings.  See the Reference for syntax and usage.
 	<li>TEIID-2176,TEIID-2177 <b>Native Query Support</b> - JDBC, LDAP, SalesForce, JPA, OLAP translators now support execution of native queries directly against the source either through "native-query" extension metadata property or native procedure defined by their translator.
 	<li>TEIID-2227 <b>Procedure RETURN statement</b> - the Teiid procedure language now supports a RETURN statement.  See the Reference for syntax and usage.
+	<li>TEIID-2269 <b>Vault Support</b> - The transport's keystore and truststore passwords are now supported through vault based passwords.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -48,6 +49,7 @@
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
+  <li>The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.(TEIID-2267)
 </ul>
 
 <h4>from 8.1</h4>
