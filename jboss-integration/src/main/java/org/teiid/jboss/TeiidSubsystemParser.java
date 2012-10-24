@@ -536,7 +536,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     				
     			case SSL_KETSTORE_PASSWORD_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
+    				node.get(element.getModelName()).setExpression(attrValue);
     				break;
     				
     			case SSL_KETSTORE_TYPE_ATTRIBUTE:
@@ -565,7 +565,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     				
     			case SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE:
-    				node.get(element.getModelName()).set(attrValue);
+    				node.get(element.getModelName()).setExpression(attrValue);
     				break;
     				
     			default:

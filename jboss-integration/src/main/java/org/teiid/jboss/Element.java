@@ -122,11 +122,11 @@ enum Element {
 	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites", ModelType.STRING, false, null),
 	SSL_KETSTORE_ELEMENT("keystore"),
 	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name", ModelType.STRING, false, null),
-	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.STRING, false, null),
+	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.EXPRESSION, false, null),
 	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type", ModelType.STRING, false, "JKS"),
 	SSL_TRUSTSTORE_ELEMENT("truststore"),
 	SSL_TRUSTSTORE_NAME_ATTRIBUTE("name", "truststore-name", ModelType.STRING, false, null),
-	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password", ModelType.STRING, false, null),	
+	SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE("password", "truststore-password", ModelType.EXPRESSION, false, null),	
 
 	// Translator
     TRANSLATOR_ELEMENT("translator"),
@@ -210,6 +210,9 @@ enum Element {
         	else if (ModelType.STRING == this.modelType) {
         		node.get(type, name, DEFAULT).set(this.defaultValue);
         	}
+        	else if (ModelType.EXPRESSION == this.modelType) {
+        		node.get(type, name, DEFAULT).set(this.defaultValue);
+        	}        	
         	else {
         		 throw new AssertionError(this.modelType);
         	}
@@ -234,6 +237,9 @@ enum Element {
     		else if (ModelType.BOOLEAN == this.modelType) {
     			model.get(getModelName()).set(operation.get(getModelName()).asBoolean());
     		}
+    		else if (ModelType.EXPRESSION == this.modelType) {
+    			model.get(getModelName()).setExpression(operation.get(getModelName()).asString());
+    		}    		
     		else {
     			throw new AssertionError(this.modelType);
     		}
