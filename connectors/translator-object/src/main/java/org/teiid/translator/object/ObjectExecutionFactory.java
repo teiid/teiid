@@ -29,12 +29,14 @@ import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.metadata.JavaBeanMetadataProcessor;
 
 
 /**
@@ -99,6 +101,14 @@ public class ObjectExecutionFactory extends
 
 	public List<Object> search(Select query, Map<?, ?> map, Class<?> type) throws TranslatorException {
 		return SearchByKey.get(query.getWhere(), map, type);
+	}
+	
+	@Override
+	public void getMetadata(MetadataFactory metadataFactory, ObjectConnection connection) throws TranslatorException {
+		if (connection != null) {
+			JavaBeanMetadataProcessor processor = new JavaBeanMetadataProcessor();
+			processor.getMetadata(metadataFactory, connection, this);
+		}
 	}
 
 }

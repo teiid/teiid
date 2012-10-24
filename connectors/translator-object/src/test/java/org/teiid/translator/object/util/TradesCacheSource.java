@@ -56,11 +56,16 @@ public class TradesCacheSource extends HashMap <Object, Object> implements Objec
 	public static final String TRADE_CLASS_NAME = Trade.class.getName();
 	public static final String LEG_CLASS_NAME = Leg.class.getName();
 	public static final String TRANSACTION_CLASS_NAME = Transaction.class.getName();
-
+	
+	private static Map<String, Class<?>> mapOfCaches = new HashMap<String, Class<?>>(1);
 	
 	public static final int NUMLEGS = 10;
 	public static final int NUMTRADES = 3;
 	public static final int NUMTRANSACTIONS = 5;
+	
+	static {
+		mapOfCaches.put(TradesCacheSource.TRADES_CACHE_NAME, Trade.class);
+	}
 	
 	public static void loadCache( BasicCache<String, Object> cache) {
 
@@ -158,4 +163,11 @@ public class TradesCacheSource extends HashMap <Object, Object> implements Objec
 	public Class<?> getType(String name) throws TranslatorException {
 		return Trade.class;
 	}
+
+	@Override
+	public Map<String, Class<?>> getMapOfCacheTypes() {
+		return mapOfCaches;
+	}
+	
+	
 }

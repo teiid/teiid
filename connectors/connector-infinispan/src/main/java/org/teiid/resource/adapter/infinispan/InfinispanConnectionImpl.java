@@ -89,5 +89,15 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
         final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.typeNotFound", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
         throw new TranslatorException(msg);
 	}
+	
+	/**
+	 * Returns a map of all defined caches, and their respective root object class type,
+	 * that are accessible using this connection.
+	 * @return Map<String, Class>
+	 */
+	@Override
+	public Map<String, Class<?>> getMapOfCacheTypes() {
+		return this.config.getMapOfCacheTypes();
+	}
 
 }
