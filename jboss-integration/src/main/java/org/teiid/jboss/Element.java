@@ -22,13 +22,18 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationFailedException;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.net.socket.SocketUtil;
@@ -237,25 +242,25 @@ enum Element {
     
     public boolean isDefined(ModelNode node) {
     	if ( node.hasDefined(getModelName())) {
-    		return !asString(node).isEmpty();
+    		return !node.get(getModelName()).asString().isEmpty();
     	}
     	return false;
     }
     
-    public int asInt(ModelNode node) {
-    	return node.get(getModelName()).asInt();
+    public int asInt(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asInt();
     }
     
-    public long asLong(ModelNode node) {
-    	return node.get(getModelName()).asLong();
+    public long asLong(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asLong();
     }
     
-    public String asString(ModelNode node) {
-    	return node.get(getModelName()).asString();
+    public String asString(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asString();
     }
     
-    public boolean asBoolean(ModelNode node) {
-    	return node.get(getModelName()).asBoolean();
+    public boolean asBoolean(ModelNode node, OperationContext context) throws OperationFailedException {
+    	return context.resolveExpressions(node.get(getModelName())).asBoolean();
     }
     
     public boolean isLike(ModelNode node) {

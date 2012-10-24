@@ -80,7 +80,7 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
 		
     	String moduleName = null;
     	if (Element.TRANSLATOR_MODULE_ATTRIBUTE.isDefined(operation)) {
-    		moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation);
+    		moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation, context);
     	}
 		
         final ServiceTarget target = context.getServiceTarget();
