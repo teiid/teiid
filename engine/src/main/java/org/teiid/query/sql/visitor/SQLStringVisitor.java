@@ -1048,7 +1048,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         visitNode(obj.getCommand());
         append(")");//$NON-NLS-1$
         append(" AS ");//$NON-NLS-1$
-        append(obj.getOutputName());
+        append(escapeSinglePart(obj.getOutputName()));
     }
 
     public void visit( SubquerySetCriteria obj ) {

@@ -1726,5 +1726,9 @@ public class TestSQLStringVisitor {
     	
     	helpTest(QueryParser.getQueryParser().parseCommand(sql), "SELECT (intkey = intnum) IS NULL, (intkey < intnum) IN (TRUE, FALSE) FROM bqt1.smalla"); //$NON-NLS-1$
     }
+    
+    @Test public void testSubqueryNameEscaping() throws Exception {
+    	helpTest(new SubqueryFromClause("user", QueryParser.getQueryParser() .parseCommand("select 1")), "(SELECT 1) AS \"user\"");
+	}
 
 }
