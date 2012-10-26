@@ -113,7 +113,7 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 	    
 	    @Override
 	    public boolean supportsOrderBy() {
-	    	return true;
+	    	return false;
 	    }
 	    
 	    @Override
