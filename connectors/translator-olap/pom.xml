@@ -31,6 +31,20 @@
           <artifactId>olap4j</artifactId>
           <version>0.9.8.343</version>
           <scope>provided</scope>
+          <exclusions>
+              <exclusion>
+                   <groupId>javacup</groupId>
+                  <artifactId>javacup</artifactId>
+              </exclusion>
+             <exclusion>
+                  <groupId>retroweaver</groupId>
+                  <artifactId>retroweaver</artifactId>
+             </exclusion>
+              <exclusion>
+                  <groupId>retroweaver</groupId>
+                  <artifactId>retroweaver-rt</artifactId>
+              </exclusion>
+           </exclusions>
         </dependency>
     </dependencies>
     
