@@ -2,6 +2,7 @@ package org.teiid.resource.adapter.google.integration;
 
 import junit.framework.Assert;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.AuthHeaderFactory;
 import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
@@ -16,7 +17,9 @@ import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
  * 
  * @author fnguyen
  *
+ *
  */
+@Ignore
 public class MetadataLoadingTest extends IntegrationTest {
 	
 	private static GDataClientLoginAPI gdata = null;
