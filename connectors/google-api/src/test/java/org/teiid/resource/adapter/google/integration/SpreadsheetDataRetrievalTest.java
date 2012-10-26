@@ -7,6 +7,7 @@ import java.util.List;
 import junit.framework.Assert;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
 import org.teiid.resource.adapter.google.common.RectangleIdentifier;
@@ -48,6 +49,7 @@ import com.google.gdata.util.ServiceException;
  * @author fnguyen
  *
  */
+@Ignore
 public class SpreadsheetDataRetrievalTest extends IntegrationTest {
 	private static String AUTH_KEY = 
 			"DQAAAMIAAAD0oyU_QCsmLknUuVTSE0bMJe_ub7X7olITlQ-UF-nvV7lHEzcJL0W5P5RQ7kINKGoe5iu-jNB8LX6Z1KPvzn-3YB4TRkR0SlNokcrE4Jn8BGx3ZYPvIr-TChE6-hveX1-fqzs_4_A_B4_xwIC2JeN6Bh74UIeNVmdcc4dDX9_QW2iUDGW-Er2B4DzeixFFFl163emRfcrHgkRvsbCvYukQ8WRpVysE9P1PBY1sPaTHMJ6imXh5FciJk_fWRbNpDUNH99CA3BRaepBw0hPCt5TY";

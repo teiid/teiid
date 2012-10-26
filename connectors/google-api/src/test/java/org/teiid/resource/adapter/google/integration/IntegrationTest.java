@@ -12,6 +12,6 @@ import org.junit.Ignore;
  */
 
 public class IntegrationTest {
-	protected static final String USERNAME="jbossteiid";
-	protected static final String PASSWORD="jbossteiid123";
+	protected static final String USERNAME="xxx";
+	protected static final String PASSWORD="xxx";
 }

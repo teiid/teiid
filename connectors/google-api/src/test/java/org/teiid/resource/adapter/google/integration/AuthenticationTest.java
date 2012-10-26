@@ -2,6 +2,7 @@ package org.teiid.resource.adapter.google.integration;
 
 import java.io.IOException;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
 import org.teiid.resource.adapter.google.auth.OAuth2AuthenticatorGoogle;
@@ -16,6 +17,7 @@ import org.teiid.resource.adapter.google.result.RowsResult;
  * @author fnguyen
  *
  */
+@Ignore
 public class AuthenticationTest extends IntegrationTest {
 //	private String refreshToken ="1/j7FBwqkdGxCwSFAT1VxZAev7HC2qOamO9UXX_Xxz2nQ";
 	private String refreshToken ="1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs";
