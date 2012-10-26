@@ -92,14 +92,17 @@
   
   <modules>
     <module>translator-jdbc</module>
+    <module>translator-google</module>
     <module>translator-ldap</module>
     <module>translator-loopback</module>
     <module>translator-file</module>
     <module>translator-salesforce</module>
     <module>connector-file</module>
+        <module>connector-google</module>
     <module>connector-salesforce</module>
     <module>connector-ldap</module>
     <module>salesforce-api</module>
+        <module>google-api</module>
     <module>connector-ws</module>
     <module>sandbox</module>
     <module>translator-ws</module>

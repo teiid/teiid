@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.0">
+  <resource-adapters>
+    <resource-adapter>
+      <archive>
+                        teiid-connector-google.rar
+                    </archive>
+      <transaction-support>NoTransaction</transaction-support>
+      <connection-definitions>
+        <connection-definition class-name="org.teiid.resource.adapter.google.SpreadsheetManagedConnectionFactory" jndi-name="java:/google" enabled="true" use-java-context="true" pool-name="google">
+          <config-property name="AuthMethod">
+                                ClientLogin
+                            </config-property>
+          <config-property name="SpreadsheetName">
+                                spreadsheetName
+	 </config-property>
+          <config-property name="SpreadsheetInfo">
+<![CDATA[
+                                <worksheets>
+                                                                                                                               	<worksheet name="sp1">
+                             <!-- You can override data type of columns (default is string) -->
+				  <column alphaName="A" dataType="integer" />
+                                                                                                                                		<column alphaName="B" dataType="date" />
+                                                                                                                                	</worksheet>
+                                                                                                                                	<worksheet name="sp2">
+                                                                                                                                		<column alphaName="A" dataType="string" />
+                                                                                                                                		<column alphaName="C" dataType="string" />
+                                                                                                                                	</worksheet>
+
+                                                                                                                                </worksheets>
+]]>
+
+                            </config-property>
+          <config-property name="Username">
+                                GoogleUserName
+                            </config-property>
+          <config-property name="Password">
+                                Password
+                  </config-property>
+          <config-property name="BatchSize">
+                                100
+                            </config-property>
+ 
+        </connection-definition>
+      </connection-definitions>
+    </resource-adapter>
+  </resource-adapters>
+</subsystem>
