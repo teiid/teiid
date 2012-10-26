@@ -44,5 +44,12 @@ public interface ObjectConnection  {
 	 * @throws TranslatorException
 	 */
 	public Class<?> getType(String name) throws TranslatorException;
+	
+	/**
+	 * Returns a map of all defined caches, and their respective root object class type,
+	 * that are accessible using this connection.
+	 * @return Map<String, Class>
+	 */
+	public Map<String, Class<?>> getMapOfCacheTypes();
 
 }

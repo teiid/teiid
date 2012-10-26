@@ -66,15 +66,6 @@ public class TestObjectExecutionFactory {
 		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
 		
 		assertNotNull(exec);
-	}
-	
-	@Test public void testFactoryLoadingJarClassNames() throws Exception {
-		factory.start();
-			
-		ObjectExecution exec = (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, null);
-		
-		assertNotNull(exec);
-		
 	}	
 	
 	@Test public void testGetMetadata() throws Exception {
