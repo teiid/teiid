@@ -33,7 +33,7 @@ import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
@@ -117,7 +117,7 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 		};
 	}
 	
-	private Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
+	public Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
 		Map<Class<?>, Map<String, Method>> clazzMaps = null;
 		synchronized (properties) {
 			clazzMaps = properties.get(clazz.getClassLoader());
@@ -131,7 +131,7 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 			try {
 				BeanInfo info = Introspector.getBeanInfo(clazz);
 				PropertyDescriptor[] pds = info.getPropertyDescriptors();
-				methodMap = new HashMap<String, Method>();
+				methodMap = new LinkedHashMap<String, Method>();
 				if (pds != null) {
 					for (int j = 0; j < pds.length; j++) {
 						PropertyDescriptor pd = pds[j];

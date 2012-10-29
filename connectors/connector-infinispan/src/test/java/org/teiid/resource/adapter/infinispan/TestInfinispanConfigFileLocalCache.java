@@ -21,12 +21,10 @@
  */
 package org.teiid.resource.adapter.infinispan;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 import java.util.Map;
 
-import java.lang.Long;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.object.ObjectConnection;
@@ -42,7 +40,7 @@ public class TestInfinispanConfigFileLocalCache {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.CACHE_NAME + ":" + "java.lang.Long");
+		factory.setCacheTypeMap(RemoteInfinispanTestHelper.CACHE_NAME + ":" + "java.lang.Long;longValue");
 		
 		// initialize container and cache
 		factory.createCacheContainer();
@@ -61,5 +59,8 @@ public class TestInfinispanConfigFileLocalCache {
     		Class<?> t = conn.getType(RemoteInfinispanTestHelper.CACHE_NAME);
     		
     		assertEquals(Long.class, t);
+    		
+    		assertEquals("longValue", conn.getPkField(RemoteInfinispanTestHelper.CACHE_NAME));
+
     }
 }

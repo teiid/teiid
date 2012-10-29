@@ -800,37 +800,37 @@ public class DataTypeManager {
 	}
 
 	static void loadSourceConversions() {
-		addSourceTransform(Clob.class, new SourceTransform<Clob, ClobType>() {
+		addSourceTransform(Clob.class, new SourceTransform<Clob, ClobType>(ClobType.class) {
 			@Override
 			public ClobType transform(Clob value) {
 				return new ClobType(value);
 			}
 		});
-		addSourceTransform(char[].class, new SourceTransform<char[], ClobType>() {
+		addSourceTransform(char[].class, new SourceTransform<char[], ClobType>(ClobType.class) {
 			@Override
 			public ClobType transform(char[] value) {
 				return new ClobType(ClobImpl.createClob(value));
 			}
 		});
-		addSourceTransform(Blob.class, new SourceTransform<Blob, BlobType>() {
+		addSourceTransform(Blob.class, new SourceTransform<Blob, BlobType>(BlobType.class) {
 			@Override
 			public BlobType transform(Blob value) {
 				return new BlobType(value);
 			}
 		});
-		addSourceTransform(byte[].class, new SourceTransform<byte[], BinaryType>() {
+		addSourceTransform(byte[].class, new SourceTransform<byte[], BinaryType>(BinaryType.class) {
 			@Override
 			public BinaryType transform(byte[] value) {
 				return new BinaryType(value);
 			}
 		});
-		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>() {
+		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>(XMLType.class) {
 			@Override
 			public XMLType transform(SQLXML value) {
 				return new XMLType(value);
 			}
 		});
-		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>() {
+		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>(Timestamp.class) {
 			@Override
 			public Timestamp transform(Date value) {
 				return new Timestamp(value.getTime());
@@ -856,6 +856,25 @@ public class DataTypeManager {
 			}
 		}
 		return value; // "object type"
+	}
+	
+	public static Class<?> getRuntimeType(Class<?> c) {
+		if (c == null) {
+			return DefaultDataClasses.NULL;
+		}
+		if (DATA_TYPE_CLASSES.contains(c)) {
+			return c;
+		}
+		SourceTransform t = sourceConverters.get(c);
+		if (t != null) {
+			return t.getTargetType();
+		}
+		for (Map.Entry<Class<?>, SourceTransform> entry : sourceConverters.entrySet()) {
+			if (entry.getKey().isAssignableFrom(c)) {
+				return entry.getValue().getTargetType();
+			}
+		}
+		return DefaultDataClasses.OBJECT; // "object type"
 	}
 
 	@SuppressWarnings("unchecked")

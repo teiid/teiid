@@ -46,6 +46,13 @@ public interface ObjectConnection  {
 	public Class<?> getType(String name) throws TranslatorException;
 	
 	/**
+	 * Returns the type of the primary key
+	 * @param name
+	 * @return
+	 */
+	public String getPkField(String name);
+	
+	/**
 	 * Returns a map of all defined caches, and their respective root object class type,
 	 * that are accessible using this connection.
 	 * @return Map<String, Class>

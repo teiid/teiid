@@ -99,5 +99,10 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	public Map<String, Class<?>> getMapOfCacheTypes() {
 		return this.config.getMapOfCacheTypes();
 	}
+	
+	@Override
+	public String getPkField(String name) {
+		return this.config.getPkMap().get(name);
+	}
 
 }

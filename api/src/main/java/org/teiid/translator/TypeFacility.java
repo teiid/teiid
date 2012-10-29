@@ -114,17 +114,27 @@ public class TypeFacility {
     }
     
     /**
-     * Get the Class constant for the given String type name
+     * Get the Class constant for the given String runtime type name
      */
     public static Class<?> getDataTypeClass(String type) {
     	return DataTypeManager.getDataTypeClass(type);    	
     }
     
     /**
-     * Get the String constant for the given type class
+     * Get the String constant for the given runtime type class
      */
     public static String getDataTypeName(Class<?> type) {
     	return DataTypeManager.getDataTypeName(type);    	
+    }
+    
+    /**
+     * Get the String constant for the given class
+     */
+    public static Class<?> getRuntimeType(Class<?> type) {
+    	if (type.isPrimitive()) {
+    		return convertPrimitiveToObject(type);
+    	}
+    	return DataTypeManager.getRuntimeType(type);    	
     }
     
     /**
@@ -161,6 +171,26 @@ public class TypeFacility {
 	public Object convertDate(Date date, TimeZone initial, Calendar target,
 			Class<?> targetType) {
 		return TimestampWithTimezone.create(date, initial, target, targetType);
+	}
+	
+	/**
+	 * Convert a primitive class to the corresponding object class
+	 * @param clazz
+	 * @return
+	 */
+	public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
+		if (!clazz.isPrimitive()) {
+			return clazz;
+		}
+		if      ( clazz == Boolean.TYPE   ) clazz = Boolean.class;
+		else if ( clazz == Character.TYPE ) clazz = Character.class;
+		else if ( clazz == Byte.TYPE      ) clazz = Byte.class;
+		else if ( clazz == Short.TYPE     ) clazz = Short.class;
+		else if ( clazz == Integer.TYPE   ) clazz = Integer.class;
+		else if ( clazz == Long.TYPE      ) clazz = Long.class;
+		else if ( clazz == Float.TYPE     ) clazz = Float.class;
+		else if ( clazz == Double.TYPE    ) clazz = Double.class;
+		return clazz;
 	}
 
 }

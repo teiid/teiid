@@ -61,7 +61,11 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 
 		@Override
 		public Map<String, Class<?>> getMapOfCacheTypes() {
-			// TODO Auto-generated method stub
+			return null;
+		}
+		
+		@Override
+		public String getPkField(String name) {
 			return null;
 		}
 	}

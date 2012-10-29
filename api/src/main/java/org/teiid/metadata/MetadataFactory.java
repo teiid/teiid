@@ -457,14 +457,7 @@ public class MetadataFactory implements Serializable {
 			Class<?> clazz = params[i];
 			if (clazz.isPrimitive()) {
 				nullOnNull = true;
-				if      ( clazz == Boolean.TYPE   ) clazz = Boolean.class;
-	            else if ( clazz == Character.TYPE ) clazz = Character.class;
-	            else if ( clazz == Byte.TYPE      ) clazz = Byte.class;
-	            else if ( clazz == Short.TYPE     ) clazz = Short.class;
-	            else if ( clazz == Integer.TYPE   ) clazz = Integer.class;
-	            else if ( clazz == Long.TYPE      ) clazz = Long.class;
-	            else if ( clazz == Float.TYPE     ) clazz = Float.class;
-	            else if ( clazz == Double.TYPE    ) clazz = Double.class;
+				clazz = TypeFacility.convertPrimitiveToObject(clazz);
 			}
 			paramTypes[i] = DataTypeManager.getDataTypeName(clazz);
 		}
@@ -481,7 +474,7 @@ public class MetadataFactory implements Serializable {
 		func.setNullOnNull(nullOnNull);
 		return func;
 	}
-	
+
 	/**
 	 * Set to false to disable correcting column and other names to be valid Teiid names.
 	 * @param autoCorrectColumnNames

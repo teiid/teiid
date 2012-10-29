@@ -22,7 +22,13 @@
 
 package org.teiid.core.types;
 
-public interface SourceTransform<S, T> {
+public abstract class SourceTransform<S, T> {
+	
+	private Class<T> target;
+	
+	public SourceTransform(Class<T> target) {
+		this.target = target;
+	}
 	
 	/**
 	 * This method transforms a value of the source type into a value
@@ -32,6 +38,10 @@ public interface SourceTransform<S, T> {
 	 * @throws TransformationException if value is an incorrect input type or
 	 * the transformation fails
 	 */
-	public T transform(S value);
+	public abstract T transform(S value);
+	
+	public Class<T> getTargetType() {
+		return target;
+	}
 
 }

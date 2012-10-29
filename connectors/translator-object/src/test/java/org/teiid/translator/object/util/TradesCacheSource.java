@@ -169,5 +169,10 @@ public class TradesCacheSource extends HashMap <Object, Object> implements Objec
 		return mapOfCaches;
 	}
 	
+	@Override
+	public String getPkField(String name) {
+		return "tradeId";
+	}
+	
 	
 }

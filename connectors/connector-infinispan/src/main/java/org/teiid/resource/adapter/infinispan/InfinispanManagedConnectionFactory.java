@@ -63,8 +63,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private Map<String, Class<?>> typeMap = null;
 	private String cacheTypes = null;
 	private BasicCacheContainer cacheContainer = null;
-
-
+	private Map<String, String> pkMap;
 	private String module;
 	
 	@Override
@@ -83,6 +82,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		
 		createCacheContainer();
 
+		pkMap = new HashMap<String, String>();
 		ClassLoader cl = null;
 		if (module != null) {
 			Module m;
@@ -98,10 +98,17 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		List<String> types = StringUtil.getTokens(this.cacheTypes, ","); //$NON-NLS-1$
 		Map<String, Class<?>> tm = new HashMap<String, Class<?>>();
 		for (String type : types) {
-			final List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
+			List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
+			if (mapped.size() != 2) {
+				throw new InvalidPropertyException();
+			}
 			final String cacheName = mapped.get(0);
-			final String className = mapped.get(1);
-
+			String className = mapped.get(1);
+			mapped = StringUtil.getTokens(className, ";"); //$NON-NLS-1$
+			if (mapped.size() > 1) {
+				className = mapped.get(0);
+				pkMap.put(cacheName, mapped.get(1));
+			}
 			try {
 				tm.put(cacheName, Class.forName(className, true, cl));
 			} catch (ClassNotFoundException e) {
@@ -122,10 +129,14 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		};
 	}	
 	
+	public Map<String, String> getPkMap() {
+		return pkMap;
+	}
+	
 	/**
-	 * Get the <code>cacheName:ClassName[;cacheName:ClassName...]</code> cache type mappings.
+	 * Get the <code>cacheName:ClassName[,cacheName:ClassName...]</code> cache type mappings.
 	 * 
-	 * @return <code>cacheName:ClassName[;cacheName:ClassName...]</code> cache type mappings
+	 * @return <code>cacheName:ClassName[,cacheName:ClassName...]</code> cache type mappings
 	 * @see #setCacheTypeMap(String)
 	 */
 	public String getCacheTypeMap() {
@@ -133,11 +144,11 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	}
 
 	/**
-	 * Set the cache type mapping <code>cacheName:ClassName[;cacheName:ClassName...]</code> that represent
+	 * Set the cache type mapping <code>cacheName:ClassName[,cacheName:ClassName...]</code> that represent
 	 * the root node class type for 1 or more caches available for access.
 	 * 
 	 * @param cacheTypeMap
-	 *            the cache type mappings passed in the form of <code>cacheName:ClassName[;cacheName:ClassName...]</code>
+	 *            the cache type mappings passed in the form of <code>cacheName:ClassName[,cacheName:ClassName...]</code>
 	 * @see #getCacheTypeMap()
 	 */
 	public void setCacheTypeMap(
@@ -255,9 +266,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     	if (cacheContainer != null) {
     		if (cacheName == null) {
     			return cacheContainer.getCache();
-    		} else {
-    			return cacheContainer.getCache(cacheName);
-    		}   		
+    		}
+			return cacheContainer.getCache(cacheName);
     	}
     	return null;
     }
@@ -350,8 +360,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	            } 	
 	            
 				LogManager
-				.logInfo(LogConstants.CTX_CONNECTOR,
-						"=== Using CacheContainer (obtained by JNDI: " + jndiName + " ==="); //$NON-NLS-1
+				.logDetail(LogConstants.CTX_CONNECTOR,
+						"=== Using CacheContainer (obtained by JNDI:", jndiName, "==="); //$NON-NLS-1 //$NON-NLS-2
 	            
 				
 				cacheContainer  = (EmbeddedCacheManager) cache;

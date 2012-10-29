@@ -37,7 +37,7 @@
             <managedconnectionfactory-class>org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory</managedconnectionfactory-class>
   
             <config-property>
-               <description>{$display:"Cache Type Mapping",$description:"Cache Type Map(cacheName:className[;cacheName:className...])",$required="true"}</description>
+               <description>{$display:"Cache Type Mapping",$description:"Cache Type Map(cacheName:className[;pkFieldName][,cacheName:className[;pkFieldName]...])",$required="true"}</description>
                <config-property-name>CacheTypeMap</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>  

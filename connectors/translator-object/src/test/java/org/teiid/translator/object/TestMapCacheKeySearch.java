@@ -22,31 +22,26 @@
 package org.teiid.translator.object;
 
 import static org.junit.Assert.*;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
 import javax.naming.Context;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.Select;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.metadata.BaseMetadataProcessor;
 import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
@@ -100,7 +95,7 @@ public class TestMapCacheKeySearch extends BasicSearchTest {
 		
 		factory.getMetadata(mfactory, source);
 		
-		assertEquals(mfactory.getSchema().getName(), BaseMetadataProcessor.SCHEMA_NAME);
+		assertEquals(mfactory.getSchema().getName(), "Trade");
 		
 		String clzName = Trade.class.getName();
 		clzName = clzName.substring(clzName.lastIndexOf(".") + 1);
@@ -109,43 +104,14 @@ public class TestMapCacheKeySearch extends BasicSearchTest {
 		assertNotNull(physicalTable);
 		assertTrue(physicalTable.isPhysical());
 		assertTrue(!physicalTable.isVirtual());
-
-		
-		String virClzName = clzName + BaseMetadataProcessor.VIEWTABLE_SUFFIX;
-
-		Table virtualTable = mfactory.getSchema().getTable(virClzName);
-		assertNotNull(virtualTable);
-		assertTrue(virtualTable.isVirtual());
-		assertTrue(!virtualTable.isPhysical());
-		
-//		transform = "SELECT o.Name, o.TradeId, o.TradeDate, o.Settled FROM Trade as T," +
-//		" OBJECTTABLE('x' PASSING T.TradeObject AS x COLUMNS Name string 'teiid_row.Name'," + 
-//		" TradeId long 'teiid_row.TradeId', TradeDate timestamp 'teiid_row.TradeDate'," + 
-//		" Settled boolean 'teiid_row.Settled') as o;";
-
-		
-		//  used the following to validate the transform because the class methods are not 
-		//		guaranteed to be processed in the same order, 
-		//		thereby, the elements in transform statement can be arranged differently each time
-		String transform = virtualTable.getSelectTransformation();	
-		
-		int idx = transform.indexOf("OBJECTTABLE");
-		
-		String select = transform.substring(0, idx);
-		String objecttable = transform.substring(idx);
-		assertTrue(select.indexOf("o.Name") >-1);
-		assertTrue(select.indexOf("o.TradeId") >-1);
-		assertTrue(select.indexOf("o.TradeDate") >-1);
-		assertTrue(select.indexOf("o.Settled") >-1);
-		assertTrue(select.indexOf("FROM Trade as T") >-1);
-
-		assertTrue(objecttable.indexOf("'x' PASSING T.TradeObject AS x COLUMNS") >-1);
-		assertTrue(objecttable.indexOf("Name string 'teiid_row.Name'") >-1);
-		assertTrue(objecttable.indexOf("TradeId long 'teiid_row.TradeId'") >-1);
-		assertTrue(objecttable.indexOf("TradeDate timestamp 'teiid_row.TradeDate'") >-1);
-		assertTrue(objecttable.indexOf("Settled boolean 'teiid_row.Settled'") >-1);
-
-
+		assertEquals(5, physicalTable.getColumns().size());
+		//this
+		assertEquals("object", physicalTable.getColumns().get(0).getRuntimeType());
+		//trade id key
+		assertEquals("long", physicalTable.getColumns().get(1).getRuntimeType());
+		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(1).getNullType());
+		//name
+		assertEquals("string", physicalTable.getColumns().get(2).getRuntimeType());
 	}
 
 }

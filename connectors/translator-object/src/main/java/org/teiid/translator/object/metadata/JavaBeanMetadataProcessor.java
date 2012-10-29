@@ -1,120 +1,167 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.translator.object.metadata;
 
 import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+import javax.script.ScriptException;
+
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.MetadataException;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.Column.SearchType;
-import org.teiid.translator.TranslatorException;
+import org.teiid.query.eval.TeiidScriptEngine;
 import org.teiid.translator.TypeFacility;
+import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectExecutionFactory;
 
-public class JavaBeanMetadataProcessor extends BaseMetadataProcessor {
-	
-	
-	private boolean isUpdatable = false;
 
+/**
+ * The BaseMetadataProcess is the core logic for providing metadata to the translator.
+ */
+public class JavaBeanMetadataProcessor {
+	public static final String KEY_ASSOSIATED_WITH_FOREIGN_TABLE = "assosiated_with_table";  //$NON-NLS-1$
+	public static final String ENTITYCLASS= "entity_class"; //$NON-NLS-1$
 	
-	protected String getTableName(Class<?> entity) {
-		if (entity == null) {
-			return "tableName";
-		}
-		String name = null;
-		String className = entity.getName();
-		int idx = className.lastIndexOf(".");
-		if (idx > 0) {
-			name = className.substring(idx + 1);
-		} else {
-			name = className;
-		}
-		return name;		
+	public static final String GET = "get"; //$NON-NLS-1$
+	public static final String IS = "is"; //$NON-NLS-1$
 		
+	public static final String VIEWTABLE_SUFFIX = "View"; //$NON-NLS-1$
+	public static final String OBJECT_COL_SUFFIX = "Object"; //$NON-NLS-1$
+	
+	protected boolean isUpdatable = false;
+	private TeiidScriptEngine engine = new TeiidScriptEngine();
+
+	public void getMetadata(MetadataFactory mf, ObjectConnection conn, ObjectExecutionFactory env) {
+		
+		Map<String, Class<?>> cacheTypes = conn.getMapOfCacheTypes();
+		for (String cacheName : cacheTypes.keySet()) {
+			Class<?> type = cacheTypes.get(cacheName);
+			String pkField = conn.getPkField(cacheName);
+			createSourceTable(mf, type, cacheName, pkField);
+		}
+
 	}
 	
+	private Table createSourceTable(MetadataFactory mf, Class<?> entity, String cacheName, String pkField) {
+		String tableName = getTableName(entity);
+		Table table = mf.getSchema().getTable(tableName);
+		if (table != null) {
+			//TODO: probably an error
+			return table;
+		}
+		table = mf.addTable(tableName);
+		table.setSupportsUpdate(isUpdateable(entity));
+		table.setNameInSource(cacheName); 
+
+		table.setProperty(ENTITYCLASS, entity.getName());
+		
+		String columnName = tableName + OBJECT_COL_SUFFIX;
+		addColumn(mf, entity, entity, columnName, "this", SearchType.Unsearchable, table); //$NON-NLS-1$
+		Map<String, Method> methods;
+		try {
+			methods = engine.getMethodMap(entity);
+		} catch (ScriptException e) {
+			throw new MetadataException(e);
+		}
+		
+		Method pkMethod = null;
+		if (pkField != null) {
+			pkMethod = methods.get(pkField);
+			if (pkMethod != null) {
+				addColumn(mf, entity, pkMethod.getReturnType(), pkField, pkField, SearchType.Searchable, table);
+			} else {
+				//TODO: warning/error?
+			}
+		}
+		
+		//we have to filter the duplicate names, isFoo vs. foo
+		Map<Method, String> methodsToAdd = new LinkedHashMap<Method, String>();
+		for (Map.Entry<String, Method> entry : methods.entrySet()) {
+			String name = methodsToAdd.get(entry.getValue());
+			if (name == null || name.length() > entry.getKey().length()) {
+				if (entry.getValue() == pkMethod 
+						|| entry.getValue().getDeclaringClass() == Object.class
+						|| entry.getValue().getName().equals("toString") //$NON-NLS-1$
+						|| entry.getValue().getName().equals("hashCode") //$NON-NLS-1$
+						|| TypeFacility.getRuntimeType(entry.getValue().getReturnType()) == Object.class) {
+					continue;
+				}				
+				methodsToAdd.put(entry.getValue(), entry.getKey());
+			}
+		}
+		
+		for (Map.Entry<Method, String> entry : methodsToAdd.entrySet()) {
+			addColumn(mf, entity, entry.getKey().getReturnType(), entry.getValue(), entry.getValue(), SearchType.Unsearchable, table);
+		}
+		return table;
+	}
+	
+	/**
+	 * Call to get the name of table based on the <code>Class</code> entity
+	 * @param entity
+	 * @return String name of table
+	 */
+	protected String getTableName(Class<?> entity) {
+		return entity.getSimpleName();
+	}
+	
+	/**
+	 * @param entity  
+	 */
 	protected boolean isUpdateable(Class<?> entity) {
 		return this.isUpdatable;
 	}
 
+	/**
+	 * @param entity  
+	 * @param columnName 
+	 */
 	protected boolean isUpdateable(Class<?> entity, String columnName) {
 		return this.isUpdatable;
 	}
-	
-	protected String createViewTransformation(MetadataFactory mf, Class<?> entity, Table vtable, Table sourceTable) throws TranslatorException {
-		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT ");
-		
-		StringBuilder sbObjTable = new StringBuilder();
-		
-		
-		Method[] methods = entity.getDeclaredMethods();
 
-		int cnt = 0;
-		for (Method m : methods) {
-			String methodName = m.getName();
-			if (methodName.startsWith(GET)) {
-				methodName=methodName.substring( methodName.indexOf(GET) + 3);
-			} else if (methodName.startsWith(IS)) {
-				methodName=methodName.substring( methodName.indexOf(IS) + 2);
-			} else {
-				continue;
-			}
-			boolean simpleType = isSimpleType(m.getReturnType());
-			boolean returnType = simpleType;
-			if (!simpleType) {
-				returnType = isSupportedObjectType(m.getReturnType());
-			}
-			
-			// if the object type is not supported to be returned as is, then don't include it,
-			// this is an object that will need a chaining OBJECTTABLE specified
-			if (! returnType) continue;
-			
-			if (cnt > 0) {
-				sb.append(", ");
-				sbObjTable.append(", ");
-			}
-			
-			sb.append("o.");
-			sb.append(methodName);
-			
-			sbObjTable.append(methodName);
-			sbObjTable.append(" ");
-			
-			
-			String simpleName = m.getReturnType().getSimpleName();
-			
-			Column column = addColumn(mf, entity, methodName, "", SearchType.Searchable, TypeFacility.getDataTypeName(getJavaDataType(m.getReturnType())), false, vtable);
-		
-			sbObjTable.append(column.getRuntimeType());
-			sbObjTable.append(" ");
-			sbObjTable.append("'teiid_row.");
-			sbObjTable.append(methodName);
-			sbObjTable.append("'");
-			
-			column.setNativeType(simpleName);
-
-			if (simpleName.equalsIgnoreCase("string")) {
-				column.setLength(4000);
-			}
-			if (!simpleType) {
-					column.setSearchType(SearchType.Unsearchable);
-			}
-			++cnt;
+	protected Column addColumn(MetadataFactory mf, Class<?> entity, Class<?> type, String attributeName, String nis, SearchType searchType, Table entityTable) {
+		Column c = entityTable.getColumnByName(attributeName);
+		if (c != null) {
+			//TODO: there should be a log here
+			return c;
 		}
-		
-		Column sourceColumn = sourceTable.getColumns().get(0);
-		
-		sb.append(" FROM ");
-		sb.append(sourceTable.getName());
-		sb.append(" as T, OBJECTTABLE('x' PASSING T.");
-		sb.append(sourceColumn.getName());
-		sb.append(" AS x COLUMNS ");
-		
-		sb.append(sbObjTable.toString());
-		
-		sb.append(") as o;");
-		
-		return sb.toString();
-		
+		c = mf.addColumn(attributeName, TypeFacility.getDataTypeName(TypeFacility.getRuntimeType(type)), entityTable);
+		if (nis != null) {
+			c.setNameInSource(nis);
+		}
+		c.setUpdatable(isUpdateable(entity, attributeName));
+		c.setSearchType(searchType);
+		c.setNativeType(type.getName());
+		if (type.isPrimitive()) {
+			c.setNullType(NullType.No_Nulls);
+		}
+		return c;
 	}
-
+	
 }
