@@ -1,0 +1,28 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.0">
+    <resource-adapters>
+        <resource-adapter>
+            <archive>teiid-connector-infinispan.rar</archive>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory" 
+                        jndi-name="java:/infinspanDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-infinispan-ds">
+                        
+                       <!-- comma separate list of cache name to cache class;primary key -->
+                      <config-property name="CacheTypeMap">trades:org.somewhere.Trade;tradeId</config-property>
+                      
+                      <!-- module name to load the cache classes from -->
+                      <config-property name="Module">org.somewhere</config-property>
+
+                      <!-- JNDI lookup name of the Infinispan cache container.  other options include remote hot rod access and
+                           using a configuration file to access a local cache -->
+                      <config-property name="CacheJndiName">java:/myCache</config-property>
+                      
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>
