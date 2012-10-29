@@ -38,6 +38,8 @@ import javax.xml.ws.Service;
 public interface WSConnection extends Connection {
 
 	<T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
+	
+	String getWsdl();
 
 	public static class Util {
 		
