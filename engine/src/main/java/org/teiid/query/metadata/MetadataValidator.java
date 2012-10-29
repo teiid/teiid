@@ -24,11 +24,12 @@ package org.teiid.query.metadata;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.adminapi.impl.ModelMetaData;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.types.DataTypeManager;
@@ -62,10 +63,20 @@ import org.teiid.translator.TranslatorException;
 
 public class MetadataValidator {
 	
+	private Map<String, Datatype> typeMap;
+	
 	interface MetadataRule {
 		void execute(VDBMetaData vdb, MetadataStore vdbStore, ValidatorReport report, MetadataValidator metadataValidator);
 	}	
 	
+	public MetadataValidator(Map<String, Datatype> typeMap) {
+		this.typeMap = typeMap;
+	}
+	
+	public MetadataValidator() {
+		this.typeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
+	}
+
 	public ValidatorReport validate(VDBMetaData vdb, MetadataStore store) {
 		ValidatorReport report = new ValidatorReport();
 		if (store != null && !store.getSchemaList().isEmpty()) {
@@ -166,7 +177,15 @@ public class MetadataValidator {
 	    	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
 			for (Schema schema:store.getSchemaList()) {
 				ModelMetaData model = vdb.getModel(schema.getName());
-
+				MetadataFactory mf = new MetadataFactory(vdb.getName(), vdb.getVersion(), metadataValidator.typeMap, model) {
+					protected void setUUID(AbstractMetadataRecord record) {
+						if (count >= 0) {
+							count = Integer.MIN_VALUE;
+						}
+						super.setUUID(record);
+					}
+				};
+				mf.setBuiltinDataTypes(store.getDatatypes());
 				for (Table t:schema.getTables().values()) {
 					// no need to verify the transformation of the xml mapping document, 
 					// as this is very specific and designer already validates it.
@@ -180,7 +199,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
 						}
 						else {
-							metadataValidator.validate(vdb, model, t, report, metadata);
+							metadataValidator.validate(vdb, model, t, report, metadata, mf);
 						}
 					}						
 				}
@@ -191,7 +210,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
 						}
 						else {
-							metadataValidator.validate(vdb, model, p, report, metadata);
+							metadataValidator.validate(vdb, model, p, report, metadata, mf);
 						}
 					}
 				}					
@@ -215,7 +234,7 @@ public class MetadataValidator {
 		LogManager.log(messageLevel, LogConstants.CTX_QUERY_RESOLVER, msg);
 	}
 	
-    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report, QueryMetadataInterface metadata) {
+    private void validate(VDBMetaData vdb, ModelMetaData model, AbstractMetadataRecord record, ValidatorReport report, QueryMetadataInterface metadata, MetadataFactory mf) {
     	ValidatorReport resolverReport = null;
     	try {
     		if (record instanceof Procedure) {
@@ -228,7 +247,6 @@ public class MetadataValidator {
     			
     			GroupSymbol symbol = new GroupSymbol(t.getFullName());
     			ResolverUtil.resolveGroup(symbol, metadata);
-    			MetadataFactory mf = t.removeAttachment(MetadataFactory.class);    			
     			if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {
     				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
     				QueryResolver.resolveCommand(command, metadata);

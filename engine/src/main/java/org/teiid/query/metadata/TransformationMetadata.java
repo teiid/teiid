@@ -741,7 +741,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
         Table tableRecord = (Table) groupID;
         
-        MappingDocument mappingDoc = tableRecord.getAttachment(MappingDocument.class);
+        MappingDocument mappingDoc = (MappingDocument) getFromMetadataCache(groupID, "xml-doc"); //$NON-NLS-1$
         
         if (mappingDoc != null) {
         	return mappingDoc;
@@ -763,7 +763,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 					inputStream.close();
             	} catch(Exception e) {}
             }
-            tableRecord.addAttchment(MappingDocument.class, mappingDoc);
+            addToMetadataCache(groupID, "xml-doc", mappingDoc); //$NON-NLS-1$
             return mappingDoc;
         }
 

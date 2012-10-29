@@ -4774,9 +4774,7 @@ void createTable(MetadataFactory factory) :
 		   }
 		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
 		}
-		if (table.getColumns() == null) {
-			table.addAttchment(MetadataFactory.class, factory);
-		} else if (!table.supportsUpdate()) {
+		if (table.getColumns() != null && !table.supportsUpdate()) {
 			for (Column c : table.getColumns()) {
 				c.setUpdatable(false);
 			}

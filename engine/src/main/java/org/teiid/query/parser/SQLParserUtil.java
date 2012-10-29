@@ -620,7 +620,6 @@ public class SQLParserUtil {
 				fbi = true;
 			}
 		}
-		table.addAttchment(MetadataFactory.class, factory);
     	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
 	}
 	

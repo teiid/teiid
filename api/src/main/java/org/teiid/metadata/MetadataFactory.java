@@ -68,7 +68,7 @@ public class MetadataFactory implements Serializable {
 	private Properties modelProperties;
 	private Schema schema = new Schema();
 	private String idPrefix; 
-	private int count;
+	protected int count;
 	private transient Parser parser;
 	private transient ModelMetaData model;
 	
@@ -101,7 +101,7 @@ public class MetadataFactory implements Serializable {
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
 	}
-
+	
 	private long longHash(String s, long h) {
 		if (s == null) {
 			return h;

@@ -109,7 +109,7 @@ public class SystemMetadata {
 		systemStore = loadSchema(vdb, p, "SYS").asMetadataStore(); //$NON-NLS-1$
 		systemStore.addDataTypes(dataTypes);
 		loadSchema(vdb, p, "SYSADMIN").mergeInto(systemStore); //$NON-NLS-1$
-		MetadataValidator validator = new MetadataValidator();
+		MetadataValidator validator = new MetadataValidator(this.typeMap);
 		ValidatorReport report = validator.validate(vdb, systemStore);
 		if (report.hasItems()) {
 			throw new TeiidRuntimeException(report.getFailureMessage());

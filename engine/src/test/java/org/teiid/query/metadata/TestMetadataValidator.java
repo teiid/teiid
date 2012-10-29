@@ -69,7 +69,8 @@ public class TestMetadataValidator {
 		mf.setBuiltinDataTypes(SystemMetadata.getInstance().getSystemStore().getDatatypes());
 		mf.getSchema().setPhysical(physical);
 		repo.loadMetadata(mf, null, null);
-		mf.mergeInto(store);	
+		mf.mergeInto(store);
+		model.addAttchment(MetadataFactory.class, mf);
 		return model;
 	}
 	
