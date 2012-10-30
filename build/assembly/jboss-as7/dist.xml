@@ -159,6 +159,7 @@
             <include>org.jboss.teiid.connectors:connector-file:rar</include>
             <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
             <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
+            <include>org.jboss.teiid.connectors:connector-google:rar</include>
             <include>org.jboss.teiid.connectors:connector-ws:rar</include>
             <include>org.jboss.teiid.connectors:connector-infinispan:rar</include>
         </includes>
@@ -280,6 +281,52 @@
           <fileMode>0644</fileMode>
         </binaries>
       
+    </moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-google</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/org/jboss/teiid/translator/google/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:google-api</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/org/jboss/teiid/translator/google/api/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
     </moduleSet>
     <moduleSet>
         <includeSubModules>true</includeSubModules>
