@@ -21,8 +21,6 @@
  */
 package org.teiid.translator.ws;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +38,6 @@ import javax.wsdl.WSDLException;
 import javax.wsdl.extensions.ExtensibilityElement;
 import javax.wsdl.extensions.http.HTTPAddress;
 import javax.wsdl.extensions.http.HTTPBinding;
-import javax.wsdl.extensions.http.HTTPOperation;
 import javax.wsdl.extensions.soap.SOAPAddress;
 import javax.wsdl.extensions.soap.SOAPBinding;
 import javax.wsdl.extensions.soap.SOAPBody;
@@ -162,12 +159,11 @@ public class WSDLMetadataProcessor {
 		}
 		
 		WSExecutionFactory.Binding executionBinding = extractExecutionBinding(binding);
-		String httpVerb = extractVerb(binding, "POST"); //$NON-NLS-1$
-		
-		for (BindingOperation bindingOperation:operations) {
-			buildOperation(mf, bindingOperation, executionBinding, address, httpVerb);		
+		if (executionBinding == WSExecutionFactory.Binding.SOAP11 || executionBinding == WSExecutionFactory.Binding.SOAP12) {
+			for (BindingOperation bindingOperation:operations) {
+				buildSoapOperation(mf, bindingOperation, executionBinding, address);		
+			}
 		}
-		
 	}
 
 	private WSExecutionFactory.Binding extractExecutionBinding(Binding binding) throws TranslatorException {
@@ -188,17 +184,9 @@ public class WSDLMetadataProcessor {
         return executionBinding;
 	}
 	
-	private String extractVerb(Binding binding, String defaultVerb) {
-		ExtensibilityElement bindingExtension = getExtensibilityElement(binding.getExtensibilityElements(), "binding"); //$NON-NLS-1$		
-        if (bindingExtension instanceof HTTPBinding) {
-        	return ((HTTPBinding)bindingExtension).getVerb();
-        }
-        return defaultVerb;
-	}	
-
-	private void buildOperation(MetadataFactory mf,
+	private void buildSoapOperation(MetadataFactory mf,
 			BindingOperation bindingOperation,
-			WSExecutionFactory.Binding binding, String endpoint, String httpVerb) {
+			WSExecutionFactory.Binding binding, String endpoint) {
 		
 		Operation operation = bindingOperation.getOperation();
 		BindingInput bindingInput = bindingOperation.getBindingInput();
@@ -246,18 +234,8 @@ public class WSDLMetadataProcessor {
 			}
 			
 		}
-		else if (operationExtension instanceof HTTPOperation) {
-			//http:operation
-			HTTPOperation httpOperation = (HTTPOperation) operationExtension;
-			action = httpVerb.toUpperCase();
-			
-			if (endpoint != null && httpOperation.getLocationURI() != null) {
-				try {
-					endpoint = new URL(new URL(endpoint), httpOperation.getLocationURI()).toExternalForm();
-				} catch (MalformedURLException e) {
-					endpoint = httpOperation.getLocationURI();
-				}
-			}
+		else {
+			return;
 		}
 
 		Procedure procedure = mf.addProcedure(operation.getName());
@@ -269,9 +247,6 @@ public class WSDLMetadataProcessor {
 		procedure.setProperty(MetadataFactory.WS_URI+ENCODING, encodingStyle);
 		procedure.setProperty(MetadataFactory.WS_URI+BINDING, binding.name());
 		procedure.setProperty(MetadataFactory.WS_URI+ACTION, action);
-		if (binding == org.teiid.translator.ws.WSExecutionFactory.Binding.HTTP && action.equals("GET")) { //$NON-NLS-1$
-			procedure.setProperty(MetadataFactory.WS_URI+XML_PARAMETER, inputXML);
-		}
 		if (endpoint != null) {
 			procedure.setProperty(MetadataFactory.WS_URI+ENDPOINT, endpoint);
 		}

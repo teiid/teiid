@@ -31,6 +31,7 @@ import javax.xml.transform.stax.StAXSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
@@ -81,7 +82,7 @@ public class TestWSTranslatorMetadata {
 	}
 	
 	
-	
+	@Ignore
 	@Test public void testHttpMetadata() throws Exception {
 		WSExecutionFactory ef = new WSExecutionFactory();
 		
