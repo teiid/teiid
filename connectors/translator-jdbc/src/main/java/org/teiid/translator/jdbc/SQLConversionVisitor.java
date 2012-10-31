@@ -371,6 +371,9 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 		if (obj.getMetadataObject() != null) {
 			String nativeQuery = obj.getMetadataObject().getProperty(TEIID_NATIVE_QUERY, false);
 	    	if (nativeQuery != null) {
+	    		if (obj.getCorrelationName() == null) {
+	    			throw new IllegalArgumentException(JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11020, obj.getName()));
+	    		}
 	    		buffer.append(Tokens.LPAREN).append(nativeQuery).append(Tokens.RPAREN);
 	    		if (obj.getCorrelationName() == null) {
 	                buffer.append(Tokens.SPACE);
@@ -378,6 +381,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 	                    buffer.append(AS).append(Tokens.SPACE);
 	                }
 	    		}
+	    		return;
 	    	}
 		}
 		super.appendBaseName(obj);
