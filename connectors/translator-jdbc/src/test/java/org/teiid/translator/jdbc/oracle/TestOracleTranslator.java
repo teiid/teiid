@@ -908,9 +908,18 @@ public class TestOracleTranslator {
 		Mockito.verify(cs, Mockito.times(1)).getObject(1);
 	}
 	
-	@Test public void testNativeQuery() throws Exception {
+	@Test (expected=IllegalArgumentException.class)public void testNativeQueryWithNoCorrelationName() throws Exception {
 		String input = "SELECT (DoubleNum * 1.0) FROM x"; //$NON-NLS-1$
         String output = "SELECT (x.DoubleNum * 1.0) FROM (select c from d) x"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
+	
+	@Test public void testNativeQuery() throws Exception {
+		String input = "SELECT (DoubleNum * 1.0) FROM x as y"; //$NON-NLS-1$
+        String output = "SELECT (y.DoubleNum * 1.0) FROM (select c from d) y"; //$NON-NLS-1$
 
         QueryMetadataInterface metadata = getOracleSpecificMetadata();
 
