@@ -43,7 +43,14 @@ public class LDAPManagedConnectionFactory extends BasicManagedConnectionFactory 
 		return new BasicConnectionFactory<LDAPConnectionImpl>() {
 			@Override
 			public LDAPConnectionImpl getConnection() throws ResourceException {
-				return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
+				ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+				try {
+					Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+					return new LDAPConnectionImpl(LDAPManagedConnectionFactory.this);
+				} 
+				finally {
+					Thread.currentThread().setContextClassLoader(contextClassLoader);
+				}
 			}
 		};
 	}	
