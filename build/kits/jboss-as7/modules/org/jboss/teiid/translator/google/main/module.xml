@@ -11,6 +11,5 @@
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />       
         <module name="org.jboss.teiid.translator.google.api" />       
-        <module name="net.sf.opencsv"/>  
     </dependencies>
 </module>

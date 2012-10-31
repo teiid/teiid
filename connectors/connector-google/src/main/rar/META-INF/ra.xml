@@ -70,11 +70,6 @@
                <config-property-name>RefreshToken</config-property-name>
                <config-property-type>java.lang.String</config-property-type>
             </config-property>
-             <config-property>
-               <description>{$display:"SpreadsheetInfo",$description:"",$required:"false"}</description>
-               <config-property-name>SpreadsheetInfo</config-property-name>
-               <config-property-type>java.lang.String</config-property-type>
-            </config-property>
             <config-property>
                <description>{$display:"Name of the spreadsheet we are connecting to",$description:"",$required:"false"}</description>
                <config-property-name>SpreadsheetName</config-property-name>

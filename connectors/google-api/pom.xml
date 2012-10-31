@@ -28,24 +28,6 @@
 		  <version>4.1.2</version>
 		  <scope>provided</scope>
 		</dependency>
-		<dependency>
-		  <groupId>org.codehaus.jackson</groupId>
-		  <artifactId>jackson-core-asl</artifactId>
-		  <version>1.9.2</version>
-		  <scope>provided</scope>
-		</dependency>
-		<dependency>
-		  <groupId>org.codehaus.jackson</groupId>
-		  <artifactId>jackson-mapper-asl</artifactId>
-		  <version>1.9.2</version>
-		  <scope>provided</scope>
-		</dependency>
-		<dependency>
-		  <groupId>net.sf.opencsv</groupId>
-		  <artifactId>opencsv</artifactId>
-		  <version>2.3</version>
-		  <scope>provided</scope>
-		</dependency>
        <dependency>
 		  <groupId>org.jboss.teiid.connectors.google</groupId>
 		  <artifactId>gdata-spreadsheet</artifactId>
@@ -58,7 +40,15 @@
 		  <version>1.0</version>
 		  <scope>provided</scope>
 		</dependency>
-		
-
+		<dependency>
+		  <groupId>org.jboss.teiid</groupId>
+		  <artifactId>teiid-common-core</artifactId>
+		  <scope>provided</scope>
+		</dependency>
+		<dependency>
+		  <groupId>org.jboss.teiid</groupId>
+		  <artifactId>teiid-api</artifactId>
+		  <scope>provided</scope>
+		</dependency>
   </dependencies>
 </project>

@@ -1,6 +1,6 @@
 package org.teiid.resource.adapter.google.integration;
 
-import org.junit.Ignore;
+
 
 
 /**
@@ -11,6 +11,7 @@ import org.junit.Ignore;
  *
  */
 
+@SuppressWarnings("nls")
 public class IntegrationTest {
 	protected static final String USERNAME="xxx";
 	protected static final String PASSWORD="xxx";

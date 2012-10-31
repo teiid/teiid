@@ -9,7 +9,6 @@ import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
 import org.teiid.resource.adapter.google.gdata.GDataClientLoginAPI;
 import org.teiid.resource.adapter.google.gdata.SpreadsheetMetadataExtractor;
-import org.teiid.resource.adapter.google.metadata.SpreadsheetColumnType;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 
 /**
@@ -20,6 +19,7 @@ import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
  *
  */
 @Ignore
+@SuppressWarnings("nls")
 public class MetadataLoadingTest extends IntegrationTest {
 	
 	private static GDataClientLoginAPI gdata = null;
@@ -54,9 +54,5 @@ public class MetadataLoadingTest extends IntegrationTest {
 		
 	}
 	
-	@Test 
-	public void testMetadataParsing(){
-		
-	}
 }
 

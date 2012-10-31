@@ -55,9 +55,9 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -1330,75 +1330,9 @@ public final class FunctionMethods {
 	}
 
     public static String unescape(String string) {
-    	StringBuilder sb = new StringBuilder();
-    	boolean escaped = false;
-    	for (int i = 0; i < string.length(); i++) {
-    		char c = string.charAt(i);
-    		if (escaped) {
-	    		switch (c) {
-	    		case 'b':
-	    			sb.append('\b');
-	    			break;
-	    		case 't':
-	    			sb.append('\t');
-	    			break;
-	    		case 'n':
-	    			sb.append('\n');
-	    			break;
-	    		case 'f':
-	    			sb.append('\f');
-	    			break;
-	    		case 'r':
-	    			sb.append('\r');
-	    			break;
-	    		case 'u':
-					i = parseNumericValue(string, sb, i, 0, 4, 4);
-					//TODO: this should probably be strict about needing 4 digits
-	    			break;
-    			default:
-    				int value = Character.digit(c, 8);
-					if (value == -1) {
-						sb.append(c);
-					} else {
-						int possibleDigits = value < 3 ? 2:1;
-						int radixExp = 3;
-    					i = parseNumericValue(string, sb, i, value, possibleDigits, radixExp);
-    				}
-	    		}
-	    		escaped = false;
-    		} else {
-    			if (c == '\\') {
-    				escaped = true;
-    			} else {
-					sb.append(c);
-    			}
-    		}
-    	}
-    	//TODO: should this be strict?
-    	//if (escaped) {
-    		//throw new FunctionExecutionException();
-    	//}
-    	return sb.toString();
+    	return StringUtil.unescape(string, -1, true, new StringBuilder());
     }
 
-	private static int parseNumericValue(String string, StringBuilder sb,
-			int i, int value, int possibleDigits, int radixExp) {
-		for (int j = 0; j < possibleDigits; j++) {
-			if (i + 1 == string.length()) {
-				break;
-			}
-			char digit = string.charAt(i + 1);
-			int val = Character.digit(digit, 1 << radixExp);
-			if (val == -1) {
-				break;
-			}
-			i++;
-			value = (value << radixExp) + val;
-		}
-		sb.append((char)value);
-		return i;
-	}
-    
 	public static String uuid() {
 		return UUID.randomUUID().toString();
 	}

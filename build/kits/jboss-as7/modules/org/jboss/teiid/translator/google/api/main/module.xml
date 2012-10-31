@@ -11,9 +11,6 @@
         <module name="org.jboss.teiid.api" />       
         <module name="javax.xml.bind.api" />       
         <module name="org.apache.httpcomponents" />
-        <module name="org.codehaus.jackson.jackson-core-asl" />
-        <module name="org.codehaus.jackson.jackson-mapper-asl" />
         <module name="com.google.gdata"/>
-        <module name="net.sf.opencsv"/>     
     </dependencies>
 </module>

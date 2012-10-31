@@ -14,23 +14,6 @@
           <config-property name="SpreadsheetName">
                                 spreadsheetName
 	 </config-property>
-          <config-property name="SpreadsheetInfo">
-<![CDATA[
-                                <worksheets>
-                                                                                                                               	<worksheet name="sp1">
-                             <!-- You can override data type of columns (default is string) -->
-				  <column alphaName="A" dataType="integer" />
-                                                                                                                                		<column alphaName="B" dataType="date" />
-                                                                                                                                	</worksheet>
-                                                                                                                                	<worksheet name="sp2">
-                                                                                                                                		<column alphaName="A" dataType="string" />
-                                                                                                                                		<column alphaName="C" dataType="string" />
-                                                                                                                                	</worksheet>
-
-                                                                                                                                </worksheets>
-]]>
-
-                            </config-property>
           <config-property name="Username">
                                 GoogleUserName
                             </config-property>

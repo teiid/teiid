@@ -1,16 +1,39 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.resource.adapter.google.gdata;
 
-import java.util.Iterator;
+import java.io.IOException;
+import java.util.List;
 
-import org.teiid.resource.adapter.google.common.SheetRow;
 import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
+import org.teiid.resource.adapter.google.metadata.Column;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.metadata.Worksheet;
-import org.teiid.resource.adapter.google.result.RowsResult;
 
 import com.google.gdata.data.spreadsheet.SpreadsheetEntry;
 import com.google.gdata.data.spreadsheet.WorksheetEntry;
+import com.google.gdata.util.ServiceException;
 
 /**
  * Creates metadata by using GData API.
@@ -48,16 +71,17 @@ public class SpreadsheetMetadataExtractor {
 			for (WorksheetEntry wentry : sentry.getWorksheets()) {
 				String title = wentry.getTitle().getPlainText();
 				Worksheet worksheet = metadata.createWorksheet(title);
-				RowsResult rr = visualizationAPI.executeQuery(spreadsheetName, title, "SELECT *", 1,0,1);
-				Iterator<SheetRow> resultIterator= rr.iterator();
-				if (resultIterator.hasNext()){
-					worksheet.setColumnCount(resultIterator.next().getRow().size());
-				}else {
+				List<Column> cols = visualizationAPI.getMetadata(spreadsheetName, title);
+				if (cols.isEmpty()) {
 					worksheet.setColumnCount(0);
+				} else {
+					worksheet.setColumns(cols);
 				}
-
 			}
-		} catch (Exception ex) {
+		} catch (IOException ex) {
+			throw new SpreadsheetOperationException(
+					"Error getting metadata about Spreadsheets worksheet", ex);
+		} catch (ServiceException ex) {
 			throw new SpreadsheetOperationException(
 					"Error getting metadata about Spreadsheets worksheet", ex);
 		}

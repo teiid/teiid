@@ -19,11 +19,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
+
 package org.teiid.resource.adapter.google;
 
 import javax.resource.cci.Connection;
 
-import org.teiid.resource.adapter.google.common.RectangleIdentifier;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.result.RowsResult;
 
@@ -34,7 +34,6 @@ import org.teiid.resource.adapter.google.result.RowsResult;
  */
 public interface GoogleSpreadsheetConnection extends Connection {
 	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit);
-	public RowsResult executeProcedureGetAsText(String worksheetName, RectangleIdentifier rectangle);
 	/**
 	 * Returns information about existing Spreadsheets and worksheets.
 	 * @return

@@ -865,4 +865,88 @@ public final class StringUtil {
 		return result;
 	}
 	
+	/**
+	 * Unescape the given string
+	 * @param string
+	 * @param quoteChar
+	 * @param useAsciiExcapes
+	 * @param sb a scratch buffer to use
+	 * @return
+	 */
+    public static String unescape(CharSequence string, int quoteChar, boolean useAsciiExcapes, StringBuilder sb) {
+    	boolean escaped = false;
+    	
+    	for (int i = 0; i < string.length(); i++) {
+    		char c = string.charAt(i);
+    		if (escaped) {
+	    		switch (c) {
+	    		case 'b':
+	    			sb.append('\b');
+	    			break;
+	    		case 't':
+	    			sb.append('\t');
+	    			break;
+	    		case 'n':
+	    			sb.append('\n');
+	    			break;
+	    		case 'f':
+	    			sb.append('\f');
+	    			break;
+	    		case 'r':
+	    			sb.append('\r');
+	    			break;
+	    		case 'u':
+					i = parseNumericValue(string, sb, i, 0, 4, 4);
+					//TODO: this should probably be strict about needing 4 digits
+	    			break;
+    			default:
+    				if (c == quoteChar) {
+    					sb.append(quoteChar);
+    				} else if (useAsciiExcapes) {
+	    				int value = Character.digit(c, 8);
+						if (value == -1) {
+							sb.append(c);
+						} else {
+							int possibleDigits = value < 3 ? 2:1;
+							int radixExp = 3;
+	    					i = parseNumericValue(string, sb, i, value, possibleDigits, radixExp);
+	    				}
+    				}
+	    		}
+	    		escaped = false;
+    		} else {
+    			if (c == '\\') {
+    				escaped = true;
+    			} else if (c == quoteChar) {
+    				break;
+    			} else {
+					sb.append(c);
+    			}
+    		}
+    	}
+    	//TODO: should this be strict?
+    	//if (escaped) {
+    		//throw new FunctionExecutionException();
+    	//}
+    	return sb.toString();
+    }
+
+	private static int parseNumericValue(CharSequence string, StringBuilder sb,
+			int i, int value, int possibleDigits, int radixExp) {
+		for (int j = 0; j < possibleDigits; j++) {
+			if (i + 1 == string.length()) {
+				break;
+			}
+			char digit = string.charAt(i + 1);
+			int val = Character.digit(digit, 1 << radixExp);
+			if (val == -1) {
+				break;
+			}
+			i++;
+			value = (value << radixExp) + val;
+		}
+		sb.append((char)value);
+		return i;
+	}
+	
 }

@@ -32,12 +32,6 @@
   	    <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
-	<dependency>
-        <groupId>net.sf.opencsv</groupId>
-	    <artifactId>opencsv</artifactId>
-	    <version>2.3</version>
-	    <scope>provided</scope>
-	</dependency>
        <!-- can't do this but this should be possible! 
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>

@@ -21,26 +21,21 @@
  */
 package org.teiid.resource.adapter.google;
 
-import java.util.List;
-
 import javax.resource.ResourceException;
 
 import org.teiid.core.BundleUtil;
-
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
 public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
 	private static final long serialVersionUID = -1832915223199053471L;
-	public static final String CLIENT_LOGIN = "ClientLogin";
-	public static final String OAUTH2_LOGIN = "OAuth2";
+	public static final String CLIENT_LOGIN = "ClientLogin"; //$NON-NLS-1$
+	public static final String OAUTH2_LOGIN = "OAuth2"; //$NON-NLS-1$
 	private long batchSize;
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
-	public static final String SPREADSHEET_NAME = "SpreadsheetName";
+	public static final String SPREADSHEET_NAME = "SpreadsheetName"; //$NON-NLS-1$
 
-	//Contains XML with configuration of additional metadata supplied by user
-	private String spreadsheetInfo;
 	private String spreadsheetName;
 	
 	//Can be either ClientLogin or OAuth2
@@ -125,17 +120,8 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 		return batchSize;
 	}
 
-	
 	public void setBatchSize(long batchSize) {
 		this.batchSize = batchSize;
-	}
-
-	public String getSpreadsheetInfo() {
-		return spreadsheetInfo;
-	}
-
-	public void setSpreadsheetInfo(String spreadsheetInfo) {
-		this.spreadsheetInfo = spreadsheetInfo;
 	}
 
 	public String getAuthMethod() {
@@ -161,7 +147,5 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
 	}
-	
-	
 	
 }

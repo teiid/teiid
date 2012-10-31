@@ -33,5 +33,9 @@ public class SpreadsheetInfo {
 		return worksheetByName.get(worksheet);		
 	}
 	
+	public String getSpreadsheetName() {
+		return spreadsheetName;
+	}
+	
 	
 }

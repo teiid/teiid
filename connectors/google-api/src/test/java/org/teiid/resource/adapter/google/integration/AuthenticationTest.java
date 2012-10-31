@@ -1,11 +1,30 @@
-package org.teiid.resource.adapter.google.integration;
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
 
-import java.io.IOException;
+package org.teiid.resource.adapter.google.integration;
 
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.resource.adapter.google.auth.ClientLoginHeaderFactory;
-import org.teiid.resource.adapter.google.auth.OAuth2AuthenticatorGoogle;
 import org.teiid.resource.adapter.google.auth.OAuth2HeaderFactory;
 import org.teiid.resource.adapter.google.common.SheetRow;
 import org.teiid.resource.adapter.google.dataprotocol.GoogleDataProtocolAPI;
@@ -18,15 +37,10 @@ import org.teiid.resource.adapter.google.result.RowsResult;
  *
  */
 @Ignore
+@SuppressWarnings("nls")
 public class AuthenticationTest extends IntegrationTest {
 //	private String refreshToken ="1/j7FBwqkdGxCwSFAT1VxZAev7HC2qOamO9UXX_Xxz2nQ";
 	private String refreshToken ="1/A6ifXgNxCYVGTkPUTnD6Y35v_GyfmuRAsKKL4eww8xs";
-	
-	@Test
-	public void google() throws IOException{
-		OAuth2AuthenticatorGoogle oauth = new OAuth2AuthenticatorGoogle();
-		oauth.flow();
-	}
 	
 	@Test
 	public void clientLoginGData(){

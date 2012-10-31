@@ -1,80 +1,69 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.resource.adapter.google.metadata;
 
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.teiid.resource.adapter.google.common.Util;
 
-public class Worksheet implements Iterable<Column> {
+public class Worksheet {
 	private String name;
-	/**
-	 * Header names indexed by alpha col names
-	 */
-	private Map<String,Column> columnsByAlpha = new TreeMap<String,Column>();
-	private int columnCount = 0;
-
+	private List<Column> columns = Collections.emptyList();
+	
+	public List<Column> getColumns() {
+		return columns;
+	}
+	
+	public void setColumns(List<Column> columns) {
+		this.columns = columns;
+	}
 
 	public void setColumnCount(int columnCount) {
-		this.columnCount = columnCount;
+		if (columnCount == 0) {
+			columns = Collections.emptyList();
+		} else {
+			columns = new ArrayList<Column>(columnCount);
+			for (int i = 1; i <= columnCount; i++) {
+				Column newCol = new  Column();
+				newCol.setAlphaName(Util.convertColumnIDtoString(i));
+				columns.add(newCol);
+			}
+		}
 	}
 
 	public Worksheet( String name) {
 		this.name = name;
 	}
-	
 
 	public String getName() {
 		return name;
 	}
 	
-	
-	public Iterator<Column> iterator(){
-		return new Iterator<Column>() {
-			private int position = 0;
-			@Override
-			public void remove() {				
-			}
-			
-			@Override
-			public Column next() {
-				return getColumn(++position);
-			}
-			
-			@Override
-			public boolean hasNext() {
-				return position+1 <= columnCount; 
-			}
-		};
-	}
-	
-	public Column getColumn(int col){
-		return getColumn(Util.convertColumnIDtoString(col));
-	}
-	
-	/**
-	 * Ensures Column is in map
-	 * @param header
-	 * @return
-	 */
-	public Column getColumn(String alpha) {
-		if (columnsByAlpha.containsKey(alpha))
-			return columnsByAlpha.get(alpha);
-		
-		Column newCol = new  Column();
-		newCol.setAlphaName(alpha);
-		columnsByAlpha.put(alpha, newCol);
-		return newCol;
-	}
-
 	public int getColumnCount() {
-		// TODO Auto-generated method stub
-		return columnCount;
+		return columns.size();
 	}
-
-
-
-	
 	
 }

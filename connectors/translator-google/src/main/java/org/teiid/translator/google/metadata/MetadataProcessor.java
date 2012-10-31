@@ -1,22 +1,37 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.translator.google.metadata;
 
 
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Procedure;
-import org.teiid.metadata.ProcedureParameter;
-import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table;
-import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 import org.teiid.resource.adapter.google.metadata.Column;
 import org.teiid.resource.adapter.google.metadata.SpreadsheetInfo;
 import org.teiid.resource.adapter.google.metadata.Worksheet;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
-import org.teiid.translator.google.Constants;
 
 public class MetadataProcessor {
-
 	
 	MetadataFactory metadataFactory;
 	SpreadsheetInfo spreadsheetMetadata;
@@ -31,14 +46,9 @@ public class MetadataProcessor {
  * 
  */
 	public void processMetadata() {
-		try {
 		for (Worksheet worksheet : spreadsheetMetadata.getWorksheets()) {			
 				addTable(worksheet);
 
-		}
-		addProcedures();
-		} catch (Exception ex)	{
-			throw new SpreadsheetOperationException("Error processing metadata" ,ex);
 		}
 	}
 	/**
@@ -48,15 +58,15 @@ public class MetadataProcessor {
 	 * @param worksheet    Name of the worksheet
 	 * @throws TranslatorException
 	 */
-	private void addTable(Worksheet worksheet) throws TranslatorException{
-		Table table=null;
+	private void addTable(Worksheet worksheet) {
 		if (worksheet.getColumnCount() == 0){
-		return;
+			return;
 		}
-		table=metadataFactory.addTable(worksheet.getName());
+		Table table=metadataFactory.addTable(worksheet.getName());
+		table.setNameInSource(worksheet.getName()); 
 		addColumnsToTable(table, worksheet);
-
 	}
+	
 	/**
 	 * Adds column to table
 	 * 
@@ -64,72 +74,32 @@ public class MetadataProcessor {
 	 * @param worksheet  
 	 * @throws TranslatorException
 	 */
-	private void addColumnsToTable(Table table, Worksheet worksheet) throws TranslatorException{
-
-
-		for(Column column : worksheet){ 
+	private void addColumnsToTable(Table table, Worksheet worksheet) {
+		for(Column column : worksheet.getColumns()){
+			String type = null;
 			switch(column.getDataType()){
 			case DATE:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.DATE, table);
-				break;
-			case DOUBLE:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.DOUBLE, table);
-				break;
-			case STRING:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.STRING, table);
-				break;
-			case TIME:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.TIME, table);
-				break;
-			case CHAR:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.CHAR, table);
-				break;
-			case BIG_DECIMAL:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.BIG_DECIMAL, table);
-				break;
-			case BIG_INTEGER:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.BIG_INTEGER, table);
+				type = TypeFacility.RUNTIME_NAMES.DATE;
 				break;
 			case BOOLEAN:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.BOOLEAN, table);
+				type = TypeFacility.RUNTIME_NAMES.BOOLEAN;
 				break;
-			case FLOAT:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.FLOAT, table);
+			case DATETIME:
+				type = TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 				break;
-			case INTEGER:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.INTEGER, table);
+			case NUMBER:
+				type = TypeFacility.RUNTIME_NAMES.DOUBLE;
 				break;
-			case LONG:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.LONG, table);
-				break;				
-			case SHORT:
-				metadataFactory.addColumn(column.getAlphaName(), DataTypeManager.DefaultDataTypes.SHORT, table);
+			case TIMEOFDAY:
+				type = TypeFacility.RUNTIME_NAMES.TIME;
 				break;
 			default:
-				new TranslatorException("Unsupported column type: "+column.getDataType());
-				break;			
-			}	
+				type = TypeFacility.RUNTIME_NAMES.STRING;
+			}
+			org.teiid.metadata.Column c = metadataFactory.addColumn(column.getLabel()!=null?column.getLabel():column.getAlphaName(), type, table);
+			c.setNameInSource(column.getAlphaName());
+			c.setNativeType(column.getDataType().name());
 		}    
-	}
-	/**
-	 * Adds procedures to metadataFactory
-	 * 
-	 * @throws TranslatorException
-	 */
-	private void addProcedures() throws TranslatorException{
-		Procedure p = metadataFactory.addProcedure(Constants.GETASTEXT);
-		p.setAnnotation("Returns part of the spreadsheet as text"); //$NON-NLS-1$
-		ProcedureParameter param1 = metadataFactory.addProcedureParameter("worksheet", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$
-		param1.setAnnotation("Worksheet name"); //$NON-NLS-1$
-		ProcedureParameter param2 = metadataFactory.addProcedureParameter("startRow", TypeFacility.RUNTIME_NAMES.INTEGER, Type.In, p); //$NON-NLS-1$
-		param2.setAnnotation("Starting row"); //$NON-NLS-1$
-		ProcedureParameter param3 = metadataFactory.addProcedureParameter("startCol", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
-		param3.setAnnotation("Starting column"); //$NON-NLS-1$
-		ProcedureParameter param4 = metadataFactory.addProcedureParameter("endRow", TypeFacility.RUNTIME_NAMES.INTEGER, Type.In, p); //$NON-NLS-1$
-		param4.setAnnotation("Ending row"); //$NON-NLS-1$
-		ProcedureParameter param5 = metadataFactory.addProcedureParameter("endCol", TypeFacility.RUNTIME_NAMES.OBJECT, Type.In, p); //$NON-NLS-1$
-		param5.setAnnotation("Ending column"); //$NON-NLS-1$
-		metadataFactory.addProcedureResultSetColumn("csv", TypeFacility.RUNTIME_NAMES.CLOB, p); //$NON-NLS-1$
 	}
 	
 }
