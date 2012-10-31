@@ -1,4 +1,7 @@
-<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
+<!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file 
+Add the following in ${jboss-as}/modules/sun/jdk/main/module.xml
+<path name="sun/jdbc/odbc"/>
+-->
 <datasources>
     <datasource jndi-name="java:/odbcDS" pool-name="odbcDS">
         <!-- Create a DSN using ODBC driver manager, and replace {DSN} below with your DSN name -->
@@ -7,7 +10,7 @@
        <!-- For DSN less connection URL use the below form to connect to a Excel Sheet
           <connection-url>jdbc:odbc:Driver={Microsoft Excel Driver (*.xls)};Dbq=c:\ODBC\ExcelData.xls</connection-url>
         -->      
-         <driver-class>sun.jdbc.odbc.JdbcOdbcDriver</driver-class>
+        <driver>odbc</driver>
         <transaction-isolation>TRANSACTION_NONE</transaction-isolation>
         
         <pool>
@@ -19,5 +22,10 @@
             <user-name>{user}</user-name>
             <password>{password}</password>
         </security>
-    </datasource>                               
+    </datasource>     
+    <drivers>
+        <driver name="odbc" module="sun.jdk">
+        	<driver-class>sun.jdbc.odbc.JdbcOdbcDriver</driver-class>
+    	</driver>
+	</drivers>    
 </datasources>
