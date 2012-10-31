@@ -61,8 +61,14 @@ public class AuthUrlResponse {
 		this.deviceCode = (String)deviceCode;
 		this.userCode = (String)userCode;
 		this.verificationUrl = (String)verificationUrl;
-		this.expiresIn = (Integer)expiresIn;
-		this.interval = (Integer)interval;
+		Number n = (Number)expiresIn;
+		if (n != null) {
+			this.expiresIn = n.intValue();
+		}
+		n = (Number)interval;
+		if (n != null) {
+			this.interval = n.intValue();
+		}
 	}
 	@Override
 	@SuppressWarnings("nls")
