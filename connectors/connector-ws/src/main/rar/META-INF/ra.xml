@@ -72,9 +72,30 @@
             </config-property>
                         
             <config-property>
-                <description>{$display:"Configuration Name",$description:"Local name of the QName of the port configuration to use with this connection.  The port namespace URI should be http://teiid.org"}</description>
+                <description>{$display:"Configuration Name",$description:"DEPRECATED: see EndPointName"}</description>
                 <config-property-name>ConfigName</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+             <config-property>
+                <description>{$display:"End Point Name",$description:"Local part of the end point QName to use with this connection.  Defaults to teiid"}</description>
+                <config-property-name>EndPointName</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+                <config-property-value>teiid</config-property-value>
+            </config-property>
+            
+             <config-property>
+                <description>{$display:"Service Name",$description:"Local part of the service QName to use with this connection.  Defaults to teiid"}</description>
+                <config-property-name>ServiceName</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+                <config-property-value>teiid</config-property-value>
+            </config-property>
+            
+            <config-property>
+                <description>{$display:"Namespace URI",$description:"Namespace URI of the service QName to use with this connection.  Defaults to http://teiid.org"}</description>
+                <config-property-name>NamespaceUri</config-property-name>
+                <config-property-type>java.lang.String</config-property-type>
+                <config-property-value>http://teiid.org</config-property-value>
             </config-property>
             
             <config-property>

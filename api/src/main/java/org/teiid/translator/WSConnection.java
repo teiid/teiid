@@ -27,6 +27,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 import javax.resource.cci.Connection;
+import javax.xml.namespace.QName;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.ws.Dispatch;
@@ -39,7 +40,13 @@ public interface WSConnection extends Connection {
 
 	<T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
 	
+	<T> Dispatch<T> createDispatch(Class<T> type, Service.Mode mode) throws IOException;
+	
 	String getWsdl();
+	
+	QName getServiceQName();
+	
+	QName getPortQName();
 
 	public static class Util {
 		

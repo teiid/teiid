@@ -24,23 +24,10 @@ package org.teiid.translator.ws;
 import java.util.List;
 import java.util.Map;
 
-import javax.wsdl.Binding;
-import javax.wsdl.BindingInput;
-import javax.wsdl.BindingOperation;
-import javax.wsdl.Definition;
-import javax.wsdl.Input;
-import javax.wsdl.Message;
-import javax.wsdl.Operation;
-import javax.wsdl.Output;
-import javax.wsdl.Port;
-import javax.wsdl.Service;
-import javax.wsdl.WSDLException;
+import javax.wsdl.*;
 import javax.wsdl.extensions.ExtensibilityElement;
-import javax.wsdl.extensions.http.HTTPAddress;
 import javax.wsdl.extensions.http.HTTPBinding;
-import javax.wsdl.extensions.soap.SOAPAddress;
 import javax.wsdl.extensions.soap.SOAPBinding;
-import javax.wsdl.extensions.soap.SOAPBody;
 import javax.wsdl.extensions.soap.SOAPOperation;
 import javax.wsdl.extensions.soap12.SOAP12Binding;
 import javax.wsdl.factory.WSDLFactory;
@@ -49,25 +36,18 @@ import javax.xml.namespace.QName;
 
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
 
 public class WSDLMetadataProcessor {
-	private final static String DEFAULT_SOAP_ENCODING = "http://schemas.xmlsoap.org/soap/encoding/"; //$NON-NLS-1$
-	static final String BINDING = "binding"; //$NON-NLS-1$
-	static final String ACTION = "action"; //$NON-NLS-1$
-	static final String ENDPOINT = "endpoint"; //$NON-NLS-1$
-	static final String ENCODING = "encoding"; //$NON-NLS-1$
-	static final String XML_PARAMETER = "xml-parameter"; //$NON-NLS-1$
 	
 	private Definition definition;
-	private String serviceName;
-	private String portName;
-	
 	
 	public WSDLMetadataProcessor(String wsdl) throws TranslatorException {
 		try {
@@ -79,79 +59,26 @@ public class WSDLMetadataProcessor {
 		}
 	}
 
-	public String getServiceName() {
-		return serviceName;
-	}
-
-	public void setServiceName(String serviceName) {
-		this.serviceName = serviceName;
-	}
-
-	public String getPortName() {
-		return portName;
-	}
-
-	public void setPortName(String portName) {
-		this.portName = portName;
-	}
-	
-	public void getMetadata(MetadataFactory mf, @SuppressWarnings("unused") WSConnection connection) throws TranslatorException {
+	public void getMetadata(MetadataFactory mf, WSConnection connection) throws TranslatorException {
 		Map<QName, Service> services = this.definition.getServices();
 		if (services == null || services.isEmpty()) {
-			return;
+			throw new TranslatorException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15001, connection.getServiceQName()));
 		}
-		
-		Service service = null;
-		for (QName name:services.keySet()) {
-			// if service name not defined then get the first one.
-			if (this.serviceName == null) {
-				service = services.get(name);
-				break;
-			}
-			if (name.getLocalPart().equalsIgnoreCase(this.serviceName)) {
-				service = services.get(name);
-				break;
-			}
-		}
+		Service service = services.get(connection.getServiceQName());
 		
 		if (service == null) {
-			throw new TranslatorException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15001, this.serviceName));
+			throw new TranslatorException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15001, connection.getServiceQName()));
 		}
 		
-		getServiceMetadata(mf,service);
-	}
-	
-	private void getServiceMetadata(MetadataFactory mf, Service service) throws TranslatorException {
-		Port port = null;
 		Map<String, Port> ports = service.getPorts();
-		for (String name:ports.keySet()) {
-			if (this.portName == null) {
-				port = ports.get(name);
-				break;
-			}
-			if (name.equalsIgnoreCase(this.portName)) {
-				port = ports.get(name);
-				break;
-			}
-		}
-		
+		Port port = ports.get(connection.getPortQName().getLocalPart());
 		if (port == null) {
-			throw new TranslatorException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15002, this.portName, this.serviceName));
+			throw new TranslatorException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15002, connection.getPortQName(), connection.getServiceQName()));
 		}
 		getPortMetadata(mf, port);
 	}
 	
 	private void getPortMetadata(MetadataFactory mf, Port port) throws TranslatorException {
-		String address = null;
-        
-		ExtensibilityElement addressExtension = getExtensibilityElement(port.getExtensibilityElements(), "address"); //$NON-NLS-1$
-        if(addressExtension instanceof SOAPAddress){
-           address = ((SOAPAddress)addressExtension).getLocationURI();
-        }
-        else if (addressExtension instanceof HTTPAddress) {
-        	address = ((HTTPAddress)addressExtension).getLocationURI();
-        }
-		
 		Binding binding = port.getBinding();
 		List<BindingOperation> operations = binding.getBindingOperations();
 		if (operations == null || operations.isEmpty()) {
@@ -161,7 +88,7 @@ public class WSDLMetadataProcessor {
 		WSExecutionFactory.Binding executionBinding = extractExecutionBinding(binding);
 		if (executionBinding == WSExecutionFactory.Binding.SOAP11 || executionBinding == WSExecutionFactory.Binding.SOAP12) {
 			for (BindingOperation bindingOperation:operations) {
-				buildSoapOperation(mf, bindingOperation, executionBinding, address);		
+				buildSoapOperation(mf, bindingOperation);		
 			}
 		}
 	}
@@ -185,11 +112,9 @@ public class WSDLMetadataProcessor {
 	}
 	
 	private void buildSoapOperation(MetadataFactory mf,
-			BindingOperation bindingOperation,
-			WSExecutionFactory.Binding binding, String endpoint) {
+			BindingOperation bindingOperation) {
 		
 		Operation operation = bindingOperation.getOperation();
-		BindingInput bindingInput = bindingOperation.getBindingInput();
 				
 		// add input
 		String inputXML = null;
@@ -211,45 +136,30 @@ public class WSDLMetadataProcessor {
 			}
 		}
 		
-		String encodingStyle = DEFAULT_SOAP_ENCODING;
-		String action = null;
 		ExtensibilityElement operationExtension = getExtensibilityElement(bindingOperation.getExtensibilityElements(), "operation"); //$NON-NLS-1$
-		if (operationExtension instanceof SOAPOperation) {
-			// soap:operation
-			SOAPOperation soapOperation = (SOAPOperation) operationExtension;
-			action = soapOperation.getSoapActionURI();
-			String style = soapOperation.getStyle();
-			if (style.equalsIgnoreCase("rpc")) { //$NON-NLS-1$
-				LogManager.logInfo(LogConstants.CTX_CONNECTOR, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15004, operation.getName()));
-				return;
-			}
-			
-			ExtensibilityElement bodyExtension = getExtensibilityElement(bindingInput.getExtensibilityElements(), "body"); //$NON-NLS-1$
-			if (bodyExtension instanceof SOAPBody) {
-				SOAPBody soapBody = (SOAPBody) bodyExtension;
-				List styles = soapBody.getEncodingStyles();
-				if (styles != null) {
-					encodingStyle = styles.get(0).toString();
-				}
-			}
-			
+		if (!(operationExtension instanceof SOAPOperation)) {
+			return;
 		}
-		else {
+		// soap:operation
+		SOAPOperation soapOperation = (SOAPOperation) operationExtension;
+		String style = soapOperation.getStyle();
+		if (style.equalsIgnoreCase("rpc")) { //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_CONNECTOR, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15004, operation.getName()));
 			return;
 		}
 
 		Procedure procedure = mf.addProcedure(operation.getName());
 		procedure.setVirtual(false);
+		procedure.setNameInSource(operation.getName());
 		
 		mf.addProcedureParameter(inputXML, TypeFacility.RUNTIME_NAMES.XML, Type.In, procedure);
-		mf.addProcedureParameter(outXML, TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, procedure);
 		
-		procedure.setProperty(MetadataFactory.WS_URI+ENCODING, encodingStyle);
-		procedure.setProperty(MetadataFactory.WS_URI+BINDING, binding.name());
-		procedure.setProperty(MetadataFactory.WS_URI+ACTION, action);
-		if (endpoint != null) {
-			procedure.setProperty(MetadataFactory.WS_URI+ENDPOINT, endpoint);
-		}
+		ProcedureParameter param = mf.addProcedureParameter("stream", TypeFacility.RUNTIME_NAMES.BOOLEAN, Type.In, procedure); //$NON-NLS-1$
+		param.setAnnotation("If the result should be streamed."); //$NON-NLS-1$
+		param.setNullType(NullType.Nullable);
+		param.setDefaultValue("false"); //$NON-NLS-1$
+		
+		mf.addProcedureParameter(outXML, TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, procedure);
 	}
 	
 	private ExtensibilityElement getExtensibilityElement(List<ExtensibilityElement> elements, String type) {

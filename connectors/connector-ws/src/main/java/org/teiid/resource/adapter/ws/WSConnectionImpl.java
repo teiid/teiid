@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -61,6 +63,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.MetadataException;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.WSConnection;
 
@@ -188,14 +191,31 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		}
 	}
 	
-	static final String DEFAULT_NAMESPACE_URI = "http://teiid.org"; //$NON-NLS-1$ 
-	static final String DEFAULT_LOCAL_NAME = "teiid"; //$NON-NLS-1$
-
-	private static QName svcQname = new QName(DEFAULT_NAMESPACE_URI, DEFAULT_LOCAL_NAME); 
 	private WSManagedConnectionFactory mcf;
+	private Service wsdlService;
 	
 	public WSConnectionImpl(WSManagedConnectionFactory mcf) {
 		this.mcf = mcf;
+	}
+	
+	public <T> Dispatch<T> createDispatch(Class<T> type, Mode mode) throws IOException {
+		if (wsdlService == null) {
+			Bus bus = BusFactory.getThreadDefaultBus();
+			BusFactory.setThreadDefaultBus(mcf.getBus());
+			try {
+				wsdlService = Service.create(new URI(mcf.getWsdl()).toURL(), this.mcf.getServiceQName());
+			} catch (URISyntaxException e) {
+				throw new MetadataException(e);
+			} finally {
+				BusFactory.setThreadDefaultBus(bus);
+			}
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_WS, MessageLevel.DETAIL)) {
+				LogManager.logDetail(LogConstants.CTX_WS, "Created the WSDL service for", mcf.getWsdl()); //$NON-NLS-1$
+			}
+		}
+		Dispatch<T> dispatch = wsdlService.createDispatch(mcf.getPortQName(), type, mode);
+		setDispatchProperties(dispatch);
+		return dispatch;
 	}
 
 	public <T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Mode mode) {
@@ -250,7 +270,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			BusFactory.setThreadDefaultBus(mcf.getBus());
 			Service svc;
 			try {
-				svc = Service.create(svcQname);
+				svc = Service.create(mcf.getServiceQName());
 			} finally {
 				BusFactory.setThreadDefaultBus(bus);
 			}
@@ -271,14 +291,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			}
 		}
 		
-		if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
-			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, mcf.getAuthUserName());
-			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, mcf.getAuthPassword());
-		}
-		
-		if (mcf.getRequestTimeout() != -1L){
-			dispatch.getRequestContext().put("javax.xml.ws.client.receiveTimeout", mcf.getRequestTimeout()); //$NON-NLS-1$
-		}		
+		setDispatchProperties(dispatch);		
 		
 		if (HTTPBinding.HTTP_BINDING.equals(binding)) {
 	        Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
@@ -292,6 +305,17 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		return dispatch;
 	}
 
+	private <T> void setDispatchProperties(Dispatch<T> dispatch) {
+		if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
+			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, mcf.getAuthUserName());
+			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, mcf.getAuthPassword());
+		}
+		
+		if (mcf.getRequestTimeout() != -1L){
+			dispatch.getRequestContext().put("javax.xml.ws.client.receiveTimeout", mcf.getRequestTimeout()); //$NON-NLS-1$
+		}
+	}
+
 	@Override
 	public void close() throws ResourceException {
 		
@@ -300,5 +324,15 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 	@Override
 	public String getWsdl() {
 		return this.mcf.getWsdl();
+	}
+	
+	@Override
+	public QName getServiceQName() {
+		return this.mcf.getServiceQName();
+	}
+	
+	@Override
+	public QName getPortQName() {
+		return this.mcf.getPortQName();
 	}
 }

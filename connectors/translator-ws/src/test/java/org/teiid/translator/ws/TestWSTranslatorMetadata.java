@@ -22,11 +22,12 @@
 
 package org.teiid.translator.ws;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.Properties;
 
 import javax.activation.DataSource;
+import javax.xml.namespace.QName;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.Service;
@@ -52,11 +53,11 @@ public class TestWSTranslatorMetadata {
 		WSExecutionFactory ef = new WSExecutionFactory();
 		
 		Properties props = new Properties();
-		props.setProperty("importer.servicename", "XigniteQuotes");
-		props.setProperty("importer.portname", "XigniteQuotesSoap");
 
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
 		Mockito.stub(mockConnection.getWsdl()).toReturn(UnitTestUtil.getTestDataPath()+"/xquotes.wsdl");
+		Mockito.stub(mockConnection.getServiceQName()).toReturn(new QName("http://www.xignite.com/services/", "XigniteQuotes"));
+		Mockito.stub(mockConnection.getPortQName()).toReturn(new QName("http://www.xignite.com/services/", "XigniteQuotesSoap"));
 		
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 		ef.getMetadata(mf, mockConnection);
@@ -68,19 +69,15 @@ public class TestWSTranslatorMetadata {
 		
 		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
 		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(Mockito.mock(StAXSource.class));
-		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+		Mockito.stub(mockConnection.createDispatch(Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		
 		CommandBuilder cb = new CommandBuilder(tm);
 		
 		Call call = (Call)cb.getCommand("call GetFundQuote('<foo/>')");
-		assertEquals("SOAP11", call.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.BINDING, false));
-		assertEquals("http://www.xignite.com/services/GetFundQuote", call.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.ACTION, false));
-		assertEquals("http://www.xignite.com/xquotes.asmx", call.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.ENDPOINT, false));
-		WSProcedureExecution wpe = new WSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
+		WSWSDLProcedureExecution wpe = new WSWSDLProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		wpe.execute();
 		wpe.getOutputParameterValues();
 	}
-	
 	
 	@Ignore
 	@Test public void testHttpMetadata() throws Exception {
@@ -108,9 +105,6 @@ public class TestWSTranslatorMetadata {
 		CommandBuilder cb = new CommandBuilder(tm);
 		
 		Call call = (Call)cb.getCommand("call GetFundQuote('<foo/>')");
-		assertEquals("HTTP", call.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.BINDING, false));
-		assertEquals("GET", call.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.ACTION, false));
-		assertEquals("http://www.xignite.com/GetFundQuote", call.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.ENDPOINT, false));
 		WSProcedureExecution wpe = new WSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		wpe.execute();
 		wpe.getOutputParameterValues();

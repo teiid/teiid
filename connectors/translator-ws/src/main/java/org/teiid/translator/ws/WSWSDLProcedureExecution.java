@@ -22,19 +22,16 @@
 
 package org.teiid.translator.ws;
 
+import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamResult;
 import javax.xml.ws.Dispatch;
 import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
@@ -51,13 +48,12 @@ import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 import org.teiid.translator.WSConnection.Util;
-import org.teiid.translator.ws.WSExecutionFactory.Binding;
 import org.teiid.util.StAXSQLXML;
 
 /**
- * A soap call executor - handles all styles doc/literal, rpc/encoded etc. 
+ * A WSDL soap call executor 
  */
-public class WSProcedureExecution implements ProcedureExecution {
+public class WSWSDLProcedureExecution implements ProcedureExecution {
 
 	RuntimeMetadata metadata;
     ExecutionContext context;
@@ -69,7 +65,7 @@ public class WSProcedureExecution implements ProcedureExecution {
     /** 
      * @param env
      */
-    public WSProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
+    public WSWSDLProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
         this.metadata = metadata;
         this.context = context;
         this.procedure = procedure;
@@ -80,54 +76,19 @@ public class WSProcedureExecution implements ProcedureExecution {
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
         
-        String style = (String)arguments.get(0).getArgumentValue().getValue();
-        String action = (String)arguments.get(1).getArgumentValue().getValue();
-        XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
+        XMLType docObject = (XMLType)arguments.get(0).getArgumentValue().getValue();
         StAXSource source = null;
     	try {
 	        source = convertToSource(docObject);
-	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
 	        
-	        if (style == null) {
-	        	style = executionFactory.getDefaultBinding().getBindingId();
-	        } else {
-	        	try {
-		        	Binding type = Binding.valueOf(style.toUpperCase());
-		        	style = type.getBindingId();
-	        	} catch (IllegalArgumentException e) {
-	        		throw new TranslatorException(WSExecutionFactory.UTIL.getString("invalid_invocation", Arrays.toString(Binding.values()))); //$NON-NLS-1$
-	        	}
+	        Dispatch<StAXSource> dispatch = conn.createDispatch(StAXSource.class, executionFactory.getDefaultServiceMode());
+	        String operation = this.procedure.getProcedureName();
+	        if (this.procedure.getMetadataObject() != null && this.procedure.getMetadataObject().getNameInSource() != null) {
+	        	operation = this.procedure.getMetadataObject().getNameInSource();
 	        }
-	        
-	        Dispatch<StAXSource> dispatch = conn.createDispatch(style, endpoint, StAXSource.class, executionFactory.getDefaultServiceMode()); 
+	        QName opQName = new QName(conn.getServiceQName().getNamespaceURI(), operation);
+	        dispatch.getRequestContext().put(MessageContext.WSDL_OPERATION, opQName); 
 	
-			if (Binding.HTTP.getBindingId().equals(style)) {
-				if (action == null) {
-					action = "POST"; //$NON-NLS-1$
-				}
-				dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, action);
-				if (source != null && !"POST".equalsIgnoreCase(action)) { //$NON-NLS-1$
-					if (this.executionFactory.getXMLParamName() == null) {
-						throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
-					}
-					try {
-						Transformer t = TransformerFactory.newInstance().newTransformer();
-						StringWriter writer = new StringWriter();
-						//TODO: prevent this from being too large 
-				        t.transform(source, new StreamResult(writer));
-						String param = Util.httpURLEncode(this.executionFactory.getXMLParamName())+"="+Util.httpURLEncode(writer.toString()); //$NON-NLS-1$
-						endpoint = WSConnection.Util.appendQueryString(endpoint, param);
-					} catch (TransformerException e) {
-						throw new WebServiceException(e);
-					}
-				}
-			} else {
-				if (action != null) {
-					dispatch.getRequestContext().put(Dispatch.SOAPACTION_USE_PROPERTY, Boolean.TRUE);
-					dispatch.getRequestContext().put(Dispatch.SOAPACTION_URI_PROPERTY, action);
-				}
-			}
-			
 			if (source == null) {
 				// JBoss Native DispatchImpl throws exception when the source is null
 				source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<none/>"))); //$NON-NLS-1$
@@ -138,6 +99,8 @@ public class WSProcedureExecution implements ProcedureExecution {
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		} catch (XMLStreamException e) {
+			throw new TranslatorException(e);
+		} catch (IOException e) {
 			throw new TranslatorException(e);
 		} finally {
 			Util.closeSource(source);
@@ -159,7 +122,7 @@ public class WSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
+		if (returnValue != null && procedure.getArguments().size() > 1 && Boolean.TRUE.equals(procedure.getArguments().get(1).getArgumentValue().getValue())) {
 			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
 			XMLType xml = new XMLType(sqlXml);
 			xml.setType(Type.DOCUMENT);
