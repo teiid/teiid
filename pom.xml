@@ -38,6 +38,7 @@
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
         <version.sun.jaxb>2.2.4</version.sun.jaxb>
+        <version.javax.wsdl4j>1.6.2</version.javax.wsdl4j>
         <version.junit>4.10</version.junit>
 	</properties>
 	<scm>
@@ -669,7 +670,12 @@
                 <groupId>org.jboss.marshalling</groupId>
                 <artifactId>jboss-marshalling</artifactId>
                 <version>${version.org.jboss.marshalling.jboss-marshalling}</version>
-            </dependency>                                       
+            </dependency>
+            <dependency>
+                <groupId>wsdl4j</groupId>
+                <artifactId>wsdl4j</artifactId>
+                <version>${version.javax.wsdl4j}</version>
+            </dependency>  
 		</dependencies>
 	</dependencyManagement>
 	<modules>

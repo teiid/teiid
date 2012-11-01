@@ -31,6 +31,11 @@
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+          <groupId>wsdl4j</groupId>
+          <artifactId>wsdl4j</artifactId>
+          <scope>provided</scope>
+        </dependency>        
     </dependencies>
 
     <build>

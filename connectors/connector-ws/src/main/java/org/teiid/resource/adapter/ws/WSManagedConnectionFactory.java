@@ -49,6 +49,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private String configName; // config name in the above file
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
+	private String wsdl;
 
 	private Bus bus;
 	private QName portQName;
@@ -147,6 +148,14 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	public QName getPortQName() {
 		return portQName;
 	}
+	
+	public String getWsdl() {
+		return wsdl;
+	}
+	
+	public void setWsdl(String wsdl) {
+		this.wsdl = wsdl;
+	}	
 	
 	public List<? extends Interceptor> getOutInterceptors() {
 		return outInterceptors;
