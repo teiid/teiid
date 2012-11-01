@@ -189,9 +189,19 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 					if (getConnectionName() == null) {
 						return null;
 					}
-					ConnectionFactoryProvider<?> connectionFactoryProvider = connectionFactoryProviders.get(getConnectionName());
+					org.teiid.resource.spi.ConnectionFactoryProvider<?> connectionFactoryProvider = connectionFactoryProviders.get(getConnectionName());
 					if (connectionFactoryProvider != null) {
-						return connectionFactoryProvider.getConnectionFactory();
+						try {
+							return connectionFactoryProvider.createConnectionFactory();
+						} catch (Exception e) {
+							if (e instanceof TranslatorException) {
+								throw (TranslatorException)e;
+							}
+							if (e instanceof RuntimeException) {
+								throw (RuntimeException)e;
+							}
+							throw new TranslatorException(e);
+						}
 					}
 					return super.getConnectionFactory();
 				}
@@ -199,6 +209,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 	}
 
+	/**
+	 * 
+	 * @Deprecated
+	 * @see org.teiid.resource.spi.ConnectionFactoryProvider
+	 */
 	public interface ConnectionFactoryProvider<T> {
 		T getConnectionFactory() throws TranslatorException;
 	}
@@ -227,7 +242,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	};
 	protected boolean throwMetadataErrors = true;
 	private ConcurrentHashMap<String, ExecutionFactory<?, ?>> translators = new ConcurrentHashMap<String, ExecutionFactory<?, ?>>();
-	private ConcurrentHashMap<String, ConnectionFactoryProvider<?>> connectionFactoryProviders = new ConcurrentHashMap<String, ConnectionFactoryProvider<?>>();
+	private ConcurrentHashMap<String, org.teiid.resource.spi.ConnectionFactoryProvider<?>> connectionFactoryProviders = new ConcurrentHashMap<String, org.teiid.resource.spi.ConnectionFactoryProvider<?>>();
 	protected SessionServiceImpl sessionService = new SessionServiceImpl();
 	protected ObjectReplicator replicator;
 	protected BufferServiceImpl bufferService = new BufferServiceImpl();
@@ -273,8 +288,24 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 	}
 
+	/**
+	 * @deprecated
+	 * @see #addConnectionFactoryProvider(String, ConnectionFactoryProvider)
+	 * @param name
+	 * @param connectionFactoryProvider
+	 */
 	public void addConnectionFactoryProvider(String name,
-			ConnectionFactoryProvider<?> connectionFactoryProvider) {
+			final ConnectionFactoryProvider<?> connectionFactoryProvider) {
+		this.connectionFactoryProviders.put(name, new org.teiid.resource.spi.ConnectionFactoryProvider() {
+			@Override
+			public Object createConnectionFactory() throws Exception {
+				return connectionFactoryProvider.getConnectionFactory();
+			}
+		});
+	}
+	
+	public void addConnectionFactoryProvider(String name,
+			org.teiid.resource.spi.ConnectionFactoryProvider<?> connectionFactoryProvider) {
 		this.connectionFactoryProviders.put(name, connectionFactoryProvider);
 	}
 
@@ -432,7 +463,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * Adds a default instance of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.  
 	 * @param ef
 	 */
-	public void addTranslator(Class<ExecutionFactory<?, ?>> clazz) {
+	public void addTranslator(Class<? extends ExecutionFactory<?, ?>> clazz) {
 		Translator t = clazz.getAnnotation(Translator.class);
 		String name = clazz.getName();
 		if (t != null) {
