@@ -55,6 +55,7 @@ public class MetadataFactory implements Serializable {
 	private static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
 	private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
 	private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
+	private static final String TEIID_WS = "teiid_ws"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = 8590341087771685630L;
 	
@@ -73,12 +74,14 @@ public class MetadataFactory implements Serializable {
 	private transient ModelMetaData model;
 	
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
+	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
 	
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
 		Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 		map.put(TEIID_RELATIONAL, AbstractMetadataRecord.RELATIONAL_URI.substring(1, AbstractMetadataRecord.RELATIONAL_URI.length()-1));
 		map.put(TEIID_SF, SF_URI.substring(1, SF_URI.length()-1));
+		map.put(TEIID_WS, WS_URI.substring(1, WS_URI.length()-1));
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
 	

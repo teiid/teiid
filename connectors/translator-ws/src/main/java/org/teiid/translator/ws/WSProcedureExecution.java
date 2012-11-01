@@ -44,6 +44,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
@@ -65,6 +66,8 @@ public class WSProcedureExecution implements ProcedureExecution {
     private StAXSource returnValue;
     private WSConnection conn;
     private WSExecutionFactory executionFactory;
+	private String serviceName;
+	private String portName;
     
     /** 
      * @param env
@@ -77,16 +80,63 @@ public class WSProcedureExecution implements ProcedureExecution {
         this.executionFactory = executionFactory;
     }
     
+    private String getStyle(boolean invokeProcedure, List<Argument> arguments) {
+    	if (invokeProcedure) {
+    		return (String)arguments.get(0).getArgumentValue().getValue();
+    	}
+    	return this.procedure.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.BINDING, false);
+    }
+    
+    private String getAction(boolean invokeProcedure, List<Argument> arguments) {
+    	if (invokeProcedure) {
+    		return (String)arguments.get(1).getArgumentValue().getValue();
+    	}
+    	return this.procedure.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.ACTION, false);
+    }
+    
+    private XMLType getInput(boolean invokeProcedure, List<Argument> arguments) {
+    	if (invokeProcedure) {
+    		return (XMLType)arguments.get(2).getArgumentValue().getValue();
+    	}
+    	return (XMLType)arguments.get(0).getArgumentValue().getValue();
+    }
+    
+    private String getEndpoint(boolean invokeProcedure, List<Argument> arguments) {
+    	if (invokeProcedure) {
+    		return (String)arguments.get(3).getArgumentValue().getValue();
+    	}
+    	return this.procedure.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.ENDPOINT, false);
+    }    
+    
+    private boolean isStreaming() {
+    	boolean invokeProcedure = this.procedure.getProcedureName().equals(WSExecutionFactory.INVOKE);
+    	if (invokeProcedure) {
+    		return procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue());
+    	}
+    	return false;
+    }
+    
+	private String getXMLParameter() {
+		String value = this.executionFactory.getXMLParamName();
+		if (value == null) {
+			value = this.procedure.getMetadataObject().getProperty(MetadataFactory.WS_URI+WSDLMetadataProcessor.XML_PARAMETER, false);
+		}
+		return value;
+	}
+	
     public void execute() throws TranslatorException {
+        
+        boolean invokeProcedure = this.procedure.getProcedureName().equals(WSExecutionFactory.INVOKE);
         List<Argument> arguments = this.procedure.getArguments();
         
-        String style = (String)arguments.get(0).getArgumentValue().getValue();
-        String action = (String)arguments.get(1).getArgumentValue().getValue();
-        XMLType docObject = (XMLType)arguments.get(2).getArgumentValue().getValue();
+        String style = getStyle(invokeProcedure, arguments);
+        String action = getAction(invokeProcedure, arguments);
+        XMLType docObject = getInput(invokeProcedure, arguments);
+        
         StAXSource source = null;
     	try {
 	        source = convertToSource(docObject);
-	        String endpoint = (String)arguments.get(3).getArgumentValue().getValue();
+	        String endpoint = getEndpoint(invokeProcedure, arguments);
 	        
 	        if (style == null) {
 	        	style = executionFactory.getDefaultBinding().getBindingId();
@@ -107,7 +157,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 				}
 				dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, action);
 				if (source != null && !"POST".equalsIgnoreCase(action)) { //$NON-NLS-1$
-					if (this.executionFactory.getXMLParamName() == null) {
+					if (this.executionFactory.getXMLParamName() == null && getXMLParameter() == null) {
 						throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
 					}
 					try {
@@ -115,7 +165,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 						StringWriter writer = new StringWriter();
 						//TODO: prevent this from being too large 
 				        t.transform(source, new StreamResult(writer));
-						String param = Util.httpURLEncode(this.executionFactory.getXMLParamName())+"="+Util.httpURLEncode(writer.toString()); //$NON-NLS-1$
+						String param = Util.httpURLEncode(getXMLParameter())+"="+Util.httpURLEncode(writer.toString()); //$NON-NLS-1$
 						endpoint = WSConnection.Util.appendQueryString(endpoint, param);
 					} catch (TransformerException e) {
 						throw new WebServiceException(e);
@@ -144,6 +194,7 @@ public class WSProcedureExecution implements ProcedureExecution {
 		}
     }
 
+
 	private StAXSource convertToSource(SQLXML xml) throws SQLException {
 		if (xml == null) {
 			return null;
@@ -159,7 +210,7 @@ public class WSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(4).getArgumentValue().getValue())) {
+    	if (returnValue != null && isStreaming()) {
 			SQLXMLImpl sqlXml = new StAXSQLXML(returnValue);
 			XMLType xml = new XMLType(sqlXml);
 			xml.setType(Type.DOCUMENT);
@@ -175,4 +226,20 @@ public class WSProcedureExecution implements ProcedureExecution {
     public void cancel() throws TranslatorException {
         // no-op
     }    
+    
+	public String getServiceName() {
+		return serviceName;
+	}
+
+	public void setServiceName(String serviceName) {
+		this.serviceName = serviceName;
+	}
+
+	public String getPortName() {
+		return portName;
+	}
+
+	public void setPortName(String portName) {
+		this.portName = portName;
+	}	    
 }

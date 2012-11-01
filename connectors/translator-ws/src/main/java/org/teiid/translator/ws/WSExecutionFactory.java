@@ -31,6 +31,7 @@ import javax.xml.ws.http.HTTPBinding;
 import javax.xml.ws.soap.SOAPBinding;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Call;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.MetadataFactory;
@@ -50,6 +51,8 @@ import org.teiid.translator.WSConnection;
 @Translator(name="ws", description="A translator for making Web Service calls")
 public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
 	
+	static final String INVOKE = "invoke"; //$NON-NLS-1$
+
 	static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
 
 	public enum Binding {
@@ -69,13 +72,19 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 	}
 	
 	public static BundleUtil UTIL = BundleUtil.getBundleUtil(WSExecutionFactory.class);
+    public static enum Event implements BundleUtil.Event{
+    	TEIID15001,
+    	TEIID15002,
+    	TEIID15003,
+    	TEIID15004
+    }	
 		
 	private Mode defaultServiceMode = Mode.PAYLOAD;
 	private Binding defaultBinding = Binding.SOAP12;
 	private String xmlParamName;
 	
 	public WSExecutionFactory() {
-		setSourceRequiredForMetadata(false);
+		setSourceRequiredForMetadata(true);
 	}
 
 	@TranslatorProperty(description="Contols request/response message wrapping - set to MESSAGE for full control over SOAP messages.", display="Default Service Mode")
@@ -120,9 +129,8 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     }
 	
 	@Override
-	public void getMetadata(MetadataFactory metadataFactory,
-			WSConnection conn) throws TranslatorException {
-		Procedure p = metadataFactory.addProcedure("invoke"); //$NON-NLS-1$ 
+	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
+		Procedure p = metadataFactory.addProcedure(INVOKE); 
 		p.setAnnotation("Invokes a webservice that returns an XML result"); //$NON-NLS-1$
 		
 		metadataFactory.addProcedureParameter("result", TypeFacility.RUNTIME_NAMES.XML, Type.ReturnValue, p); //$NON-NLS-1$
@@ -172,7 +180,14 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		param.setNullType(NullType.Nullable);
 		param.setDefaultValue("false"); //$NON-NLS-1$
 		
-		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$	
+		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$
+		
+		if (conn != null && conn.getWsdl() != null) {
+			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl());
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+			metadataProcessor.getMetadata(metadataFactory, conn);
+		}
+		
 	}
 	
 	@Override

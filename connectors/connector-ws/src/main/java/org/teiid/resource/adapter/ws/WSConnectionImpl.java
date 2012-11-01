@@ -297,4 +297,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		
 	}
 
+	@Override
+	public String getWsdl() {
+		return this.mcf.getWsdl();
+	}
 }
