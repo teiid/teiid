@@ -42,6 +42,8 @@
 	<li>TEIID-2176,TEIID-2177 <b>Native Query Support</b> - JDBC, LDAP, SalesForce, JPA, OLAP translators now support execution of native queries directly against the source either through "native-query" extension metadata property or native procedure defined by their translator.
 	<li>TEIID-2227 <b>Procedure RETURN statement</b> - the Teiid procedure language now supports a RETURN statement.  See the Reference for syntax and usage.
 	<li>TEIID-2269 <b>Vault Support</b> - The transport's keystore and truststore passwords are now supported through vault based passwords.
+	<li>TEIID-1064 <b>Google Spreadsheet Support</b> - there is now support for querying Google Spreadsheets via Teiid.  See the Reference and Admin Guides for more.
+	<li>TEIID-1241 <b>WSDL backed WS Translator</b> - a web services data source can be configured to access a single server and point based upon a specific WSDL.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -179,6 +181,8 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 <ul>
   <li>The file translator now defaults to exceptionIfFileNotFound=true, you can set the translator property to false to preserve the old behavior of returning null.
   <li>TEIID-2086 TEIID-2168 prepared plan and result set caches are now configured as infinispan caches.  See the teiid cache container in the configuration.  You may also control the transactional aspects of the result set cache on the resultset and resultset-repl caches via the configuration. 
+  <li>TEIID-1241 the web services connector property ConfigName was deprecated in favor of EndPointName.  There were also ServiceName, NamespaceUri, and Wsdl properties added, which are used to point the 
+      translator at a specific WSDL. 
 </ul>
 
 <h4>from 8.0</h4>

@@ -27,8 +27,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,7 +61,6 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.MetadataException;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.WSConnection;
 
@@ -203,9 +200,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			Bus bus = BusFactory.getThreadDefaultBus();
 			BusFactory.setThreadDefaultBus(mcf.getBus());
 			try {
-				wsdlService = Service.create(new URI(mcf.getWsdl()).toURL(), this.mcf.getServiceQName());
-			} catch (URISyntaxException e) {
-				throw new MetadataException(e);
+				wsdlService = Service.create(mcf.getWsdlUrl(), this.mcf.getServiceQName());
 			} finally {
 				BusFactory.setThreadDefaultBus(bus);
 			}
@@ -322,8 +317,8 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 	}
 
 	@Override
-	public String getWsdl() {
-		return this.mcf.getWsdl();
+	public URL getWsdl() {
+		return this.mcf.getWsdlUrl();
 	}
 	
 	@Override

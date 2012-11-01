@@ -21,9 +21,13 @@
  */
 package org.teiid.resource.adapter.ws;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 import javax.resource.ResourceException;
+import javax.resource.spi.InvalidPropertyException;
 import javax.xml.namespace.QName;
 
 import org.apache.cxf.Bus;
@@ -51,7 +55,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	//wsdl properties
 	private String wsdl;
 	private String serviceName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
-
+	private URL wsdlUrl;
 	//shared properties
 	private String securityType = SecurityType.None.name(); // None, HTTPBasic, WS-Security
 	private String configFile; // path to the "jbossws-cxf.xml" file
@@ -83,7 +87,18 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		}
 		this.portQName = new QName(this.namespaceUri, endPointName);
 		this.serviceQName = new QName(this.namespaceUri, this.serviceName);
-		
+		if (this.wsdl != null) {
+			try {
+				this.wsdlUrl = new URL(wsdl);
+			} catch (MalformedURLException e) {
+				File f = new File(this.wsdl);
+				try {
+					this.wsdlUrl = f.toURI().toURL();
+				} catch (MalformedURLException e1) {
+					throw new InvalidPropertyException(e1);
+				}
+			}
+		}
 		if (configFile != null) {
 			bus = new SpringBusFactory().createBus(configFile);
 			JaxWsClientFactoryBean instance = new JaxWsClientFactoryBean();
@@ -201,6 +216,10 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	
 	public String getWsdl() {
 		return wsdl;
+	}
+	
+	public URL getWsdlUrl() {
+		return wsdlUrl;
 	}
 	
 	public void setWsdl(String wsdl) {

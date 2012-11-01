@@ -186,7 +186,7 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
 		metadataFactory.addProcedureParameter("contentType", TypeFacility.RUNTIME_NAMES.STRING, Type.Out, p); //$NON-NLS-1$
 		
 		if (conn != null && conn.getWsdl() != null) {
-			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl());
+			WSDLMetadataProcessor metadataProcessor = new WSDLMetadataProcessor(conn.getWsdl().toString());
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getMetadata(metadataFactory, conn);
 		}

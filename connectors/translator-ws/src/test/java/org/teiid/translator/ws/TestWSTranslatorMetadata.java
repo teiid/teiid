@@ -24,6 +24,7 @@ package org.teiid.translator.ws;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.util.Properties;
 
 import javax.activation.DataSource;
@@ -55,7 +56,7 @@ public class TestWSTranslatorMetadata {
 		Properties props = new Properties();
 
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
-		Mockito.stub(mockConnection.getWsdl()).toReturn(UnitTestUtil.getTestDataPath()+"/xquotes.wsdl");
+		Mockito.stub(mockConnection.getWsdl()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/xquotes.wsdl").toURI().toURL());
 		Mockito.stub(mockConnection.getServiceQName()).toReturn(new QName("http://www.xignite.com/services/", "XigniteQuotes"));
 		Mockito.stub(mockConnection.getPortQName()).toReturn(new QName("http://www.xignite.com/services/", "XigniteQuotesSoap"));
 		
@@ -88,7 +89,7 @@ public class TestWSTranslatorMetadata {
 		props.setProperty("importer.portname", "XigniteQuotesHttpGet");
 
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
-		Mockito.stub(mockConnection.getWsdl()).toReturn(UnitTestUtil.getTestDataPath()+"/xquotes.wsdl");
+		Mockito.stub(mockConnection.getWsdl()).toReturn(new File(UnitTestUtil.getTestDataPath()+"/xquotes.wsdl").toURI().toURL());
 		
     	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 		ef.getMetadata(mf, mockConnection);

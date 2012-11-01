@@ -105,7 +105,7 @@
             </config-property>     
             
             <config-property>
-                <description>{$display:"WSDL",$description:"WSDL URL for the web service",$advanced:"true"}</description>
+                <description>{$display:"WSDL",$description:"WSDL file or URL for the web service",$advanced:"true"}</description>
                 <config-property-name>Wsdl</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>

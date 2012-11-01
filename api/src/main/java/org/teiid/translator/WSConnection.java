@@ -24,6 +24,7 @@ package org.teiid.translator;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URL;
 import java.net.URLEncoder;
 
 import javax.resource.cci.Connection;
@@ -42,7 +43,7 @@ public interface WSConnection extends Connection {
 	
 	<T> Dispatch<T> createDispatch(Class<T> type, Service.Mode mode) throws IOException;
 	
-	String getWsdl();
+	URL getWsdl();
 	
 	QName getServiceQName();
 	
