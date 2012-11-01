@@ -148,12 +148,7 @@ public class TeiidEmbeddedPortfolio {
 		final JdbcDataSource h2ds = new JdbcDataSource();
     	h2ds.setURL("jdbc:h2:accounts");
 
-		EmbeddedServer.ConnectionFactoryProvider<DataSource> jdbcProvider = new EmbeddedServer.ConnectionFactoryProvider<DataSource>() {
-			@Override
-			public DataSource getConnectionFactory() throws TranslatorException {
-				return h2ds;
-			}
-		};
+		EmbeddedServer.ConnectionFactoryProvider<DataSource> jdbcProvider = new EmbeddedServer.SimpleConnectionFactoryProvider<DataSource>(h2ds);
 		Connection conn = jdbcProvider.getConnectionFactory().getConnection();
 		String schema = ObjectConverterUtil.convertFileToString(new File("data/customer-schema.sql"));
 		StringTokenizer st = new StringTokenizer(schema, ";");
@@ -175,17 +170,12 @@ public class TeiidEmbeddedPortfolio {
 		// NOTE: every source that is being integrated, needs its connection provider and its translator 
 		// check out https://docs.jboss.org/author/display/TEIID/Built-in+Translators prebuit translators
 		final ConnectionFactory cf = new FileConnectionFactory();
-		teiidServer.addConnectionFactoryProvider("source-file", new EmbeddedServer.ConnectionFactoryProvider<ConnectionFactory>() {
-			@Override
-			public ConnectionFactory getConnectionFactory() throws TranslatorException {
-				return cf;
-			}
-		});
-		teiidServer.addTranslator(new FileExecutionFactory());
+		teiidServer.addConnectionFactoryProvider("source-file", new EmbeddedServer.SimpleConnectionFactoryProvider<ConnectionFactory>(cf));
+		teiidServer.addTranslator(FileExecutionFactory.class);
 
 		// configure the connection provider and translator for jdbc based source
 		teiidServer.addConnectionFactoryProvider("source-jdbc", jdbcProvider);
-		teiidServer.addTranslator(new H2ExecutionFactory());
+		teiidServer.addTranslator(H2ExecutionFactory.class);
 		
 		buildDeployVDB(teiidServer);
 		

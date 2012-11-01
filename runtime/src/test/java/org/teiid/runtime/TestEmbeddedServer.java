@@ -251,13 +251,7 @@ public class TestEmbeddedServer {
 			}
 		});
 		final AtomicInteger counter = new AtomicInteger();
-		ConnectionFactoryProvider<AtomicInteger> cfp = new ConnectionFactoryProvider<AtomicInteger>() {
-			@Override
-			public AtomicInteger getConnectionFactory()
-					throws TranslatorException {
-				return counter;
-			}
-		};
+		ConnectionFactoryProvider<AtomicInteger> cfp = new EmbeddedServer.SimpleConnectionFactoryProvider<AtomicInteger>(counter);
 		
 		es.addConnectionFactoryProvider("z", cfp);
 		

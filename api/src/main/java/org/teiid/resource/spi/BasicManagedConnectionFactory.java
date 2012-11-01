@@ -41,7 +41,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ReflectionHelper;
 
 
-public abstract class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ValidatingManagedConnectionFactory, ConnectionFactoryProvider<BasicConnectionFactory> {
+public abstract class BasicManagedConnectionFactory implements ManagedConnectionFactory, ResourceAdapterAssociation, ValidatingManagedConnectionFactory {
 
 	private static final long serialVersionUID = -7302713800883776790L;
 	private PrintWriter log;
