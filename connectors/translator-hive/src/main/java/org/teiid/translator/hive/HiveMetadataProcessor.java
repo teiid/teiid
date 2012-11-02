@@ -28,8 +28,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.logging.LogConstants;
-import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
@@ -47,18 +45,14 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 		}
 	}
 	
-	private List<String> getTables(Connection conn) {
+	private List<String> getTables(Connection conn) throws SQLException {
 		ArrayList<String> tables = new ArrayList<String>();
-		try {
-			Statement stmt = conn.createStatement();
-			ResultSet rs =  stmt.executeQuery("SHOW TABLES"); //$NON-NLS-1$
-			while (rs.next()){
-				tables.add(rs.getString(1));
-			}
-			rs.close();
-		} catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "HiveMetadataProcessor - failed getting table names"); //$NON-NLS-1$
+		Statement stmt = conn.createStatement();
+		ResultSet rs =  stmt.executeQuery("SHOW TABLES"); //$NON-NLS-1$
+		while (rs.next()){
+			tables.add(rs.getString(1));
 		}
+		rs.close();
 		return tables;
 	}
 	
@@ -89,25 +83,23 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 		}	
 		return TypeFacility.RUNTIME_NAMES.STRING;
 	}
-	private void addTable(String tableName, Connection conn, MetadataFactory metadataFactory) throws TranslatorException {
-		try {
-			Table table = metadataFactory.addTable(tableName);
-			table.setNameInSource(tableName);
-			table.setSupportsUpdate(true);
-			Statement stmt = conn.createStatement();
-			ResultSet rs =  stmt.executeQuery("DESCRIBE "+tableName); //$NON-NLS-1$
-			while (rs.next()){
-				String name = rs.getString(1); 
-				String type = rs.getString(2); 
-				String runtimeType = getRuntimeType(type);
-				
-				Column column = metadataFactory.addColumn(name, runtimeType, table);
-				column.setNameInSource(name);
-				column.setUpdatable(true);
-			}
-			rs.close();
-		} catch (SQLException e) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "HiveMetadataProcessor - failed getting column names"); //$NON-NLS-1$
+	
+	private void addTable(String tableName, Connection conn, MetadataFactory metadataFactory) throws SQLException {
+		Table table = addTable(metadataFactory, null, null, tableName, null, tableName);
+		if (table == null) {
+			return;
 		}
+		Statement stmt = conn.createStatement();
+		ResultSet rs =  stmt.executeQuery("DESCRIBE "+tableName); //$NON-NLS-1$
+		while (rs.next()){
+			String name = rs.getString(1); 
+			String type = rs.getString(2); 
+			String runtimeType = getRuntimeType(type);
+			
+			Column column = metadataFactory.addColumn(name, runtimeType, table);
+			column.setNameInSource(name);
+			column.setUpdatable(true);
+		}
+		rs.close();
 	}	
 }

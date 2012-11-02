@@ -35,9 +35,9 @@ import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.QueryPlugin;
@@ -64,7 +64,8 @@ import org.teiid.query.util.CommandContext;
 
 public class AccessNode extends SubqueryAwareRelationalNode {
 
-    private static final int MAX_CONCURRENT = 10; //TODO: this could be settable via a property
+    private static final Object[] NO_PROJECTION = new Object[0];
+	private static final int MAX_CONCURRENT = 10; //TODO: this could be settable via a property
 	// Initialization state
     private Command command;
     private String modelName;
@@ -212,7 +213,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 			i++;
 		}
 		if (!shouldProject) {
-			this.projection = new Object[0];
+			this.projection = NO_PROJECTION;
 		} else if (query.getOrderBy() != null) {
 			for (OrderByItem item : query.getOrderBy().getOrderByItems()) {
 				Integer index = uniqueSymbols.get(SymbolMap.getExpression(item.getSymbol()));
@@ -434,6 +435,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         props.addProperty(PROP_MODEL_NAME, this.modelName);
+        if (this.projection != null && this.projection.length > 0 && this.originalSelect != null) {
+        	props.addProperty(PROP_SELECT_COLS, this.originalSelect.toString());
+        }
+        props.addProperty(PROP_MODEL_NAME, this.modelName);
         if (this.info != null) {
         	props.addProperty(PROP_SHARING_ID, String.valueOf(this.info.id));
         }
@@ -451,13 +456,6 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	@Override
 	protected Collection<? extends LanguageObject> getObjects() {
 		ArrayList<LanguageObject> list = new ArrayList<LanguageObject>();
-		if (projection != null) {
-			for (Object obj : projection) {
-				if (obj instanceof LanguageObject) {
-					list.add((LanguageObject)obj);
-				}
-			}
-		}
 		if (shouldEvaluate) {
 			//collect any evaluatable subqueries
 			for (SubqueryContainer<?> container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(this.command)) {

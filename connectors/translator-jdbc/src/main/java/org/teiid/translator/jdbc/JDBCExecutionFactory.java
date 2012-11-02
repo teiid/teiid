@@ -259,7 +259,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 				throw new TranslatorException(JDBCPlugin.Event.TEIID11018, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11018));
 			}
 			JDBCMetdataProcessor metadataProcessor = createMetadataProcessor();
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
 			 throw new TranslatorException(JDBCPlugin.Event.TEIID11010, e);
@@ -732,7 +732,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             registerSpecificTypeOfOutParameter(statement, returnType, index++);
         }
         
-        Iterator iter = preparedValues.iterator();
+        Iterator<?> iter = preparedValues.iterator();
         while(iter.hasNext()){
             Argument param = (Argument)iter.next();
                     

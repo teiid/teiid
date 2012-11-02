@@ -56,10 +56,10 @@ import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.ExtractFunctionModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.JDBCPlugin;
 import org.teiid.translator.jdbc.LocateFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
-import org.teiid.translator.jdbc.TranslatedCommand;
 
 
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
@@ -755,6 +755,21 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsArrayType() {
     	return true;
+    }
+    
+    @Override
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+    	return new JDBCMetdataProcessor() {
+    		@Override
+    		protected String getRuntimeType(int type, String typeName,
+    				int precision) {
+    			//overrides for varchar2 and nvarchar2
+    			if (type == 1111 || type == 12) {
+    				return TypeFacility.RUNTIME_NAMES.STRING;
+    			}
+    			return super.getRuntimeType(type, typeName, precision);
+    		}
+    	};
     }
     
 }

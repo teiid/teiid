@@ -228,16 +228,13 @@ public class JDBCMetdataProcessor {
 			String tableCatalog = tables.getString(1);
 			String tableSchema = tables.getString(2);
 			String tableName = tables.getString(3);
+			String remarks = tables.getString(5);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
-			if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
-				excludedTables++;
+			Table table = addTable(metadataFactory, tableCatalog, tableSchema,
+					tableName, remarks, fullName);
+			if (table == null) {
 				continue;
 			}
-			Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
-			table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
-			table.setSupportsUpdate(true);
-			String remarks = tables.getString(5);
-			table.setAnnotation(remarks);
 			TableInfo ti = new TableInfo(tableCatalog, tableSchema, tableName, table);
 			tableMap.put(fullName, ti);
 			tableMap.put(tableName, ti);
@@ -246,6 +243,20 @@ public class JDBCMetdataProcessor {
 		
 		getColumns(metadataFactory, metadata, tableMap);
 		return tableMap;
+	}
+
+	protected Table addTable(MetadataFactory metadataFactory,
+			String tableCatalog, String tableSchema, String tableName,
+			String remarks, String fullName) {
+		if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
+			excludedTables++;
+			return null;
+		}
+		Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
+		table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
+		table.setSupportsUpdate(true);
+		table.setAnnotation(remarks);
+		return table;
 	}
 
 	private void getColumns(MetadataFactory metadataFactory,
@@ -327,7 +338,7 @@ public class JDBCMetdataProcessor {
 		columns.close();
 	}
 
-	private String getRuntimeType(int type, String typeName, int precision) {
+	protected String getRuntimeType(int type, String typeName, int precision) {
 		if (type == Types.BIT && precision > 1) {
 			type = Types.BINARY;
 		}

@@ -126,7 +126,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
      * @param object
      * @param valuesbuffer
      */
-    private void translateSQLType(Class type, Object obj, StringBuilder valuesbuffer) {
+    protected void translateSQLType(Class<?> type, Object obj, StringBuilder valuesbuffer) {
         if (obj == null) {
             valuesbuffer.append(Reserved.NULL);
         } else {
