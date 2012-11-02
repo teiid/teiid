@@ -54,6 +54,7 @@ import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.DispatchImpl;
+import org.apache.cxf.service.model.MessagePartInfo;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -209,6 +210,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			}
 		}
 		Dispatch<T> dispatch = wsdlService.createDispatch(mcf.getPortQName(), type, mode);
+		MessagePartInfo.DEFAULT_TYPE.set(type);
 		setDispatchProperties(dispatch);
 		return dispatch;
 	}
@@ -313,7 +315,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 	@Override
 	public void close() throws ResourceException {
-		
+		MessagePartInfo.DEFAULT_TYPE.remove();
 	}
 
 	@Override

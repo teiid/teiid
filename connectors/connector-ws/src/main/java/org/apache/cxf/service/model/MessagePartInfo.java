@@ -20,11 +20,13 @@
 package org.apache.cxf.service.model;
 
 import javax.xml.namespace.QName;
-import javax.xml.transform.stax.StAXSource;
 
 import org.apache.ws.commons.schema.XmlSchemaAnnotated;
 import org.apache.ws.commons.schema.XmlSchemaElement;
 
+/**
+ * No longer needed after CXF 2.5.7, 2.6.4, 2.7.1
+ */
 public final class MessagePartInfo extends AbstractPropertiesHolder implements NamedItem {
 
     private QName pname;
@@ -35,8 +37,10 @@ public final class MessagePartInfo extends AbstractPropertiesHolder implements N
     private QName elementName;
     private QName concreteName;
     private XmlSchemaAnnotated xmlSchema;
-    private Class<?> typeClass = StAXSource.class; //default to StAXSource as a workaround for https://issues.apache.org/jira/browse/CXF-4608
+    private Class<?> typeClass;
     private int index;
+    
+    public static ThreadLocal<Class<?>> DEFAULT_TYPE = new ThreadLocal<Class<?>>();
     
     public MessagePartInfo(QName n, AbstractMessageContainer info) {
         mInfo = info;
@@ -115,6 +119,10 @@ public final class MessagePartInfo extends AbstractPropertiesHolder implements N
     }
 
     public Class<?> getTypeClass() {
+    	if (typeClass == null) {
+    		//default to StAXSource as a workaround for https://issues.apache.org/jira/browse/CXF-4608
+    		return DEFAULT_TYPE.get();
+    	}
         return typeClass;
     }
 
