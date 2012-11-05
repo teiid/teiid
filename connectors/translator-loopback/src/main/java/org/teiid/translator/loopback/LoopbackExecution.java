@@ -51,13 +51,11 @@ import org.teiid.translator.UpdateExecution;
  * Represents the execution of a command.
  */
 public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
-
-    private static final String ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; //$NON-NLS-1$
-
-    // Connector resources
+//     Connector resources
     private LoopbackExecutionFactory config;
     private Command command;
-    
+    private String staticStringValue = "";
+        
     // Execution state
     private Random randomNumber = new Random(System.currentTimeMillis());
     private List<Object> row;
@@ -68,9 +66,34 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     public LoopbackExecution(Command command, LoopbackExecutionFactory config) {
         this.config = config;
         this.command = command;
+        
+
+        
+        constructIncrementedString(config.getCharacterValuesSize()); 
+        staticStringValue = constructIncrementedString(config.getCharacterValuesSize());
     }
     
-    @Override
+    /**
+     * Creates string "ABCD...ZABC..." of length characterValueSize
+     * @param characterValuesSize
+     * @return
+     */
+    public static String constructIncrementedString(int characterValuesSize) {
+        //Create string of length as defined in the translator configuration
+    	StringBuffer alphaString = new StringBuffer();
+        int genAlphaSize = characterValuesSize;
+        char currentChar = 'A';
+        while (genAlphaSize-- != 0){
+        	alphaString.append(currentChar);
+        	if (currentChar =='Z')
+        		currentChar = 'A';
+        	else
+        		currentChar += 1;
+        }
+        return alphaString.toString();
+	}
+
+	@Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
         // Wait on first batch if necessary
         if(this.config.getWaitTime() > 0 && !waited) {
@@ -92,15 +115,22 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             waited = true;
         }
                 
-        if(rowsReturned < this.rowsNeeded && row.size() > 0) {
+        List<Object> resultRow = row;
+        if(rowsReturned < this.rowsNeeded && resultRow.size() > 0) {
             rowsReturned++;            
-            return row;
+            if (config.getIncrementRows()) {
+            	incrementValues();
+            }
+            return resultRow;
         }
         
         return null;
     }
 
-    @Override
+	
+	
+
+	@Override
     public void execute() throws TranslatorException {
        
     	// Log our command
@@ -118,6 +148,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             	this.rowsNeeded = queryCommand.getLimit().getRowLimit();
             }
         }
+        
         
         // Prepare for execution
         List types = determineOutputTypes(this.command);
@@ -156,7 +187,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         // Get select columns and lookup the types in metadata
         if(command instanceof QueryExpression) {
             QueryExpression query = (QueryExpression) command;
-            return Arrays.asList(query.getColumnTypes());
+            return Arrays.asList(query.getColumnTypes());            
         }
         if (command instanceof Call) {
         	return Arrays.asList(((Call)command).getResultSetColumnTypes());
@@ -173,22 +204,8 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             row.add( getValue(type) );
         }   
     }
-
-    /**
-     * Get a variable-sized string.
-     * @param size The size (in characters) of the string
-     */
-    private String getVariableString( int size ) {
-        int multiplier = size / ALPHA.length();
-        int remainder  = size % ALPHA.length();
-        String value = ""; //$NON-NLS-1$
-        for ( int k = 0; k < multiplier; k++ ) {
-            value += ALPHA;
-        }
-        value += ALPHA.substring(0,remainder);
-        return value;
-    }
     
+    public static final Long DAY_MILIS=86400000L;
     private static final Integer INTEGER_VAL = new Integer(0);
     private static final Long LONG_VAL = new Long(0);
     private static final Float FLOAT_VAL = new Float(0.0);
@@ -209,7 +226,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     static {
     	Calendar cal = Calendar.getInstance();
     	cal.clear();
-    	cal.set(1969, 11, 31, 18, 0, 0);
+    	cal.set(1969, 1, 31, 18, 0, 0);
     	SQL_DATE_VAL = new Date(cal.getTimeInMillis());
     	TIME_VAL = new Time(cal.getTimeInMillis());
     	TIMESTAMP_VAL = new Timestamp(cal.getTimeInMillis());
@@ -217,7 +234,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     
     private Object getValue(Class type) {
         if(type.equals(java.lang.String.class)) {
-            return getVariableString(10);
+            return staticStringValue;
         } else if(type.equals(java.lang.Integer.class)) {
             return INTEGER_VAL;
         } else if(type.equals(java.lang.Short.class)) { 
@@ -245,12 +262,111 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         } else if(type.equals(java.sql.Timestamp.class)) {
             return TIMESTAMP_VAL;
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
-            return this.config.getTypeFacility().convertToRuntimeType(ALPHA.toCharArray());
+            return this.config.getTypeFacility().convertToRuntimeType(staticStringValue.toCharArray());
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
-            return this.config.getTypeFacility().convertToRuntimeType(ALPHA.getBytes());
+            return this.config.getTypeFacility().convertToRuntimeType(staticStringValue.getBytes());
         } else {
-            return getVariableString(10);
+            return staticStringValue;
         }
     }
+    
+    /**
+	 * Increments value in each column. If the value is bounded type (e.g. short) it will cycle the values.
+	 */
+	private void incrementValues() {
+		List<Object> newRow = new ArrayList<Object>();
+		rowNumber = rowNumber.add(one);
+		String incrementedString = incrementString(staticStringValue,rowNumber);
+		for (Object o : row) {
+			if (o.getClass().equals(String.class)) {
+				newRow.add(incrementedString);
+			} else if (o.getClass().equals(Integer.class)) {
+				Integer i = ((Integer) o);
+				if (i==Integer.MAX_VALUE)
+					i = 0;
+				else 
+					i++;
+				newRow.add(i);
+			} else if (o.getClass().equals(java.lang.Short.class)) {
+				Short s = (Short)o;
+				if (Short.MAX_VALUE == s)
+					s = (short)0;
+				else {
+					s = new Short((short)(1+(Short)o));
+				}
+				
+				newRow.add(s);
+			} else if (o.getClass().equals(java.lang.Long.class)) {
+				Long l = (Long) o;
+				if (l == Long.MAX_VALUE) {
+					l=0L;
+				} else 
+					l = ((Long) o) + 1L;
+				newRow.add(l);
+				
+			} else if (o.getClass().equals(java.lang.Float.class)) {
+				Float f = (Float)o;
+				if (Float.MAX_VALUE - f < 1)
+					f= (float)0;
+				else 
+					f = ((Float) o) + 0.1f;
+				newRow.add(f);
+			} else if (o.getClass().equals(java.lang.Double.class)) {
+				Double d = (Double) o;
+				if (Double.MAX_VALUE - d < 1) 
+					d= new Double(0);
+				else 
+					d = new Double(((Double) o) + 0.1);
+				newRow.add(d);
+			} else if (o.getClass().equals(java.lang.Character.class)) {
+				Character c = (Character)o;
+				if (c == 'z')
+					c= 'a';
+				else
+					c= new Character((char)(1+(Character)o));
+				newRow.add(c);
+			} else if (o.getClass().equals(java.lang.Byte.class)) {
+				Byte b = (Byte)o;
+				if (Byte.MAX_VALUE == b)
+					b = (byte)0; 
+				else 
+					b = new Byte((byte)((Byte)o+1));
+				
+				newRow.add(b);
+			} else if (o.getClass().equals(java.lang.Boolean.class)) {
+				newRow.add(((Boolean) o) ? false : true);
+			} else if (o.getClass().equals(java.math.BigInteger.class)) {
+				newRow.add(((BigInteger) o).add(new BigInteger("1")));
+			} else if (o.getClass().equals(java.math.BigDecimal.class)) {
+				newRow.add(((BigDecimal) o).add(new BigDecimal("0.1")));
+			} else if (o.getClass().equals(java.sql.Date.class)) {
+				newRow.add(new Date(((Date) o).getTime() + DAY_MILIS));
+			} else if (o.getClass().equals(java.sql.Time.class)) {
+				newRow.add(new Time(((Time) o).getTime() + 1000));
+			} else if (o.getClass().equals(java.sql.Timestamp.class)) {
+				newRow.add(new Timestamp(((Timestamp) o).getTime() + 1));
+			} else if (o.getClass().equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
+				newRow.add(this.config.getTypeFacility().convertToRuntimeType(
+						incrementedString.toCharArray()));
+			} else if (o.getClass().equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
+				newRow.add(this.config.getTypeFacility().convertToRuntimeType(incrementedString.getBytes()));
+			}
+		}
+		row = newRow;
+	}
+	
+	private BigInteger rowNumber = new BigInteger("0");
+	private static final BigInteger one= new BigInteger("1");
+	/**
+	 * Increments the string by appending unique number in sequence. Preserves string length.
+	 * @param number Number in the sequence of strings (which row)
+	 * @return
+	 */
+	public static String incrementString(String string, BigInteger number) {
+		String numberString= number.toString();
+		if (number.equals(new BigInteger("0")))
+			return string.toString();//Backward compatibility for first string
+		return string.substring(0,string.length()-numberString.length())+ numberString;
+	}
 
 }

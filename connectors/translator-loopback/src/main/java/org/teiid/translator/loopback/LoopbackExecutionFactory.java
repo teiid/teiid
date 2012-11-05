@@ -44,6 +44,8 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	private int rowCount = 1;
 	private boolean throwError = false;
 	private long pollIntervalInMilli = -1;
+	private boolean incrementRows = false;
+	private int charValueSize = 10;
 	
 	public LoopbackExecutionFactory() {
 		setSupportsFullOuterJoins(true);
@@ -52,6 +54,24 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 		setSupportsSelectDistinct(true);
 		setSupportsInnerJoins(true);
 	}
+	
+	@TranslatorProperty(display="Size of values for CLOB, VARCHAR, etc.", advanced=true)
+	public int getCharacterValuesSize() {
+		return charValueSize;
+	}
+	
+	public void setCharacterValuesSize(int charValSize){
+		this.charValueSize = charValSize;
+	}
+	
+	@TranslatorProperty(display="If set to true each value in each column is being incremented with each row", advanced=true)
+	public boolean getIncrementRows() {
+		return incrementRows;
+	}	
+	
+	public void setIncrementRows(boolean incrementRows) {
+		this.incrementRows = incrementRows;
+	}	
 	
 	@Override
 	public Object getConnection(Object factory) throws TranslatorException {
@@ -290,5 +310,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
     @Override
     public boolean supportsIntersect() {
     	return true;
-    }	
+    }
+
+
 }
