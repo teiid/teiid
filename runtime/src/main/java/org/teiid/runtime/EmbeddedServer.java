@@ -452,15 +452,18 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	/**
 	 * Adds a default instance of the {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.  
 	 * @param ef
+	 * @throws TranslatorException 
 	 */
-	public void addTranslator(Class<? extends ExecutionFactory<?, ?>> clazz) {
+	public void addTranslator(Class<? extends ExecutionFactory<?, ?>> clazz) throws TranslatorException {
 		Translator t = clazz.getAnnotation(Translator.class);
 		String name = clazz.getName();
 		if (t != null) {
 			name = t.name();
 		}
 		try {
-			addTranslator(name, clazz.newInstance());
+			ExecutionFactory<?, ?> instance = clazz.newInstance();
+			instance.start();
+			addTranslator(name, instance);
 		} catch (InstantiationException e) {
 			throw new TeiidRuntimeException(e);
 		} catch (IllegalAccessException e) {
@@ -470,7 +473,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	
 	/**
 	 * Add an {@link ExecutionFactory} using the default name either from the {@link Translator} annotation or the class name.
-	 * @param ef
+	 * @param ef the already started ExecutionFactory
 	 * @deprecated
 	 * @see {@link #addTranslator(String, ExecutionFactory)} or {@link #addTranslator(Class)}
 	 * if the translator has overrides or multiple translators of a given type are needed.
@@ -487,7 +490,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	/**
 	 * Add a named {@link ExecutionFactory}.
 	 * @param name
-	 * @param ef
+	 * @param ef the already started ExecutionFactory
 	 */
 	public void addTranslator(String name, ExecutionFactory<?, ?> ef) {
 		translators.put(name, ef);
@@ -563,6 +566,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public synchronized void stop() {
 		if (config != null) {
 			config.stop();
+		}
+		if (running == null || !running) {
+			return;
 		}
 		dqp.stop();
 		eventDistributorFactoryService.stop();
