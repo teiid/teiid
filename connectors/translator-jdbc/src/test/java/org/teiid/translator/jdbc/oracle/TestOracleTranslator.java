@@ -46,6 +46,7 @@ import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Literal;
 import org.teiid.language.Select;
+import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
@@ -790,12 +791,14 @@ public class TestOracleTranslator {
             "DoubleNum",  //$NON-NLS-1$ 
             "ID", //$NON-NLS-1$
             "timestampvalue", //$NON-NLS-1$
-            "description"
+            "description",
+            "ndescription"
         };
         String[] elemTypes = new String[] {  
             DataTypeManager.DefaultDataTypes.DOUBLE,
             DataTypeManager.DefaultDataTypes.INTEGER,
             DataTypeManager.DefaultDataTypes.TIMESTAMP,
+            DataTypeManager.DefaultDataTypes.STRING,
             DataTypeManager.DefaultDataTypes.STRING,
         };
         RealMetadataFactory.createElements(x, elemNames, elemTypes);
@@ -805,6 +808,7 @@ public class TestOracleTranslator {
         cols.get(1).setNameInSource("ID:SEQUENCE=MYSEQUENCE.nextVal"); //$NON-NLS-1$
         cols.get(2).setNativeType("date"); //$NON-NLS-1$
         cols.get(3).setNativeType("CHAR");
+        cols.get(4).setNativeType("NCHAR");
         List<Column> dualCols = RealMetadataFactory.createElements(dual, new String[] {"something"}, new String[] {DataTypeManager.DefaultDataTypes.STRING}); //$NON-NLS-1$
         dualCols.get(0).setNameInSource("seq.nextval");
         
@@ -965,16 +969,19 @@ public class TestOracleTranslator {
 	
 	@Test public void testCharType() throws Exception {
 		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
-        Command command = commandBuilder.getCommand("select id from smalla where description = 'a'");
-        ((Literal)((Comparison)((Select)command).getWhere()).getRightExpression()).setBindEligible(true);
+        Command command = commandBuilder.getCommand("select id from smalla where description = 'a' and ndescription in ('b', 'c')");
+        for (Literal l : CollectorVisitor.collectObjects(Literal.class, command)) {
+        	l.setBindEligible(true);
+        }
 		Connection connection = Mockito.mock(Connection.class);
 		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
-		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ?")).toReturn(ps); //$NON-NLS-1$
+		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).toReturn(ps); //$NON-NLS-1$
 		OracleExecutionFactory ef = new OracleExecutionFactory();
-		
+		ef.start();
 		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
 		e.execute();
-		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", 999);
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", OracleExecutionFactory.FIXED_CHAR_TYPE);
+		Mockito.verify(ps, Mockito.times(1)).setObject(2, "b", OracleExecutionFactory.FIXED_CHAR_TYPE);
 	}
 	
     @Test public void testParseFormat() throws Exception {

@@ -494,16 +494,18 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public SQLConversionVisitor getSQLConversionVisitor() {
-    	if (!oracleSuppliedDriver) {
-    		return super.getSQLConversionVisitor();
-    	}
     	return new SQLConversionVisitor(this) {
     		
     		@Override
     		public void visit(Comparison obj) {
-    			if (isChar(obj.getLeftExpression()) && obj.getRightExpression() instanceof Literal) {
-    				Literal l = (Literal)obj.getRightExpression();
-    				l.setType(FixedCharType.class);
+    			if (isFixedChar(obj.getLeftExpression())) {
+    				if (obj.getRightExpression() instanceof Literal) {
+	    				Literal l = (Literal)obj.getRightExpression();
+	    				l.setType(FixedCharType.class);
+    				} else if (obj.getRightExpression() instanceof Parameter) {
+    					Parameter p = (Parameter)obj.getRightExpression();
+	    				p.setType(FixedCharType.class);
+    				}
     			}
     			super.visit(obj);
     		}
@@ -520,20 +522,26 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     		}
 
-			private boolean isChar(Expression obj) {
-				if (!(obj instanceof ColumnReference)) {
+			private boolean isFixedChar(Expression obj) {
+				if (!isOracleSuppliedDriver() || !(obj instanceof ColumnReference)) {
 					return false;
 				}
 				ColumnReference cr = (ColumnReference)obj;
-				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING && cr.getMetadataObject() != null && "CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()); //$NON-NLS-1$
+				return cr.getType() == TypeFacility.RUNTIME_TYPES.STRING 
+						&& cr.getMetadataObject() != null 
+						&& ("CHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType()) //$NON-NLS-1$
+								|| "NCHAR".equalsIgnoreCase(cr.getMetadataObject().getNativeType())); //$NON-NLS-1$
 			}
     		
     		public void visit(In obj) {
-    			if (isChar(obj.getLeftExpression())) {
+    			if (isFixedChar(obj.getLeftExpression())) {
     				for (Expression exp : obj.getRightExpressions()) {
     					if (exp instanceof Literal) {
     						Literal l = (Literal)exp;
     	    				l.setType(FixedCharType.class);
+    					} else if (exp instanceof Parameter) {
+    						Parameter p = (Parameter)exp;
+    	    				p.setType(FixedCharType.class);
     					}
     				}
     			}
