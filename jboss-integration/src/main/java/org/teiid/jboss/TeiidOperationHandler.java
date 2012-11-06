@@ -478,8 +478,10 @@ class GetPlan extends TeiidOperationHandler{
 		}			
 		PlanNode plan = engine.getPlan(operation.get(OperationsConstants.SESSION).asString(), operation.get(OperationsConstants.EXECUTION_ID).asLong());
 		ModelNode result = context.getResult();
-		
-		result.set(plan.toXml());
+
+		if (plan != null) {
+			result.set(plan.toXml());
+		}
 	}
 	
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
