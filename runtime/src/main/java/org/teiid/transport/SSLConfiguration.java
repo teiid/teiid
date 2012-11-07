@@ -60,6 +60,7 @@ public class SSLConfiguration {
     private String trustStorePassword = ""; //$NON-NLS-1$
     private String authenticationMode = ONEWAY;
     private String[] enabledCipherSuites;
+    private String keyAlias; 
     
 
 	public SSLEngine getServerSSLEngine() throws IOException, GeneralSecurityException {
@@ -79,7 +80,8 @@ public class SSLConfiguration {
                                     trustStorePassword,
                                     keyManagerFactoryAlgorithm,
                                     keyStoreType,
-                                    sslProtocol);
+                                    sslProtocol,
+                                    keyAlias);
         } 
 
         SSLEngine result = context.createSSLEngine();
@@ -156,5 +158,9 @@ public class SSLConfiguration {
 	
 	public String[] getEnabledCipherSuitesAsArray() {
 		return enabledCipherSuites;
+	}
+
+	public void setKeystorekeyAlias(String alias) {
+		this.keyAlias = alias;
 	}
 }

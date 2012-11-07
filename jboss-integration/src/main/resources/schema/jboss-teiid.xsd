@@ -321,6 +321,11 @@
                                         <xs:documentation>Keystore Type</xs:documentation>
                                     </xs:annotation>                    
                                 </xs:attribute>
+                                <xs:attribute name="key-alias" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key alias name</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>                                
                             </xs:complexType>                        
                         </xs:element>
                         <xs:element name="truststore" minOccurs="0" maxOccurs="1">
