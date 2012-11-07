@@ -88,6 +88,7 @@ public class CachedFinder implements CapabilitiesFinder {
         TranslatorException exception = null;
         ModelMetaData model = vdb.getModel(modelName);
         for (String sourceName:model.getSourceNames()) {
+        	//TOOD: in multi-source mode it may be necessary to compute minimal capabilities across the sources
         	try {
         		ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
         		if (mgr == null) {

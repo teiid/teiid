@@ -35,6 +35,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.Request;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
@@ -106,8 +107,11 @@ public class TestMultiSourcePlanToProcessConverter {
             	 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
-        
-        QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
+        String elementName = vdb.getPropertyValue(Request.MULTISOURCE_COLUMN_NAME);
+        if (elementName == null) {
+        	elementName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME;
+        }
+        QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels, elementName);
         wrapper = new TempMetadataAdapter(wrapper, new TempMetadataStore());
     	DQPWorkContext dqpContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
         
@@ -127,7 +131,7 @@ public class TestMultiSourcePlanToProcessConverter {
         IDGenerator idGenerator = new IDGenerator();
         
         CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(wrapper, idGenerator, analysis, finder, multiSourceModels, dqpContext, context));
+        context.setPlanToProcessConverter(new MultiSourcePlanToProcessConverter(wrapper, idGenerator, analysis, finder, multiSourceModels, elementName, dqpContext, context));
 
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);
                         
@@ -162,6 +166,20 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(false);
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testSingleReplacementAltName() throws Exception {
+        final QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+        final String userSql = "SELECT * FROM MultiModel.Phys WHERE foo = 'a'"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = 
+            new List<?>[] { Arrays.asList(new Object[] { null, null, "a"}) };
+        final HardcodedDataManager dataMgr = new MultiSourceDataManager();
+        dataMgr.setMustRegisterCommands(false);
+        VDBMetaData vdb = RealMetadataFactory.exampleMultiBindingVDB();
+        vdb.addProperty(Request.MULTISOURCE_COLUMN_NAME, "foo");
+		helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, vdb);
     }
     
     @Test public void testPreparedReplacement() throws Exception {

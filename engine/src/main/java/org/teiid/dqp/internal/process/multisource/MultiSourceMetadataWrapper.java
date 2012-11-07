@@ -44,15 +44,23 @@ import org.teiid.query.sql.symbol.Symbol;
  */
 public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
-    private static final String SUFFIX = Symbol.SEPARATOR + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
+    private final String suffix;
 	private Set<String> multiSourceModels;
+	private String multiSourceElementName;
     
-    public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Set<String> multiSourceModels){
+    public MultiSourceMetadataWrapper(QueryMetadataInterface actualMetadata, Set<String> multiSourceModels, String multiSourceElementName){
     	super(actualMetadata);
         this.multiSourceModels = multiSourceModels;
+        this.multiSourceElementName = multiSourceElementName;
+        this.suffix =  Symbol.SEPARATOR + multiSourceElementName;
     }	
 
-    public static String getGroupName(final String fullElementName) {
+    public MultiSourceMetadataWrapper(QueryMetadataInterface metadata,
+			Set<String> multiSourceModels) {
+    	this(metadata, multiSourceModels, MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME);
+	}
+
+	public static String getGroupName(final String fullElementName) {
         int index = fullElementName.lastIndexOf('.');
         if(index >= 0) { 
             return fullElementName.substring(0, index);
@@ -64,7 +72,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	 * @see org.teiid.query.metadata.QueryMetadataInterface#getElementID(java.lang.String)
 	 */
 	public Object getElementID(String elementName) throws TeiidComponentException, QueryMetadataException {
-        if(StringUtil.endsWithIgnoreCase(elementName, SUFFIX)) {
+        if(StringUtil.endsWithIgnoreCase(elementName, suffix)) {
             try {
                 String groupName = getGroupName(elementName);
                 Object groupID = getGroupID(groupName);
@@ -112,7 +120,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	public String getName(Object metadataID) throws TeiidComponentException,
 			QueryMetadataException {
 		if(metadataID instanceof MultiSourceElement) {
-            return MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME;
+            return multiSourceElementName;
         }
 		return actualMetadata.getName(metadataID);
 	}
@@ -128,13 +136,13 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
         if(multiSourceModels.contains(modelName)) {
             elements = new ArrayList(elements);       
             
-            String fullName = this.getFullName(groupID) + "." + MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME; //$NON-NLS-1$
+            String fullName = this.getFullName(groupID) + suffix;
 
             // Check whether a source_name column was modeled in the group already
             boolean elementExists = false;
             for(int i=0; i<elements.size(); i++) {
                 Object elemID = elements.get(i);
-                if(actualMetadata.getName(elemID).equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) { 
+                if(actualMetadata.getName(elemID).equalsIgnoreCase(multiSourceElementName)) { 
                     // Replace the element with a MultiSourceElement
                     elements.set(i, new MultiSourceElement(groupID, i+1, fullName));
                     elementExists = true;
@@ -366,7 +374,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	        String modelName = this.getFullName(modelID);
 	        if(multiSourceModels.contains(modelName)) {
 				String shortName = getName(elementId);        
-		        return shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME);
+		        return shortName.equalsIgnoreCase(multiSourceElementName);
 	        }
 		}
 		return false;
@@ -374,7 +382,7 @@ public class MultiSourceMetadataWrapper extends BasicQueryMetadataWrapper {
 	
 	@Override
 	protected QueryMetadataInterface createDesignTimeMetadata() {
-		return new MultiSourceMetadataWrapper(actualMetadata.getDesignTimeMetadata(), multiSourceModels);
+		return new MultiSourceMetadataWrapper(actualMetadata.getDesignTimeMetadata(), multiSourceModels, multiSourceElementName);
 	}
 
 }

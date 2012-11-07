@@ -24,7 +24,7 @@ package org.teiid.dqp.internal.process.multisource;
 
 
 public class MultiSourceElement {
-    public static final String MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
+    public static final String DEFAULT_MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
     
     public Object groupID;
     public int position;

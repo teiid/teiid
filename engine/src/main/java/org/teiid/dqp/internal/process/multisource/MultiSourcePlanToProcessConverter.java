@@ -71,6 +71,7 @@ import org.teiid.query.util.CommandContext;
 public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	
 	private Set<String> multiSourceModels;
+	private String multiSourceElementName;
 	private DQPWorkContext workContext;
 	
 	private boolean multiSource;
@@ -78,11 +79,12 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 	
 	public MultiSourcePlanToProcessConverter(QueryMetadataInterface metadata,
 			IDGenerator idGenerator, AnalysisRecord analysisRecord,
-			CapabilitiesFinder capFinder, Set<String> multiSourceModels,
+			CapabilitiesFinder capFinder, Set<String> multiSourceModels, String multiSourceElementName,
 			DQPWorkContext workContext, CommandContext context) {
 		super(metadata, idGenerator, analysisRecord, capFinder, context);
 		this.multiSourceModels = multiSourceModels;
 		this.workContext = workContext;
+		this.multiSourceElementName = multiSourceElementName;
 	}
 	
 	@Override
@@ -247,7 +249,7 @@ public class MultiSourcePlanToProcessConverter extends PlanToProcessConverter {
 					continue;
 				}
 				String shortName = param.getParameterSymbol().getShortName();        
-			    if(shortName.equalsIgnoreCase(MultiSourceElement.MULTI_SOURCE_ELEMENT_NAME)) {
+			    if(shortName.equalsIgnoreCase(multiSourceElementName)) {
 		        	Constant source = (Constant)param.getExpression();
 		    		params.remove();
 		    		if (param.isUsingDefault() && source.isNull()) {

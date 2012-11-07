@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -47,6 +48,7 @@ import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
 import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
+import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.message.RequestID;
@@ -56,6 +58,7 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -99,6 +102,7 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class Request implements SecurityFunctionEvaluator {
     
+	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName";
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
@@ -115,6 +119,7 @@ public class Request implements SecurityFunctionEvaluator {
     protected CapabilitiesFinder capabilitiesFinder;
     protected QueryMetadataInterface metadata;
     private Set<String> multiSourceModels;
+    private String multiSourceElementName;
 
     // internal results
     protected boolean addedLimit;
@@ -195,9 +200,15 @@ public class Request implements SecurityFunctionEvaluator {
         
         // Check for multi-source models and further wrap the metadata interface
         Set<String> multiSourceModelList = workContext.getVDB().getMultiSourceModelNames();
+        multiSourceElementName = workContext.getVDB().getPropertyValue(MULTISOURCE_COLUMN_NAME);
         if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
         	this.multiSourceModels = multiSourceModelList;
-            this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels);
+        	if (multiSourceElementName == null) {
+        		multiSourceElementName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME;
+        	} else if (multiSourceElementName.isEmpty() || multiSourceElementName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) > -1) {
+        		throw new QueryMetadataException();
+        	}
+            this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels, multiSourceElementName);
         }
         
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, this.tempTableStore.getMetadataStore());
@@ -234,7 +245,7 @@ public class Request implements SecurityFunctionEvaluator {
         if (multiSourceModels != null) {
             MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
 					metadata, idGenerator, getAnalysisRecord(), capabilitiesFinder,
-					multiSourceModels, workContext, context);
+					multiSourceModels, multiSourceElementName, workContext, context);
             context.setPlanToProcessConverter(modifier);
         }
         context.setExecutor(this.executor);
