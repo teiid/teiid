@@ -596,6 +596,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		if (this.resultsBuffer == null) {
 			//This is just a dummy result it will get replaced by collector source
 	    	resultsBuffer = this.processor.getBufferManager().createTupleBuffer(this.originalCommand.getProjectedSymbols(), this.request.context.getConnectionId(), TupleSourceType.FINAL);
+		} else if (this.requestMsg.getRequestOptions().isContinuous()) {
+			//TODO: this is based upon continuous being an embedded connection otherwise we have to do something like
+			//forcing inlining, but truncating or erroring over a given size (similar to odbc handling)
+			resultsBuffer.removeLobTracking();
 		}
 		initTransactionState(request.transactionContext);
 		if (requestMsg.isNoExec()) {

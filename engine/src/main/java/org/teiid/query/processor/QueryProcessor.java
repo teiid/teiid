@@ -22,8 +22,7 @@
 
 package org.teiid.query.processor;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.common.buffer.BlockedException;
@@ -149,8 +148,7 @@ public class QueryProcessor implements BatchProducer {
 	        		
 	        		if (result.getTerminationFlag()) {
 	        			result.setTermination(TupleBatch.ITERATION_TERMINATED);
-	        			ArrayList<Object> terminationTuple = new ArrayList<Object>(this.getOutputElements().size());
-	        			Collections.fill(terminationTuple, null);
+	        			List<Object> terminationTuple = Arrays.asList(new Object[this.getOutputElements().size()]);
 	        			result.getTuples().add(terminationTuple);
 	        			this.context.getTupleSourceCache().close();
 		        		this.processPlan.close();

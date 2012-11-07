@@ -98,6 +98,13 @@ public class TupleBuffer {
 		}
 	}
 	
+	public void removeLobTracking() {
+		if (this.lobManager != null) {
+			this.lobManager.remove();
+			this.lobManager = null;
+		}
+	}
+	
 	public String getId() {
 		if (this.uuid == null) {
 			this.uuid = java.util.UUID.randomUUID().toString();

@@ -22,16 +22,22 @@
 
 package org.teiid.dqp.internal.datamgr;
 
-import java.sql.Clob;
+import static org.junit.Assert.*;
 
+import java.sql.Clob;
+import java.sql.Types;
+
+import org.junit.Test;
 import org.teiid.translator.TypeFacility;
 
-import junit.framework.TestCase;
+public class TestTypeFacilityImpl {
 
-public class TestTypeFacilityImpl extends TestCase {
-
-	public void testNullClob() {
+	@Test public void testNullClob() {
 		assertNull(new TypeFacility().convertToRuntimeType((Clob)null));
+	}
+	
+	@Test public void testArrayType() {
+		assertEquals(TypeFacility.RUNTIME_NAMES.OBJECT, TypeFacility.getDataTypeNameFromSQLType(Types.ARRAY));
 	}
 	
 }
