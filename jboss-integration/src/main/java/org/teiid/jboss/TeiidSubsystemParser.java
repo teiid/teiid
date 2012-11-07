@@ -168,6 +168,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 				writeAttribute(writer, Element.SSL_KETSTORE_NAME_ATTRIBUTE, node);
 				writeAttribute(writer, Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE, node);
 				writeAttribute(writer, Element.SSL_KETSTORE_TYPE_ATTRIBUTE, node);
+				writeAttribute(writer, Element.SSL_KETSTORE_ALIAS_ATTRIBUTE, node);
 				writer.writeEndElement();
 			}
 			
@@ -540,6 +541,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     				
     			case SSL_KETSTORE_TYPE_ATTRIBUTE:
+    				node.get(element.getModelName()).set(attrValue);
+    				break;
+
+    			case SSL_KETSTORE_ALIAS_ATTRIBUTE:
     				node.get(element.getModelName()).set(attrValue);
     				break;
 
