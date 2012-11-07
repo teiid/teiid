@@ -122,6 +122,7 @@ enum Element {
 	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites", ModelType.STRING, false, null),
 	SSL_KETSTORE_ELEMENT("keystore"),
 	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name", ModelType.STRING, false, null),
+	SSL_KETSTORE_ALIAS_ATTRIBUTE("key-alias", "keystore-key-alias", ModelType.STRING, false, null),
 	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password", ModelType.EXPRESSION, false, null),
 	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type", ModelType.STRING, false, "JKS"),
 	SSL_TRUSTSTORE_ELEMENT("truststore"),

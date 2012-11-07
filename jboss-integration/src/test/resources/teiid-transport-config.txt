@@ -109,5 +109,10 @@
         "type" => EXPRESSION,
         "description" => "Truststore Password",
         "required" => false
+    },
+    "keystore-key-alias" => {
+        "type" => STRING,
+        "description" => "key Alias name",
+        "required" => false
     }
 }}
