@@ -45,6 +45,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	private boolean throwError = false;
 	private long pollIntervalInMilli = -1;
 	private boolean incrementRows = false;
+	private boolean disableCapabilities = false;
 	private int charValueSize = 10;
 	
 	public LoopbackExecutionFactory() {
@@ -71,6 +72,15 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	
 	public void setIncrementRows(boolean incrementRows) {
 		this.incrementRows = incrementRows;
+	}	
+	
+	@TranslatorProperty(display="If set to true all translator capabilities will be disabled", advanced=false)
+	public boolean getDisableCapabilities() {
+		return disableCapabilities;
+	}	
+	
+	public void setDisableCapabilities(boolean disableCapabilities) {
+		this.disableCapabilities = !disableCapabilities;
 	}	
 	
 	@Override
@@ -150,42 +160,42 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
     
     @Override
     public boolean supportsGroupBy() {
-    	return true;
+    	return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesAvg() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesCount() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesCountStar() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesDistinct() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesMax() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesMin() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsAggregatesSum() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
@@ -195,96 +205,96 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 
     @Override
     public boolean supportsCompareCriteriaEquals() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsCorrelatedSubqueries() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsExistsCriteria() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsInCriteria() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsInCriteriaSubquery() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsIsNullCriteria() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsLikeCriteria() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsLikeCriteriaEscapeCharacter() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsNotCriteria() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsOrCriteria() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsQuantifiedCompareCriteriaAll() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsScalarSubqueries() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsSearchedCaseExpressions() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsSelfJoins() {
-        return true;
+        return disableCapabilities;
     }
     
     @Override
     public boolean supportsInlineViews() {
-        return true;
+        return disableCapabilities;
     }
 
     @Override
     public boolean supportsQuantifiedCompareCriteriaSome() {
-        return true;
+        return disableCapabilities;
     }
     @Override
     public boolean supportsRowLimit() {
-        return true;
+        return disableCapabilities;
     }
     
     @Override
     public boolean supportsSelectExpression() {
-    	return true;
+    	return disableCapabilities;
     }
         
     @Override
     public boolean supportsSetQueryOrderBy() {
-    	return true;
+    	return disableCapabilities;
     }
     
     @Override
@@ -294,22 +304,22 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
     
     @Override
     public boolean supportsCompareCriteriaOrdered() {
-    	return true;
+    	return disableCapabilities;
     }
     
     @Override
     public boolean supportsExcept() {
-    	return true;
+    	return disableCapabilities;
     }
     
     @Override
     public boolean supportsHaving() {
-    	return true;
+    	return disableCapabilities;
     }
     
     @Override
     public boolean supportsIntersect() {
-    	return true;
+    	return disableCapabilities;
     }
 
 

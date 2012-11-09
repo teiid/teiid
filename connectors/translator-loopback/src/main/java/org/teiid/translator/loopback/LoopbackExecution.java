@@ -32,7 +32,9 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
+import java.sql.Blob;
 
+import org.teiid.core.types.BlobImpl;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -66,10 +68,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     public LoopbackExecution(Command command, LoopbackExecutionFactory config) {
         this.config = config;
         this.command = command;
-        
-
-        
-        constructIncrementedString(config.getCharacterValuesSize()); 
+            
         staticStringValue = constructIncrementedString(config.getCharacterValuesSize());
     }
     
@@ -263,8 +262,8 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
             return TIMESTAMP_VAL;
         } else if(type.equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
             return this.config.getTypeFacility().convertToRuntimeType(staticStringValue.toCharArray());
-        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
-            return this.config.getTypeFacility().convertToRuntimeType(staticStringValue.getBytes());
+        } else if(type.equals(TypeFacility.RUNTIME_TYPES.BLOB) || type.equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) { 
+				return this.config.getTypeFacility().convertToRuntimeType(staticStringValue.getBytes());
         } else {
             return staticStringValue;
         }
@@ -346,11 +345,11 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 			} else if (o.getClass().equals(java.sql.Timestamp.class)) {
 				newRow.add(new Timestamp(((Timestamp) o).getTime() + 1));
 			} else if (o.getClass().equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
-				newRow.add(this.config.getTypeFacility().convertToRuntimeType(
-						incrementedString.toCharArray()));
-			} else if (o.getClass().equals(TypeFacility.RUNTIME_TYPES.BLOB)) {
+				newRow.add(this.config.getTypeFacility().convertToRuntimeType(incrementedString.toCharArray()));
+			} else if (o.getClass().equals(TypeFacility.RUNTIME_TYPES.BLOB) || o.getClass().equals(TypeFacility.RUNTIME_TYPES.VARBINARY)) {
 				newRow.add(this.config.getTypeFacility().convertToRuntimeType(incrementedString.getBytes()));
-			}
+			} 
+			
 		}
 		row = newRow;
 	}
