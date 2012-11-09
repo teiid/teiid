@@ -208,7 +208,7 @@ public class Request implements SecurityFunctionEvaluator {
     protected void createCommandContext(Command command) throws QueryValidatorException {
     	boolean returnsResultSet = command.returnsResultSet();
     	this.returnsUpdateCount = !(command instanceof StoredProcedure) && !returnsResultSet;
-    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && !returnsUpdateCount) 
+    	if ((this.requestMsg.getResultsMode() == ResultsMode.UPDATECOUNT && returnsResultSet) 
     			|| (this.requestMsg.getResultsMode() == ResultsMode.RESULTSET && !returnsResultSet)) {
         	throw new QueryValidatorException(QueryPlugin.Event.TEIID30490, QueryPlugin.Util.getString(this.requestMsg.getResultsMode()==ResultsMode.RESULTSET?"Request.no_result_set":"Request.result_set")); //$NON-NLS-1$ //$NON-NLS-2$
     	}

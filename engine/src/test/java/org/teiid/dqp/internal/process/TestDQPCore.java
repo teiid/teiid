@@ -42,8 +42,9 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.cache.CacheConfiguration;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
+import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -630,6 +631,16 @@ public class TestDQPCore {
         
         assertNull(rm.getException());
         assertEquals(2, rm.getResultsList().size());
+    }
+    
+    @Test public void testProcedureUpdateCount() throws Exception {
+    	String sql = "{? = call TEIIDSP8(1)}"; //$NON-NLS-1$
+    	RequestMessage request = exampleRequestMessage(sql);
+    	request.setResultsMode(ResultsMode.UPDATECOUNT);
+    	request.setStatementType(StatementType.CALLABLE);
+        ResultsMessage rm = execute("A", 1, request);
+        assertNull(rm.getException());
+        assertEquals(1, rm.getResultsList().size());
     }
     
 	public void helpTestVisibilityFails(String sql) throws Exception {
