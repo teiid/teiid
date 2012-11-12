@@ -80,7 +80,7 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	}	
 	
 	public void setDisableCapabilities(boolean disableCapabilities) {
-		this.disableCapabilities = !disableCapabilities;
+		this.disableCapabilities = disableCapabilities;
 	}	
 	
 	@Override
@@ -123,7 +123,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	public void setPollIntervalInMilli(long intervel) {
 		this.pollIntervalInMilli = intervel;
 	}
-	
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
@@ -160,167 +159,170 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
     
     @Override
     public boolean supportsGroupBy() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesAvg() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesCount() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesCountStar() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesDistinct() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesMax() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesMin() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAggregatesSum() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsAliasedTable() {
-        return true;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsCompareCriteriaEquals() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsCorrelatedSubqueries() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsExistsCriteria() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsInCriteria() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsInCriteriaSubquery() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsIsNullCriteria() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsLikeCriteria() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsLikeCriteriaEscapeCharacter() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsNotCriteria() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsOrCriteria() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsQuantifiedCompareCriteriaAll() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsScalarSubqueries() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsSearchedCaseExpressions() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsSelfJoins() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsInlineViews() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
 
     @Override
     public boolean supportsQuantifiedCompareCriteriaSome() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
     @Override
     public boolean supportsRowLimit() {
-        return disableCapabilities;
+        return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsSelectExpression() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
         
     @Override
     public boolean supportsSetQueryOrderBy() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsUnions() {
-    	return true;
+    	return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsCompareCriteriaOrdered() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsExcept() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsHaving() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
     
     @Override
     public boolean supportsIntersect() {
-    	return disableCapabilities;
+    	return isCapabilityEnabled();
     }
-
+    
+	private boolean isCapabilityEnabled(){
+		return !disableCapabilities;
+	}
 
 }
