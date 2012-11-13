@@ -65,6 +65,26 @@ public class TestTriggerActions {
     	helpProcess(plan, context, dm, expected);
 	}
 	
+	@Test public void testInsertWithDefault() throws Exception {
+		TransformationMetadata metadata = TestUpdateValidator.example1();
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, GX);
+		Table t = metadata.getMetadataStore().getSchemas().get(VM1).getTables().get(GX);
+		t.setDeletePlan("");
+		t.setUpdatePlan("");
+		t.setInsertPlan("FOR EACH ROW BEGIN insert into pm1.g1 (e1) values (new.x); END");
+		
+		String sql = "insert into gx (x) values (1)";
+		
+		FakeDataManager dm = new FakeDataManager();
+		FakeDataStore.addTable("pm1.g1", dm, metadata);
+		
+		CommandContext context = createCommandContext();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        ProcessorPlan plan = TestProcessor.helpGetPlan(TestResolver.helpResolve(sql, metadata), metadata, new DefaultCapabilitiesFinder(caps), context);
+        List<?>[] expected = new List[] {Arrays.asList(1)};
+    	helpProcess(plan, context, dm, expected);
+	}
+	
 	@Test public void testInsertWithQueryExpression() throws Exception {
 		TransformationMetadata metadata = TestUpdateValidator.example1();
 		TestUpdateValidator.createView("select '1' as x, 2 as y", metadata, GX);

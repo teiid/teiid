@@ -272,7 +272,7 @@ public class InsertResolver extends ProcedureContainerResolver implements Variab
 
         Iterator<ElementSymbol> defaultIter = insertElmnts.iterator();
         while(defaultIter.hasNext()) {
-        	ElementSymbol next = varIter.next();
+        	ElementSymbol next = defaultIter.next();
  			ElementSymbol varSymbol = next.clone();
             varSymbol.getGroupSymbol().setName(ProcedureReservedWords.CHANGING);
             varSymbol.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
