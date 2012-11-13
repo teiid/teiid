@@ -65,7 +65,7 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		admin.deploy("dynamicview-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("dynamicview-vdb.xml")));
 		
 		Properties props = new Properties();
-		props.setProperty("ParentDirectory", "../docs/teiid/examples/dynamicvdb-portfolio/data");
+		props.setProperty("ParentDirectory", ".");
 		props.setProperty("AllowParentPaths", "true");
 		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
 		
