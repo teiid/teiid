@@ -33,6 +33,7 @@ import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
@@ -130,7 +131,7 @@ public class CompositeVDB {
 		newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
 		this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
-		for (VDBImport vdbImport : vdb.getVDBImports()) {
+		for (VDBImportMetadata vdbImport : vdb.getVDBImports()) {
 			CompositeVDB importedVDB = vdbRepository.getCompositeVDB(new VDBKey(vdbImport.getName(), vdbImport.getVersion()));
 			if (importedVDB == null) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40083, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40083, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion()));
@@ -162,6 +163,7 @@ public class CompositeVDB {
 					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40086, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40086, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), entry.getKey()));
 				}
 			}
+			newMergedVDB.getVDBImports().add(vdbImport);
 		}
 		this.mergedVDB = newMergedVDB;
 	}
