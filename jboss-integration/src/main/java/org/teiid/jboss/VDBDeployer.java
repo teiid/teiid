@@ -363,5 +363,11 @@ class VDBDeployer implements DeploymentUnitProcessor {
         if (controller != null) {
             controller.setMode(ServiceController.Mode.REMOVE);
         }
+        
+		ServiceController<?> switchSvc = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.vdbSwitchServiceName(deployment.getName(), deployment.getVersion()));
+        if (switchSvc != null) {
+            switchSvc.setMode(ServiceController.Mode.REMOVE);
+        }
+        
 	}
 }
