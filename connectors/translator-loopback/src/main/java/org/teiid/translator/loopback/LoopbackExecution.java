@@ -32,14 +32,12 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
-import java.sql.Blob;
 
-import org.teiid.core.types.BlobImpl;
 import org.teiid.language.Argument;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
-import org.teiid.language.Argument.Direction;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.DataNotAvailableException;
@@ -59,11 +57,12 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     private String staticStringValue = "";
         
     // Execution state
-    private Random randomNumber = new Random(System.currentTimeMillis());
+    private Random randomNumber = new Random();
     private List<Object> row;
     private boolean waited = false;
     private int rowsReturned = 0;
     private int rowsNeeded = 1;
+	private BigInteger rowNumber = BigInteger.ZERO;
     
     public LoopbackExecution(Command command, LoopbackExecutionFactory config) {
         this.config = config;
@@ -204,14 +203,15 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
         }   
     }
     
-    public static final Long DAY_MILIS=86400000L;
-    private static final Integer INTEGER_VAL = new Integer(0);
-    private static final Long LONG_VAL = new Long(0);
+    public static final Long DAY_SECONDS=86400L;
+    private static final int DATE_PERIOD = 365*(8099-1970);
+    private static final Integer INTEGER_VAL = 0;
+    private static final Long LONG_VAL = 0l;
     private static final Float FLOAT_VAL = new Float(0.0);
-    private static final Short SHORT_VAL = new Short((short)0);
+    private static final Short SHORT_VAL = 0;
     private static final Double DOUBLE_VAL = new Double(0.0);
     private static final Character CHAR_VAL = new Character('c');
-    private static final Byte BYTE_VAL = new Byte((byte)0);
+    private static final Byte BYTE_VAL = 0x0;
     private static final Boolean BOOLEAN_VAL = Boolean.FALSE;
     private static final BigInteger BIG_INTEGER_VAL = new BigInteger("0"); //$NON-NLS-1$
     private static final BigDecimal BIG_DECIMAL_VAL = new BigDecimal("0"); //$NON-NLS-1$
@@ -225,7 +225,7 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
     static {
     	Calendar cal = Calendar.getInstance();
     	cal.clear();
-    	cal.set(1969, 1, 31, 18, 0, 0);
+    	cal.setTimeInMillis(0);
     	SQL_DATE_VAL = new Date(cal.getTimeInMillis());
     	TIME_VAL = new Time(cal.getTimeInMillis());
     	TIMESTAMP_VAL = new Timestamp(cal.getTimeInMillis());
@@ -274,49 +274,21 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 	 */
 	private void incrementValues() {
 		List<Object> newRow = new ArrayList<Object>();
-		rowNumber = rowNumber.add(one);
+		rowNumber = rowNumber.add(BigInteger.ONE);
 		String incrementedString = incrementString(staticStringValue,rowNumber);
 		for (Object o : row) {
 			if (o.getClass().equals(String.class)) {
 				newRow.add(incrementedString);
 			} else if (o.getClass().equals(Integer.class)) {
-				Integer i = ((Integer) o);
-				if (i==Integer.MAX_VALUE)
-					i = 0;
-				else 
-					i++;
-				newRow.add(i);
+				newRow.add(rowNumber.intValue());
 			} else if (o.getClass().equals(java.lang.Short.class)) {
-				Short s = (Short)o;
-				if (Short.MAX_VALUE == s)
-					s = (short)0;
-				else {
-					s = new Short((short)(1+(Short)o));
-				}
-				
-				newRow.add(s);
+				newRow.add(rowNumber.shortValue());
 			} else if (o.getClass().equals(java.lang.Long.class)) {
-				Long l = (Long) o;
-				if (l == Long.MAX_VALUE) {
-					l=0L;
-				} else 
-					l = ((Long) o) + 1L;
-				newRow.add(l);
-				
+				newRow.add(rowNumber.longValue());
 			} else if (o.getClass().equals(java.lang.Float.class)) {
-				Float f = (Float)o;
-				if (Float.MAX_VALUE - f < 1)
-					f= (float)0;
-				else 
-					f = ((Float) o) + 0.1f;
-				newRow.add(f);
+				newRow.add(rowNumber.floatValue()/10);
 			} else if (o.getClass().equals(java.lang.Double.class)) {
-				Double d = (Double) o;
-				if (Double.MAX_VALUE - d < 1) 
-					d= new Double(0);
-				else 
-					d = new Double(((Double) o) + 0.1);
-				newRow.add(d);
+				newRow.add(rowNumber.doubleValue()/10);
 			} else if (o.getClass().equals(java.lang.Character.class)) {
 				Character c = (Character)o;
 				if (c == 'z')
@@ -325,23 +297,17 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 					c= new Character((char)(1+(Character)o));
 				newRow.add(c);
 			} else if (o.getClass().equals(java.lang.Byte.class)) {
-				Byte b = (Byte)o;
-				if (Byte.MAX_VALUE == b)
-					b = (byte)0; 
-				else 
-					b = new Byte((byte)((Byte)o+1));
-				
-				newRow.add(b);
+				newRow.add(rowNumber.byteValue());
 			} else if (o.getClass().equals(java.lang.Boolean.class)) {
 				newRow.add(((Boolean) o) ? false : true);
 			} else if (o.getClass().equals(java.math.BigInteger.class)) {
-				newRow.add(((BigInteger) o).add(new BigInteger("1")));
+				newRow.add(rowNumber);
 			} else if (o.getClass().equals(java.math.BigDecimal.class)) {
-				newRow.add(((BigDecimal) o).add(new BigDecimal("0.1")));
+				newRow.add(new BigDecimal(rowNumber, 1));
 			} else if (o.getClass().equals(java.sql.Date.class)) {
-				newRow.add(new Date(((Date) o).getTime() + DAY_MILIS));
+				newRow.add(new Date(DAY_SECONDS * 1000 * (rowNumber.intValue()%DATE_PERIOD)));
 			} else if (o.getClass().equals(java.sql.Time.class)) {
-				newRow.add(new Time(((Time) o).getTime() + 1000));
+				newRow.add(new Time((rowNumber.intValue()%DAY_SECONDS) * 1000));
 			} else if (o.getClass().equals(java.sql.Timestamp.class)) {
 				newRow.add(new Timestamp(((Timestamp) o).getTime() + 1));
 			} else if (o.getClass().equals(TypeFacility.RUNTIME_TYPES.CLOB)) {
@@ -354,8 +320,6 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 		row = newRow;
 	}
 	
-	private BigInteger rowNumber = new BigInteger("0");
-	private static final BigInteger one= new BigInteger("1");
 	/**
 	 * Increments the string by appending unique number in sequence. Preserves string length.
 	 * @param number Number in the sequence of strings (which row)
@@ -363,8 +327,9 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 	 */
 	public static String incrementString(String string, BigInteger number) {
 		String numberString= number.toString();
-		if (number.equals(new BigInteger("0")))
-			return string.toString();//Backward compatibility for first string
+		if (number.equals(BigInteger.ZERO)) {
+			return string;//Backward compatibility for first string
+		}
 		return string.substring(0,string.length()-numberString.length())+ numberString;
 	}
 

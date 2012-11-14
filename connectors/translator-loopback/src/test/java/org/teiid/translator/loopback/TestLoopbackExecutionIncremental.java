@@ -26,17 +26,16 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
-import java.util.List;
 
 import junit.framework.Assert;
 
 import org.junit.Test;
-import org.teiid.cdk.api.ConnectorHost;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.translator.TranslatorException;
 
 
+@SuppressWarnings("nls")
 public class TestLoopbackExecutionIncremental  {
 
 
@@ -70,7 +69,7 @@ public class TestLoopbackExecutionIncremental  {
     			new Long(1), 
     			new Double(0.1), 
     			new Byte((byte)1), //$NON-NLS-1$
-                new Date(LoopbackExecution.SQL_DATE_VAL.getTime()+LoopbackExecution.DAY_MILIS),
+                new Date(LoopbackExecution.SQL_DATE_VAL.getTime()+LoopbackExecution.DAY_SECONDS*1000),
                 new Time(LoopbackExecution.TIME_VAL.getTime()+1000), 
                 new Time(LoopbackExecution.TIMESTAMP_VAL.getTime()+1),
                 Boolean.TRUE, 
