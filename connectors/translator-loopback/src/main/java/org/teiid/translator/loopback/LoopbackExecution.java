@@ -218,11 +218,11 @@ public class LoopbackExecution implements UpdateExecution, ProcedureExecution {
 			} else if (type.equals(java.lang.Double.class)) {
 				newRow.add(rowNumber.doubleValue()/10);
 			} else if (type.equals(java.lang.Character.class)) {
-				newRow.add((char)((rowNumber.byteValue()&0xff % 26) + 97));
+				newRow.add((char)((((rowNumber.byteValue()&0xff) + 2)%26) + 97));
 			} else if (type.equals(java.lang.Byte.class)) {
 				newRow.add(rowNumber.byteValue());
 			} else if (type.equals(java.lang.Boolean.class)) {
-				newRow.add(rowNumber.intValue()%2==1);
+				newRow.add(rowNumber.intValue()%2!=0);
 			} else if (type.equals(java.math.BigInteger.class)) {
 				newRow.add(rowNumber);
 			} else if (type.equals(java.math.BigDecimal.class)) {
