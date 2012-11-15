@@ -24,7 +24,9 @@ package org.teiid.translator.loopback;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.List;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,9 +60,9 @@ public class TestLoopbackExecution  {
     public void testMostTypes() throws Exception {
         Object[][] results = new Object[][] {
             new Object[] { new Integer(0), "ABCDEFGHIJ", new Float(0), new Long(0), new Double(0), new Byte((byte)0), //$NON-NLS-1$
-                LoopbackExecution.SQL_DATE_VAL, LoopbackExecution.TIME_VAL, 
-                LoopbackExecution.TIMESTAMP_VAL, Boolean.FALSE, 
-                new BigInteger("0"), new BigDecimal("0"), "ABCDEFGHIJ", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+                new Date(0), new Time(0), 
+                new Timestamp(0), Boolean.FALSE, 
+                new BigInteger("0"), new BigDecimal("0.0"), "ABCDEFGHIJ", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
                 new Short((short)0), new Character('c')
                  }  
         };
