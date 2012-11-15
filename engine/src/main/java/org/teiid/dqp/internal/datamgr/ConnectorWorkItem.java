@@ -38,9 +38,9 @@ import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.language.Call;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -203,54 +203,56 @@ public class ConnectorWorkItem implements ConnectorWork {
         if(isCancelled()) {
     		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
     	}
-        
-    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
     	try {
-    		try {
-    			this.connectionFactory = this.manager.getConnectionFactory();
-    		} catch (TranslatorException e) {
-    			if (this.connector.isSourceRequired()) {
-    				throw e;
-    			}
-    		}
-	    	if (this.connectionFactory != null) {
-	    		this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
-	    	} 
-	    	if (this.connection == null && this.connector.isSourceRequired()) {
-	    		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", this.manager.getConnectionName())); //$NON-NLS-1$);
-	    	}
-
-	        Object unwrapped = null;
-			if (connection instanceof WrappedConnection) {
-				try {
-					unwrapped = ((WrappedConnection)connection).unwrap();
-				} catch (ResourceException e) {
-					 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
-				}	
-			}
-
-	        // Translate the command
-	        Command command = this.requestMsg.getCommand();
-	        this.expectedColumns = command.getProjectedSymbols().size();
-	        if (command instanceof StoredProcedure) {
-	        	this.expectedColumns = ((StoredProcedure)command).getResultSetColumns().size();
-	        }
-
-			Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.securityContext.getPartIdentifier());
-			if (exec != null) {
-				((ReusableExecution)exec).reset(translatedCommand, this.securityContext, connection);
-			} else {
-		        exec = connector.createExecution(translatedCommand, this.securityContext, queryMetadata, (unwrapped == null) ? this.connection:unwrapped);
-		        if (exec instanceof ReusableExecution<?>) {
-		        	this.requestMsg.getCommandContext().putReusableExecution(this.securityContext.getPartIdentifier(), (ReusableExecution<?>) exec);
+	        if (this.execution == null) {
+	        	if (this.connection == null) {
+		        	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Processing NEW request:", this.requestMsg.getCommand()}); //$NON-NLS-1$                                     
+		    		try {
+		    			this.connectionFactory = this.manager.getConnectionFactory();
+		    		} catch (TranslatorException e) {
+		    			if (this.connector.isSourceRequired()) {
+		    				throw e;
+		    			}
+		    		}
+			    	if (this.connectionFactory != null) {
+			    		this.connection = this.connector.getConnection(this.connectionFactory, securityContext);
+			    	} 
+			    	if (this.connection == null && this.connector.isSourceRequired()) {
+			    		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", this.manager.getConnectionName())); //$NON-NLS-1$);
+			    	}
+	        	}
+	
+		        Object unwrapped = null;
+				if (connection instanceof WrappedConnection) {
+					try {
+						unwrapped = ((WrappedConnection)connection).unwrap();
+					} catch (ResourceException e) {
+						 throw new TranslatorException(QueryPlugin.Event.TEIID30477, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30477));
+					}	
+				}
+	
+		        // Translate the command
+		        Command command = this.requestMsg.getCommand();
+		        this.expectedColumns = command.getProjectedSymbols().size();
+		        if (command instanceof StoredProcedure) {
+		        	this.expectedColumns = ((StoredProcedure)command).getResultSetColumns().size();
 		        }
-			}
-	        setExecution(command, translatedCommand, exec);
-			
-	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
-	        //Log the Source Command (Must be after obtaining the execution context)
-	        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
-	        
+	
+				Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.securityContext.getPartIdentifier());
+				if (exec != null) {
+					((ReusableExecution)exec).reset(translatedCommand, this.securityContext, connection);
+				} else {
+			        exec = connector.createExecution(translatedCommand, this.securityContext, queryMetadata, (unwrapped == null) ? this.connection:unwrapped);
+			        if (exec instanceof ReusableExecution<?>) {
+			        	this.requestMsg.getCommandContext().putReusableExecution(this.securityContext.getPartIdentifier(), (ReusableExecution<?>) exec);
+			        }
+				}
+		        setExecution(command, translatedCommand, exec);
+				
+		        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.requestMsg.getAtomicRequestID(), "Obtained execution"}); //$NON-NLS-1$      
+		        //Log the Source Command (Must be after obtaining the execution context)
+		        manager.logSRCCommand(this.requestMsg, this.securityContext, Event.NEW, null); 
+	    	}
 	        // Execute query
 	    	this.execution.execute();
 	        LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Executed command"}); //$NON-NLS-1$
