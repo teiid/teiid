@@ -487,5 +487,20 @@ public class TestEmbeddedServer {
 	    ps.setString(2,"Columns");
 		assertEquals(1, ps.executeUpdate());
 	}
+	
+	public static boolean started;
+	
+	public static class MyEF extends ExecutionFactory<Void, Void> {
+		
+		@Override
+		public void start() throws TranslatorException {
+			started = true;
+		}
+	}
+	
+	@Test public void testStart() throws TranslatorException {
+		es.addTranslator(MyEF.class);
+		assertTrue(started);
+	}
 
 }

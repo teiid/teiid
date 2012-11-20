@@ -130,7 +130,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(32, translators.size());
+		assertEquals(33, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -313,7 +313,8 @@ public class IntegrationTestDeployment {
 	
 	@Test
 	public void getDatasourceTemplateNames() throws Exception {
-		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-connector-infinispan.rar", "teiid-connector-file.rar", "teiid-local", "teiid", "teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2"}));
+		Set<String> vals  = new HashSet<String>(Arrays.asList(new String[]{"teiid-connector-infinispan.rar", "teiid-connector-file.rar", "teiid-local", "teiid", 
+				"teiid-connector-salesforce.rar", "teiid-connector-ldap.rar", "teiid-connector-ws.rar", "h2", "teiid-connector-google.rar",}));
 		deployVdb();
 		Set<String> templates = admin.getDataSourceTemplateNames();
 		assertEquals(vals, templates);

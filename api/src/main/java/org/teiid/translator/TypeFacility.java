@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
@@ -146,7 +147,15 @@ public class TypeFacility {
         return JDBCSQLTypeInfo.getSQLTypeFromRuntimeType(type);
     } 
     
+    /**
+     * Get the runtime type name for the given SQL type
+     * @param sqlType
+     * @return
+     */
     public static final String getDataTypeNameFromSQLType(int sqlType) {
+    	if (sqlType == Types.ARRAY) {
+    		return RUNTIME_NAMES.OBJECT;
+    	}
     	return JDBCSQLTypeInfo.getTypeName(sqlType);
     }
     

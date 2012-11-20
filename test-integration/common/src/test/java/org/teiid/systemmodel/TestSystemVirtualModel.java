@@ -266,7 +266,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.Schemas", new StatementCallback() {
+		ts.submitExecute("select xmlelement(name x) from SYS.Schemas", new StatementCallback() {
 			int rowCount;
 			@Override
 			public void onRow(Statement s, ResultSet rs) throws SQLException {
