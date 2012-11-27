@@ -332,7 +332,7 @@ public class TestAggregateProcessing {
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
-        dataManager.addData("SELECT MAX(g_0.e2), COUNT(*), COUNT(g_0.e2), SUM(power(g_0.e2, 2)), SUM(g_0.e2) FROM pm2.g2 AS g_0 HAVING COUNT(*) > 0", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
+        dataManager.addData("SELECT MAX(g_0.e2), COUNT(*), COUNT(g_0.e2), SUM(power(g_0.e2, 2)), SUM(g_0.e2) FROM pm2.g2 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", new List[] {Arrays.asList(5, 6, 4, BigInteger.valueOf(50l), 10l)});
         
         List[] expected = new List[] {
     		Arrays.asList(5, 8, 2.1147629234082532, 5.366666666666666),

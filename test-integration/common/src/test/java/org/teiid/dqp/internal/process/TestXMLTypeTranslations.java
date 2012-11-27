@@ -94,7 +94,7 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
     }
     
     public void testGetXmlSchemas() throws Exception {
-        FakeCapabilitiesFinder finder = new FakeCapabilitiesFinder();
+    	CachedFinder finder = new CachedFinder(null, null);
         finder.addCapabilities("sample", new BasicSourceCapabilities()); //$NON-NLS-1$
         
         TransformationMetadata metadata = createMetadata(UnitTestUtil.getTestDataPath()+"/test.vdb"); //$NON-NLS-1$

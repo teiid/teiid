@@ -252,7 +252,7 @@ public class SimpleQueryResolver implements CommandResolver {
    
             // Look for elements that are not selectable and remove them
             for (ElementSymbol element : elements) {
-                if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT)) {
+                if(metadata.elementSupports(element.getMetadataID(), SupportConstants.Element.SELECT) && !metadata.isPseudo(element.getMetadataID())) {
                     element = element.clone();
                     element.setGroupSymbol(group);
                 	result.add(element);

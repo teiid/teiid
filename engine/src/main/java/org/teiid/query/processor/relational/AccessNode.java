@@ -31,6 +31,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
@@ -40,6 +42,7 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.internal.process.multisource.MultiSourceElementReplacementVisitor;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -49,11 +52,13 @@ import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ExistsCriteria;
+import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -70,6 +75,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private Command command;
     private String modelName;
     private String connectorBindingId;
+    private Expression connectorBindingExpression;
     private boolean shouldEvaluate = false;
 
     // Processing state
@@ -79,6 +85,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     protected Command nextCommand;
     private int reserved;
     private int schemaSize;
+    private Command processingCommand;
+    private boolean shouldExecute = true;
     
     private Object[] projection;
     private List<Expression> originalSelect;
@@ -107,6 +115,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		isUpdate = false;
         returnedRows = false;
         nextCommand = null;
+        if (connectorBindingExpression != null) {
+        	connectorBindingId = null;
+        }
+        processingCommand = null;
+        shouldExecute = true;
     }
 
 	public void setCommand(Command command) {
@@ -141,26 +154,42 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		throws TeiidComponentException, TeiidProcessingException {
 
         // Copy command and resolve references if necessary
-        Command atomicCommand = command;
+		if (processingCommand == null) {
+	        processingCommand = command;
+	        isUpdate = RelationalNodeUtil.isUpdate(command);
+		}
         boolean needProcessing = true;
         
-        if (shouldEvaluate) {
-	        atomicCommand = initialCommand();
-        } 
+        if (this.connectorBindingExpression != null && connectorBindingId == null) {
+        	this.connectorBindingId = (String) getEvaluator(Collections.emptyMap()).evaluate(this.connectorBindingExpression, null);
+        	VDBMetaData vdb = getContext().getVdb();
+            ModelMetaData model = vdb.getModel(getModelName());
+            List<String> sources = model.getSourceNames();
+            String replacement = this.connectorBindingId;
+            if (!sources.contains(this.connectorBindingId)) {
+            	shouldExecute = false;
+            	if (command instanceof StoredProcedure) {
+                	StoredProcedure sp = (StoredProcedure)command;
+                	if (sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size()) {
+                		throw new TeiidProcessingException(QueryPlugin.Event.TEIID30561, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30561, command));
+                	}
+                }
+            	return;
+            } 
+            if (!(command instanceof StoredProcedure || command instanceof Insert)) {
+            	processingCommand = (Command) command.clone();
+        		PreOrPostOrderNavigator.doVisit(processingCommand, new MultiSourceElementReplacementVisitor(replacement, getContext().getMetadata()), PreOrPostOrderNavigator.PRE_ORDER, false);
+        	}
+        }
+        
         do {
-			atomicCommand = nextCommand();
+			Command atomicCommand = nextCommand();
         	if(shouldEvaluate) {
 	            needProcessing = prepareNextCommand(atomicCommand);
 	            nextCommand = null;
 	        } else {
 	            needProcessing = RelationalNodeUtil.shouldExecute(atomicCommand, true);
 	        }
-	        // else command will not be changed, so no reason to all this work.
-	        // Removing this if block and always evaluating has a significant cost that will
-	        // show up in performance tests for many simple tests that do not require it.
-	        
-	        isUpdate = RelationalNodeUtil.isUpdate(atomicCommand);
-	        
 			if(needProcessing) {
 				registerRequest(atomicCommand);
 			}
@@ -244,15 +273,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	}
 	
 	@SuppressWarnings("unused")
-	protected Command initialCommand() throws TeiidProcessingException, TeiidComponentException {
-		return nextCommand();
-	}
-
-	protected Command nextCommand() {
+	protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
 		//it's important to save the next command
 		//to ensure that the subquery ids remain stable
 		if (nextCommand == null) {
-			nextCommand = (Command) command.clone(); 
+			nextCommand = (Command) processingCommand.clone(); 
 		}
 		return nextCommand; 
 	}
@@ -265,7 +290,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
         
-        while (!tupleSources.isEmpty() || hasNextCommand()) {
+        while (shouldExecute && (!tupleSources.isEmpty() || hasNextCommand())) {
         	
         	if (tupleSources.isEmpty() && processCommandsIndividually()) {
         		registerNext();
@@ -421,7 +446,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		super.copyTo(target);
 		target.modelName = modelName;
 		target.modelId = modelId;
-		target.connectorBindingId = connectorBindingId;
+		if (this.connectorBindingExpression == null) {
+			target.connectorBindingId = this.connectorBindingId;
+		}
 		target.shouldEvaluate = shouldEvaluate;
 		if (!shouldEvaluate) {
 			target.projection = projection;
@@ -429,6 +456,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		}
 		target.command = command;
 		target.info = info;
+		target.connectorBindingExpression = this.connectorBindingExpression; 
 	}
 
     public PlanNode getDescriptionProperties() {
@@ -451,6 +479,15 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public void setConnectorBindingId(String connectorBindingId) {
 		this.connectorBindingId = connectorBindingId;
+	}
+	
+	public Expression getConnectorBindingExpression() {
+		return connectorBindingExpression;
+	}
+	
+	public void setConnectorBindingExpression(
+			Expression connectorBindingExpression) {
+		this.connectorBindingExpression = connectorBindingExpression;
 	}
 	
 	@Override

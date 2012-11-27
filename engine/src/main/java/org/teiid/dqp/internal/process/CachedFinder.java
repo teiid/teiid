@@ -114,5 +114,9 @@ public class CachedFinder implements CapabilitiesFinder {
         userCache.put(modelName, caps);
         return caps;
     }
+    
+    public void addCapabilities(String connBinding, SourceCapabilities sourceCaps) {
+    	userCache.put(connBinding, sourceCaps);
+    }
         
 }

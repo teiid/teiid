@@ -211,13 +211,17 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 		Table table = this.store.findGroup(elementName.substring(0, columnIndex));
 		String shortElementName = elementName.substring(columnIndex + 1);
-		for (Column column : getElementIDsInGroupID(table)) {
-			if (column.getName().equalsIgnoreCase(shortElementName)) {
-				return column;
-			}
-        }
-         throw new QueryMetadataException(QueryPlugin.Event.TEIID30356, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		return getColumn(elementName, table, shortElementName);
     }
+
+	public static Column getColumn(final String elementName, Table table,
+			String shortElementName) throws QueryMetadataException {
+		Column c = table.getColumnByName(shortElementName);
+		if (c != null) {
+			return c;
+		}
+         throw new QueryMetadataException(QueryPlugin.Event.TEIID30356, elementName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+	}
 
     public Table getGroupID(final String groupName) throws TeiidComponentException, QueryMetadataException {
         return getMetadataStore().findGroup(groupName);

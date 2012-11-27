@@ -48,12 +48,14 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -433,7 +435,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                         return currentNode;
                     }
                     if (this.createdNodes == null) {
-                    	satisfyAccessPatterns(critNode, currentNode);
+                    	satisfyConditions(critNode, currentNode, metadata);
                     }
 
                     if (isDependentFinalDestination(critNode, currentNode)) {
@@ -467,7 +469,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     }
                 }  
             
-                satisfyAccessPatterns(critNode, currentNode);
+                if (this.createdNodes == null) {
+                	satisfyConditions(critNode, currentNode, metadata);
+                }
 				break;
 			default:
 				if (FrameUtil.isOrderedOrStrictLimit(currentNode)) {
@@ -594,7 +598,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         }
 		
         if (createdNodes == null) {
-        	satisfyAccessPatterns(critNode, sourceNode);
+        	satisfyConditions(critNode, sourceNode, metadata);
         }
         
 		// Mark critNode as a "phantom"
@@ -606,17 +610,29 @@ public final class RulePushSelectCriteria implements OptimizerRule {
     /** 
      * @param critNode
      * @param sourceNode
+     * @throws TeiidComponentException 
+     * @throws QueryMetadataException 
      */
-    static void satisfyAccessPatterns(PlanNode critNode,
-                                       PlanNode sourceNode) {
+    static void satisfyConditions(PlanNode critNode,
+                                       PlanNode sourceNode, QueryMetadataInterface metadata) throws QueryMetadataException, TeiidComponentException {
         List aps = (List)sourceNode.getProperty(NodeConstants.Info.ACCESS_PATTERNS);
-       
+        Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+
+        if (sourceNode.hasBooleanProperty(Info.IS_MULTI_SOURCE) && crit instanceof CompareCriteria) {
+        	CompareCriteria cc = (CompareCriteria)crit;
+        	if (cc.getLeftExpression() instanceof ElementSymbol && cc.getRightExpression() instanceof Constant) {
+        		ElementSymbol es = (ElementSymbol)cc.getLeftExpression();
+        		if (metadata.isMultiSourceElement(es.getMetadataID())) {
+        			sourceNode.setProperty(Info.IS_MULTI_SOURCE, false);
+        			sourceNode.setProperty(Info.SOURCE_NAME, ((Constant)cc.getRightExpression()).getValue());
+        		}
+        	}
+        }
+        
         if (aps == null) {
             return;
         }
 
-        Criteria crit = (Criteria)critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
-        
         Collection<ElementSymbol> elements = getElementsIncriteria(crit);
                         
         boolean removeAps = satisfyAccessPatterns(aps, elements);
@@ -681,13 +697,13 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	}
 
 	boolean pushAcrossSetOp(PlanNode critNode, PlanNode setOp, QueryMetadataInterface metadata)
-		throws QueryPlannerException {
+		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         // Find source node above union and grab the symbol map
         PlanNode sourceNode = NodeEditor.findParent(setOp, NodeConstants.Types.SOURCE);
         GroupSymbol virtualGroup = sourceNode.getGroups().iterator().next();
         if (createdNodes == null) {
-        	satisfyAccessPatterns(critNode, sourceNode);
+        	satisfyConditions(critNode, sourceNode, metadata);
         }
         
         SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);

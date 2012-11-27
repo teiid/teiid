@@ -266,7 +266,7 @@ public class RulePlanJoins implements OptimizerRule {
                     JoinType joinType = joinCriteria.isEmpty()?JoinType.JOIN_CROSS:JoinType.JOIN_INNER;
                     
                     //try to push to the source
-                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null) == null) {
+                    if (RuleRaiseAccess.canRaiseOverJoin(toTest, metadata, capFinder, joinCriteria, joinType, null, context) == null) {
                         continue;
                     }
                     

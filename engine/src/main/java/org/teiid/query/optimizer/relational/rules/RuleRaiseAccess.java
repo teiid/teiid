@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.Set;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -40,10 +42,10 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
@@ -54,7 +56,9 @@ import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
@@ -73,7 +77,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             raisedNode = false;
 
             for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
-                PlanNode newRoot = raiseAccessNode(plan, accessNode, metadata, capFinder, afterJoinPlanning, analysisRecord);
+                PlanNode newRoot = raiseAccessNode(plan, accessNode, metadata, capFinder, afterJoinPlanning, analysisRecord, context);
                 if(newRoot != null) {
                     raisedNode = true;
                     plan = newRoot;
@@ -88,7 +92,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @return null if nothing changed, and a new plan root if something changed
      */
     static PlanNode raiseAccessNode(PlanNode rootNode, PlanNode accessNode, QueryMetadataInterface metadata, 
-    		CapabilitiesFinder capFinder, boolean afterJoinPlanning, AnalysisRecord record) 
+    		CapabilitiesFinder capFinder, boolean afterJoinPlanning, AnalysisRecord record, CommandContext context) 
     throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         
         PlanNode parentNode = accessNode.getParent();
@@ -104,7 +108,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         switch(parentNode.getType()) {
             case NodeConstants.Types.JOIN:
             {
-                modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning, record);
+                modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning, record, context);
                 if(modelID != null) {
                     raiseAccessOverJoin(parentNode, modelID, true);                    
                     return rootNode;
@@ -114,10 +118,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             case NodeConstants.Types.PROJECT:
             {         
                 // Check that the PROJECT contains only functions that can be pushed                               
-                List projectCols = (List) parentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
+                List<Expression> projectCols = (List) parentNode.getProperty(NodeConstants.Info.PROJECT_COLS);
                 
                 for (int i = 0; i < projectCols.size(); i++) {
-                    Expression symbol = (Expression)projectCols.get(i);
+                    Expression symbol = projectCols.get(i);
                     if(! canPushSymbol(symbol, true, modelID, metadata, capFinder, record)) {
                         return null;
                     } 
@@ -138,6 +142,16 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 	//this project node logically has the responsibility of creating the sort keys
             		return null;
                 }
+                
+                if (accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+                	List<WindowFunction> windowFunctions = new ArrayList<WindowFunction>(2);
+                	for (Expression ex : projectCols) {
+                    	AggregateSymbolCollectorVisitor.getAggregates(ex, null, null, null, windowFunctions, null);
+						if (!windowFunctions.isEmpty()) {
+							return null;
+						}
+					}
+                }
                                 
                 return performRaise(rootNode, accessNode, parentNode);                
             }
@@ -149,8 +163,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 	return null;
                 }
                 
-                //TODO: this check is too specific the columns could be used in expressions that are comparable
-                if (!CapabilitiesUtil.checkElementsAreSearchable((List)NodeEditor.findNodePreOrder(parentNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+                if (!supportsDistinct(metadata, parentNode, accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE))) {
                 	parentNode.recordDebugAnnotation("not all columns are comparable at the source", modelID, "cannot push dupremove", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
                 	return null;
                 }
@@ -167,7 +180,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             case NodeConstants.Types.GROUP:            
             {                
                 Set<AggregateSymbol> aggregates = RulePushAggregates.collectAggregates(parentNode);
-                if (canRaiseOverGroupBy(parentNode, accessNode, aggregates, metadata, capFinder, record)) {
+                if (canRaiseOverGroupBy(parentNode, accessNode, aggregates, metadata, capFinder, record, true)) {
                 	accessNode.getGroups().clear();
                 	accessNode.getGroups().addAll(parentNode.getGroups());
                     return performRaise(rootNode, accessNode, parentNode);
@@ -178,14 +191,24 @@ public final class RuleRaiseAccess implements OptimizerRule {
             	if (!canRaiseOverSetQuery(parentNode, metadata, capFinder)) {
             		return null;
             	}
-
+            	String sourceName = null;
+            	boolean multiSource = false;
             	for (PlanNode node : new ArrayList<PlanNode>(parentNode.getChildren())) {
+            		multiSource |= accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
+            		if (sourceName == null) {
+            			sourceName = (String)accessNode.getProperty(Info.SOURCE_NAME);
+            		}
             		if (node == accessNode) {
             			continue;
             		}
         			NodeEditor.removeChildNode(parentNode, node);
             	}
             	accessNode.getGroups().clear();
+            	if (multiSource) {
+            		accessNode.setProperty(Info.IS_MULTI_SOURCE, true);
+            	} else if (sourceName != null) {
+            		accessNode.setProperty(Info.SOURCE_NAME, sourceName);
+            	}
                 return performRaise(rootNode, accessNode, parentNode);
             case NodeConstants.Types.SELECT:            
             {
@@ -193,7 +216,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             		return null;
             	}
             	if (canRaiseOverSelect(accessNode, metadata, capFinder, parentNode, record)) {
-                    RulePushSelectCriteria.satisfyAccessPatterns(parentNode, accessNode);
+                    RulePushSelectCriteria.satisfyConditions(parentNode, accessNode, metadata);
                     return performRaise(rootNode, accessNode, parentNode);                      
             	}
             	//determine if we should push the select back up
@@ -224,7 +247,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				}
     			PlanNode newParent = grandParent.getParent();
 				//TODO: use costing or heuristics instead of always raising
-    			PlanNode newRoot = raiseAccessNode(rootNode, accessNode, metadata, capFinder, afterJoinPlanning, record);
+    			PlanNode newRoot = raiseAccessNode(rootNode, accessNode, metadata, capFinder, afterJoinPlanning, record, context);
     			if (newRoot == null) {
 					//return the tree to its original state
     				parentNode.addFirstChild(accessNode);
@@ -303,11 +326,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
                                          PlanNode accessNode,
                                          Collection<? extends AggregateSymbol> aggregates,
                                          QueryMetadataInterface metadata,
-                                         CapabilitiesFinder capFinder, AnalysisRecord record) throws QueryMetadataException,
+                                         CapabilitiesFinder capFinder, AnalysisRecord record, boolean considerMultiSource) throws QueryMetadataException,
                                                         TeiidComponentException {
         Object modelID = getModelIDFromAccess(accessNode, metadata);
         if(modelID == null) {
             return false;
+        }
+        if (considerMultiSource && accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+        	return false;
         }
         List<Expression> groupCols = (List<Expression>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
         if(!CapabilitiesUtil.supportsAggregates(groupCols, modelID, metadata, capFinder)) {
@@ -333,7 +359,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 }
             }
         }
-        return CapabilitiesUtil.checkElementsAreSearchable(groupCols, metadata, SupportConstants.Element.SEARCHABLE_COMPARE);
+        if (!CapabilitiesUtil.checkElementsAreSearchable(groupCols, metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+        	groupNode.recordDebugAnnotation("non-searchable group by column", modelID, "cannot push group by", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        	return false;
+        }
+        return true;
     }
 
 	static boolean canRaiseOverSort(PlanNode accessNode,
@@ -382,6 +412,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
         		&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_UNRELATED, modelID, metadata, capFinder)
         		&& NodeEditor.findParent(accessNode, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE) == null
         		&& !compensateForUnrelated) {
+        	return false;
+        }
+        
+        if (accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
         	return false;
         }
         
@@ -493,11 +527,12 @@ public final class RuleRaiseAccess implements OptimizerRule {
      * @param joinNode Join node that might be pushed underneath the access node
      * @param metadata Metadata information
      * @param capFinder CapabilitiesFinder
+     * @param context 
      * @return The modelID if the raise can proceed and what common model these combined
      * nodes will be sent to
      */
 	private static Object canRaiseOverJoin(Object modelId, PlanNode joinNode, QueryMetadataInterface metadata, 
-			CapabilitiesFinder capFinder, boolean afterJoinPlanning, AnalysisRecord record) 
+			CapabilitiesFinder capFinder, boolean afterJoinPlanning, AnalysisRecord record, CommandContext context) 
 		throws QueryMetadataException, TeiidComponentException {
 		
         List crits = (List) joinNode.getProperty(NodeConstants.Info.JOIN_CRITERIA);
@@ -534,14 +569,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			}
 		}
         
-        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record);		
+        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record, context);		
 	}
 
     static Object canRaiseOverJoin(List<PlanNode> children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
                                            List<Criteria> crits,
-                                           JoinType type, AnalysisRecord record) throws QueryMetadataException,
+                                           JoinType type, AnalysisRecord record, CommandContext context) throws QueryMetadataException,
                                                          TeiidComponentException {
         //we only want to consider binary joins
         if (children.size() != 2) {
@@ -549,6 +584,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
 
     	Object modelID = null;
+    	boolean multiSource = false;
         Set<Object> groupIDs = new HashSet<Object>();
         int groupCount = 0;
 		LinkedList<CompareCriteria> thetaCriteria = new LinkedList<CompareCriteria>();
@@ -643,15 +679,40 @@ public final class RuleRaiseAccess implements OptimizerRule {
 							return null;
 						}
 					} 
-                } else if (sjc != SupportedJoinCriteria.ANY) {
+                } 
+				if (sjc != SupportedJoinCriteria.ANY && thetaCriteria.isEmpty()) {
                 	return null; //cross join not supported
                 }
 				
 				modelID = accessModelID;
+				multiSource = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
 				
 			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder)) { 
 				return null;							
+			} else if ((multiSource || childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) && !context.getOptions().isImplicitMultiSourceJoin()) {
+				//only allow raise if partitioned
+				boolean multiSourceOther = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
+				if (multiSource && multiSourceOther && (type == JoinType.JOIN_ANTI_SEMI || type == JoinType.JOIN_CROSS)) {
+					return null;
+				}
+				ArrayList<Expression> leftExpressions = new ArrayList<Expression>();
+				ArrayList<Expression> rightExpressions = new ArrayList<Expression>();
+				RuleChooseJoinStrategy.separateCriteria(children.get(0).getGroups(), children.get(1).getGroups(), leftExpressions, rightExpressions, crits, new LinkedList<Criteria>());
+				boolean needsOtherCrit = sjc != SupportedJoinCriteria.ANY;
+				boolean partitioned = !multiSource || !multiSourceOther;
+				for (int i = 0; i < leftExpressions.size() && (!partitioned || needsOtherCrit); i++) {
+					boolean multi = isMultiSourceColumn(metadata, leftExpressions.get(i), children.get(0)) && isMultiSourceColumn(metadata, rightExpressions.get(i), children.get(1));
+					if (multi) {
+						partitioned = true;
+					} else {
+						needsOtherCrit = false;
+					}
+				}
+				if (needsOtherCrit || !partitioned) {
+					return null;
+				}
 			}
+			
 		} // end walking through join node's children
 
 		int maxGroups = CapabilitiesUtil.getMaxFromGroups(modelID, metadata, capFinder);
@@ -699,10 +760,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
     		return false;
     	}
     	CompareCriteria cc = (CompareCriteria)crit;
-    	if (!(cc.getLeftExpression() instanceof ElementSymbol)) {
-    		return false;
-    	}
-    	if (!(cc.getRightExpression() instanceof ElementSymbol)) {
+    	if (!(cc.getLeftExpression() instanceof ElementSymbol) 
+    			|| !(cc.getRightExpression() instanceof ElementSymbol)) {
     		return false;
     	}
     	if (sjc == SupportedJoinCriteria.THETA) {
@@ -756,6 +815,18 @@ public final class RuleRaiseAccess implements OptimizerRule {
         RulePlaceAccess.copyDependentHints(leftAccess, newAccess);
         RulePlaceAccess.copyDependentHints(rightAccess, newAccess);
         RulePlaceAccess.copyDependentHints(joinNode, newAccess);
+        if (leftAccess.hasBooleanProperty(Info.IS_MULTI_SOURCE) || rightAccess.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+        	newAccess.setProperty(Info.IS_MULTI_SOURCE, Boolean.TRUE);
+        }
+        String sourceName = (String)leftAccess.getProperty(Info.SOURCE_NAME);
+        if (sourceName != null) {
+        	newAccess.setProperty(Info.SOURCE_NAME, sourceName);
+        } else {
+            sourceName = (String)rightAccess.getProperty(Info.SOURCE_NAME);
+            if (sourceName != null) {
+            	newAccess.setProperty(Info.SOURCE_NAME, sourceName);
+            }
+        }
         
         if (insert) {
             joinNode.addAsParent(newAccess);
@@ -809,7 +880,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
                                      CapabilitiesFinder capFinder) throws QueryMetadataException, TeiidComponentException {
         
         Object modelID = null;
-        
+        String sourceName = null;
+        boolean multiSource = false;
         for (PlanNode childNode : setOpNode.getChildren()) {
             if(childNode.getType() != NodeConstants.Types.ACCESS) {
                 return false;
@@ -824,25 +896,118 @@ public final class RuleRaiseAccess implements OptimizerRule {
             if(accessModelID == null) {
                 return false;
             }
+        	//TODO: see if the children are actually multiSourced
+            multiSource |= childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
+            String name = (String)childNode.getProperty(Info.SOURCE_NAME);
             
             // Reconcile this access node's model ID with existing                                             
             if(modelID == null) {
                 modelID = accessModelID;
                 
-                if(! CapabilitiesUtil.supportsSetOp(accessModelID, (Operation)setOpNode.getProperty(NodeConstants.Info.SET_OPERATION), metadata, capFinder)) {
+                Operation op = (Operation)setOpNode.getProperty(NodeConstants.Info.SET_OPERATION);
+				if(! CapabilitiesUtil.supportsSetOp(accessModelID, op, metadata, capFinder)) {
                     return false;
+                }
+                if (multiSource && op != Operation.UNION) {
+            		return false;
                 }
             } else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder)) {
                 return false;
-            }      
-            if (!setOpNode.hasBooleanProperty(NodeConstants.Info.USE_ALL) 
-            		&&  !CapabilitiesUtil.checkElementsAreSearchable((List)NodeEditor.findNodePreOrder(childNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS), metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+            } 
+            if (!multiSource) {
+            	if (sourceName == null) {
+            		sourceName = name;
+            	} else if (name != null && !sourceName.equals(name)) {
+            		return false;
+            	}
+            }
+            if (!setOpNode.hasBooleanProperty(NodeConstants.Info.USE_ALL) && !supportsDistinct(metadata, childNode, multiSource)) {
             	return false;
             }
-
         }
         return true;
     }
+
+	static boolean supportsDistinct(QueryMetadataInterface metadata,
+			PlanNode childNode, boolean multiSource)
+			throws QueryMetadataException, TeiidComponentException {
+		List<? extends Expression> project = (List)NodeEditor.findNodePreOrder(childNode, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS);
+
+		if (multiSource) {
+			boolean partitioned = isPartitioned(metadata, project, childNode);
+			if (!partitioned) {
+				return false;
+			}
+		}
+		if (!CapabilitiesUtil.checkElementsAreSearchable(project, metadata, SupportConstants.Element.SEARCHABLE_COMPARE)) {
+			return false;
+		}
+		return true;
+	}
+
+	static boolean isPartitioned(QueryMetadataInterface metadata,
+			Collection<? extends Expression> project, PlanNode node) throws QueryMetadataException,
+			TeiidComponentException {
+		boolean partitioned = false;
+		for (Expression expression : project) {
+			Expression ex = SymbolMap.getExpression(expression);
+			if (ex.getType() == DataTypeManager.DefaultDataClasses.STRING 
+					&& isMultiSourceColumn(metadata, ex, node)) {
+				partitioned = true;
+				break;
+			}
+		}
+		return partitioned;
+	}
+
+	/**
+	 * Check to see if the element is a multi-source source_name column
+	 * TODO: inner side of an outer join projection
+	 * do this check as part of metadata validation
+	 * 
+	 */
+	private static boolean isMultiSourceColumn(QueryMetadataInterface metadata,
+			Expression ex, PlanNode node) throws QueryMetadataException,
+			TeiidComponentException {
+		if (!(ex instanceof ElementSymbol)) {
+			return false;
+		}
+		ElementSymbol es = (ElementSymbol) ex;
+		if (metadata.isMultiSourceElement(es.getMetadataID())) {
+			return true;
+		}
+		if (node == null || node.getFirstChild() == null) {
+			return false;
+		}
+		node = FrameUtil.findOriginatingNode(node.getFirstChild(), Collections.singleton(es.getGroupSymbol()));
+		if (node == null || node.getType() != NodeConstants.Types.SOURCE) {
+			return false;
+		}
+		SymbolMap map = (SymbolMap)node.getProperty(Info.SYMBOL_MAP);
+		if (node.getChildren().isEmpty() || map == null) {
+			return false;
+		}
+		PlanNode set = NodeEditor.findNodePreOrder(node.getFirstChild(), NodeConstants.Types.SET_OP, NodeConstants.Types.SOURCE);
+		if (set == null) {
+			ex = map.getMappedExpression(es);
+			return isMultiSourceColumn(metadata, ex, node.getFirstChild());
+		}
+		int index = map.getKeys().indexOf(ex);
+		if (index == -1) {
+			return false;
+		}
+		for (PlanNode child : set.getChildren()) {
+			PlanNode project = NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT, NodeConstants.Types.SOURCE);
+			if (project == null) {
+				return false;
+			}
+			List<Expression> cols = (List<Expression>) project.getProperty(Info.PROJECT_COLS);
+			if (!isMultiSourceColumn(metadata, cols.get(index), child)) {
+				return false;
+			}
+		}
+		return true;
+	}
     
 	public String toString() {
 		return "RaiseAccess"; //$NON-NLS-1$

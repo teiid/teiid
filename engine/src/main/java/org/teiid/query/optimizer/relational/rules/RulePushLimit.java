@@ -43,10 +43,10 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.SetQuery;
@@ -236,12 +236,16 @@ public class RulePushLimit implements OptimizerRule {
             return null;
         }
         
+        boolean multiSource = accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
+        
         Expression offset = (Expression)parentNode.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
         
-        if (offset != null && !CapabilitiesUtil.supportsRowOffset(modelID, metadata, capFinder)) {
+        if (multiSource || (offset != null && !CapabilitiesUtil.supportsRowOffset(modelID, metadata, capFinder))) {
             
             if (limit != null) {
-                parentNode.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, null);
+            	if (!multiSource) {
+            		parentNode.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, null);
+            	}
                 
                 PlanNode pushedLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
                 

@@ -47,10 +47,8 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
-import org.teiid.dqp.internal.process.multisource.MultiSourceCapabilitiesFinder;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
-import org.teiid.dqp.internal.process.multisource.MultiSourcePlanToProcessConverter;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
@@ -102,7 +100,7 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class Request implements SecurityFunctionEvaluator {
     
-	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName";
+	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName"; //$NON-NLS-1$
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
@@ -199,14 +197,15 @@ public class Request implements SecurityFunctionEvaluator {
         }
         
         // Check for multi-source models and further wrap the metadata interface
+        // TODO: perform this wrapping as part of the vdb metadata loading process
         Set<String> multiSourceModelList = workContext.getVDB().getMultiSourceModelNames();
-        multiSourceElementName = workContext.getVDB().getPropertyValue(MULTISOURCE_COLUMN_NAME);
         if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
+        	multiSourceElementName = workContext.getVDB().getPropertyValue(MULTISOURCE_COLUMN_NAME);
         	this.multiSourceModels = multiSourceModelList;
         	if (multiSourceElementName == null) {
         		multiSourceElementName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME;
         	} else if (multiSourceElementName.isEmpty() || multiSourceElementName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) > -1) {
-        		throw new QueryMetadataException();
+        		throw new QueryMetadataException(QueryPlugin.Util.getString("SQLParser.Invalid_short_name", multiSourceElementName)); //$NON-NLS-1$
         	}
             this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels, multiSourceElementName);
         }
@@ -242,12 +241,6 @@ public class Request implements SecurityFunctionEvaluator {
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
-        if (multiSourceModels != null) {
-            MultiSourcePlanToProcessConverter modifier = new MultiSourcePlanToProcessConverter(
-					metadata, idGenerator, getAnalysisRecord(), capabilitiesFinder,
-					multiSourceModels, multiSourceElementName, workContext, context);
-            context.setPlanToProcessConverter(modifier);
-        }
         context.setExecutor(this.executor);
         context.setSecurityFunctionEvaluator(this);
         context.setTempTableStore(tempTableStore);
@@ -440,14 +433,6 @@ public class Request implements SecurityFunctionEvaluator {
             }
         }
         
-    	// If using multi-source models, insert a proxy to simplify the supported capabilities.  This is 
-        // done OUTSIDE the cache (wrapped around the cache) intentionally to avoid caching the simplified
-        // capabilities which may be different for the same model in a different VDB used by this same DQP.
-    	CapabilitiesFinder finder = this.capabilitiesFinder;
-        if(this.multiSourceModels != null) {
-            finder = new MultiSourceCapabilitiesFinder(finder, this.multiSourceModels);
-        }
-        
         boolean debug = analysisRecord.recordDebug();
 		if(debug) {
 			analysisRecord.println("\n============================================================================"); //$NON-NLS-1$
@@ -455,7 +440,7 @@ public class Request implements SecurityFunctionEvaluator {
         }
         // Run the optimizer
         try {
-            processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, finder, analysisRecord, context);
+            processPlan = QueryOptimizer.optimizePlan(command, metadata, idGenerator, capabilitiesFinder, analysisRecord, context);
         } finally {
             String debugLog = analysisRecord.getDebugLog();
             if(debugLog != null && debugLog.length() > 0) {

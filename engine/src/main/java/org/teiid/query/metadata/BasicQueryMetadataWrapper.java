@@ -413,5 +413,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 	public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
 		return actualMetadata.getFunctionBasedExpressions(metadataID);
 	}
+
+	@Override
+	public boolean isPseudo(Object elementId) {
+		return actualMetadata.isPseudo(elementId);
+	}
 	
 }

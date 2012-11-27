@@ -42,8 +42,8 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.metadata.Table.TriggerEvent;
@@ -2346,6 +2346,15 @@ public class RealMetadataFactory {
 	    
 	    Table physGroup = createPhysicalGroup("Phys", physModel); //$NON-NLS-1$
 	    createElements(physGroup,
+	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
+	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+	    Table physGroup1 = createPhysicalGroup("Phys1", physModel); //$NON-NLS-1$
+	    createElements(physGroup1,
+	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
+	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
+	    
+	    Table physGroup2 = createPhysicalGroup("Phys2", physModel); //$NON-NLS-1$
+	    createElements(physGroup2,
 	                                  new String[] { "a", "b" }, //$NON-NLS-1$ //$NON-NLS-2$ 
 	                                  new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING });
 	    

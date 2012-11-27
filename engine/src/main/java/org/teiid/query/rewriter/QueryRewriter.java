@@ -544,6 +544,15 @@ public class QueryRewriter {
 			query.getSelect().setDistinct(false);
 		}
 		rewriteExpressions(query.getGroupBy());
+		List<Expression> expr = query.getGroupBy().getSymbols();
+		for (Iterator<Expression> iter = expr.iterator(); iter.hasNext();) {
+			if (EvaluatableVisitor.willBecomeConstant(iter.next())) {
+				iter.remove();
+			}
+		}
+		if (expr.isEmpty()) {
+			query.setGroupBy(null);
+		}
 		return query;
 	}
 	

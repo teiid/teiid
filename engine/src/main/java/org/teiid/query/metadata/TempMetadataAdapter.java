@@ -34,6 +34,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
+import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingNode;
@@ -172,6 +173,11 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         throws TeiidComponentException, QueryMetadataException {
 		
         if(groupOrElementID instanceof TempMetadataID) {
+        	TempMetadataID tid = (TempMetadataID)groupOrElementID;
+        	Object oid = tid.getOriginalMetadataID();
+            if (oid instanceof Procedure) {
+            	return actualMetadata.getModelID(oid);
+            }
             return TempMetadataAdapter.TEMP_MODEL;    
         }        
  		return this.actualMetadata.getModelID(groupOrElementID);

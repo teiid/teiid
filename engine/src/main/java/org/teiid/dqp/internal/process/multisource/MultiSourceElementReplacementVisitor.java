@@ -22,7 +22,10 @@
 
 package org.teiid.dqp.internal.process.multisource;
 
+import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -32,20 +35,26 @@ import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 public class MultiSourceElementReplacementVisitor extends ExpressionMappingVisitor {
 
     private String bindingName;
+    private QueryMetadataInterface metadata;
     
-    public MultiSourceElementReplacementVisitor(String bindingName) {
+    public MultiSourceElementReplacementVisitor(String bindingName, QueryMetadataInterface metadata) {
         super(null);
         this.bindingName = bindingName;
+        this.metadata = metadata;
     }
     
     public Expression replaceExpression(Expression expr) {
         if(expr instanceof ElementSymbol) {
             ElementSymbol elem = (ElementSymbol) expr;
             Object metadataID = elem.getMetadataID();            
-            if(metadataID instanceof MultiSourceElement) {
-                Constant bindingConst = new Constant(this.bindingName, DataTypeManager.DefaultDataClasses.STRING);
-                return bindingConst;
-            }
+            try {
+				if(metadata.isMultiSourceElement(metadataID)) {
+				    Constant bindingConst = new Constant(this.bindingName, DataTypeManager.DefaultDataClasses.STRING);
+				    return bindingConst;
+				}
+			} catch (QueryMetadataException e) {
+			} catch (TeiidComponentException e) {
+			}
         }
         
         return expr;

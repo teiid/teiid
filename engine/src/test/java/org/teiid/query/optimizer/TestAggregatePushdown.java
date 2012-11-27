@@ -69,7 +69,7 @@ public class TestAggregatePushdown {
         
         String sql = "SELECT a12.intkey AS REGION_NBR, SUM(a11.intnum) AS WJXBFS1 FROM bqt1.smalla AS a11 INNER JOIN bqt2.smalla AS a12 ON a11.stringkey = a12.stringkey WHERE a11.stringkey = 0 GROUP BY a12.intkey"; //$NON-NLS-1$
         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.exampleBQTCached(), null, capFinder, 
-                                      new String[] {"SELECT SUM(a11.intnum) FROM bqt1.smalla AS a11 WHERE a11.stringkey = '0' HAVING COUNT(*) > 0", "SELECT a12.intkey FROM bqt2.smalla AS a12 WHERE a12.stringkey = '0'"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ 
+                                      new String[] {"SELECT SUM(a11.intnum) FROM bqt1.smalla AS a11 WHERE a11.stringkey = '0' HAVING SUM(a11.intnum) IS NOT NULL", "SELECT a12.intkey FROM bqt2.smalla AS a12 WHERE a12.stringkey = '0'"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ //$NON-NLS-2$ 
         
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
@@ -993,7 +993,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm1.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(g_0.e2) FROM pm1.g2 AS g_0 HAVING COUNT(*) > 0", "SELECT MAX(g_0.e2) FROM pm1.g1 AS g_0 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT MAX(g_0.e2) FROM pm1.g2 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", "SELECT MAX(g_0.e2) FROM pm1.g1 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -1048,7 +1048,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0 HAVING COUNT(*) > 0", "SELECT g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", "SELECT g_0.e2 FROM pm2.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess
@@ -1076,7 +1076,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm2", caps1); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), count(*) from (select e1, e2 from pm1.g1 union all select e1, e2 from pm2.g2) z", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(g_0.e2), COUNT(*) FROM pm2.g2 AS g_0 HAVING COUNT(*) > 0", "SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT MAX(g_0.e2), COUNT(*) FROM pm2.g2 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL", "SELECT MAX(g_0.e2), COUNT(*) FROM pm1.g1 AS g_0 HAVING MAX(g_0.e2) IS NOT NULL"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess

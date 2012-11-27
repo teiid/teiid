@@ -554,5 +554,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 	public Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID) {
 		return null;
 	}
+
+	@Override
+	public boolean isPseudo(Object elementId) {
+		return false;
+	}
 	
 }

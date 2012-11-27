@@ -40,10 +40,10 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
@@ -92,9 +92,12 @@ public class RuleDecomposeJoin implements OptimizerRule {
 	}
 	
 	public PlanNode decomposeJoin(PlanNode joinNode, PlanNode root, QueryMetadataInterface metadata, CommandContext context) throws TeiidComponentException, QueryPlannerException {
-		//TODO: should be done based upon join region to allow more than a 2-way non-ansi join
+		if (joinNode.getParent() == null) {
+			return root; //already processed
+		}
+		
 		JoinType joinType = (JoinType)joinNode.getProperty(Info.JOIN_TYPE);
-		if (joinType != JoinType.JOIN_INNER) {
+		if (joinType == JoinType.JOIN_ANTI_SEMI || joinType == JoinType.JOIN_CROSS) {
 			return root;
 		}
 
@@ -146,10 +149,16 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		int otherBranchSize = rightPartionInfo.values().iterator().next().size();
 		
 		if (matches.isEmpty()) {
-			//no matches mean that we can just insert a null node (false criteria) and be done with it
-			PlanNode critNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-			critNode.setProperty(Info.SELECT_CRITERIA, QueryRewriter.FALSE_CRITERIA);
-			unionNode.addAsParent(critNode);
+			if (joinType == JoinType.JOIN_INNER || joinType == JoinType.JOIN_SEMI) {
+				//no matches mean that we can just insert a null node (false criteria) and be done with it
+				PlanNode critNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
+				critNode.setProperty(Info.SELECT_CRITERIA, QueryRewriter.FALSE_CRITERIA);
+				unionNode.addAsParent(critNode);
+			} else if (joinType == JoinType.JOIN_LEFT_OUTER) {
+				joinNode.getParent().replaceChild(joinNode, left);
+			} else if (joinType == JoinType.JOIN_FULL_OUTER) {
+				joinNode.setProperty(Info.JOIN_CRITERIA, QueryRewriter.FALSE_CRITERIA);
+			}
 			return root;
 		}
 		
@@ -168,7 +177,7 @@ public class RuleDecomposeJoin implements OptimizerRule {
 			return root; //sanity check 
 		}
 
-		PlanNode newUnion = buildUnion(unionNode, right, criteria, matches, branches, otherBranches);
+		PlanNode newUnion = buildUnion(unionNode, right, criteria, matches, branches, otherBranches, joinType);
 		PlanNode view = rebuild(left.getGroups().iterator().next(), joinNode, newUnion, metadata, context, left, right);
 
 		SymbolMap symbolmap = (SymbolMap)view.getProperty(Info.SYMBOL_MAP);
@@ -180,7 +189,10 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		view.setProperty(Info.PARTITION_INFO, newPartitionInfo);
 	
 		//since we've created a new union node, there's a chance we can decompose again
-		return decomposeJoin(newUnion, root, metadata, context);
+		if (view.getParent().getType() == NodeConstants.Types.JOIN) {
+			return decomposeJoin(view.getParent(), root, metadata, context);
+		}
+		return root;
 	}
 
 	private void updatePartitionInfo(
@@ -278,7 +290,7 @@ public class RuleDecomposeJoin implements OptimizerRule {
 
 	private PlanNode buildUnion(PlanNode unionNode, PlanNode otherSide,
 			List<Criteria> criteria, List<int[]> matches,
-			List<PlanNode> branches, List<PlanNode> otherBranches) {
+			List<PlanNode> branches, List<PlanNode> otherBranches, JoinType joinType) {
 		SymbolMap symbolMap = (SymbolMap)unionNode.getParent().getProperty(Info.SYMBOL_MAP);
 		SymbolMap otherSymbolMap = (SymbolMap)otherSide.getProperty(Info.SYMBOL_MAP);
 
@@ -296,7 +308,7 @@ public class RuleDecomposeJoin implements OptimizerRule {
 			newJoinNode.addLastChild(otherBranchSource);
 			
 			newJoinNode.setProperty(Info.JOIN_STRATEGY, JoinStrategyType.NESTED_LOOP);
-			newJoinNode.setProperty(Info.JOIN_TYPE, JoinType.JOIN_INNER);
+			newJoinNode.setProperty(Info.JOIN_TYPE, joinType);
 			newJoinNode.setProperty(Info.JOIN_CRITERIA, LanguageObject.Util.deepClone(criteria, Criteria.class));
 			newJoinNode.addGroups(branchSource.getGroups());
 			newJoinNode.addGroups(otherBranchSource.getGroups());

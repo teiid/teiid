@@ -34,8 +34,8 @@ import javax.security.auth.Subject;
 
 import org.teiid.CommandListener;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.SessionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
@@ -56,7 +56,6 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.optimizer.relational.PlanToProcessConverter;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.lang.SourceHint;
@@ -100,8 +99,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private SecurityFunctionEvaluator securityFunctionEvaluator;
 	    
 	    private TimeZone timezone = TimeZone.getDefault();
-	    
-	    private PlanToProcessConverter planToProcessConverter;
 	    
 	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
 	        
@@ -393,14 +390,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		return globalState.timezone;
 	}
 
-	public void setPlanToProcessConverter(PlanToProcessConverter planToProcessConverter) {
-		this.globalState.planToProcessConverter = planToProcessConverter;
-	}
-
-	public PlanToProcessConverter getPlanToProcessConverter() {
-		return globalState.planToProcessConverter;
-	}
-	
 	public QueryProcessor.ProcessorFactory getQueryProcessorFactory() {
 		return this.globalState.queryProcessorFactory;
 	}
@@ -613,7 +602,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 	
 	@Override
-	public VDB getVdb() {
+	public VDBMetaData getVdb() {
 		return this.globalState.dqpWorkContext.getVDB();
 	}
 	

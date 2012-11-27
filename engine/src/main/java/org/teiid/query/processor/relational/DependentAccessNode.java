@@ -82,18 +82,13 @@ public class DependentAccessNode extends AccessNode {
     }
     
     @Override
-    protected Command initialCommand() throws TeiidProcessingException, TeiidComponentException {
+    protected Command nextCommand() throws TeiidProcessingException, TeiidComponentException {
     	if (rewrittenCommand == null) {
-    		Command atomicCommand = nextCommand();
+    		Command atomicCommand = super.nextCommand();
 	        rewriteAndEvaluate(atomicCommand, getEvaluator(Collections.emptyMap()), this.getContext(), this.getContext().getMetadata());
 	        rewrittenCommand = atomicCommand;
 	        nextCommand = null;
     	}
-    	return rewrittenCommand;
-    }
-    
-    @Override
-    protected Command nextCommand() {
     	if (nextCommand == null && rewrittenCommand != null) {
 			nextCommand = (Command)rewrittenCommand.clone();
     	}

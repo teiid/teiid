@@ -42,15 +42,15 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.ColumnSet;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.mapping.xml.MappingDocument;
@@ -1678,10 +1678,19 @@ public class TestValidator {
         assertEquals(report.toString(), 1, report.getItems().size());
     }
     
+    @Test public void testMultiSourceInsert() throws Exception {  
+    	Set<String> models = new HashSet<String>();
+    	models.add("pm1");
+        helpValidate("insert into pm1.g1 (e1) values (1)", new String[] {"pm1.g1", "pm1.g1.SOURCE_NAME"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
+    }
+    
+    /**
+     * TODO: this should be allowable
+     */
     @Test public void testDisallowProjectIntoMultiSource() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("pm1");
-        helpValidate("insert into pm1.g1 select * from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
+        helpValidate("insert into pm1.g1 select pm1.g1.*, 1 from pm1.g1", new String[] {"pm1.g1"}, new MultiSourceMetadataWrapper(RealMetadataFactory.example1(), models));  //$NON-NLS-1$
     }
     
     @Test public void testTextAggEncoding() throws Exception {
@@ -1695,7 +1704,7 @@ public class TestValidator {
     @Test public void testMultiSourceProcValue() throws Exception {  
     	Set<String> models = new HashSet<String>();
     	models.add("MultiModel");
-        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {"MultiModel.proc.source_name"}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
+        helpValidate("exec MultiModel.proc('a', (select 1))", new String[] {}, new MultiSourceMetadataWrapper(RealMetadataFactory.exampleMultiBinding(), models));  //$NON-NLS-1$
     }
     
 	@Test public void testFailAggregateInGroupBy() {

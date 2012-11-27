@@ -20,16 +20,12 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.dqp.internal.process.multisource;
+package org.teiid.query.sql.lang;
 
-import org.teiid.metadata.Column;
+public interface FilteredCommand {
 
-/**
- * TODO: introduce a real (non group context) pseudo column
- */
-public class MultiSourceElement extends Column {
-
-	private static final long serialVersionUID = 5275578893617706914L;
-	public static final String DEFAULT_MULTI_SOURCE_ELEMENT_NAME = "SOURCE_NAME"; //$NON-NLS-1$
-    
+	Criteria getCriteria();
+	
+	void setCriteria(Criteria criteria);
+	
 }

@@ -70,22 +70,22 @@ import org.teiid.query.sql.lang.XMLTable.XMLColumn;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.Block;
 import org.teiid.query.sql.proc.BranchingStatement;
+import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.CreateProcedureCommand;
 import org.teiid.query.sql.proc.LoopStatement;
-import org.teiid.query.sql.proc.WhileStatement;
-import org.teiid.query.sql.proc.BranchingStatement.BranchingMode;
 import org.teiid.query.sql.proc.Statement.Labeled;
+import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
+import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.xquery.saxon.SaxonXQueryExpression;
 import org.teiid.translator.SourceSystemFunctions;
@@ -366,10 +366,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(StoredProcedure obj) {
 		for (SPParameter param : obj.getInputParameters()) {
 			try {
-				if (!(param.getExpression() instanceof Constant) && getMetadata().isMultiSourceElement(param.getMetadataID())) {
-	            	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", param.getParameterSymbol()), param.getParameterSymbol()); //$NON-NLS-1$
-	            	continue;
-	            }
                 if (!getMetadata().elementSupports(param.getMetadataID(), SupportConstants.Element.NULL) && EvaluatableVisitor.isFullyEvaluatable(param.getExpression(), true)) {
 	                try {
 	                    // If nextValue is an expression, evaluate it before checking for null
@@ -652,14 +648,20 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         Collection values = obj.getValues();
         Iterator valIter = values.iterator();
         GroupSymbol insertGroup = obj.getGroup();
-
         try {
+            boolean multiSource = getMetadata().isMultiSource(getMetadata().getModelID(insertGroup.getMetadataID()));
             // Validate that all elements in variable list are updatable
         	for (ElementSymbol insertElem : vars) {
                 if(! getMetadata().elementSupports(insertElem.getMetadataID(), SupportConstants.Element.UPDATE)) {
                     handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0052", insertElem), insertElem); //$NON-NLS-1$
                 }
+                if (multiSource && getMetadata().isMultiSourceElement(insertElem.getMetadataID())) {
+                	multiSource = false;
+                }
             }
+        	if (multiSource) {
+        		validateMultisourceInsert(insertGroup);
+        	}
 
             // Get elements in the group.
     		Collection<ElementSymbol> insertElmnts = new LinkedList<ElementSymbol>(ResolverUtil.resolveElementsInGroup(insertGroup, getMetadata()));
@@ -670,8 +672,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		for (ElementSymbol nextElmnt : insertElmnts) {
 				if(!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.DEFAULT_VALUE) &&
 					!getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.NULL) &&
-                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT) &&
-                     !getMetadata().isMultiSourceElement(nextElmnt.getMetadataID())) {
+                    !getMetadata().elementSupports(nextElmnt.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
 		                handleValidationError(QueryPlugin.Util.getString("ERR.015.012.0053", new Object[] {insertGroup, nextElmnt}), nextElmnt); //$NON-NLS-1$
 				}
 			}
@@ -682,11 +683,6 @@ public class ValidationVisitor extends AbstractValidationVisitor {
                 Expression nextValue = (Expression) valIter.next();
                 ElementSymbol nextVar = varIter.next();
 
-                if (!(nextValue instanceof Constant) && getMetadata().isMultiSourceElement(nextVar.getMetadataID())) {
-                	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.multisource_constant", nextVar), nextVar); //$NON-NLS-1$
-                	continue;
-                }
-                
                 if (EvaluatableVisitor.isFullyEvaluatable(nextValue, true)) {
                     try {
                         // If nextValue is an expression, evaluate it before checking for null

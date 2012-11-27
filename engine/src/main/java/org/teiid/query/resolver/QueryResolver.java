@@ -68,9 +68,9 @@ import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.validator.UpdateValidator;
-import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateType;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 /**
@@ -425,6 +425,8 @@ public class QueryResolver {
                 }
                 
                 bindings = qnode.getBindings();
+            } else {
+            	result = (Command) result.clone();
             }
             if (bindings != null && !bindings.isEmpty()) {
             	QueryResolver.resolveWithBindingMetadata(result, qmi, qnode, true);
@@ -435,7 +437,7 @@ public class QueryResolver {
             
 	        validateProjectedSymbols(virtualGroup, qmi, result);
             cachedNode = new QueryNode(qnode.getQuery());
-            cachedNode.setCommand((Command)result.clone());
+            cachedNode.setCommand(result);
 	        
 			if(isView(virtualGroup, qmi)) {
 		        String updatePlan = qmi.getUpdatePlan(virtualGroup.getMetadataID());

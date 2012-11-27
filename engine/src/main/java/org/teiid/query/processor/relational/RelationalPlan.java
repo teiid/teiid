@@ -56,7 +56,6 @@ public class RelationalPlan extends ProcessorPlan {
 	private List<WithQueryCommand> with;
 	
 	private TempTableStore tempTableStore;
-	private boolean multisourceUpdate;
 	private SourceHint sourceHint;
 
     /**
@@ -219,15 +218,8 @@ public class RelationalPlan extends ProcessorPlan {
         this.outputCols = outputCols;
     }
     
-    public void setMultisourceUpdate(boolean multisourceUpdate) {
-		this.multisourceUpdate = multisourceUpdate;
-	}
-    
     @Override
     public boolean requiresTransaction(boolean transactionalReads) {
-    	if (multisourceUpdate) {
-    		return true;
-    	}
     	if (this.with != null) {
     		if (transactionalReads) {
     			return true;

@@ -30,11 +30,13 @@ import java.util.Properties;
 public class Options {
 
 	public static final String UNNEST_DEFAULT = "org.teiid.subqueryUnnestDefault"; //$NON-NLS-1$
-	public static final String PUSHDOWN_DEFAULT_NULL_ORDER = "org.teiid.pushdownDefaultNullOrder"; //$NON-NLS-1$ 
+	public static final String PUSHDOWN_DEFAULT_NULL_ORDER = "org.teiid.pushdownDefaultNullOrder"; //$NON-NLS-1$
+	public static final String IMPLICIT_MULTISOURCE_JOIN = "org.teiid.implicitMultiSourceJoin"; //$NON-NLS-1$
 
 	private Properties properties;
 	private boolean subqueryUnnestDefault;
 	private boolean pushdownDefaultNullOrder;
+	private boolean implicitMultiSourceJoin = true;
 	
 	public Properties getProperties() {
 		return properties;
@@ -67,6 +69,19 @@ public class Options {
 	
 	public Options pushdownDefaultNullOrder(boolean p) {
 		this.pushdownDefaultNullOrder = p;
+		return this;
+	}
+	
+	public void setImplicitMultiSourceJoin(boolean implicitMultiSourceJoin) {
+		this.implicitMultiSourceJoin = implicitMultiSourceJoin;
+	}
+	
+	public boolean isImplicitMultiSourceJoin() {
+		return implicitMultiSourceJoin;
+	}
+	
+	public Options implicitMultiSourceJoin(boolean b) {
+		this.implicitMultiSourceJoin = b;
 		return this;
 	}
 

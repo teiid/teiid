@@ -663,4 +663,6 @@ public interface QueryMetadataInterface {
 	boolean isVariadic(Object metadataID);
 
 	Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID);
+
+	boolean isPseudo(Object elementId);
 }

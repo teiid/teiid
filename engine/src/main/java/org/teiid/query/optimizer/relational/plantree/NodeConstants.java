@@ -75,6 +75,8 @@ public final class NodeConstants {
         PROCEDURE_CRITERIA,
         PROCEDURE_INPUTS,
         PROCEDURE_DEFAULTS,
+        IS_MULTI_SOURCE,
+        SOURCE_NAME,
         
         // Set operation properties 
         SET_OPERATION,      // SetOperation

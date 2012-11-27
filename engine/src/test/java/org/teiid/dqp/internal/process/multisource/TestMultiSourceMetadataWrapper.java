@@ -51,7 +51,6 @@ public class TestMultiSourceMetadataWrapper {
         assertEquals(18, elements.size());
         
         Object instanceElementID = elements.get(elements.size()-1);
-        assertTrue(instanceElementID instanceof MultiSourceElement);
         String fullName = wrapper.getFullName(instanceElementID);
         assertEquals("BQT1.SmallA." + MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME, fullName); //$NON-NLS-1$
         

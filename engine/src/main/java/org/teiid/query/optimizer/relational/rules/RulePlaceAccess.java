@@ -39,6 +39,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
@@ -135,7 +136,14 @@ public final class RulePlaceAccess implements
             if (modelId != null) {
                 accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
-
+            modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+            if (modelId != null) {
+	            boolean multiSource = metadata.isMultiSource(modelId);
+	            if (multiSource) {
+	            	accessNode.setProperty(Info.IS_MULTI_SOURCE, multiSource);
+	            }
+            }
+            
             // Insert
             sourceNode.addAsParent(accessNode);
 

@@ -76,6 +76,8 @@ public class RulePushAggregates implements
                                OptimizerRule {
 	
 	private IDGenerator idGenerator;
+	private CommandContext context;
+	private List<PlanNode> groupingNodes;
 	
 	public RulePushAggregates(IDGenerator idGenerator) {
 		this.idGenerator = idGenerator;
@@ -92,32 +94,75 @@ public class RulePushAggregates implements
                             CapabilitiesFinder capFinder,
                             RuleStack rules,
                             AnalysisRecord analysisRecord,
-                            CommandContext context) throws QueryPlannerException,
+                            CommandContext ctx) throws QueryPlannerException,
                                                    QueryMetadataException,
                                                    TeiidComponentException {
-
-        for (PlanNode groupNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS)) {
+    	this.context = ctx;
+    	groupingNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS);
+        outer: for (int i = 0; i < groupingNodes.size(); i++) {
+        	PlanNode groupNode = groupingNodes.get(i);
             PlanNode child = groupNode.getFirstChild();
 
         	List<Expression> groupingExpressions = (List<Expression>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);
         	if (groupingExpressions == null) {
         		groupingExpressions = Collections.emptyList();
         	}
-            
-            if (child.getType() == NodeConstants.Types.SOURCE) {
-                PlanNode setOp = child.getFirstChild();
-                
-                try {
-					pushGroupNodeOverUnion(metadata, capFinder, groupNode, child, groupingExpressions, setOp, context, analysisRecord);
-				} catch (QueryResolverException e) {
-					 throw new TeiidComponentException(QueryPlugin.Event.TEIID30264, e);
-				}
-                continue;
-            }
-        	
-            if (child.getType() != NodeConstants.Types.JOIN) {
-                continue;
-            }
+
+            try {
+	        	if (child.getType() == NodeConstants.Types.SOURCE) {
+	                PlanNode setOp = child.getFirstChild();
+					pushGroupNodeOverUnion(metadata, capFinder, groupNode, child, groupingExpressions, setOp, analysisRecord);
+	                continue;
+	            } else if (child.getType() != NodeConstants.Types.JOIN) {
+	            	PlanNode access = NodeEditor.findNodePreOrder(child, NodeConstants.Types.ACCESS, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN | NodeConstants.Types.SET_OP);
+	            	if (access != null) {
+	            		PlanNode parent = access.getParent();
+	            		while (parent != groupNode) {
+	            			if (parent.getType() != NodeConstants.Types.SELECT) {
+	            				continue outer;
+	            			}
+	            			parent = parent.getParent();
+	            		}
+            			Set<AggregateSymbol> aggregates = collectAggregates(groupNode);
+            			
+            			//hybrid of the join/union/decompose pushing logic
+	            		if (access.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+	            			if (!RuleRaiseAccess.isPartitioned(metadata, groupingExpressions, groupNode)) {
+		            			if (aggregates.isEmpty()) {
+		            				//TODO: insert distinct if supported by the access node
+		            				continue;
+		            			} 
+		            			for (AggregateSymbol agg : aggregates) {
+		            				if (!agg.canStage()) {
+		            					continue outer;
+		            				}
+		            			}
+		            			boolean shouldPushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, access, analysisRecord, groupNode); 
+		            			if (!shouldPushdown) {
+		            				continue;
+		            			}
+		            			Set<Expression> stagedGroupingSymbols = new LinkedHashSet<Expression>();
+	                        	aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
+			                    if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
+			                        continue;
+			                    }
+		            			addGroupBy(child, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, false, stagedGroupingSymbols.isEmpty());
+	            			} else if (groupNode.getFirstChild() == access 
+	            					&& RuleRaiseAccess.canRaiseOverGroupBy(groupNode, child, aggregates, metadata, capFinder, analysisRecord, false)
+	            					&& canFilterEmpty(metadata, capFinder, aggregates, child)) {
+	            				addEmptyFilter(aggregates, groupNode, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(child, metadata));
+	            				FrameUtil.convertNode(groupNode.getParent(), null, null, ((SymbolMap)groupNode.getProperty(Info.SYMBOL_MAP)).inserseMapping(), metadata, false);
+	            				RuleRaiseAccess.performRaise(null, access, access.getParent());
+	            				RuleRaiseAccess.performRaise(null, access, access.getParent());
+	            			}
+	            		}
+            			//TODO: consider pushing aggregate in general
+	            	} 
+	                continue;
+	            }
+			} catch (QueryResolverException e) {
+				 throw new TeiidComponentException(QueryPlugin.Event.TEIID30264, e);
+			}
 
             Set<AggregateSymbol> aggregates = collectAggregates(groupNode);
 
@@ -152,7 +197,7 @@ public class RulePushAggregates implements
 	 */
 	private void pushGroupNodeOverUnion(QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
 			PlanNode groupNode, PlanNode unionSourceParent,
-			List<Expression> groupingExpressions, PlanNode setOp, CommandContext context, AnalysisRecord record)
+			List<Expression> groupingExpressions, PlanNode setOp, AnalysisRecord record)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryPlannerException, QueryResolverException {
 		if (setOp == null || setOp.getProperty(NodeConstants.Info.SET_OPERATION) != Operation.UNION) {
@@ -172,7 +217,7 @@ public class RulePushAggregates implements
 
 		//partitioned union
 		if (partitionInfo != null && !Collections.disjoint(partitionInfo.keySet(), groupingExpressions)) {
-			decomposeGroupBy(groupNode, unionSourceParent, groupingExpressions, aggregates, unionChildren, parentMap, metadata, capFinder, context);
+			decomposeGroupBy(groupNode, unionSourceParent, groupingExpressions, aggregates, unionChildren, parentMap, metadata, capFinder);
 			return;
 		}
 
@@ -218,7 +263,7 @@ public class RulePushAggregates implements
 		List<Boolean> pushdownList = new ArrayList<Boolean>(unionChildren.size());
 		
 		for (PlanNode planNode : unionChildren) {
-			boolean pushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, planNode, record); 
+			boolean pushdown = canPushGroupByToUnionChild(metadata, capFinder, groupingExpressions, aggregates, planNode, record, groupNode); 
 			pushdownList.add(pushdown);
 			shouldPushdown |= pushdown;
 		}
@@ -232,11 +277,11 @@ public class RulePushAggregates implements
 		Iterator<Boolean> pushdownIterator = pushdownList.iterator();
 		boolean first = true;
 		for (PlanNode planNode : unionChildren) {
-			addUnionGroupBy(groupingExpressions, aggregates, parentMap, metadata, capFinder, context, group, first, planNode, !pushdownIterator.next());
+			addUnionGroupBy(groupingExpressions, aggregates, parentMap, metadata, capFinder, group, first, planNode, !pushdownIterator.next());
 			first = false;
 		}
 		
-		updateParentAggs(groupNode, context, aggMap, metadata);
+		updateParentAggs(groupNode, aggMap, metadata);
 		
 		List<Expression> symbols = (List<Expression>) NodeEditor.findNodePreOrder(unionSourceParent, NodeConstants.Types.PROJECT).getProperty(Info.PROJECT_COLS);
 		GroupSymbol modifiedGroup = group.clone();
@@ -260,7 +305,7 @@ public class RulePushAggregates implements
 		removeUnnecessaryViews(unionSourceParent, metadata, capFinder);
 	}
 
-	private void updateParentAggs(PlanNode groupNode, CommandContext context,
+	private void updateParentAggs(PlanNode groupNode,
 			Map<AggregateSymbol, Expression> aggMap, QueryMetadataInterface metadata)
 			throws QueryMetadataException, TeiidComponentException, QueryPlannerException {
 		LinkedHashSet<AggregateSymbol> compositeAggs = new LinkedHashSet<AggregateSymbol>();
@@ -343,7 +388,7 @@ public class RulePushAggregates implements
 			List<Expression> groupingExpressions,
 			LinkedHashSet<AggregateSymbol> aggregates,
 			LinkedList<PlanNode> unionChildren, SymbolMap parentMap, QueryMetadataInterface metadata, 
-			CapabilitiesFinder capFinder, CommandContext cc) throws QueryPlannerException, QueryMetadataException, TeiidComponentException, QueryResolverException {
+			CapabilitiesFinder capFinder) throws QueryPlannerException, QueryMetadataException, TeiidComponentException, QueryResolverException {
 		// remove the group node
 		groupNode.getParent().replaceChild(groupNode, groupNode.getFirstChild());
 		
@@ -352,7 +397,7 @@ public class RulePushAggregates implements
 		boolean first = true;
 		for (PlanNode planNode : unionChildren) {
 			addUnionGroupBy(groupingExpressions, aggregates,
-					parentMap, metadata, capFinder, cc, group, first,
+					parentMap, metadata, capFinder, group, first,
 					planNode, false);
 			first = false;
 		}
@@ -385,6 +430,7 @@ public class RulePushAggregates implements
 	 * @param sourceNode
 	 * @param metadata
 	 * @param capFinder
+	 * @param context 
 	 * @throws QueryPlannerException
 	 * @throws QueryMetadataException
 	 * @throws TeiidComponentException
@@ -407,7 +453,7 @@ public class RulePushAggregates implements
 			} else {
 				parent.getFirstChild().addAsParent(planNode);
 			}
-			while (RuleRaiseAccess.raiseAccessNode(planNode, planNode, metadata, capFinder, true, null) != null) {
+			while (RuleRaiseAccess.raiseAccessNode(planNode, planNode, metadata, capFinder, true, null, context) != null) {
 				//continue to raise
 			}
 		}
@@ -417,7 +463,7 @@ public class RulePushAggregates implements
 			List<Expression> groupingExpressions,
 			LinkedHashSet<AggregateSymbol> aggregates, SymbolMap parentMap,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			CommandContext cc, GroupSymbol group, boolean first, PlanNode planNode, boolean viewOnly)
+			GroupSymbol group, boolean first, PlanNode planNode, boolean viewOnly)
 			throws QueryMetadataException, TeiidComponentException,
 			QueryPlannerException, QueryResolverException {
 		List<Expression> groupingColumns = LanguageObject.Util.deepClone(groupingExpressions, Expression.class);
@@ -488,7 +534,7 @@ public class RulePushAggregates implements
 		view.addAsParent(projectPlanNode);
 		
 		if (!viewOnly) {
-			addGroupBy(cc, view, groupingColumns, aggregates, metadata, projectPlanNode.getParent());
+			addGroupBy(view, groupingColumns, aggregates, metadata, projectPlanNode.getParent(), capFinder, true, groupingColumns.isEmpty());
 		}
 	}
 	
@@ -504,41 +550,38 @@ public class RulePushAggregates implements
 	private boolean canPushGroupByToUnionChild(QueryMetadataInterface metadata,
 			CapabilitiesFinder capFinder,
 			List<Expression> groupingExpressions,
-			LinkedHashSet<AggregateSymbol> aggregates, PlanNode planNode, AnalysisRecord record)
+			Set<AggregateSymbol> aggregates,
+			PlanNode planNode, AnalysisRecord record, PlanNode groupingNode)
 			throws QueryMetadataException, TeiidComponentException {
 		if (planNode.getType() != NodeConstants.Types.ACCESS) {
 			return false;
 		}
-		Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNode, metadata);
-		if (!CapabilitiesUtil.supports(Capability.QUERY_GROUP_BY, modelId, metadata, capFinder)) {
+		boolean result = RuleRaiseAccess.canRaiseOverGroupBy(groupingNode, planNode, aggregates, metadata, capFinder, record, false);
+		if (!result) {
 			return false;
 		}
-		if (!CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelId, metadata, capFinder)
-		    && !CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelId, metadata, capFinder)) {
-			for (Expression e : groupingExpressions) {
-				if (!(e instanceof ElementSymbol)) {
-					return false;
+		if (groupingExpressions.isEmpty() && !canFilterEmpty(metadata, capFinder, aggregates, planNode)) {
+			return false;
+		}
+		return true;
+	}
+
+	private boolean canFilterEmpty(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, Set<AggregateSymbol> aggregates,
+			PlanNode planNode) throws QueryMetadataException,
+			TeiidComponentException {
+		Object modelId = RuleRaiseAccess.getModelIDFromAccess(planNode, metadata);
+		if (CapabilitiesUtil.supports(Capability.CRITERIA_ISNULL, modelId, metadata, capFinder) && CapabilitiesUtil.supports(Capability.CRITERIA_NOT, modelId, metadata, capFinder)) {
+			for (AggregateSymbol as : aggregates) {
+				if (as.getAggregateFunction() != AggregateSymbol.Type.COUNT) {
+					if (as.getAggregateFunction() == AggregateSymbol.Type.COUNT && as.getFunctionDescriptor().isNullDependent()) {
+						continue;
+					}
+					return true;
 				}
 			}
 		}
-		for (AggregateSymbol aggregate : aggregates) {
-			if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(aggregate, modelId, metadata, capFinder, record)) {
-	            return false;
-	        }
-		}
-		if (groupingExpressions.isEmpty()) {
-			if (!CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder)) {
-				return false;
-			}
-		} else {
-			for (Expression ses : groupingExpressions) {
-				if(! CriteriaCapabilityValidatorVisitor.canPushLanguageObject(ses, modelId, metadata, capFinder, record)) {
-		            return false;
-		        }
-			}
-		}
-		//TODO: check to see if we are distinct
-		return true;
+		return (CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_ORDERED, modelId, metadata, capFinder) && CapabilitiesUtil.supports(Capability.QUERY_AGGREGATES_COUNT_STAR, modelId, metadata, capFinder));
 	}
     
 	/**
@@ -676,7 +719,7 @@ public class RulePushAggregates implements
         	}
             
             if (aggregates != null) {
-                aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates, cc);
+                aggregates = stageAggregates(groupNode, metadata, stagedGroupingSymbols, aggregates);
             } else {
                 aggregates = new ArrayList<AggregateSymbol>(1);
             }
@@ -684,43 +727,25 @@ public class RulePushAggregates implements
             if (aggregates.isEmpty() && stagedGroupingSymbols.isEmpty()) {
                 continue;
             }
-            //TODO: if aggregates is empty, then could insert a dup remove node instead
-            
-            PlanNode stageGroup = addGroupBy(cc, planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent());
-			
-            //check for push down
-            PlanNode accessNode = stageGroup.getFirstChild();
-			if (accessNode.getType() == NodeConstants.Types.ACCESS 
-                            && RuleRaiseAccess.canRaiseOverGroupBy(stageGroup, accessNode, aggregates, metadata, capFinder, null)) {
-            	accessNode.getGroups().clear();
-            	accessNode.getGroups().addAll(stageGroup.getGroups());
-                RuleRaiseAccess.performRaise(null, accessNode, stageGroup);
-                if (stagedGroupingSymbols.isEmpty()) {
-                    RuleRaiseAccess.performRaise(null, stageGroup.getParent(), stageGroup.getParent().getParent());
-                }
-            }
+            addGroupBy(planNode, new ArrayList<Expression>(stagedGroupingSymbols), aggregates, metadata, groupNode.getParent(), capFinder, true, stagedGroupingSymbols.isEmpty());
         }
     }
 
-	private PlanNode addGroupBy(CommandContext cc,
+    /**
+     * TODO: if aggregates are empty, then could insert a dup remove node instead
+     */
+	private void addGroupBy(
 			PlanNode child, List<Expression> stagedGroupingSymbols,
-			Collection<AggregateSymbol> aggregates, QueryMetadataInterface metadata, PlanNode endNode) throws QueryMetadataException,
+			Collection<AggregateSymbol> aggregates, QueryMetadataInterface metadata, PlanNode endNode, CapabilitiesFinder capFinder, boolean considerMultiSource, boolean filterEmpty) throws QueryMetadataException,
 			TeiidComponentException, QueryPlannerException {
 		PlanNode stageGroup = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
 		child.addAsParent(stageGroup);
 		aggregates = new LinkedHashSet<AggregateSymbol>(aggregates);
-		if (stagedGroupingSymbols.isEmpty()) {
-		    // if the source has no rows we need to insert a select node with criteria count(*)>0
-		    PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
-		    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); 
-		    aggregates.add(count); //consider the count aggregate for the push down call below
-		    selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompareCriteria(count, CompareCriteria.GT,
-		                                                                                   new Constant(new Integer(0))));
-		    selectNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
-		    stageGroup.addAsParent(selectNode);
+		Map<Expression, ElementSymbol> reverseMapping = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, context, idGenerator).inserseMapping();
+		if (filterEmpty) {
+		    // if the source has no rows we need to insert a select node with criteria
+		    addEmptyFilter(aggregates, stageGroup, metadata, capFinder, RuleRaiseAccess.getModelIDFromAccess(NodeEditor.findNodePreOrder(child, NodeConstants.Types.ACCESS), metadata));
 		}
-		
-		Map<Expression, ElementSymbol> reverseMapping = RelationalPlanner.buildGroupingNode(aggregates, stagedGroupingSymbols, stageGroup, cc, idGenerator).inserseMapping();
 		GroupSymbol newGroup = reverseMapping.values().iterator().next().getGroupSymbol();
 		PlanNode node = stageGroup.getParent();
 		while (node != endNode) {
@@ -735,13 +760,55 @@ public class RulePushAggregates implements
 			}
 			node = node.getParent();
 		}
-		return stageGroup;
+		//check for push down
+        PlanNode accessNode = stageGroup.getFirstChild();
+        if (accessNode.getType() != NodeConstants.Types.ACCESS) {
+        	groupingNodes.add(stageGroup);
+        } else if (RuleRaiseAccess.canRaiseOverGroupBy(stageGroup, accessNode, aggregates, metadata, capFinder, null, false)) {
+			if (considerMultiSource && accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+				groupingNodes.add(stageGroup);
+			} else {
+	        	accessNode.getGroups().clear();
+	        	accessNode.getGroups().addAll(stageGroup.getGroups());
+	            RuleRaiseAccess.performRaise(null, accessNode, stageGroup);
+	            if (filterEmpty) {
+	            	RuleRaiseAccess.performRaise(null, stageGroup.getParent(), stageGroup.getParent().getParent());
+	            }
+			}
+        }
+	}
+
+	private void addEmptyFilter(Collection<AggregateSymbol> aggregates,
+			PlanNode stageGroup, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, Object modelId) throws QueryMetadataException, TeiidComponentException {
+		PlanNode selectNode = NodeFactory.getNewNode(NodeConstants.Types.SELECT);
+		Criteria crit = null;
+		if (CapabilitiesUtil.supports(Capability.CRITERIA_ISNULL, modelId, metadata, capFinder) && CapabilitiesUtil.supports(Capability.CRITERIA_NOT, modelId, metadata, capFinder)) {
+			for (AggregateSymbol aggregateSymbol : aggregates) {
+				if (aggregateSymbol.getAggregateFunction() != AggregateSymbol.Type.COUNT) {
+					if (aggregateSymbol.getAggregateFunction() == AggregateSymbol.Type.COUNT && aggregateSymbol.getFunctionDescriptor().isNullDependent()) {
+						continue;
+					}
+					IsNullCriteria inc = new IsNullCriteria((Expression) aggregateSymbol.clone());
+					inc.setNegated(true);
+					crit = inc;
+					break;
+				}
+			}
+		} 
+		if (crit == null) {
+		    AggregateSymbol count = new AggregateSymbol(NonReserved.COUNT, false, null); 
+		    aggregates.add(count); //consider the count aggregate for the push down call below
+		    crit = new CompareCriteria(count, CompareCriteria.GT, new Constant(new Integer(0)));
+		}
+		selectNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, crit);
+		selectNode.setProperty(NodeConstants.Info.IS_HAVING, Boolean.TRUE);
+		stageGroup.addAsParent(selectNode);
 	}
 
     Set<AggregateSymbol> stageAggregates(PlanNode groupNode,
                                  QueryMetadataInterface metadata,
                                  Set<Expression> stagedGroupingSymbols,
-                                 Collection<AggregateSymbol> aggregates, CommandContext context) throws TeiidComponentException, QueryPlannerException {
+                                 Collection<AggregateSymbol> aggregates) throws TeiidComponentException, QueryPlannerException {
         //remove any aggregates that are computed over a group by column
         for (final Iterator<AggregateSymbol> iterator = aggregates.iterator(); iterator.hasNext();) {
             final AggregateSymbol symbol = iterator.next();
@@ -765,7 +832,7 @@ public class RulePushAggregates implements
 		} catch (QueryResolverException e) {
 			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30266, e);
 		}
-        updateParentAggs(groupNode, context, aggMap, metadata);
+        updateParentAggs(groupNode, aggMap, metadata);
         return newAggs;
     }
     

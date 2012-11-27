@@ -163,13 +163,7 @@ public class RelationalPlanner {
             analysisRecord.println("GENERATE CANONICAL: \n" + command); //$NON-NLS-1$
 		}   
 		
-		PlanToProcessConverter planToProcessConverter = null;
-        if (context != null) {
-        	planToProcessConverter = context.getPlanToProcessConverter();
-        }
-        if (planToProcessConverter == null) {
-        	planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
-        }
+		PlanToProcessConverter planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
 		
 		//plan with
         List<WithQueryCommand> withList = null;
