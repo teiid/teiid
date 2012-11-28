@@ -534,7 +534,7 @@ public class RulePushAggregates implements
 		view.addAsParent(projectPlanNode);
 		
 		if (!viewOnly) {
-			addGroupBy(view, groupingColumns, aggregates, metadata, projectPlanNode.getParent(), capFinder, true, groupingColumns.isEmpty());
+			addGroupBy(view, groupingColumns, aggregates, metadata, projectPlanNode.getParent(), capFinder, true, groupingColumns.isEmpty() || containsNullDependent(aggregates));
 		}
 	}
 	
@@ -560,10 +560,22 @@ public class RulePushAggregates implements
 		if (!result) {
 			return false;
 		}
-		if (groupingExpressions.isEmpty() && !canFilterEmpty(metadata, capFinder, aggregates, planNode)) {
+		if ((!groupingExpressions.isEmpty() || containsNullDependent(aggregates)) && !canFilterEmpty(metadata, capFinder, aggregates, planNode)) {
 			return false;
 		}
 		return true;
+	}
+
+	private boolean containsNullDependent(Set<AggregateSymbol> aggregates) {
+		for (AggregateSymbol aggregateSymbol : aggregates) {
+			if (aggregateSymbol.getAggregateFunction() == Type.COUNT) {
+				return true;
+			}
+			if (aggregateSymbol.getFunctionDescriptor() != null && aggregateSymbol.getFunctionDescriptor().isNullDependent()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean canFilterEmpty(QueryMetadataInterface metadata,
