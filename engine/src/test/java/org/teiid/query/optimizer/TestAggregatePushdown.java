@@ -939,7 +939,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select e1, count(*) filter (where e3) from (select e1, e2, e3 from pm1.g1 union all select e1, e2, e3 from pm1.g2) y group by e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1", "SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g2 AS g_0 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 HAVING COUNT(*) > 0", "SELECT g_0.e1, COUNT(*) FILTER(WHERE g_0.e3) FROM pm1.g2 AS g_0 GROUP BY g_0.e1 HAVING COUNT(*) > 0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess

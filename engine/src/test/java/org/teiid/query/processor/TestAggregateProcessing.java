@@ -264,11 +264,11 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 HAVING MAX(g_0.e2) IS NOT NULL", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("a", Integer.valueOf(2), Integer.valueOf(1)), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, COUNT(g_0.e2), MAX(g_0.e2) FROM pm1.g2 AS g_0 GROUP BY g_0.e1 HAVING MAX(g_0.e2) IS NOT NULL", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("a", Integer.valueOf(3), Integer.valueOf(2)), //$NON-NLS-1$
     			});
@@ -300,12 +300,12 @@ public class TestAggregateProcessing {
     	capFinder.addCapabilities("pm2", bac); //$NON-NLS-1$
     	HardcodedDataManager dataManager = new HardcodedDataManager();
     	
-    	dataManager.addData("SELECT g_0.e1, g_0.e2, COUNT(*), MAX(g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1, g_0.e2", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT g_0.e1, g_0.e2, COUNT(*), MAX(g_0.e3) FROM pm1.g1 AS g_0 GROUP BY g_0.e1, g_0.e2 HAVING MAX(g_0.e3) IS NOT NULL", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("2", Integer.valueOf(2), Integer.valueOf(2), Boolean.FALSE), //$NON-NLS-1$
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(3), Boolean.TRUE), //$NON-NLS-1$
     			});
-    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT convert(g_0.e2, string) AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1", //$NON-NLS-1$ 
+    	dataManager.addData("SELECT v_0.c_0, v_0.c_1, COUNT(*), MAX(v_0.c_2) FROM (SELECT convert(g_0.e2, string) AS c_0, g_0.e2 AS c_1, g_0.e3 AS c_2 FROM pm2.g2 AS g_0 ORDER BY c_0 LIMIT 10) AS v_0 GROUP BY v_0.c_0, v_0.c_1 HAVING MAX(v_0.c_2) IS NOT NULL", //$NON-NLS-1$ 
     			new List[] {
     				Arrays.asList("1", Integer.valueOf(1), Integer.valueOf(4), Boolean.FALSE), //$NON-NLS-1$
     			});
