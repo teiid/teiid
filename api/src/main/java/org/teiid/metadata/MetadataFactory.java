@@ -186,7 +186,6 @@ public class MetadataFactory implements Serializable {
 		if (autoCorrectColumnNames) {
 			name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
-			//TODO: for now this is not used
 			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
 		}
 		if (table.getColumnByName(name) != null) {

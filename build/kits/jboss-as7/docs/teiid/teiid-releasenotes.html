@@ -26,24 +26,8 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-	<li>TEIID-2150 <b>Positional procedure defaults</b> - a procedure now may be called positionally with just the leading input parameters as long as all trailing parameters are out or defaultable.
-	<li>TEIID-2148 <b>Streaming Improvements</b> - the ws translator invoke/invokeHttp procedures now accept a "stream"" parameter to indicate that the result should be streamed directly without an intermediate copy being created.  
-	Also intermediate document/blob copies are made concurrently with reading to reduce latency.
-	<li>TEIID-2158 <b>Rest Services</b> - when required extension metadata defined on the virtual procedure, a REST based service on that procedure is automatically generated and deployed upon VDB deployment.
-	<li>TEIID-2163 <b>Binary XMLSERIALIZE</b> - XMLSERIALIZE now supports blob/varbinary and the encoding/version and XMLDECLARATION options.
-	<li>TEIID-2141 <b>OBJECTTABLE</b> - was added to extract values from objects using arbitrary scripts.  See the Reference for usage.
-	<li>TEIID-2111 <b>Vararg Procedures</b> - variable argument procedures and functions can be created through DDL using the VARIADIC parameter type.  See the Reference for usage.
-	<li>TEIID-2195 <b>Function Based Indexes</b> - DDL can be used to specify function based indexes.  When used on an internal mat view it will create
-	the corresponding function based index automatically.  In any other circumstance, the metadata is not currently used.
-	<li>TEIID-2181 <b>System query performance</b> - system queries are now indexed on case-insensitive schema/table name columns.
-	<li>TEIID-2086 <b>Transactional results caching</b> - the result set cache is now transactional by default.
-	<li>TEIID-2210 <b>Object Translator</b> - the translator-object can support Infinispan Cache and other Map type caches.  See OBJECTTABLE for executing queries against this translator.
-	<li>TEIID-1386 <b>Procedure exception handling</b> - the Teiid procedure language now supports exception handling and emitting SQLWarnings.  See the Reference for syntax and usage.
-	<li>TEIID-2176,TEIID-2177 <b>Native Query Support</b> - JDBC, LDAP, SalesForce, JPA, OLAP translators now support execution of native queries directly against the source either through "native-query" extension metadata property or native procedure defined by their translator.
-	<li>TEIID-2227 <b>Procedure RETURN statement</b> - the Teiid procedure language now supports a RETURN statement.  See the Reference for syntax and usage.
-	<li>TEIID-2269 <b>Vault Support</b> - The transport's keystore and truststore passwords are now supported through vault based passwords.
-	<li>TEIID-1064 <b>Google Spreadsheet Support</b> - there is now support for querying Google Spreadsheets via Teiid.  See the Reference and Admin Guides for more.
-    <li>TEIID-2274, TEIID-2275, TEIID-2288, TEIID-2299 <b>Converting examples to Quick Starts</b> - The examples in the Teiid JBoss dist zip have been converted to Quick Starts and will now be found in the Quick Start kit.
+	<li>TEIID-2253 <b>Multi-source improvements</b> - multi-source planning was significantly improved, which will result in much better plans when using multi-source models.  
+	The user may also now configure the multi-source column name, auto-populate it the actual metadata, and use non-literal multi-source column values.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -54,9 +38,21 @@
   <li>The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.(TEIID-2267)
 </ul>
 
+<h4>from 8.2</h4>
+<ul>
+  <li>TEIID-2253 the multi-source implementation logic was significantly altered the following changes were introduced.
+     <ul>
+        <li>If not auto-populated, the multi-source column acts as a pseudo-column and will not be selectable via a wildcard SELECT * nor tbl.*
+        <li>Multi-source inserts must specify a single source as their target.
+        <li>The join planning behavior in multi-source mode was not consistent and did not work in all situations.  To ensure consistency multi-source tables being joined together should specify a join predicate on the source name column - i.e. tbl1.source_name = tbl2.source_name.
+        For backwards compatibility a the system property org.teiid.implicitMultiSourceJoin was introduced to control whether multi-source joins are effectively partitioned by source without a source_name predicate.  The property defaults to true, the pre 8.3 behavior - but should be
+        switched to false for later versions unless the issues with implicit join planning are addressed.   
+     </ul>
+<ul>
+
 <h4>from 8.1</h4>
 <ul>
-  <li>TEIID-2149 the subqueryUnnestDefault property no longer influences cost based decisions to treat subqueries as merge joins.
+  <li>TEIID-2149 the subqueryUnnestDefault property no longer influences cost based decisions to treat subqueries as merge joins.  In nearly all circumstances this is desirable, but may require the use of nounnest hint to prevent forming the join if desired.
   <li>TEIID-2166 array_get will return null if the index is out of bounds rather than raising an error.
   <li>TEIID-2175 for 8.0 and 8.1 clients the server will check if serialized date/time values fall outside of 32-bit value ranges (year 1900 - 9999 for dates and times between years 1901 and 2038) and throw an exception.  The previous behavior was
   to truncate.  The exception and the use of 32 bit serialization can be avoided by setting the system property org.teiid.longDatesTimes to true.

@@ -40,6 +40,8 @@ import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
+import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Datatype;
@@ -75,6 +77,14 @@ public abstract class AbstractVDBDeployer {
 				continue;
 			}
 			MetadataRepository<?, ?> repo = getMetadataRepository(deployment, model, defaultRepo);
+			//handle multi-source column creation
+			if (model.isSupportsMultiSourceBindings() && Boolean.valueOf(model.getPropertyValue("multisource.addColumn"))) { //$NON-NLS-1$
+				List<MetadataRepository<?, ?>> repos = new ArrayList<MetadataRepository<?, ?>>(2);
+				repos.add(repo);
+				String columnName = deployment.getPropertyValue(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME);
+				repos.add(new MultiSourceMetadataRepository(columnName==null?MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME:columnName));
+				repo = new ChainingMetadataRepository(repos);
+			}
 			model.addAttchment(MetadataRepository.class, repo);
 		}
 	}

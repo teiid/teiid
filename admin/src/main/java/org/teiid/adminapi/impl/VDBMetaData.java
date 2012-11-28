@@ -24,7 +24,6 @@ package org.teiid.adminapi.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -191,20 +190,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	public ModelMetaData getModel(String modelName) {
 		return this.models.get(modelName);
 	}
-	
-	public Set<String> getMultiSourceModelNames(){
-		if (multiSource == null) {
-			HashSet<String> set = new HashSet<String>();
-			for(ModelMetaData m: models.values()) {
-				if (m.isSupportsMultiSourceBindings()) {
-					set.add(m.getName());
-				}
-			}
-			multiSource = set;
-		}
-		return multiSource;
-	}
-	
+		
 	public boolean isDynamic() {
 		return dynamic;
 	}

@@ -27,7 +27,7 @@ import static org.junit.Assert.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -35,7 +35,6 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.id.IDGenerator;
 import org.teiid.dqp.internal.process.DQPWorkContext;
-import org.teiid.dqp.internal.process.Request;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
@@ -102,8 +101,8 @@ public class TestMultiSourcePlanToProcessConverter {
     }
     
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb, List<?> params, Options options) throws Exception {
-        Set<String> multiSourceModels = vdb.getMultiSourceModelNames();
-        for (String model:multiSourceModels) {
+        Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(vdb);
+        for (String model:multiSourceModels.keySet()) {
             char sourceID = 'a';
             // by default every model has one binding associated, but for multi-source there were none assigned. 
             ModelMetaData m = vdb.getModel(model);
@@ -112,11 +111,7 @@ public class TestMultiSourcePlanToProcessConverter {
             	 m.addSourceMapping("" + sourceID, "translator",  null); //$NON-NLS-1$ //$NON-NLS-2$
             }
         }
-        String elementName = vdb.getPropertyValue(Request.MULTISOURCE_COLUMN_NAME);
-        if (elementName == null) {
-        	elementName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME;
-        }
-        QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels, elementName);
+        QueryMetadataInterface wrapper = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
         wrapper = new TempMetadataAdapter(wrapper, new TempMetadataStore());
     	DQPWorkContext workContext = RealMetadataFactory.buildWorkContext(wrapper, vdb);
         
@@ -192,7 +187,7 @@ public class TestMultiSourcePlanToProcessConverter {
         final HardcodedDataManager dataMgr = new MultiSourceDataManager();
         dataMgr.setMustRegisterCommands(false);
         VDBMetaData vdb = RealMetadataFactory.exampleMultiBindingVDB();
-        vdb.addProperty(Request.MULTISOURCE_COLUMN_NAME, "foo");
+        vdb.getModel("MultiModel").addProperty(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME, "foo");
 		helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, vdb);
     }
     

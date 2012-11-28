@@ -467,14 +467,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
 
     public boolean isVirtualGroup(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        ArgCheck.isInstanceOf(Table.class, groupID);
-        return ((Table) groupID).isVirtual();
+    	if (groupID instanceof Table) {
+    		return ((Table) groupID).isVirtual();
+    	}
+    	if (groupID instanceof Procedure) {
+    		return ((Procedure) groupID).isVirtual();
+    	}
+    	throw createInvalidRecordTypeException(groupID);
     }
 
-    /** 
-     * @see org.teiid.query.metadata.QueryMetadataInterface#isProcedureInputElement(java.lang.Object)
-     * @since 4.2
-     */
     public boolean isProcedure(final Object groupID) throws TeiidComponentException, QueryMetadataException {
     	if(groupID instanceof Procedure) {
             return true;            

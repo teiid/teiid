@@ -47,7 +47,7 @@ public class TestMultiSourceMetadataWrapper {
         MultiSourceMetadataWrapper wrapper = new MultiSourceMetadataWrapper(RealMetadataFactory.exampleBQTCached(), multiSourceModels);
         
         Object groupID = wrapper.getGroupID("BQT1.SmallA"); //$NON-NLS-1$
-        List elements = wrapper.getElementIDsInGroupID(groupID);
+        List<?> elements = wrapper.getElementIDsInGroupID(groupID);
         assertEquals(18, elements.size());
         
         Object instanceElementID = elements.get(elements.size()-1);
@@ -80,5 +80,9 @@ public class TestMultiSourceMetadataWrapper {
         
         assertFalse(tma.isMultiSourceElement(id.getElements().get(0)));
         assertTrue(tma.isMultiSourceElement(instanceElementID));
+        
+        assertTrue(tma.isPseudo(instanceElementID));
+        
+        assertEquals(17, tma.getElementIDsInGroupID(tma.getGroupID("VQT.Smalla")).size());
     }
 }

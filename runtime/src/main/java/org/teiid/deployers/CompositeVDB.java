@@ -37,6 +37,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -255,7 +256,12 @@ public class CompositeVDB {
 		MetadataStore mergedStore = getMetadataStore();
 		
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
-		mergedVDB.addAttchment(QueryMetadataInterface.class, metadata);
+		QueryMetadataInterface qmi = metadata;
+        Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(vdb);
+        if(multiSourceModels != null && !multiSourceModels.isEmpty()) {
+            qmi = new MultiSourceMetadataWrapper(metadata, multiSourceModels);
+        }
+		mergedVDB.addAttchment(QueryMetadataInterface.class, qmi);
 		mergedVDB.addAttchment(TransformationMetadata.class, metadata);
 		mergedVDB.addAttchment(MetadataStore.class, mergedStore);
 	}

@@ -26,11 +26,9 @@ import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -47,8 +45,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.process.AuthorizationValidator.CommandType;
-import org.teiid.dqp.internal.process.multisource.MultiSourceElement;
-import org.teiid.dqp.internal.process.multisource.MultiSourceMetadataWrapper;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
@@ -56,7 +52,6 @@ import org.teiid.dqp.service.TransactionService;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -100,7 +95,6 @@ import org.teiid.query.validator.ValidatorReport;
  */
 public class Request implements SecurityFunctionEvaluator {
     
-	public static final String MULTISOURCE_COLUMN_NAME = "multisource.columnName"; //$NON-NLS-1$
 	// init state
     protected RequestMessage requestMsg;
     private String vdbName;
@@ -116,8 +110,6 @@ public class Request implements SecurityFunctionEvaluator {
     // acquired state
     protected CapabilitiesFinder capabilitiesFinder;
     protected QueryMetadataInterface metadata;
-    private Set<String> multiSourceModels;
-    private String multiSourceElementName;
 
     // internal results
     protected boolean addedLimit;
@@ -160,10 +152,9 @@ public class Request implements SecurityFunctionEvaluator {
         this.planCache = planCache;
     }
     
-	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata, Set multiSourceModels) {
+	void setMetadata(CapabilitiesFinder capabilitiesFinder, QueryMetadataInterface metadata) {
 		this.capabilitiesFinder = capabilitiesFinder;
 		this.metadata = metadata;
-		this.multiSourceModels = multiSourceModels;
 	}
 	
 	public void setResultSetCacheEnabled(boolean resultSetCacheEnabled) {
@@ -194,20 +185,6 @@ public class Request implements SecurityFunctionEvaluator {
 
         if (metadata == null) {
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30489, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30489, this.vdbName, this.vdbVersion));
-        }
-        
-        // Check for multi-source models and further wrap the metadata interface
-        // TODO: perform this wrapping as part of the vdb metadata loading process
-        Set<String> multiSourceModelList = workContext.getVDB().getMultiSourceModelNames();
-        if(multiSourceModelList != null && multiSourceModelList.size() > 0) {
-        	multiSourceElementName = workContext.getVDB().getPropertyValue(MULTISOURCE_COLUMN_NAME);
-        	this.multiSourceModels = multiSourceModelList;
-        	if (multiSourceElementName == null) {
-        		multiSourceElementName = MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME;
-        	} else if (multiSourceElementName.isEmpty() || multiSourceElementName.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) > -1) {
-        		throw new QueryMetadataException(QueryPlugin.Util.getString("SQLParser.Invalid_short_name", multiSourceElementName)); //$NON-NLS-1$
-        	}
-            this.metadata = new MultiSourceMetadataWrapper(this.metadata, this.multiSourceModels, multiSourceElementName);
         }
         
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, this.tempTableStore.getMetadataStore());

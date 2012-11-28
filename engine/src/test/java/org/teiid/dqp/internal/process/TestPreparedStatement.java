@@ -241,7 +241,7 @@ public class TestPreparedStatement {
         Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(new AutoGenDataService());
         
         serverRequest.initialize(request, BufferManagerFactory.getStandaloneBufferManager(), null, new FakeTransactionService(), null, workContext, prepPlanCache);
-        serverRequest.setMetadata(capFinder, metadata, null);
+        serverRequest.setMetadata(capFinder, metadata);
         DefaultAuthorizationValidator drav = new DefaultAuthorizationValidator();
         serverRequest.setAuthorizationValidator(drav);
         serverRequest.processRequest();

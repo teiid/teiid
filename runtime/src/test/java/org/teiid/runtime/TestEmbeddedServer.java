@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -416,6 +417,41 @@ public class TestEmbeddedServer {
 		ps.setInt(1, 3);
 		ps.setInt(2, 1);
 		assertEquals(1, ps.executeUpdate());
+	}
+	
+	@Test public void testMultiSourceMetadata() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.addTranslator("t", new ExecutionFactory<Void, Void>());
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setSchemaSourceType("ddl");
+		mmd1.setSchemaText("create foreign table t (x string)");
+		mmd1.setSupportsMultiSourceBindings(true);
+		mmd1.addSourceMapping("x", "t", null);
+		mmd1.addSourceMapping("y", "t", null);
+		
+		es.deployVDB("vdb", mmd1);
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		PreparedStatement ps = c.prepareStatement("select * from t");
+		ResultSetMetaData metadata = ps.getMetaData();
+		assertEquals(1, metadata.getColumnCount());
+		
+		mmd1.addProperty("multisource.addColumn", Boolean.TRUE.toString());
+		
+		es.undeployVDB("vdb");
+		es.deployVDB("vdb", mmd1);
+		
+		c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		ps = c.prepareStatement("select * from t");
+		metadata = ps.getMetaData();
+		assertEquals(2, metadata.getColumnCount());
 	}
 	
 	@Test public void testDynamicUpdate() throws Exception {
