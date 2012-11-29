@@ -54,10 +54,10 @@
             </config-property>    
             
             <config-property>
-               <description>{$display:"Google Spreadsheet result batching size",$description:""}</description>
+               <description>{$display:"Max result batch size",$description:""}</description>
                <config-property-name>BatchSize</config-property-name>
                <config-property-type>java.lang.Long</config-property-type>
-               <config-property-value>1000</config-property-value>
+               <config-property-value>4096</config-property-value>
             </config-property>       
                     
             <config-property>

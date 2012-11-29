@@ -52,8 +52,8 @@ import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Streamable;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
+import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -75,7 +75,9 @@ import org.teiid.query.sql.symbol.Expression;
  *       
  * TODO: add a pre-fetch for tuplebuffers or some built-in correlation logic with the queue.      
  */
-public class BufferManagerImpl implements BufferManager, StorageManager, ReplicatedObject<String> {
+public class BufferManagerImpl implements BufferManager, ReplicatedObject<String> {
+
+	private static final int SYSTEM_OVERHEAD_MEGS = 150;
 
 	/**
 	 * Asynch cleaner attempts to age out old entries and to reduce the memory size when 
@@ -347,7 +349,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	private static ReferenceQueue<CacheEntry> SOFT_QUEUE = new ReferenceQueue<CacheEntry>();
 	
 	// Configuration 
-    private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     //set to acceptable defaults for testing
     private int maxProcessingBytes = 1 << 21; 
@@ -459,19 +460,6 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
         return this.processorBatchSize;
     }
 
-    /**
-     * Get connector batch size
-     * @return Number of rows in a connector batch
-     */
-    @Override
-    public int getConnectorBatchSize() {
-        return this.connectorBatchSize;
-    }
-    
-    public void setConnectorBatchSize(int connectorBatchSize) {
-        this.connectorBatchSize = connectorBatchSize;
-    } 
-    
     public void setTargetBytesPerRow(int targetBytesPerRow) {
 		this.targetBytesPerRow = targetBytesPerRow;
 	}
@@ -572,7 +560,7 @@ public class BufferManagerImpl implements BufferManager, StorageManager, Replica
 	@Override
 	public void initialize() throws TeiidComponentException {
 		long maxMemory = Runtime.getRuntime().maxMemory();
-		maxMemory = Math.max(0, maxMemory - (300 << 20)); //assume 300 megs of overhead for the AS/system stuff
+		maxMemory = Math.max(0, maxMemory - (SYSTEM_OVERHEAD_MEGS << 20)); //assume 300 megs of overhead for the AS/system stuff
 		if (getMaxReserveKB() < 0) {
 			this.maxReserveBytes.set(0);
 			int one_gig = 1 << 30;

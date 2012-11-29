@@ -42,8 +42,8 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
+import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.RelativePathService;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
@@ -58,12 +58,12 @@ import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
 import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceContainer;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceTarget;
 import org.jboss.msc.service.ValueService;
-import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheFactory;
@@ -113,7 +113,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 		Element.USE_DISK_ATTRIBUTE,
 		Element.INLINE_LOBS,
 		Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE,
-		Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE,
 		Element.MAX_PROCESSING_KB_ATTRIBUTE,
 		Element.MAX_RESERVED_KB_ATTRIBUTE,
 		Element.MAX_FILE_SIZE_ATTRIBUTE,
@@ -462,9 +461,6 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
     	}	                	
     	if (Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE.isDefined(node)) {
     		bufferManger.setProcessorBatchSize(Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE.asInt(node, context));
-    	}	
-    	if (Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE.isDefined(node)) {
-    		bufferManger.setConnectorBatchSize(Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE.asInt(node, context));
     	}	
     	if (Element.MAX_PROCESSING_KB_ATTRIBUTE.isDefined(node)) {
     		bufferManger.setMaxProcessingKb(Element.MAX_PROCESSING_KB_ATTRIBUTE.asInt(node, context));

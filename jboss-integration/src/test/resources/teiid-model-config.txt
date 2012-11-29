@@ -111,15 +111,9 @@
     },
     "buffer-service-processor-batch-size" => {
         "type" => INT,
-        "description" => "The max row count of a batch sent internally within the query processor. Should be <= the 'connector-batch-size'. (default 256)",
+        "description" => "The max row count of a batch sent internally within the query processor. (default 256)",
         "required" => false,
         "default" => 256
-    },
-    "buffer-service-connector-batch-size" => {
-        "type" => INT,
-        "description" => "The max row count of a batch from a connector. Should be even multiple of 'processor-batch-size'. (default 512)",
-        "required" => false,
-        "default" => 512
     },
     "buffer-service-max-processing-kb" => {
         "type" => INT,

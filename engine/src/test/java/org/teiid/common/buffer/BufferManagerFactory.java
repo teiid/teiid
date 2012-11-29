@@ -62,15 +62,6 @@ public class BufferManagerFactory {
 		return initBufferManager(new BufferManagerImpl());
 	}
 
-	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize, int connectorBatchSize) {
-		BufferManagerImpl bufferManager = new BufferManagerImpl();
-		bufferManager.setProcessorBatchSize(procBatchSize);
-		bufferManager.setConnectorBatchSize(connectorBatchSize);
-		bufferManager.setMaxProcessingKB((int) (bytesAvailable/1024));
-		bufferManager.setMaxReserveKB((int) (bytesAvailable/1024));
-	    return initBufferManager(bufferManager);
-	}
-
 	public static BufferManagerImpl getTestBufferManager(long bytesAvailable, int procBatchSize) {
 		BufferManagerImpl bufferManager = new BufferManagerImpl();
 		bufferManager.setProcessorBatchSize(procBatchSize);

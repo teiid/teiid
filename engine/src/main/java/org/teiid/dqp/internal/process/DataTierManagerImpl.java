@@ -33,8 +33,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -42,9 +42,9 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.client.RequestMessage;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -75,10 +75,10 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.CollectionTupleSource;
@@ -101,8 +101,8 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.CacheDirective.Scope;
+import org.teiid.translator.TranslatorException;
 
 /**
  * Full {@link ProcessorDataManager} implementation that 
@@ -642,6 +642,9 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		
 		AtomicRequestMessage aqr = createRequest(workItem, command, modelName, parameterObject.connectorBindingId, parameterObject.nodeID);
 		aqr.setCommandContext(context);
+		if (parameterObject.fetchSize > 0) {
+			aqr.setFetchSize(2*parameterObject.fetchSize);
+		}
 		SourceHint sh = context.getSourceHint();
 		if (sh != null) {
 			aqr.setGeneralHint(sh.getGeneralHint());
@@ -908,7 +911,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         if (nodeID >= 0) {
         	aqr.setTransactionContext(workItem.getTransactionContext());
         }
-        aqr.setFetchSize(this.bufferManager.getConnectorBatchSize());
+        
         if (connectorBindingId == null) {
         	VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();
         	ModelMetaData model = vdb.getModel(modelName);

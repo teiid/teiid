@@ -335,12 +335,15 @@ public class AccessNode extends SubqueryAwareRelationalNode {
                     continue;
         		} catch (BlockedException e) {
         			if (processCommandsIndividually()) {
+        				if (hasPendingRows()) {
+                			return pullBatch();
+                		}
         				throw e;
         			}
         			continue;
         		}
 			}
-        	
+
         	if (processCommandsIndividually()) {
         		if (hasPendingRows()) {
         			return pullBatch();
@@ -349,6 +352,9 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         	}
         	
         	if (!this.tupleSources.isEmpty()) {
+        		if (hasPendingRows()) {
+        			return pullBatch();
+        		}
         		throw BlockedException.block(getContext().getRequestId(), "Blocking on source request(s)."); //$NON-NLS-1$
         	}
         }
@@ -400,6 +406,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		}
 		RegisterRequestParameter param = new RegisterRequestParameter(connectorBindingId, getID(), limit);
 		param.info = info;
+		param.fetchSize = this.getBatchSize();
 		tupleSources.add(getDataManager().registerRequest(getContext(), atomicCommand, modelName, param));
 		if (tupleSources.size() > 1) {
         	reserved += getBufferManager().reserveBuffers(schemaSize, BufferReserveMode.FORCE);

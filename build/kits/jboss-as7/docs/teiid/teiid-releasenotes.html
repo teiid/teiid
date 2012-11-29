@@ -176,6 +176,11 @@ See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on c
 
 <h4>from 8.1</h4>
 <ul>
+  <li>The connector batch size setting is no longer used.  Instead a fetch size will be sent to the translator that is 2 times the working batch size or the non-pushed limit, whichever is less.
+</ul>
+
+<h4>from 8.1</h4>
+<ul>
   <li>The file translator now defaults to exceptionIfFileNotFound=true, you can set the translator property to false to preserve the old behavior of returning null.
   <li>TEIID-2086 TEIID-2168 prepared plan and result set caches are now configured as infinispan caches.  See the teiid cache container in the configuration.  You may also control the transactional aspects of the result set cache on the resultset and resultset-repl caches via the configuration. 
   <li>TEIID-1241 the web services connector property ConfigName was deprecated in favor of EndPointName.  There were also ServiceName, NamespaceUri, and Wsdl properties added, which are used to point the 

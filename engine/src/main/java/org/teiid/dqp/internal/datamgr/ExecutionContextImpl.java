@@ -56,7 +56,7 @@ public class ExecutionContextImpl implements ExecutionContext {
     
     private boolean isTransactional;
     
-    private int batchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+    private int batchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
 	private WeakReference<RequestWorkItem> worktItem;

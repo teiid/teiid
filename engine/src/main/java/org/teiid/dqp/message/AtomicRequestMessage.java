@@ -68,7 +68,7 @@ public class AtomicRequestMessage {
 	private Command command;
 
 	// results fetch size
-	private int fetchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
+	private int fetchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 
 	// The time when command begins processing on the server.
 	private long processingTimestamp = System.currentTimeMillis();

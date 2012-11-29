@@ -64,7 +64,7 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, GoogleSpreadsheetConnection connection)
 			throws TranslatorException {
-		return new SpreadsheetQueryExecution((Select)command, connection);
+		return new SpreadsheetQueryExecution((Select)command, connection, executionContext);
 	}
 	
 	@Override

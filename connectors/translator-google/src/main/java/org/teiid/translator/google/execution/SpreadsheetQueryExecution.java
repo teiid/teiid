@@ -9,6 +9,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
 import org.teiid.resource.adapter.google.common.SheetRow;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.google.SpreadsheetExecutionFactory;
@@ -18,9 +19,11 @@ public class SpreadsheetQueryExecution implements ResultSetExecution {
 	private Select query;
 	private GoogleSpreadsheetConnection connection;
 	private Iterator<SheetRow> rowIterator;
+	private ExecutionContext executionContext;
 
 	public SpreadsheetQueryExecution(Select query,
-			GoogleSpreadsheetConnection connection) {
+			GoogleSpreadsheetConnection connection, ExecutionContext executionContext) {
+		this.executionContext = executionContext;
 		this.connection = connection;
 		this.query = query;
 	}
@@ -40,7 +43,7 @@ public class SpreadsheetQueryExecution implements ResultSetExecution {
 	public void execute() throws TranslatorException {
 		SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor();
 		visitor.translateSQL(query);		
-		rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue()).iterator();
+		rowIterator = connection.executeQuery(visitor.getWorksheetTitle(), visitor.getTranslatedSQL(), visitor.getOffsetValue(),visitor.getLimitValue(), executionContext.getBatchSize()).iterator();
 		
 	}
 

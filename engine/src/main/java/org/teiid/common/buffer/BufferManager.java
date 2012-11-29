@@ -62,7 +62,6 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 		NO_WAIT
 	}
 
-	public static int DEFAULT_CONNECTOR_BATCH_SIZE = 512;
 	public static int DEFAULT_PROCESSOR_BATCH_SIZE = 256;
 	public static int DEFAULT_MAX_PROCESSING_KB = -1;
 	public static int DEFAULT_RESERVE_BUFFER_KB = -1;
@@ -79,12 +78,6 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
      */
     int getProcessorBatchSize();
 
-    /**
-     * Get the batch size to use when reading data from a connector.  
-     * @return Batch size (# of rows)
-     */
-    int getConnectorBatchSize();
-    
 	TupleBuffer createTupleBuffer(List elements, String groupName, TupleSourceType tupleSourceType) 
     throws TeiidComponentException;
 	

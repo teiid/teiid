@@ -186,7 +186,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		writeAttribute(writer, Element.USE_DISK_ATTRIBUTE, node);
 		writeAttribute(writer, Element.INLINE_LOBS, node);
 		writeAttribute(writer, Element.PROCESSOR_BATCH_SIZE_ATTRIBUTE, node);
-		writeAttribute(writer, Element.CONNECTOR_BATCH_SIZE_ATTRIBUTE, node);
 		writeAttribute(writer, Element.MAX_PROCESSING_KB_ATTRIBUTE, node);
 		writeAttribute(writer, Element.MAX_RESERVED_KB_ATTRIBUTE, node);
 		writeAttribute(writer, Element.MAX_FILE_SIZE_ATTRIBUTE, node);
@@ -601,7 +600,6 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case CONNECTOR_BATCH_SIZE_ATTRIBUTE:
-    				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
     				break;
     			case MAX_PROCESSING_KB_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));

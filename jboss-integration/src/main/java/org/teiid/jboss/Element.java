@@ -22,10 +22,7 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -68,6 +65,7 @@ enum Element {
 	BUFFER_SERVICE_ELEMENT("buffer-service"),
 	USE_DISK_ATTRIBUTE("use-disk", "buffer-service-use-disk", ModelType.BOOLEAN, false, "true"),
 	PROCESSOR_BATCH_SIZE_ATTRIBUTE("processor-batch-size", "buffer-service-processor-batch-size", ModelType.INT, false, "256"),
+	@Deprecated
 	CONNECTOR_BATCH_SIZE_ATTRIBUTE("connector-batch-size", "buffer-service-connector-batch-size", ModelType.INT, false, "512"),
 	MAX_PROCESSING_KB_ATTRIBUTE("max-processing-kb", "buffer-service-max-processing-kb", ModelType.INT, false, "-1"),
 	MAX_RESERVED_KB_ATTRIBUTE("max-reserve-kb", "buffer-service-max-reserve-kb", ModelType.INT, false, "-1"),

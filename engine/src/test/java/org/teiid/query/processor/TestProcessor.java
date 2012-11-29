@@ -232,7 +232,6 @@ public class TestProcessor {
     	if (bufferMgr == null) {
 	        BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
 	        bm.setProcessorBatchSize(context.getProcessorBatchSize());
-	        bm.setConnectorBatchSize(context.getProcessorBatchSize());
 	        context.setBufferManager(bm);
 	        bufferMgr = bm;
     	}

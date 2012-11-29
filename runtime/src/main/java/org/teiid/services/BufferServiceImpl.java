@@ -57,7 +57,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	private File bufferDir;
 	private boolean useDisk = true;
 	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
-	private int connectorBatchSize = BufferManager.DEFAULT_CONNECTOR_BATCH_SIZE;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
     private int maxProcessingKb = BufferManager.DEFAULT_MAX_PROCESSING_KB;
@@ -82,7 +81,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	try {
             // Construct and initialize the buffer manager
             this.bufferMgr = new BufferManagerImpl();
-            this.bufferMgr.setConnectorBatchSize(Integer.valueOf(connectorBatchSize));
             this.bufferMgr.setProcessorBatchSize(Integer.valueOf(processorBatchSize));
             this.bufferMgr.setMaxReserveKB(this.maxReserveKb);
             this.bufferMgr.setMaxProcessingKB(this.maxProcessingKb);
@@ -166,10 +164,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
 	public void setProcessorBatchSize(int size) {
 		this.processorBatchSize = size;
 	}
-	public void setConnectorBatchSize(int size) {
-		this.connectorBatchSize = size;
-	}
-	
+
 	public void setInlineLobs(boolean inlineLobs) {
 		this.inlineLobs = inlineLobs;
 	}
@@ -188,10 +183,6 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
 	public int getProcessorBatchSize() {
 		return this.processorBatchSize;
-	}
-
-	public int getConnectorBatchSize() {
-		return this.connectorBatchSize;
 	}
 
     public void setMaxFileSize(long maxFileSize) {

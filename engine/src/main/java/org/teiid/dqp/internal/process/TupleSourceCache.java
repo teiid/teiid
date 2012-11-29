@@ -28,9 +28,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
@@ -153,6 +153,7 @@ public class TupleSourceCache {
 			state = new SharedState();
 			state.expectedReaders = parameterObject.info.sharingCount;
 			RegisterRequestParameter param = new RegisterRequestParameter(parameterObject.connectorBindingId, 0, -1);
+			param.fetchSize = parameterObject.fetchSize;
 			state.ts = pdm.registerRequest(context, command, modelName, param);
 			if (param.doNotCache) {
 				return state.ts;

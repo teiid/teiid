@@ -33,7 +33,7 @@ import org.teiid.resource.adapter.google.result.RowsResult;
  * 
  */
 public interface GoogleSpreadsheetConnection extends Connection {
-	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit);
+	public RowsResult executeQuery(String worksheetName, String query, Integer offset, Integer limit, int batchSize);
 	/**
 	 * Returns information about existing Spreadsheets and worksheets.
 	 * @return

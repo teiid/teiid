@@ -124,9 +124,9 @@ public class SpreadsheetConnectionImpl extends BasicConnection implements Google
 	@Override
 	public RowsResult executeQuery(
 			String worksheetName, String query, 
-			 Integer offset, Integer limit) {
+			 Integer offset, Integer limit, int batchSize) {
 		
-		return dataProtocol.executeQuery(config.getSpreadsheetName(), worksheetName, query, (int)config.getBatchSize(), 
+		return dataProtocol.executeQuery(config.getSpreadsheetName(), worksheetName, query, Math.min(batchSize, (int)config.getBatchSize()), 
 				offset, limit);
 	}	
 	
