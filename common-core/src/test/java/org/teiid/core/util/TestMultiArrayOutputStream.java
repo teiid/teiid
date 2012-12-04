@@ -22,32 +22,22 @@
 
 package org.teiid.core.util;
 
-import java.io.ByteArrayOutputStream;
+import static org.junit.Assert.*;
 
-public class AccessibleByteArrayOutputStream extends ByteArrayOutputStream {
+import java.io.IOException;
 
-	public AccessibleByteArrayOutputStream() {
-		super();
-	}
-	
-	public AccessibleByteArrayOutputStream(int size) {
-		super(size);
-	}
-	
-	public byte[] getBuffer() {
-		return this.buf;
-	}
-	
-	public void setBuffer(byte[] buffer) {
-		this.buf = buffer;
-	}
-	
-	public int getCount() {
-		return this.count;
-	}
-	
-	public void setCount(int count) {
-		this.count = count;
+import org.junit.Test;
+
+public class TestMultiArrayOutputStream {
+
+	@Test public void testArrayWrites() throws IOException {
+		MultiArrayOutputStream maos = new MultiArrayOutputStream(2);
+		for (int i = 0; i < 10; i++) {
+			int len = 1 << i;
+			maos.write(new byte[len], 0, len);
+		}
+		assertEquals((1<<10)-1, maos.getCount());
+		assertEquals(1, maos.getIndex());
 	}
 	
 }

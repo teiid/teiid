@@ -22,32 +22,29 @@
 
 package org.teiid.core.util;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 
-public class AccessibleByteArrayOutputStream extends ByteArrayOutputStream {
+public class AccessibleBufferedInputStream extends BufferedInputStream {
+	
+	public AccessibleBufferedInputStream(InputStream in, int size) {
+		super(in, size);
+	}
 
-	public AccessibleByteArrayOutputStream() {
-		super();
-	}
-	
-	public AccessibleByteArrayOutputStream(int size) {
-		super(size);
-	}
-	
 	public byte[] getBuffer() {
 		return this.buf;
-	}
-	
-	public void setBuffer(byte[] buffer) {
-		this.buf = buffer;
 	}
 	
 	public int getCount() {
 		return this.count;
 	}
 	
-	public void setCount(int count) {
-		this.count = count;
+	public int getPosition() {
+		return this.pos;
 	}
 	
+	public void setPosition(int pos) {
+		this.pos = pos;
+	}
+
 }

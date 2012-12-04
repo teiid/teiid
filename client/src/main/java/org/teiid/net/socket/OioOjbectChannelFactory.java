@@ -22,9 +22,6 @@
 
 package org.teiid.net.socket;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -38,6 +35,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.util.AccessibleBufferedInputStream;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.net.CommunicationException;
@@ -62,14 +60,10 @@ public final class OioOjbectChannelFactory implements ObjectChannelFactory {
 		private OioObjectChannel(Socket socket, int maxObjectSize) throws IOException {
 			log.fine("creating new OioObjectChannel"); //$NON-NLS-1$
 			this.socket = socket;
-            BufferedOutputStream bos = new BufferedOutputStream( socket.getOutputStream(), STREAM_BUFFER_SIZE);
-            outputStream = new ObjectEncoderOutputStream( new DataOutputStream(bos), 512);
-            //The output stream must be flushed on creation in order to write some initialization data
-            //through the buffered stream to the input stream on the other side
-            outputStream.flush();
+			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+            outputStream = new ObjectEncoderOutputStream(out, STREAM_BUFFER_SIZE);
             final ClassLoader cl = this.getClass().getClassLoader();
-            BufferedInputStream bis = new BufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE);
-            inputStream = new ObjectDecoderInputStream(new DataInputStream(bis), cl, maxObjectSize);
+            inputStream = new ObjectDecoderInputStream(new AccessibleBufferedInputStream(socket.getInputStream(), STREAM_BUFFER_SIZE), cl, maxObjectSize);
 		}
 
 		@Override

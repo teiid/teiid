@@ -51,6 +51,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.net.CommunicationException;
@@ -140,6 +141,11 @@ public class TestSocketRemoting {
 
 		public void send(Message message, Serializable messageKey) {
 			this.listener.receiveResults(message.getContents());
+		}
+		
+		@Override
+		public String getServerVersion() {
+			return ApplicationInfo.getInstance().getReleaseNumber();
 		}
 		
 	}

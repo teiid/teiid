@@ -25,17 +25,7 @@ package org.teiid.core.crypto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
-import java.security.AlgorithmParameterGenerator;
-import java.security.AlgorithmParameters;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Properties;
@@ -104,7 +94,7 @@ public class DhKeyGenerator {
 		}
 	}
 
-	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes)
+	public SymmetricCryptor getSymmetricCryptor(byte[] peerPublicKeyBytes, boolean useSealedObject)
 			throws CryptoException {
 		if (privateKey == null) {
 			throw new IllegalStateException(
@@ -125,7 +115,9 @@ public class DhKeyGenerator {
 			byte[] hash = sha.digest(secret);
 			byte[] symKey = new byte[keySize / 8];
 			System.arraycopy(hash, 0, symKey, 0, symKey.length);
-			return SymmetricCryptor.getSymmectricCryptor(symKey);
+			SymmetricCryptor sc = SymmetricCryptor.getSymmectricCryptor(symKey);
+			sc.setUseSealedObject(useSealedObject);
+			return sc;
 		} catch (NoSuchAlgorithmException e) {
 			  throw new CryptoException(CorePlugin.Event.TEIID10003, e);
 		} catch (InvalidKeySpecException e) {

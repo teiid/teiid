@@ -22,6 +22,9 @@
 
 package org.teiid.core.crypto;
 
+import java.io.ByteArrayInputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.security.InvalidKeyException;
 import java.security.Key;
@@ -32,7 +35,9 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SealedObject;
 
 import org.teiid.core.CorePlugin;
+import org.teiid.core.util.AccessibleByteArrayOutputStream;
 import org.teiid.core.util.Base64;
+import org.teiid.core.util.ObjectInputStreamWithClassloader;
 
 
 /**
@@ -49,9 +54,12 @@ public class BasicCryptor implements Cryptor {
     /** The <code>Cipher</code> to use for encryption. */
     protected Cipher encryptCipher;
     protected String cipherAlgorithm;
-	public static final String OLD_ENCRYPT_PREFIX = "{mm-encrypt}"; //$NON-NLS-1$
+    public static final String OLD_ENCRYPT_PREFIX = "{mm-encrypt}"; //$NON-NLS-1$
 	public static final String ENCRYPT_PREFIX = "{teiid-encrypt}"; //$NON-NLS-1$
-       
+	
+	private ClassLoader classLoader = BasicCryptor.class.getClassLoader();
+	private boolean useSealedObject = true;
+	
     public BasicCryptor( Key encryptKey, Key decryptKey, String algorithm) throws CryptoException {
     	this.encryptKey = encryptKey;
         this.cipherAlgorithm = algorithm;
@@ -60,7 +68,15 @@ public class BasicCryptor implements Cryptor {
         initEncryptCipher();
         initDecryptCipher();
     }
-
+    
+    public synchronized void setUseSealedObject(boolean useSealedObject) {
+		this.useSealedObject = useSealedObject;
+	}
+    
+    public synchronized void setClassLoader(ClassLoader classLoader) {
+		this.classLoader = classLoader;
+	}
+    
     /**
      * Decrypt the ciphertext to yield the original cleartext.
      * @param ciphertext The text to be encrypted, in byte form
@@ -105,7 +121,7 @@ public class BasicCryptor implements Cryptor {
         } else if (ciphertext.startsWith(BasicCryptor.OLD_ENCRYPT_PREFIX)) {
         	ciphertext = ciphertext.substring(BasicCryptor.OLD_ENCRYPT_PREFIX.length());
         }
-		return ciphertext;
+        return ciphertext;
 	}
 
     /**
@@ -129,23 +145,41 @@ public class BasicCryptor implements Cryptor {
     }
     
     public synchronized Object unsealObject(Object object) throws CryptoException {
-        
-        if (!(object instanceof SealedObject)) {
-            return object;
+        if (useSealedObject) {
+	        if (!(object instanceof SealedObject)) {
+	            return object;
+	        }
+	        
+	        SealedObject so = (SealedObject)object;
+	        
+	    	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	        try {
+	        	if (cl != classLoader) {
+	        		Thread.currentThread().setContextClassLoader(BasicCryptor.class.getClassLoader());
+	        	}
+	            return so.getObject(decryptCipher);
+	        } catch ( Exception e ) {
+	            try {
+	                initDecryptCipher();
+	            } catch (CryptoException err) {
+	                //shouldn't happen
+	            }
+	              throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
+	        } finally {
+	        	Thread.currentThread().setContextClassLoader(cl);
+	        }
         }
-        
-        SealedObject so = (SealedObject)object;
-        
+        if (!(object instanceof byte[])) {
+        	return object;
+        }
+        byte[] bytes = (byte[])object;
+        bytes = decrypt(bytes);
         try {
-            return so.getObject(decryptCipher);
-        } catch ( Exception e ) {
-            try {
-                initDecryptCipher();
-            } catch (CryptoException err) {
-                //shouldn't happen
-            }
-              throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
-        } 
+	    	ObjectInputStream ois = new ObjectInputStreamWithClassloader(new ByteArrayInputStream(bytes), classLoader);
+	    	return ois.readObject();
+        } catch (Exception e) {
+        	throw new CryptoException(CorePlugin.Event.TEIID10006,  CorePlugin.Util.gs(CorePlugin.Event.TEIID10006, e.getClass().getName(), e.getMessage()));
+        }
     }
             
     /**
@@ -153,9 +187,14 @@ public class BasicCryptor implements Cryptor {
      * @param cleartext The text to be encrypted, in byte form
      * @param The encrypted ciphertext, in byte form
      */
-    public synchronized byte[] encrypt( byte[] cleartext ) throws CryptoException {
-        try {
-            return encryptCipher.doFinal(cleartext);
+    public byte[] encrypt( byte[] cleartext ) throws CryptoException {
+        return encrypt(cleartext, 0, cleartext.length);
+    }
+    
+    public synchronized byte[] encrypt(byte[] buffer, int offset, int length)
+    		throws CryptoException {
+    	try {
+            return encryptCipher.doFinal(buffer, offset, length);
         } catch ( Exception e ) {
             try {
                 initEncryptCipher();
@@ -206,7 +245,15 @@ public class BasicCryptor implements Cryptor {
     
     public synchronized Object sealObject(Object object) throws CryptoException {
         try {
-            return new SealedObject((Serializable)object, encryptCipher);        
+        	if (useSealedObject) {
+        		return new SealedObject((Serializable)object, encryptCipher);
+        	}
+        	AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream(1 << 13);
+        	ObjectOutputStream oos = new ObjectOutputStream(baos);
+        	oos.writeObject(object);
+        	oos.flush();
+        	oos.close();
+        	return encrypt(baos.getBuffer(), 0, baos.getCount());
         } catch ( Exception e ) {
             try {
                 initEncryptCipher();

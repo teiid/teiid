@@ -30,8 +30,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutionException;
 
-import javax.crypto.SealedObject;
-
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ResultsFuture;
@@ -68,7 +66,7 @@ public class ServerWorkItem implements Runnable {
 	public void run() {
 		Message result = null;
 		String loggingContext = null;
-		final boolean encrypt = message.getContents() instanceof SealedObject;
+		final boolean encrypt = !(message.getContents() instanceof ServiceInvocationStruct);
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
         	try {

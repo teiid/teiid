@@ -35,7 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.core.CorePlugin;
-import org.teiid.core.util.AccessibleByteArrayOutputStream;
+import org.teiid.core.util.MultiArrayOutputStream;
 
 
 
@@ -136,10 +136,10 @@ public abstract class Streamable<T> implements Externalizable {
 		}
     	out.writeLong(length);
     	boolean writeBuffer = false;
-    	AccessibleByteArrayOutputStream baos = null;
+    	MultiArrayOutputStream baos = null;
     	if (referenceStreamId == null) {
     		//TODO: detect when this buffering is not necessary
-    		baos = new AccessibleByteArrayOutputStream();
+    		baos = new MultiArrayOutputStream(DataTypeManager.MAX_LOB_MEMORY_BYTES);
     		DataOutputStream dataOutput = new DataOutputStream(baos);
     		try {
     			writeReference(dataOutput);
@@ -152,7 +152,7 @@ public abstract class Streamable<T> implements Externalizable {
     	}
     	out.writeObject(referenceStreamId);
 		if (writeBuffer) {
-			out.write(baos.getBuffer(), 0, baos.getCount());
+			baos.writeTo(out);
 		}
     }
     
