@@ -127,8 +127,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	 * @param type Type for the constant, should never be null
 	 */
 	public Constant(Object value, Class<?> type) {
-        // Set value
-        this.value = DataTypeManager.convertToRuntimeType(value);
+        this.value = value;
 
         // Check that type is valid, then set it
         if(type == null) {
@@ -151,7 +150,7 @@ public class Constant implements Expression, Comparable<Constant> {
 	 * @param value Constant value, may be null
 	 */
 	public Constant(Object value) {
-		this.value = DataTypeManager.convertToRuntimeType(value);
+		this.value = value;
 		if (this.value == null) {
 			this.type = DataTypeManager.DefaultDataClasses.NULL;
 		} else { 

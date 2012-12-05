@@ -53,8 +53,22 @@ public class ObjectToAnyTransform extends Transform {
         }
         
         Transform transform = DataTypeManager.getTransform(value.getClass(), getTargetType());
+        boolean valid = true;
+        if (transform instanceof ObjectToAnyTransform) {
+        	Object v1 = DataTypeManager.convertToRuntimeType(value, true);
+        	if (v1 != value) {
+				try {
+					return transformDirect(v1);
+				} catch (TransformationException e) {
+					throw new TransformationException(
+							CorePlugin.Event.TEIID10076, e, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, getSourceType(),
+									targetClass, value));
+				}
+        	}
+        	valid = false;
+        }
         
-        if (transform == null || transform instanceof ObjectToAnyTransform) {
+        if (transform == null || !valid) {
             Object[] params = new Object[] { getSourceType(), targetClass, value};
               throw new TransformationException(CorePlugin.Event.TEIID10076, CorePlugin.Util.gs(CorePlugin.Event.TEIID10076, params));
         }

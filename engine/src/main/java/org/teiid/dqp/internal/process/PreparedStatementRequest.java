@@ -246,7 +246,7 @@ public class PreparedStatementRequest extends Request {
         	if(value != null) {
                 try {
                     String targetTypeName = DataTypeManager.getDataTypeName(param.getType());
-                    Expression expr = ResolverUtil.convertExpression(new Constant(value), targetTypeName, metadata);
+                    Expression expr = ResolverUtil.convertExpression(new Constant(DataTypeManager.convertToRuntimeType(value, param.getType() != DataTypeManager.DefaultDataClasses.OBJECT)), targetTypeName, metadata);
                     value = Evaluator.evaluate(expr);
 				} catch (ExpressionEvaluationException e) {
                     String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$

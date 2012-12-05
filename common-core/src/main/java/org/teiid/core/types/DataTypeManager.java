@@ -308,8 +308,6 @@ public class DataTypeManager {
 
 	private static Set<Class<?>> DATA_TYPE_CLASSES = Collections.unmodifiableSet(dataTypeClasses.keySet());
 
-	private static Map<Class<?>, SourceTransform> sourceConverters = new HashMap<Class<?>, SourceTransform>();
-
 	// Static initializer - loads basic transforms types
 	static {
 		// Load default data types - not extensible yet
@@ -317,8 +315,6 @@ public class DataTypeManager {
 
 		// Load default transforms
 		loadBasicTransforms();
-		
-		loadSourceConversions();
 		
 		for (Map.Entry<String, Class<?>> entry : dataTypeNames.entrySet()) {
 			Class<?> arrayType = getArrayType(entry.getValue());
@@ -398,7 +394,7 @@ public class DataTypeManager {
 		}
 		String result = dataTypeClasses.get(typeClass);
 		if (result == null) {
-			if (typeClass.isArray()) {
+			if (typeClass.isArray() && !typeClass.getComponentType().isPrimitive()) {
 				result = arrayTypeNames.get(typeClass);
 				if (result == null) {
 					return getDataTypeName(typeClass.getComponentType()) + ARRAY_SUFFIX;
@@ -424,7 +420,7 @@ public class DataTypeManager {
 		if (DATA_TYPE_CLASSES.contains(clazz)) {
 			return clazz;
 		}
-		clazz = convertToRuntimeType(value).getClass();
+		clazz = convertToRuntimeType(value, true).getClass();
 		if (DATA_TYPE_CLASSES.contains(clazz)) {
 			return clazz;
 		}
@@ -799,46 +795,11 @@ public class DataTypeManager {
 
 	}
 
-	static void loadSourceConversions() {
-		addSourceTransform(Clob.class, new SourceTransform<Clob, ClobType>(ClobType.class) {
-			@Override
-			public ClobType transform(Clob value) {
-				return new ClobType(value);
-			}
-		});
-		addSourceTransform(char[].class, new SourceTransform<char[], ClobType>(ClobType.class) {
-			@Override
-			public ClobType transform(char[] value) {
-				return new ClobType(ClobImpl.createClob(value));
-			}
-		});
-		addSourceTransform(Blob.class, new SourceTransform<Blob, BlobType>(BlobType.class) {
-			@Override
-			public BlobType transform(Blob value) {
-				return new BlobType(value);
-			}
-		});
-		addSourceTransform(byte[].class, new SourceTransform<byte[], BinaryType>(BinaryType.class) {
-			@Override
-			public BinaryType transform(byte[] value) {
-				return new BinaryType(value);
-			}
-		});
-		addSourceTransform(SQLXML.class, new SourceTransform<SQLXML, XMLType>(XMLType.class) {
-			@Override
-			public XMLType transform(SQLXML value) {
-				return new XMLType(value);
-			}
-		});
-		addSourceTransform(Date.class, new SourceTransform<Date, Timestamp>(Timestamp.class) {
-			@Override
-			public Timestamp transform(Date value) {
-				return new Timestamp(value.getTime());
-			}
-		});
-	}
-	
-	public static Object convertToRuntimeType(Object value) {
+	/**
+	 * Convert the value to the probable runtime type.
+	 * @param allConversions if false only lob conversions will be used
+	 */
+	public static Object convertToRuntimeType(Object value, boolean allConversions) {
 		if (value == null) {
 			return null;
 		}
@@ -846,15 +807,26 @@ public class DataTypeManager {
 		if (DATA_TYPE_CLASSES.contains(c)) {
 			return value;
 		}
-		SourceTransform t = sourceConverters.get(c);
-		if (t != null) {
-			return t.transform(value);
-		}
-		for (Map.Entry<Class<?>, SourceTransform> entry : sourceConverters.entrySet()) {
-			if (entry.getKey().isAssignableFrom(c)) {
-				return entry.getValue().transform(value);
+		if (allConversions) {
+			if (c == char[].class) {
+				return new ClobType(ClobImpl.createClob((char[])value));
+			}
+			if (c == byte[].class) {
+				return new BinaryType((byte[])value);
+			}
+			if (java.util.Date.class.isAssignableFrom(c)) {
+				return new Timestamp(((java.util.Date)value).getTime());				
 			}
 		}
+		if (Clob.class.isAssignableFrom(c)) {
+			return new ClobType((Clob)value);
+		} 
+		if (Blob.class.isAssignableFrom(c)) {
+			return new BlobType((Blob)value);
+		} 
+		if (SQLXML.class.isAssignableFrom(c)) {
+			return new XMLType((SQLXML)value);
+		} 
 		return value; // "object type"
 	}
 	
@@ -865,15 +837,24 @@ public class DataTypeManager {
 		if (DATA_TYPE_CLASSES.contains(c)) {
 			return c;
 		}
-		SourceTransform t = sourceConverters.get(c);
-		if (t != null) {
-			return t.getTargetType();
+		if (c == char[].class) {
+			return DefaultDataClasses.CLOB;
 		}
-		for (Map.Entry<Class<?>, SourceTransform> entry : sourceConverters.entrySet()) {
-			if (entry.getKey().isAssignableFrom(c)) {
-				return entry.getValue().getTargetType();
-			}
+		if (c == byte[].class) {
+			return DefaultDataClasses.VARBINARY;
 		}
+		if (java.util.Date.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.DATE;				
+		}
+		if (Clob.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.CLOB;
+		} 
+		if (Blob.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.BLOB;
+		} 
+		if (SQLXML.class.isAssignableFrom(c)) {
+			return DefaultDataClasses.XML;
+		} 
 		return DefaultDataClasses.OBJECT; // "object type"
 	}
 
@@ -887,7 +868,7 @@ public class DataTypeManager {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T transformValue(Object value, Class sourceType,
+	public static <T> T transformValue(Object value, Class<?> sourceType,
 			Class<T> targetClass) throws TransformationException {
 		if (value == null || sourceType == targetClass || DefaultDataClasses.OBJECT == targetClass) {
 			return (T) value;
@@ -907,10 +888,6 @@ public class DataTypeManager {
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.BLOB.equals(type))
             || (!COMPARABLE_LOBS && DataTypeManager.DefaultDataTypes.CLOB.equals(type))
             || DataTypeManager.DefaultDataTypes.XML.equals(type);
-    }
-    
-    public static <S> void addSourceTransform(Class<S> sourceClass, SourceTransform<S, ?> transform) {
-    	sourceConverters.put(sourceClass, transform);
     }
     
     public static void setValueCacheEnabled(boolean enabled) {

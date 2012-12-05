@@ -43,7 +43,6 @@ import java.sql.Timestamp;
 
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.ReaderInputStream;
 
 
@@ -98,8 +97,8 @@ final class DataTypeTransformer {
         	}
     	}
     	try {
-    		return targetType.cast(DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value), getRuntimeType(targetType)));
-    	} catch (TransformationException e) {
+    		return targetType.cast(DataTypeManager.transformValue(DataTypeManager.convertToRuntimeType(value, true), getRuntimeType(targetType)));
+    	} catch (Exception e) {
     		String valueStr = value.toString();
     		if (valueStr.length() > 20) {
     			valueStr = valueStr.substring(0, 20) + "..."; //$NON-NLS-1$

@@ -49,9 +49,9 @@ import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -1433,6 +1433,11 @@ public class TestFunctionLibrary {
 
 	@Test() public void testTrim2() throws Exception {
 		helpInvokeMethod("trim", new Object[] {"trailing", "x", "xaxx"}, "xa"); //$NON-NLS-1$
+	}
+	
+	@Test public void testCastWithNonRuntimeTypes() throws Exception {
+		helpInvokeMethod("cast", new Object[] {new java.util.Date(0), "time"}, new Time(24*60*60*1000)); //$NON-NLS-1$
+		helpInvokeMethod("cast", new Object[] {new byte[0], "blob"}, new BlobType(BlobType.createBlob(new byte[0]))); //$NON-NLS-1$
 	}
 
 }

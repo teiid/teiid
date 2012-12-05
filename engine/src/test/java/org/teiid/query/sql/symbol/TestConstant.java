@@ -172,9 +172,4 @@ public class TestConstant {
 		assertEquals(0, c.compare("a ", "a"));
 	}
 	
-	@Test public void testVarBinaryTyping() {
-		Constant c = new Constant(new byte[1]);
-		assertEquals(DataTypeManager.DefaultDataClasses.VARBINARY, c.getType());
-	}
-    
 }

@@ -48,6 +48,7 @@
         For backwards compatibility a the system property org.teiid.implicitMultiSourceJoin was introduced to control whether multi-source joins are effectively partitioned by source without a source_name predicate.  The property defaults to true, the pre 8.3 behavior - but should be
         switched to false for later versions unless the issues with implicit join planning are addressed.   
      </ul>
+  <li>TEIID-2317 byte[] char[] and java.util.Date instances returned as object values will be left in tact and not automatically converted to BinaryType, ClobType, and Timestamp respectively.  The values may still be cast to those types.
 <ul>
 
 <h4>from 8.1</h4>

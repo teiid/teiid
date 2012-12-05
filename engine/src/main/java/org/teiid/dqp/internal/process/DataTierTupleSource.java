@@ -74,9 +74,9 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.ProcedureContainer;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.util.XMLInputStream;
 
 
@@ -276,7 +276,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			}
 			return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
 		}
-		return DataTypeManager.convertToRuntimeType(value);
+		return DataTypeManager.convertToRuntimeType(value, desiredType != DataTypeManager.DefaultDataClasses.OBJECT);
 	}
 
     public List<?> nextTuple() throws TeiidComponentException, TeiidProcessingException {

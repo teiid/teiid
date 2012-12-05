@@ -110,7 +110,7 @@ public abstract class Streamable<T> implements Externalizable {
     @Override
     public String toString() {
     	if (reference == null) {
-    		return super.toString();
+    		return getClass().getName() + " " + this.referenceStreamId; //$NON-NLS-1$
     	}
         return reference.toString();
     }

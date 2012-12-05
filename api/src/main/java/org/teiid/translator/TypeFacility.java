@@ -165,7 +165,7 @@ public class TypeFacility {
      * @return
      */
 	public Object convertToRuntimeType(Object value) {
-		return DataTypeManager.convertToRuntimeType(value);
+		return DataTypeManager.convertToRuntimeType(value, true);
 	}
 	
     /**

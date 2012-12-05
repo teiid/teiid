@@ -304,7 +304,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 		    	}
 		    }
 		}
-		result = DataTypeManager.convertToRuntimeType(result);
+		result = DataTypeManager.convertToRuntimeType(result, expectedType != DataTypeManager.DefaultDataClasses.OBJECT);
 		if (expectedType.isArray() && result instanceof ArrayImpl) {
 			return result;
 		}
