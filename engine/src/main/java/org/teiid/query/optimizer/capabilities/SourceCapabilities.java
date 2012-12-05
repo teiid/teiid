@@ -332,7 +332,8 @@ public interface SourceCapabilities {
         QUERY_ONLY_SINGLE_TABLE_GROUP_BY,
         ONLY_FORMAT_LITERALS,
         CRITERIA_ON_SUBQUERY,
-        ARRAY_TYPE;
+        ARRAY_TYPE, 
+        QUERY_SUBQUERIES_ONLY_CORRELATED;
         
         private final String toString;
         

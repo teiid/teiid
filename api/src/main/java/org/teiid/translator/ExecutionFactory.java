@@ -1081,4 +1081,11 @@ public class ExecutionFactory<F, C> {
 	public void setNativeQueryProcedureName(String name) {
 		this.nativeProcedureName = name;
 	}	
+	
+	/**
+	 * @return true if only correlated subqueries are supported.
+	 */
+	public boolean supportsOnlyCorrelatedSubqueries() {
+		return false;
+	}
 }

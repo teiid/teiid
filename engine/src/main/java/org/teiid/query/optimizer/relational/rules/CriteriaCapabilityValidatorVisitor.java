@@ -52,8 +52,8 @@ import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.ExecutionFactory.Format;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -567,6 +567,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
                 if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(subqueryContainer.getCommand(), critNodeModelID, metadata, capFinder, analysisRecord )) {
                     return null;
                 }
+            } else if (CapabilitiesUtil.supports(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, critNodeModelID, metadata, capFinder)) {
+            	return null;
             }
         } catch(QueryMetadataException e) {
              throw new TeiidComponentException(QueryPlugin.Event.TEIID30271, e);

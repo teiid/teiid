@@ -36,7 +36,9 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -1128,6 +1130,24 @@ public class TestSubqueryPushdown {
                                           "SELECT 1 FROM BQT1.SmallA AS g_0 LEFT OUTER JOIN BQT1.SmallB AS g_1 ON EXISTS (SELECT 'Y' FROM BQT1.MediumA AS g_2 WHERE (g_1.IntKey = 1) AND (g_0.IntKey = 1))"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     
     	
+    }
+    
+    /**
+     * Shows the uncorrelated subquery is evaluated ahead of time
+     */
+    @Test public void testCorrelatedOnly() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, true);
+    	bsc.setCapabilitySupport(Capability.CRITERIA_EXISTS, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan("SELECT 1 FROM bqt1.smalla where EXISTS (SELECT 'Y' FROM bqt1.mediuma)", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {
+                                          "SELECT 1 FROM BQT1.SmallA AS g_0 WHERE EXISTS (SELECT 'Y' FROM BQT1.MediumA AS g_0)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        HardcodedDataManager hcdm = new HardcodedDataManager(false);
+        TestProcessor.helpProcess(plan, hcdm, null);
+        assertEquals("SELECT 'Y' FROM BQT1.MediumA AS g_0", hcdm.getCommandHistory().get(0).toString());
+        assertEquals("SELECT 1 FROM BQT1.SmallA AS g_0", hcdm.getCommandHistory().get(1).toString());
     }
 
 }

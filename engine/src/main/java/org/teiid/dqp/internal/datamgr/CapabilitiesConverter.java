@@ -114,6 +114,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.DEPENDENT_JOIN, srcCaps.supportsDependentJoins());
         tgtCaps.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, srcCaps.supportsSubqueryInOn());
         tgtCaps.setCapabilitySupport(Capability.ARRAY_TYPE, srcCaps.supportsArrayType());
+        tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, srcCaps.supportsOnlyCorrelatedSubqueries());
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

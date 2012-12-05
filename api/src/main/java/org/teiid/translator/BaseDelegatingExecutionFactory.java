@@ -466,4 +466,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 			RuntimeMetadata metadata, C connection) throws TranslatorException {
 		 return delegate.createDirectExecution(arguments, command, executionContext, metadata, connection);
 	}	
+	@Override
+	public boolean supportsOnlyCorrelatedSubqueries() {
+		return delegate.supportsOnlyCorrelatedSubqueries();
+	}
 }
