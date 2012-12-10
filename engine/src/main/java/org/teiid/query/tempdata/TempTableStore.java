@@ -361,7 +361,7 @@ public class TempTableStore {
 			TableProcessor withProcessor, TempTable tempTable)
 			throws TeiidComponentException, ExpressionEvaluationException,
 			TeiidProcessingException {
-		tempTable.insert(new BatchIterator(withProcessor.queryProcessor), withProcessor.columns, false);
+		tempTable.insert(new BatchIterator(withProcessor.queryProcessor), withProcessor.columns, false, null);
 		tempTable.setUpdatable(false);
 		processors.remove(tempTableID);
 	}

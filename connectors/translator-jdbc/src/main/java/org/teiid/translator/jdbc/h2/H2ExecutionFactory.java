@@ -215,4 +215,9 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsArrayType() {
     	return true;
     }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return true;
+    }
 }

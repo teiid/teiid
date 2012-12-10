@@ -152,6 +152,15 @@ public class TestJDBCSocketTransport {
 		assertEquals(0, count);
 	}
 	
+	@Test public void testGeneratedKeys() throws Exception {
+		Statement s = conn.createStatement();
+		s.execute("create local temporary table x (y serial, z integer, primary key (y))");
+		assertFalse(s.execute("insert into x (z) values (1)", Statement.RETURN_GENERATED_KEYS));
+		ResultSet rs = s.getGeneratedKeys();
+		rs.next();
+		assertEquals(1, rs.getInt(1));
+	}
+	
 	/**
 	 * Ensures if you start more than the maxActivePlans
 	 * where all the plans take up more than output buffer limit

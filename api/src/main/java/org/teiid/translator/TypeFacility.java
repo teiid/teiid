@@ -129,7 +129,7 @@ public class TypeFacility {
     }
     
     /**
-     * Get the String constant for the given class
+     * Get the closest runtime type for the given class
      */
     public static Class<?> getRuntimeType(Class<?> type) {
     	if (type.isPrimitive()) {

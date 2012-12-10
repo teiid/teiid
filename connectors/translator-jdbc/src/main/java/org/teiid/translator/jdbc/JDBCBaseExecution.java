@@ -31,6 +31,7 @@ import java.sql.Statement;
 import java.util.List;
 
 import org.teiid.language.Command;
+import org.teiid.language.Insert;
 import org.teiid.language.Literal;
 import org.teiid.language.Parameter;
 import org.teiid.logging.LogConstants;
@@ -178,7 +179,11 @@ public abstract class JDBCBaseExecution implements Execution  {
             statement.close();
             statement = null;
         }
-        statement = connection.prepareStatement(sql);
+        if (executionFactory.supportsGeneratedKeys() && command instanceof Insert) {
+        	statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+        } else {
+        	statement = connection.prepareStatement(sql);
+        }
         setSizeContraints(statement);
         return (PreparedStatement)statement;
     }

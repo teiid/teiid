@@ -823,7 +823,7 @@ public class TestMMDatabaseMetaData {
         expected.put("supportsExpressionsInOrderBy", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsExtendedSQLGrammar", Boolean.FALSE); //$NON-NLS-1$
         expected.put("supportsFullOuterJoins", Boolean.TRUE); //$NON-NLS-1$
-        expected.put("supportsGetGeneratedKeys", Boolean.FALSE); //$NON-NLS-1$
+        expected.put("supportsGetGeneratedKeys", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupBy", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupByBeyondSelect", Boolean.TRUE); //$NON-NLS-1$
         expected.put("supportsGroupByUnrelated", Boolean.TRUE); //$NON-NLS-1$
