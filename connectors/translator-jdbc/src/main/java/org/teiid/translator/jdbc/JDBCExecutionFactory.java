@@ -129,6 +129,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private String version;
 	private int maxInsertBatchSize = 2048;
 	private DatbaseCalender databaseCalender;
+	private boolean supportsGeneratedKeys;
 
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -1045,7 +1046,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             sb.append(";DriverName=").append(dbmd.getDriverName()); //$NON-NLS-1$
             sb.append(";DriverVersion=").append(dbmd.getDriverVersion()); //$NON-NLS-1$
             sb.append(";IsolationLevel=").append(dbmd.getDefaultTransactionIsolation()); //$NON-NLS-1$
-            
+            supportsGeneratedKeys = dbmd.supportsGetGeneratedKeys();
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, sb.toString());
         } catch (SQLException e) {
             LogManager.logInfo(LogConstants.CTX_CONNECTOR, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11002)); 
@@ -1163,6 +1164,10 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	 */
 	public void setFetchSize(Command command, ExecutionContext context, Statement statement, int fetchSize) throws SQLException {
 		statement.setFetchSize(fetchSize);
+	}
+	
+	public boolean supportsGeneratedKeys() {
+		return supportsGeneratedKeys;
 	}
 	
 }

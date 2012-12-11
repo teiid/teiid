@@ -49,8 +49,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
+import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.events.EventDistributor;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
@@ -182,7 +182,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					}
         			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
         		}
-        		return table.insert(ts, insert.getVariables(), true);
+        		return table.insert(ts, insert.getVariables(), true, context);
         	}
         	if (command instanceof Update) {
         		final Update update = (Update)command;
@@ -454,7 +454,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			qp.getContext().setDataObjects(null);
 			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			
-			table.insert(ts, allColumns, false);
+			table.insert(ts, allColumns, false, null);
 			table.getTree().compact();
 			rowCount = table.getRowCount();
 			//TODO: could pre-process indexes to remove overlap

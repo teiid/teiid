@@ -22,10 +22,12 @@
 
 package org.teiid.client;
 
+import java.io.EOFException;
 import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.io.OptionalDataException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -83,6 +85,7 @@ public class ResultsMessage implements Externalizable {
     private Collection<Annotation> annotations;
     
     private boolean isUpdateResult;
+    private int updateCount = -1;
 
     public ResultsMessage(){
     }
@@ -111,6 +114,10 @@ public class ResultsMessage implements Externalizable {
     public void setResults(List<?>[] results) {
 		this.results = Arrays.asList(results);
 	}
+    
+    public void setResults(List<? extends List<?>> results) {
+    	this.results = results;
+    }
 
 	public  String[] getColumnNames() {
         return this.columnNames;
@@ -266,6 +273,13 @@ public class ResultsMessage implements Externalizable {
         debugLog = (String)in.readObject();
         annotations = ExternalizeUtil.readList(in, Annotation.class);
         isUpdateResult = in.readBoolean();
+        if (isUpdateResult) {
+        	try {
+        		updateCount = in.readInt();
+        	} catch (OptionalDataException e) {
+        	} catch (EOFException e) {
+        	}
+        }
     }
 
     public void writeExternal(ObjectOutput out) throws IOException {
@@ -300,6 +314,9 @@ public class ResultsMessage implements Externalizable {
         out.writeObject(debugLog);
         ExternalizeUtil.writeCollection(out, annotations);
         out.writeBoolean(isUpdateResult);
+        if (isUpdateResult) {
+        	out.writeInt(updateCount);
+        }
     }
 
     /**
@@ -356,6 +373,14 @@ public class ResultsMessage implements Externalizable {
 	
 	public void setClientSerializationVersion(byte clientSerializationVersion) {
 		this.clientSerializationVersion = clientSerializationVersion;
+	}
+	
+	public void setUpdateCount(int updateCount) {
+		this.updateCount = updateCount;
+	}
+	
+	public int getUpdateCount() {
+		return updateCount;
 	}
 }
 

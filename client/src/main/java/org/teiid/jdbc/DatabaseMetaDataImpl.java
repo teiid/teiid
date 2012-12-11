@@ -1962,15 +1962,8 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         return true;
     }
 
-    /**
-     * Retrieves whether auto-generated keys can be retrieved after a
-     * statement has been executed.
-     * @return boolean true if auto-generated keys can be retrieved
-     * after a statement has executed; false otherwise
-     * @throws SQLException, should never occur
-     */
     public boolean supportsGetGeneratedKeys() throws SQLException {
-        return false;
+        return true;
     }
 
     public boolean supportsGroupBy() throws SQLException {
