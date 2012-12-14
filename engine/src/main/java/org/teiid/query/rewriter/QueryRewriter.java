@@ -2684,8 +2684,8 @@ public class QueryRewriter {
 		Query query = (Query)info.getViewDefinition().clone();
 		query.setOrderBy(null);
 		SymbolMap expressionMapping = SymbolMap.createSymbolMap(update.getGroup(), query.getProjectedSymbols(), metadata);
-		
-		ArrayList<Expression> selectSymbols = mapChangeList(update, symbolMap);
+		SetClauseList setClauseList = (SetClauseList) update.getChangeList().clone();
+		ArrayList<Expression> selectSymbols = mapChangeList(setClauseList, symbolMap);
 		query.setSelect(new Select(selectSymbols));
 		ExpressionMappingVisitor emv = new ExpressionMappingVisitor(expressionMapping.asMap(), true);
 		PostOrderNavigator.doVisit(query.getSelect(), emv);
@@ -2698,18 +2698,19 @@ public class QueryRewriter {
 		GroupSymbol group = mapping.getGroup();
 		String correlationName = mapping.getCorrelatedName().getName();
 		
-		return createUpdateProcedure(update, query, group, correlationName);
+		return createUpdateProcedure(update, query, group, correlationName, setClauseList);
 	}
 
-	private ArrayList<Expression> mapChangeList(Update update,
+	private ArrayList<Expression> mapChangeList(SetClauseList setClauses,
 			Map<ElementSymbol, ElementSymbol> symbolMap) {
-		ArrayList<Expression> selectSymbols = new ArrayList<Expression>(update.getChangeList().getClauses().size());
+		ArrayList<Expression> selectSymbols = new ArrayList<Expression>(setClauses.getClauses().size());
 		int i = 0;
-		for (SetClause clause : update.getChangeList().getClauses()) {
+		for (SetClause clause : setClauses.getClauses()) {
 			Expression ex = clause.getValue();
 			if (!EvaluatableVisitor.willBecomeConstant(ex)) {
 				selectSymbols.add(new AliasSymbol("s_" +i, ex)); //$NON-NLS-1$
-				ex = new ElementSymbol("s_" +i); //$NON-NLS-1$
+				ex = new ElementSymbol("X.s_" +i); //$NON-NLS-1$
+				clause.setValue(ex);
 			}
 			if (symbolMap != null) {
 				clause.setSymbol(symbolMap.get(clause.getSymbol()));
@@ -2720,11 +2721,11 @@ public class QueryRewriter {
 	}
 
 	private Command createUpdateProcedure(Update update, Query query,
-			GroupSymbol group, String correlationName)
+			GroupSymbol group, String correlationName, SetClauseList setClauseList)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException, TeiidProcessingException {
 		Update newUpdate = new Update();
-		newUpdate.setChangeList(update.getChangeList());
+		newUpdate.setChangeList(setClauseList);
 		newUpdate.setGroup(group.clone());
 		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query);
 		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
@@ -2843,9 +2844,13 @@ public class QueryRewriter {
 	public static Command createUpdateProcedure(Update update, QueryMetadataInterface metadata, CommandContext context) throws QueryResolverException, QueryMetadataException, TeiidComponentException, TeiidProcessingException {
 		QueryRewriter rewriter = new QueryRewriter(metadata, context);
 		Criteria crit = update.getCriteria();
-		ArrayList<Expression> selectSymbols = rewriter.mapChangeList(update, null);
+		if (crit != null) {
+			crit = (Criteria) crit.clone();
+		}
+		SetClauseList setClauseList = (SetClauseList) update.getChangeList().clone();
+		ArrayList<Expression> selectSymbols = rewriter.mapChangeList(setClauseList, null);
 		Query query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(update.getGroup()))), crit, null, null);
-		return rewriter.createUpdateProcedure(update, query, update.getGroup(), update.getGroup().getName());
+		return rewriter.createUpdateProcedure(update, query, update.getGroup(), update.getGroup().getName(), setClauseList);
 	}
 
 	private Command createDeleteProcedure(Delete delete, Query query,
