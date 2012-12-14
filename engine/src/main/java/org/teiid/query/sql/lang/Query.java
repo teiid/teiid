@@ -52,7 +52,7 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
  *	 	Option			Defines any extra options on the query
  * </pre>
  */
-public class Query extends QueryCommand {
+public class Query extends QueryCommand implements FilteredCommand {
 
     /** The select clause. */
     private Select select;

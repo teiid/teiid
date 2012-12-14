@@ -600,6 +600,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	@Override
 	public Map<String, DataPolicy> getAllowedDataPolicies() {
+		if (this.globalState.dqpWorkContext == null) {
+			return null;
+		}
 		return this.globalState.dqpWorkContext.getAllowedDataPolicies();
 	}
 	

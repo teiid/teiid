@@ -126,6 +126,7 @@
 									             <xs:element name="allow-delete" type="xs:boolean" minOccurs="0"/>
 									             <xs:element name="allow-execute" type="xs:boolean" minOccurs="0"/>
 									             <xs:element name="allow-alter" type="xs:boolean" minOccurs="0"/>	
+									             <xs:element name="condition" type="xs:string" minOccurs="0"/>
 											</xs:sequence>
 											<xs:element name="allow-language" type="xs:boolean" minOccurs="0"/>
 							             </xs:choice>

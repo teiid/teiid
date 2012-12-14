@@ -105,9 +105,9 @@ public class RelationalPlanner {
 	private AnalysisRecord analysisRecord;
 	private Command parentCommand;
 	private IDGenerator idGenerator;
-	private CommandContext context;
-	private CapabilitiesFinder capFinder;
-	private QueryMetadataInterface metadata;
+	CommandContext context;
+	CapabilitiesFinder capFinder;
+	QueryMetadataInterface metadata;
 	private PlanHints hints = new PlanHints();
 	private Option option;
 	private SourceHint sourceHint;
@@ -582,6 +582,9 @@ public class RelationalPlanner {
 	            attachLast(sourceNode, plan);
 	            mergeTempMetadata(insert.getQueryExpression(), insert);
 	            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, insert.getGroup());
+	            if (insert.getConstraint() != null) {
+	            	projectNode.setProperty(NodeConstants.Info.CONSTRAINT, insert.getConstraint());
+	            }
         	}
         }
         
@@ -624,6 +627,7 @@ public class RelationalPlanner {
 				((CreateProcedureCommand)c).setProjectedSymbols(container.getProjectedSymbols());
 			}
 		}
+		c = RowBasedSecurityHelper.checkUpdateRowBasedFilters(container, c, this);
 		if (c != null) {
 			if (c instanceof TriggerAction) {
 				TriggerAction ta = (TriggerAction)c;
@@ -655,10 +659,7 @@ public class RelationalPlanner {
 				container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
 				&& !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
 			//do a workaround of row-by-row processing for update/delete
-			if (metadata.getUniqueKeysInGroup(container.getGroup().getMetadataID()).isEmpty() 
-					|| !CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_EQ, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder)) {
-				 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
-			}
+			validateRowProcessing(container);
 			
 			//treat this as an update procedure
 			if (container instanceof Update) {
@@ -695,6 +696,15 @@ public class RelationalPlanner {
 		return false;
 	}
 
+	void validateRowProcessing(ProcedureContainer container)
+			throws TeiidComponentException, QueryMetadataException,
+			QueryPlannerException {
+		if (metadata.getUniqueKeysInGroup(container.getGroup().getMetadataID()).isEmpty() 
+				|| !CapabilitiesUtil.supports(Capability.CRITERIA_COMPARE_EQ, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder)) {
+			 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
+		}
+	}
+
     PlanNode createStoredProcedurePlan(StoredProcedure storedProc) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         // Create top project node - define output columns for stored query / procedure
         PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
@@ -715,6 +725,13 @@ public class RelationalPlanner {
 
         attachLast(projectNode, sourceNode);
 
+        Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, storedProc.getGroup(), this.context);
+        if (filter != null) {
+        	//TODO: this is not exactly proper, there should be an inline view, with the filter above.
+        	// prehaps we shouldn't even allow this case yet.
+        	PlanNode critNode = createSelectNode(filter, false);
+        	sourceNode.addAsParent(critNode);
+        }
         return projectNode;
     }
 
@@ -888,6 +905,11 @@ public class RelationalPlanner {
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true, true);
             }
             parent.addLastChild(node);
+            Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, this.context);
+            if (filter != null) {
+            	PlanNode critNode = createSelectNode(filter, false);
+            	node.addAsParent(critNode);
+            }
         } else if(clause instanceof JoinPredicate) {
             JoinPredicate jp = (JoinPredicate) clause;
 

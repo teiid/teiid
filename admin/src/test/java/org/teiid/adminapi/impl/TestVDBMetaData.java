@@ -134,6 +134,7 @@ public class TestVDBMetaData {
 			else {
 				assertFalse(p.getAllowRead());
 				assertTrue(p.getAllowDelete());
+				assertEquals("col1 = user()", p.getCondition());
 			}
 		}
 		assertTrue(lang);
@@ -197,6 +198,7 @@ public class TestVDBMetaData {
 		perm2.setResourceName("myTable.T2"); //$NON-NLS-1$
 		perm2.setAllowRead(false);
 		perm2.setAllowDelete(true);
+		perm2.setCondition("col1 = user()");
 		roleOne.addPermission(perm2);
 		
 		PermissionMetaData perm3 = new PermissionMetaData();

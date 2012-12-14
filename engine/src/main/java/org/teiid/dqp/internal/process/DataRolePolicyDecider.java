@@ -50,9 +50,6 @@ public class DataRolePolicyDecider implements PolicyDecider {
 		int policyCount = policies.size();
 		outer:for (Iterator<String> iter = resources.iterator(); iter.hasNext();) {
 			String resource = iter.next();
-			if (action != PermissionType.LANGUAGE) {
-				resource = resource.toLowerCase();
-			}
 			while (resource.length() > 0) {
 				boolean isFalse = false;
 				for (int j = 0; j < policyCount; j++) {

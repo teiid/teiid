@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.teiid.adminapi.DataPolicy;
@@ -39,7 +40,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 	protected boolean anyAuthenticated;
 	protected Boolean allowCreateTemporaryTables;
 
-    protected Map<String, PermissionMetaData> permissions = new HashMap<String, PermissionMetaData>();
+    protected Map<String, PermissionMetaData> permissions = new TreeMap<String, PermissionMetaData>(String.CASE_INSENSITIVE_ORDER);
     protected Map<String, PermissionMetaData> languagePermissions = new HashMap<String, PermissionMetaData>(2);
     
     protected List<String> mappedRoleNames = new CopyOnWriteArrayList<String>();
@@ -69,6 +70,10 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		return result;
 	}
 	
+	public Map<String, PermissionMetaData> getPermissionMap() {
+		return permissions;
+	}
+	
 	public void setPermissions(List<DataPermission> permissions) {
 		this.permissions.clear();
 		for (DataPermission permission:permissions) {
@@ -92,6 +97,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		if (previous != null) {
 			permission.bits |= previous.bits;
 			permission.bitsSet |= previous.bitsSet;
+			if (previous.getCondition() != null) {
+				if (permission.getCondition() == null) {
+					permission.setCondition(previous.getCondition());
+				} else {
+					permission.setCondition("(" + permission.getCondition() + ") OR (" + previous.getCondition() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				}
+			}
 		}
 	}
 	
@@ -131,6 +143,7 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         
         // XML based fields
         private String resourceName;
+        private String condition;
         protected byte bits;
         protected byte bitsSet;
         
@@ -286,6 +299,15 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	sb.append("]");//$NON-NLS-1$
         	return sb.toString();
         }
+		
+		@Override
+		public String getCondition() {
+			return condition;
+		}
+		
+		public void setCondition(String filter) {
+			this.condition = filter;
+		}
 	}
 
     public Boolean isAllowCreateTemporaryTables() {

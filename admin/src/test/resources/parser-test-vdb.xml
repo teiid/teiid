@@ -32,6 +32,7 @@
             <allow-delete>true</allow-delete>
             <allow-execute>true</allow-execute>
             <allow-alter>true</allow-alter>
+            <condition>col1 = user()</condition>
         </permission>
         <permission>
             <resource-name>javascript</resource-name>

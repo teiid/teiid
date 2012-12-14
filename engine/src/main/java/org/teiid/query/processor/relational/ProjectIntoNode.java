@@ -30,17 +30,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.query.QueryPlugin;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -74,6 +78,9 @@ public class ProjectIntoNode extends RelationalNode {
     private TupleBatch currentBatch;
         	
     private TupleSource tupleSource;
+    
+    private Criteria constraint;
+    private Evaluator eval;
 
     protected ProjectIntoNode() {
         super();
@@ -138,6 +145,18 @@ public class ProjectIntoNode extends RelationalNode {
                 		&& (!currentBatch.getTerminationFlag() || mode != Mode.ITERATOR)) {
             		currentBatch = null;
             		continue;
+                }
+                if (this.constraint != null) {
+                	//row based security check
+	                if (eval == null) {
+	                	eval = new Evaluator(createLookupMap(this.intoElements), this.getDataManager(), getContext());
+	                }
+	                List<List<?>> tuples = this.currentBatch.getTuples();
+	                for (int i = 0; i < tuples.size(); i++) {
+	                	if (!eval.evaluate(constraint, tuples.get(i))) {
+	                		throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, new Insert(intoGroup, this.intoElements, convertValuesToConstants(tuples.get(i), intoElements))));
+	                	}
+	                }
                 }
             } 
             
@@ -237,7 +256,7 @@ public class ProjectIntoNode extends RelationalNode {
         clonedNode.intoElements = intoElements;
         clonedNode.modelName = this.modelName;
         clonedNode.mode = this.mode;
-        
+        clonedNode.constraint = this.constraint;
         return clonedNode;
     }
 
@@ -290,5 +309,9 @@ public class ProjectIntoNode extends RelationalNode {
 		}
 		return null;
     }
+    
+    public void setConstraint(Criteria constraint) {
+		this.constraint = constraint;
+	}
     
 }

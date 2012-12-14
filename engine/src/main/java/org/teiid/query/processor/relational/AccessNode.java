@@ -46,6 +46,7 @@ import org.teiid.dqp.internal.process.multisource.MultiSourceElementReplacementV
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.relational.RowBasedSecurityHelper;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
 import org.teiid.query.rewriter.QueryRewriter;
@@ -407,6 +408,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		RegisterRequestParameter param = new RegisterRequestParameter(connectorBindingId, getID(), limit);
 		param.info = info;
 		param.fetchSize = this.getBatchSize();
+		RowBasedSecurityHelper.checkConstraints(atomicCommand, getEvaluator(Collections.emptyMap()));
 		tupleSources.add(getDataManager().registerRequest(getContext(), atomicCommand, modelName, param));
 		if (tupleSources.size() > 1) {
         	reserved += getBufferManager().reserveBuffers(schemaSize, BufferReserveMode.FORCE);

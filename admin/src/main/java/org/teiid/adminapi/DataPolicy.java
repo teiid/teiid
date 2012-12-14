@@ -124,6 +124,10 @@ public interface DataPolicy {
 		 * @return
 		 */
 		Boolean getAllowLanguage();
-		
+
+		/**
+		 * The condition string
+		 */
+		String getCondition();
 	}
 }

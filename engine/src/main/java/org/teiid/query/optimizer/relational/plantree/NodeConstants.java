@@ -155,6 +155,8 @@ public final class NodeConstants {
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >
         ACCESS_PATTERN_USED, // List <Object element ID>
-        REQUIRED_ACCESS_PATTERN_GROUPS
+        REQUIRED_ACCESS_PATTERN_GROUPS, 
+        
+        CONSTRAINT
     }
 }

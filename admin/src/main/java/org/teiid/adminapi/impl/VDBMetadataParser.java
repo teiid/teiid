@@ -229,7 +229,9 @@ public class VDBMetadataParser {
 			case ALLOW_UPADTE:
 				permission.setAllowUpdate(Boolean.parseBoolean(reader.getElementText()));
 				break;				
-
+			case CONDITION:
+				permission.setCondition(reader.getElementText());
+				break;
              default: 
             	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element7",reader.getName(), 
             			 Element.RESOURCE_NAME.getLocalName(),
@@ -238,7 +240,7 @@ public class VDBMetadataParser {
             			 Element.ALLOW_DELETE.getLocalName(),
             			 Element.ALLOW_EXECUTE.getLocalName(),
             			 Element.ALLOW_READ.getLocalName(),
-            			 Element.ALLOW_UPADTE, Element.ALLOW_LANGUAGE), reader.getLocation()); 
+            			 Element.ALLOW_UPADTE.getLocalName(), Element.ALLOW_LANGUAGE.getLocalName(), Element.CONDITION.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -379,6 +381,7 @@ public class VDBMetadataParser {
 	    ALLOW_EXECUTE("allow-execute"),
 	    ALLOW_ALTER("allow-alter"),
 	    ALLOW_LANGUAGE("allow-language"),
+	    CONDITION("condition"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
 	    ENTRY("entry"),
 	    METADATA("metadata");
@@ -503,6 +506,9 @@ public class VDBMetadataParser {
 			}
 			if (permission.getAllowLanguage() != null) {
 				writeElement(writer, Element.ALLOW_LANGUAGE, permission.getAllowLanguage().toString());
+			}
+			if (permission.getCondition() != null) {
+				writeElement(writer, Element.CONDITION, permission.getCondition());
 			}
 			writer.writeEndElement();			
 		}

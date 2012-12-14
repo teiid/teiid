@@ -30,9 +30,9 @@ import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Model;
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
+import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
@@ -883,6 +883,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String ALLOW_EXECUTE = "allow-execute"; //$NON-NLS-1$
 		private static final String ALLOW_ALTER = "allow-alter"; //$NON-NLS-1$
 		private static final String ALLOW_LANGUAGE = "allow-language"; //$NON-NLS-1$
+		private static final String CONDITION = "condition"; //$NON-NLS-1$
 		
 		public static PermissionMetaDataMapper INSTANCE = new PermissionMetaDataMapper();
 		
@@ -913,6 +914,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			if(permission.getAllowAlter() != null) {
 				node.get(ALLOW_ALTER).set(permission.getAllowAlter().booleanValue());
+			}
+			if(permission.getCondition() != null) {
+				node.get(CONDITION).set(permission.getCondition());
 			}
 			return node;
 		}
@@ -947,6 +951,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			if (node.has(ALLOW_ALTER)) {
 				permission.setAllowAlter(node.get(ALLOW_ALTER).asBoolean());
+			}
+			if (node.has(CONDITION)) {
+				permission.setCondition(node.get(CONDITION).asString());
 			}
 			return permission;
 		}

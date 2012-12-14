@@ -290,7 +290,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
                 PlanNode parentProject = NodeEditor.findParent(parentNode, NodeConstants.Types.PROJECT);
                 GroupSymbol intoGroup = (GroupSymbol)parentProject.getProperty(NodeConstants.Info.INTO_GROUP); 
                 if (intoGroup != null && parentProject.getParent() == null) {
-                	if (CapabilitiesUtil.supports(Capability.INSERT_WITH_QUERYEXPRESSION, modelID, metadata, capFinder) && CapabilitiesUtil.isSameConnector(modelID, metadata.getModelID(intoGroup.getMetadataID()), metadata, capFinder)) {
+                	if (!parentProject.hasProperty(Info.CONSTRAINT) && CapabilitiesUtil.supports(Capability.INSERT_WITH_QUERYEXPRESSION, modelID, metadata, capFinder) && CapabilitiesUtil.isSameConnector(modelID, metadata.getModelID(intoGroup.getMetadataID()), metadata, capFinder)) {
                     	rootNode = performRaise(rootNode, accessNode, parentNode);
                     	return performRaise(rootNode, accessNode, parentProject);
                 	}

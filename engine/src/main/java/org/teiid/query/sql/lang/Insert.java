@@ -31,7 +31,6 @@ import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
-import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -52,6 +51,7 @@ public class Insert extends ProcedureContainer {
     private QueryCommand queryExpression;
     
     private TupleSource tupleSource;
+    private Criteria constraint;
 
     // =========================================================================
     //                         C O N S T R U C T O R S
@@ -103,16 +103,6 @@ public class Insert extends ProcedureContainer {
         this.group = group;
     }
     
-    public boolean isBulk() {
-    	if (this.values == null) {
-    		return false;
-    	}
-    	if (!(this.values.get(0) instanceof Constant)) {
-    		return false;
-    	}
-    	return ((Constant)this.values.get(0)).isMultiValued();
-    }
-
     /**
      * Return an ordered List of variables, may be null if no columns were specified
      * @return List of {@link org.teiid.query.sql.symbol.ElementSymbol}
@@ -247,6 +237,9 @@ public class Insert extends ProcedureContainer {
 	    	copy.setQueryExpression((QueryCommand)this.queryExpression.clone());
 	    }
         this.copyMetadataState(copy);
+        if (this.constraint != null) {
+        	copy.constraint = (Criteria) this.constraint.clone();
+        }
 		return copy;
 	}
 	
@@ -273,6 +266,14 @@ public class Insert extends ProcedureContainer {
 	
 	public TupleSource getTupleSource() {
 		return tupleSource;
+	}
+	
+	public Criteria getConstraint() {
+		return constraint;
+	}
+	
+	public void setConstraint(Criteria constraint) {
+		this.constraint = constraint;
 	}
     
 }
