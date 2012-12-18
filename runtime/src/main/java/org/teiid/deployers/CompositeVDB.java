@@ -126,8 +126,11 @@ public class CompositeVDB {
 		newMergedVDB.setProperties(this.vdb.getProperties());
 		newMergedVDB.getAttachments().putAll(this.vdb.getAttachments());
 		newMergedVDB.setConnectionType(this.vdb.getConnectionType());
-		ConnectorManagerRepository mergedRepo = new ConnectorManagerRepository();
-		mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
+		ConnectorManagerRepository mergedRepo = this.cmr;
+		if (!this.cmr.isShared()) {
+			mergedRepo = new ConnectorManagerRepository();
+			mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
+		}
 		newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
 		this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
@@ -158,9 +161,11 @@ public class CompositeVDB {
 			if (childCmr == null) {
 				throw new AssertionError("childVdb had not connector manager repository"); //$NON-NLS-1$
 			}
-			for (Map.Entry<String, ConnectorManager> entry : childCmr.getConnectorManagers().entrySet()) {
-				if (mergedRepo.getConnectorManagers().put(entry.getKey(), entry.getValue()) != null) {
-					throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40086, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40086, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), entry.getKey()));
+			if (!this.cmr.isShared()) {
+				for (Map.Entry<String, ConnectorManager> entry : childCmr.getConnectorManagers().entrySet()) {
+					if (mergedRepo.getConnectorManagers().put(entry.getKey(), entry.getValue()) != null) {
+						throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40086, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40086, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), entry.getKey()));
+					}
 				}
 			}
 		}

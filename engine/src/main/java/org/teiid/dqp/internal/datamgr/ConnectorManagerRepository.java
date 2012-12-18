@@ -56,6 +56,18 @@ public class ConnectorManagerRepository implements Serializable{
 	private static final long serialVersionUID = -1611063218178314458L;
 	
 	private Map<String, ConnectorManager> repo = new ConcurrentHashMap<String, ConnectorManager>();
+	private boolean shared;
+	
+	public ConnectorManagerRepository() {
+	}
+	
+	protected ConnectorManagerRepository(boolean b) {
+		this.shared = b;
+	}
+
+	public boolean isShared() {
+		return shared;
+	}
 	
 	public void addConnectorManager(String connectorName, ConnectorManager mgr) {
 		this.repo.put(connectorName, mgr);

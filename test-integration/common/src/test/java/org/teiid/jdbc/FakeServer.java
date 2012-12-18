@@ -29,8 +29,8 @@ import java.util.Map;
 import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
 
-import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -42,6 +42,7 @@ import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository.ConnectorManagerException;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.service.BufferService;
 import org.teiid.dqp.service.FakeBufferService;
@@ -193,6 +194,12 @@ public class FakeServer extends EmbeddedServer {
 		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	@Override
+	public void deployVDB(VDBMetaData vdb) throws ConnectorManagerException,
+			VirtualDatabaseException, TranslatorException {
+		super.deployVDB(vdb);
 	}
 	
 	public void removeVDB(String vdbName) {

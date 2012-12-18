@@ -55,7 +55,6 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private long queryTimeout = Long.MIN_VALUE;
 	private Set<String> importedModels = Collections.emptySet();
-	private Set<String> multiSource;
 
 	public String getFullName() {
 		return getName() + VERSION_DELIM + getVersion();

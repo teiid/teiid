@@ -35,16 +35,21 @@ import java.util.HashMap;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.adminapi.impl.VDBImportMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
+import org.teiid.translator.loopback.LoopbackExecutionFactory;
 
 @SuppressWarnings("nls")
 public class TestMatViews {
@@ -246,6 +251,38 @@ public class TestMatViews {
 		s.executeQuery("select * from (call refreshMatView('TEST.MATVIEW', false)) p");
 		//prior to load refresh of a single row returns -1
 		s.executeQuery("select * from (call refreshMatViewRow('TEST.MATVIEW', 0)) p");
+	}
+	
+	@Test public void testMatViewWithImportedVDB() throws Exception {
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("phy");
+		mmd.setSchemaSourceType("DDL");
+		mmd.setSchemaText("CREATE FOREIGN TABLE t1 ( col1 string, col2 integer )");
+		mmd.addSourceMapping("phy", "loopback", null);
+		
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("phy_mv");
+		mmd1.setSchemaSourceType("DDL");
+		mmd1.setSchemaText("CREATE FOREIGN TABLE t1_mv ( col1 string, col2 integer )");
+		mmd1.addSourceMapping("phy_mv", "loopback", null);
+
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col1 string, col2 integer ) OPTIONS (MATERIALIZED true, MATERIALIZED_TABLE 'phy_mv.t1_mv') AS select t1.col1, t1.col2 FROM t1");
+		server.addTranslator(LoopbackExecutionFactory.class);
+		server.deployVDB("base", mmd, mmd1, mmd2);
+		
+		VDBMetaData vdbMetaData = new VDBMetaData();
+		vdbMetaData.setDynamic(true);
+		VDBImportMetadata importVDB = new VDBImportMetadata();
+		importVDB.setName("base");
+		importVDB.setVersion(1);
+		vdbMetaData.getVDBImports().add(importVDB);
+		vdbMetaData.setName("importing");
+		
+		server.deployVDB(vdbMetaData);
 	}
 
 }

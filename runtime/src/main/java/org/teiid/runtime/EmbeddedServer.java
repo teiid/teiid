@@ -181,6 +181,11 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 
 	protected class ProviderAwareConnectorManagerRepository extends
 			ConnectorManagerRepository {
+		
+		public ProviderAwareConnectorManagerRepository() {
+			super(true);
+		}
+		
 		protected ConnectorManager createConnectorManager(
 				String translatorName, String connectionName) {
 			return new ConnectorManager(translatorName, connectionName) {
@@ -506,11 +511,16 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public void deployVDB(String name, ModelMetaData... models)
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
-		checkStarted();
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setDynamic(true);
 		vdb.setName(name);
 		vdb.setModels(Arrays.asList(models));
+		deployVDB(vdb);
+	}
+	
+	protected void deployVDB(VDBMetaData vdb) 
+			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
+		checkStarted();
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();

@@ -93,6 +93,9 @@ public class MetadataValidator {
 		@Override
 		public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
 			for (Schema schema:store.getSchemaList()) {
+				if (vdb.getImportedModels().contains(schema.getName())) {
+					continue;
+				}
 				ModelMetaData model = vdb.getModel(schema.getName());
 				
 				if (schema.getTables().isEmpty() 
@@ -125,6 +128,9 @@ public class MetadataValidator {
 		@Override
 		public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
 			for (Schema schema:store.getSchemaList()) {
+				if (vdb.getImportedModels().contains(schema.getName())) {
+					continue;
+				}
 				ModelMetaData model = vdb.getModel(schema.getName());
 				for (Table t:schema.getTables().values()) {
 					if (t.isPhysical() && !model.isSource()) {
@@ -176,6 +182,9 @@ public class MetadataValidator {
 			QueryMetadataInterface metadata = vdb.getAttachment(QueryMetadataInterface.class);
 	    	metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
 			for (Schema schema:store.getSchemaList()) {
+				if (vdb.getImportedModels().contains(schema.getName())) {
+					continue;
+				}
 				ModelMetaData model = vdb.getModel(schema.getName());
 				MetadataFactory mf = new MetadataFactory(vdb.getName(), vdb.getVersion(), metadataValidator.typeMap, model) {
 					protected void setUUID(AbstractMetadataRecord record) {
@@ -334,11 +343,14 @@ public class MetadataValidator {
 		@Override
 		public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
 			for (Schema schema:store.getSchemaList()) {
+				if (vdb.getImportedModels().contains(schema.getName())) {
+					continue;
+				}
 				ModelMetaData model = vdb.getModel(schema.getName());
 
 				for (Table t:schema.getTables().values()) {
 					if (t.isVirtual()) {
-						if (t.isMaterialized() && t.getMaterializedTable() != null) {
+						if (t.isMaterialized() && t.getMaterializedTable() != null && t.getMaterializedTable().getParent() == null) {
 							String matTableName = t.getMaterializedTable().getName();
 							int index = matTableName.indexOf(Table.NAME_DELIM_CHAR);
 							if (index == -1) {
