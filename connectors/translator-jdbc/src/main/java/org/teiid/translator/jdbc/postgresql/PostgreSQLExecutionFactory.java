@@ -34,9 +34,9 @@ import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Like;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.Limit;
 import org.teiid.language.Literal;
-import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -242,10 +242,22 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     		Like like = (Like)obj;
     		if (like.getMode() == MatchMode.REGEX) {
     			return Arrays.asList(like.getLeftExpression(), like.isNegated()?" !~ ":" ~ ", like.getRightExpression()); //$NON-NLS-1$ //$NON-NLS-2$
+    		} else if (like.getEscapeCharacter() == null) {
+    			return addDefaultEscape(like); 
     		}
     	}
     	return super.translate(obj, context);
     }
+
+    /**
+     * Add a default escape
+     * @param like
+     * @return
+     */
+	public static List<Object> addDefaultEscape(Like like) {
+		return Arrays.asList(like.getLeftExpression(), 
+				like.isNegated()?" NOT ":" ", like.getMode()==MatchMode.LIKE?"LIKE ":"SIMILAR TO ", like.getRightExpression(), " ESCAPE ''"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+	}
     
     @Override
     public NullOrder getDefaultNullOrder() {

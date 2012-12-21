@@ -28,6 +28,10 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.language.LanguageObject;
+import org.teiid.language.Like;
+import org.teiid.language.Like.MatchMode;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
@@ -38,6 +42,7 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.hsql.AddDiffModifier;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
+import org.teiid.translator.jdbc.postgresql.PostgreSQLExecutionFactory;
 
 @Translator(name="h2", description="A translator for open source H2 Database")
 public class H2ExecutionFactory extends JDBCExecutionFactory {
@@ -219,5 +224,16 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsInsertWithQueryExpression() {
     	return true;
+    }
+    
+    @Override
+    public List<?> translate(LanguageObject obj, ExecutionContext context) {
+    	if (obj instanceof Like) {
+    		Like like = (Like)obj;
+    		if (like.getEscapeCharacter() == null && like.getMode() != MatchMode.REGEX) {
+    			return PostgreSQLExecutionFactory.addDefaultEscape(like);
+    		}
+    	}
+    	return super.translate(obj, context);
     }
 }

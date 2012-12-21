@@ -57,6 +57,13 @@ public class TestH2Translator {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
+	
+	@Test public void testLikeEscape() throws Exception {
+		String input = "select 1 from BQT1.Smalla where stringkey like '_a*'"; //$NON-NLS-1$       
+        String output = "SELECT 1 FROM SmallA WHERE SmallA.StringKey LIKE '_a*' ESCAPE ''";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+	}
 
 
 }
