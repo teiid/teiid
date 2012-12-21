@@ -7,12 +7,14 @@ CREATE FOREIGN TABLE MatViews (
 	Valid boolean,
 	LoadState string(255),
 	Updated timestamp,
-	Cardinality integer
+	Cardinality integer,
+	PRIMARY KEY (VDBName, SchemaName, Name)
 );
 
 CREATE FOREIGN TABLE VDBResources (
 	resourcePath string(255),
-	contents blob
+	contents blob,
+	PRIMARY KEY (resourcePath)
 );
 
 CREATE FOREIGN PROCEDURE isLoggable(OUT loggable boolean NOT NULL RESULT, IN level string NOT NULL DEFAULT 'DEBUG', IN context string NOT NULL DEFAULT 'org.teiid.PROCESSOR')

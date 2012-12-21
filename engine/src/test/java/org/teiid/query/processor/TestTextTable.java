@@ -205,6 +205,18 @@ public class TestTextTable {
         process(sql, expected);
     }
 	
+	@Test public void testCarraigeReturn() throws Exception {
+    	String sql = "select * from texttable('a,b\r\nc,d\r\ne,f' COLUMNS c1 string, c2 string) x"; //$NON-NLS-1$
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("a", "b"),
+        		Arrays.asList("c", "d"),
+        		Arrays.asList("e", "f"),
+        };
+        
+        process(sql, expected);
+    }	
+	
 	@Test public void testQuote() throws Exception {
     	String sql = "select * from texttable('  \" a\", \" \"\" \"' COLUMNS c1 string, c2 string) x"; //$NON-NLS-1$
     	

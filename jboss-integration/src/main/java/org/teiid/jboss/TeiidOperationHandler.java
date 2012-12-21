@@ -1468,7 +1468,10 @@ class ReadRARDescription extends TeiidOperationHandler {
 				
 		ServiceName svcName = ServiceName.JBOSS.append("deployment", "unit").append(rarName); //$NON-NLS-1$ //$NON-NLS-2$
 		ServiceController<?> sc = context.getServiceRegistry(false).getService(svcName);
-		DeploymentUnit du = DeploymentUnit.class.cast(sc.getValue());
+		if (sc == null) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("RAR_notfound")));  //$NON-NLS-1$
+		}
+		DeploymentUnit du = DeploymentUnit.class.cast(sc.getValue()); 
 		ConnectorXmlDescriptor cd = du.getAttachment(ConnectorXmlDescriptor.ATTACHMENT_KEY);
 		ResourceAdapter ra = cd.getConnector().getResourceadapter();
 		if (ra instanceof ResourceAdapter1516) {
