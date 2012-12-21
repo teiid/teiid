@@ -147,11 +147,6 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>    
-<dependency>
-  <groupId>org.jboss.as</groupId>
-  <artifactId>jboss-as-jaxrs</artifactId>
-  <version>7.1.1.Final</version>
-</dependency>
   </dependencies>
   
 </project>

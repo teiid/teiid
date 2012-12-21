@@ -8,9 +8,6 @@
     <dependencies>
         <module name="javax.api" />
         <module name="org.joda.time" />
-        <!-- 
-        <module name="org.jboss.resteasy.resteasy-jaxrs" />
-        -->
         <module name="javax.ws.rs.api"/>
     </dependencies>
 
