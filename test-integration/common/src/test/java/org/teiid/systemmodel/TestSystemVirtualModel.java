@@ -194,7 +194,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
 		}, new RequestOptions());
-		assertEquals(7905, result.get().intValue());
+		assertEquals(8288, result.get().intValue());
 	}
 	
 	@Test public void testAsynchContinuousEmpty() throws Exception {

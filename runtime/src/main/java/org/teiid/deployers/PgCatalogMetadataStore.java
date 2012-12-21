@@ -35,9 +35,9 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.Table.Type;
 import org.teiid.odbc.ODBCServerRemoteImpl;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -62,6 +62,7 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		add_pg_user();
 		add_matpg_relatt();
 		add_matpg_datatype();
+		add_pg_description();
 		addFunction("hasPerm", "has_function_privilege"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr2", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
 		addFunction("getExpr3", "pg_get_expr"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -79,6 +80,20 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		t.setVirtual(true);
 		t.setTableType(Type.Table);
 		return t;
+	}
+	
+	//TODO: implement using the oid index on the metadata
+	private Table add_pg_description() {
+		Table t = createView("pg_description"); //$NON-NLS-1$ 
+		addColumn("objoid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
+		addColumn("classoid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("objsubid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("description", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+
+		String transformation = "SELECT 0, null, null, null"; //$NON-NLS-1$
+		t.setSelectTransformation(transformation);
+		
+		return t;		
 	}
 	
 	//index access methods

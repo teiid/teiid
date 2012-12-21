@@ -32,6 +32,7 @@ import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -381,6 +382,10 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertTrue(rs.next());
 		assertEquals("a::b", rs.getString(1));
 		
+		rs = s.executeQuery("select ' a::b'");
+		assertTrue(rs.next());
+		assertEquals(" a::b", rs.getString(1));
+		
 		rs = s.executeQuery("select name::varchar from tables where name = 'Columns'");
 		assertTrue(rs.next());
 		assertEquals("Columns", rs.getString(1));
@@ -402,6 +407,17 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		rs = s.executeQuery("select pg_client_encoding()");
 		rs.next();
 		assertEquals("UTF8", rs.getString(1));
+	}
+	
+	/**
+	 * TODO: we really want an odbc test, but this confirms the pg_description table and ~ rewrite handling
+	 * @throws Exception
+	 */
+	@Test public void test_table_with_underscore() throws Exception {
+		DatabaseMetaData metadata = conn.getMetaData();
+		System.out.println(metadata.getSearchStringEscape());
+		ResultSet rs = metadata.getTables(null, null, "pg_index", null);
+		assertTrue(rs.next());
 	}
 	
 	/**

@@ -36,15 +36,16 @@ oid          relname                                                            
 340          pg_class                                                           291           v        0            0.0        0            false        false     
 350          pk_pg_class                                                        291           i        0            0.0        0            false        false     
 352          pg_database                                                        291           v        0            0.0        0            false        false     
-362          pg_index                                                           291           v        0            0.0        0            false        false     
-372          pk_pg_index                                                        291           i        0            0.0        0            false        false     
-374          pg_namespace                                                       291           v        0            0.0        0            false        false     
-377          pg_proc                                                            291           v        0            0.0        0            false        false     
-388          pk_pg_proc                                                         291           i        0            0.0        0            false        false     
-390          pg_trigger                                                         291           v        0            0.0        0            false        false     
-400          pg_type                                                            291           v        0            0.0        0            false        false     
-412          pg_user                                                            291           v        0            0.0        0            false        false     
-Row Count : 44
+362          pg_description                                                     291           v        0            0.0        0            false        false     
+367          pg_index                                                           291           v        0            0.0        0            false        false     
+377          pk_pg_index                                                        291           i        0            0.0        0            false        false     
+379          pg_namespace                                                       291           v        0            0.0        0            false        false     
+382          pg_proc                                                            291           v        0            0.0        0            false        false     
+393          pk_pg_proc                                                         291           i        0            0.0        0            false        false     
+395          pg_trigger                                                         291           v        0            0.0        0            false        false     
+405          pg_type                                                            291           v        0            0.0        0            false        false     
+417          pg_user                                                            291           v        0            0.0        0            false        false     
+Row Count : 45
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_class      11                    10            0         false            false            false       false                 1           true        true          true      false       
 relname        12             PartsSupplier   java.lang.String    relname         string             pg_catalog     pg_class      4000                  4000          0         false            true             false       false                 1           true        true          false     false       

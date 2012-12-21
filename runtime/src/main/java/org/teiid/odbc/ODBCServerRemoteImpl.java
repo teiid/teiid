@@ -24,7 +24,6 @@ package org.teiid.odbc;
 import static org.teiid.odbc.PGUtil.*;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -70,8 +69,6 @@ import org.teiid.transport.PgFrontendProtocol.NullTerminatedStringDataInputStrea
 public class ODBCServerRemoteImpl implements ODBCServerRemote {
 
 	private static final String UNNAMED = "UNNAMED"; //$NON-NLS-1$
-	private static Pattern pgToastLiteral = Pattern.compile("'pg_toast'");//$NON-NLS-1$
-	private static Pattern pgCast = Pattern.compile("(\\s[^']+)::[A-Za-z0-9]*"); //$NON-NLS-1$
 	private static Pattern setPattern = Pattern.compile("set\\s+(\\w+)\\s+to\\s+((?:'[^']*')+)", Pattern.DOTALL|Pattern.CASE_INSENSITIVE);//$NON-NLS-1$
 	
 	private static Pattern pkPattern = Pattern.compile("select ta.attname, ia.attnum, ic.relname, n.nspname, tc.relname " +//$NON-NLS-1$
@@ -552,8 +549,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 	
 	private String modifySQL(String sql) {
 		String modified = sql;
-		// select current_schema()
-		// set client_encoding to 'WIN1252'
 		if (sql == null) {
 			return null;
 		}
@@ -621,11 +616,20 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		}
 		else if ((m = releasePattern.matcher(sql)).matches()) {
 			return "SELECT 0"; //$NON-NLS-1$
-		}		
-		//these are somewhat dangerous
-		modified = pgCast.matcher(modified).replaceAll("$1"); //$NON-NLS-1$
-		//TODO: use an appropriate cast
-		modified = pgToastLiteral.matcher(modified).replaceAll("'SYS'"); //$NON-NLS-1$
+		} 
+		for (int i = 0; i < modified.length(); i++) {
+			switch (modified.charAt(i)) {
+			case ':':
+			case '~':
+				ScriptReader reader = new ScriptReader(modified);
+				reader.setRewrite(true);
+				try {
+					return reader.readStatement();
+				} catch (IOException e) {
+					//can't happen
+				}				
+			}
+		}
 		return modified;
 	}
 
@@ -865,7 +869,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		String sql;
 
 		private QueryWorkItem(String query) {
-			this.reader = new ScriptReader(new StringReader(query));		
+			this.reader = new ScriptReader(query);		
 		}
 		
 		private void done(Throwable error) {
