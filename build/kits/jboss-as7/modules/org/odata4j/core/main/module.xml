@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.odata4j.core">
+    <resources>
+        <resource-root path="odata4j-core-0.8.0-SNAPSHOT.jar" />
+        <resource-root path="core4j-0.5.jar" />
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="org.joda.time" />
+        <!-- 
+        <module name="org.jboss.resteasy.resteasy-jaxrs" />
+        -->
+        <module name="javax.ws.rs.api"/>
+    </dependencies>
+
+</module>
