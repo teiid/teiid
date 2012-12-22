@@ -24,11 +24,11 @@ package org.teiid.jboss;
 
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
-import java.util.ServiceLoader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.*;
 import java.util.concurrent.Executor;
 
 import javax.resource.spi.XATerminator;
@@ -37,13 +37,12 @@ import javax.transaction.TransactionManager;
 
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
-import org.jboss.as.controller.AbstractAddStepHandler;
-import org.jboss.as.controller.OperationContext;
-import org.jboss.as.controller.OperationFailedException;
-import org.jboss.as.controller.ServiceVerificationHandler;
+import org.jboss.as.controller.*;
 import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.as.controller.registry.AttributeAccess.Storage;
+import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.registry.Resource;
 import org.jboss.as.controller.services.path.RelativePathService;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
@@ -57,13 +56,8 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
-import org.jboss.msc.service.ServiceBuilder;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
-import org.jboss.msc.service.ServiceContainer;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.ValueService;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.PolicyDecider;
 import org.teiid.cache.CacheFactory;
@@ -72,12 +66,7 @@ import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
-import org.teiid.dqp.internal.process.AuthorizationValidator;
-import org.teiid.dqp.internal.process.CachedResults;
-import org.teiid.dqp.internal.process.DQPCore;
-import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
-import org.teiid.dqp.internal.process.PreparedPlan;
-import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.dqp.internal.process.*;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -153,8 +142,15 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	}
 	
 	@Override
+	protected void populateModel(final OperationContext context, final ModelNode operation, final Resource resource) throws  OperationFailedException {	
+		resource.getModel().setEmptyObject();
+		populate(operation, resource.getModel());
+		deployResources(context);
+	}
+	
+	@Override
 	protected void populateModel(ModelNode operation, ModelNode model)	throws OperationFailedException {
-		populate(operation, model);
+		throw new UnsupportedOperationException();
 	}
 
 	static void populate(ModelNode operation, ModelNode model) {
@@ -180,6 +176,7 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 			Thread.currentThread().setContextClassLoader(classloader);
 		}
 	}
+
 
 	private void initilaizeTeiidEngine(final OperationContext context, final ModelNode operation, final List<ServiceController<?>> newControllers)
 			throws OperationFailedException {
@@ -552,4 +549,40 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 			subsystem.registerReadWriteAttribute(attributes[i].getModelName(), null, AttributeWrite.INSTANCE, Storage.CONFIGURATION);
 		}		
 	}
+	
+	
+	private void deployResources(OperationContext context) throws OperationFailedException{
+        if (requiresRuntime(context)) {
+        	try {
+        	Module module = Module.forClass(getClass());
+        	URL deployments = module.getExportedResource("deployments.properties"); //$NON-NLS-1$
+            BufferedReader in = new BufferedReader(new InputStreamReader(deployments.openStream()));
+
+            String deployment;
+            while ((deployment = in.readLine()) != null) {
+                PathAddress deploymentAddress = PathAddress.pathAddress(PathElement.pathElement(DEPLOYMENT, deployment));
+                ModelNode op = new ModelNode();
+                op.get(OP).set(ADD);
+                op.get(OP_ADDR).set(deploymentAddress.toModelNode());
+                op.get(ENABLED).set(true);
+                op.get(PERSISTENT).set(false); // prevents writing this deployment out to standalone.xml
+
+                URL url = module.getExportedResource(deployment);
+                String urlString = url.toExternalForm();
+
+                ModelNode contentItem = new ModelNode();
+                contentItem.get(URL).set(urlString);
+                op.get(CONTENT).add(contentItem);
+
+                ImmutableManagementResourceRegistration rootResourceRegistration = context.getRootResourceRegistration();
+                OperationStepHandler handler = rootResourceRegistration.getOperationHandler(deploymentAddress, ADD);
+
+                context.addStep(op, handler, OperationContext.Stage.MODEL);
+            }
+            in.close();
+        	}catch(IOException e) {
+        		throw new OperationFailedException(e.getMessage(), e);
+        	}
+        }		
+	}	
 }

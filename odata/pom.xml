@@ -11,6 +11,7 @@
   <description>Teiid OData Server module</description>
   <packaging>war</packaging>
   
+  
   <build>
   <plugins>
   <plugin>
