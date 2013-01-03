@@ -30,12 +30,13 @@ import java.beans.MethodDescriptor;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.ref.Reference;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import javax.script.AbstractScriptEngine;
@@ -56,7 +57,7 @@ import org.teiid.query.QueryPlugin;
  * A simplistic script engine that supports root variable access and 0-ary methods on the subsequent objects.
  */
 public final class TeiidScriptEngine extends AbstractScriptEngine implements Compilable {
-	private static Map<ClassLoader, Map<Class<?>, Map<String, Method>>> properties = new WeakHashMap<ClassLoader, Map<Class<?>, Map<String, Method>>>(100);
+	private static Reference<Map<Class<?>, Map<String, Method>>> properties;
 	private static Pattern splitter = Pattern.compile("\\."); //$NON-NLS-1$
 	
 	@Override
@@ -119,46 +120,50 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 	
 	public Map<String, Method> getMethodMap(Class<?> clazz) throws ScriptException {
 		Map<Class<?>, Map<String, Method>> clazzMaps = null;
-		synchronized (properties) {
-			clazzMaps = properties.get(clazz.getClassLoader());
-			if (clazzMaps == null) {
-				clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String, Method>>(100));
-				properties.put(clazz.getClassLoader(), clazzMaps);
+		Map<String, Method> methodMap = null; 
+		if (properties != null) {
+			clazzMaps = properties.get();
+			if (clazzMaps != null) {
+				methodMap = clazzMaps.get(clazz);
+				if (methodMap != null) {
+					return methodMap;
+				}
 			}
 		}
-		Map<String, Method> methodMap = clazzMaps.get(clazz);
-		if (methodMap == null) {
-			try {
-				BeanInfo info = Introspector.getBeanInfo(clazz);
-				PropertyDescriptor[] pds = info.getPropertyDescriptors();
-				methodMap = new LinkedHashMap<String, Method>();
-				if (pds != null) {
-					for (int j = 0; j < pds.length; j++) {
-						PropertyDescriptor pd = pds[j];
-						if (pd.getReadMethod() == null || pd instanceof IndexedPropertyDescriptor) {
-							continue;
-						}
-						String name = pd.getName();
-						Method m = pd.getReadMethod();
-						methodMap.put(name, m);
+		try {
+			BeanInfo info = Introspector.getBeanInfo(clazz);
+			PropertyDescriptor[] pds = info.getPropertyDescriptors();
+			methodMap = new LinkedHashMap<String, Method>();
+			if (pds != null) {
+				for (int j = 0; j < pds.length; j++) {
+					PropertyDescriptor pd = pds[j];
+					if (pd.getReadMethod() == null || pd instanceof IndexedPropertyDescriptor) {
+						continue;
 					}
+					String name = pd.getName();
+					Method m = pd.getReadMethod();
+					methodMap.put(name, m);
 				}
-				MethodDescriptor[] mds = info.getMethodDescriptors();
-				if (pds != null) {
-					for (int j = 0; j < mds.length; j++) {
-						MethodDescriptor md = mds[j];
-						if (md.getMethod() == null || md.getMethod().getParameterTypes().length > 0 || md.getMethod().getReturnType() == Void.class) {
-							continue;
-						}
-						String name = md.getName();
-						Method m = md.getMethod();
-						methodMap.put(name, m);
-					}
-				}
-				clazzMaps.put(clazz, methodMap);
-			} catch (IntrospectionException e) {
-				throw new ScriptException(e);
 			}
+			MethodDescriptor[] mds = info.getMethodDescriptors();
+			if (pds != null) {
+				for (int j = 0; j < mds.length; j++) {
+					MethodDescriptor md = mds[j];
+					if (md.getMethod() == null || md.getMethod().getParameterTypes().length > 0 || md.getMethod().getReturnType() == Void.class || md.getMethod().getReturnType() == void.class) {
+						continue;
+					}
+					String name = md.getName();
+					Method m = md.getMethod();
+					methodMap.put(name, m);
+				}
+			}
+			if (clazzMaps == null) {
+				clazzMaps = Collections.synchronizedMap(new LRUCache<Class<?>, Map<String,Method>>(100));
+				properties = new SoftReference<Map<Class<?>,Map<String,Method>>>(clazzMaps);
+			}
+			clazzMaps.put(clazz, methodMap);
+		} catch (IntrospectionException e) {
+			throw new ScriptException(e);
 		}
 		return methodMap;
 	}
