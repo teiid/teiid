@@ -26,6 +26,7 @@ import java.util.Map;
 
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OFunctionParameter;
+import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmType;
 import org.odata4j.producer.BaseResponse;
@@ -46,4 +47,6 @@ public interface Client {
 	CountResponse sqlExecuteCount(String sql, List<SQLParam> parameters);
 	
 	int sqlExecuteUpdate(String sql, List<SQLParam> parameters);	
+	
+	EdmDataServices getMetadata();
 }

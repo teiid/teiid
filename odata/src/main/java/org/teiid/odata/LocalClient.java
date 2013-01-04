@@ -260,5 +260,10 @@ public class LocalClient implements Client {
 			} catch (SQLException e) {
 			}
 		}
+	}
+
+	@Override
+	public EdmDataServices getMetadata() {
+		return ODataEntitySchemaBuilder.buildMetadata(getMetadataStore());
 	}		
 }

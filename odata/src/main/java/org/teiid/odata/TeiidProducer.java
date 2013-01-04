@@ -38,7 +38,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Update;
 
 public class TeiidProducer implements ODataProducer {
-	private EdmDataServices metadata;
 	private Client client;
 	
 	public TeiidProducer(Client client) {
@@ -52,10 +51,7 @@ public class TeiidProducer implements ODataProducer {
 
 	@Override
 	public EdmDataServices getMetadata() {
-		if (this.metadata == null) {
-			this.metadata = ODataEntitySchemaBuilder.buildMetadata(this.client.getMetadataStore());
-		}
-		return this.metadata;
+		return this.client.getMetadata();
 	}
 
 	@Override

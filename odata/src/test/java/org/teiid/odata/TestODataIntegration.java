@@ -70,14 +70,15 @@ public class TestODataIntegration extends BaseResourceTest {
 	
 	@Test
 	public void testMetadata() throws Exception {
-		
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
+		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());		
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());	
+		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
 		
 		StringWriter sw = new StringWriter();
-		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+		
 		EdmxFormatWriter.write(eds, sw);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/$metadata"));
@@ -91,7 +92,8 @@ public class TestODataIntegration extends BaseResourceTest {
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
 		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 		Client client = mock(Client.class);
-		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());		
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
 		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
 		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);

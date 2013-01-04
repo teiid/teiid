@@ -32,7 +32,6 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 
@@ -109,7 +108,7 @@ public class ODataEntitySchemaBuilder {
 				KeyRecord primaryKey = table.getPrimaryKey();
 				List<KeyRecord> uniques = table.getUniqueKeys();
 				if (primaryKey == null && uniques.isEmpty()) {
-					LogManager.log(MessageLevel.INFO, LogConstants.CTX_ODATA, null, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16002, table.getFullName()));
+					LogManager.logDetail(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16002, table.getFullName()));
 					continue;
 				}
 
