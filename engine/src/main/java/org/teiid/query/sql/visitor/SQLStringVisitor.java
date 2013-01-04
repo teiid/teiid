@@ -452,6 +452,10 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(SubqueryHint.NOUNNEST);
                 append(SPACE);
             }
+            if (obj.isPreserve()) {
+                append(FromClause.PRESERVE);
+                append(SPACE);
+            }
             append(END_HINT);
             append(SPACE);
     	}

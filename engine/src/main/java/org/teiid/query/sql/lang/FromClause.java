@@ -39,13 +39,15 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class FromClause implements LanguageObject {
 	
-	public static String MAKEIND = "MAKEIND"; //$NON-NLS-1$
+	public static final String MAKEIND = "MAKEIND"; //$NON-NLS-1$
+	public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 	
     private boolean optional;
     private boolean makeDep;
     private boolean makeNotDep;
     private boolean makeInd;
     private boolean noUnnest;
+    private boolean preserve;
 
     public boolean isOptional() {
         return optional;
@@ -101,8 +103,16 @@ public abstract class FromClause implements LanguageObject {
         this.makeNotDep = makeNotDep;
     }
     
+    public boolean isPreserve() {
+		return preserve;
+	}
+    
+    public void setPreserve(boolean preserve) {
+		this.preserve = preserve;
+	}
+    
     public boolean hasHint() {
-        return optional || makeDep || makeNotDep || makeInd || noUnnest;
+        return optional || makeDep || makeNotDep || makeInd || noUnnest || preserve;
     }
     
     public boolean equals(Object obj) {
@@ -120,7 +130,8 @@ public abstract class FromClause implements LanguageObject {
                && other.isMakeDep() == this.isMakeDep()
                && other.isMakeNotDep() == this.isMakeNotDep()
         	   && other.isMakeInd() == this.isMakeInd()
-        	   && other.isNoUnnest() == this.isNoUnnest();
+        	   && other.isNoUnnest() == this.isNoUnnest()
+			   && other.isNoUnnest() == this.isNoUnnest();
     }
     
     @Override

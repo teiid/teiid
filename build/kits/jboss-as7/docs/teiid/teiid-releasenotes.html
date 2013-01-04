@@ -30,6 +30,8 @@
 	The user may also now configure the multi-source column name, auto-populate the multi-column in the actual metadata, and use non-literal multi-source column values.
 	<li>TEIID-1557 <b>Generated Key Retrieval</b> - JDBC now supports generated key retrieval, see the Client and the Developers Guides for more.
 	<li>TEIID-2311 <b>Permission Conditions</b> - data roles can now specify SQL conditions that will enforce row-based security and physical table insert/update checked constraints.  See the Reference Guide for more.
+	<li>TEIID-2341 <b>Join Planning Improvements</b> - ANSI join structures can now be preserved with the preserve hint, i.e. FROM /*+ PRESERVE */ (tbl1 INNER JOIN tbl2 ON ...), which is similar to the Oracle ORDERED hint.  
+	Also sources restircted to only outer joins can have INNER or effectively INNER joins pushed to them.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

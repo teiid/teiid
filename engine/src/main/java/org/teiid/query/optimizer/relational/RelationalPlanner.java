@@ -918,7 +918,9 @@ public class RelationalPlanner {
             node.setProperty(NodeConstants.Info.JOIN_TYPE, jp.getJoinType());
             node.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.NESTED_LOOP);
             node.setProperty(NodeConstants.Info.JOIN_CRITERIA, jp.getJoinCriteria());
-            
+            if (jp.isPreserve()) {
+            	node.setProperty(Info.PRESERVE, Boolean.TRUE);
+            }
             if (jp.getJoinType() == JoinType.JOIN_LEFT_OUTER) {
             	hints.hasOptionalJoin = true;
             }
@@ -929,12 +931,12 @@ public class RelationalPlanner {
             // Handle each child
             FromClause[] clauses = new FromClause[] {jp.getLeftClause(), jp.getRightClause()};
             for(int i=0; i<2; i++) {
+            	if (jp.isPreserve() && clauses[i] instanceof JoinPredicate) {
+            		((JoinPredicate)clauses[i]).setPreserve(true);
+            	}
                 buildTree(clauses[i], node);
-
                 // Add groups to joinNode
-                for (PlanNode child : node.getChildren()) {
-                    node.addGroups(child.getGroups());
-                }
+            	node.addGroups(node.getLastChild().getGroups());
             }
         } else if (clause instanceof SubqueryFromClause) {
             SubqueryFromClause sfc = (SubqueryFromClause)clause;

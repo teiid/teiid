@@ -33,8 +33,8 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.metadata.Column;
-import org.teiid.metadata.Table;
 import org.teiid.metadata.KeyRecord.Type;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
@@ -891,6 +891,20 @@ public class TestJoinOptimization {
 
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
         
+    }
+    
+    @Test public void testPreserveHint() throws Exception { 
+        String sql = "select pm1.g1.e1 from /*+ preserve */ (pm1.g1 left outer join pm1.g2 on g1.e2 = g2.e2) where pm1.g2.e1 = 'a'"; //$NON-NLS-1$
+        assertEquals("SELECT pm1.g1.e1 FROM /*+ PRESERVE */ (pm1.g1 LEFT OUTER JOIN pm1.g2 ON g1.e2 = g2.e2) WHERE pm1.g2.e1 = 'a'", QueryParser.getQueryParser().parseCommand(sql).toString());
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,
+                                      null, TestOptimizer.getGenericFinder(true), 
+                                      new String[] { 
+                                          "SELECT g_0.e1 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e2 = g_1.e2 WHERE g_1.e1 = 'a'" }, //$NON-NLS-1$
+                                          TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); 
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);                                    
     }
     
     /**

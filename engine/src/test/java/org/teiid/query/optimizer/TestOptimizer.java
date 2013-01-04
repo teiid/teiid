@@ -140,6 +140,7 @@ public class TestOptimizer {
     	final BasicSourceCapabilities caps = getTypicalCapabilities();
     	if (!supportsJoins) {
 	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+	    	caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
 		    caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
     	}
         return new DefaultCapabilitiesFinder(caps);

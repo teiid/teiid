@@ -281,7 +281,7 @@ public final class RuleCollapseSource implements OptimizerRule {
      * @param metadata Metadata implementation
      * @throws QueryPlannerException
      */
-    private ElementSymbol selectOutputElement(Collection<GroupSymbol> groups, QueryMetadataInterface metadata)
+    static ElementSymbol selectOutputElement(Collection<GroupSymbol> groups, QueryMetadataInterface metadata)
         throws QueryMetadataException, TeiidComponentException {
 
         // Find a group with selectable elements and pick the first one
@@ -344,7 +344,22 @@ public final class RuleCollapseSource implements OptimizerRule {
                 int lastClause = clauses.size()-1;
                 FromClause clause1 = clauses.get(lastClause-1);
                 FromClause clause2 = clauses.get(lastClause);
-                 
+
+                //compensate if we only support outer and use a left outer join instead
+                if (!joinType.isOuter() && !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_INNER, RuleRaiseAccess.getModelIDFromAccess(accessRoot, metadata), metadata, capFinder)) {
+                	joinType = JoinType.JOIN_LEFT_OUTER;
+                	if (!crits.isEmpty()) {
+	                	if (!useLeftOuterJoin(query, metadata, crits, right.getGroups())) {
+	                		if (!useLeftOuterJoin(query, metadata, crits, left.getGroups())) {
+	                			throw new AssertionError("Could not convert inner to outer join."); //$NON-NLS-1$
+	                		}
+	                		FromClause temp = clause1;
+                        	clause1 = clause2;
+                        	clause2 = temp;	                		
+	                	}
+                	}
+                }
+                
                 //correct the criteria or the join type if necessary
                 if (joinType != JoinType.JOIN_CROSS && crits.isEmpty()) {
                     crits.add(QueryRewriter.TRUE_CRITERIA);
@@ -417,6 +432,41 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
         }        
     }
+
+	private boolean useLeftOuterJoin(Query query, QueryMetadataInterface metadata,
+			List<Criteria> crits, Set<GroupSymbol> innerGroups) {
+		Criteria c = query.getCriteria();
+		if (c != null) {
+			List<Criteria> parts = Criteria.separateCriteriaByAnd(c);
+			for (Criteria criteria : parts) {
+				if (!JoinUtil.isNullDependent(metadata, innerGroups, criteria)) {
+					return true;
+				}
+			}
+		}
+		ElementSymbol es = null;
+		for (Criteria criteria : crits) {
+			if (!(criteria instanceof CompareCriteria)) {
+				continue;
+			}
+			CompareCriteria cc = (CompareCriteria)criteria;
+			if ((cc.getLeftExpression() instanceof ElementSymbol) && innerGroups.contains(((ElementSymbol)cc.getLeftExpression()).getGroupSymbol())) {
+				es = (ElementSymbol) cc.getLeftExpression();
+				break;
+			}
+			if ((cc.getRightExpression() instanceof ElementSymbol) && innerGroups.contains(((ElementSymbol)cc.getRightExpression()).getGroupSymbol())) {
+				es = (ElementSymbol) cc.getRightExpression();
+				break;
+			}
+		}
+		if (es == null) {
+			return false;
+		}
+		IsNullCriteria inc = new IsNullCriteria(es);
+		inc.setNegated(true);
+		query.setCriteria( CompoundCriteria.combineCriteria(c, inc) );
+		return true;
+	}
 
 	private void prepareSubqueries(List<SubqueryContainer<?>> containers) {
 		for (SubqueryContainer<?> container : containers) {

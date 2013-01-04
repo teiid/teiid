@@ -34,6 +34,7 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
@@ -459,7 +460,7 @@ public class RulePlanJoins implements OptimizerRule {
                 
                 boolean treatJoinAsSource = jt.isOuter() || root.getProperty(NodeConstants.Info.ACCESS_PATTERNS) != null 
                 || root.hasProperty(NodeConstants.Info.MAKE_DEP) || root.hasProperty(NodeConstants.Info.MAKE_IND)
-                || !root.getExportedCorrelatedReferences().isEmpty();
+                || !root.getExportedCorrelatedReferences().isEmpty() || root.hasBooleanProperty(Info.PRESERVE);
                 
                 if (treatJoinAsSource) {
                     currentRegion.addJoinSourceNode(root);

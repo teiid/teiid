@@ -132,12 +132,41 @@ public class TestJoinPushdownRestrictions {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, false);
         caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.ANY);
         caps.setFunctionSupport("+", true); //$NON-NLS-1$
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
 
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
+	}
+	
+	@Test public void testOuterPreservation() throws Exception {
+		String sql = "select pm1.g1.e2, pm1.g2.e2 from pm1.g1 left outer join pm1.g2 on (pm1.g1.e2 = pm1.g2.e2) where pm1.g2.e1 = 'a'"; //$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.ANY);
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
+        		new String[] {"SELECT g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e2 = g_1.e2 WHERE g_1.e1 = 'a'"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
+	}
+	
+	@Test public void testOuterPreservation1() throws Exception {
+		String sql = "select pm1.g1.e2, pm1.g2.e2 from pm1.g1 inner join pm1.g2 on (pm1.g1.e2 = pm1.g2.e2)"; //$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.ANY);
+        caps.setFunctionSupport("+", true); //$NON-NLS-1$
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
+        		new String[] {"SELECT g_0.e2, g_1.e2 FROM pm1.g1 AS g_0 LEFT OUTER JOIN pm1.g2 AS g_1 ON g_0.e2 = g_1.e2 WHERE g_1.e2 IS NOT NULL"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
 	}
 	
 	@Test public void testCriteriaRestrictionWithNonJoinCriteria() throws Exception {

@@ -625,6 +625,34 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				   return null;
         		}
         		sjc = CapabilitiesUtil.getSupportedJoinCriteria(accessModelID, metadata, capFinder);
+
+        		//see if we can emulate the inner join using an outer
+        		if (!type.isOuter() 
+    				&& !CapabilitiesUtil.supports(Capability.QUERY_FROM_JOIN_INNER, accessModelID, metadata, capFinder) 
+    				&& (crits != null) && !crits.isEmpty()) {
+        			//TODO: the IS NOT NULL check is not strictly needed as we could check predicates to see if we are already null filtering
+    				if (!CapabilitiesUtil.supports(Capability.CRITERIA_ISNULL, accessModelID, metadata, capFinder)
+    						|| !CapabilitiesUtil.supports(Capability.CRITERIA_NOT, accessModelID, metadata, capFinder)) {
+    					return null;
+    				}
+    				if (sjc == SupportedJoinCriteria.ANY) {
+    					//quick check to see if we can find an element to be nullable
+    					boolean valid = false;
+    					for (Criteria crit : crits) {
+        					if (!(crit instanceof CompareCriteria)) {
+        			    		continue;
+        			    	}
+        			    	CompareCriteria cc = (CompareCriteria)crit;
+        			    	if ((cc.getLeftExpression() instanceof ElementSymbol) 
+        			    			|| (cc.getRightExpression() instanceof ElementSymbol)) {
+        			    		valid = true;
+        			    	}
+						}
+    					if (!valid) {
+    						return null; //TODO: check if any of the already pushed predicates can satisfy
+    					}
+    				}
+        		}
 				
         		/*
         		 * Key joins must be left linear

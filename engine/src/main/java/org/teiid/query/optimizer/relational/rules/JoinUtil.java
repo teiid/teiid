@@ -30,6 +30,7 @@ import org.teiid.core.TeiidException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
@@ -73,7 +74,7 @@ public class JoinUtil {
      * @return
      */
     static final JoinType optimizeJoinType(PlanNode critNode, PlanNode joinNode, QueryMetadataInterface metadata) {
-        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups())) {
+        if (critNode.getGroups().isEmpty() || !joinNode.getGroups().containsAll(critNode.getGroups()) || joinNode.hasBooleanProperty(Info.PRESERVE)) {
             return null;
         }
 

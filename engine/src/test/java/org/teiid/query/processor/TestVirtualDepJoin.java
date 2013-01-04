@@ -220,6 +220,7 @@ public class TestVirtualDepJoin {
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
         caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setCapabilitySupport(Capability.CRITERIA_ISNULL, false);
         caps.setCapabilitySupport(Capability.CRITERIA_IN, setPushdown);    
         finder.addCapabilities("US", caps); //$NON-NLS-1$
         finder.addCapabilities("Europe", caps);//$NON-NLS-1$

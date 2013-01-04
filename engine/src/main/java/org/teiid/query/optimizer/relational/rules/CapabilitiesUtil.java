@@ -31,8 +31,8 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
-import org.teiid.metadata.Schema;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.Schema;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -43,14 +43,14 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.Function;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
-import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -98,7 +98,7 @@ public class CapabilitiesUtil {
         SourceCapabilities caps = getCapabilities(modelID, metadata, capFinder);
 
         if (!joinType.isOuter()) {
-        	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER);
+        	return caps.supportsCapability(Capability.QUERY_FROM_JOIN_INNER) || caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER);
         }
         
         if(! caps.supportsCapability(Capability.QUERY_FROM_JOIN_OUTER)) {
