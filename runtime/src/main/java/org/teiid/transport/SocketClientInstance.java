@@ -32,6 +32,7 @@ import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
 import org.teiid.core.crypto.NullCryptor;
+import org.teiid.core.crypto.SymmetricCryptor;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.DQPWorkContext.Version;
 import org.teiid.logging.LogConstants;
@@ -138,6 +139,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             
             try {
 				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "8.3".compareTo(clientVersion) > 0); //$NON-NLS-1$
+				((SymmetricCryptor)this.cryptor).setClassLoader(SocketClientInstance.class.getClassLoader());
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}
