@@ -554,32 +554,39 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	private void deployResources(OperationContext context) throws OperationFailedException{
         if (requiresRuntime(context)) {
         	try {
-        	Module module = Module.forClass(getClass());
-        	URL deployments = module.getExportedResource("deployments.properties"); //$NON-NLS-1$
-            BufferedReader in = new BufferedReader(new InputStreamReader(deployments.openStream()));
-
-            String deployment;
-            while ((deployment = in.readLine()) != null) {
-                PathAddress deploymentAddress = PathAddress.pathAddress(PathElement.pathElement(DEPLOYMENT, deployment));
-                ModelNode op = new ModelNode();
-                op.get(OP).set(ADD);
-                op.get(OP_ADDR).set(deploymentAddress.toModelNode());
-                op.get(ENABLED).set(true);
-                op.get(PERSISTENT).set(false); // prevents writing this deployment out to standalone.xml
-
-                URL url = module.getExportedResource(deployment);
-                String urlString = url.toExternalForm();
-
-                ModelNode contentItem = new ModelNode();
-                contentItem.get(URL).set(urlString);
-                op.get(CONTENT).add(contentItem);
-
-                ImmutableManagementResourceRegistration rootResourceRegistration = context.getRootResourceRegistration();
-                OperationStepHandler handler = rootResourceRegistration.getOperationHandler(deploymentAddress, ADD);
-
-                context.addStep(op, handler, OperationContext.Stage.MODEL);
-            }
-            in.close();
+	        	Module module = Module.forClass(getClass());
+	        	if (module == null) {
+	        		return; // during testing
+	        	}
+	        	
+	        	URL deployments = module.getExportedResource("deployments.properties"); //$NON-NLS-1$
+	        	if (deployments == null) {
+	        		return; // no deployments 
+	        	}
+	            BufferedReader in = new BufferedReader(new InputStreamReader(deployments.openStream()));
+	
+	            String deployment;
+	            while ((deployment = in.readLine()) != null) {
+	                PathAddress deploymentAddress = PathAddress.pathAddress(PathElement.pathElement(DEPLOYMENT, deployment));
+	                ModelNode op = new ModelNode();
+	                op.get(OP).set(ADD);
+	                op.get(OP_ADDR).set(deploymentAddress.toModelNode());
+	                op.get(ENABLED).set(true);
+	                op.get(PERSISTENT).set(false); // prevents writing this deployment out to standalone.xml
+	
+	                URL url = module.getExportedResource(deployment);
+	                String urlString = url.toExternalForm();
+	
+	                ModelNode contentItem = new ModelNode();
+	                contentItem.get(URL).set(urlString);
+	                op.get(CONTENT).add(contentItem);
+	
+	                ImmutableManagementResourceRegistration rootResourceRegistration = context.getRootResourceRegistration();
+	                OperationStepHandler handler = rootResourceRegistration.getOperationHandler(deploymentAddress, ADD);
+	
+	                context.addStep(op, handler, OperationContext.Stage.MODEL);
+	            }
+	            in.close();
         	}catch(IOException e) {
         		throw new OperationFailedException(e.getMessage(), e);
         	}

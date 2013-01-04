@@ -38,7 +38,7 @@ public class TeiidODataApplication extends Application {
 	    classes.add(ServiceDocumentResource.class);
 	    classes.add(ODataBatchProvider.class);
 	    classes.add(ExceptionMappingProvider.class);	
-	    classes.add(org.teiid.odata.MockProvider.class);
+	    classes.add(TeiidProducerProvider.class);
 		return classes;
 	}
 }
