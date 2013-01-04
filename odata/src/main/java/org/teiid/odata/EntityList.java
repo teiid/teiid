@@ -23,13 +23,10 @@ package org.teiid.odata;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 import org.odata4j.core.*;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.*;
 import org.teiid.client.util.ResultsFuture;
 
 class EntityList extends AbstractList<OEntity>{
@@ -40,13 +37,21 @@ class EntityList extends AbstractList<OEntity>{
 	private OEntity prevEntity;
 	private OEntity currentEntity;
 	private boolean closed = false;
-	private HashMap<String, Boolean> projectedColumns;
+	private Map<String, Boolean> projectedColumns;
+	private HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
 	
-	public EntityList(HashMap<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition) {
+	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition) {
 		this.entitySet = entitySet;
 		this.rs = rs;
 		this.completion = complition;
 		this.projectedColumns = columns;
+
+		EdmEntityType entityType = this.entitySet.getType();
+		Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
+		while(propIter.hasNext()) {
+			EdmProperty prop = propIter.next();
+			this.propertyTypes.put(prop.getName(), prop);
+		}
 		
 		this.prevEntity = getEntity();
 		if (this.prevEntity != null) {
@@ -70,11 +75,18 @@ class EntityList extends AbstractList<OEntity>{
 	private OEntity getEntity() {
 		if (!this.closed) {
 			try {
-				if (rs.next()) {
+				if (rs.next()) {					
 					HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
 					for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 						Object value = rs.getObject(i+1);
-						OProperty<?> property = OProperties.simple(rs.getMetaData().getColumnLabel(i+1), value);
+						OProperty<?> property = null;
+						String propName = rs.getMetaData().getColumnLabel(i+1);
+						if (value != null) {
+							property = OProperties.simple(propName, (EdmSimpleType)this.propertyTypes.get(propName).getType(), value);
+						}
+						else {
+							property = OProperties.null_(rs.getMetaData().getColumnLabel(i+1), (EdmSimpleType)this.propertyTypes.get(propName).getType());
+						}
 						properties.put(rs.getMetaData().getColumnLabel(i+1), property);	
 					}			
 					

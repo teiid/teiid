@@ -109,7 +109,7 @@ public class ODataEntitySchemaBuilder {
 				KeyRecord primaryKey = table.getPrimaryKey();
 				List<KeyRecord> uniques = table.getUniqueKeys();
 				if (primaryKey == null && uniques.isEmpty()) {
-					LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "Table=", table.getFullName(), " not included in metadata, due to lack of primary keys or unique keys"); //$NON-NLS-1$
+					LogManager.log(MessageLevel.INFO, LogConstants.CTX_ODATA, null, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16002, table.getFullName()));
 					continue;
 				}
 

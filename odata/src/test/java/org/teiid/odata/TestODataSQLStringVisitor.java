@@ -27,11 +27,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.odata4j.core.OEntityKey;
-import org.odata4j.exceptions.NotAcceptableException;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.expression.*;
 import org.odata4j.producer.QueryInfo;
@@ -101,7 +99,7 @@ public class TestODataSQLStringVisitor {
 	
 	@Test
 	public void testOperator() {
-		//te("-x", "-x");
+		te("-1", "-1");
 		te("not x", "NOT (x)");
 		te("x mul y", "(x * y)");
 		te("x div y", "(x / y)");
@@ -212,27 +210,49 @@ public class TestODataSQLStringVisitor {
 	
 	@Test(expected=NotFoundException.class)
 	public void testBadSelect() throws Exception {
-		testSelect("SELECT e1, x5 FROM pm1.g1", "nw.Shippers", "e1 ne 'foo'", "ShipperID,x5", "ShipperID desc, CompanyName", -1, null, null);		
+		testSelect("SELECT e1, x5 FROM pm1.g1", "nw.Shippers", "e1 ne 'foo'",
+				"ShipperID,x5", "ShipperID desc, CompanyName", -1, null, null);
 	}
 	
 	@Test
 	public void testSelectCount() throws Exception {
-		testSelectCountStar("SELECT COUNT(*) FROM pm1.g1 WHERE (e1 >= 10) AND (e1 < 20)", "pm1.g1", "e1 ge 10 and e1 lt 20", "e1,x5", "e1 desc, e2", 10);
+		testSelectCountStar(
+				"SELECT COUNT(*) FROM pm1.g1 WHERE (e1 >= 10) AND (e1 < 20)",
+				"pm1.g1", "e1 ge 10 and e1 lt 20", "e1,x5", "e1 desc, e2", 10);
 	}
 	
 	@Test
 	public void testSelectQuery() throws Exception {
-		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20)", "nw.Shippers", "ShipperID ge 10 and ShipperID lt 20", null, null, -1, null, null);
-		testSelect("SELECT g0.Phone, g0.ShipperID, g0.CompanyName FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo'", "nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone", null, -1, null, null);
-		testSelect("SELECT g0.Phone, g0.ShipperID, g0.CompanyName FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.CompanyName DESC, g0.Phone", "nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone", "CompanyName desc, Phone", -1, null, null);
-		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 LIMIT 0, 10", "nw.Shippers", null, null, null, 10, null, null);		
+		testSelect(
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20)",
+				"nw.Shippers", "ShipperID ge 10 and ShipperID lt 20", null,
+				null, -1, null, null);
+		testSelect(
+				"SELECT g0.Phone, g0.ShipperID, g0.CompanyName FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo'",
+				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
+				null, -1, null, null);
+		testSelect(
+				"SELECT g0.Phone, g0.ShipperID, g0.CompanyName FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.CompanyName DESC, g0.Phone",
+				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
+				"CompanyName desc, Phone", -1, null, null);
+		testSelect(
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 LIMIT 0, 10",
+				"nw.Shippers", null, null, null, 10, null, null);
 	}	
 	
 	@Test
 	public void testNavigationalQuery() throws Exception {
-		testSelect("SELECT g1.EmployeeID, g1.ShipVia, g1.OrderID, g1.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID", "nw.Customers", null, "EmployeeID", null, -1, "nw.Orders", null);
-		testSelect("SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12", "nw.Customers", null, "UnitPrice", null, -1, "nw.Orders(12)/nw.OrderDetails", null);
-		testSelect("SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12)", "nw.Customers", null, "UnitPrice", null, -1, "nw.Orders(12)/nw.OrderDetails", OEntityKey.create(33));
+		testSelect(
+				"SELECT g1.EmployeeID, g1.ShipVia, g1.OrderID, g1.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID",
+				"nw.Customers", null, "EmployeeID", null, -1, "nw.Orders", null);
+		testSelect(
+				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12",
+				"nw.Customers", null, "UnitPrice", null, -1,
+				"nw.Orders(12)/nw.OrderDetails", null);
+		testSelect(
+				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12)",
+				"nw.Customers", null, "UnitPrice", null, -1,
+				"nw.Orders(12)/nw.OrderDetails", OEntityKey.create(33));
 	}
 	
 	
@@ -241,11 +261,45 @@ public class TestODataSQLStringVisitor {
 		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
 	}	
 	
-	@Test(expected=NotAcceptableException.class)
+	@Test
 	public void testFilterBasedAssosiation() throws Exception {
-		te("Customer/ContactName ne 'Fred'", "\"Customer/ContactName\" <> 'Fred'");
-		//testSelect("", "nw.Orders", "\"nw.Customers\"/ContactName eq 'Fred'", null, null, 0, null, null);
+		testSelect(
+				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID " +
+				"FROM nw.Orders AS g0 INNER JOIN Customers AS g1 " +
+				"ON g0.CustomerID = g1.CustomerID WHERE g1.ContactName = 'Fred'",
+				"nw.Orders", "Customers/ContactName eq 'Fred'", "OrderID",
+				null, -1, null, null);
+		
+		testSelect(
+				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1",
+				"nw.Customers", "Orders/OrderID eq 1", "ContactName",
+				null, -1, null, null);
+		
 	}	
+	
+	@Test
+	public void testOrderByWithCriteria() throws Exception {
+		testSelect(
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID DESC",
+				"nw.Shippers", null, null, "ShipperID eq 12 desc", -1, null,
+				null);
+	}	
+	
+	@Test
+	public void testAny() throws Exception {		
+		testSelect(
+				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 LEFT OUTER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",
+				"nw.Orders", "OrderDetails/any(ol: ol/Quantity gt 10)",
+				"OrderID", null, -1, null, null);
+	}	
+		
+	@Test
+	public void testAll() throws Exception {		
+		testSelect(
+				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",
+				"nw.Orders", "OrderDetails/all(ol: ol/Quantity gt 10)",
+				"OrderID", null, -1, null, null);
+	}		
 }
 
 

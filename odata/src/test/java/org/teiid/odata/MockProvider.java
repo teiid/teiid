@@ -30,15 +30,16 @@ import org.odata4j.producer.ODataProducer;
 import org.teiid.core.TeiidRuntimeException;
 
 @Provider
-public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
-
+public class MockProvider implements ContextResolver<ODataProducer> {
+	public static Client CLIENT = null;
+	
 	@Context
 	protected UriInfo uriInfo;	
 	
 	@Override
 	public ODataProducer getContext(Class<?> arg0) {
 		if (!arg0.equals(ODataProducer.class)) {
-			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16007));
+			throw new TeiidRuntimeException("Invalid Context Type requested in OData Server");
 		}
 		
 		String vdb = null;
@@ -54,8 +55,10 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 		
 		int versionIdx = vdb.indexOf('.');
 		if (versionIdx != -1) {
-			return new TeiidProducer(new LocalClient(vdb.substring(0, versionIdx), Integer.parseInt(vdb.substring(versionIdx+1))));
+			return new TeiidProducer(CLIENT);
 		}
-		return new TeiidProducer(new LocalClient(vdb, 1));
+		return new TeiidProducer(CLIENT) {
+			
+		};
 	}
 }

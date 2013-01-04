@@ -21,24 +21,31 @@
  */
 package org.teiid.odata;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
-import javax.ws.rs.core.Application;
+import org.teiid.core.BundleUtil;
 
-import org.odata4j.producer.resources.*;
 
-public class TeiidODataApplication extends Application {
-	@Override
-	public Set<Class<?>> getClasses() {
-		Set<Class<?>> classes = new HashSet<Class<?>>();
-	    classes.add(EntitiesRequestResource.class);
-	    classes.add(EntityRequestResource.class);
-	    classes.add(MetadataResource.class);
-	    classes.add(ServiceDocumentResource.class);
-	    classes.add(ODataBatchProvider.class);
-	    classes.add(ExceptionMappingProvider.class);	
-	    classes.add(org.teiid.odata.MockProvider.class);
-		return classes;
-	}
+public class ODataPlugin {
+    private static final String PLUGIN_ID = "org.teiid.odata" ; //$NON-NLS-1$
+    static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
+    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
+    
+    public static ResourceBundle getResourceBundle(Locale locale) {
+        if (locale == null) {
+            locale = Locale.getDefault();
+        }
+        return ResourceBundle.getBundle(ODataPlugin.BUNDLE_NAME, locale);
+    }
+    
+    public static enum Event implements BundleUtil.Event {
+    	TEIID16001,
+    	TEIID16002,
+    	TEIID16003,
+    	TEIID16004,
+    	TEIID16005,
+    	TEIID16006,
+    	TEIID16007
+    }
 }

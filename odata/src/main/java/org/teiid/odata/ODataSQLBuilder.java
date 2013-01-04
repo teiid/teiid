@@ -23,10 +23,12 @@ package org.teiid.odata;
 
 import static org.teiid.language.SQLConstants.Reserved.CONVERT;
 
+import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.odata4j.core.NamedValue;
 import org.odata4j.core.OEntity;
@@ -59,6 +61,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private FromClause fromCluse = null;
 	private HashMap<String, GroupSymbol> assosiatedTables = new HashMap<String, GroupSymbol>();
 	private HashMap<String, Boolean> projectedColumns = new HashMap<String, Boolean>();
+	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
+	private boolean negitive = false;
+	private AtomicInteger groupCount = new AtomicInteger(1);
 
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
 		this.metadata = metadata;
@@ -78,6 +83,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		this.resultEntityTable = entityTable;
 		this.entityGroup = new GroupSymbol("g0", entityName);
 		this.assosiatedTables.put(entityTable.getName(), this.entityGroup);
+		this.aliasTableNames.put("g0", entityTable.getName());
 		
 		if (key != null) {
 			this.criteria = buildEntityKeyCriteria(entityTable, this.entityGroup, key);
@@ -87,7 +93,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		if (navProperty != null) {
 			String prop = null;
-			int propCount = 0;
 			
 			if (navProperty.startsWith("/")) {
 				navProperty = navProperty.substring(1);
@@ -96,7 +101,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			for (String segment:navProperty.split("/")) {
 		        String[] propSplit = segment.split("\\(");
 		        prop = propSplit[0];
-		        propCount++;	
 
 		        Column column = findColumn(entityTable, prop);
 		        if (column != null) {
@@ -108,7 +112,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		        // find association table.
 	        	Table joinTable = findTable(prop, metadata);
 	        	if (joinTable == null) {
-	        		throw new NotFoundException("association_not_found");
+	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, prop));
 	        	}
 	        	
 	        	boolean associationFound = false;
@@ -116,8 +120,10 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        		if (fk.getReferenceTableName().equals(entityTable.getName())) {
 	        			
 	        			GroupSymbol joinGroup = null;
+	        			String alias = joinTable.getName();
 	        			if(this.assosiatedTables.get(joinTable.getName()) == null) {
-	        				joinGroup = new GroupSymbol("g"+propCount, joinTable.getName());
+	        				alias = "g"+this.groupCount.getAndIncrement();
+	        				joinGroup = new GroupSymbol(alias, joinTable.getName());
 		        			List<Criteria> critList = new ArrayList<Criteria>();
 		        			List<Column> pkColumns = entityTable.getPrimaryKey().getColumns();
 		        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
@@ -136,19 +142,19 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		        			else {
 		        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
 		        			}
+		        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
+		        			this.aliasTableNames.put(alias, joinTable.getName());
 	        			}
-	        			
 	        			this.entityGroup = joinGroup;
 	        			entityTable = joinTable;
 	        			this.resultEntityTable = entityTable;
 	        			associationFound = true;
-	        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
 	        			break;
 	        		}
 	        	}
 	        	
 	        	if (!associationFound) {
-	        		throw new NotFoundException("association_not_found");
+	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16003, prop, resultEntityTable.getName()));
 	        	}
 	        	
 	            if (propSplit.length > 1) {
@@ -199,7 +205,87 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return query;
 	}
 	
-	
+	private GroupSymbol joinTable(String tableName, String alias, JoinType joinType) {
+		Table joinTable = findTable(tableName, metadata);
+    	if (joinTable == null ) {
+    		tableName = this.aliasTableNames.get(tableName);
+    		joinTable = findTable(tableName, metadata);
+    	}
+    	if (joinTable == null && alias != null) {
+    		tableName = this.aliasTableNames.get(alias);
+    		joinTable = findTable(tableName, metadata);
+    	}
+    	if (joinTable == null) {
+    		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, tableName));
+    	}
+    	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
+    		if (fk.getReferenceTableName().equals(joinTable.getName())) {
+    			GroupSymbol joinGroup = null;
+    			
+    			if(this.assosiatedTables.get(alias!=null?alias:joinTable.getName()) == null) {
+    				alias = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
+    				joinGroup = new GroupSymbol(alias, joinTable.getName());
+        			List<Criteria> critList = new ArrayList<Criteria>();
+        			List<Column> pkColumns = joinTable.getPrimaryKey().getColumns();
+        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
+        				critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i).getName(), this.entityGroup), CompareCriteria.EQ, new ElementSymbol(fk.getReferenceColumns().get(i), joinGroup)));
+        			}
+        			
+        			Criteria crit = critList.get(0);
+        			for (int i = 1; i < critList.size(); i++) {
+        				crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
+        			}		        			
+        			
+        			if (this.fromCluse == null) {
+        				this.fromCluse = new JoinPredicate(new UnaryFromClause(this.entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
+        				
+        			}
+        			else {
+        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
+        			}
+        			this.assosiatedTables.put(alias, joinGroup);
+        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
+	    			this.aliasTableNames.put(alias, joinTable.getName());
+    			}
+    			return this.assosiatedTables.get(alias!=null?alias:joinTable.getName());
+    		}
+    	}
+    	
+    	// if join direction is other way
+    	for (ForeignKey fk:joinTable.getForeignKeys()) {
+    		if (fk.getReferenceTableName().equals(this.resultEntityTable.getName())) {
+    			
+    			GroupSymbol joinGroup = null;
+    			if(this.assosiatedTables.get(alias!=null?alias:joinTable.getName()) == null) {
+    				alias = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
+    				joinGroup = new GroupSymbol(alias, joinTable.getName());
+        			List<Criteria> critList = new ArrayList<Criteria>();
+        			List<Column> pkColumns = this.resultEntityTable.getPrimaryKey().getColumns();
+        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
+        				critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i).getName(), this.entityGroup), CompareCriteria.EQ, new ElementSymbol(fk.getReferenceColumns().get(i), joinGroup)));
+        			}
+        			
+        			Criteria crit = critList.get(0);
+        			for (int i = 1; i < critList.size(); i++) {
+        				crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
+        			}		        			
+        			
+        			if (this.fromCluse == null) {
+        				this.fromCluse = new JoinPredicate(new UnaryFromClause(this.entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
+        				
+        			}
+        			else {
+        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
+        			}
+        			this.assosiatedTables.put(alias, joinGroup);
+        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
+        			this.aliasTableNames.put(alias, joinTable.getName());
+    			}
+    			return this.assosiatedTables.get(alias!=null?alias:joinTable.getName());
+    		}
+    	}
+    	return null;
+	}
 
 	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, OEntityKey entityKey) {
 		if (entityKey.getKeyType() == OEntityKey.KeyType.SINGLE) {
@@ -240,7 +326,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			for (String property:selectColumns.keySet()) {
 				Column column = findColumn(table, property);
 				if (column == null) {
-					throw new NotFoundException("column_not_found");
+					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, property, table.getFullName()));
 				}
 				select.addSymbol(new ElementSymbol(column.getName(), group));
 			}
@@ -280,7 +366,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(Direction direction) {
-		this.orderBy.addVariable(stack.pop(), direction == Direction.ASCENDING);
+		Expression expr = stack.pop();
+		if (expr instanceof CompareCriteria) {
+			expr = ((CompareCriteria)expr).getLeftExpression();
+		}
+		this.orderBy.addVariable(expr, direction == Direction.ASCENDING);
 	}
 
 	@Override
@@ -354,7 +444,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			this.params.add(new SQLParam(expr.getValue(), Types.DECIMAL));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			if (this.negitive) {
+				this.negitive = false;
+				stack.add(new Constant(expr.getValue().multiply(new BigDecimal(-1)))); //$NON-NLS-1$
+			}
+			else {
+				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -382,72 +478,26 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		String property = expr.getPropertyName();
 		
 		if (property.indexOf('/') == -1) {
+			if (this.negitive) {
+				this.negitive = false;
+				throw new NotAcceptableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16006, property));
+			}
 			stack.push(new ElementSymbol(property, this.entityGroup));
 			return;
 		}
 		
-		throw new NotAcceptableException("assosiation_in_filter_not_supported");
-		
-//		// this is to support the filter clause with URI like
-//		// http://host/service.svc/Orders?$filter = Customer/ContactName ne 'Fred'
-//		// we need to handle 'Customer/ContactName'
-//		int propCount = 0;
-//		GroupSymbol joinGroup = null;
-//		for (String segment:property.split("/")) {
-//			propCount++;
-//			
-//	        // find association table.
-//			if (joinGroup != null) {
-//				Column c  = findColumn(findTable(joinGroup.getName(), this.metadata), segment);
-//				if (c != null) {
-//					this.stack.push(new ElementSymbol(property, joinGroup));
-//					return;			
-//				}
-//			}
-//
-//			Table joinTable = findTable(segment, this.metadata);
-//        	if (joinTable == null) {
-//        		throw new NotFoundException("association_not_found");
-//        	}
-//			
-//        	boolean associationFound = false;
-//        	for (ForeignKey fk:joinTable.getForeignKeys()) {
-//        		if (fk.getReferenceTableName().equals(this.resultEntityTable.getName())) {
-//        			if (this.assosiatedTables.get(joinTable.getName()) == null) {
-//        				joinGroup = new GroupSymbol("f"+propCount, joinTable.getName());
-//	        			List<Criteria> critList = new ArrayList<Criteria>();
-//	        			List<Column> pkColumns = this.resultEntityTable.getPrimaryKey().getColumns();
-//	        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
-//	        				critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i).getName(), this.resultEntityGroup), CompareCriteria.EQ, new ElementSymbol(fk.getReferenceColumns().get(i), joinGroup)));
-//	        			}
-//	        			
-//	        			Criteria crit = critList.get(0);
-//	        			for (int i = 1; i < critList.size(); i++) {
-//	        				crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
-//	        			}		        			
-//	        			
-//	        			if (this.fromCluse == null) {
-//	        				this.fromCluse = new JoinPredicate(new UnaryFromClause(this.entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-//	        				
-//	        			}
-//	        			else {
-//	        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-//	        			}
-//        			}
-//        			else {
-//        				joinGroup = this.assosiatedTables.get(joinTable.getName());
-//        			}
-//        			associationFound = true;
-//        			break;
-//        		}
-//        	}
-//        	
-//        	if (!associationFound) {
-//        		throw new NotFoundException("association_not_found");
-//        	}        	
-//		}
-//		// none of the associated tables have the column name
-//		throw new NotFoundException("bad_filter");
+		// this is to support the filter clause with URI like
+		// http://host/service.svc/Orders?$filter = Customer/ContactName ne 'Fred'
+		// we need to handle 'Customer/ContactName'
+		// only supporting one level deep for simplicity
+		String[] segments = property.split("/"); 
+		GroupSymbol joinGroup = joinTable(segments[0], null, JoinType.JOIN_INNER);
+		Table joinTable = findTable(joinGroup.getDefinition(), metadata);
+		Column column = findColumn(joinTable, segments[1]);
+		if (column == null) {
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16005, segments[1], joinTable.getFullName()));
+		}
+		this.stack.push(new ElementSymbol(segments[1], joinGroup));
 	}
 
 	@Override
@@ -545,9 +595,14 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			this.params.add(new SQLParam(expr.getValue(), Types.FLOAT));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			if (this.negitive) {
+				this.negitive = false;
+				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
+			}
+			else {
+				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			}
 		}
-
 	}
 
 	@Override
@@ -557,7 +612,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			this.params.add(new SQLParam(expr.getValue(), Types.DOUBLE));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			if (this.negitive) {
+				this.negitive = false;
+				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
+			}
+			else {
+				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -568,7 +629,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			this.params.add(new SQLParam(expr.getValue(), Types.INTEGER));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			if (this.negitive) {
+				this.negitive = false;
+				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
+			}
+			else {
+				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -579,7 +646,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			this.params.add(new SQLParam(expr.getValue(), Types.BIGINT));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			if (this.negitive) {
+				this.negitive = false;
+				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
+			}
+			else {
+				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			}
 		}
 	}
 
@@ -651,8 +724,8 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(NegateExpression expr) {
-//		buffer.append("-");
-//		visitNode(expr.getExpression());
+		this.negitive = true;
+		visitNode(expr.getExpression());
 	}
 
 	@Override
@@ -835,14 +908,16 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(AggregateAnyFunction expr) {
-		throw new UnsupportedOperationException();
-
+		String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
+		joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_LEFT_OUTER);
+		expr.getPredicate().visitThis(this);
 	}
 
 	@Override
 	public void visit(AggregateAllFunction expr) {
-		throw new UnsupportedOperationException();
-
+		String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
+		joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_INNER);
+		expr.getPredicate().visitThis(this);
 	}
 
 	private Table findTable(String tableName, MetadataStore store) {

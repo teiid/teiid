@@ -21,24 +21,29 @@
  */
 package org.teiid.odata;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
-import javax.ws.rs.core.Application;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OFunctionParameter;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmType;
+import org.odata4j.producer.BaseResponse;
+import org.odata4j.producer.CountResponse;
+import org.teiid.metadata.MetadataStore;
 
-import org.odata4j.producer.resources.*;
+public interface Client {
+	String getVDBName();
+	
+	int getVDBVersion();
+	
+	MetadataStore getMetadataStore();
+	
+	BaseResponse sqlExecuteCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType);
 
-public class TeiidODataApplication extends Application {
-	@Override
-	public Set<Class<?>> getClasses() {
-		Set<Class<?>> classes = new HashSet<Class<?>>();
-	    classes.add(EntitiesRequestResource.class);
-	    classes.add(EntityRequestResource.class);
-	    classes.add(MetadataResource.class);
-	    classes.add(ServiceDocumentResource.class);
-	    classes.add(ODataBatchProvider.class);
-	    classes.add(ExceptionMappingProvider.class);	
-	    classes.add(org.teiid.odata.MockProvider.class);
-		return classes;
-	}
+	List<OEntity> sqlExecute(String sql, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns);
+	
+	CountResponse sqlExecuteCount(String sql, List<SQLParam> parameters);
+	
+	int sqlExecuteUpdate(String sql, List<SQLParam> parameters);	
 }
