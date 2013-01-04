@@ -63,6 +63,11 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 			version = Integer.parseInt(vdbName.substring(versionIdx+1));
 		}
 		
+		vdbName = vdbName.trim();
+		if (vdbName.isEmpty()) {
+			throw new TeiidRuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16008));
+		}
+		
 		VDBKey key = new VDBKey(vdbName, version);
 		Client client = this.clientMap.get(key);
 		if (client == null) {
