@@ -104,6 +104,18 @@
         <outputDirectory>modules/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>
+    
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.jboss.teiid:teiid-odata</include>   
+      </includes>
+      <binaries>
+        <includeDependencies>false</includeDependencies>
+        <unpack>false</unpack>
+        <outputDirectory>modules/org/jboss/teiid/main/deployments</outputDirectory>
+      </binaries>
+    </moduleSet>    
 
     <!-- These are Teiid internal dependencies; to make JCA work -->
     <moduleSet>

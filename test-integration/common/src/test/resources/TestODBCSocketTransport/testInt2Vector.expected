@@ -8,6 +8,34 @@ indkey
 1 2                                                              
 2                                                                
 1                                                                
+1 2 3 4                                                          
+1 2 3                                                            
+7                                                                
+29                                                               
+1                                                                
+15                                                               
+1 2 3 4                                                          
+1 2 3                                                            
+8                                                                
+1 2 3 4                                                          
+1 2 3                                                            
+10                                                               
+1 2 3 4                                                          
+1 2 3                                                            
+5                                                                
+14                                                               
+1 2 3                                                            
+1 2                                                              
+6                                                                
+3                                                                
+1 2                                                              
+4                                                                
+1 2 3                                                            
+1 2                                                              
+8                                                                
+1 2                                                              
+1 2 3                                                            
+1                                                                
 1 3                                                              
 2 1                                                              
 3 4 5                                                            
@@ -16,6 +44,6 @@ indkey
 1                                                                
 1                                                                
 1                                                                
-Row Count : 16
+Row Count : 44
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 indkey         1111                           java.lang.Object    indkey          int2vector                                      2147483647            2147483647    0         false            true             false       false                 1           false       true          false     true        
