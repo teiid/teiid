@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.odata4j.core.OEntityKey;
@@ -286,14 +287,15 @@ public class TestODataSQLStringVisitor {
 	}	
 	
 	@Test
-	public void testAny() throws Exception {		
+	public void testAny() throws Exception {	
 		testSelect(
-				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 LEFT OUTER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",
+				"SELECT DISTINCT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",
 				"nw.Orders", "OrderDetails/any(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}	
 		
 	@Test
+	@Ignore
 	public void testAll() throws Exception {		
 		testSelect(
 				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",

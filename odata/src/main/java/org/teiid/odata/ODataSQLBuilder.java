@@ -64,6 +64,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
 	private boolean negitive = false;
 	private AtomicInteger groupCount = new AtomicInteger(1);
+	private boolean distinct = false;
 
 	public ODataSQLBuilder(MetadataStore metadata, boolean prepared) {
 		this.metadata = metadata;
@@ -197,6 +198,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			query.setLimit(new Limit(new Constant(0), new Constant(info.top)));
 		}
 		
+		select.setDistinct(this.distinct);
 		From from = new From();
 		from.addClause(this.fromCluse);
 		query.setSelect(select);
@@ -908,16 +910,23 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(AggregateAnyFunction expr) {
+		// http://host/service.svc/Orders?$filter=OrderLines/any(ol: ol/Quantity gt 10)
+		// select distinct orders.* from orders join orderlines on (key) where (orderlines.quantity > 10)
 		String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
-		joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_LEFT_OUTER);
+		joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_INNER);
 		expr.getPredicate().visitThis(this);
+		this.distinct = true;
 	}
 
 	@Override
 	public void visit(AggregateAllFunction expr) {
-		String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
-		joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_INNER);
-		expr.getPredicate().visitThis(this);
+		throw new UnsupportedOperationException("TODO");
+		// http://host/service.svc/Orders?$filter=OrderLines/all(ol: ol/Quantity gt 10)
+		// select * from orders where ALL (select quantity from orderlines where fk = pk) > 10
+		
+		//String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
+		//joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_INNER);
+		//expr.getPredicate().visitThis(this);
 	}
 
 	private Table findTable(String tableName, MetadataStore store) {

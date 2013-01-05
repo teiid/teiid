@@ -186,11 +186,14 @@ public class ODataEntitySchemaBuilder {
 					EdmEntityType.Builder entityType = findEntityType(edmSchemas, schema.getName(), table.getName());
 					EdmEntityType.Builder refEntityType = findEntityType(edmSchemas, schema.getName(), fk.getReferenceTableName());
 					
+					// check to see if fk is part of this table's pk, then it is 1 to 1 relation
+					boolean onetoone = sameColumnSet(table.getPrimaryKey(), fk);
+					
 					// Build Association Ends				
 					EdmAssociationEnd.Builder endSelf = EdmAssociationEnd.newBuilder()
 							.setRole(table.getName())
 							.setType(entityType)
-							.setMultiplicity(EdmMultiplicity.MANY);
+							.setMultiplicity(onetoone?EdmMultiplicity.ZERO_TO_ONE:EdmMultiplicity.MANY);
 					
 					EdmAssociationEnd.Builder endRef = EdmAssociationEnd.newBuilder()
 							.setRole(fk.getReferenceTableName())
@@ -325,5 +328,27 @@ public class ODataEntitySchemaBuilder {
 			names.add(c.getName());
 		}
 		return names;
+	}
+	
+	static boolean sameColumnSet(KeyRecord recordOne, KeyRecord recordTwo) {
+		
+		if (recordOne == null || recordTwo == null) {
+			return false;
+		}
+		
+		List<Column> setOne = recordOne.getColumns();
+		List<Column> setTwo = recordTwo.getColumns();
+		
+		if (setOne.size() != setTwo.size()) {
+			return false;
+		}
+		for (int i = 0; i < setOne.size(); i++) {
+			Column one = setOne.get(i);
+			Column two = setTwo.get(i);
+			if (!one.getName().equals(two.getName())) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
