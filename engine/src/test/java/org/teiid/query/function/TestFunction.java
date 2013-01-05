@@ -130,6 +130,11 @@ public class TestFunction {
         int actualLocation = location.intValue();
         assertEquals("Didn't get expected result from locate", expectedLocation, actualLocation); //$NON-NLS-1$
     }
+    
+    public static void helpTestEndssWith(String locateString, String input, Boolean expected) {
+        Boolean actual = (Boolean) FunctionMethods.endsWith(locateString, input);
+        assertEquals("Didn't get expected result from startsWith", expected, actual); //$NON-NLS-1$
+    }    
 
     public static void helpTestLocate(String locateString, String input, Integer start, int expectedLocation) {
         Integer location = (Integer) FunctionMethods.locate(locateString, input, start);
@@ -626,7 +631,19 @@ public class TestFunction {
     @Test public void testLocate8() throws Exception {
         helpTestLocate("z", "abab", -1, 0); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testEndsWith1() throws Exception {
+        helpTestEndssWith("z", "abab", false); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testEndsWith2() throws Exception {
+    	helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
+    }
 
+    @Test public void testEndsWith3() throws Exception {
+    	helpTestEndssWith("a", null, false); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     @Test public void testBitand() throws Exception {
         // Both values are integers
         Integer result = (Integer) FunctionMethods.bitand(new Integer(0xFFF), new Integer(0x0F0));

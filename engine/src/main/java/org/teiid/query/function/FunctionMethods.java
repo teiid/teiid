@@ -714,6 +714,15 @@ public final class FunctionMethods {
 	public static Object locate(String sub, String str) {
 		return locate(sub, str, 1);
 	}
+	
+	// ================== Function = endsWith =====================
+
+	public static Object endsWith(String sub, String str) {
+		if(str == null || sub == null) {
+			return Boolean.FALSE;
+		} 
+		return str.endsWith(sub);
+	}	
 
 	/**
 	 * TODO: The treatment of negative start indexes is inconsistent here.
