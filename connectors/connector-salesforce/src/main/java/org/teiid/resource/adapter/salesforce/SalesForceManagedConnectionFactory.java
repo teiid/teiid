@@ -25,6 +25,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.resource.ResourceException;
+import javax.security.auth.Subject;
 import javax.xml.namespace.QName;
 
 import org.apache.cxf.Bus;
@@ -34,6 +35,7 @@ import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
+import org.teiid.resource.spi.ConnectionContext;
 
 import com.sforce.soap.partner.SforceService;
 
@@ -106,7 +108,18 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 
 			@Override
 			public SalesforceConnectionImpl getConnection() throws ResourceException {
-				return new SalesforceConnectionImpl(getUsername(), getPassword(), getAsURL(), SalesForceManagedConnectionFactory.this);
+				String userName = getUsername();
+				String password = getPassword();
+
+				// if security-domain is specified and caller identity is used; then use
+				// credentials from subject
+				Subject subject = ConnectionContext.getSubject();
+				if (subject != null) {
+					userName = ConnectionContext.getUserName(subject, SalesForceManagedConnectionFactory.this, userName);
+					password = ConnectionContext.getPassword(subject, SalesForceManagedConnectionFactory.this, userName, password);
+				}
+				
+				return new SalesforceConnectionImpl(userName, password, getAsURL(), SalesForceManagedConnectionFactory.this);
 			}
 		};
 	}
