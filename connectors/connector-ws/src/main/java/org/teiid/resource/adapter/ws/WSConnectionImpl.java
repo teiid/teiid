@@ -36,15 +36,10 @@ import java.util.concurrent.Future;
 
 import javax.activation.DataSource;
 import javax.resource.ResourceException;
+import javax.security.auth.Subject;
 import javax.xml.namespace.QName;
-import javax.xml.ws.AsyncHandler;
-import javax.xml.ws.Binding;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.EndpointReference;
-import javax.xml.ws.Response;
-import javax.xml.ws.Service;
+import javax.xml.ws.*;
 import javax.xml.ws.Service.Mode;
-import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
@@ -63,6 +58,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.resource.spi.ConnectionContext;
 import org.teiid.translator.WSConnection;
 
 /**
@@ -304,8 +300,20 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 	private <T> void setDispatchProperties(Dispatch<T> dispatch) {
 		if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.HTTPBasic){
-			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, mcf.getAuthUserName());
-			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, mcf.getAuthPassword());
+			
+			String userName = this.mcf.getAuthUserName();
+			String password = this.mcf.getAuthPassword();
+
+			// if security-domain is specified and caller identity is used; then use
+			// credentials from subject
+			Subject subject = ConnectionContext.getSubject();
+			if (subject != null) {
+				userName = ConnectionContext.getUserName(subject, mcf, userName);
+				password = ConnectionContext.getPassword(subject, mcf, userName, password);
+			}			
+			
+			dispatch.getRequestContext().put(Dispatch.USERNAME_PROPERTY, userName);
+			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, password);
 		}
 		
 		if (mcf.getRequestTimeout() != -1L){
