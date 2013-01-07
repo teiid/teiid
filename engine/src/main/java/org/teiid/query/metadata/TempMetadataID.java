@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.core.util.LRUCache;
 import org.teiid.metadata.AbstractMetadataRecord.DataModifiable;
@@ -59,7 +60,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		int cardinality = QueryMetadataInterface.UNKNOWN_CARDINALITY;
 		List<TempMetadataID> primaryKey;
 		QueryNode queryNode;
-		LRUCache<Object, Object> localCache;
+		Map<Object, Object> localCache;
 		CacheHint cacheHint;
 		List<List<TempMetadataID>> keys;
 		List<TempMetadataID> indexes;
@@ -321,7 +322,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
     
     Object setProperty(Object key, Object value) {
 		if (this.getTableData().localCache == null) {
-			this.getTableData().localCache = new LRUCache<Object, Object>(LOCAL_CACHE_SIZE);
+			this.getTableData().localCache = Collections.synchronizedMap(new LRUCache<Object, Object>(LOCAL_CACHE_SIZE));
     	}
 		return this.getTableData().localCache.put(key, value);
     }
