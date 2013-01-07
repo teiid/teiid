@@ -1476,8 +1476,10 @@ class ReadRARDescription extends TeiidOperationHandler {
 		ResourceAdapter ra = cd.getConnector().getResourceadapter();
 		if (ra instanceof ResourceAdapter1516) {
 			ResourceAdapter1516 ra1516 = (ResourceAdapter1516)ra;
+			result.add(buildReadOnlyNode("resourceadapter-class", ra1516.getResourceadapterClass())); //$NON-NLS-1$
 			List<ConnectionDefinition> connDefinitions = ra1516.getOutboundResourceadapter().getConnectionDefinitions();
 			for (ConnectionDefinition p:connDefinitions) {
+				result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().toString())); //$NON-NLS-1$
 				List<? extends ConfigProperty> props = p.getConfigProperties();
 				for (ConfigProperty prop:props) {
 					result.add(buildNode(prop));
@@ -1485,6 +1487,17 @@ class ReadRARDescription extends TeiidOperationHandler {
 			}
 		}
 	}
+	
+	private ModelNode buildReadOnlyNode(String name, String value) {
+		ModelNode node = new ModelNode();
+		node.get(name, TYPE).set(ModelType.STRING);
+		node.get(name, "display").set(name); //$NON-NLS-1$
+        node.get(name, READ_ONLY).set(Boolean.toString(Boolean.TRUE));
+        node.get(name, "advanced").set(Boolean.toString(Boolean.TRUE)); //$NON-NLS-1$
+        node.get(name, DEFAULT).set(value);
+		return node;
+	}
+	
 	private ModelNode buildNode(ConfigProperty prop) {
 		ModelNode node = new ModelNode();
 		String name = prop.getConfigPropertyName().getValue();
