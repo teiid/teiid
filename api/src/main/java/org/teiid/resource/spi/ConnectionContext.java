@@ -21,6 +21,9 @@
  */
 package org.teiid.resource.spi;
 
+import java.util.Set;
+
+import javax.resource.spi.security.PasswordCredential;
 import javax.security.auth.Subject;
 
 /**
@@ -41,4 +44,34 @@ public class ConnectionContext {
 	public static void setSubject(Subject subject) {
 		SUBJECT.set(subject);
 	}	
+	
+	public static String getUserName(Subject subject, BasicManagedConnectionFactory mcf, String defalt) {
+		Set<PasswordCredential> creds = subject.getPrivateCredentials(PasswordCredential.class);
+		if (creds != null && creds.size() > 0) {
+			for (PasswordCredential cred : creds) {
+				if (cred.getManagedConnectionFactory().equals(mcf)) {
+					if (cred.getUserName() != null) {
+						return cred.getUserName();
+					}
+				}
+			}
+		}
+		return defalt;
+	}
+	
+	public static String getPassword(Subject subject, BasicManagedConnectionFactory mcf, String userName, String defalt) {
+		Set<PasswordCredential> creds = subject.getPrivateCredentials(PasswordCredential.class);
+		if (creds != null && creds.size() > 0) {
+			for (PasswordCredential cred : creds) {
+				if (cred.getManagedConnectionFactory().equals(mcf)) {
+					if (cred.getUserName().equals(userName)) {
+						if (cred.getPassword() != null) {
+							return new String(cred.getPassword());
+						}
+					}
+				}
+			}
+		}
+		return defalt;
+	}
 }
