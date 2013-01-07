@@ -294,48 +294,62 @@ public class JDBCMetdataProcessor {
 					continue;
 				}
 			}
-			String columnName = columns.getString(4);
-			int type = columns.getInt(5);
-			String typeName = columns.getString(6);
-			int columnSize = columns.getInt(7);
-			String runtimeType = getRuntimeType(type, typeName, columnSize);
-			//note that the resultset is already ordered by position, so we can rely on just adding columns in order
-			Column column = metadataFactory.addColumn(columnName, runtimeType, tableInfo.table);
-			column.setNameInSource(quoteName(columnName));
-			column.setPrecision(columnSize);
-			column.setLength(columnSize);
-			column.setNativeType(typeName);
-			column.setRadix(columns.getInt(10));
-			column.setNullType(NullType.values()[columns.getShort(11)]);
-			column.setUpdatable(true);
-			String remarks = columns.getString(12);
-			column.setAnnotation(remarks);
-			String defaultValue = columns.getString(13);
-			column.setDefaultValue(defaultValue);
-			if (defaultValue != null && type == Types.BIT && TypeFacility.RUNTIME_NAMES.BOOLEAN.equals(runtimeType)) {
-				//try to determine a usable boolean value
-                if(defaultValue.length() == 1) {
-                    int charIntVal = defaultValue.charAt(0);
-                    // Set boolean FALse for incoming 0, TRUE for 1
-                    if(charIntVal==0) {
-                        column.setDefaultValue(Boolean.FALSE.toString());
-                    } else if(charIntVal==1) {
-                        column.setDefaultValue(Boolean.TRUE.toString());
-                    }
-				} else { //SQLServer quotes bit values
-                    String trimedDefault = defaultValue.trim();
-                    if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
-                        trimedDefault = defaultValue.substring(1, defaultValue.length() - 1);
-                    }
-                    column.setDefaultValue(trimedDefault);
-                }
-			}
-			column.setCharOctetLength(columns.getInt(16));
-			if (rsColumns >= 23) {
-				column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
-			}
+			addColumn(columns, tableInfo.table, metadataFactory, rsColumns);
 		}
 		columns.close();
+	}
+	
+	/**
+	 * Add a column to the given table based upon the current row of the columns resultset
+	 * @param columns
+	 * @param table
+	 * @param metadataFactory
+	 * @param rsColumns
+	 * @return the column added
+	 * @throws SQLException
+	 */
+	protected Column addColumn(ResultSet columns, Table table, MetadataFactory metadataFactory, int rsColumns) throws SQLException {
+		String columnName = columns.getString(4);
+		int type = columns.getInt(5);
+		String typeName = columns.getString(6);
+		int columnSize = columns.getInt(7);
+		String runtimeType = getRuntimeType(type, typeName, columnSize);
+		//note that the resultset is already ordered by position, so we can rely on just adding columns in order
+		Column column = metadataFactory.addColumn(columnName, runtimeType, table);
+		column.setNameInSource(quoteName(columnName));
+		column.setPrecision(columnSize);
+		column.setLength(columnSize);
+		column.setNativeType(typeName);
+		column.setRadix(columns.getInt(10));
+		column.setNullType(NullType.values()[columns.getShort(11)]);
+		column.setUpdatable(true);
+		String remarks = columns.getString(12);
+		column.setAnnotation(remarks);
+		String defaultValue = columns.getString(13);
+		column.setDefaultValue(defaultValue);
+		if (defaultValue != null && type == Types.BIT && TypeFacility.RUNTIME_NAMES.BOOLEAN.equals(runtimeType)) {
+			//try to determine a usable boolean value
+            if(defaultValue.length() == 1) {
+                int charIntVal = defaultValue.charAt(0);
+                // Set boolean FALse for incoming 0, TRUE for 1
+                if(charIntVal==0) {
+                    column.setDefaultValue(Boolean.FALSE.toString());
+                } else if(charIntVal==1) {
+                    column.setDefaultValue(Boolean.TRUE.toString());
+                }
+			} else { //SQLServer quotes bit values
+                String trimedDefault = defaultValue.trim();
+                if (defaultValue.startsWith("(") && defaultValue.endsWith(")")) { //$NON-NLS-1$ //$NON-NLS-2$
+                    trimedDefault = defaultValue.substring(1, defaultValue.length() - 1);
+                }
+                column.setDefaultValue(trimedDefault);
+            }
+		}
+		column.setCharOctetLength(columns.getInt(16));
+		if (rsColumns >= 23) {
+			column.setAutoIncremented("YES".equalsIgnoreCase(columns.getString(23))); //$NON-NLS-1$
+		}
+		return column;
 	}
 
 	protected String getRuntimeType(int type, String typeName, int precision) {
