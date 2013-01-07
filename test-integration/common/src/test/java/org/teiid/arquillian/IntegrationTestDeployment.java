@@ -345,6 +345,8 @@ public class IntegrationTestDeployment {
 		assertTrue(rar_props.contains("ParentDirectory"));
 		assertTrue(rar_props.contains("FileMapping"));
 		assertTrue(rar_props.contains("AllowParentPaths"));
+		assertTrue(rar_props.contains("resourceadapter-class"));
+		assertTrue(rar_props.contains("managedconnectionfactory-class"));
 	}
 	
 	@Test
