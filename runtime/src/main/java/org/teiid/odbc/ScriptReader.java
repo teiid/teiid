@@ -63,8 +63,9 @@ public class ScriptReader {
         while (true) {
             if (c < 0) {
                 endOfFile = true;
-                return builder.toString();
+                break;
             } else if (c == ';') {
+            	builder.setLength(builder.length()-1);
                 break;
             }
             switch (c) {
@@ -231,6 +232,9 @@ public class ScriptReader {
         }
         String result = builder.toString();
         builder.setLength(0);
+        if (result.length() == 0) {
+        	return null;
+        }
         return result;
     }
 

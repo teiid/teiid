@@ -90,7 +90,7 @@ public class TestStatement {
 		assertFalse(statement.execute("set foo bar")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "bar");
 		
-		assertFalse(statement.execute("set foo 'b''ar'")); //$NON-NLS-1$
+		assertFalse(statement.execute("set foo 'b''ar' ; ")); //$NON-NLS-1$
 		Mockito.verify(conn).setExecutionProperty("foo", "b'ar");
 	}
 	
