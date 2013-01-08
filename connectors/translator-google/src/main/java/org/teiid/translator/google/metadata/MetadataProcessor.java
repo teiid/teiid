@@ -40,17 +40,18 @@ public class MetadataProcessor {
 		this.metadataFactory = metadataFactory;
 		spreadsheetMetadata = metadata;
 	}
-/**
- * Creates metadata from all spreadsheets in the user account. Table name consists of Spreadsheet name 
- * and worksheet name. Columns of the table are columns of the worksheet.
- * 
- */
-	public void processMetadata() {
-		for (Worksheet worksheet : spreadsheetMetadata.getWorksheets()) {			
-				addTable(worksheet);
 
+	/**
+	 * Creates metadata from all spreadsheets in the user account. Table name
+	 * consists of Spreadsheet name and worksheet name. Columns of the table are
+	 * columns of the worksheet.
+	 */
+	public void processMetadata() {
+		for (Worksheet worksheet : spreadsheetMetadata.getWorksheets()) {
+			addTable(worksheet);
 		}
 	}
+
 	/**
 	 * Adds new table to metadata.
 	 * 

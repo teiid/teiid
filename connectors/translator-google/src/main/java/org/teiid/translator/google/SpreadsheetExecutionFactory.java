@@ -28,6 +28,8 @@ import java.util.List;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.language.Argument;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
@@ -35,23 +37,17 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
-import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
-import org.teiid.translator.ResultSetExecution;
-import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.Translator;
-import org.teiid.translator.TranslatorException;
+import org.teiid.translator.*;
+import org.teiid.translator.google.execution.DirectSpreadsheetQueryExecution;
 import org.teiid.translator.google.execution.SpreadsheetQueryExecution;
 import org.teiid.translator.google.metadata.MetadataProcessor;
-
-
-
 
 @Translator(name="google-spreadsheet", description="A translator for Google Spreadsheet")
 public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFactory, GoogleSpreadsheetConnection>{
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetExecutionFactory.class);
 	public SpreadsheetExecutionFactory() {
 		setSourceRequiredForMetadata(false);
+		setSupportsNativeQueries(true);
 	}
 	
 	@Override
@@ -60,11 +56,15 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Google Spreadsheet ExecutionFactory Started"); //$NON-NLS-1$
 	}
 
-
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, GoogleSpreadsheetConnection connection)
 			throws TranslatorException {
 		return new SpreadsheetQueryExecution((Select)command, connection, executionContext);
+	}
+
+	@Override
+	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, GoogleSpreadsheetConnection connection) throws TranslatorException {
+		 return new DirectSpreadsheetQueryExecution(arguments, executionContext, connection);
 	}
 	
 	@Override
@@ -73,95 +73,94 @@ public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFact
 	 	metadataProcessor.processMetadata();
 	} 
 	
-	  @Override
-	    public boolean supportsCompareCriteriaEquals() {
-	        return true;
-	    }
+	@Override
+	public boolean supportsCompareCriteriaEquals() {
+		return true;
+	}
 
-	    @Override
-	    public boolean supportsInCriteria() {
-	        return true;
-	    }
+	@Override
+	public boolean supportsInCriteria() {
+		return true;
+	}
 
-	    @Override
-	    public boolean supportsLikeCriteria() {
-	        return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsOrCriteria() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsNotCriteria() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsAggregatesCount() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsAggregatesMax() {
-	    	return true;
-	    }
+	@Override
+	public boolean supportsLikeCriteria() {
+		return true;
+	}
 
-	    @Override
-	    public boolean supportsAggregatesMin() {
-	    	return true;
-	    }
+	@Override
+	public boolean supportsOrCriteria() {
+		return true;
+	}
 
-	    @Override
-	    public boolean supportsAggregatesSum() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsAggregatesAvg() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsGroupBy() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public boolean supportsOrderBy() {
-	    	return false;
-	    }
-	    
-	    @Override
-	    public boolean supportsHaving() {
-	    	return false;
-	    }
-	    @Override
-	    public boolean supportsCompareCriteriaOrdered() {
-	    	return true;
-	    }
-	    @Override
-	    public boolean supportsRowLimit() {
-	    	return true;
-	    }
-	    @Override
-	    public boolean supportsRowOffset() {
-	    	return true;
-	    }
-	    
-	    @Override
-	    public List<String> getSupportedFunctions() {
-	    	return Arrays.asList(SourceSystemFunctions.YEAR, 
-	    			SourceSystemFunctions.MONTH,
-	    			SourceSystemFunctions.DAYOFMONTH,
-	    			SourceSystemFunctions.HOUR,
-	    			SourceSystemFunctions.MINUTE,
-	    			SourceSystemFunctions.SECOND,
-	    			SourceSystemFunctions.QUARTER,
-	    			SourceSystemFunctions.DAYOFWEEK,
-	    			SourceSystemFunctions.UCASE,
-	    			SourceSystemFunctions.LCASE);
-	    }
+	@Override
+	public boolean supportsNotCriteria() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsAggregatesCount() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsAggregatesMax() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsAggregatesMin() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsAggregatesSum() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsAggregatesAvg() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsGroupBy() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOrderBy() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsHaving() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsCompareCriteriaOrdered() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowLimit() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsRowOffset() {
+		return true;
+	}
+
+	@Override
+	public List<String> getSupportedFunctions() {
+		return Arrays.asList(SourceSystemFunctions.YEAR,
+				SourceSystemFunctions.MONTH, SourceSystemFunctions.DAYOFMONTH,
+				SourceSystemFunctions.HOUR, SourceSystemFunctions.MINUTE,
+				SourceSystemFunctions.SECOND, SourceSystemFunctions.QUARTER,
+				SourceSystemFunctions.DAYOFWEEK, SourceSystemFunctions.UCASE,
+				SourceSystemFunctions.LCASE);
+	}
 	
 }
