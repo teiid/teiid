@@ -2857,6 +2857,7 @@ public class TestOptimizer {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,

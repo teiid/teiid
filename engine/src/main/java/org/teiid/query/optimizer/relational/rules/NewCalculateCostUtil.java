@@ -41,9 +41,9 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
@@ -496,7 +496,21 @@ public class NewCalculateCostUtil {
             GroupSymbol group = node.getGroups().iterator().next();
             float cardinality = metadata.getCardinality(group.getMetadataID());
             if (cardinality <= QueryMetadataInterface.UNKNOWN_CARDINALITY){
-                cardinality = UNKNOWN_VALUE;
+            	if (group.isTempTable()) {
+            		//this should be with-in the scope of a procedure or an undefined size common table
+            		//
+            		//the typical assumption is that this should drive other joins, thus assume
+            		//a relatively small number of rows.  This is a relatively safe assumption
+            		//as we do not need parallel processing with the temp fetch and the 
+            		//dependent join backoff should prevent unacceptable performance
+            		//
+            		//another strategy (that is generally applicable) is to delay the full affect of dependent join planning
+            		//until the size is known - however that is somewhat complicated with the current WITH logic
+            		//as the table is loaded on demand
+            		cardinality = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
+            	} else {
+            		cardinality = UNKNOWN_VALUE;
+            	}
             }
             cost = cardinality;
             if (!node.hasProperty(Info.ATOMIC_REQUEST)) {

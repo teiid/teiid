@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
+import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -43,8 +44,8 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.DependentCostAnalysis;
 import org.teiid.query.sql.lang.DependentSetCriteria;
-import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -67,6 +68,7 @@ public final class RuleChooseDependent implements OptimizerRule {
     }
 
 	public static final int DEFAULT_INDEPENDENT_CARDINALITY = 10;
+	public static final int UNKNOWN_INDEPENDENT_CARDINALITY = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     
     public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
@@ -88,7 +90,7 @@ public final class RuleChooseDependent implements OptimizerRule {
             
             PlanNode chosenNode = chooseDepWithoutCosting(sourceNode, bothCandidates?siblingNode:null, analysisRecord);
             if(chosenNode != null) {
-                pushCriteria |= markDependent(chosenNode, joinNode, metadata, null);
+                pushCriteria |= markDependent(chosenNode, joinNode, metadata, null, false);
                 continue;
             }   
             
@@ -103,16 +105,16 @@ public final class RuleChooseDependent implements OptimizerRule {
             }
             
             if (dca.expectedCardinality != null) {
-                pushCriteria |= markDependent(dependentNode, joinNode, metadata, dca);
+                pushCriteria |= markDependent(dependentNode, joinNode, metadata, dca, true);
             } else {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
             	
-                if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
-                		&& (sourceCost < siblingCost || siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE)) {
-                    pushCriteria |= markDependent(siblingNode, joinNode, metadata, null);
-                } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost < RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY) {
-                    pushCriteria |= markDependent(sourceNode, joinNode, metadata, null);
+                if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
+                		&& sourceCost <= siblingCost) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
+                    pushCriteria |= markDependent(siblingNode, joinNode, metadata, null, true);
+                } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && (siblingCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
+                    pushCriteria |= markDependent(sourceNode, joinNode, metadata, null, true);
                 }
             }
         }
@@ -260,7 +262,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */
-    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca) throws QueryMetadataException, TeiidComponentException {
+    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, boolean bound) throws QueryMetadataException, TeiidComponentException {
 
         boolean isLeft = joinNode.getFirstChild() == sourceNode;
         
@@ -276,7 +278,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
 
-        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata, dca);
+        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata, dca, bound);
         
         sourceNode.addAsParent(crit);
               
@@ -295,7 +297,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @since 4.3
      */
     private PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
-                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca) throws QueryMetadataException, TeiidComponentException {
+                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, boolean bound) throws QueryMetadataException, TeiidComponentException {
         
         Float cardinality = null;
         
@@ -318,6 +320,13 @@ public final class RuleChooseDependent implements OptimizerRule {
                 	cardinality = NewCalculateCostUtil.computeCostForTree(indNode, metadata);
                 }
                 comp.ndv = NewCalculateCostUtil.getNDVEstimate(indNode, metadata, cardinality, elems, true);
+                if (bound) {
+                	if (dca != null) {
+                		comp.maxNdv = Math.max(comp.ndv * 4, dca.expectedCardinality * 2);
+                	} else {
+                		comp.maxNdv = Math.max(UNKNOWN_INDEPENDENT_CARDINALITY, comp.ndv * 4);
+                	}
+                }
             }
             comp.ind = indExpr;
             comp.dep = SymbolMap.getExpression(depExpr);

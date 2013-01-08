@@ -65,6 +65,7 @@ import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
+import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.ProcedureContainerResolver;
 import org.teiid.query.resolver.QueryResolver;
@@ -176,8 +177,13 @@ public class RelationalPlanner {
 			if (queryCommand.getWith() != null) {
 	        	withList = queryCommand.getWith();
 	        	for (WithQueryCommand with : queryCommand.getWith()) {
-	        		Command subCommand = with.getCommand();
-	                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	        		QueryCommand subCommand = with.getCommand();
+	                RelationalPlan procPlan = (RelationalPlan)QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	                RelationalNode root = procPlan.getRootNode();
+	                Number planCardinality = root.getEstimateNodeCardinality();
+	                if (planCardinality != null) {
+	                	((TempMetadataID)with.getGroupSymbol().getMetadataID()).setCardinality(planCardinality.intValue());
+	                }
 	                subCommand.setProcessorPlan(procPlan);
 	                AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
 	                if (aNode != null && supportsWithPushdown) {
