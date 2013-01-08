@@ -46,8 +46,7 @@ import org.teiid.translator.google.metadata.MetadataProcessor;
 public class SpreadsheetExecutionFactory extends ExecutionFactory<ConnectionFactory, GoogleSpreadsheetConnection>{
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetExecutionFactory.class);
 	public SpreadsheetExecutionFactory() {
-		setSourceRequiredForMetadata(false);
-		setSupportsNativeQueries(true);
+	    setSourceRequiredForMetadata(false);
 	}
 	
 	@Override
