@@ -11,15 +11,15 @@ connect
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/locking=LOCKING:add(isolation=READ_COMMITTED)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/expiration=EXPIRATION:add(lifespan=7200000)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
-/profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/transaction=TRANSACTION:add(mode=NON_XA)
+/profile=ha/subsystem=infinispan/cache-container=teiid-cache/replicated-cache=resultset-repl/transaction=TRANSACTION:add(mode=NON_XA)
 
-/profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add(mode=SYNC, batching=true)
+/profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset:add(batching=true)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/locking=LOCKING:add(isolation=READ_COMMITTED)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/expiration=EXPIRATION:add(lifespan=7200000)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/eviction=EVICTION:add(max-entries=1024, strategy=LIRS)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=resultset/transaction=TRANSACTION:add(mode=NON_XA)
 
-/profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan:add(mode=SYNC, batching=true)
+/profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan:add(batching=true)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/locking=LOCKING:add(isolation=READ_COMMITTED)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/expiration=EXPIRATION:add(lifespan=28800)
 /profile=ha/subsystem=infinispan/cache-container=teiid-cache/local-cache=preparedplan/eviction=EVICTION:add(max-entries=512, strategy=LIRS)
@@ -28,7 +28,7 @@ connect
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add(login-modules=[{"code"=>"org.jboss.security.auth.spi.UsersRolesLoginModule", "flag"=>"required", "module-options"=>[("usersProperties"=>"${jboss.domain.config.dir}/teiid-security-users.properties"), ("rolesProperties"=>"${jboss.domain.config.dir}/teiid-security-roles.properties")]}]) 
 /profile=ha/subsystem=threads/bounded-queue-thread-pool=teiid-async:add(name=teiid-async, max-threads=4, queue-length=100)
 
-/profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+/profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /profile=ha/subsystem=teiid/transport=embedded:add()
 /profile=ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
 /profile=ha/subsystem=teiid/transport=odbc:add(protocol=pg, socket-binding=teiid-odbc, authentication-security-domain=teiid-security) 
@@ -64,6 +64,7 @@ connect
 /profile=ha/subsystem=teiid/translator=hive:add(module=org.jboss.teiid.translator.hive)
 /profile=ha/subsystem=teiid/translator=infinispan-cache:add(module=org.jboss.teiid.translator.object)
 /profile=ha/subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
+/profile=ha/subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 
 
 /profile=ha/subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
