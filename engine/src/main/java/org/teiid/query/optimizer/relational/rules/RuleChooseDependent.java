@@ -49,6 +49,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -105,16 +106,16 @@ public final class RuleChooseDependent implements OptimizerRule {
             }
             
             if (dca.expectedCardinality != null) {
-                pushCriteria |= markDependent(dependentNode, joinNode, metadata, dca, true);
+                pushCriteria |= markDependent(dependentNode, joinNode, metadata, dca, null);
             } else {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
             	
                 if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
                 		&& sourceCost <= siblingCost) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
-                    pushCriteria |= markDependent(siblingNode, joinNode, metadata, null, true);
+                    pushCriteria |= markDependent(siblingNode, joinNode, metadata, null, sourceCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null);
                 } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && (siblingCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
-                    pushCriteria |= markDependent(sourceNode, joinNode, metadata, null, true);
+                    pushCriteria |= markDependent(sourceNode, joinNode, metadata, null, siblingCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null);
                 }
             }
         }
@@ -262,7 +263,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      */
-    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, boolean bound) throws QueryMetadataException, TeiidComponentException {
+    boolean markDependent(PlanNode sourceNode, PlanNode joinNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, Boolean bound) throws QueryMetadataException, TeiidComponentException {
 
         boolean isLeft = joinNode.getFirstChild() == sourceNode;
         
@@ -277,8 +278,25 @@ public final class RuleChooseDependent implements OptimizerRule {
         String id = "$dsc/id" + ID.getAndIncrement(); //$NON-NLS-1$
         // Create DependentValueSource and set on the independent side as this will feed the values
         joinNode.setProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE, id);
+        
+        PlanNode indNode = isLeft?joinNode.getLastChild():joinNode.getFirstChild();
+        
+        if (bound == null) {
+        	List<PlanNode> sources = NodeEditor.findAllNodes(indNode, NodeConstants.Types.SOURCE);
+        	for (PlanNode planNode : sources) {
+				for (GroupSymbol gs : planNode.getGroups()) {
+					if (gs.isTempTable() && metadata.getCardinality(gs.getMetadataID()) == QueryMetadataInterface.UNKNOWN_CARDINALITY) {
+						bound = true;
+						break;
+					}
+				}
+			}
+        	if (bound == null) {
+        		bound = false;
+        	}
+        }
 
-        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, isLeft?joinNode.getLastChild():joinNode.getFirstChild(), metadata, dca, bound);
+        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, indNode, metadata, dca, bound);
         
         sourceNode.addAsParent(crit);
               
@@ -297,7 +315,7 @@ public final class RuleChooseDependent implements OptimizerRule {
      * @since 4.3
      */
     private PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
-                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, boolean bound) throws QueryMetadataException, TeiidComponentException {
+                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, Boolean bound) throws QueryMetadataException, TeiidComponentException {
         
         Float cardinality = null;
         
