@@ -130,4 +130,15 @@ public interface EventDistributor {
 	@Replicated(remoteOnly=true)
 	void setViewDefinition(String vdbName, int vdbVersion, String schema, String viewName, String definition);
 	
+	/**
+	 * Add EventListener for callback on events
+	 * @param listener
+	 */
+	void register(EventListener listener);
+	
+	/**
+	 * Remove EventListener
+	 * @param listener
+	 */
+	void unregister(EventListener listener);
 }

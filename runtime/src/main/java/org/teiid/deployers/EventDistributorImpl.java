@@ -21,12 +21,16 @@
  */
 package org.teiid.deployers;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.DataTierManagerImpl;
 import org.teiid.events.EventDistributor;
+import org.teiid.events.EventListener;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
@@ -44,8 +48,32 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.RuntimePlugin;
 
 public abstract class EventDistributorImpl implements EventDistributor {
-	
+	private Set<EventListener> listeners = Collections.synchronizedSet(new HashSet<EventListener>());
+
 	public abstract VDBRepository getVdbRepository();
+	
+	public EventDistributorImpl() {
+		getVdbRepository().addListener(new VDBLifeCycleListener() {
+			@Override
+			public void removed(String name, int version, CompositeVDB vdb) {
+				for(EventListener el:EventDistributorImpl.this.listeners) {
+					el.vdbUndeployed(name, version);
+				}
+			}
+			@Override
+			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+				for(EventListener el:EventDistributorImpl.this.listeners) {
+					el.vdbLoaded(name, version);
+				}
+			}
+			@Override
+			public void added(String name, int version, CompositeVDB vdb) {
+				for(EventListener el:EventDistributorImpl.this.listeners) {
+					el.vdbDeployed(name, version);
+				}
+			}
+		});
+	}
 	
 	@Override
 	public void updateMatViewRow(String vdbName, int vdbVersion, String schema,
@@ -183,5 +211,15 @@ public abstract class EventDistributorImpl implements EventDistributor {
 		if (record != null) {
 			record.setProperty(name, value);
 		}
+	}
+	
+	@Override
+	public void register(EventListener listener) {
+		this.listeners.add(listener);
+	}
+	
+	@Override
+	public void unregister(EventListener listener) {
+		this.listeners.remove(listener);
 	}
 }
