@@ -33,6 +33,8 @@
 	<li>TEIID-2341 <b>Join Planning Improvements</b> - ANSI join structures can now be preserved with the preserve hint, i.e. FROM /*+ PRESERVE */ (tbl1 INNER JOIN tbl2 ON ...), which is similar to the Oracle ORDERED hint.  
 	Also sources restricted to only outer joins (such as Salesforce) can have INNER or effectively INNER joins pushed to them.
 	<li>TEIID-2312 <b>Source security domains</b> - Ldap, Salesforce, google-spreadsheet and ws (basic auth) translators can now define "security-domain" in their resource-adaptor configuration for security. When defined along with caller-identity the logged in user's credentials are passed to source for authentication. 
+	<li>TEIID-2182 <b>Events</b> - Capture the VDB loading and unloading events now from registering a listener on EventDistributor
+	<li>TEIID-2241 <b>CLI script for Standalone</b> - Install Teiid into any AS7 standalone configuration using the provided CLI script. 
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
