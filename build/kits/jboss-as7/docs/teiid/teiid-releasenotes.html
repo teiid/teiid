@@ -31,8 +31,8 @@
 	<li>TEIID-1557 <b>Generated Key Retrieval</b> - JDBC now supports generated key retrieval, see the Client and the Developers Guides for more.
 	<li>TEIID-2311 <b>Permission Conditions</b> - data roles can now specify SQL conditions that will enforce row-based security and physical table insert/update checked constraints.  See the Reference Guide for more.
 	<li>TEIID-2341 <b>Join Planning Improvements</b> - ANSI join structures can now be preserved with the preserve hint, i.e. FROM /*+ PRESERVE */ (tbl1 INNER JOIN tbl2 ON ...), which is similar to the Oracle ORDERED hint.  
-	Also sources restircted to only outer joins can have INNER or effectively INNER joins pushed to them.
-	<li>TEIID-2312 <b>Ldap, Salesforce, google-spreadsheet and ws (basic auth) translators can now define "security-domain" in their resource-adaptor configuration for security. When defined along with caller-identity the logged in user's credentials are passed to source for authentication. 
+	Also sources restricted to only outer joins (such as Salesforce) can have INNER or effectively INNER joins pushed to them.
+	<li>TEIID-2312 <b>Source security domains</b> - Ldap, Salesforce, google-spreadsheet and ws (basic auth) translators can now define "security-domain" in their resource-adaptor configuration for security. When defined along with caller-identity the logged in user's credentials are passed to source for authentication. 
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

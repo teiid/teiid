@@ -47,7 +47,6 @@ public class TestDataEntitySchemaBuilder {
 		StringWriter sw = new StringWriter();
 		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 		EdmxFormatWriter.write(eds, sw);
-		System.out.println(sw.toString());
 	    EdmDataServices pds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new StringReader(sw.toString())));
 	    
 	    assertEquals(eds.getSchemas().size(), pds.getSchemas().size());
