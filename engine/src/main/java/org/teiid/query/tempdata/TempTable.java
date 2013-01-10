@@ -374,8 +374,8 @@ public class TempTable implements Cloneable, SearchableTable {
 			this.sequences = Collections.emptyMap();
 		}
 		this.sessionID = sessionID;
-		this.keyBatchSize = bm.getSchemaSize(columns);
-		this.leafBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
+		this.keyBatchSize = bm.getSchemaSize(columns.subList(0, primaryKeyLength));
+		this.leafBatchSize = bm.getSchemaSize(columns);
 	}
 	
 	public TempTable clone() {
