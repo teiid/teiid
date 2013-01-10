@@ -74,7 +74,7 @@ public class ResultSetInfo {
 	private Insert tempInsert;
 	private Command tempDrop;
 	private boolean isAutoStaged;
-	private List<ElementSymbol> fkColumns;
+	private Set<List<ElementSymbol>> fkColumns;
     
     public ResultSetInfo(String resultName) {
         this.resultSetName = resultName;
@@ -238,11 +238,14 @@ public class ResultSetInfo {
 		this.isAutoStaged = isAutoStaged;
 	}
 
-	public void setFkColumns(List<ElementSymbol> fkColumns) {
-		this.fkColumns = fkColumns;
+	public void addFkColumns(List<ElementSymbol> cols) {
+		if (this.fkColumns == null) {
+			this.fkColumns = new HashSet<List<ElementSymbol>>();
+		}
+		this.fkColumns.add(cols);
 	}
 
-	public List<ElementSymbol> getFkColumns() {
+	public Set<List<ElementSymbol>> getFkColumns() {
 		return this.fkColumns;
 	}
 }

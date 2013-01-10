@@ -220,7 +220,9 @@ public class TempTableDataManager implements ProcessorDataManager {
     		Assertion.isNotNull(tt, "Table doesn't exist"); //$NON-NLS-1$
     		tt.setUpdatable(false);
     		if (att.getIndexColumns() != null && tt.getRowCount() > 2*tt.getTree().getPageSize(true)) {
-    			tt.addIndex(att.getIndexColumns(), false);
+    			for (List<ElementSymbol> cols : att.getIndexColumns()) {
+    				tt.addIndex(cols, false);
+    			}
     		}
     		return CollectionTupleSource.createUpdateCountTupleSource(0);
     	}

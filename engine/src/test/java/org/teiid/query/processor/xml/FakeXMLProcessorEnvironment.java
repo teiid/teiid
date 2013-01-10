@@ -28,7 +28,6 @@ import java.util.Map;
 
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManagerFactory;
-import org.teiid.core.TeiidComponentException;
 import org.teiid.query.mapping.xml.ResultSetInfo;
 
 
@@ -36,18 +35,17 @@ import org.teiid.query.mapping.xml.ResultSetInfo;
  */
 public class FakeXMLProcessorEnvironment extends XMLProcessorEnvironment {
 
-    private Map dataMap = new HashMap();
-    private Map schemaMap = new HashMap();
+    private Map<String, List<?>[]> dataMap = new HashMap<String, List<?>[]>();
+    private Map<String, List<?>> schemaMap = new HashMap<String, List<?>>();
 
 
-    public void addData(String resultSetName, List schema, List[] rows) {
+    public void addData(String resultSetName, List<?> schema, List<?>[] rows) {
         dataMap.put(resultSetName, rows);
         schemaMap.put(resultSetName, schema);
     }
 
-    public PlanExecutor createResultExecutor(ResultSetInfo info) 
-        throws TeiidComponentException{
-       return new FakePlanExecutor(info.getResultSetName(), (List)schemaMap.get(info.getResultSetName()), (List[])dataMap.get(info.getResultSetName()));
+    public PlanExecutor createResultExecutor(ResultSetInfo info) {
+       return new FakePlanExecutor(info.getResultSetName(), schemaMap.get(info.getResultSetName()), dataMap.get(info.getResultSetName()));
     }
         
     /**

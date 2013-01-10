@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.xml;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.teiid.core.id.IDGenerator;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -89,7 +90,7 @@ public final class XMLPlannerEnvironment{
     CommandContext context;
     
     // ################## Planning state ################## 
-    private HashMap stagingResultsInfo = new HashMap();
+    private TreeMap<String, ResultSetInfo> stagingResultsInfo = new TreeMap<String, ResultSetInfo>(String.CASE_INSENSITIVE_ORDER);
     
     /**
      * Global temp metadata - dynamically generated mapping classes and staging tables should 
@@ -115,21 +116,25 @@ public final class XMLPlannerEnvironment{
     }
 
     public ResultSetInfo getStagingTableResultsInfo(String groupName) {
-        ResultSetInfo info = (ResultSetInfo)this.stagingResultsInfo.get(groupName.toUpperCase());
+    	ResultSetInfo info = this.stagingResultsInfo.get(groupName);
         if (info == null) {
             info = new ResultSetInfo(groupName);            
-            this.stagingResultsInfo.put(info.getResultSetName().toUpperCase(), info);
+            this.stagingResultsInfo.put(info.getResultSetName(), info);
         }
         return info;
     }
     
     /**
-     * Dynamically setting up the staging tables as meterialized views.  
+     * Dynamically setting up the staging tables as materialized views.  
      * @param groupSymbol
      * @param intoGroupSymbol
      */
     public void addStagingTable(Object groupId, Object intoGroupId) {
         this.stagingTableMap.put(groupId, intoGroupId);
+    }
+    
+    public Map<Object, Object> getStagingTableIds() {
+    	return this.stagingTableMap;
     }
     
     public boolean isStagingTable(Object groupId) {
@@ -155,5 +160,14 @@ public final class XMLPlannerEnvironment{
     public String getAliasName(final String rsName) {
         String inlineViewName = rsName.replace(Symbol.SEPARATOR.charAt(0), '_');
         return inlineViewName;
-    }    
+    }
+
+	public boolean hasExplicitStagingTables() {
+		for (ResultSetInfo info : this.stagingResultsInfo.values()) {
+			if (!info.isAutoStaged()) {
+				return true;
+			}
+		}
+		return false;
+	}    
 }

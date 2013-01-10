@@ -301,7 +301,7 @@ public class XMLStagaingQueryPlanner {
             ResultSetInfo stagedInfo = planEnv.getStagingTableResultsInfo(stagingGroupName);
         	stagedInfo.setStagingRoot(stagingRoot);
         	stagedInfo.setAutoStaged(true);
-        	stagedInfo.setFkColumns(fk);
+        	stagedInfo.addFkColumns(fk);
         	stagedInfo.setTempTable(tempGroup.getName());
         	
         	rsInfo.setAutoStaged(true);
@@ -322,7 +322,7 @@ public class XMLStagaingQueryPlanner {
 
         stagableQuery = (Query)stagableQuery.clone();
 
-        // stage the transformation query and it is successful
+        // stage the transformation query if it is successful
         if (!XMLQueryPlanner.planStagaingQuery(true, groupName, stagingGroupName, stagableQuery, planEnv)) {
             return false;
         }
