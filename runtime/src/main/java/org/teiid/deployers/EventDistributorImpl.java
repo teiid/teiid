@@ -22,9 +22,9 @@
 package org.teiid.deployers;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
@@ -39,8 +39,8 @@ import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.TableStats;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.processor.DdlPlan;
@@ -48,7 +48,7 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.RuntimePlugin;
 
 public abstract class EventDistributorImpl implements EventDistributor {
-	private Set<EventListener> listeners = Collections.synchronizedSet(new HashSet<EventListener>());
+	private Set<EventListener> listeners = Collections.newSetFromMap(new ConcurrentHashMap<EventListener, Boolean>());
 
 	public abstract VDBRepository getVdbRepository();
 	
