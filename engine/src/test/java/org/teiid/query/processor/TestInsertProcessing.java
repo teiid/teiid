@@ -7,15 +7,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
-import org.teiid.query.metadata.CompositeMetadataStore;
-import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
-import org.teiid.query.metadata.TestMetadataValidator;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -434,15 +430,9 @@ public class TestInsertProcessing {
     }
     
     @Test public void testAutoIncrementView() throws Exception {
-    	VDBMetaData vdb = new VDBMetaData();
-    	MetadataStore store = new MetadataStore();
     	String ddl = "create foreign table t1 (x integer options (auto_increment true), y string) options (updatable true); \n"
     		+ "create view v1 (x integer options (auto_increment true), y string) options (updatable true) as select * from t1;";
-    	TestMetadataValidator.buildModel("x", true, vdb, store, ddl);
-    	TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(store)), null, RealMetadataFactory.SFM.getSystemFunctions(), null);
-    	vdb.addAttchment(TransformationMetadata.class, tm);
-    	vdb.addAttchment(QueryMetadataInterface.class, tm);
-    	new MetadataValidator().validate(vdb, store);
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
     	
         String sql = "insert into v1 (y) values ('a')"; //$NON-NLS-1$
         
@@ -454,6 +444,24 @@ public class TestInsertProcessing {
         List<?>[] expected = new List<?>[] {Arrays.asList(1)};
 		dataManager.addData("INSERT INTO t1 (y) VALUES ('a')", expected);
         helpProcess(plan, dataManager, expected);
+    }
+    
+    @Test public void testMerge() throws Exception {
+    	String ddl = "create foreign table t1 (x integer primary key, y string) options (updatable true);";
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");
+    	
+        String sql = "merge into t1 (x, y) select 1, 'a' union all select 2, 'b'"; //$NON-NLS-1$
+        
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT 1 FROM t1 AS g_0 WHERE g_0.x = 1", new List<?>[] {Arrays.asList(1)});
+        dataManager.addData("UPDATE t1 SET y = 'a' WHERE t1.x = 1", new List<?>[] {Arrays.asList(1)});
+        dataManager.addData("SELECT 1 FROM t1 AS g_0 WHERE g_0.x = 2", new List<?>[] {});
+        dataManager.addData("INSERT INTO t1 (x, y) VALUES (2, 'b')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
     }
 
 }

@@ -171,7 +171,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     // ######################### Validation methods #########################
 
     /**
-     * Validate insert entitlements
+     * Validate insert/merge entitlements
      */
     protected void validateEntitlements(Insert obj) {
     	List<LanguageObject> insert = new LinkedList<LanguageObject>();
@@ -180,7 +180,13 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
         validateEntitlements(
         		insert,
             DataPolicy.PermissionType.CREATE,
-            Context.INSERT);
+            Context.MERGE);
+        if (obj.isMerge()) {
+        	validateEntitlements(
+            		insert,
+                DataPolicy.PermissionType.UPDATE,
+                Context.MERGE);
+        }
     }
 
     /**

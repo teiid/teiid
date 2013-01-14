@@ -254,7 +254,11 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( Insert obj ) {
-        append(INSERT);
+    	if (obj.isMerge()) {
+    		append(MERGE);
+    	} else {
+    		append(INSERT);
+    	}
     	addSourceHint(obj.getSourceHint());
         append(SPACE);
         append(INTO);

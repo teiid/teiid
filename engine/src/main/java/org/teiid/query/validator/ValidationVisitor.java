@@ -182,6 +182,27 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         validateGroupSupportsUpdate(obj.getGroup());
         validateInsert(obj);
         
+        try {
+			if (obj.isMerge()) {
+				Collection keys = getMetadata().getUniqueKeysInGroup(obj.getGroup().getMetadataID());
+				if (keys.isEmpty()) {
+					handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31132, obj.getGroup()), obj);
+				} else {
+					Set<Object> keyCols = new LinkedHashSet<Object>(getMetadata().getElementIDsInKey(keys.iterator().next()));
+					for (ElementSymbol es : obj.getVariables()) {
+						keyCols.remove(es.getMetadataID());
+					}
+					if (!keyCols.isEmpty()) {
+						handleValidationError(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31133, obj.getGroup(), obj.getVariables()), obj);
+					}
+				}
+			}
+		} catch (QueryMetadataException e1) {
+			handleException(e1);
+		} catch (TeiidComponentException e1) {
+			handleException(e1);
+		}
+        
         if (obj.getQueryExpression() != null) {
         	validateMultisourceInsert(obj.getGroup());
         }

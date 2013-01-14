@@ -1611,6 +1611,7 @@ example={code:sql}INSERT INTO tbl (col1, col2) VALUES ('a', 1){code}
 Insert insert(ParseInfo info) :
 {
 	Insert insert = new Insert();
+	boolean merge = false;
 	String group = null;
 	List values = null;
 	List<ElementSymbol> columns = null;
@@ -1618,7 +1619,7 @@ Insert insert(ParseInfo info) :
 	QueryCommand query = null;
 }
 {
-	<INSERT> <INTO>
+	(<INSERT>|<MERGE>{merge=true;}) <INTO>
 	group = id(null)
 
 	[LOOKAHEAD(<LPAREN> id(null)) columns = columnList(false, true) {
@@ -1651,7 +1652,7 @@ Insert insert(ParseInfo info) :
 	{
 		// Store group
 		insert.setGroup(new GroupSymbol(group) );
-
+		insert.setMerge(merge);
 		return insert;
 	}
 }

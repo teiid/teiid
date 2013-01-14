@@ -1775,6 +1775,12 @@ public class TestValidator {
         helpValidate(userUpdateStr, new String[]{"vm1.g2", "INSERT INTO vm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
     
+    @Test public void testMergeNoKey() {
+        String userUpdateStr = "MERGE into pm1.g2 (e1) values ('x')"; //$NON-NLS-1$
+        
+        helpValidate(userUpdateStr, new String[]{"MERGE INTO pm1.g2 (e1) VALUES ('x')"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
     @Test public void testDeleteError() {
         String userUpdateStr = "DELETE from vm1.g2 where e1='x'"; //$NON-NLS-1$
         

@@ -24,12 +24,14 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.sql.Connection;
@@ -37,7 +39,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,7 +48,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.util.AccessibleByteArrayOutputStream;
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.util.ResultSetUtil;
 
@@ -76,42 +79,32 @@ public class TestMMDatabaseMetaData {
 			throws FileNotFoundException, SQLException, IOException {
 		FileOutputStream actualOut = null;
         BufferedReader expectedIn = null;
-        PrintStream stream = null;
         try {
+	        AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream();
+	        PrintStream ps = new PrintStream(baos, false, "UTF-8");
+	        for (int i = 0; i < rs.length; i++) {
+	        	ResultSetUtil.printResultSet(rs[i], MAX_COL_WIDTH, true, ps);
+	        }
+	        if (PRINT_RESULTSETS_TO_CONSOLE) {
+	           System.out.println(new String(baos.getBuffer(), 0, baos.getCount(), "UTF-8"));
+	        }
 	        if (REPLACE_EXPECTED) {
 	            File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
 	            actualOut = new FileOutputStream(actual);
+	            actualOut.write(baos.getBuffer(), 0, baos.getCount());
 	        } else {
 	            if (WRITE_ACTUAL_RESULTS_TO_FILE) {
 	                File actual = new File(UnitTestUtil.getTestDataPath() + "/" +testName+".actual"); //$NON-NLS-1$ //$NON-NLS-2$
 	                actualOut = new FileOutputStream(actual);
 	            }
-	            File expected = new File(UnitTestUtil.getTestDataPath() + "/"+testName+".expected"); //$NON-NLS-1$ //$NON-NLS-2$
-	            expectedIn = new BufferedReader(new FileReader(expected));
+	            InputStreamReader isr = new InputStreamReader(new BufferedInputStream(new FileInputStream(UnitTestUtil.getTestDataPath() + "/"+testName+".expected"))); //$NON-NLS-1$ //$NON-NLS-2$
+		        assertEquals("Actual data did not match expected", //$NON-NLS-1$
+	                    ObjectConverterUtil.convertToString(isr),
+	                    new String(baos.getBuffer(), 0, baos.getCount(), "UTF-8"));
 	        }
-	        PrintStream defaultStream = null;
-	        if (PRINT_RESULTSETS_TO_CONSOLE) {
-	            defaultStream = new PrintStream(System.out) {
-	                // SYS.out should be protected from being closed.
-	                public void close() {}
-	            };
-	        }
-	        stream = ResultSetUtil.getPrintStream(actualOut, expectedIn, defaultStream);
-	        for (int i = 0; i < rs.length; i++) {
-	        	ResultSetUtil.printResultSet(rs[i], MAX_COL_WIDTH, true, stream);
-	        }
-	        assertEquals("Actual data did not match expected", //$NON-NLS-1$
-                    Collections.EMPTY_LIST,
-                    ResultSetUtil.getUnequalLines(stream));
         } finally {
-	        if (stream != null) {
-	        	stream.close();
-	        }
 	        if (actualOut != null) {
 	            actualOut.close();
-	        }
-	        if (expectedIn != null) {
-	            expectedIn.close();
 	        }
         }
 	}

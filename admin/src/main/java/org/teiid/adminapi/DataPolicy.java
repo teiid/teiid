@@ -30,6 +30,7 @@ public interface DataPolicy {
 		DROP,
 		QUERY,
 		INSERT,
+		MERGE,
 		UPDATE,
 		DELETE,
 		FUNCTION,
