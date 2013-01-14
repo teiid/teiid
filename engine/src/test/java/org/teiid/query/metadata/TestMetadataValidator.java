@@ -347,6 +347,19 @@ public class TestMetadataValidator {
     	String ddl = "create procedure proc (x integer) as return x;\n";
 		helpTest(ddl, true);
     }
+    
+    @Test public void testViewKeys() throws Exception {
+    	buildModel("phy1", true, this.vdb, this.store, "CREATE FOREIGN TABLE t1 ( col1 string, col2 integer ) options (updatable true)");
+    	buildModel("phy2", true, this.vdb, this.store, "CREATE FOREIGN TABLE t2 ( col1 string, col2 integer ) options (updatable true)");
+    	buildModel("view1", false, this.vdb, this.store, "CREATE view vw_t1 ( col1 string, col2 integer primary key, foreign key (col2) references vw_t2 (col2) ) options (updatable true) as select * from t1;" +
+				"CREATE view vw_t2 ( col1 string, col2 integer primary key, foreign key (col2) references vw_t1 (col2) ) options (updatable true) as select * from t2;" +
+				"CREATE VIEW v1 ( col1 string, col2 integer ) OPTIONS (updatable 'true') AS select vw_t1.col1, vw_t1.col2 FROM vw_t1, vw_t2 where vw_t1.col2 = vw_t2.col2");
+    	
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+		assertFalse(printError(report), report.hasItems());
+    }
 
 	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, ddl);

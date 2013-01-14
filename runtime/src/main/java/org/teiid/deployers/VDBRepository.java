@@ -288,20 +288,27 @@ public class VDBRepository implements Serializable{
 		}
 		v.metadataLoadFinished();
 		synchronized (metadataAwareVDB) {
-			ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
-
-			if (report.hasItems()) {
-				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
-				if (!v.getVDB().isPreview() && !processMetadataValidatorReport(key, report)) {
-					v.getVDB().setStatus(Status.FAILED);
-					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
-					return;
+			try {
+				ValidatorReport report = new MetadataValidator().validate(metadataAwareVDB, metadataAwareVDB.removeAttachment(MetadataStore.class));
+	
+				if (report.hasItems()) {
+					LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40073, name, version));
+					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
+						metadataAwareVDB.setStatus(Status.FAILED);
+						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
+						return;
+					}
+				} 
+				validateDataSources(metadataAwareVDB);
+				metadataAwareVDB.setStatus(Status.ACTIVE);
+				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
+				notifyFinished(name, version, v);
+			} finally {
+				if (metadataAwareVDB.getStatus() != Status.ACTIVE && metadataAwareVDB.getStatus() != Status.FAILED) {
+					//guard against an unexpected exception - probably bad validation logic
+					metadataAwareVDB.setStatus(Status.FAILED);
 				}
-			} 
-			validateDataSources(metadataAwareVDB);
-			metadataAwareVDB.setStatus(Status.ACTIVE);
-			LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
-			notifyFinished(name, version, v);
+			}
 		}
 	}
 	

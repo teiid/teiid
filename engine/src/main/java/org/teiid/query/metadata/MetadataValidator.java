@@ -81,8 +81,8 @@ public class MetadataValidator {
 		ValidatorReport report = new ValidatorReport();
 		if (store != null && !store.getSchemaList().isEmpty()) {
 			new SourceModelArtifacts().execute(vdb, store, report, this);
-			new ResolveQueryPlans().execute(vdb, store, report, this);
 			new CrossSchemaResolver().execute(vdb, store, report, this);
+			new ResolveQueryPlans().execute(vdb, store, report, this);
 			new MinimalMetadata().execute(vdb, store, report, this);
 		}
 		return report;
