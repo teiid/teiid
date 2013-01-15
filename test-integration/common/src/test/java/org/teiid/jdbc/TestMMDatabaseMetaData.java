@@ -25,7 +25,6 @@ package org.teiid.jdbc;
 import static org.junit.Assert.*;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -78,7 +77,6 @@ public class TestMMDatabaseMetaData {
 	public static void compareResultSet(String testName, ResultSet... rs)
 			throws FileNotFoundException, SQLException, IOException {
 		FileOutputStream actualOut = null;
-        BufferedReader expectedIn = null;
         try {
 	        AccessibleByteArrayOutputStream baos = new AccessibleByteArrayOutputStream();
 	        PrintStream ps = new PrintStream(baos, false, "UTF-8");
