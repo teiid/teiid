@@ -33,6 +33,7 @@ import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
 import org.teiid.adminapi.AdminFactory.AdminImpl;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.CompositeVDB;
@@ -68,6 +69,10 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 		if (this.vdbName.equals(name) && this.vdbVersion == version) {
 
 			final VDBMetaData vdb = cvdb.getVDB();
+			
+			if (!vdb.getStatus().equals(Status.ACTIVE)) {
+				return;
+			}
 			
 			String generate = vdb.getPropertyValue(ResteasyEnabler.REST_NAMESPACE+"auto-generate"); //$NON-NLS-1$
 	

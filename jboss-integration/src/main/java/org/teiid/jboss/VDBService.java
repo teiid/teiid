@@ -52,6 +52,7 @@ import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.Translator;
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -157,17 +158,19 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					return;
 				}
 				VDBMetaData vdbInstance = cvdb.getVDB();
-				// add object replication to temp/matview tables
-				GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdbInstance.getAttachment(TransformationMetadata.class));
-				if (objectReplicatorInjector.getValue() != null) {
-					try {
-						gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-					} catch (Exception e) {
-						LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
+				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
+					// add object replication to temp/matview tables
+					GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdbInstance.getAttachment(TransformationMetadata.class));
+					if (objectReplicatorInjector.getValue() != null) {
+						try {
+							gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
+						} catch (Exception e) {
+							LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
+						}
 					}
+					vdbInstance.addAttchment(GlobalTableStore.class, gts);
+					vdbService.install();
 				}
-				vdbInstance.addAttchment(GlobalTableStore.class, gts);
-				vdbService.install();
 			}
 		};
 		
