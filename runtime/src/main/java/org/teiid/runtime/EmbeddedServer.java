@@ -41,6 +41,7 @@ import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.DQP;
@@ -412,8 +413,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version,
-					CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+				if (!vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
+					return;
+				}
 				GlobalTableStore gts = new GlobalTableStoreImpl(dqp.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
 				if (replicator != null) {
 					try {

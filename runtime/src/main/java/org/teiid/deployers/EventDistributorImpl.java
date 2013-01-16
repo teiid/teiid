@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.dqp.internal.process.DataTierManagerImpl;
@@ -63,7 +64,12 @@ public abstract class EventDistributorImpl implements EventDistributor {
 			@Override
 			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
-					el.vdbLoaded(name, version);
+					if (vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
+						el.vdbLoaded(vdb.getVDB());
+					}
+					else {
+						el.vdbLoadFailed(vdb.getVDB());
+					}
 				}
 			}
 			@Override
