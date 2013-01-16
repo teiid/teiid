@@ -21,6 +21,8 @@
  */
 package org.teiid.events;
 
+import org.teiid.adminapi.VDB;
+
 
 /**
  * A listener interface than can be registered with {@link EventDistributor} that will notify 
@@ -44,8 +46,13 @@ public interface EventListener {
 	
 	/**
 	 * VDB and all its metadata has been loaded and in ACTIVE state.
-	 * @param vdbName
-	 * @param vdbVersion
+	 * @param vdb
 	 */
-	void vdbLoaded(String vdbName, int vdbVersion);
+	void vdbLoaded(VDB vdb);
+	
+	/**
+	 * VDB failed to load and in FAILED state; Note this can be called multiple times for given VDB
+	 * @param vdb
+	 */
+	void vdbLoadFailed(VDB vdb);	
 }

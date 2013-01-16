@@ -23,6 +23,7 @@ package org.teiid.events;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.adminapi.VDB;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 
@@ -41,12 +42,12 @@ public class TestEventDistributor {
 	    	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 	    	
 	    	Mockito.verify(events).vdbDeployed(VDB, 1);
-	    	Mockito.verify(events).vdbLoaded(VDB, 1);
+	    	Mockito.verify(events).vdbLoaded((VDB)Mockito.any());
 	    	
 	    	server.undeployVDB(VDB);
 
 	    	Mockito.verify(events).vdbDeployed(VDB, 1);
-	    	Mockito.verify(events).vdbLoaded(VDB, 1);
+	    	Mockito.verify(events).vdbLoaded((VDB)Mockito.any());
 	    	Mockito.verify(events).vdbUndeployed(VDB, 1);
 		} finally { 
 			if (server != null) {

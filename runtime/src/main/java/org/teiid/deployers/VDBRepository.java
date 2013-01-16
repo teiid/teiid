@@ -296,6 +296,7 @@ public class VDBRepository implements Serializable{
 					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
 						metadataAwareVDB.setStatus(Status.FAILED);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
+						notifyFinished(name, version, v);
 						return;
 					}
 				} 
@@ -307,6 +308,7 @@ public class VDBRepository implements Serializable{
 				if (metadataAwareVDB.getStatus() != Status.ACTIVE && metadataAwareVDB.getStatus() != Status.FAILED) {
 					//guard against an unexpected exception - probably bad validation logic
 					metadataAwareVDB.setStatus(Status.FAILED);
+					notifyFinished(name, version, v);
 				}
 			}
 		}
