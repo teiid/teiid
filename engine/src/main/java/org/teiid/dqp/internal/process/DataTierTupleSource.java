@@ -499,16 +499,14 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     public void cancelRequest() {
     	this.canceled = true;
 		this.cwi.cancel();
+		cancelFutures();
     }
 
     /**
      * @see TupleSource#closeSource()
      */
     public void closeSource() {
-    	if (this.scheduledFuture != null) {
-    		this.scheduledFuture.cancel(true);
-    		this.scheduledFuture = null;
-    	}
+    	cancelFutures();
     	lobBuffer = null;
     	lobStore = null; //can still be referenced by lobs and will be cleaned-up by reference
     	cancelAsynch = true;
@@ -516,6 +514,16 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
         	fullyCloseSource();
     	}
     }
+
+	private void cancelFutures() {
+		if (this.scheduledFuture != null) {
+    		this.scheduledFuture.cancel(true);
+    		this.scheduledFuture = null;
+    	}
+    	if (this.futureResult != null) {
+    		this.futureResult.cancel(false);
+    	}
+	}
 
     AtomicResultsMessage exceptionOccurred(TranslatorException exception) throws TeiidComponentException, TeiidProcessingException {
     	if(workItem.requestMsg.supportsPartialResults()) {

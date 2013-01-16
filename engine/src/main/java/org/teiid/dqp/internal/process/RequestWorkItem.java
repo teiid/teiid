@@ -104,6 +104,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				if (!submitted) {
 					return;
 				}
+				synchronized (RequestWorkItem.this) {
+					if (isProcessing()) {
+						totalThreads--;
+						moreWork();
+						return;
+					}
+				}
 				nextWork = queue.pollFirst();
 				if (nextWork == null) {
 					totalThreads--;
@@ -380,6 +387,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	protected void processMore() throws BlockedException, TeiidException {
 		if (!doneProducingBatches) {
+			synchronized (queue) {
+				while (!queue.isEmpty() && totalThreads < dqpCore.getUserRequestSourceConcurrency()) {
+					WorkWrapper<?> w = queue.removeFirst();
+	        		dqpCore.addWork(w.work);
+	        		w.submitted = true;
+	        		totalThreads++;
+	        	}
+			}
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
 			this.resultsBuffer = collector.collectTuples();
@@ -1022,6 +1037,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 
 	private void doneProducingBatches() {
 		this.doneProducingBatches = true;
+		synchronized (queue) {
+			queue.clear();
+		}
 		dqpCore.finishProcessing(this);
 	}
 	
