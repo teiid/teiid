@@ -111,5 +111,6 @@
     <module>translator-jpa</module>
     <module>translator-object</module>
     <module>connector-infinispan</module>
+    <module>translator-odata</module>
   </modules>
 </project>

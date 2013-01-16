@@ -51,6 +51,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.translator.odata.ODataTypeManager;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 
