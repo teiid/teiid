@@ -2551,7 +2551,7 @@ public class QueryRewriter {
 				query = q;
 			}
 			query = createInlineViewQuery(new GroupSymbol("X"), query, metadata, insert.getVariables()); //$NON-NLS-1$
-			return asLoopProcedure(insert.getGroup(), query, ifStatement, varGroup);
+			return asLoopProcedure(insert.getGroup(), query, ifStatement, varGroup, Command.TYPE_INSERT);
 		}
 		UpdateInfo info = insert.getUpdateInfo();
 		if (info != null && info.isInherentInsert()) {
@@ -2786,24 +2786,26 @@ public class QueryRewriter {
 		newUpdate.setGroup(group.clone());
 		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query, varGroup);
 		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
-		return asLoopProcedure(update.getGroup(), query, newUpdate, varGroup);
+		return asLoopProcedure(update.getGroup(), query, newUpdate, varGroup, Command.TYPE_UPDATE);
 	}
 
 	/**
 	 * rewrite as loop on (query) as X begin newupdate; rows_updated = rows_updated + 1 end;
+	 * @param updateType 
 	 */
 	private Command asLoopProcedure(GroupSymbol group, QueryCommand query,
-			ProcedureContainer newUpdate, GroupSymbol varGroup) throws QueryResolverException,
+			ProcedureContainer newUpdate, GroupSymbol varGroup, int updateType) throws QueryResolverException,
 			TeiidComponentException, TeiidProcessingException {
-		return asLoopProcedure(group, query, new CommandStatement(newUpdate), varGroup);
+		return asLoopProcedure(group, query, new CommandStatement(newUpdate), varGroup, updateType);
 	}
 	
 	private Command asLoopProcedure(GroupSymbol group, QueryCommand query,
-			Statement s, GroupSymbol varGroup) throws QueryResolverException,
+			Statement s, GroupSymbol varGroup, int updateType) throws QueryResolverException,
 			TeiidComponentException, TeiidProcessingException {
 		Block b = new Block();
 		b.addStatement(s);
 		CreateProcedureCommand cupc = new CreateProcedureCommand();
+		cupc.setUpdateType(updateType);
 		Block parent = new Block();
 		parent.setAtomic(true);
 		ElementSymbol rowsUpdated = new ElementSymbol(ProcedureReservedWords.VARIABLES+Symbol.SEPARATOR+"ROWS_UPDATED"); //$NON-NLS-1$
@@ -2926,7 +2928,7 @@ public class QueryRewriter {
 		GroupSymbol varGroup = getVarGroup(delete);
 		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query, varGroup);
 		newUpdate.setCriteria(new CompoundCriteria(pkCriteria));
-		return asLoopProcedure(delete.getGroup(), query, newUpdate, varGroup);
+		return asLoopProcedure(delete.getGroup(), query, newUpdate, varGroup, Command.TYPE_DELETE);
 	}
     
     private Limit rewriteLimitClause(Limit limit) throws TeiidComponentException, TeiidProcessingException{

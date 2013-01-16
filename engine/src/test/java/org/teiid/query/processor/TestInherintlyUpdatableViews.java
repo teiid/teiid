@@ -29,6 +29,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -58,11 +61,14 @@ public class TestInherintlyUpdatableViews {
 
         if (dm != null) {
         	CommandContext context = createCommandContext();
+        	SessionAwareCache<PreparedPlan> planCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
+        	context.setPreparedPlanCache(planCache); //$NON-NLS-1$
 	        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
 	        caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
 	        ProcessorPlan plan = helpGetPlan(helpParse(userSql), metadata, new DefaultCapabilitiesFinder(caps), context);
 	        List<?>[] expected = new List[] {Arrays.asList(1)};
         	helpProcess(plan, context, dm, expected);
+        	assertEquals(0, planCache.getTotalCacheEntries());
         }
         
         return command;
