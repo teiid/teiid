@@ -79,8 +79,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 			final String warName = buildName(vdb);
 			if (generate != null && Boolean.parseBoolean(generate)
 					&& hasRestMetadata(vdb)
-					&& !this.deployed.get()
-					&& !((AdminImpl) this.admin).getDeployments().contains(warName)) {
+					&& !this.deployed.get()) {
 				
 				this.deployed.set(true);
 				
@@ -91,7 +90,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 						try {
 							RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
 							byte[] warContents = builder.createRestArchive(vdb);
-							admin.deploy(warName, new ByteArrayInputStream(warContents));
+							((AdminImpl)admin).deploy(warName, new ByteArrayInputStream(warContents), false);
 						} catch (FileNotFoundException e) {
 							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
 						} catch (IOException e) {
@@ -118,7 +117,7 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 					@Override
 					public void run() {
 						try {
-						admin.undeploy(warName);
+						((AdminImpl)admin).undeploy(warName, true);
 						} catch (AdminException e) {
 							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
 						}						

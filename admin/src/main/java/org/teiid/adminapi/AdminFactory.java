@@ -518,14 +518,24 @@ public class AdminFactory {
 		public void undeploy(String deployedName) throws AdminException {
 			ModelNode request;
 			try {			
-				request = buildUndeployRequest(deployedName);
+				request = buildUndeployRequest(deployedName, false);
 	        } catch (OperationFormatException e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70010, e);
 	        }
 			execute(request);
 		}
 		
-	    public ModelNode buildUndeployRequest(String name) throws OperationFormatException {
+		public void undeploy(String deployedName, boolean force) throws AdminException {
+			ModelNode request;
+			try {			
+				request = buildUndeployRequest(deployedName, force);
+	        } catch (OperationFormatException e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70010, e);
+	        }
+			execute(request);
+		}		
+		
+	    public ModelNode buildUndeployRequest(String name, boolean force) throws OperationFormatException {
 	        ModelNode composite = new ModelNode();
 	        composite.get("operation").set("composite");
 	        composite.get("address").setEmptyList();
@@ -545,7 +555,7 @@ public class AdminFactory {
                     ModelNode groupStep = Util.configureDeploymentOperation(DEPLOYMENT_REMOVE_OPERATION, name, group);
                     steps.add(groupStep);
                 }
-	        } else if(Util.isDeployedAndEnabledInStandalone(name, this.connection)) {
+	        } else if(Util.isDeployedAndEnabledInStandalone(name, this.connection)||force) {
 	            builder = new DefaultOperationRequestBuilder();
 	            builder.setOperationName("undeploy");
 	            builder.addNode("deployment", name);
@@ -563,11 +573,16 @@ public class AdminFactory {
 
 		@Override
 		public void deploy(String deployName, InputStream vdb)	throws AdminException {
-			ModelNode request = buildDeployVDBRequest(deployName, vdb);
+			ModelNode request = buildDeployVDBRequest(deployName, vdb, true);
 			execute(request);
 		}
+		
+		public void deploy(String deployName, InputStream vdb, boolean persist)	throws AdminException {
+			ModelNode request = buildDeployVDBRequest(deployName, vdb, persist);
+			execute(request);
+		}		
 
-		private ModelNode buildDeployVDBRequest(String fileName, InputStream vdb) throws AdminProcessingException {
+		private ModelNode buildDeployVDBRequest(String fileName, InputStream vdb, boolean persist) throws AdminProcessingException {
             try {
 				if (Util.isDeploymentInRepository(fileName, this.connection)){
 	                // replace
@@ -590,9 +605,15 @@ public class AdminFactory {
 	            builder.setOperationName("add");
 	            builder.addNode("deployment", fileName);
 
+
 				byte[] bytes = ObjectConverterUtil.convertToByteArray(vdb);
 				builder.getModelNode().get("content").get(0).get("bytes").set(bytes);
-				steps.add(builder.buildRequest());
+				ModelNode request = builder.buildRequest();
+	            if (!persist) {
+	            	request.get("persistent").set(false); // prevents writing this deployment out to standalone.xml
+	            }		
+	            request.get("enabled").set(true);
+				steps.add(request);
             
 	            // deploy
 	            if (this.domainMode) {
@@ -607,7 +628,12 @@ public class AdminFactory {
 	                builder = new DefaultOperationRequestBuilder();
 	                builder.setOperationName("deploy");
 	                builder.addNode("deployment", fileName);
-	                steps.add(builder.buildRequest());
+					request = builder.buildRequest();
+		            if (!persist) {
+		            	request.get("persistent").set(false); // prevents writing this deployment out to standalone.xml
+		            }	        
+		            request.get("enabled").set(true);
+	                steps.add(request);
 	            }     
 	            return composite;
 			} catch (OperationFormatException e) {
