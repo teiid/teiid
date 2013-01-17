@@ -50,8 +50,8 @@ import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.StatementType;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.plan.PlanNode;
@@ -70,15 +70,15 @@ import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionService;
 import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.events.EventDistributor;
 import org.teiid.jdbc.EnhancedTimer;
 import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.tempdata.TempTableDataManager;
@@ -625,7 +625,7 @@ public class DQPCore implements DQP {
             }
             message = new CommandLogMessage(System.currentTimeMillis(), rID.toString(), txnID, workContext.getSessionId(), workContext.getUserName(), workContext.getVdbName(), workContext.getVdbVersion(), rowCount, status, plan);
         }
-        LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
+        LogManager.log(status == Event.PLAN?MessageLevel.TRACE:MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
     
     public TempTableDataManager getDataTierManager() {
