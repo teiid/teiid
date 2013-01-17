@@ -154,6 +154,6 @@ public abstract class TeiidRSProvider {
 	
 	private Connection getConnection(String vdbName, int version, boolean passthough) throws SQLException {
 		TeiidDriver driver = new TeiidDriver();
-		return driver.connect("jdbc:teiid:"+vdbName+"."+version+(passthough?"PassthroughAuthentication=true":""), null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		return driver.connect("jdbc:teiid:"+vdbName+"."+version+";"+(passthough?"PassthroughAuthentication=true;":""), null); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
 	}
 }

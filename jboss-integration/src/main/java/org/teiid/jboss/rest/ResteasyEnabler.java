@@ -38,6 +38,7 @@ import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
@@ -79,28 +80,28 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 			final String warName = buildName(vdb);
 			if (generate != null && Boolean.parseBoolean(generate)
 					&& hasRestMetadata(vdb)
-					&& !this.deployed.get()
-					&& !((AdminImpl) this.admin).getDeployments().contains(warName)) {
-				
+					&& !this.deployed.get()) {
+
 				this.deployed.set(true);
-				
-				// this must be executing the async thread to avoid any lock-up from management operations
-				this.executor.execute(new Runnable() {
-					@Override
-					public void run() {
-						try {
-							RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
-							byte[] warContents = builder.createRestArchive(vdb);
-							admin.deploy(warName, new ByteArrayInputStream(warContents));
-						} catch (FileNotFoundException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
-						} catch (IOException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
-						} catch (AdminException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+				if (!((AdminImpl) this.admin).getDeployments().contains(warName)) {
+					// this must be executing the async thread to avoid any lock-up from management operations
+					this.executor.execute(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								RestASMBasedWebArchiveBuilder builder = new RestASMBasedWebArchiveBuilder();
+								byte[] warContents = builder.createRestArchive(vdb);
+								((AdminImpl)admin).deploy(warName, new ByteArrayInputStream(warContents), true);
+							} catch (FileNotFoundException e) {
+								LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("failed_to_add", warName)); //$NON-NLS-1$
+							} catch (IOException e) {
+								LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("failed_to_add", warName)); //$NON-NLS-1$;
+							} catch (AdminException e) {
+								LogManager.logWarning(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.getString("failed_to_add", warName)); //$NON-NLS-1$
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}
@@ -118,9 +119,10 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 					@Override
 					public void run() {
 						try {
-						admin.undeploy(warName);
+						((AdminImpl)admin).undeploy(warName, true);
 						} catch (AdminException e) {
-							LogManager.logWarning(LogConstants.CTX_RUNTIME, e);
+							// during shutdown some times the logging and other subsystems are shutdown, so this operation may not succeed. 
+							LogManager.logWarning(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("failed_to_remove", warName)); //$NON-NLS-1$
 						}						
 					}
 				});
