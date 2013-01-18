@@ -25,6 +25,7 @@ package org.teiid.query.sql.lang;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.util.VariableContext;
@@ -37,8 +38,9 @@ import org.teiid.query.sql.util.VariableContext;
  */
 public class BatchedUpdateCommand extends Command {
     
-    protected List<Command> commands;
+	protected List<Command> commands;
     private List<VariableContext> variableContexts; //processing state
+    private boolean singleResult;
     
     /**
      *  
@@ -46,7 +48,12 @@ public class BatchedUpdateCommand extends Command {
      * @since 4.2
      */
     public BatchedUpdateCommand(List<? extends Command> updateCommands) {
+        this(updateCommands, false);
+    }
+    
+    public BatchedUpdateCommand(List<? extends Command> updateCommands, boolean singleResult) {
         this.commands = new ArrayList<Command>(updateCommands);
+        this.singleResult = singleResult;
     }
     
     /**
@@ -88,6 +95,7 @@ public class BatchedUpdateCommand extends Command {
     public Object clone() {
         List<Command> clonedCommands = LanguageObject.Util.deepClone(this.commands, Command.class);
         BatchedUpdateCommand copy = new BatchedUpdateCommand(clonedCommands);
+        copy.singleResult = this.singleResult;
         copyMetadataState(copy);
         return copy;
     }
@@ -118,5 +126,30 @@ public class BatchedUpdateCommand extends Command {
 	public List<VariableContext> getVariableContexts() {
 		return variableContexts;
 	}
+	
+    @Override
+	public int hashCode() {
+    	return commands.hashCode();
+	}
 
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof BatchedUpdateCommand)) {
+			return false;
+		}
+		BatchedUpdateCommand other = (BatchedUpdateCommand)obj;
+		return EquivalenceUtil.areEqual(commands, other.commands) && this.singleResult == other.singleResult;
+	}
+	
+	public void setSingleResult(boolean singleResult) {
+		this.singleResult = singleResult;
+	}
+	
+	public boolean isSingleResult() {
+		return singleResult;
+	}
+	
 }

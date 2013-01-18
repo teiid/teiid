@@ -39,6 +39,7 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.rewriter.TestQueryRewriter;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.TestUpdateValidator;
 import org.teiid.translator.SourceSystemFunctions;
@@ -147,6 +148,25 @@ public class TestInherintlyUpdatableViews {
     	String viewSql = "select 1 as e1, e2 from pm1.g1 union all select 2 as e1, e2 from pm1.g2";
         String expectedSql = "INSERT INTO pm1.g1 (e2) VALUES (2)";
         helpTest(userSql, viewSql, expectedSql, null);	
+	}
+	
+	@Test public void testWherePartitioningUpdates() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table b (custid integer, field1 varchar) options (updatable true); " +
+				"create view finnish_customers options (updatable true) as select custid, field1 as name from b where custid = 1; " +
+				"create view other_customers options (updatable true) as select custid, field1 as name from b where custid = 2; " +
+				"create view customers options (updatable true) as select * from finnish_customers where custid = 1 union all select * from other_customers where custid = 2;", "x", "y");
+		
+		ProcessorPlan plan = TestProcessor.helpGetPlan("insert into customers (custid, name) values (1, 'a')", metadata);
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("INSERT INTO b (custid, field1) VALUES (1, 'a')", new List<?>[] {Arrays.asList(1)});
+		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)});
+
+		//ensure that update works as expected - TODO: eventually we should support a check option to not allow updates such as this
+		plan = TestProcessor.helpGetPlan("update customers set custid = 3, name = 'a'", metadata, TestOptimizer.getGenericFinder());
+		dataManager = new HardcodedDataManager();
+		dataManager.addData("UPDATE b SET custid = 3, field1 = 'a' WHERE custid = 1", new List<?>[] {Arrays.asList(1)});
+		dataManager.addData("UPDATE b SET custid = 3, field1 = 'a' WHERE custid = 2", new List<?>[] {Arrays.asList(1)});
+		TestProcessor.helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
 	}
 
 }

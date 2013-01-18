@@ -2695,7 +2695,7 @@ public class QueryRewriter {
 					batchedUpdates.add(rewriteInherentUpdate((Update)update.clone(), branchInfo));
 				}
 				batchedUpdates.add(0, rewriteInherentUpdate(update, info));
-				return new BatchedUpdateCommand(batchedUpdates);
+				return new BatchedUpdateCommand(batchedUpdates, true);
 			}
 			return rewriteInherentUpdate(update, info);
 		}
@@ -2854,7 +2854,7 @@ public class QueryRewriter {
 					batchedUpdates.add(rewriteInherentDelete((Delete)delete.clone(), branchInfo));
 				}
 				batchedUpdates.add(0, rewriteInherentDelete(delete, info));
-				return new BatchedUpdateCommand(batchedUpdates);
+				return new BatchedUpdateCommand(batchedUpdates, true);
 			}
 			return rewriteInherentDelete(delete, info);
 		}
