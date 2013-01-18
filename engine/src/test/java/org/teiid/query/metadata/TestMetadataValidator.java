@@ -360,6 +360,15 @@ public class TestMetadataValidator {
 		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
     }
+    
+    @Test public void testResolvingOrder() throws Exception {
+    	buildModel("phy1", true, this.vdb, this.store, "CREATE FOREIGN TABLE t1 ( col1 string, col2 integer ) options (updatable true); CREATE view a as select * from t1;");
+    	
+		buildTransformationMetadata();
+		
+		ValidatorReport report = new MetadataValidator().validate(this.vdb, this.store);
+		assertFalse(printError(report), report.hasItems());
+    }
 
 	private ValidatorReport helpTest(String ddl, boolean expectErrors) throws Exception {
 		buildModel("pm1", true, this.vdb, this.store, ddl);

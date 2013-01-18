@@ -195,34 +195,36 @@ public class MetadataValidator {
 					}
 				};
 				mf.setBuiltinDataTypes(store.getDatatypes());
-				for (Table t:schema.getTables().values()) {
-					// no need to verify the transformation of the xml mapping document, 
-					// as this is very specific and designer already validates it.
-					if (t.getTableType() == Table.Type.Document
-							|| t.getTableType() == Table.Type.XmlMappingClass
-							|| t.getTableType() == Table.Type.XmlStagingTable) {
-						continue;
+				for (AbstractMetadataRecord record : schema.getResolvingOrder()) {
+					if (record instanceof Table) {
+						Table t = (Table)record;
+						// no need to verify the transformation of the xml mapping document, 
+						// as this is very specific and designer already validates it.
+						if (t.getTableType() == Table.Type.Document
+								|| t.getTableType() == Table.Type.XmlMappingClass
+								|| t.getTableType() == Table.Type.XmlStagingTable) {
+							continue;
+						}
+						if (t.isVirtual()) {
+							if (t.getSelectTransformation() == null) {
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
+							}
+							else {
+								metadataValidator.validate(vdb, model, t, report, metadata, mf);
+							}
+						}						
+					} else if (record instanceof Procedure) {
+						Procedure p = (Procedure)record;
+						if (p.isVirtual() && !p.isFunction()) {
+							if (p.getQueryPlan() == null) {
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
+							}
+							else {
+								metadataValidator.validate(vdb, model, p, report, metadata, mf);
+							}
+						}						
 					}
-					if (t.isVirtual()) {
-						if (t.getSelectTransformation() == null) {
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
-						}
-						else {
-							metadataValidator.validate(vdb, model, t, report, metadata, mf);
-						}
-					}						
 				}
-				
-				for (Procedure p:schema.getProcedures().values()) {
-					if (p.isVirtual() && !p.isFunction()) {
-						if (p.getQueryPlan() == null) {
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
-						}
-						else {
-							metadataValidator.validate(vdb, model, p, report, metadata, mf);
-						}
-					}
-				}					
 			}
 		}
 	}	
