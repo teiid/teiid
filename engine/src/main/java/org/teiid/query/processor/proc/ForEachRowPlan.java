@@ -106,11 +106,12 @@ public class ForEachRowPlan extends ProcessorPlan {
 			}
 			if (this.rowProcessor == null) {
 				rowProcedure.reset();
+				rowProcedure.setRunInContext(false); //for each row procedures are properly encapsulated
 				CommandContext context = getContext().clone();
 				this.rowProcessor = new QueryProcessor(rowProcedure, context, this.bufferMgr, this.dataMgr);
 				Evaluator eval = new Evaluator(Collections.emptyMap(), dataMgr, context);
 				for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
-					Integer index = (Integer)this.lookupMap.get(entry.getValue());
+					Integer index = this.lookupMap.get(entry.getValue());
 					if (index != null) {
 						rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), this.currentTuple.get(index));
 					} else {
