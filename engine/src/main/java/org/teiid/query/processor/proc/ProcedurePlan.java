@@ -119,12 +119,14 @@ public class ProcedurePlan extends ProcessorPlan {
     private List<List<?>> batchRows;
     private boolean lastBatch = false;
     private LinkedHashMap<ElementSymbol, Expression> params;
+    private boolean runInContext = true;
     private List<ElementSymbol> outParams;
     private QueryMetadataInterface metadata;
 
     private Map<String, CursorState> cursorStates = new TreeMap<String, CursorState>(StringUtil.NULL_SAFE_CASE_INSENSITIVE_ORDER);
 
 	private VariableContext currentVarContext;
+	private VariableContext parentContext;
 
     private CursorState last;
     
@@ -163,6 +165,7 @@ public class ProcedurePlan extends ProcessorPlan {
     public void initialize(CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {       
         this.bufferMgr = bufferMgr;
         this.batchSize = bufferMgr.getProcessorBatchSize(getOutputElements());
+        this.parentContext = context.getVariableContext();
         setContext(context.clone());
         this.dataMgr = new ProcessorDataManager() {
 			
@@ -203,6 +206,9 @@ public class ProcedurePlan extends ProcessorPlan {
         }
         evaluatedParams = false;
         cursorStates.clear();
+        if (parentContext != null) {
+        	super.getContext().setVariableContext(parentContext);
+        }
         createVariableContext();
         last = null;
         
@@ -240,7 +246,10 @@ public class ProcedurePlan extends ProcessorPlan {
 		            checkNotNull(param, value);
 		            setParameterValue(param, context, value);
 		        }
-    		}
+    		} else if (runInContext) {
+    			//if there are no params, this needs to run in the current variable context
+            	this.currentVarContext.setParentContext(parentContext);
+            }
     		this.push(originalProgram);
     	}
     	this.evaluatedParams = true;
@@ -461,6 +470,7 @@ public class ProcedurePlan extends ProcessorPlan {
         plan.setOutParams(outParams);
         plan.setMetadata(metadata);
         plan.requiresTransaction = requiresTransaction;
+        plan.runInContext = runInContext;
         return plan;
     }
 
@@ -524,7 +534,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
     
 	private void createVariableContext() {
-		this.currentVarContext = new VariableContext(true);
+		this.currentVarContext = new VariableContext(false);
         this.currentVarContext.setValue(ROWCOUNT, 0);
 	}
 
@@ -816,5 +826,14 @@ public class ProcedurePlan extends ProcessorPlan {
     	//TODO: detect simple select case
     	return requiresTransaction || transactionalReads;
     }
+    
+    /**
+     * For procedures without explicit parameters, sets whether the 
+     * procedure should run in the parent variable context.
+     * @param runInContext
+     */
+    public void setRunInContext(boolean runInContext) {
+		this.runInContext = runInContext;
+	}
     
 }

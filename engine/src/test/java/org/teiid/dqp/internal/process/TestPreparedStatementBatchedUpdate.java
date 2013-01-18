@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -110,6 +111,41 @@ public class TestPreparedStatementBatchedUpdate {
     	
     	// Create the plan and process the query
     	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
+    }
+    
+    @Test public void testBatchedMerge() throws Exception {
+    	String ddl = "CREATE foreign table x (y string primary key, z integer) options (updatable true)";
+
+		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
+
+        // Create query 
+		String preparedSql = "merge into x (y, z) values (?, ?)"; //$NON-NLS-1$
+        
+		// Create a testable prepared plan cache
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
+		
+		// Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT 1 FROM phy.x AS g_0 WHERE g_0.y = 'a'", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		dataManager.addData("UPDATE x SET z = 0 WHERE y = 'a'", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		dataManager.addData("INSERT INTO x (y, z) VALUES (null, 1)", new List[] {Arrays.asList(1)}); //$NON-NLS-1$
+		
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        capFinder.addCapabilities("phy", caps); //$NON-NLS-1$
+        
+        // batch with two commands
+		ArrayList<ArrayList<Object>> values = new ArrayList<ArrayList<Object>>(2);
+		values.add(new ArrayList<Object>(Arrays.asList(new Object[] { "a",  new Integer(0) })));  //$NON-NLS-1$
+    	values.add(new ArrayList<Object>(Arrays.asList(new Object[] { null, new Integer(1) })));
+    	
+    	List<?>[] expected = new List[] { 
+                Arrays.asList(1),
+                Arrays.asList(1)
+        };
+    	
+    	// Create the plan and process the query
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
     }
     
     /**

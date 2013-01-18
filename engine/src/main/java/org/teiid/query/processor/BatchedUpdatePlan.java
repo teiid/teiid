@@ -159,13 +159,22 @@ public class BatchedUpdatePlan extends ProcessorPlan {
 
 	private void openPlan() throws TeiidComponentException,
 			TeiidProcessingException {
+		//reset prior to updating the context
+		updatePlans[planIndex].reset();
 		if (this.contexts != null && !this.contexts.isEmpty()) {
 			CommandContext context = updatePlans[planIndex].getContext();
-			context.getVariableContext().clear();
+			VariableContext vc = context.getVariableContext();
+			//ensure that we're dealing with the global context
+			//this is just a safe guard against the plan not correctly resetting the context
+			//if we allow batched updates from with-in procedures we'll need to do handle the
+			//scoping better here.
+			while (vc.getParentContext() != null) {
+				vc = vc.getParentContext();
+			}
+			vc.clear();
 			VariableContext currentValues = this.contexts.get(planIndex);
-			context.getVariableContext().putAll(currentValues); 
+			vc.putAll(currentValues); 
 		}
-		updatePlans[planIndex].reset();
 		updatePlans[planIndex].open();
 		planOpened[planIndex] = true;
 	}

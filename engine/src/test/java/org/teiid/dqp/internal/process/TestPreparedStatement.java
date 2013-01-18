@@ -427,4 +427,23 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
+    @Test public void testInherentlyUpdatableViewCompensation() throws Exception {
+    	String preparedSql = "SELECT pm1.g1.e1 FROM pm1.g1 WHERE pm1.g1.e2 IN (SELECT pm1.g2.e2 FROM pm1.g2 WHERE pm1.g2.e1 = ?)"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList("a"),
+        };    
+    
+		List values = Arrays.asList("a"); //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("SELECT g_0.e1 FROM g1 AS g_0 WHERE g_0.e2 IN (SELECT g_1.e2 FROM g2 AS g_1 WHERE g_1.e1 = 'a')", new List[] {Arrays.asList("a")});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_CORRELATED, true);
+	    caps.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
 }
