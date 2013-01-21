@@ -3158,10 +3158,12 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 	Expression value = null;
 	boolean negated = false;
 	boolean similar = false;
+	Token t = null;
 }
 {
 	[<NOT> {negated = true;}]
     (<LIKE>|(<SIMILAR> <TO> {similar = true;}))
+    {t = getToken(1);}
 	value=commonValueExpression(info)
     [   <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") |
         (<LBRACE> <ESCAPE> esc = charVal(info, "LIKE/SIMILAR TO ESCAPE") <RBRACE>) 
@@ -3171,6 +3173,10 @@ MatchCriteria matchCrit(ParseInfo info, Expression expression) :
 		matchcriteria.setNegated(negated);
 	    if(esc != null) {
 			matchcriteria.setEscapeChar(esc.charValue());
+		} else if (!similar && value instanceof Constant) {
+			if (t.image != null && t.image.startsWith("E'")) {
+				matchcriteria.setEscapeChar('\\');
+			}
 		}
 		matchcriteria.setMode(similar?MatchMode.SIMILAR:MatchMode.LIKE);
 		return matchcriteria;

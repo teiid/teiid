@@ -2603,6 +2603,27 @@ public class TestParser {
                  "SELECT a FROM db.g WHERE b LIKE 'aString'",  //$NON-NLS-1$
                  query);
     }   
+    
+    @Test public void testPgLike(){
+        GroupSymbol g = new GroupSymbol("db.g"); //$NON-NLS-1$
+        From from = new From();
+        from.addGroup(g);
+
+        Select select = new Select();
+        ElementSymbol a = new ElementSymbol("a");  //$NON-NLS-1$
+        select.addSymbol(a);
+
+        Expression string1 = new Constant("\\_aString"); //$NON-NLS-1$
+        Criteria crit = new MatchCriteria(new ElementSymbol("b"), string1, '\\'); //$NON-NLS-1$
+
+        Query query = new Query();
+        query.setSelect(select);
+        query.setFrom(from);
+        query.setCriteria(crit);
+        helpTest("SELECT a FROM db.g WHERE b LIKE E'\\\\_aString'",  //$NON-NLS-1$
+                 "SELECT a FROM db.g WHERE b LIKE '\\_aString' ESCAPE '\\'",  //$NON-NLS-1$
+                 query);
+    }
 
     /** SELECT a FROM db.g WHERE b NOT LIKE 'aString'*/
     @Test public void testLike1(){
