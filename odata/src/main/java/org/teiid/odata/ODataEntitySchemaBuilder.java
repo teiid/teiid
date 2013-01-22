@@ -34,6 +34,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
+import org.teiid.translator.odata.ODataTypeManager;
 
 public class ODataEntitySchemaBuilder {
 	

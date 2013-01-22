@@ -39,12 +39,18 @@ import org.teiid.language.NamedTable;
  */
 public class CollectorVisitor<T> extends HierarchyVisitor {
 
-    private Class<T> type;
-    private Collection<T> objects = new ArrayList<T>();
+    protected Class<T> type;
+    protected Collection<T> objects = new ArrayList<T>();
+    private boolean shallow = false;
 
     public CollectorVisitor(Class<T> type) {
         this.type = type;
     }
+    
+    public CollectorVisitor(Class<T> type, boolean shallow) {
+        this.type = type;
+        this.shallow = shallow;
+    }    
     
     @SuppressWarnings("unchecked")
     @Override
@@ -52,7 +58,9 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
-    	super.visitNode(obj);
+        if (this.shallow) {
+        	super.visitNode(obj);
+        }
     }
 
     public Collection<T> getCollectedObjects() {
@@ -72,6 +80,18 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         visitor.visitNode(object);
         return visitor.getCollectedObjects();
     }
+    
+    /**
+     * Similar to collectObjects but this method does deep walk language objects that have already collected
+     * @param type
+     * @param object
+     * @return
+     */
+    public static <T> Collection<T> shallowCollectObjects(Class<T> type, LanguageObject object) {
+        CollectorVisitor<T> visitor = new CollectorVisitor<T>(type);
+        visitor.visitNode(object);
+        return visitor.getCollectedObjects();
+    }    
     
     /**
      * This is a utility method for a common use of this visitor, which is to collect
