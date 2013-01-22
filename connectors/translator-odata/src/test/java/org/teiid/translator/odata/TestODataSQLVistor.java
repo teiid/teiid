@@ -28,6 +28,7 @@ import java.io.InputStreamReader;
 import java.util.Properties;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
@@ -46,6 +47,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestODataSQLVistor {
 	private ODataExecutionFactory translator;
 	private TranslationUtility utility;
