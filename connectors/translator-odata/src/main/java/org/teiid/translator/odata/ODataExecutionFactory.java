@@ -21,11 +21,23 @@
  */
 package org.teiid.translator.odata;
 
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.format.xml.EdmxFormatParser;
+import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
@@ -37,17 +49,73 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
+/**
+ * TODO:
+ * Type coercion	cast(T), cast(x, T)	Perform a type coercion if possible.
+ * Type comparison	isof(T), isof(x, T)	Whether targeted instance can be converted to the specified type.
+ * media streams are generally not supported yet. 
+ */
 @Translator(name="odata", description="A translator for making OData data service calls")
 public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
+    private static final Map<Class<?>, Integer> TYPE_CODE_MAP = new HashMap<Class<?>, Integer>();
+    
+    private static final int INTEGER_CODE = 0;
+    private static final int LONG_CODE = 1;
+    private static final int DOUBLE_CODE = 2;
+    private static final int BIGDECIMAL_CODE = 3;
+    private static final int SHORT_CODE = 4;
+    private static final int FLOAT_CODE = 5;
+    private static final int TIME_CODE = 6;
+    private static final int DATE_CODE = 7;
+    private static final int TIMESTAMP_CODE = 8;
+    private static final int BLOB_CODE = 9;
+    private static final int CLOB_CODE = 10;
+    private static final int BOOLEAN_CODE = 11;
+    
+    static {
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.LONG, new Integer(LONG_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DOUBLE, new Integer(DOUBLE_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, new Integer(BIGDECIMAL_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.SHORT, new Integer(SHORT_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.FLOAT, new Integer(FLOAT_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIME, new Integer(TIME_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DATE, new Integer(DATE_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
+        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
+    }
+    
+    public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
+
+    static class DatbaseCalender extends ThreadLocal<Calendar> {
+    	private String timeZone;
+    	public DatbaseCalender(String tz) {
+    		this.timeZone = tz;
+    	}
+    	@Override
+    	protected Calendar initialValue() {
+            if(this.timeZone != null && this.timeZone.trim().length() > 0) {
+            	TimeZone tz = TimeZone.getTimeZone(this.timeZone);
+                if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
+            		return Calendar.getInstance(tz);
+                }
+            }      		
+    		return Calendar.getInstance();
+    	}
+    };
+    
 	static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
+	private EdmDataServices eds;
+	private String databaseTimeZone;
+	private DatbaseCalender databaseCalender;
 	
 	public ODataExecutionFactory() {
 		setSourceRequiredForMetadata(true);
-		setSupportsInnerJoins(true);
 		setSupportsOrderBy(true);
-		setSupportsSelectDistinct(true);
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 		
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
@@ -58,29 +126,51 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	}
 	
 	@Override
+	public void start() throws TranslatorException {
+		super.start();		
+		this.databaseCalender = new DatbaseCalender(this.databaseTimeZone);
+    }	
+	
+	@TranslatorProperty(display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
+	public String getDatabaseTimeZone() {
+		return this.databaseTimeZone;
+	}
+
+	public void setDatabaseTimeZone(String databaseTimeZone) {
+		this.databaseTimeZone = databaseTimeZone;
+	}	
+	
+	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
 		
 		List<Argument> parameters = new ArrayList<Argument>();
 		parameters.add(new Argument(Direction.IN, new Literal("GET", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)); //$NON-NLS-1$
 		parameters.add(new Argument(Direction.IN, new Literal(null, TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null));
 		parameters.add(new Argument(Direction.IN, new Literal("$metadata", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)); //$NON-NLS-1$
-
+		parameters.add(new Argument(Direction.IN, new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), TypeFacility.RUNTIME_TYPES.BOOLEAN, null));
+		
 		Call call = getLanguageFactory().createCall(ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 		
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, null, null, null, conn);
+		execution.addHeader("Content-Type", Collections.singletonList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
+		execution.addHeader("Accept", Arrays.asList("application/xml", "application/atom+xml")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		execution.execute();
-		InputStream out = (InputStream)execution.getOutputParameterValues().get(0);
+		Blob out = (Blob)execution.getOutputParameterValues().get(0);
 		
-		
-		ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
-		PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-		metadataProcessor.getMetadata(metadataFactory, out);
+		try {
+			this.eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
+			ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
+			metadataProcessor.getMetadata(metadataFactory, eds);
+		} catch (SQLException e) {
+			throw new TranslatorException(e);
+		}
 	}
 	
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		return new ODataQueryExecution(this, command, executionContext, metadata, connection);
+		return new ODataQueryExecution(this, command, executionContext, metadata, connection, this.eds);
 	}
 
 	@Override
@@ -221,5 +311,73 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     public boolean useAnsiJoin() {
     	return true;
     }
+
+	public Object retrieveValue(Object value, Class<?> expectedType) throws TranslatorException {
+		if (value == null) {
+			return null;
+		}
+		
+        try {
+			Integer code = TYPE_CODE_MAP.get(expectedType);
+			if(code != null) {
+			    switch(code.intValue()) {
+			        case INTEGER_CODE:
+			            return DataTypeManager.transformValue(value, expectedType);
+			        case LONG_CODE:
+			        	return DataTypeManager.transformValue(value, expectedType);
+			        case DOUBLE_CODE:
+			        	return DataTypeManager.transformValue(value, expectedType);                    
+			        case BIGDECIMAL_CODE:
+			        	return DataTypeManager.transformValue(value, expectedType); 
+			        case SHORT_CODE:
+			        	return DataTypeManager.transformValue(value, expectedType);
+			        case FLOAT_CODE:
+			        	return DataTypeManager.transformValue(value, expectedType);
+			        case TIME_CODE:{
+			        	if (value instanceof LocalDateTime) {
+			        		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.databaseCalender.get().getTimeZone()));
+			        		value = new java.sql.Time(dateTime.getMillis());
+			        	}
+			        	else if (value instanceof LocalTime) {
+			        		value = new java.sql.Time(((LocalTime)value).toDateTimeToday().getMillis());
+			        	}
+			        	return DataTypeManager.transformValue(value, expectedType);
+			        }
+			        case DATE_CODE: {
+			        	if (value instanceof LocalDateTime) {
+			        		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.databaseCalender.get().getTimeZone()));
+			        		value = new java.sql.Date(dateTime.getMillis());
+			        	}
+			        	else if (value instanceof DateTime) {
+			        		value = new java.sql.Date(((DateTime)value).getMillis());
+			        	}
+			        	return DataTypeManager.transformValue(value, expectedType);
+			        }
+			        case TIMESTAMP_CODE: {
+			        	if (value instanceof LocalDateTime) {
+			        		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.databaseCalender.get().getTimeZone()));
+			        		value = new Timestamp(dateTime.getMillis());
+			        	}
+			        	else if (value instanceof DateTime) {
+			        		value = new Timestamp(((DateTime)value).getMillis());
+			        	}
+			        	return DataTypeManager.transformValue(value, expectedType);
+			        }
+					case BLOB_CODE:
+						return DataTypeManager.transformValue(value, expectedType);
+					case CLOB_CODE:
+						return DataTypeManager.transformValue(value, expectedType);
+					case BOOLEAN_CODE:
+						return DataTypeManager.transformValue(value, expectedType);
+			    }
+			}
+		} catch (TransformationException e) {
+			throw new TranslatorException(e);
+		}
+
+        // otherwise fall through and call getObject() and rely on the normal
+		// translation routines
+		return value;
+	}
     	
 }

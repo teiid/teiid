@@ -48,7 +48,12 @@
             <artifactId>core4j</artifactId>
             <groupId>org.core4j</groupId>
             <scope>provided</scope>
-        </dependency>        
+        </dependency>    
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <scope>provided</scope>
+        </dependency>            
     </dependencies>
 
     <build>

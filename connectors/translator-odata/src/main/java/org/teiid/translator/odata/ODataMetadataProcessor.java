@@ -21,20 +21,16 @@
  */
 package org.teiid.translator.odata;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.odata4j.edm.*;
-import org.odata4j.format.xml.EdmxFormatParser;
-import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.translator.TranslatorException;
 
 public class ODataMetadataProcessor {
-	public static final String PARENT_TABLE = "ParentTable"; //$NON-NLS-1$
+	//public static final String PARENT_TABLE = "ParentTable"; //$NON-NLS-1$
 	public static final String LINK_TABLES = "LinkTables"; //$NON-NLS-1$
 	public static final String HTTP_METHOD = "HttpMethod"; //$NON-NLS-1$
 	public static final String JOIN_COLUMN = "JoinColumn"; //$NON-NLS-1$
@@ -44,8 +40,7 @@ public class ODataMetadataProcessor {
 	private String entityContainer;
 	private String schemaNamespace;
 	
-	public void getMetadata(MetadataFactory mf, InputStream out) throws TranslatorException {
-		EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out)));
+	public void getMetadata(MetadataFactory mf, EdmDataServices eds) throws TranslatorException {
 		
 		for (EdmSchema schema:eds.getSchemas()) {
 			
@@ -69,7 +64,7 @@ public class ODataMetadataProcessor {
 					
 					// add procedures
 					for (EdmFunctionImport function:container.getFunctionImports()) {
-						addFunimportAsProcedure(mf, eds, function);
+						addFunimportAsProcedure(mf, function);
 					}
 				}
 			}
@@ -86,11 +81,29 @@ public class ODataMetadataProcessor {
 			if (ep.getType().isSimple()) {
 				addPropertyAsColumn(mf, table, ep); 
 			}
+			else {
+				// this is complex type, i.e treat them as embeddable in the same table add all columns.
+				// Have tried adding this as separate table with 1 to 1 mapping to parent table, however
+				// that model fails when there are two instances of single complex type as column. This
+				// creates verbose columns but safe.
+				EdmComplexType embedded = (EdmComplexType)ep.getType();
+				for (EdmProperty property:embedded.getProperties().toList()) {
+					if (property.getType().isSimple()) {
+						Column column = addPropertyAsColumn(mf, table, property, ep.getName());
+						column.setProperty(ENTITY_TYPE, ep.getName());
+						column.setNameInSource(property.getName());
+					}
+					else {
+						throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17002, name, ep.getName()));
+					}
+				}				
+			}
 		}
 		
 		// add PK
 		mf.addPrimaryKey("PK", entity.getKeys(), table); //$NON-NLS-1$
 
+		/*
 		// add complex types are embedded types, expose them as tables 
 		// with 1 to 1 relationship with access pattern on them
 		for (EdmProperty ep:entity.getProperties().toList()) {
@@ -98,8 +111,11 @@ public class ODataMetadataProcessor {
 				addComplexTypeAsTable(mf, (EdmComplexType)ep.getType(), table);
 			}
 		}
+		*/
 	}
 	
+	
+	/*
 	private void addComplexTypeAsTable(MetadataFactory mf, EdmComplexType embedded, Table parentTable) throws TranslatorException{
 
 		// check if table already added
@@ -150,7 +166,7 @@ public class ODataMetadataProcessor {
 			}
 		}
 	}
-	
+	*/
 	
 	void addNavigationRelations(MetadataFactory mf, String tableName, EdmEntityType orderEntity) throws TranslatorException {
 		Table orderTable = mf.getSchema().getTable(tableName);
@@ -214,33 +230,35 @@ public class ODataMetadataProcessor {
 				}
 				
 			} else if (isMultiplicityOne(orderEnd)) {
-				addRelation(mf, orderTable, detailsTable, association);
+				addRelation(mf, orderTable, detailsTable, association, orderEnd.getRole());
 			}
 		}
 	}
 
 
-	private List<String> addLinkTableKeys(MetadataFactory mf, Table orderTable, List<String> leftNames, Table linkTable)
+	private List<String> addLinkTableKeys(MetadataFactory mf, Table orderTable, List<String> columnNames, Table linkTable)
 			throws TranslatorException {
-		if (leftNames != null) {
-			for (String columnName:leftNames) {
-				Column c = orderTable.getColumnByName(columnName);
-				if (c == null) {
-					throw new TranslatorException("column_not_found");
+		if (columnNames != null) {
+			for (String columnName:columnNames) {
+				Column column = orderTable.getColumnByName(columnName);
+				if (column == null) {
+					throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17003, columnName, orderTable.getName()));
 				}
-				String name = orderTable.getName()+"_"+c.getName();
-				mf.addColumn(name, c.getDatatype().getRuntimeTypeName(), linkTable);
+				String name = orderTable.getName()+"_"+column.getName(); //$NON-NLS-1$
+				column = mf.addColumn(name, column.getDatatype().getRuntimeTypeName(), linkTable);
+				column.setProperty(JOIN_COLUMN, String.valueOf(true));
 			}
 		}
 		else {
-			leftNames = new ArrayList<String>();
-			for (Column c :orderTable.getPrimaryKey().getColumns()) {
-				String name = orderTable.getName()+"_"+c.getName();
-				mf.addColumn(name, c.getDatatype().getRuntimeTypeName(), linkTable);
-				leftNames.add(c.getName());
+			columnNames = new ArrayList<String>();
+			for (Column column :orderTable.getPrimaryKey().getColumns()) {
+				columnNames.add(column.getName());
+				String name = orderTable.getName()+"_"+column.getName(); //$NON-NLS-1$
+				column = mf.addColumn(name, column.getDatatype().getRuntimeTypeName(), linkTable);
+				column.setProperty(JOIN_COLUMN, String.valueOf(true));
 			}
 		}
-		return leftNames;
+		return columnNames;
 	}
 	
 	private boolean isMultiplicityOne(EdmAssociationEnd end) {
@@ -257,7 +275,7 @@ public class ODataMetadataProcessor {
 				return t;
 			}
 		}
-		throw new TranslatorException("entity_not_found");
+		throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17004, toEntity.getFullyQualifiedTypeName()));
 	}
 
 
@@ -265,12 +283,20 @@ public class ODataMetadataProcessor {
 		return (x.getFullyQualifiedTypeName().equalsIgnoreCase(y.getFullyQualifiedTypeName()));
 	}
 
-	private void addRelation(MetadataFactory mf, Table orderTable, Table detailsTable, EdmAssociation association) {
+	private void addRelation(MetadataFactory mf, Table orderTable, Table detailsTable, EdmAssociation association, String primaryRole) {
 		EdmReferentialConstraint refConstaint = association.getRefConstraint();
 		if (refConstaint != null) {
-			List<String> orderKeys = refConstaint.getPrincipalReferences();
-			List<String> detailsKeys = refConstaint.getDependentReferences();
-			mf.addForiegnKey(association.getName(), orderKeys, detailsKeys, orderTable.getName(), detailsTable);
+			List<String> orderKeys = null;
+			List<String> detailsKeys = null;			
+			if (refConstaint.getPrincipalRole().equals(primaryRole)) {
+				orderKeys = refConstaint.getPrincipalReferences();
+				detailsKeys = refConstaint.getDependentReferences();
+			}
+			else {
+				orderKeys = refConstaint.getDependentReferences();
+				detailsKeys = refConstaint.getPrincipalReferences();
+			}
+			mf.addForiegnKey(association.getName(), detailsKeys, orderKeys, orderTable.getName(), detailsTable);
 		}
 		else {
 			// add the key columns from into many side
@@ -288,8 +314,16 @@ public class ODataMetadataProcessor {
 		}
 	}
 
-	private void addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep) {
-		Column c = mf.addColumn(ep.getName(), ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), table);
+	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep) {
+		return addPropertyAsColumn(mf, table, ep, null);
+	}
+	
+	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep, String prefix) {
+		String columnName = ep.getName();
+		if (prefix != null) {
+			columnName = prefix+"_"+columnName; //$NON-NLS-1$
+		}
+		Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), table);
 		if (ep.getFixedLength() != null) {
 			c.setFixedLength(ep.getFixedLength());
 		}
@@ -297,10 +331,11 @@ public class ODataMetadataProcessor {
 		if (ep.getMaxLength() != null) {
 			c.setLength(ep.getMaxLength());
 		}
-	}
+		return c;
+	}	
 
 	
-	void addFunimportAsProcedure(MetadataFactory mf, EdmDataServices eds, EdmFunctionImport function) throws TranslatorException {
+	void addFunimportAsProcedure(MetadataFactory mf, EdmFunctionImport function) throws TranslatorException {
 		Procedure procedure = mf.addProcedure(function.getName());
 		procedure.setProperty(HTTP_METHOD, function.getHttpMethod());
 		
@@ -325,7 +360,7 @@ public class ODataMetadataProcessor {
 			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType(), function.getEntitySet().getName());
 		}
 		else {
-			throw new TranslatorException("unknown_return_type");
+			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, function.getName(), returnType.getFullyQualifiedTypeName()));
 		}
 	}
 	
@@ -348,7 +383,7 @@ public class ODataMetadataProcessor {
 			}
 		}
 		else {
-			throw new TranslatorException("unknown_return_type");
+			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, procedure.getName(), type.getFullyQualifiedTypeName()));
 		}
 	}
 	

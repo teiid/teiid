@@ -21,22 +21,24 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.FALSE;
+import static org.teiid.language.SQLConstants.Reserved.DESC;
 import static org.teiid.language.SQLConstants.Reserved.NOT;
 import static org.teiid.language.SQLConstants.Reserved.NULL;
-import static org.teiid.language.SQLConstants.Reserved.TRUE;
 
+import java.net.URI;
 import java.util.*;
 
-import javax.swing.text.html.parser.Entity;
+import javax.ws.rs.core.UriBuilder;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
+import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
@@ -55,55 +57,74 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	protected QueryExpression command;
 	protected ODataExecutionFactory executionFactory;
 	protected RuntimeMetadata metadata;
-	protected List<String> select = new ArrayList<String>();
+	protected TreeSet<Column> selectColumns = new TreeSet<Column>();
 	protected StringBuilder filter = new StringBuilder();
 	private Map<Expression, Boolean> ignoreExpression = new HashMap<Expression, Boolean>();
 	private EntitiesInQuery entities = new EntitiesInQuery();
+	private Integer skip;
+	private Integer top;
+	private StringBuilder orderBy = new StringBuilder();
+	private boolean count = false;
 	
+	public Column[] getSelect(){
+		return this.selectColumns.toArray(new Column[this.selectColumns.size()]);
+	}
 	
-	public static String getODataString(Command obj, ODataExecutionFactory executionFactory, RuntimeMetadata metadata)  throws TranslatorException {
-		ODataSQLVisitor visitor = new ODataSQLVisitor(executionFactory, metadata);
-        
-    	visitor.visitNode(obj);
-    	
-    	if (!visitor.exceptions.isEmpty()) {
-    		throw visitor.exceptions.get(0);
-    	}  
-    	return visitor.buildURL();
-
-    }
+	public boolean isCount() {
+		return this.count;
+	}
 	
-	private String buildURL() {
-    	boolean first = true;
+	public boolean isKeyLookup() {
+		return this.entities.isKeyLookup();
+	}
+	
+	public Table getEnityTable() {
+		return this.entities.getFinalEntity();
+	}
+	
+	public String buildURL() {
     	StringBuilder url = new StringBuilder();
-    	
     	this.entities.append(url);
+    	if (this.count) {
+    		url.append("/$count"); //$NON-NLS-1$
+    	}
+    	UriBuilder uriBuilder = UriBuilder.fromPath(url.toString());    	
     	
     	if (this.filter.length() > 0) {
-    		first = addSeparator(first, url);
-    		url.append("$filter=").append(this.filter); //$NON-NLS-1$
+    		uriBuilder.queryParam("$filter", this.filter.toString()); //$NON-NLS-1$
     	}
     	
-    	if (!this.select.isEmpty()) {
-    		first = addSeparator(first, url);
-    		url.append("$select="); //$NON-NLS-1$ 
-    		for (int i = 0; i < this.select.size()-1; i++) {
-    			url.append(this.select.get(i)).append(","); //$NON-NLS-1$
-    			
-    		}
-    		url.append(this.select.get(this.select.size()-1));
+    	if (this.orderBy.length() > 0) {
+    		uriBuilder.queryParam("$orderby", this.orderBy.toString()); //$NON-NLS-1$
     	}
-        return url.toString();		
-	}
-
-	private static boolean addSeparator(boolean first, StringBuilder url) {
-		if (first) {
-			url.append("?"); //$NON-NLS-1$
-		}
-		else {
-			url.append("&"); //$NON-NLS-1$
-		}
-		return false;
+    	
+    	if (!this.selectColumns.isEmpty()) {
+    		HashSet<String> select = new HashSet<String>();
+    		for (Column column:this.selectColumns) {
+    			select.add(getColumnName(column));
+    		}
+    		StringBuilder sb = new StringBuilder();
+    		Iterator<String> it = select.iterator();
+    		while(it.hasNext()) {
+    			sb.append(it.next());
+    			if (it.hasNext()) {
+    				sb.append(Tokens.COMMA);
+    			}
+    		}
+    		uriBuilder.queryParam("$select", sb.toString()); //$NON-NLS-1$
+    	}
+    	if (this.skip != null) {
+    		uriBuilder.queryParam("$skip", this.skip); //$NON-NLS-1$
+    	}
+    	if (this.top != null) {
+    		uriBuilder.queryParam("$top", this.top); //$NON-NLS-1$
+    	}
+    	//if (!this.count) {
+    	//	uriBuilder.queryParam("$format", "atom"); //$NON-NLS-1$ //$NON-NLS-2$
+    	//}
+    	
+    	URI uri = uriBuilder.build();    	
+        return uri.toString();		
 	}
 
 	public ODataSQLVisitor(ODataExecutionFactory executionFactory,
@@ -182,12 +203,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	
 	@Override
     public void visit(ColumnReference obj) {
-		filter.append(obj.getName());
-	}
-	
-	@Override
-    public void visit(Call obj) {
-		
+		filter.append(obj.getMetadataObject().getName());
 	}
 	
     protected boolean isInfixFunction(String function) {
@@ -196,7 +212,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Function obj) {
-        String name = obj.getName();
+        String name = obj.getMetadataObject().getName();
         List<Expression> args = obj.getParameters();
         if(isInfixFunction(name)) { 
             filter.append(Tokens.LPAREN); 
@@ -213,9 +229,20 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             filter.append(Tokens.RPAREN);
         } 
         else {
-            filter.append(obj.getName())
+        	FunctionMethod method = obj.getMetadataObject();
+        	if (name.startsWith(method.getCategory())) {
+        		name = name.substring(method.getCategory().length()+1);
+        	}
+            filter.append(name)
                   .append(Tokens.LPAREN);
-            append(args);
+            if (args != null && args.size() != 0) {
+                for (int i = 0; i < args.size(); i++) {
+                    append(args.get(i));
+                    if (i < args.size()-1) {
+                    	filter.append(Tokens.COMMA);
+                    }
+                }
+            }
             filter.append(Tokens.RPAREN);
         }		
 	}
@@ -224,19 +251,15 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     public void visit(NamedTable obj) {
 		this.entities.addEntity(obj.getMetadataObject());
 	}
-
-	@Override
-    public void visit(Insert obj) {
-		
-	}
+	
 	@Override
     public void visit(IsNull obj) {
-    	appendNested(obj.getExpression());
-        filter.append(Tokens.SPACE);
         if (obj.isNegated()) {
             filter.append(NOT).append(Tokens.LPAREN);
         }
-        filter.append(Tokens.EQ).append(Tokens.SPACE);
+    	appendNested(obj.getExpression());
+        filter.append(Tokens.SPACE);
+        filter.append("eq").append(Tokens.SPACE); //$NON-NLS-1$
         filter.append(NULL);
         if (obj.isNegated()) {
             filter.append(Tokens.RPAREN);
@@ -256,16 +279,28 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Join obj) {
-        visitNode(obj.getLeftItem());
-        visitNode(obj.getRightItem());
-        
-        // this should have been covered by the EQUI join support
-        //visitNode(obj.getCondition());		
+		// joins are not used currently
+		if (obj.getLeftItem() instanceof NamedTable && obj.getRightItem() instanceof NamedTable) {
+			this.entities.addEntity(((NamedTable)obj.getLeftItem()).getMetadataObject());
+			this.entities.addEntity(((NamedTable)obj.getRightItem()).getMetadataObject());
+			buildEntityKey(obj.getCondition());
+			visitNode(obj.getCondition());
+		}
+		else {
+	        visitNode(obj.getLeftItem());
+	        visitNode(obj.getRightItem());
+	        visitNode(obj.getCondition());
+		}
 	}
 	
 	@Override
     public void visit(Limit obj) {
-		
+		if (obj.getRowOffset() != 0) {
+			this.skip = new Integer(obj.getRowOffset());
+		}
+		if (obj.getRowLimit() != 0) {
+			this.top = new Integer(obj.getRowLimit());
+		}
 	}
 	
 	@Override
@@ -282,7 +317,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
             if(Number.class.isAssignableFrom(type)) {
                 sb.append(val);
             } else if(type.equals(DataTypeManager.DefaultDataClasses.BOOLEAN)) {
-            	sb.append(obj.getValue().equals(Boolean.TRUE) ? TRUE : FALSE);
+            	sb.append(obj.getValue().equals(Boolean.TRUE) ? true : false);
             } else if(type.equals(DataTypeManager.DefaultDataClasses.TIMESTAMP)) {
                 sb.append("datetime'") //$NON-NLS-1$
                       .append(val)
@@ -322,29 +357,30 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(OrderBy obj) {
-		
+		 append(obj.getSortSpecifications());
 	}
 
 	@Override
     public void visit(SortSpecification obj) {
-		
-	}
-	@Override
-    public void visit(Argument obj) {
-		
+		if (orderBy.length() > 0) {
+			orderBy.append(Tokens.COMMA);
+		}
+		ColumnReference column = (ColumnReference)obj.getExpression();
+		orderBy.append(column.getMetadataObject().getName());
+		// default is ascending
+        if (obj.getOrdering() == Ordering.DESC) {
+        	orderBy.append(Tokens.SPACE).append(DESC);
+        } 
 	}
 	
 	@Override
     public void visit(Select obj) {
-    	visitNodes(obj.getDerivedColumns());
-    	
         visitNodes(obj.getFrom());
-        
         buildEntityKey(obj.getWhere());
-        
         visitNode(obj.getWhere());
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());
+        visitNodes(obj.getDerivedColumns());
 	}
 
 
@@ -409,16 +445,39 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	@Override
     public void visit(DerivedColumn obj) {
 		if (obj.getExpression() instanceof ColumnReference) {
-			ColumnReference column = (ColumnReference)obj.getExpression();
-			String joinColumn = column.getMetadataObject().getProperty(ODataMetadataProcessor.JOIN_COLUMN, false);
+			Column column = ((ColumnReference)obj.getExpression()).getMetadataObject();
+			String joinColumn = column.getProperty(ODataMetadataProcessor.JOIN_COLUMN, false);
 			if (joinColumn != null && Boolean.valueOf(joinColumn)) {
-				this.exceptions.add(new TranslatorException("join_column_not_allowed_in_select"));
+				this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17006, column.getName())));
 			}
-			select.add(column.getName());
+			this.selectColumns.add(column);
+		}
+		else if (obj.getExpression() instanceof AggregateFunction) {
+			AggregateFunction func = (AggregateFunction)obj.getExpression();
+			if (func.getName().equalsIgnoreCase("COUNT")) { //$NON-NLS-1$
+				this.count = true;
+			}
+			else {
+				this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17007, func.getName())));
+			}
 		}
 		else {
-			this.exceptions.add(new TranslatorException("expr_not_allowed_in_select"));
+			this.exceptions.add(new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17008)));
 		}
+	}
+
+	private String getColumnName(Column column) {
+		String columnName = column.getName();
+		// Check if this is a embedded column, if it is then only 
+		// add the parent type
+		String entityType = column.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
+		if (entityType != null) {
+			String parentEntityType = column.getParent().getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
+			if (!entityType.equals(parentEntityType)) {
+				columnName = entityType;
+			}
+		}
+		return columnName;
 	}
 	
 	@Override
@@ -450,15 +509,31 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     	Table table; 
     	Map<Column, Literal> pkValues = new HashMap<Column, Literal>();
     	boolean hasValidKey = false;
+    	List<Object[]> relations = new ArrayList<Object[]>();
     	
     	public Entity(Table t) {
     		this.table = t;
     	}
     	
-    	public void addKeyValue(Column c, Literal value) {
-    		this.pkValues.put(c, value);
-    		for (Column column:this.table.getPrimaryKey().getColumns()) {
-	        	if (this.pkValues.get(column) == null) {
+    	public void addKeyValue(Column column, Literal value) {
+    		addKeyValue(column, value, true);
+    	}
+    	
+    	private void addKeyValue(Column column, Literal value, boolean walkRelations) {
+    		// add in self key
+    		this.pkValues.put(column, value);
+    		
+    		if (walkRelations) {
+	    		// See any other relations exist.
+	    		for (Object[] relation:relations) {
+	    			if (column.equals(relation[0])){
+	    				((Entity)relation[2]).addKeyValue((Column)relation[1], value, false);
+	    			}
+	    		}
+    		}
+    		
+    		for (Column col:this.table.getPrimaryKey().getColumns()) {
+	        	if (this.pkValues.get(col) == null) {
 	        		return;
 	        	}
 	        }  
@@ -468,22 +543,35 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     	public boolean hasValidKey() {
 	        return this.hasValidKey;
     	}
+
+		public void addRelation(Column self, Column other, Entity otherEntity) {
+			relations.add(new Object[] {self, other, otherEntity});
+		}
     }
     
     class EntitiesInQuery {
     	ArrayList<Entity> entities = new ArrayList<ODataSQLVisitor.Entity>();
     	
     	public void append(StringBuilder url) {
-    		Entity entity = null;
     		if (this.entities.size() == 1) {
-    			entity = this.entities.get(0);
+    			addEntityToURL(url, this.entities.get(0));
     		}
     		else {
-    			
+    			for (int i = 0; i < this.entities.size()-1; i++) {
+    				addEntityToURL(url, this.entities.get(i));
+    				url.append("/"); //$NON-NLS-1$
+    			}
+    			addEntityToURL(url, this.entities.get(this.entities.size()-1));
     		}
-    		
-        	addEntityToURL(url, entity);    		
     	}
+    	
+		public boolean isKeyLookup() {
+			return this.entities.get(this.entities.size()-1).hasValidKey();
+		}
+
+		public Table getFinalEntity() {
+			return this.entities.get(this.entities.size()-1).table;
+		}
 
 		private void addEntityToURL(StringBuilder url, Entity entity) {
 			url.append(entity.table.getName());
@@ -529,17 +617,38 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 					Entity entity = getEntity(parentTable);
 					if (entity != null) {
 						Column column = columnRef.getMetadataObject();
-						for (Column c:parentTable.getPrimaryKey().getColumns()) {
-							if (c.equals(column)) {
-								entity.addKeyValue(c, (Literal)obj.getRightExpression());
-								return true;
-							}
+						if (parentTable.getPrimaryKey().getColumnByName(column.getName())!=null) {
+							entity.addKeyValue(column, (Literal)obj.getRightExpression());
+							return true;							
 						}
+					}
+				}
+				if (obj.getLeftExpression() instanceof ColumnReference && obj.getRightExpression() instanceof ColumnReference) {	
+					Column left = ((ColumnReference)obj.getLeftExpression()).getMetadataObject();
+					Column right = ((ColumnReference)obj.getRightExpression()).getMetadataObject();
+					
+					if (isJoinOrPkColumn(left)&& isJoinOrPkColumn(right)) {
+						// in odata the navigation from parent to child implicit by their keys
+						Entity leftEntity = getEntity((Table)left.getParent());
+						Entity rightEntity = getEntity((Table)right.getParent());
+						leftEntity.addRelation(left, right, rightEntity);
+						rightEntity.addRelation(right,left, leftEntity);
+						return true;
 					}
 				}
 			}
 			return false;
 		}		
+		
+		private boolean isJoinOrPkColumn(Column column) {
+			boolean joinColumn = Boolean.valueOf(column.getProperty(ODataMetadataProcessor.JOIN_COLUMN, false));
+			if (!joinColumn) {
+				Table table = (Table)column.getParent();
+				return (table.getPrimaryKey().getColumnByName(column.getName()) != null);
+				
+			}
+			return false;
+		}
 		
 		private boolean valid() {
 			for (Entity e:this.entities) {

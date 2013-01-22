@@ -105,6 +105,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 	private static final class BinaryDispatch implements Dispatch<DataSource> {
 
 		HashMap<String, Object> requestContext = new HashMap<String, Object>();
+		HashMap<String, Object> responseContext = new HashMap<String, Object>();
 		
 		private String endpoint;
 		
@@ -136,7 +137,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 					InputStream is = msg.getInputStream();
 					ObjectConverterUtil.write(os, is, -1);
 				}
-				
+				readResponseHeaders(httpConn);
 				return new HttpDataSource(url, httpConn);
 			} catch (IOException e) {
 				throw new WebServiceException(e);
@@ -181,7 +182,20 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 		@Override
 		public Map<String, Object> getResponseContext() {
-			throw new UnsupportedOperationException();
+			return responseContext;
+		}
+		
+		private void readResponseHeaders(HttpURLConnection httpConn) {
+			for (int i = 0;; i++) {
+				String headerName = httpConn.getHeaderFieldKey(i);
+				String headerValue = httpConn.getHeaderField(i);
+				
+				if (headerName == null && headerValue == null) {
+					break;
+				}
+				
+				this.responseContext.put(headerName, headerValue);
+			}		
 		}
 	}
 	

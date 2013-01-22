@@ -24,11 +24,14 @@ package org.teiid.translator.odata;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Properties;
 
 import org.junit.Test;
 import org.odata4j.edm.*;
+import org.odata4j.format.xml.EdmxFormatParser;
+import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.BaseColumn.NullType;
@@ -48,7 +51,7 @@ public class TestODataMetadataProcessor {
 		props.setProperty("schemaNamespace", "ODataWeb.Northwind.Model");
 		props.setProperty("entityContainer", "NorthwindEntities");
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
-		processor.getMetadata(mf, new ByteArrayInputStream(csdl.getBytes()));
+		processor.getMetadata(mf, new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes())))));
 		
 		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
 		System.out.println(ddl);	
@@ -108,27 +111,13 @@ public class TestODataMetadataProcessor {
 		
 		processor.addEntitySetAsTable(mf, "Person", buildPersonEntity(buildAddressEntity().build()).build());
 		
-		assertEquals(2, mf.getSchema().getTables().size());
+		assertEquals(1, mf.getSchema().getTables().size());
 		assertNotNull(mf.getSchema().getTable("Person"));
-		assertNotNull(mf.getSchema().getTable("Address"));
 		
 		Table personTable = mf.getSchema().getTable("Person");
-		assertEquals(2, personTable.getColumns().size());
+		assertEquals(5, personTable.getColumns().size());
 		
-		Table addressTable = mf.getSchema().getTable("Address");
-		assertEquals(4, addressTable.getColumns().size());
-		assertNotNull(addressTable.getColumnByName("Person_ssn"));
-		assertEquals("true", addressTable.getColumnByName("Person_ssn").getProperty(ODataMetadataProcessor.JOIN_COLUMN, false));
-		
-		assertEquals("Person_PK", addressTable.getPrimaryKey().getName());
-		assertEquals("Person_FK", addressTable.getForeignKeys().get(0).getName());
-		assertEquals("Person_embed", addressTable.getAccessPatterns().get(0).getName());
-		
-		assertEquals(1, addressTable.getAccessPatterns().get(0).getColumns().size());
-		assertEquals("Person_ssn", addressTable.getAccessPatterns().get(0).getColumns().get(0).getName());
-		
-		assertEquals("Person", addressTable.getProperty(ODataMetadataProcessor.PARENT_TABLE, false));
-		assertEquals("EdmComplexType", addressTable.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false));
+		assertNotNull(personTable.getColumnByName("address_street"));
 	}
 
 	
@@ -140,38 +129,18 @@ public class TestODataMetadataProcessor {
 		processor.addEntitySetAsTable(mf, "Person", buildPersonEntity(buildAddressEntity().build()).build());
 		processor.addEntitySetAsTable(mf, "Business", buildBusinessEntity(buildAddressEntity().build()).build());
 		
-		assertEquals(3, mf.getSchema().getTables().size());
+		assertEquals(2, mf.getSchema().getTables().size());
 		assertNotNull(mf.getSchema().getTable("Person"));
-		assertNotNull(mf.getSchema().getTable("Address"));
+		assertNotNull(mf.getSchema().getTable("Business"));
 		
 		Table personTable = mf.getSchema().getTable("Person");
-		assertEquals(2, personTable.getColumns().size());
+		assertEquals(5, personTable.getColumns().size());
 		
-		Table addressTable = mf.getSchema().getTable("Address");
-		assertEquals(5, addressTable.getColumns().size());
-		assertNotNull(addressTable.getColumnByName("Person_ssn"));
-		assertNotNull(addressTable.getColumnByName("Business_name"));
-		assertEquals("true", addressTable.getColumnByName("Person_ssn").getProperty(ODataMetadataProcessor.JOIN_COLUMN, false));
-		assertEquals("true", addressTable.getColumnByName("Business_name").getProperty(ODataMetadataProcessor.JOIN_COLUMN, false));
+		Table businessTable = mf.getSchema().getTable("Business");
+		assertEquals(4, businessTable.getColumns().size());
 		
-		assertEquals(2, addressTable.getForeignKeys().size());
-		assertEquals(2, addressTable.getAccessPatterns().size());
-		
-		assertEquals("Person_PK", addressTable.getPrimaryKey().getName());
-		assertEquals("Person_FK", addressTable.getForeignKeys().get(0).getName());
-		assertEquals("Person_embed", addressTable.getAccessPatterns().get(0).getName());
-		
-		assertEquals("Business_FK", addressTable.getForeignKeys().get(1).getName());
-		assertEquals("Business_embed", addressTable.getAccessPatterns().get(1).getName());
-		
-		assertEquals(1, addressTable.getAccessPatterns().get(0).getColumns().size());
-		assertEquals("Person_ssn", addressTable.getAccessPatterns().get(0).getColumns().get(0).getName());
-		
-		assertEquals("Business_name", addressTable.getForeignKeys().get(1).getColumns().get(0).getName());
-		assertEquals("Business_name", addressTable.getAccessPatterns().get(1).getColumns().get(0).getName());
-		
-		assertEquals("Person", addressTable.getProperty(ODataMetadataProcessor.PARENT_TABLE, false));
-		assertEquals("EdmComplexType", addressTable.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false));	
+		assertNotNull(personTable.getColumnByName("address_street"));
+		assertNotNull(businessTable.getColumnByName("address_street"));
 	}
 	
 	@Test
@@ -228,8 +197,8 @@ public class TestODataMetadataProcessor {
 				.setMultiplicity(EdmMultiplicity.ONE);		
 		
 		EdmReferentialConstraint.Builder refContraint = EdmReferentialConstraint
-				.newBuilder().addPrincipalReferences("e1")
-				.addDependentReferences("g2e2");
+				.newBuilder().addPrincipalReferences("e1").setPrincipalRole("source")
+				.addDependentReferences("g2e2").setDependentRole("target");
 
 		EdmAssociation.Builder assocition = EdmAssociation.newBuilder()
 				.setNamespace("namspace").setName("one_2_one")

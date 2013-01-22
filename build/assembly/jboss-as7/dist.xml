@@ -499,7 +499,29 @@
               <outputDirectory>modules/org/jboss/teiid/translator/object/main</outputDirectory>
               <fileMode>0644</fileMode>
           </binaries>
-      </moduleSet>       
+      </moduleSet>   
+      
+      <moduleSet>
+          <includeSubModules>true</includeSubModules>
+          <useAllReactorProjects>true</useAllReactorProjects>
+          <includes>
+              <include>org.jboss.teiid.connectors:translator-odata</include>
+          </includes>
+          <binaries>        
+              <includeDependencies>true</includeDependencies>
+              <unpack>false</unpack>
+              <dependencySets>
+                  <dependencySet>
+                      <useProjectArtifact>true</useProjectArtifact>
+                      <unpack>false</unpack>
+                      <useTransitiveDependencies>false</useTransitiveDependencies>
+                      <useDefaultExcludes>true</useDefaultExcludes>
+                  </dependencySet>
+              </dependencySets>          
+              <outputDirectory>modules/org/jboss/teiid/translator/odata/main</outputDirectory>
+              <fileMode>0644</fileMode>
+          </binaries>
+      </moduleSet>
     <!-- Include the JOPR plugin     
     <moduleSet>
         <includeSubModules>true</includeSubModules>
