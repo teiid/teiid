@@ -28,8 +28,7 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import javax.activation.DataSource;
 import javax.xml.ws.Dispatch;
@@ -80,6 +79,8 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     private DataSource returnValue;
     private WSConnection conn;
     WSExecutionFactory executionFactory;
+    Map<String, List<String>> customHeaders = new HashMap<String, List<String>>();
+    Map<String, Object> responseContext = new HashMap<String, Object>();
     
     /** 
      * @param env
@@ -109,6 +110,12 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			if (payload != null && !"POST".equalsIgnoreCase(method)) { //$NON-NLS-1$
 				throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
 			}
+			
+	        Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
+	        for (String key:this.customHeaders.keySet()) {
+	        	httpHeaders.put(key, this.customHeaders.get(key));
+	        }
+	        dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);			
 
 			DataSource ds = null;
 			if (payload instanceof String) {
@@ -121,7 +128,8 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 				ds = new InputStreamFactory.BlobInputStreamFactory((Blob)payload);
 			}
 			
-			returnValue = dispatch.invoke(ds);
+			this.returnValue = dispatch.invoke(ds);
+			this.responseContext = dispatch.getResponseContext();
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		} 
@@ -135,7 +143,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() > 4 && Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
+		if (returnValue != null && procedure.getArguments().size() >= 4 && Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
 			try {
 				result = new BlobType(new StreamingBlob(returnValue.getInputStream()));
 			} catch (IOException e) {
@@ -152,4 +160,12 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     public void cancel() throws TranslatorException {
         // no-op
     }    
+    
+    public void addHeader(String name, List<String> value) {
+    	this.customHeaders.put(name, value);
+    }
+    
+    public Object getResponseHeader(String name){
+    	return this.responseContext.get(name);
+    }
 }

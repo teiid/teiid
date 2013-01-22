@@ -321,6 +321,7 @@
             <translator name="jpa2" module="org.jboss.teiid.translator.jpa"/>
             <translator name="infinispan-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
+            <translator name="odata" module="org.jboss.teiid.translator.odata"/>
             
             
         </subsystem>         

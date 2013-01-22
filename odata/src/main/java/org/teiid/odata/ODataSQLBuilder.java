@@ -47,6 +47,7 @@ import org.teiid.metadata.*;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.translator.odata.ODataTypeManager;
 
 public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private Query query = new Query();

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.odata;
+package org.teiid.translator.odata;
 
 import java.util.HashMap;
 
@@ -64,6 +64,7 @@ public class ODataTypeManager {
 		odatakeyed.put(EdmSimpleType.TIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIME);
 		odatakeyed.put(EdmSimpleType.DATETIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
 		odatakeyed.put(EdmSimpleType.BINARY.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.OBJECT);
+		odatakeyed.put(EdmSimpleType.GUID.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
 	}
 	
 	public static String teiidType(String odataType) {

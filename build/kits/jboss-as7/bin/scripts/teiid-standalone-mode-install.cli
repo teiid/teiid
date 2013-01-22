@@ -62,6 +62,7 @@ connect
 /subsystem=teiid/translator=infinispan-cache:add(module=org.jboss.teiid.translator.object)
 /subsystem=teiid/translator=map-cache:add(module=org.jboss.teiid.translator.object)
 /subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
+/subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
