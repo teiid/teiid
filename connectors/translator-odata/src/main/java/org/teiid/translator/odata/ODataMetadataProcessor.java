@@ -64,7 +64,7 @@ public class ODataMetadataProcessor {
 					
 					// add procedures
 					for (EdmFunctionImport function:container.getFunctionImports()) {
-						addFunimportAsProcedure(mf, function);
+						addFunctionImportAsProcedure(mf, function);
 					}
 				}
 			}
@@ -102,71 +102,7 @@ public class ODataMetadataProcessor {
 		
 		// add PK
 		mf.addPrimaryKey("PK", entity.getKeys(), table); //$NON-NLS-1$
-
-		/*
-		// add complex types are embedded types, expose them as tables 
-		// with 1 to 1 relationship with access pattern on them
-		for (EdmProperty ep:entity.getProperties().toList()) {
-			if (!ep.getType().isSimple()) {
-				addComplexTypeAsTable(mf, (EdmComplexType)ep.getType(), table);
-			}
-		}
-		*/
 	}
-	
-	
-	/*
-	private void addComplexTypeAsTable(MetadataFactory mf, EdmComplexType embedded, Table parentTable) throws TranslatorException{
-
-		// check if table already added
-		Table table = mf.getSchema().getTable(embedded.getName());
-		if (table == null) {
-			// child table
-			table = mf.addTable(embedded.getName());
-			table.setProperty(PARENT_TABLE, parentTable.getName());
-			table.setProperty(ENTITY_TYPE, "EdmComplexType"); //$NON-NLS-1$
-			
-			// add columns
-			for (EdmProperty ep:embedded.getProperties().toList()) {
-				if (ep.getType().isSimple()) {
-					addPropertyAsColumn(mf, table, ep);
-				}
-				else {
-					throw new TranslatorException("embedded_can_not_embed");
-				}
-			}
-			
-			// add all parent table's PK as keys
-			ArrayList<String> pkNames = new ArrayList<String>();
-			List<Column> columns = parentTable.getPrimaryKey().getColumns();
-			for (Column c: columns) {
-				String name = parentTable.getName()+"_"+c.getName(); //$NON-NLS-1$
-				Column addedColumn = mf.addColumn(name, c.getDatatype().getRuntimeTypeName(), table);
-				addedColumn.setProperty(JOIN_COLUMN, String.valueOf(true));
-				pkNames.add(name);
-			}
-			// add PK to the table and have access pattern on it			
-			mf.addPrimaryKey(parentTable.getName()+"_PK", pkNames, table); //$NON-NLS-1$
-			mf.addAccessPattern(parentTable.getName()+"_embed", pkNames, table); //$NON-NLS-1$
-			mf.addForiegnKey(parentTable.getName()+"_FK", pkNames, parentTable.getName(), table); //$NON-NLS-1$
-		}
-		else {
-			if (!table.getProperty(PARENT_TABLE, false).equals(parentTable.getName())) {
-				// add all parent table's PK as keys
-				ArrayList<String> pkNames = new ArrayList<String>();
-				List<Column> columns = parentTable.getPrimaryKey().getColumns();
-				for (Column c: columns) {
-					String name = parentTable.getName()+"_"+c.getName(); //$NON-NLS-1$
-					Column addedColumn = mf.addColumn(name, c.getDatatype().getRuntimeTypeName(), table);
-					addedColumn.setProperty(JOIN_COLUMN, String.valueOf(true));
-					pkNames.add(name);
-				}
-				mf.addAccessPattern(parentTable.getName()+"_embed", pkNames, table); //$NON-NLS-1$
-				mf.addForiegnKey(parentTable.getName()+"_FK", pkNames, parentTable.getName(), table); //$NON-NLS-1$				
-			}
-		}
-	}
-	*/
 	
 	void addNavigationRelations(MetadataFactory mf, String tableName, EdmEntityType orderEntity) throws TranslatorException {
 		Table orderTable = mf.getSchema().getTable(tableName);
@@ -335,7 +271,7 @@ public class ODataMetadataProcessor {
 	}	
 
 	
-	void addFunimportAsProcedure(MetadataFactory mf, EdmFunctionImport function) throws TranslatorException {
+	void addFunctionImportAsProcedure(MetadataFactory mf, EdmFunctionImport function) throws TranslatorException {
 		Procedure procedure = mf.addProcedure(function.getName());
 		procedure.setProperty(HTTP_METHOD, function.getHttpMethod());
 		
@@ -357,6 +293,7 @@ public class ODataMetadataProcessor {
 			mf.addProcedureParameter("return", ODataTypeManager.teiidType(((EdmSimpleType)returnType).getFullyQualifiedTypeName()), ProcedureParameter.Type.ReturnValue, procedure); //$NON-NLS-1$
 		}
 		else if (returnType instanceof EdmCollectionType) {
+			procedure.setProperty(ENTITY_TYPE, function.getEntitySet().getName());
 			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType(), function.getEntitySet().getName());
 		}
 		else {

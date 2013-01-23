@@ -53,7 +53,6 @@ public class TestWSTranslator {
 		ef.getMetadata(mf, null);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		assertEquals(6, p.getParameters().size());
-		p.getParameters().remove(4);
 		p = mf.getSchema().getProcedure("invoke");
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(5);
@@ -66,7 +65,7 @@ public class TestWSTranslator {
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		CommandBuilder cb = new CommandBuilder(tm);
 		
-		Call call = (Call)cb.getCommand("call invokeHttp()");
+		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, true)");
 		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		pe.execute();
 		pe.getOutputParameterValues();
