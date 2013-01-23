@@ -117,6 +117,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		setSourceRequiredForMetadata(true);
 		setSupportsOrderBy(true);
 		
+		registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.UCASE, new AliasModifier("toupper")); //$NON-NLS-1$
@@ -179,7 +180,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		if (nativeQuery != null) {
 			return new ODataDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery);
 		}
-		return new ODataProcedureExecution(command, executionContext, metadata, connection);
+		return new ODataProcedureExecution(command, this, executionContext, metadata, connection, this.eds);
 	}
 
 	@Override

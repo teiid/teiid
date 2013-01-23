@@ -41,15 +41,15 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
 
     protected Class<T> type;
     protected Collection<T> objects = new ArrayList<T>();
-    private boolean shallow = false;
+    private boolean deepWalk = true;
 
     public CollectorVisitor(Class<T> type) {
         this.type = type;
     }
     
-    public CollectorVisitor(Class<T> type, boolean shallow) {
+    public CollectorVisitor(Class<T> type, boolean walkDeep) {
         this.type = type;
-        this.shallow = shallow;
+        this.deepWalk = walkDeep;
     }    
     
     @SuppressWarnings("unchecked")
@@ -58,7 +58,7 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
-        if (this.shallow) {
+        if (this.deepWalk) {
         	super.visitNode(obj);
         }
     }
@@ -88,7 +88,7 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
      * @return
      */
     public static <T> Collection<T> shallowCollectObjects(Class<T> type, LanguageObject object) {
-        CollectorVisitor<T> visitor = new CollectorVisitor<T>(type);
+        CollectorVisitor<T> visitor = new CollectorVisitor<T>(type, false);
         visitor.visitNode(object);
         return visitor.getCollectedObjects();
     }    

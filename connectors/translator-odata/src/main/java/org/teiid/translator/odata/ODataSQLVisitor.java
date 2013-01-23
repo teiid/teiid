@@ -212,7 +212,11 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Function obj) {
-        String name = obj.getMetadataObject().getName();
+    	if (this.executionFactory.getFunctionModifiers().containsKey(obj.getName())) {
+            this.executionFactory.getFunctionModifiers().get(obj.getName()).translate(obj);
+    	}
+    	
+        String name = obj.getName();
         List<Expression> args = obj.getParameters();
         if(isInfixFunction(name)) { 
             filter.append(Tokens.LPAREN); 
