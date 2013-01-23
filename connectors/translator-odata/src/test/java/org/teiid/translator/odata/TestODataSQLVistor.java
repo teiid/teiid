@@ -25,10 +25,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
+import java.net.URLDecoder;
 import java.util.Properties;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
@@ -47,7 +47,6 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
-@Ignore
 public class TestODataSQLVistor {
 	private ODataExecutionFactory translator;
 	private TranslationUtility utility;
@@ -79,13 +78,13 @@ public class TestODataSQLVistor {
     	Select cmd = (Select)this.utility.parseCommand(query);
     	ODataSQLVisitor visitor = new ODataSQLVisitor(this.translator, utility.createRuntimeMetadata());
     	visitor.visitNode(cmd); 
-    	String actual = visitor.buildURL();
+    	String actual = URLDecoder.decode(visitor.buildURL(), "UTF-8");
     	assertEquals(expected, actual);
     }
 
     @Test
     public void testSelectStar() throws Exception {
-    	helpExecute("select * from customers", "Customers?$select=CustomerID,CompanyName,ContactName,ContactTitle,Mailing_Address,Mailing_City,Mailing_Region,Mailing_PostalCode,Mailing_Country,Mailing_Phone,Mailing_Fax,Shipping_Address,Shipping_City,Shipping_Region,Shipping_PostalCode,Shipping_Country,Shipping_Phone,Shipping_Fax");
+    	helpExecute("select * from customers", "Customers?$select=Mailing,ContactName,CustomerID,Shipping,CompanyName,ContactTitle");
     }
     
     @Test
@@ -102,6 +101,11 @@ public class TestODataSQLVistor {
     public void testMultiKeyKeyBasedFilter() throws Exception {
     	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and ProductID = 12 and Quantity = 2", "Order_Details(ProductID=12,OrderID=1)?$filter=Quantity eq 2&$select=UnitPrice");
     }    
+    
+    @Test
+    public void testAddFilter() throws Exception {
+    	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and (Quantity+2) > OrderID", "Order_Details?$filter=OrderID eq 1 AND (cast(Quantity,'integer') add 2) gt OrderID&$select=UnitPrice");
+    } 
     
     @Test
     public void testMultiKeyKeyBasedFilterOr() throws Exception {
@@ -135,7 +139,7 @@ public class TestODataSQLVistor {
     
     @Test
     public void testFunction() throws Exception {
-    	helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN')", "Customers?$filter=startswith(CompanyName'CN') eq TRUE&$select=ContactName");
+    	helpExecute("SELECT ContactName FROM Customers WHERE odata.startswith(CompanyName, 'CN')", "Customers?$filter=startswith(CompanyName,'CN') eq true&$select=ContactName");
     }
     
     @Test
@@ -165,7 +169,7 @@ public class TestODataSQLVistor {
     
     @Test
     public void testOrderByMultiple() throws Exception {
-    	helpExecute("SELECT LastName FROM Employees Order By LastName DESC, EmployeeId", "Employees?$orderby=LastName DESC,EmployeeId&$select=LastName");
+    	helpExecute("SELECT LastName FROM Employees Order By LastName DESC, EmployeeId", "Employees?$orderby=LastName DESC,EmployeeID&$select=LastName");
     }     
     
     @Test
@@ -187,7 +191,7 @@ public class TestODataSQLVistor {
     	Call cmd = (Call)this.utility.parseCommand(query);
 		ODataProcedureVisitor visitor = new ODataProcedureVisitor(translator, utility.createRuntimeMetadata());
     	visitor.visitNode(cmd); 
-    	String odataCmd = visitor.toString();
+    	String odataCmd = visitor.buildURL();
     	
     	assertEquals(expected, odataCmd);
     	assertEquals("GET", visitor.getMethod());

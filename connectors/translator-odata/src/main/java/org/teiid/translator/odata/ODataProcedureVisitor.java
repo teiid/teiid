@@ -29,6 +29,7 @@ import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.Procedure;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 
@@ -38,6 +39,9 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 	private StringBuilder buffer = new StringBuilder();
 	private String method = "GET"; //$NON-NLS-1$
+	private String entityName;
+	private boolean returnsTable;
+	private String tableName;
 	
 	public ODataProcedureVisitor(ODataExecutionFactory executionFactory,
 			RuntimeMetadata metadata) {
@@ -45,10 +49,11 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 		this.metadata = metadata;		
 	}
 	
-	
 	@Override
     public void visit(Call obj) {
-		this.method = obj.getMetadataObject().getProperty(ODataMetadataProcessor.HTTP_METHOD, false);
+		Procedure proc = obj.getMetadataObject();
+		this.method = proc.getProperty(ODataMetadataProcessor.HTTP_METHOD, false);
+		
 		buffer.append(obj.getProcedureName());
         final List<Argument> params = obj.getArguments();
         if (params != null && params.size() != 0) {
@@ -67,13 +72,32 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
                 }
             }
         }
+        
+        // this is collection based result
+        if(proc.getResultSet() != null) {
+        	this.returnsTable = true;
+        	this.entityName = proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
+        	this.tableName = proc.getFullName().substring(0, proc.getFullName().indexOf('.'))+"."+this.entityName; //$NON-NLS-1$
+        }
 	}
 	
-	public String toString() {
+	public String buildURL() {
 		return buffer.toString();
 	}
 	
 	public String getMethod() {
 		return this.method;
+	}
+	
+	public String getEntityName() {
+		return entityName;
+	}	
+	
+	public String getTableName() {
+		return this.tableName;
+	}
+	
+	public boolean hasCollectionReturn() {
+		return this.returnsTable;
 	}
 }
