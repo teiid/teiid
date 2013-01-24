@@ -21,41 +21,80 @@
  */
 package org.teiid.translator.odata;
 
+import javax.ws.rs.core.Response.Status;
+
+import org.odata4j.edm.EdmDataServices;
+import org.odata4j.format.FormatType;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.*;
+import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
-public class ODataUpdateExecution implements UpdateExecution {
-
-	public ODataUpdateExecution(Command command,
+public class ODataUpdateExecution extends BaseQueryExecution implements UpdateExecution {
+	private ODataUpdateVisitor visitor;
+	private ODataEntitiesResponse response;
+	
+	public ODataUpdateExecution(Command command, ODataExecutionFactory translator,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
-			WSConnection connection) {
-		// rameshTODO Auto-generated constructor stub
+			WSConnection connection, EdmDataServices edsMetadata) throws TranslatorException {
+		super(translator, executionContext, metadata, connection, edsMetadata);
+		
+		this.visitor = new ODataUpdateVisitor(translator, metadata, edsMetadata);
+		this.visitor.visitNode(command);
+		
+		if (!this.visitor.exceptions.isEmpty()) {
+			throw this.visitor.exceptions.get(0);
+		}
 	}
 
 	@Override
 	public void close() {
-		// rameshTODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void cancel() throws TranslatorException {
-		// rameshTODO Auto-generated method stub
-
 	}
 
 	@Override
 	public void execute() throws TranslatorException {
-		// rameshTODO Auto-generated method stub
-
+		if (this.visitor.getMethod().equals("DELETE")) { //$NON-NLS-1$
+			BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), this.visitor.buildURL(), null, FormatType.ATOM.getAcceptableMediaTypes());
+			if (execution.getResponseCode() != Status.OK.getStatusCode() || (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode())) {
+				throw buildError(execution);
+			}
+		}
+		else if(this.visitor.getMethod().equals("PATCH")) { //$NON-NLS-1$
+			this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), this.visitor.getPayload(), this.visitor.getEntityName(), Status.OK, Status.NO_CONTENT);
+			if (this.response != null) {
+				if (this.response.hasError()) {
+					throw this.response.getError();
+				}
+				
+				if (!this.response.hasRow()) {
+					this.response = null;	
+				}
+			}
+		}
+		else if (this.visitor.getMethod().equals("POST")) { //$NON-NLS-1$
+			this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), this.visitor.getPayload(), this.visitor.getEntityName(), Status.CREATED);
+			if (this.response != null) {
+				if (this.response.hasError()) {
+					throw this.response.getError();
+				}
+				
+				if (!this.response.hasRow()) {
+					this.response = null;	
+				}
+			}
+		}
 	}
 
 	@Override
 	public int[] getUpdateCounts() throws DataNotAvailableException,
 			TranslatorException {
-		// rameshTODO Auto-generated method stub
-		return null;
+		if (this.response != null || this.visitor.getMethod().equals("DELETE")) { //$NON-NLS-1$
+			return new int[] {1};
+		}
+		return new int[] {0};
 	}
-
 }

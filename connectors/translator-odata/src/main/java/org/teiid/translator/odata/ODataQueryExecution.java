@@ -27,6 +27,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.core.Response.Status;
+
 import org.odata4j.edm.EdmDataServices;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.QueryExpression;
@@ -42,6 +44,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 	private Class<?>[] expectedColumnTypes;
 	private String[] columnNames;
 	private String[] embeddedColumnNames;
+	private ODataEntitiesResponse response;
 	
 	public ODataQueryExecution(ODataExecutionFactory translator,
 			QueryExpression command, ExecutionContext executionContext,
@@ -79,7 +82,11 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 
 		if (this.visitor.isCount()) {
 			String[] headers = new String[] {"text/xml", "text/plain"}; //$NON-NLS-1$ //$NON-NLS-2$
-			BinaryWSProcedureExecution execution = executeRequest("GET", URI, headers); //$NON-NLS-1$
+			BinaryWSProcedureExecution execution = executeDirect("GET", URI, null, headers); //$NON-NLS-1$
+			if (execution.getResponseCode() != Status.OK.getStatusCode()) {
+				throw buildError(execution);
+			}
+			
 			Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 			try {
 				this.countResponse = Integer.parseInt(ObjectConverterUtil.convertToString(blob.getBinaryStream()));
@@ -90,7 +97,10 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			}			
 		}
 		else {
-			execute("GET", URI, visitor.getEnityTable().getName()); //$NON-NLS-1$
+			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
+			if (this.response != null && this.response.hasError()) {
+				this.executionContext.addWarning(this.response.getError());
+			}
 		}
 	}
 	
@@ -103,7 +113,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 		}
 
 		// Feed based response
-		if (this.response != null ) {
+		if (this.response != null && !this.response.hasError()) {
 			return this.response.getNextRow(this.columnNames, this.embeddedColumnNames, this.expectedColumnTypes);
 		}
 		return null;

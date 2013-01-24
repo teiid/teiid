@@ -22,6 +22,7 @@
 package org.teiid.translator.odata;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -30,12 +31,14 @@ import java.util.Properties;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.odata4j.edm.EdmDataServices;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.language.Call;
+import org.teiid.language.Command;
 import org.teiid.language.Select;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.function.FunctionTree;
@@ -45,6 +48,7 @@ import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestODataSQLVistor {
@@ -57,13 +61,14 @@ public class TestODataSQLVistor {
     	translator.start();
     	
 		String csdl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.xml"));
+		EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes()))));
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
 		Properties props = new Properties();
 		props.setProperty("schemaNamespace", "ODataWeb.Northwind.Model");
 		props.setProperty("entityContainer", "NorthwindEntities");
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "nw", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 		
-		processor.getMetadata(mf, new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes())))));
+		processor.getMetadata(mf, eds);
 		
 		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "northwind", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
     	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
@@ -200,5 +205,64 @@ public class TestODataSQLVistor {
     @Test
     public void testProcedureExec() throws Exception {
     	helpFunctionExecute("Exec TopCustomers('newyork')", "TopCustomers?city='newyork'");
+    }    
+    
+    private void helpUpdateExecute(String query, String expected, String expectedMethod, boolean checkPayload) throws Exception {
+    	Command cmd = this.utility.parseCommand(query);
+		String csdl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.xml"));
+		EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes()))));
+    	
+		ODataUpdateVisitor visitor = new ODataUpdateVisitor(translator, utility.createRuntimeMetadata(), eds);
+    	visitor.visitNode(cmd); 
+    	
+		if (!visitor.exceptions.isEmpty()) {
+			throw visitor.exceptions.get(0);
+		}
+		
+    	String odataCmd = visitor.buildURL();
+    	
+    	if (checkPayload) {
+    		assertNotNull(visitor.getPayload());
+    	}
+    	
+    	assertEquals(expected, odataCmd);
+    	assertEquals(expectedMethod, visitor.getMethod());
+    }   
+    
+    @Test
+    public void testInsert() throws Exception {
+    	helpUpdateExecute("INSERT INTO Regions (RegionID,RegionDescription) VALUES (10,'Asian')", "Regions", "POST", true);
     }     
+    
+    @Test(expected=TranslatorException.class)
+    public void testDeletewithoutPK() throws Exception {
+    	helpUpdateExecute("Delete From Regions", "Regions", "DELETE", false);
+    }    
+    
+    @Test
+    public void testDelete() throws Exception {
+    	helpUpdateExecute("Delete From Regions where RegionID=10", "Regions(10)", "DELETE", false);
+    }     
+    
+    @Test(expected=TranslatorException.class)
+    public void testDeleteOtherClause() throws Exception {
+    	helpUpdateExecute("Delete From Regions where RegionDescription='foo'", "Regions", "DELETE", false);
+    }     
+    
+    @Test
+    public void testUpdate() throws Exception {
+    	helpUpdateExecute("UPDATE Regions SET RegionDescription='foo' WHERE RegionID=10", "Regions(10)", "PATCH", true);
+    }     
+    
+    @Test(expected=TranslatorException.class)
+    public void testUpdatewithoutPK() throws Exception {
+    	helpUpdateExecute("UPDATE Regions SET RegionDescription='foo'", "Regions(10)", "PATCH", true);
+    }   
+    
+    @Test(expected=TranslatorException.class)
+    public void testUpdateOtherClause() throws Exception {
+    	helpUpdateExecute("UPDATE Regions SET RegionID=10 WHERE RegionDescription='foo'", "Regions(10)", "PATCH", true);
+    }    
 }
+
+

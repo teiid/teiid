@@ -75,6 +75,7 @@ public class ODataMetadataProcessor {
 	void addEntitySetAsTable(MetadataFactory mf, String name, EdmEntityType entity) throws TranslatorException {
 		Table table = mf.addTable(name);
 		table.setProperty(ENTITY_TYPE, entity.getFullyQualifiedTypeName());
+		table.setSupportsUpdate(true);
 		
 		// add columns
 		for (EdmProperty ep:entity.getProperties().toList()) {
@@ -267,6 +268,7 @@ public class ODataMetadataProcessor {
 		if (ep.getMaxLength() != null) {
 			c.setLength(ep.getMaxLength());
 		}
+		c.setUpdatable(true);
 		return c;
 	}	
 

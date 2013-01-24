@@ -81,6 +81,8 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     WSExecutionFactory executionFactory;
     Map<String, List<String>> customHeaders = new HashMap<String, List<String>>();
     Map<String, Object> responseContext = new HashMap<String, Object>();
+    int responseCode = 200;
+    String responseMessage;
     
     /** 
      * @param env
@@ -130,12 +132,25 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			
 			this.returnValue = dispatch.invoke(ds);
 			this.responseContext = dispatch.getResponseContext();
+			buildResposeCode((String)this.responseContext.get(null));
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		} 
     }
 
-    @Override
+    private void buildResposeCode(String object) {
+    	StringTokenizer st = new StringTokenizer(object, " ");//$NON-NLS-1$
+    	st.nextToken(); // http
+    	this.responseCode = Integer.parseInt(st.nextToken());
+    	StringBuilder sb = new StringBuilder();
+    	while (st.hasMoreTokens()) {
+    		sb.append(st.nextToken());
+    		sb.append(" "); //$NON-NLS-1$
+    	}
+    	this.responseMessage = sb.toString();
+	}
+
+	@Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
     	return null;
     }  
@@ -167,5 +182,13 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     
     public Object getResponseHeader(String name){
     	return this.responseContext.get(name);
+    }
+    
+    public int getResponseCode() {
+    	return this.responseCode;
+    }
+    
+    public String getResponseMessage() {
+    	return this.responseMessage;
     }
 }
