@@ -28,9 +28,9 @@ import java.util.Collection;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod;
-import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.FunctionParameter;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
@@ -194,6 +194,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addArrayGet();
         addArrayLength();
         addTrimFunction();
+        addEndsWithFunction();
     }
     
     private void addTrimFunction() {
@@ -606,12 +607,14 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
     }
     
     private void addEndsWithFunction() {
-        functions.add(
+        FunctionMethod f =
             new FunctionMethod(SourceSystemFunctions.ENDSWITH, QueryPlugin.Util.getString("SystemSource.endswith_desc"), STRING, FUNCTION_CLASS, "endsWith", //$NON-NLS-1$ //$NON-NLS-2$ 
                 new FunctionParameter[] {
                     new FunctionParameter("substring", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_result")) ) );                 //$NON-NLS-1$ //$NON-NLS-2$
+                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_result")) );                 //$NON-NLS-1$ //$NON-NLS-2$
+        f.setNullOnNull(false);
+        functions.add(f);
     }    
 
 	private void addRepeatFunction() {
