@@ -45,8 +45,9 @@ import org.teiid.query.QueryPlugin;
  */
 public class FileStorageManager implements StorageManager {
 	
+	private static final long MB = 1024L * 1024L;
 	public static final int DEFAULT_MAX_OPEN_FILES = 64;
-	public static final long DEFAULT_MAX_BUFFERSPACE = 50L * 1024L * 1024L * 1024L;
+	public static final long DEFAULT_MAX_BUFFERSPACE = 50L * 1024L * MB;
 	private static final String FILE_PREFIX = "b_"; //$NON-NLS-1$
 	
 	private long maxBufferSpace = DEFAULT_MAX_BUFFERSPACE;
@@ -128,30 +129,46 @@ public class FileStorageManager implements StorageManager {
 			if (fileInfo == null) {
 				fileInfo = new FileInfo(createFile(name));
 	        }
-			long bytesUsed = 0;
 	        try {
 	        	RandomAccessFile fileAccess = fileInfo.open();
 	            long newLength = fileOffset + length;
-	            bytesUsed = newLength - fileAccess.length();
-	            if (bytesUsed > 0) {
-		    		long used = usedBufferSpace.addAndGet(bytesUsed);
-					if (used > maxBufferSpace) {
-						//TODO: trigger a compaction before this is thrown
-						throw new IOException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
-					}
-	            	fileAccess.setLength(newLength);
-	            	bytesUsed = 0;
-	            }
+	            setLength(fileAccess, newLength, false);
 	            fileAccess.seek(fileOffset);
 	            fileAccess.write(b, offSet, length);
 	        } finally {
-	        	if (bytesUsed > 0) {
-	        		usedBufferSpace.addAndGet(-bytesUsed);
-	        	}
 	        	fileInfo.close();
 	        }	    		
 	    	return length;
 	    }
+
+		private void setLength(RandomAccessFile fileAccess, long newLength, boolean truncate)
+				throws IOException {
+			long currentLength = fileAccess.length();
+			long bytesUsed = newLength - currentLength;
+			if (bytesUsed == 0) {
+				return;
+			}
+			if (bytesUsed < 0) {
+				if (!truncate) {
+					return;
+				}
+			} else if (bytesUsed > MB) {
+				//this is a weak check, concurrent access may push us over the max.  we are just trying to prevent large overage allocations
+				long used = usedBufferSpace.get() + bytesUsed;
+				if (used > maxBufferSpace) {
+					//TODO: trigger a compaction before this is thrown
+					throw new IOException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
+				}
+			}
+			fileAccess.setLength(newLength);
+			long used = usedBufferSpace.addAndGet(bytesUsed);
+			if (bytesUsed > 0 && used > maxBufferSpace) {
+				fileAccess.setLength(currentLength);
+				usedBufferSpace.addAndGet(-bytesUsed);
+				//TODO: trigger a compaction before this is thrown
+				throw new IOException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", maxBufferSpace)); //$NON-NLS-1$
+			}
+		}
 	    
 	    @Override
 	    public synchronized void setLength(long length) throws IOException {
@@ -159,7 +176,7 @@ public class FileStorageManager implements StorageManager {
 				fileInfo = new FileInfo(createFile(name));
 	        }
 	    	try {
-	    		fileInfo.open().setLength(length);
+	    		setLength(fileInfo.open(), length, true);
 	    	} finally {
 	    		fileInfo.close();
 	    	}

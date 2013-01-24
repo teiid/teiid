@@ -95,6 +95,35 @@ public class TestFileStorageManager {
         writeBytes(store);
     }
     
+    @Test(expected=IOException.class) public void testMaxSpaceSplit() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null); 
+    	sm.setMaxBufferSpace(1);
+        String tsID = "0";     //$NON-NLS-1$
+        
+        SplittableStorageManager ssm = new SplittableStorageManager(sm);
+        FileStore store = ssm.createFileStore(tsID);
+        try {
+        	writeBytes(store);
+        } finally {
+        	assertEquals(0, sm.getUsedBufferSpace());
+        }
+    }
+    
+    @Test public void testSetLength() throws Exception {
+    	FileStorageManager sm = getStorageManager(null, null); 
+        
+    	String tsID = "0";     //$NON-NLS-1$
+        FileStore store = sm.createFileStore(tsID);
+        store.setLength(1000);
+        assertEquals(1000, sm.getUsedBufferSpace());
+        
+        store.setLength(200);
+        assertEquals(200, sm.getUsedBufferSpace());
+        
+        store.setLength(1000);
+        assertEquals(1000, sm.getUsedBufferSpace());
+    }
+    
     @Test public void testFlush() throws Exception {
     	FileStorageManager sm = getStorageManager(null, null);
     	FileStore store = sm.createFileStore("0");
