@@ -413,23 +413,63 @@ public class TestDQPCore {
     		}
     		sql.append("select stringkey || " + i + " from bqt1.smalla");
     	}
-    	sql.append(" limit 2");
-    	helpExecute(sql.toString(), "a");
+    	//sql.append(" limit 2");
+    	helpExecute(sql.toString(), "a", 1, false);
     	//there's isn't a hard guarantee that only two requests will get started
     	assertTrue(agds.getExecuteCount().get() <= 6);
     	
     	//20 concurrent
     	core.setUserRequestSourceConcurrency(20);
     	agds.getExecuteCount().set(0);
-    	helpExecute(sql.toString(), "a");
-    	assertTrue(agds.getExecuteCount().get() <= 20);
-    	assertTrue(agds.getExecuteCount().get() > 10);
+    	helpExecute(sql.toString(), "a", 2, false);
+    	assertTrue(agds.getExecuteCount().get() > 10 && agds.getExecuteCount().get() <= 20);
     	
     	//serial
     	core.setUserRequestSourceConcurrency(1);
     	agds.getExecuteCount().set(0);
-    	helpExecute(sql.toString(), "a");
-    	assertEquals(1, agds.getExecuteCount().get());
+    	helpExecute(sql.toString(), "a", 3, false);
+    	//there's two since 1 is smaller than the expected batch
+    	assertEquals(2, agds.getExecuteCount().get());
+    }
+    
+    @Test public void testSourceConcurrencyWithLimitedUnion() throws Exception {
+    	//setup default of 2
+    	agds.setSleep(100);
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+    	agds.setCaps(bsc);
+    	StringBuffer sql = new StringBuffer();
+    	int branches = 20;
+    	for (int i = 0; i < branches; i++) {
+    		if (i > 0) {
+    			sql.append(" union all ");
+    		}
+    		sql.append("select stringkey || " + i + " from bqt1.smalla");
+    	}
+    	sql.append(" limit 11");
+    	
+    	helpExecute(sql.toString(), "a", 1, false);
+    	assertTrue(String.valueOf(agds.getExecuteCount()), agds.getExecuteCount().get() <= 2);
+    	
+    	//20 concurrent max, but we'll use 6
+    	core.setUserRequestSourceConcurrency(20);
+    	agds.getExecuteCount().set(0);
+    	helpExecute(sql.toString(), "a", 2, false);
+    	assertTrue(String.valueOf(agds.getExecuteCount()), agds.getExecuteCount().get() <= 6);
+    	
+    	//serial
+    	core.setUserRequestSourceConcurrency(1);
+    	agds.getExecuteCount().set(0);
+    	helpExecute(sql.toString(), "a", 3, false);
+    	assertEquals(2, agds.getExecuteCount().get());
+
+    	//ensure that we'll still consult all sources even if the limit is not met
+    	core.setUserRequestSourceConcurrency(4);
+    	agds.getExecuteCount().set(0);
+    	agds.setRows(0);
+    	helpExecute(sql.toString(), "a", 4, false);
+    	assertEquals(20, agds.getExecuteCount().get());
+    	
     }
     
     @Test public void testUsingFinalBuffer() throws Exception {

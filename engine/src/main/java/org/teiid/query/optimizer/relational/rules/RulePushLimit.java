@@ -113,6 +113,10 @@ public class RulePushLimit implements OptimizerRule {
             }
             
             limitNodes.remove(limitNode);
+            
+            if (limitNode.hasBooleanProperty(Info.IS_COPIED)) {
+            	limitNode.getParent().replaceChild(limitNode, limitNode.getFirstChild());
+            }
         }
         
         if (pushRaiseNull) {
@@ -162,6 +166,9 @@ public class RulePushLimit implements OptimizerRule {
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     grandChild.addAsParent(newLimit);
                     limitNodes.add(newLimit);
+                	if (grandChild.getType() == NodeConstants.Types.SET_OP) {
+                		newLimit.setProperty(Info.IS_COPIED, true);
+                	}
                 }
                 
                 return false;

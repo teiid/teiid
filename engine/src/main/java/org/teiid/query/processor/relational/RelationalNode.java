@@ -42,9 +42,9 @@ import org.teiid.core.util.Assertion;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
@@ -88,6 +88,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
 	/** Child nodes, usually just 1 or 2 */
 	private RelationalNode[] children = new RelationalNode[2];
+	private int childCount;
 	
 	protected RelationalNode() {
 		
@@ -96,6 +97,10 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	public RelationalNode(int nodeID) {
 		this.data = new NodeData();
 		this.data.nodeID = nodeID;
+	}
+	
+	public int getChildCount() {
+		return childCount;
 	}
 	
 	public boolean isLastBatch() {
@@ -195,18 +200,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
         // Set parent of child to match
         child.setParent(this);
 
-        for(int i=0; i<children.length; i++) {
-            if(children[i] == null) {
-                children[i] = child;
-                return;
-            }
+        if (this.children.length == this.childCount) {
+	        // No room to add - double size of the array and copy
+	        RelationalNode[] newChildren = new RelationalNode[children.length * 2];
+	        System.arraycopy(this.children, 0, newChildren, 0, this.children.length);
+	        this.children = newChildren;
         }
-        
-        // No room to add - double size of the array and copy
-        RelationalNode[] newChildren = new RelationalNode[children.length * 2];
-        System.arraycopy(this.children, 0, newChildren, 0, this.children.length);
-        newChildren[this.children.length] = child;
-        this.children = newChildren;        
+        this.children[childCount++] = child;
     }
 
     protected void addBatchRow(List<?> row) {
@@ -521,6 +521,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 break;
             }
         }
+        target.childCount = this.childCount;
 	}
     
     public PlanNode getDescriptionProperties() {
