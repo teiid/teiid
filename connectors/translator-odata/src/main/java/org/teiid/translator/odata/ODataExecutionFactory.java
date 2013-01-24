@@ -24,8 +24,13 @@ package org.teiid.translator.odata;
 import java.io.InputStreamReader;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 
@@ -36,11 +41,12 @@ import org.joda.time.LocalTime;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.language.*;
+import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
+import org.teiid.language.Call;
+import org.teiid.language.Literal;
+import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
@@ -57,61 +63,14 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
  */
 @Translator(name="odata", description="A translator for making OData data service calls")
 public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
-    private static final Map<Class<?>, Integer> TYPE_CODE_MAP = new HashMap<Class<?>, Integer>();
-    
-    private static final int INTEGER_CODE = 0;
-    private static final int LONG_CODE = 1;
-    private static final int DOUBLE_CODE = 2;
-    private static final int BIGDECIMAL_CODE = 3;
-    private static final int SHORT_CODE = 4;
-    private static final int FLOAT_CODE = 5;
-    private static final int TIME_CODE = 6;
-    private static final int DATE_CODE = 7;
-    private static final int TIMESTAMP_CODE = 8;
-    private static final int BLOB_CODE = 9;
-    private static final int CLOB_CODE = 10;
-    private static final int BOOLEAN_CODE = 11;
-    
-    static {
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.INTEGER, new Integer(INTEGER_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.LONG, new Integer(LONG_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DOUBLE, new Integer(DOUBLE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BIG_DECIMAL, new Integer(BIGDECIMAL_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.SHORT, new Integer(SHORT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.FLOAT, new Integer(FLOAT_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIME, new Integer(TIME_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.DATE, new Integer(DATE_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.TIMESTAMP, new Integer(TIMESTAMP_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BLOB, new Integer(BLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
-        TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
-    }
     
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
-    static class DatbaseCalender extends ThreadLocal<Calendar> {
-    	private String timeZone;
-    	public DatbaseCalender(String tz) {
-    		this.timeZone = tz;
-    	}
-    	@Override
-    	protected Calendar initialValue() {
-            if(this.timeZone != null && this.timeZone.trim().length() > 0) {
-            	TimeZone tz = TimeZone.getTimeZone(this.timeZone);
-                if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
-            		return Calendar.getInstance(tz);
-                }
-            }      		
-    		return Calendar.getInstance();
-    	}
-    };
-    
 	static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	private EdmDataServices eds;
 	private String databaseTimeZone;
-	private DatbaseCalender databaseCalender;
+	private TimeZone timeZone = DEFAULT_TIME_ZONE;
 	
 	public ODataExecutionFactory() {
 		setSourceRequiredForMetadata(true);
@@ -129,7 +88,12 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	@Override
 	public void start() throws TranslatorException {
 		super.start();		
-		this.databaseCalender = new DatbaseCalender(this.databaseTimeZone);
+		if(this.databaseTimeZone != null && this.databaseTimeZone.trim().length() > 0) {
+        	TimeZone tz = TimeZone.getTimeZone(this.databaseTimeZone);
+            if(!DEFAULT_TIME_ZONE.hasSameRules(tz)) {
+        		timeZone = tz;;
+            }
+        }  
     }	
 	
 	@TranslatorProperty(display="Database time zone", description="Time zone of the database, if different than Integration Server", advanced=true)
@@ -178,20 +142,21 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
 		if (nativeQuery != null) {
-			return new ODataDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery);
+			return super.createProcedureExecution(command, executionContext, metadata, connection);
+			//return new ODataDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery);
 		}
 		return new ODataProcedureExecution(command, this, executionContext, metadata, connection, this.eds);
 	}
 
-	@Override
+	/*@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		return new ODataUpdateExecution(command, executionContext, metadata, connection);
-	}
+	}*/
 	
-	@Override
+	/*@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		 return new ODataDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue());
-	}	
+	}	*/
 	
 	@Override
 	public List<String> getSupportedFunctions() {
@@ -313,71 +278,23 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     	return true;
     }
 
-	public Object retrieveValue(Object value, Class<?> expectedType) throws TranslatorException {
+	/**
+	 * 
+	 * @param value
+	 * @param expectedType
+	 * @return
+	 */
+	public Object retrieveValue(Object value, Class<?> expectedType) {
 		if (value == null) {
 			return null;
 		}
-		
-        try {
-			Integer code = TYPE_CODE_MAP.get(expectedType);
-			if(code != null) {
-			    switch(code.intValue()) {
-			        case INTEGER_CODE:
-			            return DataTypeManager.transformValue(value, expectedType);
-			        case LONG_CODE:
-			        	return DataTypeManager.transformValue(value, expectedType);
-			        case DOUBLE_CODE:
-			        	return DataTypeManager.transformValue(value, expectedType);                    
-			        case BIGDECIMAL_CODE:
-			        	return DataTypeManager.transformValue(value, expectedType); 
-			        case SHORT_CODE:
-			        	return DataTypeManager.transformValue(value, expectedType);
-			        case FLOAT_CODE:
-			        	return DataTypeManager.transformValue(value, expectedType);
-			        case TIME_CODE:{
-			        	if (value instanceof LocalDateTime) {
-			        		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.databaseCalender.get().getTimeZone()));
-			        		value = new java.sql.Time(dateTime.getMillis());
-			        	}
-			        	else if (value instanceof LocalTime) {
-			        		value = new java.sql.Time(((LocalTime)value).toDateTimeToday().getMillis());
-			        	}
-			        	return DataTypeManager.transformValue(value, expectedType);
-			        }
-			        case DATE_CODE: {
-			        	if (value instanceof LocalDateTime) {
-			        		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.databaseCalender.get().getTimeZone()));
-			        		value = new java.sql.Date(dateTime.getMillis());
-			        	}
-			        	else if (value instanceof DateTime) {
-			        		value = new java.sql.Date(((DateTime)value).getMillis());
-			        	}
-			        	return DataTypeManager.transformValue(value, expectedType);
-			        }
-			        case TIMESTAMP_CODE: {
-			        	if (value instanceof LocalDateTime) {
-			        		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.databaseCalender.get().getTimeZone()));
-			        		value = new Timestamp(dateTime.getMillis());
-			        	}
-			        	else if (value instanceof DateTime) {
-			        		value = new Timestamp(((DateTime)value).getMillis());
-			        	}
-			        	return DataTypeManager.transformValue(value, expectedType);
-			        }
-					case BLOB_CODE:
-						return DataTypeManager.transformValue(value, expectedType);
-					case CLOB_CODE:
-						return DataTypeManager.transformValue(value, expectedType);
-					case BOOLEAN_CODE:
-						return DataTypeManager.transformValue(value, expectedType);
-			    }
-			}
-		} catch (TransformationException e) {
-			throw new TranslatorException(e);
-		}
-
-        // otherwise fall through and call getObject() and rely on the normal
-		// translation routines
+		if (value instanceof LocalDateTime) {
+    		DateTime dateTime = ((LocalDateTime) value).toDateTime(DateTimeZone.forTimeZone(this.timeZone));
+    		return new java.sql.Timestamp(dateTime.getMillis());
+    	}
+		if (value instanceof LocalTime) {
+    		return new java.sql.Timestamp(((LocalTime)value).toDateTimeToday().getMillis());
+    	}
 		return value;
 	}
     	

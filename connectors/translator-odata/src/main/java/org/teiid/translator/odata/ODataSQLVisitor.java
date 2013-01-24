@@ -21,12 +21,16 @@
  */
 package org.teiid.translator.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.DESC;
-import static org.teiid.language.SQLConstants.Reserved.NOT;
-import static org.teiid.language.SQLConstants.Reserved.NULL;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.net.URI;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeSet;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -35,7 +39,6 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.*;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SortSpecification.Ordering;
-import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.FunctionMethod;
@@ -59,7 +62,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	protected RuntimeMetadata metadata;
 	protected TreeSet<Column> selectColumns = new TreeSet<Column>();
 	protected StringBuilder filter = new StringBuilder();
-	private Map<Expression, Boolean> ignoreExpression = new HashMap<Expression, Boolean>();
 	private EntitiesInQuery entities = new EntitiesInQuery();
 	private Integer skip;
 	private Integer top;
@@ -135,11 +137,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(Comparison obj) {
-		Boolean ignore = this.ignoreExpression.get(obj);
-		if (ignore != null && ignore) {
-			return;
-		}
-		
         append(obj.getLeftExpression());
         filter.append(Tokens.SPACE);
         switch(obj.getOperator()) {
@@ -173,13 +170,10 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	@Override
     public void visit(AndOr obj) {
         String opString = obj.getOperator().toString();
-        Boolean ignore = this.ignoreExpression.get(obj);
         appendNestedCondition(obj, obj.getLeftCondition());
-        if (ignore == null || !ignore) {
-		    filter.append(Tokens.SPACE)
-		          .append(opString)
-		          .append(Tokens.SPACE);
-        }
+	    filter.append(Tokens.SPACE)
+	          .append(opString)
+	          .append(Tokens.SPACE);
         appendNestedCondition(obj, obj.getRightCondition());
     }
     
@@ -195,7 +189,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     	}
     	append(condition);
     }
-    
+	
 	@Override
     public void visit(Delete obj) {
 		
@@ -287,7 +281,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 		if (obj.getLeftItem() instanceof NamedTable && obj.getRightItem() instanceof NamedTable) {
 			this.entities.addEntity(((NamedTable)obj.getLeftItem()).getMetadataObject());
 			this.entities.addEntity(((NamedTable)obj.getRightItem()).getMetadataObject());
-			buildEntityKey(obj.getCondition());
+			obj.setCondition(buildEntityKey(obj.getCondition()));
 			visitNode(obj.getCondition());
 		}
 		else {
@@ -380,70 +374,33 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	@Override
     public void visit(Select obj) {
         visitNodes(obj.getFrom());
-        buildEntityKey(obj.getWhere());
+        obj.setWhere(buildEntityKey(obj.getWhere()));
         visitNode(obj.getWhere());
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());
         visitNodes(obj.getDerivedColumns());
 	}
 
-
-	private void buildEntityKey(Condition obj) {
-		Collection<AndOr> andOrObjs = CollectorVisitor.shallowCollectObjects(AndOr.class, obj);
-        if (!andOrObjs.isEmpty()) {
-        	ArrayList<AndOr> ands = new ArrayList<AndOr>();
-        	
-        	for (AndOr andOr:andOrObjs) {
-        		deepCollectAndOrs(andOr, ands);
-        	}
-        	
-        	for(AndOr and:ands) {
-        		if (and.getLeftCondition() instanceof Comparison) {
-        			Comparison left = (Comparison) and.getLeftCondition();
+	private Condition buildEntityKey(Condition obj) {
+		List<Condition> crits = LanguageUtil.separateCriteriaByAnd(obj);
+        if (!crits.isEmpty()) {
+        	boolean modified = false;
+        	for(Iterator<Condition> iter = crits.iterator(); iter.hasNext();) {
+        		Condition crit = iter.next();
+        		if (crit instanceof Comparison) {
+        			Comparison left = (Comparison) crit;
         			boolean leftAdded = this.entities.addEnityKey(left);
-        			this.ignoreExpression.put(left, Boolean.valueOf(leftAdded));
         			if (leftAdded) {
-        				this.ignoreExpression.put(and, Boolean.TRUE);
+        				iter.remove();
+        				modified = true;
         			}
         		}
-        		if (and.getRightCondition() instanceof Comparison) {
-        			Comparison right = (Comparison) and.getRightCondition();
-        			boolean rightAdded = this.entities.addEnityKey(right);
-        			this.ignoreExpression.put(right, Boolean.valueOf(rightAdded));
-        			if (rightAdded) {
-        				this.ignoreExpression.put(and, Boolean.TRUE);
-        			}
-        		}        		
+        	}
+        	if (this.entities.valid() && modified) {
+    			return LanguageUtil.combineCriteria(crits);
         	}
         }
-        else {
-        	Collection<Comparison> compares = CollectorVisitor.collectObjects(Comparison.class, obj);
-			for (Comparison c:compares) {
-				this.ignoreExpression.put(c, Boolean.valueOf(this.entities.addEnityKey(c)));
-			}
-        }
-        
-        if (!this.entities.valid()) {
-        	this.ignoreExpression.clear();
-        }
-	}
-	
-	private void deepCollectAndOrs(AndOr andOr, ArrayList<AndOr> ands) {
-		if (andOr.getOperator().equals(AndOr.Operator.AND)) {
-			ands.add(andOr);
-		    
-			Condition condition = andOr.getLeftCondition();
-	    	if (condition instanceof AndOr) {
-	    		AndOr nested = (AndOr)condition;
-	    		deepCollectAndOrs(nested, ands);
-	    	}
-	    	
-		    condition = andOr.getRightCondition();
-	    	if (condition instanceof AndOr) {
-	    		AndOr nested = (AndOr)condition;
-	    		deepCollectAndOrs(nested, ands);
-	    	}	    	
-		}
+        return obj;
 	}
 	
 	@Override
@@ -560,7 +517,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     		if (this.entities.size() == 1) {
     			addEntityToURL(url, this.entities.get(0));
     		}
-    		else {
+    		else if (this.entities.size() > 1) {
     			for (int i = 0; i < this.entities.size()-1; i++) {
     				addEntityToURL(url, this.entities.get(i));
     				url.append("/"); //$NON-NLS-1$

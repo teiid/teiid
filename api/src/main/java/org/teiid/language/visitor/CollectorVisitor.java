@@ -41,16 +41,10 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
 
     protected Class<T> type;
     protected Collection<T> objects = new ArrayList<T>();
-    private boolean deepWalk = true;
 
     public CollectorVisitor(Class<T> type) {
         this.type = type;
     }
-    
-    public CollectorVisitor(Class<T> type, boolean walkDeep) {
-        this.type = type;
-        this.deepWalk = walkDeep;
-    }    
     
     @SuppressWarnings("unchecked")
     @Override
@@ -58,9 +52,7 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         if(type.isInstance(obj)) {
             this.objects.add((T)obj);
         }
-        if (this.deepWalk) {
-        	super.visitNode(obj);
-        }
+    	super.visitNode(obj);
     }
 
     public Collection<T> getCollectedObjects() {
@@ -80,18 +72,6 @@ public class CollectorVisitor<T> extends HierarchyVisitor {
         visitor.visitNode(object);
         return visitor.getCollectedObjects();
     }
-    
-    /**
-     * Similar to collectObjects but this method does deep walk language objects that have already collected
-     * @param type
-     * @param object
-     * @return
-     */
-    public static <T> Collection<T> shallowCollectObjects(Class<T> type, LanguageObject object) {
-        CollectorVisitor<T> visitor = new CollectorVisitor<T>(type, false);
-        visitor.visitNode(object);
-        return visitor.getCollectedObjects();
-    }    
     
     /**
      * This is a utility method for a common use of this visitor, which is to collect
