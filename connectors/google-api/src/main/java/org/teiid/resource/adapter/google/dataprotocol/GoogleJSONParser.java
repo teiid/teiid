@@ -15,7 +15,7 @@ import org.teiid.resource.adapter.google.common.SpreadsheetOperationException;
 
 /**
  * Parsing google json is a little non-standard.  They assume a js binding, so array syntax, strings, and date are used.
- * This parser supports most of the customizations execpt for unquoted dictionary keys.
+ * This parser supports most of the customizations except for unquoted dictionary keys.
  * 
  * Assumes all numbers are properly represented by Double.
  */
@@ -47,7 +47,7 @@ public class GoogleJSONParser {
 				throw new SpreadsheetOperationException(e);
 			}
 			if (result == -1) {
-				throw new SpreadsheetOperationException("Readed end of stream before the end of a string value");
+				throw new SpreadsheetOperationException("Read end of stream before the end of a string value");
 			}
 			return (char)result;
 		}

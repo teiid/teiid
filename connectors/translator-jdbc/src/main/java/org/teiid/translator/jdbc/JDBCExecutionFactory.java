@@ -103,9 +103,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     };
     public final static TimeZone DEFAULT_TIME_ZONE = TimeZone.getDefault();
 
-    static class DatbaseCalender extends ThreadLocal<Calendar> {
+    static class DatabaseCalender extends ThreadLocal<Calendar> {
     	private String timeZone;
-    	public DatbaseCalender(String tz) {
+    	public DatabaseCalender(String tz) {
     		this.timeZone = tz;
     	}
     	@Override
@@ -128,7 +128,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private boolean useCommentsInSourceQuery;
 	private String version;
 	private int maxInsertBatchSize = 2048;
-	private DatbaseCalender databaseCalender;
+	private DatabaseCalender databaseCalender;
 	private boolean supportsGeneratedKeys;
 
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
@@ -146,7 +146,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public void start() throws TranslatorException {
 		super.start();		
-		this.databaseCalender = new DatbaseCalender(this.databaseTimeZone);
+		this.databaseCalender = new DatabaseCalender(this.databaseTimeZone);
     }
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")

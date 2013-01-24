@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.DataNotAvailableException;
@@ -35,10 +36,12 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
 
 @Translator(name="hardcoded")
 public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> {
 	Map<String, List<? extends List<?>>> dataMap = new HashMap<String, List<? extends List<?>>>();
+	Map<String, int[]> updateMap = new HashMap<String, int[]>();
 	
 	@Override
 	public ResultSetExecution createResultSetExecution(
@@ -74,6 +77,40 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 				}
 				return null;
 			}
+		};
+	}
+	
+	@Override
+	public UpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			Object connection) throws TranslatorException {
+		final int[] result = updateMap.get(command.toString());
+		if (result == null) {
+			throw new RuntimeException(command.toString());
+		}
+		return new UpdateExecution() {
+			
+			@Override
+			public void execute() throws TranslatorException {
+				
+			}
+			
+			@Override
+			public void close() {
+				
+			}
+			
+			@Override
+			public void cancel() throws TranslatorException {
+				
+			}
+			
+			@Override
+			public int[] getUpdateCounts() throws DataNotAvailableException,
+					TranslatorException {
+				return result;
+			}
+			
 		};
 	}
 	
