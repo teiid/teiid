@@ -78,6 +78,9 @@ public class UnionAllNode extends RelationalNode {
         	if (parent instanceof LimitNode) {
         		LimitNode limit = (LimitNode)parent;
         		rowLimit = limit.getLimit();
+        		if (rowLimit != -1 && limit.getOffset() > 0) {
+    				rowLimit += limit.getOffset();
+        		}
         		break;
         	} else if (parent instanceof SortNode) {
         		SortNode sort = (SortNode)parent;
