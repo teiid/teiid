@@ -54,7 +54,7 @@ public class TestODataMetadataProcessor {
 		processor.getMetadata(mf, new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes())))));
 		
 		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-		System.out.println(ddl);	
+		//System.out.println(ddl);	
 		
 		MetadataFactory mf2 = new MetadataFactory(null, 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf2, ddl);		

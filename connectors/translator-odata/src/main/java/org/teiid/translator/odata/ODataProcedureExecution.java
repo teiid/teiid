@@ -21,20 +21,37 @@
  */
 package org.teiid.translator.odata;
 
+import java.io.InputStreamReader;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
+import javax.ws.rs.core.Response.Status;
+
+import org.odata4j.core.ODataConstants;
+import org.odata4j.core.ODataVersion;
+import org.odata4j.core.OObject;
+import org.odata4j.core.OSimpleObject;
 import org.odata4j.edm.EdmDataServices;
+import org.odata4j.format.FormatParser;
+import org.odata4j.format.FormatParserFactory;
+import org.odata4j.format.FormatType;
+import org.odata4j.format.Settings;
 import org.teiid.language.Call;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
 import org.teiid.translator.*;
+import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
 	private ODataProcedureVisitor visitor;
 	private Class<?>[] expectedColumnTypes;
 	private String[] columnNames;
 	private String[] embeddedColumnNames;	
+	private Object returnValue;
+	private ODataEntitiesResponse response;
 	
 	public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection, EdmDataServices edsMetadata) throws TranslatorException {
 		super(translator, executionContext, metadata, connection, edsMetadata);
@@ -68,19 +85,40 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	}
 
 	@Override
-	public List<?> getOutputParameterValues() throws TranslatorException {
-		return null;
-	}
-
-	@Override
 	public void execute() throws TranslatorException {
 		String URI = this.visitor.buildURL();
 		if (this.visitor.hasCollectionReturn()) {
-			execute(this.visitor.getMethod(), URI, this.visitor.getEntityName());
+			this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(),Status.OK, Status.NO_CONTENT);
+			if (this.response != null && this.response.hasError()) {
+				throw this.response.getError();
+			}
 		}
 		else {
-			//TODO:
-			throw new TranslatorException();
+			try {
+				String[] headers = FormatType.ATOM.getAcceptableMediaTypes();
+				
+				BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), URI, null, headers);
+				if (execution.getResponseCode() != Status.OK.getStatusCode()) {
+					throw buildError(execution);
+				}
+				
+				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+				ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));				
+
+				// if the procedure is not void
+				if (this.visitor.getReturnType() != null) {
+					FormatParser<? extends OObject> parser = FormatParserFactory.getParser(OSimpleObject.class,
+							FormatType.ATOM, new Settings(version, this.edsMetadata, this.visitor.getProcedureName(),
+					            null, // entitykey
+					            true, // isResponse
+					            ODataTypeManager.odataType(this.visitor.getReturnType())));
+					
+					OSimpleObject object = (OSimpleObject)parser.parse(new InputStreamReader(blob.getBinaryStream()));
+					this.returnValue = this.translator.retrieveValue(object.getValue(), this.visitor.getReturnTypeClass());
+				}
+			} catch (SQLException e) {
+				throw new TranslatorException(e);
+			}
 		}
 	}
 
@@ -92,6 +130,11 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 		}
 		return null;
 	}
+	
+	@Override
+	public List<?> getOutputParameterValues() throws TranslatorException {
+		return Arrays.asList(this.returnValue);
+	}	
 
 	@Override
 	public void close() {

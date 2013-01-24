@@ -24,28 +24,22 @@ package org.teiid.translator.odata;
 import java.io.InputStreamReader;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.resource.cci.ConnectionFactory;
+import javax.ws.rs.core.Response.Status;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.odata4j.edm.EdmDataServices;
+import org.odata4j.format.FormatType;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.language.Argument;
-import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
-import org.teiid.language.Literal;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.MetadataFactory;
@@ -57,9 +51,8 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 /**
  * TODO:
- * Type coercion	cast(T), cast(x, T)	Perform a type coercion if possible.
  * Type comparison	isof(T), isof(x, T)	Whether targeted instance can be converted to the specified type.
- * media streams are generally not supported yet. 
+ * media streams are generally not supported yet. (blobs, clobs)
  */
 @Translator(name="odata", description="A translator for making OData data service calls")
 public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, WSConnection> {
@@ -107,20 +100,13 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
+		BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn, null);
+		BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, FormatType.ATOM.getAcceptableMediaTypes()); //$NON-NLS-1$ //$NON-NLS-2$
+		if (call.getResponseCode() != Status.OK.getStatusCode()) {
+			throw execution.buildError(call);
+		}	
 		
-		List<Argument> parameters = new ArrayList<Argument>();
-		parameters.add(new Argument(Direction.IN, new Literal("GET", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)); //$NON-NLS-1$
-		parameters.add(new Argument(Direction.IN, new Literal(null, TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null));
-		parameters.add(new Argument(Direction.IN, new Literal("$metadata", TypeFacility.RUNTIME_TYPES.STRING), TypeFacility.RUNTIME_TYPES.STRING, null)); //$NON-NLS-1$
-		parameters.add(new Argument(Direction.IN, new Literal(true, TypeFacility.RUNTIME_TYPES.BOOLEAN), TypeFacility.RUNTIME_TYPES.BOOLEAN, null));
-		
-		Call call = getLanguageFactory().createCall(ODataExecutionFactory.INVOKE_HTTP, parameters, null);
-		
-		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, null, null, null, conn);
-		execution.addHeader("Content-Type", Collections.singletonList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
-		execution.addHeader("Accept", Arrays.asList("application/xml", "application/atom+xml")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-		execution.execute();
-		Blob out = (Blob)execution.getOutputParameterValues().get(0);
+		Blob out = (Blob)call.getOutputParameterValues().get(0);
 		
 		try {
 			this.eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
@@ -128,7 +114,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getMetadata(metadataFactory, eds);
 		} catch (SQLException e) {
-			throw new TranslatorException(e);
+			throw new TranslatorException(e, e.getMessage());
 		}
 	}
 	
@@ -142,21 +128,15 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
 		if (nativeQuery != null) {
-			return super.createProcedureExecution(command, executionContext, metadata, connection);
-			//return new ODataDirectQueryExecution(command.getArguments(), command, executionContext, metadata, connection, nativeQuery);
+			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17014)); 
 		}
 		return new ODataProcedureExecution(command, this, executionContext, metadata, connection, this.eds);
 	}
 
-	/*@Override
+	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		return new ODataUpdateExecution(command, executionContext, metadata, connection);
-	}*/
-	
-	/*@Override
-	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		 return new ODataDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue());
-	}	*/
+		return new ODataUpdateExecution(command, this, executionContext, metadata, connection, this.eds);
+	}
 	
 	@Override
 	public List<String> getSupportedFunctions() {

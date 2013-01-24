@@ -84,6 +84,12 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 		return this.entities.getFinalEntity();
 	}
 	
+	public String getEnitityURL() {
+		StringBuilder url = new StringBuilder();
+		this.entities.append(url);
+		return url.toString();
+	}
+	
 	public String buildURL() {
     	StringBuilder url = new StringBuilder();
     	this.entities.append(url);
@@ -189,13 +195,8 @@ public class ODataSQLVisitor extends HierarchyVisitor {
     	}
     	append(condition);
     }
-	
-	@Override
-    public void visit(Delete obj) {
-		
-	}
-	
-	@Override
+
+    @Override
     public void visit(ColumnReference obj) {
 		filter.append(obj.getMetadataObject().getName());
 	}
@@ -381,7 +382,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         visitNodes(obj.getDerivedColumns());
 	}
 
-	private Condition buildEntityKey(Condition obj) {
+	protected Condition buildEntityKey(Condition obj) {
 		List<Condition> crits = LanguageUtil.separateCriteriaByAnd(obj);
         if (!crits.isEmpty()) {
         	boolean modified = false;
@@ -439,11 +440,6 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 			}
 		}
 		return columnName;
-	}
-	
-	@Override
-    public void visit(Update obj) {
-		
 	}
 	
     public void append(LanguageObject obj) {
