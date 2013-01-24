@@ -79,8 +79,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		visitNode(obj.getTable());
 		
 		// only pk are allowed, no other criteria not allowed
-        buildEntityKey(obj.getWhere());
-        visitNode(obj.getWhere());
+		obj.setWhere(buildEntityKey(obj.getWhere()));
         
         // this will build with entity keys
         this.uri = getEnitityURL();
@@ -131,8 +130,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		visitNode(obj.getTable());
 		
 		// only pk are allowed, no other criteria not allowed
-        buildEntityKey(obj.getWhere());
-        visitNode(obj.getWhere());
+        obj.setWhere(buildEntityKey(obj.getWhere()));
         
         // this will build with entity keys
         this.uri = getEnitityURL();

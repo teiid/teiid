@@ -382,7 +382,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
         visitNodes(obj.getDerivedColumns());
 	}
 
-	private Condition buildEntityKey(Condition obj) {
+	protected Condition buildEntityKey(Condition obj) {
 		List<Condition> crits = LanguageUtil.separateCriteriaByAnd(obj);
         if (!crits.isEmpty()) {
         	boolean modified = false;
