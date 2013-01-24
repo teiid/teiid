@@ -28,7 +28,12 @@ import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import javax.activation.DataSource;
 import javax.xml.ws.Dispatch;
@@ -80,9 +85,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     private WSConnection conn;
     WSExecutionFactory executionFactory;
     Map<String, List<String>> customHeaders = new HashMap<String, List<String>>();
-    Map<String, Object> responseContext = new HashMap<String, Object>();
+    Map<String, Object> responseContext = Collections.emptyMap();
     int responseCode = 200;
     String responseMessage;
+    private boolean useResponseContext;
     
     /** 
      * @param env
@@ -94,6 +100,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
         this.conn = conn;
         this.executionFactory = executionFactory;
     }
+    
+    public void setUseResponseContext(boolean useResponseContext) {
+		this.useResponseContext = useResponseContext;
+	}
     
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
@@ -131,8 +141,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 			
 			this.returnValue = dispatch.invoke(ds);
-			this.responseContext = dispatch.getResponseContext();
-			buildResposeCode((String)this.responseContext.get(null));
+			if (useResponseContext) {
+				this.responseContext = dispatch.getResponseContext();
+				buildResposeCode((String)this.responseContext.get(null));
+			}
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		} 

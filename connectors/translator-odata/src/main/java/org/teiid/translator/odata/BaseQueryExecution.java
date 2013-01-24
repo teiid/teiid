@@ -26,14 +26,27 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.odata4j.core.*;
+import org.odata4j.core.ODataConstants;
 import org.odata4j.core.ODataConstants.Charsets;
+import org.odata4j.core.ODataVersion;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OError;
+import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmDataServices;
-import org.odata4j.format.*;
+import org.odata4j.format.Entry;
+import org.odata4j.format.Feed;
+import org.odata4j.format.FormatParser;
+import org.odata4j.format.FormatParserFactory;
+import org.odata4j.format.FormatType;
+import org.odata4j.format.Settings;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -128,6 +141,7 @@ public class BaseQueryExecution {
 		Call call = this.translator.getLanguageFactory().createCall(ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 		
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);
+		execution.setUseResponseContext(true);
 		execution.addHeader("Content-Type", Collections.singletonList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
 		execution.addHeader("Accept", Arrays.asList(acceptHeaders)); //$NON-NLS-1$
 		execution.execute();		
