@@ -136,6 +136,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addRepeatFunction();
 		addSpaceFunction();
 		addInsertFunction();
+		addEndsWithFunction();
 		
         // clob
         addClobFunction(SourceSystemFunctions.UCASE, QueryPlugin.Util.getString("SystemSource.UcaseClob_result"), "upperCase", DataTypeManager.DefaultDataTypes.CLOB); //$NON-NLS-1$ //$NON-NLS-2$ 

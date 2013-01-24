@@ -30,6 +30,7 @@ import org.teiid.language.Call;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 
@@ -42,6 +43,9 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 	private String entityName;
 	private boolean returnsTable;
 	private String tableName;
+	private String procedureName;
+	private String returnType;
+	private Class<?> returnTypeClass;
 	
 	public ODataProcedureVisitor(ODataExecutionFactory executionFactory,
 			RuntimeMetadata metadata) {
@@ -54,6 +58,7 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 		Procedure proc = obj.getMetadataObject();
 		this.method = proc.getProperty(ODataMetadataProcessor.HTTP_METHOD, false);
 		
+		this.procedureName = obj.getProcedureName();
 		buffer.append(obj.getProcedureName());
         final List<Argument> params = obj.getArguments();
         if (params != null && params.size() != 0) {
@@ -79,6 +84,14 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
         	this.entityName = proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
         	this.tableName = proc.getFullName().substring(0, proc.getFullName().indexOf('.'))+"."+this.entityName; //$NON-NLS-1$
         }
+        else {
+        	for (ProcedureParameter param:proc.getParameters()) {
+        		if (param.getType().equals(ProcedureParameter.Type.ReturnValue)) {
+        			this.returnType = param.getRuntimeType();
+        			this.returnTypeClass = param.getJavaType();
+        		}
+        	}
+        }
 	}
 	
 	public String buildURL() {
@@ -100,4 +113,17 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 	public boolean hasCollectionReturn() {
 		return this.returnsTable;
 	}
+	
+	public String getProcedureName() {
+		return this.procedureName;
+	}
+	
+	public String getReturnType() {
+		return this.returnType;
+	}	
+	
+	public Class<?>getReturnTypeClass() {
+		return this.returnTypeClass;
+	}	
+	
 }
