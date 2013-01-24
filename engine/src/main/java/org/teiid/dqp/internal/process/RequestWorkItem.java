@@ -372,7 +372,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	}
 
 	private boolean isSuspendable() {
-		return this.transactionContext.getTransaction() != null && !(this.useCallingThread & this.transactionContext.getTransactionType() == Scope.GLOBAL);
+		return this.transactionContext.getTransaction() != null && !(this.useCallingThread && this.transactionContext.getTransactionType() == Scope.GLOBAL);
 	}
 
 	private void suspend() {
@@ -690,9 +690,11 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		ResultsReceiver<ResultsMessage> receiver = null;
 		boolean result = true;
 		synchronized (this) {
-			if (batch == null || !this.requestMsg.getRequestOptions().isContinuous()) {
-				if (this.resultsReceiver == null
-						|| (this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
+			if (this.resultsReceiver == null) {
+				return result;
+			}
+			if (!this.requestMsg.getRequestOptions().isContinuous()) {
+				if ((this.begin > (batch != null?batch.getEndRow():this.resultsBuffer.getRowCount()) && !doneProducingBatches)
 						|| (this.transactionState == TransactionState.ACTIVE)) {
 					return result;
 				}
@@ -728,6 +730,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	    		} else if (!fromBuffer){
 	    			result = !isForwardOnly();
 	    		}
+			} else if (batch == null) {
+				return result;
 			} else {
 				result = false;
 			}
