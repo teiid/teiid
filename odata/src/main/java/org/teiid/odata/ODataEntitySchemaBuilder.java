@@ -201,20 +201,23 @@ public class ODataEntitySchemaBuilder {
 							.setType(refEntityType)
 							.setMultiplicity(EdmMultiplicity.ZERO_TO_ONE);
 					
-					// Build ReferentialConstraint
-					EdmReferentialConstraint.Builder erc = EdmReferentialConstraint.newBuilder();
-					erc.setPrincipalRole(fk.getReferenceTableName());
-					erc.addPrincipalReferences(fk.getReferenceColumns());
-					erc.setDependentRole(table.getName());
-					erc.addDependentReferences(getColumnNames(fk.getColumns()));
 
 					// Build Association
 					EdmAssociation.Builder association = EdmAssociation.newBuilder();
 					association.setName(table.getName()+"_"+fk.getName());
 					association.setEnds(endSelf, endRef);
 					association.setNamespace(refEntityType.getFullyQualifiedTypeName().substring(0, refEntityType.getFullyQualifiedTypeName().indexOf('.')));
-					association.setRefConstraint(erc);
 					assosiations.add(association);
+					
+					// Build ReferentialConstraint
+					if (fk.getReferenceColumns() != null) {
+						EdmReferentialConstraint.Builder erc = EdmReferentialConstraint.newBuilder();
+						erc.setPrincipalRole(fk.getReferenceTableName());
+						erc.addPrincipalReferences(fk.getReferenceColumns());
+						erc.setDependentRole(table.getName());
+						erc.addDependentReferences(getColumnNames(fk.getColumns()));
+						association.setRefConstraint(erc);
+					}					
 					
 					// Add EdmNavigationProperty to entity type
 					EdmNavigationProperty.Builder nav = EdmNavigationProperty.newBuilder(fk.getReferenceTableName());
