@@ -59,8 +59,8 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 		
 		int versionIdx = vdbName.indexOf('.');
 		if (versionIdx != -1) {
-			vdbName = vdbName.substring(0, versionIdx);
 			version = Integer.parseInt(vdbName.substring(versionIdx+1));
+			vdbName = vdbName.substring(0, versionIdx);
 		}
 		
 		vdbName = vdbName.trim();
