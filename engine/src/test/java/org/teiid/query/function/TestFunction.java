@@ -640,10 +640,6 @@ public class TestFunction {
     	helpTestEndssWith("b", "abab", true); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
-    @Test public void testEndsWith3() throws Exception {
-    	helpTestEndssWith("a", null, false); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testBitand() throws Exception {
         // Both values are integers
         Integer result = (Integer) FunctionMethods.bitand(new Integer(0xFFF), new Integer(0x0F0));

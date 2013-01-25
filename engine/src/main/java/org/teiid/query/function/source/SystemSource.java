@@ -195,7 +195,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addArrayGet();
         addArrayLength();
         addTrimFunction();
-        addEndsWithFunction();
     }
     
     private void addTrimFunction() {
@@ -614,7 +613,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                     new FunctionParameter("substring", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_arg1")), //$NON-NLS-1$ //$NON-NLS-2$
                     new FunctionParameter("string", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_arg2"))}, //$NON-NLS-1$ //$NON-NLS-2$
                 new FunctionParameter("result", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.endswith_result")) );                 //$NON-NLS-1$ //$NON-NLS-2$
-        f.setNullOnNull(false);
         functions.add(f);
     }    
 

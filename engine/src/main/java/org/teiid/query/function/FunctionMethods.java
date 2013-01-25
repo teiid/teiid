@@ -718,9 +718,6 @@ public final class FunctionMethods {
 	// ================== Function = endsWith =====================
 
 	public static Object endsWith(String sub, String str) {
-		if(str == null || sub == null) {
-			return Boolean.FALSE;
-		} 
 		return str.endsWith(sub);
 	}	
 
