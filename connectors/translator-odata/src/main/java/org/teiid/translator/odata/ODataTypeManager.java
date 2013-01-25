@@ -55,6 +55,7 @@ public class ODataTypeManager {
 		odatakeyed.put(EdmSimpleType.STRING.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
 		odatakeyed.put(EdmSimpleType.BOOLEAN.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BOOLEAN);
 		odatakeyed.put(EdmSimpleType.BYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BYTE);
+		odatakeyed.put(EdmSimpleType.SBYTE.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BYTE);
 		odatakeyed.put(EdmSimpleType.INT16.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.SHORT);
 		odatakeyed.put(EdmSimpleType.INT32.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.INTEGER);
 		odatakeyed.put(EdmSimpleType.INT64.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.LONG);
@@ -63,6 +64,7 @@ public class ODataTypeManager {
 		odatakeyed.put(EdmSimpleType.DECIMAL.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.BIG_DECIMAL);
 		odatakeyed.put(EdmSimpleType.TIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIME);
 		odatakeyed.put(EdmSimpleType.DATETIME.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
+		odatakeyed.put(EdmSimpleType.DATETIMEOFFSET.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.TIMESTAMP);
 		odatakeyed.put(EdmSimpleType.BINARY.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.OBJECT);
 		odatakeyed.put(EdmSimpleType.GUID.getFullyQualifiedTypeName(), DataTypeManager.DefaultDataTypes.STRING);
 	}

@@ -25,6 +25,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.odata4j.edm.*;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
 import org.teiid.translator.TranslatorException;
@@ -72,7 +74,7 @@ public class ODataMetadataProcessor {
 	}
 	
 
-	void addEntitySetAsTable(MetadataFactory mf, String name, EdmEntityType entity) throws TranslatorException {
+	Table addEntitySetAsTable(MetadataFactory mf, String name, EdmEntityType entity) throws TranslatorException {
 		Table table = mf.addTable(name);
 		table.setProperty(ENTITY_TYPE, entity.getFullyQualifiedTypeName());
 		table.setSupportsUpdate(true);
@@ -103,52 +105,53 @@ public class ODataMetadataProcessor {
 		
 		// add PK
 		mf.addPrimaryKey("PK", entity.getKeys(), table); //$NON-NLS-1$
+		return table;
 	}
 	
-	void addNavigationRelations(MetadataFactory mf, String tableName, EdmEntityType orderEntity) throws TranslatorException {
-		Table orderTable = mf.getSchema().getTable(tableName);
+	void addNavigationRelations(MetadataFactory mf, String tableName, EdmEntityType fromEntity) throws TranslatorException {
+		Table fromTable = mf.getSchema().getTable(tableName);
 		
-		for(EdmNavigationProperty nav:orderEntity.getNavigationProperties()) {
+		for(EdmNavigationProperty nav:fromEntity.getNavigationProperties()) {
 			EdmAssociation association = nav.getRelationship();
 			
-			EdmAssociationEnd orderEnd = nav.getFromRole();
-			EdmAssociationEnd detailsEnd = nav.getToRole();
+			EdmAssociationEnd fromEnd = nav.getFromRole();
+			EdmAssociationEnd toEnd = nav.getToRole();
 			
-			EdmEntityType detailsEntity = detailsEnd.getType();
+			EdmEntityType toEntity = toEnd.getType();
 			
 			// no support for self-joins
-			if (same(orderEntity, detailsEntity)) {
-				return;
+			if (same(fromEntity, toEntity)) {
+				continue;
 			}
 
 			// Usually navigation name is navigation table name.
-			Table detailsTable = mf.getSchema().getTable(nav.getName());
-			if (detailsTable == null) {
+			Table toTable = mf.getSchema().getTable(nav.getName());
+			if (toTable == null) {
 				// if the table not found; then navigation name may be an alias name
 				// find by the entity type
-				detailsTable = getEntityTable(mf, detailsEntity);
-				detailsTable.setProperty(ENTITY_ALIAS, nav.getName());
+				toTable = getEntityTable(mf, toEntity);
+				toTable.setProperty(ENTITY_ALIAS, nav.getName());
 			}
 			
-			if (isMultiplicityMany(orderEnd) && isMultiplicityMany(detailsEnd)) {
+			if (isMultiplicityMany(fromEnd) && isMultiplicityMany(toEnd)) {
 				if (mf.getSchema().getTable(association.getName()) == null) {
 					Table linkTable = mf.addTable(association.getName());
 					linkTable.setProperty(ENTITY_TYPE, "LinkTable"); //$NON-NLS-1$
-					linkTable.setProperty(LINK_TABLES, orderTable.getName()+","+detailsTable.getName()); //$NON-NLS-1$
+					linkTable.setProperty(LINK_TABLES, fromTable.getName()+","+toTable.getName()); //$NON-NLS-1$
 					
 					//left table
 					List<String> leftNames = null;
 					if (association.getRefConstraint() != null) {
 						leftNames = association.getRefConstraint().getPrincipalReferences();
 					}
-					leftNames = addLinkTableKeys(mf, orderTable, leftNames, linkTable);
+					leftNames = addLinkTableColumns(mf, fromTable, leftNames, linkTable);
 					
 					//right table
 					List<String> rightNames = null;
 					if (association.getRefConstraint() != null) {
 						rightNames = association.getRefConstraint().getDependentReferences();
 					}
-					rightNames = addLinkTableKeys(mf, detailsTable, rightNames, linkTable);	
+					rightNames = addLinkTableColumns(mf, toTable, rightNames, linkTable);	
 					
 					ArrayList<String> allKeys = new ArrayList<String>();
 					for(Column c:linkTable.getColumns()) {
@@ -156,42 +159,37 @@ public class ODataMetadataProcessor {
 					}
 					mf.addPrimaryKey("PK", allKeys, linkTable); //$NON-NLS-1$
 					
-					// add fks in both left and right tables
-					mf.addForiegnKey(association.getName(), leftNames,
-							getColumnNames(linkTable.getPrimaryKey().getColumns()), 
-							linkTable.getName(), orderTable);
-
-					mf.addForiegnKey(association.getName(), rightNames,
-							getColumnNames(linkTable.getPrimaryKey().getColumns()), 
-							linkTable.getName(), detailsTable);
+					// add fks for both left and right table
+					mf.addForiegnKey(fromTable.getName() + "_FK", leftNames, fromTable.getName(), linkTable); //$NON-NLS-1$
+					mf.addForiegnKey(toTable.getName() + "_FK", rightNames, toTable.getName(), linkTable); // //$NON-NLS-1$
 				}
 				
-			} else if (isMultiplicityOne(orderEnd)) {
-				addRelation(mf, orderTable, detailsTable, association, orderEnd.getRole());
+			} else if (isMultiplicityOne(fromEnd)) {
+				addRelation(mf, fromTable, toTable, association, fromEnd.getRole());
 			}
 		}
 	}
 
 
-	private List<String> addLinkTableKeys(MetadataFactory mf, Table orderTable, List<String> columnNames, Table linkTable)
+	private List<String> addLinkTableColumns(MetadataFactory mf, Table table, List<String> columnNames, Table linkTable)
 			throws TranslatorException {
 		if (columnNames != null) {
 			for (String columnName:columnNames) {
-				Column column = orderTable.getColumnByName(columnName);
+				Column column = table.getColumnByName(columnName);
 				if (column == null) {
-					throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17003, columnName, orderTable.getName()));
+					throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17003, columnName, table.getName()));
 				}
-				String name = orderTable.getName()+"_"+column.getName(); //$NON-NLS-1$
-				column = mf.addColumn(name, column.getDatatype().getRuntimeTypeName(), linkTable);
+				column = mf.addColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), linkTable);
 				column.setProperty(JOIN_COLUMN, String.valueOf(true));
 			}
 		}
 		else {
 			columnNames = new ArrayList<String>();
-			for (Column column :orderTable.getPrimaryKey().getColumns()) {
+			for (Column column :table.getPrimaryKey().getColumns()) {
 				columnNames.add(column.getName());
-				String name = orderTable.getName()+"_"+column.getName(); //$NON-NLS-1$
-				column = mf.addColumn(name, column.getDatatype().getRuntimeTypeName(), linkTable);
+				if (linkTable.getColumnByName(column.getName()) == null) {
+					column = mf.addColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), linkTable);
+				}
 				column.setProperty(JOIN_COLUMN, String.valueOf(true));
 			}
 		}
@@ -220,35 +218,66 @@ public class ODataMetadataProcessor {
 		return (x.getFullyQualifiedTypeName().equalsIgnoreCase(y.getFullyQualifiedTypeName()));
 	}
 
-	private void addRelation(MetadataFactory mf, Table orderTable, Table detailsTable, EdmAssociation association, String primaryRole) {
+	private void addRelation(MetadataFactory mf, Table fromTable, Table toTable, EdmAssociation association, String primaryRole) {
 		EdmReferentialConstraint refConstaint = association.getRefConstraint();
 		if (refConstaint != null) {
-			List<String> orderKeys = null;
-			List<String> detailsKeys = null;			
+			List<String> fromKeys = null;
+			List<String> toKeys = null;			
 			if (refConstaint.getPrincipalRole().equals(primaryRole)) {
-				orderKeys = refConstaint.getPrincipalReferences();
-				detailsKeys = refConstaint.getDependentReferences();
+				fromKeys = refConstaint.getPrincipalReferences();
+				toKeys = refConstaint.getDependentReferences();
 			}
 			else {
-				orderKeys = refConstaint.getDependentReferences();
-				detailsKeys = refConstaint.getPrincipalReferences();
+				fromKeys = refConstaint.getDependentReferences();
+				toKeys = refConstaint.getPrincipalReferences();
 			}
-			mf.addForiegnKey(association.getName(), detailsKeys, orderKeys, orderTable.getName(), detailsTable);
+			if (matchesWithPkOrUnique(fromKeys, fromTable)) {
+				mf.addForiegnKey(association.getName(), toKeys, fromKeys, fromTable.getName(), toTable);
+			}
+			else {
+				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));				
+			}
 		}
 		else {
 			// add the key columns from into many side
-			ArrayList<String> names = new ArrayList<String>();
-			for (Column c :orderTable.getPrimaryKey().getColumns()) {
-				if (detailsTable.getColumnByName(c.getName()) == null) {
-					Column addedColumn = mf.addColumn(c.getName(), c.getDatatype().getRuntimeTypeName(), detailsTable);
-					addedColumn.setProperty(JOIN_COLUMN, String.valueOf(true));
-				}
-				names.add(c.getName());
+			ArrayList<String> toKeys = new ArrayList<String>();
+			for (Column column :toTable.getPrimaryKey().getColumns()) {
+				toKeys.add(column.getName());
 			}
 			
-			// create a FK on the columns added
-			mf.addForiegnKey(association.getName(), names, orderTable.getName(), detailsTable);
+			if (matchesWithPkOrUnique(toKeys, fromTable)) {
+				// create a FK on the columns added
+				mf.addForiegnKey(association.getName(), toKeys, fromTable.getName(), toTable);
+			}
+			else {
+				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));				
+			}
 		}
+	}
+	
+	private boolean keyMatches(List<String> names, KeyRecord record) {
+		if (names.size() != record.getColumns().size()) {
+			return false;
+		}
+		for (int i = 0; i < names.size(); i++) {
+			if (!names.get(i).equals(record.getColumns().get(i).getName())) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private boolean matchesWithPkOrUnique(List<String> names, Table table) {
+		if (keyMatches(names, table.getPrimaryKey())) {
+			return true;
+		}
+		
+		for (KeyRecord record:table.getUniqueKeys()) {
+			if (keyMatches(names, record)) {
+				return true;
+			}			
+		}
+		return false;
 	}
 
 	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep) {

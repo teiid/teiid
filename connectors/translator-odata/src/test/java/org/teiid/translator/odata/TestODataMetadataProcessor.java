@@ -26,25 +26,39 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.Test;
 import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.*;
+import org.teiid.metadata.KeyRecord.Type;
+import org.teiid.query.function.FunctionTree;
+import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestODataMetadataProcessor {
+	private ODataExecutionFactory translator;
+	private TranslationUtility utility;
 
 	@Test
 	public void testSchema() throws Exception {
+    	translator = new ODataExecutionFactory();
+    	translator.start();
+
 		String csdl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.xml"));
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
 		Properties props = new Properties();
@@ -53,13 +67,19 @@ public class TestODataMetadataProcessor {
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), props, null);
 		processor.getMetadata(mf, new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes())))));
 		
+		TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "northwind", new FunctionTree("foo", new UDFSource(translator.getPushDownFunctions())));
+    	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
+    	if (report.hasItems()) {
+    		throw new RuntimeException(report.getFailureMessage());
+    	}		
+		
 		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
 		//System.out.println(ddl);	
 		
 		MetadataFactory mf2 = new MetadataFactory(null, 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null); 
 		QueryParser.getQueryParser().parseDDL(mf2, ddl);		
 	}
-
+	
 	@Test
 	public void testEnititySet() throws Exception {
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
@@ -186,6 +206,7 @@ public class TestODataMetadataProcessor {
 		
 		EdmEntityType.Builder g1Entity = entityType("g1");
 		g1Entity.addProperties(EdmProperty.newBuilder("g2e2").setType(EdmSimpleType.STRING).setNullable(false));
+		
 		EdmEntityType.Builder g2Entity = entityType("g2");
 		
 		EdmAssociationEnd.Builder aend1 = EdmAssociationEnd.newBuilder()
@@ -197,20 +218,25 @@ public class TestODataMetadataProcessor {
 				.setMultiplicity(EdmMultiplicity.ONE);		
 		
 		EdmReferentialConstraint.Builder refContraint = EdmReferentialConstraint
-				.newBuilder().addPrincipalReferences("e1").setPrincipalRole("source")
-				.addDependentReferences("g2e2").setDependentRole("target");
+				.newBuilder().addPrincipalReferences("g2e2").setPrincipalRole("source")
+				.addDependentReferences("e1").setDependentRole("target");
 
 		EdmAssociation.Builder assocition = EdmAssociation.newBuilder()
 				.setNamespace("namspace").setName("one_2_one")
 				.setEnds(aend2, aend1).setRefConstraint(refContraint);				
 
 		EdmNavigationProperty.Builder navigation = EdmNavigationProperty
-				.newBuilder("g1").setFromTo(aend2, aend1).setFromToName("source", "target").setRelationship(assocition);
+				.newBuilder("g1").setFromTo(aend2, aend1).setFromToName("source","target").setRelationship(assocition);
 		
 		g2Entity.addNavigationProperties(navigation);
 		
-		processor.addEntitySetAsTable(mf, "G1", g1Entity.build());
-		processor.addEntitySetAsTable(mf, "G2", g2Entity.build());
+		Table t1 = processor.addEntitySetAsTable(mf, "G1", g1Entity.build());
+		Table t2 = processor.addEntitySetAsTable(mf, "G2", g2Entity.build());
+		
+		KeyRecord record = new KeyRecord(Type.Unique);
+		record.addColumn(t1.getColumnByName("g2e2"));
+		t1.setUniqueKeys(Arrays.asList(record));
+		
 		processor.addNavigationRelations(mf, "G2", g2Entity.build());
 		
 		Table g1 = mf.getSchema().getTable("G1");
@@ -221,8 +247,8 @@ public class TestODataMetadataProcessor {
 		
 		ForeignKey fk = g1.getForeignKeys().get(0);
 		assertEquals("one_2_one", fk.getName());
-		assertNotNull(fk.getColumnByName("e1"));
-		assertEquals("g2e2", fk.getReferenceColumns().get(0));
+		assertNotNull(fk.getColumnByName("g2e2"));
+		assertEquals("e1", fk.getReferenceColumns().get(0));
 	}	
 	
 	
@@ -257,16 +283,19 @@ public class TestODataMetadataProcessor {
 		Table g1 = mf.getSchema().getTable("G1");
 		Table g2 = mf.getSchema().getTable("G2");
 		Table linkTable = mf.getSchema().getTable("m_2_m");
-		assertEquals(2, linkTable.getColumns().size());
-		assertEquals("G2_e1", linkTable.getColumns().get(0).getName());
-		assertEquals("G1_e1", linkTable.getColumns().get(1).getName());
+		assertEquals(1, linkTable.getColumns().size());
+		assertEquals("e1", linkTable.getColumns().get(0).getName());
 		
 		assertNotNull(linkTable);
 		assertEquals("G2,G1", linkTable.getProperty(ODataMetadataProcessor.LINK_TABLES, false));
 
-		ForeignKey fk = g1.getForeignKeys().get(0);
-		assertEquals("m_2_m", fk.getName());
-		assertNotNull(fk.getColumnByName("e1"));
+		ForeignKey fk1 = linkTable.getForeignKeys().get(0);
+		assertEquals("G2_FK", fk1.getName());
+		assertNotNull(fk1.getColumnByName("e1"));
+		
+		ForeignKey fk2 = linkTable.getForeignKeys().get(1);
+		assertEquals("G1_FK", fk2.getName());
+		assertNotNull(fk2.getColumnByName("e1"));		
 	}	
 	
 	@Test
@@ -307,19 +336,19 @@ public class TestODataMetadataProcessor {
 		Table g2 = mf.getSchema().getTable("G2");
 		Table linkTable = mf.getSchema().getTable("m_2_m");
 		assertEquals(2, linkTable.getColumns().size());
-		assertEquals("G2_e1", linkTable.getColumns().get(0).getName());
-		assertEquals("G1_g2e2", linkTable.getColumns().get(1).getName());
+		assertEquals("e1", linkTable.getColumns().get(0).getName());
+		assertEquals("g2e2", linkTable.getColumns().get(1).getName());
 		
 		assertNotNull(linkTable);
 		assertEquals("G2,G1", linkTable.getProperty(ODataMetadataProcessor.LINK_TABLES, false));
 
-		ForeignKey fk = g1.getForeignKeys().get(0);
-		assertEquals("m_2_m", fk.getName());
-		assertNotNull(fk.getColumnByName("g2e2"));
+		ForeignKey fk = linkTable.getForeignKeys().get(0);
+		assertEquals("G2_FK", fk.getName());
+		assertNotNull(fk.getColumnByName("e1"));
 
-		ForeignKey fk2 = g2.getForeignKeys().get(0);
-		assertEquals("m_2_m", fk2.getName());
-		assertNotNull(fk2.getColumnByName("e1"));
+		ForeignKey fk2 = linkTable.getForeignKeys().get(1);
+		assertEquals("G1_FK", fk2.getName());
+		assertNotNull(fk2.getColumnByName("g2e2"));
 	}	
 	
 	private EdmEntityType.Builder entityType(String name) {
