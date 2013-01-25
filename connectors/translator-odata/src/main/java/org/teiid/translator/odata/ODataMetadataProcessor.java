@@ -240,14 +240,14 @@ public class ODataMetadataProcessor {
 		}
 		else {
 			// add the key columns from into many side
-			ArrayList<String> toKeys = new ArrayList<String>();
-			for (Column column :toTable.getPrimaryKey().getColumns()) {
-				toKeys.add(column.getName());
+			ArrayList<String> fromKeys = new ArrayList<String>();
+			for (Column column :fromTable.getPrimaryKey().getColumns()) {
+				fromKeys.add(column.getName());
 			}
 			
-			if (matchesWithPkOrUnique(toKeys, fromTable)) {
+			if (hasColumns(fromKeys, toTable)) {
 				// create a FK on the columns added
-				mf.addForiegnKey(association.getName(), toKeys, fromTable.getName(), toTable);
+				mf.addForiegnKey(association.getName(), fromKeys, fromTable.getName(), toTable);
 			}
 			else {
 				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));				
@@ -255,12 +255,21 @@ public class ODataMetadataProcessor {
 		}
 	}
 	
+	private boolean hasColumns(List<String> columnNames, Table table) {
+		for (String columnName:columnNames) {
+			if (table.getColumnByName(columnName) == null) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	private boolean keyMatches(List<String> names, KeyRecord record) {
 		if (names.size() != record.getColumns().size()) {
 			return false;
 		}
 		for (int i = 0; i < names.size(); i++) {
-			if (!names.get(i).equals(record.getColumns().get(i).getName())) {
+			if (!names.get(i).equalsIgnoreCase(record.getColumns().get(i).getName())) {
 				return false;
 			}
 		}
