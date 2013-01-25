@@ -99,7 +99,7 @@ import org.teiid.query.QueryPlugin;
  * flags that are used when it is used as a lock.  It is important to not access the
  * group maps when a {@link PhysicalInfo} lock is held.
  */
-public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, StorageManager {
+public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	
 	private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(120);
 	private static final int DEFAULT_MIN_DEFRAG = 1 << 26;
@@ -141,6 +141,8 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		private final long gid;
 		private final long oid;
 		private int blockSegment;
+		private BlockByteBuffer blockByteBufferCopy = BufferFrontedFileStoreCache.this.blockByteBuffer.duplicate();
+		private BlockByteBuffer inodeByteBufferCopy = BufferFrontedFileStoreCache.this.inodeByteBuffer.duplicate();
 
 		InodeBlockManager(long gid, long oid, int inode) {
 			this.inode = inode;
@@ -157,7 +159,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		@Override
 		public ByteBuffer getBlock(int index) {
 			int dataBlock = getOrUpdateDataBlockIndex(index, EMPTY_ADDRESS, Mode.GET);
-			return blockByteBuffer.getByteBuffer(dataBlock);
+			return blockByteBufferCopy.getByteBuffer(dataBlock);
 		}
 				
 		private int getOrUpdateDataBlockIndex(int index, int value, Mode mode) {
@@ -222,7 +224,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					return null;
 				}
 			}
-			return blockByteBuffer.getByteBuffer(sib_index);
+			return blockByteBufferCopy.getByteBuffer(sib_index);
 		}
 
 		/**
@@ -286,7 +288,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 					ByteBuffer bb = getInodeBlock();
 					bb.putInt(EMPTY_ADDRESS);
 				}
-				inodeBuffer = inodeByteBuffer.getByteBuffer(inode).slice();
+				inodeBuffer = inodeByteBufferCopy.getByteBuffer(inode).slice();
 			}
 			return inodeBuffer;
 		}
@@ -312,14 +314,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 			if (!freedAll || doublyIndirectIndexBlock == EMPTY_ADDRESS) {
 				return acquire?dataBlockToAcquire:FREED;
 			}
-			bb = blockByteBuffer.getByteBuffer(doublyIndirectIndexBlock).slice();
+			bb = blockByteBufferCopy.getByteBuffer(doublyIndirectIndexBlock).slice();
 			freeBlock(0, bb, ADDRESSES_PER_BLOCK, false);
 			freeDataBlock(doublyIndirectIndexBlock);
 			return acquire?dataBlockToAcquire:FREED;
 		}
 
 		private boolean freeIndirectBlock(int indirectIndexBlock) {
-			ByteBuffer bb = blockByteBuffer.getByteBuffer(indirectIndexBlock);
+			ByteBuffer bb = blockByteBufferCopy.getByteBuffer(indirectIndexBlock);
 			boolean freedAll = freeBlock(bb.position(), bb, ADDRESSES_PER_BLOCK, true);
 			freeDataBlock(indirectIndexBlock);
 			return freedAll;
@@ -344,7 +346,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo>, Storage
 		@Override
 		public ByteBuffer allocateBlock(int blockNum) {
 			int dataBlock = getOrUpdateDataBlockIndex(blockNum, EMPTY_ADDRESS, Mode.ALLOCATE);
-			return blockByteBuffer.getByteBuffer(dataBlock);
+			return blockByteBufferCopy.getByteBuffer(dataBlock);
 		}
 	}
 

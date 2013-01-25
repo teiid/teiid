@@ -371,11 +371,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     LrfuEvictionQueue<CacheEntry> evictionQueue = new LrfuEvictionQueue<CacheEntry>(readAttempts);
     ConcurrentHashMap<Long, CacheEntry> memoryEntries = new ConcurrentHashMap<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL);
     
-    private ThreadLocal<Integer> reservedByThread = new ThreadLocal<Integer>() {
-    	protected Integer initialValue() {
-    		return 0;
+    private static class IntegerThreadLocal extends ThreadLocal<int[]> {
+    	protected int[] initialValue() {
+    		return new int[1];
     	}
     };
+    
+    private ThreadLocal<int[]> reservedByThread = new IntegerThreadLocal();
     
     //limited size reference caches based upon the memory settings
     private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
@@ -593,7 +595,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (count < 1) {
     		return;
     	}
-    	reservedByThread.set(reservedByThread.get() - count);
+    	int[] val = reservedByThread.get();
+    	val[0] -= count;
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Releasing buffer space", count); //$NON-NLS-1$
     	}
@@ -617,7 +620,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	lock.lock();
     	try {
 			//don't wait for more than is available
-			int waitCount = Math.min(additional, this.getMaxReserveKB() - reservedByThread.get());
+			int waitCount = Math.min(additional, this.getMaxReserveKB() - reservedByThread.get()[0]);
 			int committed = 0;
 	    	while (waitCount > 0 && waitCount > this.reserveBatchBytes.get() && committed < additional) {
 	    		long reserveBatchSample = this.reserveBatchBytes.get();
@@ -652,7 +655,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	} else {
     		result = noWaitReserve(count, true);
     	}
-    	reservedByThread.set(reservedByThread.get() + result);
+    	int[] val = reservedByThread.get();
+    	val[0] += result;
 		persistBatchReferences();
     	return result;
     }
@@ -928,6 +932,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	public void shutdown() {
+		this.cache = null;
+		this.memoryEntries.clear();
+		this.evictionQueue.getEvictionQueue().clear();
 	}
 
 	@Override
