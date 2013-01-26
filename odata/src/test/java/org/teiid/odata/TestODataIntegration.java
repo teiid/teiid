@@ -42,6 +42,7 @@ import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.Ignore;
 import org.mockito.ArgumentCaptor;
 import org.odata4j.core.*;
 import org.odata4j.edm.EdmDataServices;
@@ -53,6 +54,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+@Ignore
 public class TestODataIntegration extends BaseResourceTest {
 	
 	@BeforeClass
