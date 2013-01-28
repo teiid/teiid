@@ -26,6 +26,8 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -34,7 +36,11 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataQueryExecution extends BaseQueryExecution implements ResultSetExecution {
@@ -81,7 +87,9 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 		String URI = this.visitor.buildURL();
 
 		if (this.visitor.isCount()) {
-			String[] headers = new String[] {"text/xml", "text/plain"}; //$NON-NLS-1$ //$NON-NLS-2$
+			Map<String, List<String>> headers = new TreeMap<String, List<String>>();
+			headers.put("Accept", Arrays.asList("text/xml", "text/plain"));  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			
 			BinaryWSProcedureExecution execution = executeDirect("GET", URI, null, headers); //$NON-NLS-1$
 			if (execution.getResponseCode() != Status.OK.getStatusCode()) {
 				throw buildError(execution);
@@ -97,7 +105,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			}			
 		}
 		else {
-			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
+			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), null, Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
 			if (this.response != null && this.response.hasError()) {
 				this.executionContext.addWarning(this.response.getError());
 			}

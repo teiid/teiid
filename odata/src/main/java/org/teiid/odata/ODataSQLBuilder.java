@@ -57,7 +57,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private ArrayList<SQLParam> params = new ArrayList<SQLParam>();
 	private boolean prepared = true;
 	private Stack<Expression> stack = new Stack<Expression>();
-	private GroupSymbol entityGroup;
+	private GroupSymbol resultEntityGroup;
 	private Table resultEntityTable; // this is the original entity table for results
 	private FromClause fromCluse = null;
 	private HashMap<String, GroupSymbol> assosiatedTables = new HashMap<String, GroupSymbol>();
@@ -83,15 +83,15 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		Table entityTable = findTable(entityName, metadata);
 		this.resultEntityTable = entityTable;
-		this.entityGroup = new GroupSymbol("g0", entityName);
-		this.assosiatedTables.put(entityTable.getName(), this.entityGroup);
+		this.resultEntityGroup = new GroupSymbol("g0", entityName);
+		this.assosiatedTables.put(entityTable.getName(), this.resultEntityGroup);
 		this.aliasTableNames.put("g0", entityTable.getName());
 		
 		if (key != null) {
-			this.criteria = buildEntityKeyCriteria(entityTable, this.entityGroup, key);
+			this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
 		}
 		
-		this.fromCluse = new UnaryFromClause(this.entityGroup);
+		this.fromCluse = new UnaryFromClause(this.resultEntityGroup);
 		
 		if (navProperty != null) {
 			String prop = null;
@@ -118,54 +118,55 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	}
 	        	
 	        	boolean associationFound = false;
+	        	String aliasGroup = "g"+this.groupCount.getAndIncrement();
+	        	
 	        	for (ForeignKey fk:joinTable.getForeignKeys()) {
 	        		if (fk.getReferenceTableName().equals(entityTable.getName())) {
-	        			
-	        			GroupSymbol joinGroup = null;
-	        			String alias = joinTable.getName();
+
 	        			if(this.assosiatedTables.get(joinTable.getName()) == null) {
-	        				alias = "g"+this.groupCount.getAndIncrement();
-	        				joinGroup = new GroupSymbol(alias, joinTable.getName());
-		        			List<Criteria> critList = new ArrayList<Criteria>();
-		        			List<Column> pkColumns = entityTable.getPrimaryKey().getColumns();
-		        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
-		        				critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i).getName(), this.entityGroup), CompareCriteria.EQ, new ElementSymbol(fk.getReferenceColumns().get(i), joinGroup)));
-		        			}
-		        			
-		        			Criteria crit = critList.get(0);
-		        			for (int i = 1; i < critList.size(); i++) {
-		        				crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
-		        			}		        			
-		        			
-		        			if (this.fromCluse == null) {
-		        				this.fromCluse = new JoinPredicate(new UnaryFromClause(this.entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-		        				
-		        			}
-		        			else {
-		        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-		        			}
-		        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
-		        			this.aliasTableNames.put(alias, joinTable.getName());
+		        			List<String> refColumns = fk.getReferenceColumns();
+		        			if (refColumns == null) {
+		        				refColumns = getColumnNames(entityTable.getPrimaryKey().getColumns());
+		        			}	  
+		        			addJoinTable(aliasGroup, JoinType.JOIN_INNER, joinTable, entityTable, refColumns, getColumnNames(fk.getColumns()));	        				
 	        			}
-	        			this.entityGroup = joinGroup;
-	        			entityTable = joinTable;
-	        			this.resultEntityTable = entityTable;
 	        			associationFound = true;
 	        			break;
 	        		}
 	        	}
 	        	
+	        	// if association not found; see at the other end of the reference
+	        	if (!associationFound) {
+	            	for (ForeignKey fk:entityTable.getForeignKeys()) {
+	            		if (fk.getReferenceTableName().equals(joinTable.getName())) {
+	            			if(this.assosiatedTables.get(joinTable.getName()) == null) {
+	            				List<String> refColumns = fk.getReferenceColumns();
+	            				if (refColumns == null) {
+	            					refColumns = getColumnNames(joinTable.getPrimaryKey().getColumns());
+	            				}    				
+	            				addJoinTable(aliasGroup, JoinType.JOIN_INNER, joinTable, entityTable, getColumnNames(fk.getColumns()), refColumns);    				
+	            			}
+		        			associationFound = true;
+		        			break;	            			
+	            		}
+	            	}	        		
+	        	}
+	        	
 	        	if (!associationFound) {
 	        		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16003, prop, resultEntityTable.getName()));
 	        	}
+    			
+    			entityTable = joinTable;
+    			this.resultEntityGroup = this.assosiatedTables.get(joinTable.getName());
+    			this.resultEntityTable = entityTable;	        	
 	        	
 	            if (propSplit.length > 1) {
 	                key = OEntityKey.parse("("+ propSplit[1]);
 	                if (this.criteria != null) {
-	                	this.criteria = new CompoundCriteria(CompoundCriteria.AND, this.criteria, buildEntityKeyCriteria(entityTable, this.entityGroup, key));
+	                	this.criteria = new CompoundCriteria(CompoundCriteria.AND, this.criteria, buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key));
 	                }
 	                else {
-	                	this.criteria = buildEntityKeyCriteria(entityTable, this.entityGroup, key);
+	                	this.criteria = buildEntityKeyCriteria(entityTable, this.resultEntityGroup, key);
 	                }
 	            }
 			}
@@ -176,7 +177,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			select = new Select(Arrays.asList(aggregateSymbol));
 		}
 		else {
-			select = buildSelectColumns(this.projectedColumns, entityTable, this.entityGroup);		
+			select = buildSelectColumns(this.projectedColumns, entityTable, this.resultEntityGroup);		
 		}
 		
 		if (info.filter != null) {
@@ -208,7 +209,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return query;
 	}
 	
-	private GroupSymbol joinTable(String tableName, String alias, JoinType joinType) {
+	private GroupSymbol joinTable(String tableName, final String alias, final JoinType joinType) {
 		Table joinTable = findTable(tableName, metadata);
     	if (joinTable == null ) {
     		tableName = this.aliasTableNames.get(tableName);
@@ -221,73 +222,67 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	if (joinTable == null) {
     		throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16004, tableName));
     	}
+    	
+    	String joinKey = (alias != null)?alias:joinTable.getName();
+    	String aliasGroup = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
+    	
     	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
     		if (fk.getReferenceTableName().equals(joinTable.getName())) {
-    			GroupSymbol joinGroup = null;
-    			
-    			if(this.assosiatedTables.get(alias!=null?alias:joinTable.getName()) == null) {
-    				alias = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
-    				joinGroup = new GroupSymbol(alias, joinTable.getName());
-        			List<Criteria> critList = new ArrayList<Criteria>();
-        			List<Column> pkColumns = joinTable.getPrimaryKey().getColumns();
-        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
-        				critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i).getName(), this.entityGroup), CompareCriteria.EQ, new ElementSymbol(fk.getReferenceColumns().get(i), joinGroup)));
-        			}
-        			
-        			Criteria crit = critList.get(0);
-        			for (int i = 1; i < critList.size(); i++) {
-        				crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
-        			}		        			
-        			
-        			if (this.fromCluse == null) {
-        				this.fromCluse = new JoinPredicate(new UnaryFromClause(this.entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-        				
-        			}
-        			else {
-        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
-        			}
-        			this.assosiatedTables.put(alias, joinGroup);
-        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
-	    			this.aliasTableNames.put(alias, joinTable.getName());
+    			if(this.assosiatedTables.get(joinKey) == null) {
+    				List<String> refColumns = fk.getReferenceColumns();
+    				if (refColumns == null) {
+    					refColumns = getColumnNames(joinTable.getPrimaryKey().getColumns());
+    				}    				
+    				addJoinTable(aliasGroup, joinType, joinTable, this.resultEntityTable, getColumnNames(fk.getColumns()), refColumns);    				
     			}
-    			return this.assosiatedTables.get(alias!=null?alias:joinTable.getName());
+    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getName());
     		}
     	}
     	
     	// if join direction is other way
     	for (ForeignKey fk:joinTable.getForeignKeys()) {
     		if (fk.getReferenceTableName().equals(this.resultEntityTable.getName())) {
-    			
-    			GroupSymbol joinGroup = null;
-    			if(this.assosiatedTables.get(alias!=null?alias:joinTable.getName()) == null) {
-    				alias = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
-    				joinGroup = new GroupSymbol(alias, joinTable.getName());
-        			List<Criteria> critList = new ArrayList<Criteria>();
-        			List<Column> pkColumns = this.resultEntityTable.getPrimaryKey().getColumns();
-        			for (int i = 0; i < fk.getReferenceColumns().size(); i++) {
-        				critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i).getName(), this.entityGroup), CompareCriteria.EQ, new ElementSymbol(fk.getReferenceColumns().get(i), joinGroup)));
-        			}
-        			
-        			Criteria crit = critList.get(0);
-        			for (int i = 1; i < critList.size(); i++) {
-        				crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
-        			}		        			
-        			
-        			if (this.fromCluse == null) {
-        				this.fromCluse = new JoinPredicate(new UnaryFromClause(this.entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
-        				
-        			}
-        			else {
-        				this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
-        			}
-        			this.assosiatedTables.put(alias, joinGroup);
-        			this.assosiatedTables.put(joinTable.getName(), joinGroup);
-        			this.aliasTableNames.put(alias, joinTable.getName());
+    			if(this.assosiatedTables.get(joinKey) == null) {
+    				List<String> refColumns = fk.getReferenceColumns();
+    				if (refColumns == null) {
+    					refColumns = getColumnNames(this.resultEntityTable.getPrimaryKey().getColumns());
+    				}    				
+    				addJoinTable(aliasGroup, joinType, joinTable, this.resultEntityTable, refColumns, getColumnNames(fk.getColumns()));
     			}
-    			return this.assosiatedTables.get(alias!=null?alias:joinTable.getName());
+    			return this.assosiatedTables.get(alias!=null?aliasGroup:joinTable.getName());
     		}
     	}
     	return null;
+	}
+
+	private void addJoinTable(final String alias, final JoinType joinType,
+			final Table joinTable, final Table entityTable, List<String> pkColumns,
+			List<String> refColumns) {
+		
+		GroupSymbol joinGroup = new GroupSymbol(alias, joinTable.getName());
+		GroupSymbol entityGroup = this.assosiatedTables.get(entityTable.getName());
+		
+		List<Criteria> critList = new ArrayList<Criteria>();
+
+		for (int i = 0; i < refColumns.size(); i++) {
+			critList.add(new CompareCriteria(new ElementSymbol(pkColumns.get(i), entityGroup), CompareCriteria.EQ, new ElementSymbol(refColumns.get(i), joinGroup)));
+		}         			
+		
+		Criteria crit = critList.get(0);
+		for (int i = 1; i < critList.size(); i++) {
+			crit = new CompoundCriteria(CompoundCriteria.AND, crit, critList.get(i));
+		}		        			
+		
+		if (this.fromCluse == null) {
+			this.fromCluse = new JoinPredicate(new UnaryFromClause(entityGroup), new UnaryFromClause(joinGroup), JoinType.JOIN_INNER, crit);
+			
+		}
+		else {
+			this.fromCluse = new JoinPredicate(this.fromCluse, new UnaryFromClause(joinGroup), joinType, crit);
+		}
+		this.assosiatedTables.put(alias, joinGroup);
+		this.assosiatedTables.put(joinTable.getName(), joinGroup);
+		this.aliasTableNames.put(alias, joinTable.getName());
 	}
 
 	private Criteria buildEntityKeyCriteria(Table table, GroupSymbol entityGroup, OEntityKey entityKey) {
@@ -485,7 +480,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 				this.negitive = false;
 				throw new NotAcceptableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16006, property));
 			}
-			stack.push(new ElementSymbol(property, this.entityGroup));
+			stack.push(new ElementSymbol(property, this.resultEntityGroup));
 			return;
 		}
 		
@@ -976,18 +971,18 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 		Table entityTable = findTable(entitySet.getName(), this.metadata);
 		this.resultEntityTable = entityTable;
-		this.entityGroup = new GroupSymbol(entitySet.getName());
+		this.resultEntityGroup = new GroupSymbol(entitySet.getName());
 	    
 		List values = new ArrayList();
 		
 		Insert insert = new Insert();
-		insert.setGroup(this.entityGroup);
+		insert.setGroup(this.resultEntityGroup);
 		
 		int i = 0;
 	    for (OProperty<?> prop : entity.getProperties()) {
 	      EdmProperty edmProp = entitySet.getType().findProperty(prop.getName());
 	      Column column = entityTable.getColumnByName(edmProp.getName());
-	      insert.addVariable(new ElementSymbol(column.getName(), this.entityGroup));
+	      insert.addVariable(new ElementSymbol(column.getName(), this.resultEntityGroup));
 	        
 	      values.add(new Reference(i++));
 	      this.params.add(new SQLParam(prop.getValue(), JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(edmProp.getType().getFullyQualifiedTypeName()))));
@@ -1012,11 +1007,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		
 		Table entityTable = findTable(entitySet.getName(), this.metadata);
 		this.resultEntityTable = entityTable;
-		this.entityGroup = new GroupSymbol(entitySet.getName());
+		this.resultEntityGroup = new GroupSymbol(entitySet.getName());
 
 		Delete delete = new Delete();
-		delete.setGroup(this.entityGroup);
-		delete.setCriteria(buildEntityKeyCriteria(entityTable, this.entityGroup, entityKey));
+		delete.setGroup(this.resultEntityGroup);
+		delete.setCriteria(buildEntityKeyCriteria(entityTable, this.resultEntityGroup, entityKey));
 		
 		return delete;
 	}
@@ -1024,11 +1019,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	public Update update(EdmEntitySet entitySet, OEntity entity) {
 		Table entityTable = findTable(entitySet.getName(), this.metadata);
 		this.resultEntityTable = entityTable;
-		this.entityGroup = new GroupSymbol(entitySet.getName());
+		this.resultEntityGroup = new GroupSymbol(entitySet.getName());
 		
 		Update update = new Update();
-		update.setGroup(this.entityGroup);
-		update.setCriteria(buildEntityKeyCriteria(entityTable, this.entityGroup, entity.getEntityKey()));
+		update.setGroup(this.resultEntityGroup);
+		update.setCriteria(buildEntityKeyCriteria(entityTable, this.resultEntityGroup, entity.getEntityKey()));
 		
 		int i = 0;
 		for (OProperty<?> prop : entity.getProperties()) {
@@ -1041,10 +1036,18 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 				}
 			}
 			if (add) {
-				update.addChange(new ElementSymbol(column.getName(),this.entityGroup), new Reference(i++));
+				update.addChange(new ElementSymbol(column.getName(),this.resultEntityGroup), new Reference(i++));
 				this.params.add(new SQLParam(prop.getValue(), JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(edmProp.getType().getFullyQualifiedTypeName()))));
 			}
 		}
 		return update;
+	}
+	
+	private List<String> getColumnNames(List<Column> columns){
+		ArrayList<String> columnNames = new ArrayList<String>();
+		for (Column column:columns) {
+			columnNames.add(column.getName());
+		}
+		return columnNames;
 	}
 }

@@ -89,8 +89,9 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     int responseCode = 200;
     String responseMessage;
     private boolean useResponseContext;
+    private boolean alwaysAllowPayloads;
     
-    /** 
+	/** 
      * @param env
      */
     public BinaryWSProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
@@ -103,6 +104,10 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     
     public void setUseResponseContext(boolean useResponseContext) {
 		this.useResponseContext = useResponseContext;
+	}
+    
+    public void setAlwaysAllowPayloads(boolean alwaysAllowPayloads) {
+		this.alwaysAllowPayloads = alwaysAllowPayloads;
 	}
     
     public void execute() throws TranslatorException {
@@ -119,7 +124,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 			
 			dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, method);
-			if (payload != null && !"POST".equalsIgnoreCase(method)) { //$NON-NLS-1$
+			if (!this.alwaysAllowPayloads && payload != null && !"POST".equalsIgnoreCase(method)) { //$NON-NLS-1$
 				throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
 			}
 			
