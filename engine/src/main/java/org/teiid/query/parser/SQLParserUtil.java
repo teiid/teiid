@@ -36,6 +36,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionMethods;
@@ -516,6 +517,9 @@ public class SQLParserUtil {
 		}
 		
 		FunctionMethod.convertExtensionMetadata(proc, method);
+		if (method.getInvocationMethod() != null) {
+    		method.setPushdown(PushDown.CAN_PUSHDOWN);
+    	}
 		factory.getSchema().addFunction(method);
 		factory.getSchema().getProcedures().remove(proc.getName());
 	}

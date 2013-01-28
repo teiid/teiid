@@ -479,6 +479,14 @@ public class FunctionMethod extends AbstractMetadataRecord {
 		String deterministic = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "deterministic", true); //$NON-NLS-1$
 		boolean nullOnNull = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "null-on-null", true)); //$NON-NLS-1$
 		String varargs = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "varargs", true); //$NON-NLS-1$
+		String javaClass = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "java-class", true); //$NON-NLS-1$
+		String javaMethod = procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "java-method", true); //$NON-NLS-1$
+		if (function.getInvocationClass() == null) {
+			function.setInvocationClass(javaClass);
+		}
+		if (function.getInvocationMethod() == null) {
+			function.setInvocationMethod(javaMethod);
+		}
 		boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", true)); //$NON-NLS-1$
 		if (deterministic != null) {
 			function.setDeterminism(Boolean.valueOf(deterministic)?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);

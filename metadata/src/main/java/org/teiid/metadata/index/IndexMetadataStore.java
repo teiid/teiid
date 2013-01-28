@@ -486,14 +486,8 @@ public class IndexMetadataStore extends MetadataStore {
 	            //physical stored procedure without a result set
 	            //TODO: find a better fix for this
 	        }
-
-	        // if this is a virtual procedure get the procedure plan
-	        if(procedureRecord.isVirtual()) {
-	    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureRecord.getUUID(), MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
-	    		if(transformRecord != null) {
-	    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
-	    		}
-	        } else if (procedureRecord.isFunction()) {
+	        
+	        if (procedureRecord.isFunction()) {
 	        	FunctionParameter outputParam = null;
 	        	List<FunctionParameter> args = new ArrayList<FunctionParameter>(procedureRecord.getParameters().size() - 1);
 	        	boolean valid = true;
@@ -517,12 +511,23 @@ public class IndexMetadataStore extends MetadataStore {
 					}
 				}
 	        	if (valid && outputParam != null) {
-	        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), PushDown.MUST_PUSHDOWN, 
+	        	    FunctionMethod function = new FunctionMethod(procedureRecord.getName(), procedureRecord.getAnnotation(), model.getName(), procedureRecord.isVirtual()?PushDown.CAN_PUSHDOWN:PushDown.MUST_PUSHDOWN, 
 		        			null, null, args, outputParam, false, Determinism.DETERMINISTIC);
 		        	FunctionMethod.convertExtensionMetadata(procedureRecord, function);
+		        	if (function.getInvocationMethod() != null) {
+		        		function.setPushdown(PushDown.CAN_PUSHDOWN);
+		        	}
 					model.addFunction(function);
 					continue;
 	        	}
+	        }
+
+	        // if this is a virtual procedure get the procedure plan
+	        if(procedureRecord.isVirtual()) {
+	    		TransformationRecordImpl transformRecord = (TransformationRecordImpl)getRecordByType(procedureRecord.getUUID(), MetadataConstants.RECORD_TYPE.PROC_TRANSFORM, false);
+	    		if(transformRecord != null) {
+	    			procedureRecord.setQueryPlan(transformRecord.getTransformation());
+	    		}
 	        }
 			model.addProcedure(procedureRecord);
 		}
