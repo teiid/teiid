@@ -42,7 +42,11 @@ import org.teiid.language.Call;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Table;
-import org.teiid.translator.*;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
@@ -88,16 +92,14 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	public void execute() throws TranslatorException {
 		String URI = this.visitor.buildURL();
 		if (this.visitor.hasCollectionReturn()) {
-			this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(),Status.OK, Status.NO_CONTENT);
+			this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(), null, Status.OK, Status.NO_CONTENT);
 			if (this.response != null && this.response.hasError()) {
 				throw this.response.getError();
 			}
 		}
 		else {
 			try {
-				String[] headers = FormatType.ATOM.getAcceptableMediaTypes();
-				
-				BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), URI, null, headers);
+				BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), URI, null, getDefaultHeaders());
 				if (execution.getResponseCode() != Status.OK.getStatusCode()) {
 					throw buildError(execution);
 				}

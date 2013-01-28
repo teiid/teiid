@@ -66,7 +66,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		for (int i = 0; i < elementCount; i++) {
 			Column column = obj.getColumns().get(i).getMetadataObject();
 			List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
-			OProperty<?> property = OProperties.simple(column.getName(), ((Literal)values.get(0)).getValue());
+			OProperty<?> property = OProperties.simple(column.getName(), ((Literal)values.get(i)).getValue());
 			props.add(property);
 		}
 		this.payload = buildPayload(this.entityName, props);	
@@ -74,7 +74,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 	
 	@Override
     public void visit(Update obj) {
-		this.method = "PATCH"; //$NON-NLS-1$
+		this.method = "PUT"; //$NON-NLS-1$
 		this.entityName = obj.getTable().getMetadataObject().getName();
 		visitNode(obj.getTable());
 		

@@ -302,6 +302,14 @@ public class TestODataSQLStringVisitor {
 				"nw.Orders", "OrderDetails/all(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}		
+	
+	@Test
+	public void testMultiEntitykey() throws Exception {
+		OEntityKey key = OEntityKey.parse("(11044)");
+		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62))",
+				"nw.Orders", null,
+				"OrderID", null, -1, "nw.OrderDetails(OrderID=11044L,ProductID=62L)", key);		
+	}
 }
 
 

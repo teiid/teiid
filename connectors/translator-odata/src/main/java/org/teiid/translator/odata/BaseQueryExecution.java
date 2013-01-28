@@ -28,9 +28,10 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -97,16 +98,27 @@ public class BaseQueryExecution {
 		return version;
 	}	
 	
-	protected ODataEntitiesResponse executeWithReturnEntity(String method, String uri, String payload, String entityTable, Status... expectedStatus) throws TranslatorException {
-		String[] headers = FormatType.ATOM.getAcceptableMediaTypes();
+	protected ODataEntitiesResponse executeWithReturnEntity(String method, String uri, String payload, String entityTable, String eTag, Status... expectedStatus) throws TranslatorException {
+		Map<String, List<String>> headers = getDefaultHeaders();
+		if (eTag != null) {
+			headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
+		}
+		
+		if (payload != null) {
+			headers.put("Content-Type", Arrays.asList("application/atom+xml")); //$NON-NLS-1$ //$NON-NLS-2$
+		}
 		
 		BinaryWSProcedureExecution execution = executeDirect(method, uri, payload, headers);
 		for (Status status:expectedStatus) {
 			if (status.getStatusCode() == execution.getResponseCode()) {
-				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-				ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));				
-				Feed feed = parse(blob, version, entityTable);
-				return new ODataEntitiesResponse(uri, feed, entityTable);		
+				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode()) {
+					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
+					ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));				
+					Feed feed = parse(blob, version, entityTable);
+					return new ODataEntitiesResponse(uri, feed, entityTable);		
+				}
+				// this is success with no-data
+				return new ODataEntitiesResponse();
 			}
 		}
 		// throw an error
@@ -126,7 +138,7 @@ public class BaseQueryExecution {
 		}
 	}
 	
-	protected BinaryWSProcedureExecution executeDirect(String method, String uri, String payload, String[] acceptHeaders) throws TranslatorException {
+	protected BinaryWSProcedureExecution executeDirect(String method, String uri, String payload, Map<String, List<String>> headers) throws TranslatorException {
 		try {
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Source-URL=", URLDecoder.decode(uri, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
 		} catch (UnsupportedEncodingException e) {
@@ -142,11 +154,21 @@ public class BaseQueryExecution {
 		
 		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);
 		execution.setUseResponseContext(true);
-		execution.addHeader("Content-Type", Collections.singletonList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
-		execution.addHeader("Accept", Arrays.asList(acceptHeaders)); //$NON-NLS-1$
+		execution.setAlwaysAllowPayloads(true);
+		
+		for (String header:headers.keySet()) {
+			execution.addHeader(header, headers.get(header));
+		}
 		execution.execute();		
 		return execution;
 	}
+	
+	protected Map<String, List<String>> getDefaultHeaders() {
+		Map<String, List<String>> headers = new HashMap<String, List<String>>();
+		headers.put("Accept", Arrays.asList(FormatType.ATOM.getAcceptableMediaTypes())); //$NON-NLS-1$
+		headers.put("Content-Type", Arrays.asList("application/xml")); //$NON-NLS-1$ //$NON-NLS-2$
+		return headers;
+	}	
 	
 	class ODataEntitiesResponse {
 		private Feed feed;
@@ -167,6 +189,9 @@ public class BaseQueryExecution {
 		public ODataEntitiesResponse(TranslatorException ex) {
 			this.exception = ex;
 		}
+		
+		public ODataEntitiesResponse() {
+		}		
 		
 		public boolean hasRow() {
 			return (this.rowIter != null && this.rowIter.hasNext());
@@ -235,7 +260,7 @@ public class BaseQueryExecution {
 				else {
 					nextUri = uri + "&$skiptoken="+skip; //$NON-NLS-1$
 				}
-				BinaryWSProcedureExecution execution = executeDirect("GET", nextUri, null, FormatType.ATOM.getAcceptableMediaTypes()); //$NON-NLS-1$
+				BinaryWSProcedureExecution execution = executeDirect("GET", nextUri, null, getDefaultHeaders()); //$NON-NLS-1$
 				validateResponse(execution);
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 			    ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
@@ -244,7 +269,7 @@ public class BaseQueryExecution {
 				this.rowIter = this.feed.getEntries().iterator();
 				
 			} else if (next.toLowerCase().startsWith("http")) { //$NON-NLS-1$
-				BinaryWSProcedureExecution execution = executeDirect("GET", next, null, FormatType.ATOM.getAcceptableMediaTypes()); //$NON-NLS-1$
+				BinaryWSProcedureExecution execution = executeDirect("GET", next, null, getDefaultHeaders()); //$NON-NLS-1$
 				validateResponse(execution);
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 			    ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
