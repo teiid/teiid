@@ -24,10 +24,13 @@ package org.teiid.translator.odata;
 import javax.ws.rs.core.Response.Status;
 
 import org.odata4j.edm.EdmDataServices;
-import org.odata4j.format.FormatType;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.WSConnection;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataUpdateExecution extends BaseQueryExecution implements UpdateExecution {
@@ -58,42 +61,50 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
 	@Override
 	public void execute() throws TranslatorException {
 		if (this.visitor.getMethod().equals("DELETE")) { //$NON-NLS-1$
-			BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), this.visitor.buildURL(), null, FormatType.ATOM.getAcceptableMediaTypes());
-			if (execution.getResponseCode() != Status.OK.getStatusCode() || (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode())) {
+			// DELETE
+			BinaryWSProcedureExecution execution = executeDirect(this.visitor.getMethod(), this.visitor.buildURL(), null, getDefaultHeaders());
+			if (execution.getResponseCode() != Status.OK.getStatusCode() && (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode())) {
 				throw buildError(execution);
 			}
 		}
-		else if(this.visitor.getMethod().equals("PATCH")) { //$NON-NLS-1$
-			this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), this.visitor.getPayload(), this.visitor.getEntityName(), Status.OK, Status.NO_CONTENT);
-			if (this.response != null) {
-				if (this.response.hasError()) {
-					throw this.response.getError();
-				}
-				
-				if (!this.response.hasRow()) {
-					this.response = null;	
+		else if(this.visitor.getMethod().equals("PUT")) { //$NON-NLS-1$
+			// UPDATE
+			BinaryWSProcedureExecution execution = executeDirect("GET", this.visitor.buildURL(), null, getDefaultHeaders()); //$NON-NLS-1$
+			if (execution.getResponseCode() == Status.OK.getStatusCode()) {
+				String etag = (String)execution.getResponseHeader("ETag"); //$NON-NLS-1$
+				this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), this.visitor.getPayload(), this.visitor.getEntityName(), etag, Status.OK, Status.NO_CONTENT);
+				if (this.response != null) {
+					if (this.response.hasError()) {
+						throw this.response.getError();
+					}
 				}
 			}
 		}
 		else if (this.visitor.getMethod().equals("POST")) { //$NON-NLS-1$
-			this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), this.visitor.getPayload(), this.visitor.getEntityName(), Status.CREATED);
+			// INSERT
+			this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), this.visitor.getPayload(), this.visitor.getEntityName(), null, Status.CREATED);
 			if (this.response != null) {
 				if (this.response.hasError()) {
 					throw this.response.getError();
-				}
-				
-				if (!this.response.hasRow()) {
-					this.response = null;	
 				}
 			}
 		}
 	}
 
 	@Override
-	public int[] getUpdateCounts() throws DataNotAvailableException,
-			TranslatorException {
-		if (this.response != null || this.visitor.getMethod().equals("DELETE")) { //$NON-NLS-1$
-			return new int[] {1};
+	public int[] getUpdateCounts() throws DataNotAvailableException, TranslatorException {
+		if (this.visitor.getMethod().equals("DELETE")) { //$NON-NLS-1$
+			//DELETE
+			return (this.response != null)?new int[]{1}:new int[]{0};
+		}
+		else if(this.visitor.getMethod().equals("PUT")) { //$NON-NLS-1$
+			// UPDATE; 
+			// conflicting implementation found where some sent 200 with content; other with 204 no-content 
+			return (this.response != null)?new int[]{1}:new int[]{0};
+		}
+		else if (this.visitor.getMethod().equals("POST")) { //$NON-NLS-1$
+			//INSERT
+			return (this.response != null && this.response.hasRow())?new int[]{1}:new int[]{0};
 		}
 		return new int[] {0};
 	}

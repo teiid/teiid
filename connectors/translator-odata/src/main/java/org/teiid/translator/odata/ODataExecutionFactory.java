@@ -24,7 +24,12 @@ package org.teiid.translator.odata;
 import java.io.InputStreamReader;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.TreeMap;
 
 import javax.resource.cci.ConnectionFactory;
 import javax.ws.rs.core.Response.Status;
@@ -34,7 +39,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.odata4j.edm.EdmDataServices;
-import org.odata4j.format.FormatType;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.core.util.PropertiesUtils;
@@ -101,7 +105,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
 		BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn, null);
-		BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, FormatType.ATOM.getAcceptableMediaTypes()); //$NON-NLS-1$ //$NON-NLS-2$
+		BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
 		if (call.getResponseCode() != Status.OK.getStatusCode()) {
 			throw execution.buildError(call);
 		}	
