@@ -29,9 +29,9 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.query.processor.relational.FakeRelationalNode;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -109,6 +109,30 @@ public class TestBatchIterator {
 		assertNotNull(bi.nextTuple());
 		assertNotNull(bi.nextTuple());
 		assertNull(bi.nextTuple());
+	}
+	
+	@Test public void testDisableSave() throws Exception {
+		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
+			Arrays.asList(1),
+			Arrays.asList(1),
+			Arrays.asList(1),
+			Arrays.asList(1),
+			Arrays.asList(1),
+			Arrays.asList(1),
+		}, 2));
+		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR);
+		bi.setBuffer(tb, false);  //$NON-NLS-1$
+		bi.setPosition(2);
+		assertTrue(bi.hasNext());
+		tb.setForwardOnly(true);
+		bi.setPosition(1);
+		bi.disableSave();
+		for (int i = 0; i < 6; i++) {
+			assertNotNull(bi.nextTuple());
+		}
+		assertNull(bi.nextTuple());
+		assertEquals(0, tb.getManagedRowCount());
 	}
 	
 }

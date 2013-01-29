@@ -312,13 +312,18 @@ public class TestDQPCore {
         assertEquals(ThreadState.IDLE, item.getThreadState());
         assertTrue(item.resultsBuffer.getManagedRowCount() <= rowsPerBatch*23);
         //pull the rest of the results
-        for (int j = 0; j < 48; j++) {
+        int start = 17;
+        while (true) {
             item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
 
-	        message = core.processCursorRequest(reqMsg.getExecutionId(), (j + 2) * rowsPerBatch + 1, rowsPerBatch);
+	        message = core.processCursorRequest(reqMsg.getExecutionId(), start, rowsPerBatch);
 	        rm = message.get(5000, TimeUnit.MILLISECONDS);
 	        assertNull(rm.getException());
-	        assertEquals(rowsPerBatch, rm.getResultsList().size());
+	        assertTrue(rowsPerBatch >= rm.getResultsList().size());
+	        start += rm.getResultsList().size();
+	        if (rm.getFinalRow() == rm.getLastRow()) {
+	        	break;
+	        }
         }
     }
     
@@ -329,6 +334,7 @@ public class TestDQPCore {
         String sessionid = "1"; //$NON-NLS-1$
         
         RequestMessage reqMsg = exampleRequestMessage(sql);
+        reqMsg.setSync(true);
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
@@ -338,7 +344,7 @@ public class TestDQPCore {
         assertNull(rm.getException());
         assertEquals(8, rm.getResultsList().size());
         RequestWorkItem item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
-        assertEquals(100, item.resultsBuffer.getRowCount());
+    	assertEquals(100, item.resultsBuffer.getRowCount());
     }
     
     @Test public void testFinalRow() throws Exception {

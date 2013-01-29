@@ -28,19 +28,19 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.common.buffer.TupleBrowser;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.BufferReserveMode;
-import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil;
+import org.teiid.query.processor.relational.SourceState.ImplicitBuffer;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -180,7 +180,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	int rowId = 0;
     	List<?> lastTuple = null;
     	boolean sortedDistinct = sorted && !state.isDistinct();
-    	int sizeHint = index.getExpectedHeight(state.getTupleBuffer().getRowCount());
+    	int sizeHint = index.getExpectedHeight(state.getRowCount());
     	index.setBatchInsert(sorted);
     	outer: while (its.hasNext()) {
     		//detect if sorted and distinct
@@ -231,9 +231,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     }
     
     private boolean shouldIndexIfSmall(SourceState source) throws TeiidComponentException, TeiidProcessingException {
-    	Number cardinality = source.getSource().getEstimateNodeCardinality();
-    	return (source.hasBuffer() || (cardinality != null && cardinality.floatValue() != NewCalculateCostUtil.UNKNOWN_VALUE && cardinality.floatValue() <= source.getSource().getBatchSize() / 4)) 
-    	&& (source.getRowCount() <= source.getSource().getBatchSize() / 2);
+    	return source.rowCountLE(source.getSource().getBatchSize() / 2);
     }
     
     @Override
@@ -245,7 +243,6 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	} else if (!this.leftSource.hasBuffer() && processingSortLeft == SortOption.SORT && shouldIndexIfSmall(this.rightSource)) {
     		this.processingSortLeft = SortOption.NOT_SORTED;
     	} else { 
-    		this.leftSource.getTupleBuffer();
     		if (!this.rightSource.hasBuffer() && processingSortRight == SortOption.SORT && shouldIndexIfSmall(this.leftSource)) {
         		this.processingSortRight = SortOption.NOT_SORTED; 
         	} else if (processingSortRight == SortOption.SORT && shouldIndex(this.leftSource, this.rightSource)) {
@@ -316,10 +313,10 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	boolean useIndex = false;
     	int indexSchemaSize = this.joinNode.getBufferManager().getSchemaSize(possibleIndex.getSource().getOutputElements());
     	//approximate that 1/2 of the index will be memory resident 
-    	toReserve = (int)(indexSchemaSize * possibleIndex.getTupleBuffer().getRowCount() / (possibleIndex.getTupleBuffer().getBatchSize() * .5)); 
+    	toReserve = (int)(indexSchemaSize * possibleIndex.getRowCount() / (possibleIndex.getSource().getBatchSize() * .5)); 
     	if (toReserve < this.joinNode.getBufferManager().getMaxProcessingSize()) {
     		useIndex = true;
-    	} else if (possibleIndex.getTupleBuffer().getRowCount() / this.joinNode.getBatchSize() < preferMemCutoff) {
+    	} else if (possibleIndex.getRowCount() / this.joinNode.getBatchSize() < preferMemCutoff) {
     		useIndex = true;
     	} 
     	if (useIndex) {
@@ -327,6 +324,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		return true;
     	} 
     	this.repeatedMerge = true;
+    	possibleIndex.setImplicitBuffer(ImplicitBuffer.FULL);
     	return true;
     }
     
@@ -342,7 +340,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     		super.process();
     		return;
     	}
-    	if (this.sortedSource.getTupleBuffer().getRowCount() == 0) {
+    	if (this.sortedSource.getRowCount() == 0) {
     		return;
     	}
     	if (repeatedMerge) {

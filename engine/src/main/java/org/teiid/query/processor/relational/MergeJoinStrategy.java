@@ -342,10 +342,10 @@ public class MergeJoinStrategy extends JoinStrategy {
     @Override
     protected void loadRight() throws TeiidComponentException,
     		TeiidProcessingException {
-		this.rightSource.sort(this.processingSortRight);
-		if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER) {
+    	if (this.joinNode.getJoinType() != JoinType.JOIN_FULL_OUTER) {
 			this.rightSource.setImplicitBuffer(ImplicitBuffer.ON_MARK);
 		}
+		this.rightSource.sort(this.processingSortRight);
 	}
         
     public void setProcessingSortRight(boolean processingSortRight) {

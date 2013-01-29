@@ -178,31 +178,49 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     protected TupleBatch nextBatchDirect() throws BlockedException,
                                           TeiidComponentException,
                                           TeiidProcessingException {
-        if (state == State.LOAD_LEFT) {
-        	if (this.joinType != JoinType.JOIN_FULL_OUTER) {
-            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
-            }
-        	//left child was already opened by the join node
-            this.joinStrategy.loadLeft();
-            if (isDependent()) { 
-                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
-                //the tuplebuffer may be from a lower node, so pass in the schema
-                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
-                dvs.setDistinct(this.joinStrategy.leftSource.isDistinct());
-                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
-            }
-            state = State.LOAD_RIGHT;
-        }
-        if (state == State.LOAD_RIGHT) {
-        	this.joinStrategy.openRight();
-            this.joinStrategy.loadRight();
-            state = State.EXECUTE;
-        }
+    	try {
+	    	if (state == State.LOAD_LEFT) {
+	        	if (this.joinType != JoinType.JOIN_FULL_OUTER) {
+	            	this.joinStrategy.leftSource.setImplicitBuffer(ImplicitBuffer.NONE);
+	            }
+	        	//left child was already opened by the join node
+	            this.joinStrategy.loadLeft();
+	            if (isDependent()) { 
+	                TupleBuffer buffer = this.joinStrategy.leftSource.getTupleBuffer();
+	                //the tuplebuffer may be from a lower node, so pass in the schema
+	                dvs = new DependentValueSource(buffer, this.joinStrategy.leftSource.getSource().getElements());
+	                dvs.setDistinct(this.joinStrategy.leftSource.isDistinct());
+	                this.getContext().getVariableContext().setGlobalValue(this.dependentValueSource, dvs);
+	            }
+	            state = State.LOAD_RIGHT;
+	        }
+    	} catch (BlockedException e) {
+    		if (!isDependent()) {
+    			this.joinStrategy.openRight();
+                this.joinStrategy.loadRight();
+    		}
+    		throw e;
+    	}
         try {
+            if (state == State.LOAD_RIGHT) {
+	        	this.joinStrategy.openRight();
+	            this.joinStrategy.loadRight();
+                state = State.EXECUTE;
+            }
         	this.joinStrategy.process();
         	this.terminateBatches();
         } catch (BatchAvailableException e) {
         	//pull the batch
+        } catch (BlockedException e) {
+        	//TODO: this leads to duplicate exceptions, we 
+        	//could track which side is blocking
+        	try {
+        		this.joinStrategy.leftSource.prefetch(true);
+        	} catch (BlockedException e1) {
+        		
+        	}
+        	this.joinStrategy.rightSource.prefetch(true);
+        	throw e;
         }
         return pullBatch();
     }

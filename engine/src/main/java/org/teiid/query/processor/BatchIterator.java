@@ -72,6 +72,9 @@ public class BatchIterator extends AbstractTupleSource {
 			if (buffer != null && (!saveOnMark || mark)) {
             	buffer.addTupleBatch(batch, true);
             }
+			if (done && buffer != null) {
+				this.buffer.close();
+			}
 		}
 		return getCurrentTuple();
 	}
@@ -138,5 +141,27 @@ public class BatchIterator extends AbstractTupleSource {
     	}
     	super.setPosition(position);
     }
+
+    /**
+     * non-destructive method to set the mark
+     * @return true if the mark was set
+     */
+	public boolean ensureSave() {
+		if (!saveOnMark || mark) {
+			return false;
+		}
+		mark = true;
+		return true;
+	}
+	
+	public void disableSave() {
+		if (buffer != null) {
+			this.saveOnMark = true;
+			this.mark = false;
+			if (batch != null && batch.getEndRow() <= this.buffer.getRowCount()) {
+				this.batch = null;
+			}
+		}
+	}
     
 }
