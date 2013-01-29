@@ -79,7 +79,7 @@ public class TeiidProducer implements ODataProducer {
 	public CountResponse getEntitiesCount(ODataContext context, String entitySetName, QueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, null, null, false);
+		Query query = visitor.selectString(entitySetName, queryInfo, null, null, true);
 		List<SQLParam> parameters = visitor.getParameters();
 		return this.client.sqlExecuteCount(query.toString(), parameters);
 	}
@@ -117,7 +117,7 @@ public class TeiidProducer implements ODataProducer {
 			QueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
+		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, true);
 		List<SQLParam> parameters = visitor.getParameters();
 		return this.client.sqlExecuteCount(query.toString(), parameters);
 	}

@@ -59,6 +59,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.WSConnection;
+import org.teiid.translator.odata.ODataSQLVisitor.Entity;
 import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class BaseQueryExecution {
@@ -287,6 +288,10 @@ public class BaseQueryExecution {
 					throw buildError(execution);
 				}
 			}
+		}
+		
+		Iterator<Entry> getResultsIter(){
+			return this.rowIter;
 		}
 	}	
 }
