@@ -18,14 +18,7 @@
         <url-pattern>/*</url-pattern>
     </servlet-mapping>
          
-    <!-- 
-    <context-param>
-        <param-name>resteasy.providers</param-name>
-        <param-value>org.teiid.odata.TeiidProducerProvider,org.odata4j.producer.resources.ODataBatchProvider,org.odata4j.producer.resources.ExceptionMappingProvider</param-value>
-    </context-param>
-     -->
          
-     <!-- 
      <security-role>
         <description>security role</description>
         <role-name>odata</role-name>
@@ -46,5 +39,4 @@
         <auth-method>BASIC</auth-method>
         <realm-name>yourdomain.com</realm-name>
     </login-config>
-   -->
 </web-app>
