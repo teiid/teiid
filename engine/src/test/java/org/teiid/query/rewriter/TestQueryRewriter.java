@@ -1586,6 +1586,18 @@ public class TestQueryRewriter {
     	helpTestRewriteCriteria("pm1.g1.e2 > 5 and pm1.g1.e2 < 2", "1 = 0");
     }
     
+    @Test public void testRewritePredicateOptimization8() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 = 2 and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization8a() throws Exception {
+    	helpTestRewriteCriteria("pm1.g1.e2 in (0, 2) and pm1.g1.e2 > 1", "pm1.g1.e2 = 2");
+    }
+    
+    @Test public void testRewritePredicateOptimization9() throws Exception {
+    	helpTestRewriteCriteria("not(pm1.g1.e2 = 2 and pm1.g1.e2 = 3)", "(pm1.g1.e2 <> 2) OR (pm1.g1.e2 <> 3)");
+    }
+    
     @Test public void testRewritePredicateOptimizationOr() throws Exception {
     	helpTestRewriteCriteria("pm1.g1.e2 in (5, 6) or pm1.g1.e2 = 2", "pm1.g1.e2 IN (2, 5, 6)");
     }

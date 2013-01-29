@@ -1096,8 +1096,14 @@ public class QueryRewriter {
             		if (cc.getOperator() == CompareCriteria.EQ) {
                 		exprMap.put(cc.getLeftExpression(), cc);
             		} else if (modified) {
-            			newCrits.add(sc);
-            			exprMap.put(sc.getExpression(), sc);
+            			if (sc.getNumberOfValues() == 1) {
+            				CompareCriteria comp = new CompareCriteria(sc.getExpression(), CompareCriteria.EQ, (Expression)sc.getValues().iterator().next());
+            				newCrits.add(comp);
+	            			exprMap.put(sc.getExpression(), comp);
+            			} else {
+	            			newCrits.add(sc);
+	            			exprMap.put(sc.getExpression(), sc);
+            			}
                 		return null;
             		}
             	} else {
@@ -1105,7 +1111,7 @@ public class QueryRewriter {
             		if (cc1.getOperator() == CompareCriteria.NE) {
                 		exprMap.put(cc.getLeftExpression(), cc);
             		} else if (cc1.getOperator() == CompareCriteria.EQ) {
-            			if (!Evaluator.compare(cc1, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
+            			if (!Evaluator.compare(cc, ((Constant)cc1.getRightExpression()).getValue(), ((Constant)cc.getRightExpression()).getValue())) {
 							return FALSE_CRITERIA;
 						}
             			return null;
