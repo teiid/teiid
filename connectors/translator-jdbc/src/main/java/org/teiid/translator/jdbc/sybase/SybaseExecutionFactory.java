@@ -71,7 +71,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		setDatabaseVersion(TWELVE_5);
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
-		setMaxDependentInPredicates(10);
+		setMaxDependentInPredicates(8);
 		populateDateFormats();
 	}
 	
