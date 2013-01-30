@@ -75,6 +75,11 @@ public class SystemMetadata {
 					}
 				}
 				PropertiesUtils.setBeanProperties(dt, p, null);
+				if ("string".equals(dt.getName())) { //$NON-NLS-1$
+					dt.setLength(DataTypeManager.MAX_STRING_LENGTH);
+				} else if ("varbinary".equals(dt.getName())) { //$NON-NLS-1$
+					dt.setLength(DataTypeManager.MAX_LOB_MEMORY_BYTES);
+				}
 				dataTypes.add(dt);
 				if (dt.isBuiltin()) {
 					typeMap.put(dt.getRuntimeTypeName(), dt);
