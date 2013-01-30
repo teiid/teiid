@@ -199,16 +199,20 @@ class SourceState {
     		marked = true;
     	}
     	this.prefetch.setPosition(this.buffer.getRowCount() + 1);
+    	BatchIterator bi = this.prefetch; //even if we clear the prefetch, we may already be using it as the iterator
     	try {
 	    	if (!this.prefetch.hasNext()) {
 	    		this.prefetch = null;
+	    		if (this.iterator != bi) {
+	    			bi = null;
+	    		}
 	    	}
     	} finally {
-    		if (this.prefetch != null) {
+    		if (bi != null) {
 	    		if (marked) {
-	    			this.prefetch.reset();
+	    			bi.reset();
 	    		} else {
-	    			this.prefetch.setPosition(curIndex);
+	    			bi.setPosition(curIndex);
 	    		}
     		}
     	}

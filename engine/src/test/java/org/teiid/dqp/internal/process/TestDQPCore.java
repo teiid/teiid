@@ -334,7 +334,6 @@ public class TestDQPCore {
         String sessionid = "1"; //$NON-NLS-1$
         
         RequestMessage reqMsg = exampleRequestMessage(sql);
-        reqMsg.setSync(true);
         reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
         DQPWorkContext.getWorkContext().getSession().setSessionId(sessionid);
         DQPWorkContext.getWorkContext().getSession().setUserName(userName);
