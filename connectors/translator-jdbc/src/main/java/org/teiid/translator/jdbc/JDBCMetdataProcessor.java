@@ -56,7 +56,7 @@ public class JDBCMetdataProcessor {
 	/**
 	 * A holder for table records that keeps track of catalog and schema information.
 	 */
-	private static class TableInfo {
+	static class TableInfo {
 		private String catalog;
 		private String schema;
 		private String name;
@@ -490,15 +490,16 @@ public class JDBCMetdataProcessor {
 		return true;
 	}	
 
-	private void getIndexes(MetadataFactory metadataFactory,
+	void getIndexes(MetadataFactory metadataFactory,
 			DatabaseMetaData metadata, Collection<TableInfo> tables, boolean uniqueOnly) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing index info"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
-			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, false, importApproximateIndexes);
+			ResultSet indexInfo = metadata.getIndexInfo(tableInfo.catalog, tableInfo.schema, tableInfo.name, uniqueOnly, importApproximateIndexes);
 			TreeMap<Short, String> indexColumns = null;
 			String indexName = null;
 			short savedOrdinalPosition = Short.MAX_VALUE;
 			boolean nonUnique = false;
+			boolean valid = true;
 			while (indexInfo.next()) {
 				short type = indexInfo.getShort(7);
 				if (type == DatabaseMetaData.tableIndexStatistic) {
@@ -507,14 +508,19 @@ public class JDBCMetdataProcessor {
 				}
 				short ordinalPosition = indexInfo.getShort(8);
 				if (ordinalPosition <= savedOrdinalPosition) {
-					if (indexColumns != null && (!uniqueOnly || !nonUnique)) {
+					if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)) {
 						metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 					}
 					indexColumns = new TreeMap<Short, String>();
 					indexName = null;
+					valid = true;
 				}
 				savedOrdinalPosition = ordinalPosition;
 				String columnName = indexInfo.getString(9);
+				if (valid && columnName == null || tableInfo.table.getColumnByName(columnName) == null) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Skipping the import of non-simple index", indexInfo.getString(6)); //$NON-NLS-1$
+					valid = false;
+				}
 				nonUnique = indexInfo.getBoolean(4);
 				indexColumns.put(ordinalPosition, columnName);
 				if (indexName == null) {
@@ -524,7 +530,7 @@ public class JDBCMetdataProcessor {
 					}
 				}
 			}
-			if (indexColumns != null && (!uniqueOnly || !nonUnique)) {
+			if (valid && indexColumns != null && (!uniqueOnly || !nonUnique)) {
 				metadataFactory.addIndex(indexName, nonUnique, new ArrayList<String>(indexColumns.values()), tableInfo.table);
 			}
 			indexInfo.close();

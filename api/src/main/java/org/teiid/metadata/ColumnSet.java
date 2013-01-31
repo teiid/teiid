@@ -45,7 +45,7 @@ public class ColumnSet<T extends AbstractMetadataRecord> extends AbstractMetadat
      * @return the {@link Column} or null if it doesn't exist
      */
     public Column getColumnByName(String name) {
-    	if (columns == null) {
+    	if (columns == null || name == null) {
     		return null;
     	}
     	Map<String, Column> map = columnMap;
