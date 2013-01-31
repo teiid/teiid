@@ -176,6 +176,9 @@ class SourceState {
      * There are unfortunately quite a few cases to cover here.
      */
     protected void prefetch(boolean limit) throws TeiidComponentException, TeiidProcessingException {
+    	if (!open) {
+    		return;
+    	}
     	if (this.prefetch == null) {
     		if (this.buffer != null) {
     			return;

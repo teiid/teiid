@@ -313,6 +313,23 @@ public class TestTextTable {
         helpProcess(plan, createCommandContext(), dataManager, expected);
     } 
 	
+	
+	@Test public void testTextTableJoinPrefetch() throws Exception {
+		String sql = "select z.* from (select x.* from (select * from pm1.g1 where e1 = 'c') y, texttable(e1 || '\n' || e2 || '\n' || e3 COLUMNS x string) x) as z";
+    	
+        List[] expected = new List[] {
+        		Arrays.asList("c"),
+        		Arrays.asList("1"),
+        		Arrays.asList("true"),
+        };    
+
+        FakeDataManager dataManager = new FakeDataManager();
+        dataManager.setBlockOnce();
+        sampleData1(dataManager);
+        RelationalPlan plan = (RelationalPlan)helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
+        helpProcess(plan, createCommandContext(), dataManager, expected);
+    } 
+	
 	@Test public void testTextTableJoin1() throws Exception {
 		String sql = "select e1, e2 from texttable('a' COLUMNS col string) x, pm1.g1 where col = e1";
     	
