@@ -22,7 +22,9 @@
 package org.teiid.odata;
 
 import java.util.HashMap;
+import java.util.Timer;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ContextResolver;
@@ -37,7 +39,10 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 
 	@Context
 	protected UriInfo uriInfo;	
-	protected HashMap<VDBKey, Client> clientMap = new HashMap<VDBKey, Client>();
+	@Context
+	protected HttpServletRequest request;
+	protected HashMap<VDBKey, LocalClient> clientMap = new HashMap<VDBKey, LocalClient>();
+	private Timer timer =  new Timer("Teiid OData", true);
 	
 	@Override
 	public ODataProducer getContext(Class<?> arg0) {
@@ -69,11 +74,12 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 		}
 		
 		VDBKey key = new VDBKey(vdbName, version);
-		Client client = this.clientMap.get(key);
+		LocalClient client = this.clientMap.get(key);
 		if (client == null) {
 			client = new LocalClient(vdbName, version);
+			this.timer.schedule(client.getTimerTask(), 5*60*1000); // TODO: make this 100 configurable
 			this.clientMap.put(key, client);
-		}
+		}		
 		return new TeiidProducer(client);
 	}
 }

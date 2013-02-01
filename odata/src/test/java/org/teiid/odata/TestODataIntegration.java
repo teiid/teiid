@@ -52,6 +52,7 @@ import org.odata4j.producer.resources.*;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @Ignore
@@ -97,14 +98,14 @@ public class TestODataIntegration extends BaseResourceTest {
 		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
 		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
-		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
 		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
 		OEntity entity = createCustomersEntity(eds);
 		List<OEntity> result = new ArrayList<OEntity>();
 		result.add(entity);
 		
-		when(client.sqlExecute(anyString(), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class))).thenReturn(result);
+		when(client.sqlExecute(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);

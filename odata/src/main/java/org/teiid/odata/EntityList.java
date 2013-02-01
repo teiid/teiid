@@ -40,11 +40,18 @@ class EntityList extends AbstractList<OEntity>{
 	private Map<String, Boolean> projectedColumns;
 	private HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
 	
-	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition) {
+	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition) throws SQLException {
 		this.entitySet = entitySet;
 		this.rs = rs;
 		this.completion = complition;
 		this.projectedColumns = columns;
+		
+		if (this.projectedColumns == null) {
+			this.projectedColumns = new HashMap<String, Boolean>();
+			for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+				this.projectedColumns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
+			}
+		}
 
 		EdmEntityType entityType = this.entitySet.getType();
 		Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
