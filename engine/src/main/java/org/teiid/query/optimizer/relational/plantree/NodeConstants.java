@@ -97,7 +97,6 @@ public final class NodeConstants {
         IS_RIGHT_DISTINCT, 	// Boolean
         IS_SEMI_DEP,		// Boolean
         PRESERVE,
-        WAS_INNER,			// Boolean
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>
@@ -152,7 +151,7 @@ public final class NodeConstants {
         MAX_TUPLE_LIMIT,     // Expression that evaluates to the max number of tuples generated
         OFFSET_TUPLE_COUNT,  // Expression that evaluates to the tuple offset of the starting tuple
         IS_IMPLICIT_LIMIT,   // Boolean if the limit is created by the rewriter as part of a subquery optimization
-        IS_STRICT,			 // Boolean if the unordered limit should be enforced strictly
+        IS_NON_STRICT,		 // Boolean if the unordered limit should not be enforced strictly
 
         // Common AP Information
         ACCESS_PATTERNS,     // Collection <List <Object element ID> >

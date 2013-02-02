@@ -144,8 +144,8 @@ public class RulePushLimit implements OptimizerRule {
 				Expression childOffset = (Expression)child.getProperty(NodeConstants.Info.OFFSET_TUPLE_COUNT);
 				
 				combineLimits(limitNode, metadata, parentLimit, parentOffset, childLimit, childOffset);
-                if (child.hasBooleanProperty(Info.IS_STRICT)) {
-                	limitNode.setProperty(Info.IS_STRICT, true);
+                if (child.hasBooleanProperty(Info.IS_NON_STRICT)) {
+                	limitNode.setProperty(Info.IS_NON_STRICT, true);
                 }
                 NodeEditor.removeChildNode(limitNode, child);
                 limitNodes.remove(child);
@@ -157,13 +157,13 @@ public class RulePushLimit implements OptimizerRule {
                 if (!SetQuery.Operation.UNION.equals(child.getProperty(NodeConstants.Info.SET_OPERATION))) {
                 	return false;
                 }   
-                if (!child.hasBooleanProperty(NodeConstants.Info.USE_ALL) && limitNode.hasBooleanProperty(Info.IS_STRICT)) {
+                if (!child.hasBooleanProperty(NodeConstants.Info.USE_ALL) && !limitNode.hasBooleanProperty(Info.IS_NON_STRICT)) {
                 	return false;
                 }
                 //distribute the limit
                 List<PlanNode> grandChildren = new LinkedList<PlanNode>(child.getChildren());
                 for (PlanNode grandChild : grandChildren) {
-                    PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+                    PlanNode newLimit = newLimit(limitNode);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     grandChild.addAsParent(newLimit);
                     limitNodes.add(newLimit);
@@ -178,11 +178,9 @@ public class RulePushLimit implements OptimizerRule {
             	JoinType joinType = (JoinType)child.getProperty(Info.JOIN_TYPE);
             	boolean pushLeft = false;
             	boolean pushRight = false;
-            	boolean pushLimits = true;
             	if (joinType == JoinType.JOIN_CROSS) {
             		pushLeft = true;
             		pushRight = true;
-        			pushLimits = !child.hasBooleanProperty(Info.WAS_INNER); 
             	} else if (joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_FULL_OUTER) {
             		//we're allowed to do this based upon two conditions
             		//1 - we're not going to further change the join type/structure
@@ -190,20 +188,16 @@ public class RulePushLimit implements OptimizerRule {
             		pushLeft = true;
             	} 
             	if (pushLeft) {
-            		PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+            		PlanNode newLimit = newLimit(limitNode);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     child.getFirstChild().addAsParent(newLimit);
-                    if (pushLimits) {
-                    	limitNodes.add(newLimit);
-                    }
+                	limitNodes.add(newLimit);
             	}
             	if (pushRight) {
-            		PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+            		PlanNode newLimit = newLimit(limitNode);
                     newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
                     child.getLastChild().addAsParent(newLimit);
-                    if (pushLimits) {
-                    	limitNodes.add(newLimit);
-                    }
+                	limitNodes.add(newLimit);
             	}
             	return false;
             case NodeConstants.Types.ACCESS:
@@ -228,13 +222,21 @@ public class RulePushLimit implements OptimizerRule {
             }
             case NodeConstants.Types.SELECT:
             case NodeConstants.Types.DUP_REMOVE:
-            	return !limitNode.hasBooleanProperty(Info.IS_STRICT);
+            	return limitNode.hasBooleanProperty(Info.IS_NON_STRICT);
             default:
             {
                 return false;
             }
         }
     }
+
+	private static PlanNode newLimit(PlanNode limitNode) {
+		PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+		if (limitNode.hasBooleanProperty(Info.IS_NON_STRICT)) {
+			newLimit.setProperty(Info.IS_NON_STRICT, Boolean.TRUE);
+		}
+		return newLimit;
+	}
 
 	static void combineLimits(PlanNode limitNode,
 			QueryMetadataInterface metadata, Expression parentLimit,
@@ -287,7 +289,7 @@ public class RulePushLimit implements OptimizerRule {
             		parentNode.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, null);
             	}
                 
-                PlanNode pushedLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+                PlanNode pushedLimit = newLimit(parentNode);
                 
                 // since we're pushing underneath the offset, we want enough rows to satisfy both the limit and the row offset
                 

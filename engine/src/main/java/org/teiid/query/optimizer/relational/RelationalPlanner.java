@@ -1261,8 +1261,8 @@ public class RelationalPlanner {
         	if (limit.isImplicit()) {
         		limitNode.setProperty(Info.IS_IMPLICIT_LIMIT, true);
         	}
-        	if (limit.isStrict()) {
-        		limitNode.setProperty(Info.IS_STRICT, true);
+        	if (!limit.isStrict()) {
+        		limitNode.setProperty(Info.IS_NON_STRICT, true);
         	}
             attachLast(limitNode, plan);
             plan = limitNode;

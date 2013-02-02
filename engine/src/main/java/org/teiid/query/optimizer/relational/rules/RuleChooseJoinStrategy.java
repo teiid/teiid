@@ -36,7 +36,6 @@ import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
@@ -103,7 +102,6 @@ public class RuleChooseJoinStrategy implements OptimizerRule {
         
         if (crits.isEmpty() && jtype == JoinType.JOIN_INNER) {
     		joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_CROSS);
-    		joinNode.setProperty(Info.WAS_INNER, Boolean.TRUE);
     		return;
     	}
         

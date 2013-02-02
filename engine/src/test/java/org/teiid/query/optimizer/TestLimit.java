@@ -918,18 +918,16 @@ public class TestLimit {
     }
     
     /**
-     * Note that the limit is not pushed below the join
-     * TODO: we can push as far as the criteria that changed the join to a cross join
+     * Note that the limit is not pushed below the select nodes under the join
      */
     @Test public void testEffectivelyCrossJoinLimit() throws Exception {
     	 BasicSourceCapabilities caps = new BasicSourceCapabilities();
-         caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
          caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
          DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(caps);
           
          String sql = "select pm1.g1.e1, pm1.g1.e2 from pm1.g1, pm2.g1 where pm1.g1.e1 = pm2.g1.e1 and pm1.g1.e1 = 2 limit 5"; //$NON-NLS-1$
          
-         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1 WHERE pm2.g1.e1 = '2'", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 WHERE pm1.g1.e1 = '2'"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+         ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT pm2.g1.e1 FROM pm2.g1", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
          
          TestOptimizer.checkNodeTypes(plan, new int[] {
                  2,      // Access
@@ -944,7 +942,7 @@ public class TestLimit {
                  0,      // Null
                  0,      // PlanExecution
                  1,      // Project
-                 0,      // Select
+                 2,      // Select
                  0,      // Sort
                  0       // UnionAll
          }, NODE_TYPES);
