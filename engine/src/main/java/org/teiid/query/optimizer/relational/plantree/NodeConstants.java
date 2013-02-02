@@ -97,6 +97,7 @@ public final class NodeConstants {
         IS_RIGHT_DISTINCT, 	// Boolean
         IS_SEMI_DEP,		// Boolean
         PRESERVE,
+        WAS_INNER,			// Boolean
 
         // Project node properties
         PROJECT_COLS,       // List <SingleElementSymbol>

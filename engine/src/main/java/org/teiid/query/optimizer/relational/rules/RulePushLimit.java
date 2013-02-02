@@ -49,6 +49,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
@@ -173,6 +174,38 @@ public class RulePushLimit implements OptimizerRule {
                 
                 return false;
             }
+            case NodeConstants.Types.JOIN:
+            	JoinType joinType = (JoinType)child.getProperty(Info.JOIN_TYPE);
+            	boolean pushLeft = false;
+            	boolean pushRight = false;
+            	boolean pushLimits = true;
+            	if (joinType == JoinType.JOIN_CROSS) {
+            		pushLeft = true;
+            		pushRight = true;
+        			pushLimits = !child.hasBooleanProperty(Info.WAS_INNER); 
+            	} else if (joinType == JoinType.JOIN_LEFT_OUTER || joinType == JoinType.JOIN_FULL_OUTER) {
+            		//we're allowed to do this based upon two conditions
+            		//1 - we're not going to further change the join type/structure
+            		//2 - outer results will be produced using the left product first
+            		pushLeft = true;
+            	} 
+            	if (pushLeft) {
+            		PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
+                    child.getFirstChild().addAsParent(newLimit);
+                    if (pushLimits) {
+                    	limitNodes.add(newLimit);
+                    }
+            	}
+            	if (pushRight) {
+            		PlanNode newLimit = NodeFactory.getNewNode(NodeConstants.Types.TUPLE_LIMIT);
+                    newLimit.setProperty(NodeConstants.Info.MAX_TUPLE_LIMIT, op(SourceSystemFunctions.ADD_OP, parentLimit, parentOffset, metadata.getFunctionLibrary()));
+                    child.getLastChild().addAsParent(newLimit);
+                    if (pushLimits) {
+                    	limitNodes.add(newLimit);
+                    }
+            	}
+            	return false;
             case NodeConstants.Types.ACCESS:
             {
                 raiseAccessOverLimit(rootNode, child, metadata, capFinder, limitNode, record);
