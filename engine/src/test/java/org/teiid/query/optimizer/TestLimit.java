@@ -454,6 +454,39 @@ public class TestLimit {
         }, NODE_TYPES);
     }
     
+    @Test public void testStrictLimitWithUnion() {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        // pm1 model supports order by
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        String sql = "SELECT * FROM (select e2 from pm1.g1 where e1 = 'a') x UNION ALL SELECT e2 FROM PM1.g2 LIMIT 100";//$NON-NLS-1$
+        String[] expectedSql = new String[] {
+            "SELECT pm1.g2.e2 FROM pm1.g2 LIMIT 100", "SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1" //$NON-NLS-1$
+            };
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), 
+                                                    null, capFinder, expectedSql, true);  
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            2,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            2,      // Limit
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            1,      // Select
+            0,      // Sort
+            1       // UnionAll
+        }, NODE_TYPES);
+    }
+    
     @Test public void testLimitNotPushedWithDupRemove() {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
