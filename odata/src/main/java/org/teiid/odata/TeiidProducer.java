@@ -79,11 +79,37 @@ public class TeiidProducer implements ODataProducer {
 			return Responses.entities(this.client.fetchCursor(cursor, entitySet), entitySet, cursor.rowCount(), cursor.nextToken());
 		} finally {
 			// close down small results immediately, as we can require them again
-			if (cursor.rowCount() <= cursor.batchSize()) {
+			if (cursor.batchSize() == -1 || cursor.rowCount() <= cursor.batchSize()) {
 				this.client.closeCursor(cursor);
 			}
 		}
 	}
+	
+
+	@Override
+	public BaseResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, QueryInfo queryInfo) {
+		EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
+		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
+		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
+		entitySet = getEntitySet(visitor.getEntityTable().getFullName());
+		
+		Cursor cursor = null;
+		try {
+			if (queryInfo.skipToken == null || queryInfo.skipToken.isEmpty()) {
+				List<SQLParam> parameters = visitor.getParameters();
+				cursor =  this.client.createCursor(query, parameters, entitySet);
+			}
+			else {
+				cursor = LocalCursor.parse(queryInfo.skipToken);
+			}
+			return Responses.entities(this.client.fetchCursor(cursor, entitySet), entitySet, cursor.rowCount(), cursor.nextToken());
+		} finally {
+			// close down small results immediately, as we can require them again
+			if (cursor.batchSize() == -1 || cursor.rowCount() <= cursor.batchSize()) {
+				this.client.closeCursor(cursor);
+			}
+		}
+	}	
 
 	private EdmEntitySet getEntitySet(String entitySetName) {
 		EdmDataServices eds = getMetadata();
@@ -111,19 +137,6 @@ public class TeiidProducer implements ODataProducer {
 			return null;
 		}
 		return Responses.entity(entityList.get(0));
-	}
-
-	@Override
-	public BaseResponse getNavProperty(ODataContext context,
-			String entitySetName, OEntityKey entityKey, String navProp,
-			QueryInfo queryInfo) {
-		getEntitySet(entitySetName); // validate entity
-		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
-		List<SQLParam> parameters = visitor.getParameters();
-		EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
-		List<OEntity> entityList =  this.client.sqlExecute(query, parameters, entitySet, visitor.getProjectedColumns());
-		return Responses.entities(entityList, entitySet, null, null);
 	}
 
 	@Override
@@ -271,7 +284,7 @@ public class TeiidProducer implements ODataProducer {
 		for (EdmSchema schema : eds.getSchemas()) {
 			for (EdmEntityContainer eec:schema.getEntityContainers()) {
 				for (EdmFunctionImport func:eec.getFunctionImports()) {
-					if (func == function) {
+					if (func == function) {	
 						return eec;
 					}
 				}

@@ -21,13 +21,23 @@
  */
 package org.teiid.odata;
 
+import java.io.IOException;
+import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.*;
 
 import org.odata4j.core.*;
 import org.odata4j.edm.*;
+import org.odata4j.exceptions.ServerErrorException;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.Transform;
+import org.teiid.core.types.TransformationException;
+import org.teiid.translator.odata.ODataTypeManager;
 
 class EntityList extends AbstractList<OEntity>{
 	private ResultSet rs;
@@ -78,6 +88,25 @@ class EntityList extends AbstractList<OEntity>{
 		}
 		return null;
 	}
+	
+	private OProperty<?> buildPropery(String propName, EdmSimpleType expectedType, Object value) throws TransformationException, SQLException, IOException {
+		if (value == null) {
+			return OProperties.null_(propName, expectedType);
+		}
+		Class sourceType = DataTypeManager.getRuntimeType(value.getClass());
+		Class targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType.getFullyQualifiedTypeName()));
+		if (sourceType != targetType) {
+			Transform t = DataTypeManager.getTransform(sourceType,targetType);
+			if (t == null && BlobType.class == targetType && sourceType == ClobType.class) {
+				return OProperties.binary(propName, ClobType.getString((Clob)value).getBytes());
+			}
+			else if (t == null && BlobType.class == targetType && sourceType == SQLXML.class) {
+				return OProperties.binary(propName, ((SQLXML)value).getString().getBytes());
+			}			
+			return OProperties.simple(propName, expectedType, t!=null?t.transform(value):value);
+		}
+		return OProperties.simple(propName, expectedType,value);
+	}
 
 	private OEntity getEntity() {
 		if (!this.closed) {
@@ -86,14 +115,9 @@ class EntityList extends AbstractList<OEntity>{
 					HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
 					for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 						Object value = rs.getObject(i+1);
-						OProperty<?> property = null;
 						String propName = rs.getMetaData().getColumnLabel(i+1);
-						if (value != null) {
-							property = OProperties.simple(propName, (EdmSimpleType)this.propertyTypes.get(propName).getType(), value);
-						}
-						else {
-							property = OProperties.null_(rs.getMetaData().getColumnLabel(i+1), (EdmSimpleType)this.propertyTypes.get(propName).getType());
-						}
+						EdmSimpleType type = (EdmSimpleType)this.propertyTypes.get(propName).getType();
+						OProperty<?> property = buildPropery(propName, type, value);
 						properties.put(rs.getMetaData().getColumnLabel(i+1), property);	
 					}			
 					
@@ -118,7 +142,17 @@ class EntityList extends AbstractList<OEntity>{
 				this.closed = true;
 				this.completion.getResultsReceiver().receiveResults(Boolean.TRUE);
 			} catch(SQLException e) {
+				// ex ignored on completion				
 				this.completion.getResultsReceiver().exceptionOccurred(e);
+				throw new ServerErrorException(e.getMessage(), e);
+			} catch (TransformationException e) {
+				// ex ignored on completion
+				this.completion.getResultsReceiver().exceptionOccurred(e);
+				throw new ServerErrorException(e.getMessage(), e);
+			} catch (IOException e) {
+				// ex ignored on completion
+				this.completion.getResultsReceiver().exceptionOccurred(e);
+				throw new ServerErrorException(e.getMessage(), e);
 			}
 		}
 		return null;

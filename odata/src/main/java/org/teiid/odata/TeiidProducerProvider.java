@@ -21,10 +21,11 @@
  */
 package org.teiid.odata;
 
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.Timer;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.ext.ContextResolver;
@@ -40,7 +41,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 	@Context
 	protected UriInfo uriInfo;	
 	@Context
-	protected HttpServletRequest request;
+	protected javax.servlet.ServletContext context;
 	protected HashMap<VDBKey, LocalClient> clientMap = new HashMap<VDBKey, LocalClient>();
 	private Timer timer =  new Timer("Teiid OData", true);
 	
@@ -76,10 +77,19 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 		VDBKey key = new VDBKey(vdbName, version);
 		LocalClient client = this.clientMap.get(key);
 		if (client == null) {
-			client = new LocalClient(vdbName, version);
-			this.timer.schedule(client.getTimerTask(), 5*60*1000); // TODO: make this 100 configurable
+			client = new LocalClient(vdbName, version, getInitParameters(), this.timer);
 			this.clientMap.put(key, client);
 		}		
 		return new TeiidProducer(client);
+	}
+	
+	Properties getInitParameters() {
+		Properties props = new Properties();
+		Enumeration<String> en = this.context.getInitParameterNames();
+		while(en.hasMoreElements()) {
+			String key = en.nextElement(); 
+			props.setProperty(key, this.context.getInitParameter(key));
+		}
+		return props;
 	}
 }

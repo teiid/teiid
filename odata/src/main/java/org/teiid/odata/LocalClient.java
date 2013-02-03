@@ -21,19 +21,11 @@
  */
 package org.teiid.odata;
 
-import java.lang.ref.Reference;
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.StringTokenizer;
-import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.naming.InitialContext;
@@ -66,7 +58,7 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.core.util.LRUCache;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
@@ -94,17 +86,25 @@ import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 
 public class LocalClient implements Client {
+	private static final String MAX_ALLOWED_CURSORS = "max-allowed-cursors"; //$NON-NLS-1$
+	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
+	private static final String CURSOR_CLEAN_TIME = "cursor-cleanup-every-millis"; //$NON-NLS-1$
+	private static final String CURSOR_TTL = "cursor-ttl-millis"; //$NON-NLS-1$
+	
 	private MetadataStore metadataStore;
 	private String vdbName;
 	private int vdbVersion;
 	private AtomicInteger tempTableCounter = new AtomicInteger(0);
 	private SessionCache sessions;
-	private ReferenceQueue<String> refQueue = new ReferenceQueue<String>();
+	private int batchSize = 256;
 	
-	public LocalClient(String vdbName, int vdbVersion) {
+	public LocalClient(String vdbName, int vdbVersion, Properties props, Timer cleanupTimer) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
-		this.sessions = new SessionCache(100);
+		this.sessions = new SessionCache(PropertiesUtils.getIntProperty(props, MAX_ALLOWED_CURSORS, 100), PropertiesUtils.getIntProperty(props, CURSOR_TTL, 5*60*1000)); // 5 mins
+		int delay = PropertiesUtils.getIntProperty(props, CURSOR_CLEAN_TIME, 30000);
+		cleanupTimer.scheduleAtFixedRate(getTimerTask(), delay, delay);
+		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, 256);
 	}
 	
 	public TimerTask getTimerTask() {
@@ -122,7 +122,6 @@ public class LocalClient implements Client {
 	}
 	
 	private ConnectionImpl getConnection() throws SQLException {
-		cleanup();
 		return getConnection(this.vdbName, this.vdbVersion, null);
 	}
 	
@@ -137,10 +136,8 @@ public class LocalClient implements Client {
 	}	
 	
 	private void cleanup() {
-		Reference<? extends String> ref;
-		while ((ref = this.refQueue.poll()) != null) {
-			String sessionId = ref.get();
-			closeSession(sessionId);
+		synchronized(this.sessions) {
+			this.sessions.cleanup();
 		}
 	}
 
@@ -323,7 +320,6 @@ public class LocalClient implements Client {
 	}	
 	
 	private void execute(Command command, String sessionId, boolean closeConnection) {
-		cleanup();
 		ConnectionImpl connection = null;
 		try {
 			String sql = command.toString();
@@ -405,10 +401,9 @@ public class LocalClient implements Client {
 			stmt.close();
 					
 			// create a session and place the session id and temptable name
-			WeakReference<String> key = new WeakReference<String>(connection.getConnectionId(), this.refQueue);
-			this.sessions.put(key, tempTable);
+			createCursorEntry(connection.getConnectionId(), tempTable);
 			
-			return new LocalCursor(connection.getConnectionId(), tempTable, count, 0);
+			return new LocalCursor(connection.getConnectionId(), tempTable, count, 0, this.batchSize);
 		} catch (SQLException e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} catch (Throwable e) {
@@ -416,14 +411,37 @@ public class LocalClient implements Client {
 		}
 	}
 
-	private boolean valid(String session, String table) {
-		String tempTable = this.sessions.get(session);
-		return(tempTable != null && tempTable.equals(table));
+	private void createCursorEntry(String sessionid, String table) {
+		synchronized(this.sessions) {
+			this.sessions.put(sessionid, new Object[] {table, new Long(System.currentTimeMillis())});
+		}
 	}
+
+	private boolean validCursorEntry(String sessionid, String table) {
+		synchronized(this.sessions) {
+			Object[] contents = this.sessions.get(sessionid);
+			return(contents != null && contents[0].equals(table));
+		}
+	}
+	
+	private void updateCursorEntry(String sessionid, String table) {
+		synchronized (this.sessions) {
+			Object[] contents = this.sessions.get(sessionid);
+			if (contents != null) {
+				this.sessions.put(sessionid, new Object[] {table, new Long(System.currentTimeMillis())});
+			}
+		}
+	}	
+	
+	private void removeCursorEntry(String session) {
+		synchronized(this.sessions) {
+			this.sessions.remove(session);
+		}
+	}	
 	
 	@Override
 	public List<OEntity> fetchCursor(Cursor cursor, EdmEntitySet entitySet) {
-		if (!valid(cursor.session(), cursor.name())) {
+		if (!validCursorEntry(cursor.session(), cursor.name())) {
 			throw new ServerErrorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16009));
 		}
 		
@@ -435,34 +453,43 @@ public class LocalClient implements Client {
 		select.addSymbol(all);
 		query.setSelect(select);
 		query.setFrom(from);
-		query.setLimit(new Limit(new Constant(cursor.offset()), new Constant(cursor.batchSize())));
+		if (cursor.batchSize() == -1) {
+			query.setLimit(new Limit(new Constant(cursor.offset()), null));
+		}
+		else {
+			query.setLimit(new Limit(new Constant(cursor.offset()), new Constant(cursor.batchSize())));
+		}
+		
+		// update access time
+		updateCursorEntry(cursor.session(), cursor.name());
 		
 		return executeSQL(cursor.session(), false, query, null, entitySet, null);
 	}	
 	
 	@Override
 	public void closeCursor(Cursor cursor) {
-		if (!valid(cursor.session(), cursor.name())) {
+		if (!validCursorEntry(cursor.session(), cursor.name())) {
 			throw new ServerErrorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16009));
 		}		
-		this.sessions.remove(cursor.session());
+		removeCursorEntry(cursor.session());
 		Drop drop = new Drop();
         drop.setTable(new GroupSymbol(cursor.name())); //$NON-NLS-1$
         execute(drop, cursor.session(), true);
-	}		
-	
+	}
+
 	static class LocalCursor implements Cursor {
 		private String name;
 		private int rowCount;
 		private int offset;
-		private int batch = 10;
+		private int batch = 256;
 		private String session;
 		
-		public LocalCursor(String sessionid, String name, int rowcount, int offset) {
+		public LocalCursor(String sessionid, String name, int rowcount, int offset, int batchsize) {
 			this.session = sessionid;
 			this.name = name;
 			this.rowCount = rowcount;
 			this.offset = offset;
+			this.batch = batchsize;
 		}
 		
 		@Override
@@ -496,9 +523,12 @@ public class LocalClient implements Client {
 		
 		@Override
 		public String nextToken() {
+			if (this.batch == -1) {
+				return null;
+			}
 			if ((this.offset + this.batch) < this.rowCount) {
 				StringBuilder sb = new StringBuilder();
-				sb.append(this.session).append(",").append(this.name).append(",").append(this.rowCount).append(",").append(this.offset+this.batch);
+				sb.append(this.session).append(",").append(this.name).append(",").append(this.rowCount).append(",").append(this.batch).append(",").append(this.offset+this.batch);
 				return sb.toString();
 			}
 			return null;
@@ -509,13 +539,14 @@ public class LocalClient implements Client {
 			String session = st.nextToken();
 			String name = st.nextToken();
 			int rowcount = Integer.parseInt(st.nextToken());
+			int batch = Integer.parseInt(st.nextToken());
 			int offset = Integer.parseInt(st.nextToken());
-			return new LocalCursor(session, name, rowcount, offset);
+			return new LocalCursor(session, name, rowcount, offset, batch);
 		}
 		
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			sb.append(this.session).append(",").append(this.name).append(",").append(this.rowCount).append(",").append(this.offset);
+			sb.append(this.session).append(",").append(this.name).append(",").append(this.rowCount).append(",").append(this.batch).append(",").append(this.offset);
 			return sb.toString();
 		}
 	}
@@ -527,18 +558,42 @@ public class LocalClient implements Client {
 	}
 	
 	@SuppressWarnings("serial")
-	class SessionCache extends LRUCache<WeakReference<String>, String>{
-		public SessionCache(int maxSize) {
-			super(maxSize);
+	class SessionCache extends LinkedHashMap<String, Object[]>{
+	    protected static final int DEFAULT_SPACELIMIT = 100;
+		protected int maxSize;		
+		private int allowed;
+
+		public SessionCache(int maxSize, int allowed) {
+			super(maxSize, 0.75f, true);
+			this.maxSize = maxSize;
+			this.allowed = allowed;
 		}
 		
 		@Override
-		protected boolean removeEldestEntry(Entry<WeakReference<String>, String> eldest) {
+		protected boolean removeEldestEntry(Entry<String, Object[]> eldest) {
 			if (size() > maxSize) {
-				closeSession(eldest.getKey().get());
+				closeSession(eldest.getKey());
 				return true;
 			}
 			return false;
+		}
+		
+		protected void cleanup() {
+			// this is set up access order; so least accessed will be first
+			// check the time limit;when over break
+			Iterator<String> keys = new TreeSet(this.keySet()).iterator();
+			while(keys.hasNext()) {
+				String session = keys.next();
+				Object[] contents = get(session);
+				Long created = (Long)contents[1];
+				if (System.currentTimeMillis() - created > this.allowed) {
+					remove(session);
+					closeSession(session);
+				}
+				else {
+					break;
+				}
+			}
 		}
 	};
 }
