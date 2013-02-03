@@ -32,6 +32,8 @@ import org.odata4j.producer.edm.MetadataProducer;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.odata.Client.Cursor;
+import org.teiid.odata.LocalClient.LocalCursor;
 import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
@@ -61,14 +63,53 @@ public class TeiidProducer implements ODataProducer {
 
 	@Override
 	public EntitiesResponse getEntities(ODataContext context, String entitySetName, QueryInfo queryInfo) {
+		Cursor cursor = null;
+		try {
+			EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
+			if (queryInfo.skipToken == null || queryInfo.skipToken.isEmpty()) {
+				ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
+				Query query = visitor.selectString(entitySetName, queryInfo, null, null, false);
+				List<SQLParam> parameters = visitor.getParameters();
+				entitySet = getEntitySet(visitor.getEntityTable().getFullName());
+				cursor =  this.client.createCursor(query, parameters, entitySet);
+			}
+			else {
+				cursor = LocalCursor.parse(queryInfo.skipToken);
+			}
+			return Responses.entities(this.client.fetchCursor(cursor, entitySet), entitySet, cursor.rowCount(), cursor.nextToken());
+		} finally {
+			// close down small results immediately, as we can require them again
+			if (cursor.batchSize() == -1 || cursor.rowCount() <= cursor.batchSize()) {
+				this.client.closeCursor(cursor);
+			}
+		}
+	}
+	
+
+	@Override
+	public BaseResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, QueryInfo queryInfo) {
 		EdmEntitySet entitySet = getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, null, null, false);
-		List<SQLParam> parameters = visitor.getParameters();
+		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
 		entitySet = getEntitySet(visitor.getEntityTable().getFullName());
-		List<OEntity> entityList =  this.client.sqlExecute(query.toString(), parameters, entitySet, visitor.getProjectedColumns());
-		return Responses.entities(entityList, entitySet, null, null);
-	}
+		
+		Cursor cursor = null;
+		try {
+			if (queryInfo.skipToken == null || queryInfo.skipToken.isEmpty()) {
+				List<SQLParam> parameters = visitor.getParameters();
+				cursor =  this.client.createCursor(query, parameters, entitySet);
+			}
+			else {
+				cursor = LocalCursor.parse(queryInfo.skipToken);
+			}
+			return Responses.entities(this.client.fetchCursor(cursor, entitySet), entitySet, cursor.rowCount(), cursor.nextToken());
+		} finally {
+			// close down small results immediately, as we can require them again
+			if (cursor.batchSize() == -1 || cursor.rowCount() <= cursor.batchSize()) {
+				this.client.closeCursor(cursor);
+			}
+		}
+	}	
 
 	private EdmEntitySet getEntitySet(String entitySetName) {
 		EdmDataServices eds = getMetadata();
@@ -81,7 +122,7 @@ public class TeiidProducer implements ODataProducer {
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, null, null, true);
 		List<SQLParam> parameters = visitor.getParameters();
-		return this.client.sqlExecuteCount(query.toString(), parameters);
+		return this.client.sqlExecuteCount(query, parameters);
 	}
 	
 	@Override
@@ -91,24 +132,11 @@ public class TeiidProducer implements ODataProducer {
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, null, false);
 		EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
-		List<OEntity> entityList =  this.client.sqlExecute(query.toString(), parameters, entitySet, visitor.getProjectedColumns());
+		List<OEntity> entityList =  this.client.sqlExecute(query, parameters, entitySet, visitor.getProjectedColumns());
 		if (entityList.isEmpty()) {
 			return null;
 		}
 		return Responses.entity(entityList.get(0));
-	}
-
-	@Override
-	public BaseResponse getNavProperty(ODataContext context,
-			String entitySetName, OEntityKey entityKey, String navProp,
-			QueryInfo queryInfo) {
-		getEntitySet(entitySetName); // validate entity
-		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
-		List<SQLParam> parameters = visitor.getParameters();
-		EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
-		List<OEntity> entityList =  this.client.sqlExecute(query.toString(), parameters, entitySet, visitor.getProjectedColumns());
-		return Responses.entities(entityList, entitySet, null, null);
 	}
 
 	@Override
@@ -119,7 +147,7 @@ public class TeiidProducer implements ODataProducer {
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, true);
 		List<SQLParam> parameters = visitor.getParameters();
-		return this.client.sqlExecuteCount(query.toString(), parameters);
+		return this.client.sqlExecuteCount(query, parameters);
 	}
 
 	@Override
@@ -134,7 +162,7 @@ public class TeiidProducer implements ODataProducer {
 		Insert query = visitor.insert(entitySet, entity);
 				
 		List<SQLParam> parameters = visitor.getParameters();
-		int updateCount =  this.client.sqlExecuteUpdate(query.toString(), parameters);
+		int updateCount =  this.client.sqlExecuteUpdate(query, parameters);
 		if (updateCount  == 1) {
 			visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		    OEntityKey entityKey = visitor.buildEntityKey(entitySet, entity);
@@ -158,7 +186,7 @@ public class TeiidProducer implements ODataProducer {
 		Delete query = visitor.delete(entitySet, entityKey);
 				
 		List<SQLParam> parameters = visitor.getParameters();
-		int deleteCount =  this.client.sqlExecuteUpdate(query.toString(), parameters);
+		int deleteCount =  this.client.sqlExecuteUpdate(query, parameters);
 		if (deleteCount > 0) {
 			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$
 		}
@@ -187,7 +215,7 @@ public class TeiidProducer implements ODataProducer {
 		Update query = visitor.update(entitySet, entity);
 				
 		List<SQLParam> parameters = visitor.getParameters();
-		return this.client.sqlExecuteUpdate(query.toString(), parameters);
+		return this.client.sqlExecuteUpdate(query, parameters);
 	}
 
 	@Override
@@ -256,7 +284,7 @@ public class TeiidProducer implements ODataProducer {
 		for (EdmSchema schema : eds.getSchemas()) {
 			for (EdmEntityContainer eec:schema.getEntityContainers()) {
 				for (EdmFunctionImport func:eec.getFunctionImports()) {
-					if (func == function) {
+					if (func == function) {	
 						return eec;
 					}
 				}
