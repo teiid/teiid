@@ -32,6 +32,8 @@ import org.odata4j.edm.EdmType;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.Query;
 
 public interface Client {
 	String getVDBName();
@@ -42,11 +44,26 @@ public interface Client {
 	
 	BaseResponse sqlExecuteCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType);
 
-	List<OEntity> sqlExecute(String sql, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns);
+	List<OEntity> sqlExecute(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns);
 	
-	CountResponse sqlExecuteCount(String sql, List<SQLParam> parameters);
+	CountResponse sqlExecuteCount(Query query, List<SQLParam> parameters);
 	
-	int sqlExecuteUpdate(String sql, List<SQLParam> parameters);	
+	int sqlExecuteUpdate(Command command, List<SQLParam> parameters);	
 	
 	EdmDataServices getMetadata();
+	
+	Cursor createCursor(Query query, List<SQLParam> parameters, EdmEntitySet entitySet);
+	
+	List<OEntity> fetchCursor(Cursor cursor, EdmEntitySet entitySet);	
+	
+	void closeCursor(Cursor cursor);
+	
+	interface Cursor {
+		String session();
+		String name();
+		int rowCount();
+		int offset();
+		int batchSize();
+		String nextToken();
+	}
 }
