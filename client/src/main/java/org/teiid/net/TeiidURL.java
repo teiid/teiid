@@ -87,7 +87,6 @@ public class TeiidURL {
 		
 		public static final String ENCRYPT_REQUESTS = "encryptRequests"; //$NON-NLS-1$;
 		
-		public static final String SESSION_ID = "session-id"; //$NON-NLS-1$;
 	}
 
 	public static final String DOT_DELIMITER = "."; //$NON-NLS-1$

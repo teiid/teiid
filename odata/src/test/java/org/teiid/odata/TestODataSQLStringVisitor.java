@@ -225,11 +225,11 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testSelectQuery() throws Exception {
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20)",
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE (g0.ShipperID >= 10) AND (g0.ShipperID < 20) ORDER BY g0.ShipperID",
 				"nw.Shippers", "ShipperID ge 10 and ShipperID lt 20", null,
 				null, -1, null, null);
 		testSelect(
-				"SELECT g0.Phone, g0.ShipperID, g0.CompanyName FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo'",
+				"SELECT g0.Phone, g0.ShipperID, g0.CompanyName FROM nw.Shippers AS g0 WHERE g0.CompanyName <> 'foo' ORDER BY g0.ShipperID",
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				null, -1, null, null);
 		testSelect(
@@ -237,21 +237,21 @@ public class TestODataSQLStringVisitor {
 				"nw.Shippers", "CompanyName ne 'foo'", "CompanyName,Phone",
 				"CompanyName desc, Phone", -1, null, null);
 		testSelect(
-				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 LIMIT 0, 10",
+				"SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 ORDER BY g0.ShipperID LIMIT 0, 10",
 				"nw.Shippers", null, null, null, 10, null, null);
 	}	
 	
 	@Test
 	public void testNavigationalQuery() throws Exception {
 		testSelect(
-				"SELECT g1.EmployeeID, g1.ShipVia, g1.OrderID, g1.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID",
+				"SELECT g1.EmployeeID, g1.ShipVia, g1.OrderID, g1.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID ORDER BY g1.OrderID",
 				"nw.Customers", null, "EmployeeID", null, -1, "nw.Orders", null);
 		testSelect(
-				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12",
+				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE g1.OrderID = 12 ORDER BY g2.OrderID, g2.ProductID",
 				"nw.Customers", null, "UnitPrice", null, -1,
 				"nw.Orders(12)/nw.OrderDetails", null);
 		testSelect(
-				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12)",
+				"SELECT g2.OrderID, g2.ProductID, g2.UnitPrice FROM (nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID) INNER JOIN OrderDetails AS g2 ON g1.OrderID = g2.OrderID WHERE (g0.CustomerID = 33) AND (g1.OrderID = 12) ORDER BY g2.OrderID, g2.ProductID",
 				"nw.Customers", null, "UnitPrice", null, -1,
 				"nw.Orders(12)/nw.OrderDetails", OEntityKey.create(33));
 	}
@@ -259,7 +259,7 @@ public class TestODataSQLStringVisitor {
 	
 	@Test
 	public void testEntityKeyQuery() throws Exception {
-		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
+		testSelect("SELECT g0.ShipperID, g0.CompanyName, g0.Phone FROM nw.Shippers AS g0 WHERE g0.ShipperID = 12 ORDER BY g0.ShipperID", "nw.Shippers", null, null, null, -1, null, OEntityKey.create(12));
 	}	
 	
 	@Test
@@ -267,12 +267,12 @@ public class TestODataSQLStringVisitor {
 		testSelect(
 				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID " +
 				"FROM nw.Orders AS g0 INNER JOIN Customers AS g1 " +
-				"ON g0.CustomerID = g1.CustomerID WHERE g1.ContactName = 'Fred'",
+				"ON g0.CustomerID = g1.CustomerID WHERE g1.ContactName = 'Fred' ORDER BY g0.OrderID",
 				"nw.Orders", "Customers/ContactName eq 'Fred'", "OrderID",
 				null, -1, null, null);
 		
 		testSelect(
-				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1",
+				"SELECT g0.ContactName, g0.CustomerID FROM nw.Customers AS g0 INNER JOIN Orders AS g1 ON g0.CustomerID = g1.CustomerID WHERE g1.OrderID = 1 ORDER BY g0.CustomerID",
 				"nw.Customers", "Orders/OrderID eq 1", "ContactName",
 				null, -1, null, null);
 		
@@ -289,7 +289,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testAny() throws Exception {	
 		testSelect(
-				"SELECT DISTINCT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",
+				"SELECT DISTINCT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10 ORDER BY g0.OrderID",
 				"nw.Orders", "OrderDetails/any(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}	
@@ -306,7 +306,7 @@ public class TestODataSQLStringVisitor {
 	@Test
 	public void testMultiEntitykey() throws Exception {
 		OEntityKey key = OEntityKey.parse("(11044)");
-		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62))",
+		testSelect("SELECT g1.OrderID, g1.ProductID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS g1 ON g0.OrderID = g1.OrderID WHERE (g0.OrderID = 11044) AND ((g1.OrderID = 11044) AND (g1.ProductID = 62)) ORDER BY g1.OrderID, g1.ProductID",
 				"nw.Orders", null,
 				"OrderID", null, -1, "nw.OrderDetails(OrderID=11044L,ProductID=62L)", key);		
 	}

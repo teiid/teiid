@@ -24,7 +24,6 @@ package org.teiid.odata;
 import java.util.List;
 import java.util.Map;
 
-import org.odata4j.core.OEntity;
 import org.odata4j.core.OFunctionParameter;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
@@ -42,28 +41,13 @@ public interface Client {
 	
 	MetadataStore getMetadataStore();
 	
-	BaseResponse sqlExecuteCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType);
+	BaseResponse executeCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType);
 
-	List<OEntity> sqlExecute(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns);
+	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken);
 	
-	CountResponse sqlExecuteCount(Query query, List<SQLParam> parameters);
+	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	
-	int sqlExecuteUpdate(Command command, List<SQLParam> parameters);	
+	int executeUpdate(Command command, List<SQLParam> parameters);	
 	
 	EdmDataServices getMetadata();
-	
-	Cursor createCursor(Query query, List<SQLParam> parameters, EdmEntitySet entitySet);
-	
-	List<OEntity> fetchCursor(Cursor cursor, EdmEntitySet entitySet);	
-	
-	void closeCursor(Cursor cursor);
-	
-	interface Cursor {
-		String session();
-		String name();
-		int rowCount();
-		int offset();
-		int batchSize();
-		String nextToken();
-	}
 }

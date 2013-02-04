@@ -282,6 +282,9 @@
             <preparedplan-cache infinispan-container="teiid" name="preparedplan"/>
             
             <transport name="embedded"/>
+            <transport name="odata">
+                <authentication security-domain="teiid-security"/>
+            </transport>
             <transport name="jdbc" protocol="teiid" socket-binding="teiid-jdbc">
                 <authentication security-domain="teiid-security"/>
             </transport>
