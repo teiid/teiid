@@ -65,6 +65,9 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 @Translator(name="oracle", description="A translator for Oracle 9i Database or later")
 public class OracleExecutionFactory extends JDBCExecutionFactory {
 	
+	public static final String NINE_0 = "9.0"; //$NON-NLS-1$
+	public static final String NINE_2 = "9.2"; //$NON-NLS-1$
+	
 	private static final String TIME_FORMAT = "HH24:MI:SS"; //$NON-NLS-1$
 	private static final String DATE_FORMAT = "YYYY-MM-DD"; //$NON-NLS-1$
 	private static final String DATETIME_FORMAT = DATE_FORMAT + " " + TIME_FORMAT; //$NON-NLS-1$
@@ -98,6 +101,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	static int FIXED_CHAR_TYPE = 999;
 
 	private boolean oracleSuppliedDriver = true;
+	
+	public OracleExecutionFactory() {
+		setDatabaseVersion(NINE_0);
+	}
     
     public void start() throws TranslatorException {
         super.start();
@@ -778,6 +785,11 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			return super.getRuntimeType(type, typeName, precision);
     		}
     	};
+    }
+    
+    @Override
+    public boolean supportsCommonTableExpressions() {
+    	return getDatabaseVersion().compareTo(NINE_2) >= 0;
     }
     
 }
