@@ -192,6 +192,14 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			}
 			query.setOrderBy(this.orderBy);
 		}
+		else {
+			// provide implicit ordering for cursor logic
+			for (Column column:resultEntityTable.getPrimaryKey().getColumns()) {
+				OrderByExpression expr = org.odata4j.expression.Expression.orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()), Direction.ASCENDING);
+				visitNode(expr);
+			}
+			query.setOrderBy(this.orderBy);
+		}
 
 		if (info.top != null && info.skip != null) {
 			query.setLimit(new Limit(new Constant(info.skip), new Constant(info.top)));

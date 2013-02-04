@@ -90,11 +90,16 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	private boolean embedded;
 	private String krb5Domain;
 	private InetSocketAddress address = null;
+	private String transportName;
 	
 	private final InjectedValue<SocketBinding> socketBindingInjector = new InjectedValue<SocketBinding>();
 	private final InjectedValue<VDBRepository> vdbRepositoryInjector = new InjectedValue<VDBRepository>();
 	private final InjectedValue<DQPCore> dqpInjector = new InjectedValue<DQPCore>();	
 	private final InjectedValue<BufferManager> bufferManagerInjector = new InjectedValue<BufferManager>();
+	
+	public TransportService(String transportName) {
+		this.transportName = transportName;
+	}
 	
 	@Override
 	public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
@@ -169,7 +174,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     		}
     		if (protocol == Protocol.teiid) {
     	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue());
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (protocol == Protocol.pg) {
         		getVdbRepository().odbcEnabled();
@@ -180,7 +185,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 						try {
 							LocalServerConnection sc = new LocalServerConnection(info, true){
 								@Override
-								protected ClientServiceRegistry getClientServiceRegistry() {
+								protected ClientServiceRegistry getClientServiceRegistry(String name) {
 									return csr;
 								}
 							};
@@ -195,14 +200,14 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
         		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
         		this.socketListener = odbc;
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
     		}
     		else {
     			throw new StartException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50013));
     		}
     	}
     	else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50038, LocalServerConnection.TEIID_RUNTIME_CONTEXT));   		
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50038, LocalServerConnection.jndiNameForRuntime(transportName)));   		
     	}
     			
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
@@ -224,14 +229,14 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     	if (this.socketConfig != null) {
     		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
     		if (protocol == Protocol.teiid) {
-    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
+    	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.transportName, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
     		}
     		else if (protocol == Protocol.pg) {
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.address.getHostName(), String.valueOf(this.address.getPort())));
     		}
     	}
     	else {
-    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50041, LocalServerConnection.TEIID_RUNTIME_CONTEXT)); 
+    		LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50041, LocalServerConnection.jndiNameForRuntime(transportName))); 
     	}
 	}	
 	

@@ -40,6 +40,7 @@ public class EmbeddedProfile implements ConnectionProfile {
 	
     public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
 	public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$
+	public static final String TRANSPORT_NAME = "transportName"; //$NON-NLS-1$
 
 	/**
      * This method tries to make a connection to the given URL. This class

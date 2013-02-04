@@ -139,7 +139,7 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
         final PathAddress pathAddress = PathAddress.pathAddress(address);
     	final String transportName = pathAddress.getLastElement().getValue();
     	
-    	TransportService transport = new TransportService();
+    	TransportService transport = new TransportService(transportName);
     	    	
     	String socketBinding = null;
 		if (Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.isDefined(operation)) {
@@ -196,14 +196,14 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
         newControllers.add(transportBuilder.install());
         
         // register a JNDI name, this looks hard.
-        if (transport.isEmbedded() && !isEmbeddedRegistered()) {
+        if (transport.isEmbedded() && !isEmbeddedRegistered(transportName)) {
 			final ReferenceFactoryService<ClientServiceRegistry> referenceFactoryService = new ReferenceFactoryService<ClientServiceRegistry>();
 			final ServiceName referenceFactoryServiceName = TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
 			final ServiceBuilder<?> referenceBuilder = target.addService(referenceFactoryServiceName,referenceFactoryService);
 			referenceBuilder.addDependency(TeiidServiceNames.transportServiceName(transportName), ClientServiceRegistry.class, referenceFactoryService.getInjector());
 			referenceBuilder.setInitialMode(ServiceController.Mode.ACTIVE);
 			  
-			final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.TEIID_RUNTIME_CONTEXT);
+			final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.jndiNameForRuntime(transportName));
 			final BinderService binderService = new BinderService(bindInfo.getBindName());
 			final ServiceBuilder<?> binderBuilder = target.addService(bindInfo.getBinderServiceName(), binderService);
 			binderBuilder.addDependency(referenceFactoryServiceName, ManagedReferenceFactory.class, binderService.getManagedObjectInjector());
@@ -215,10 +215,10 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
         }
 	}
 	
-	protected boolean isEmbeddedRegistered() {
+	protected boolean isEmbeddedRegistered(String transportName) {
 		try {
 			InitialContext ic = new InitialContext();
-			ic.lookup(LocalServerConnection.TEIID_RUNTIME_CONTEXT);
+			ic.lookup(LocalServerConnection.jndiNameForRuntime(transportName));
 			return true;
 		} catch (Throwable e) {
 			return false;
