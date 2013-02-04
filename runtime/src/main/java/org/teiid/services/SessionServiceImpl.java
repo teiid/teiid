@@ -164,48 +164,30 @@ public class SessionServiceImpl implements SessionService {
         	LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"No Security Domain configured for Teiid for authentication"}); //$NON-NLS-1$
         }
         
-        SessionMetadata newSession = null;
         long creationTime = System.currentTimeMillis();
 
-        String sessionId = properties.getProperty(TeiidURL.CONNECTION.SESSION_ID);
-        if (sessionId != null) {
-        	SessionMetadata session = this.sessionCache.get(sessionId);
-			if (session != null && userName.equals(session.getUserName())
-					&& securityDomain.equals(session.getSecurityDomain())
-					&& vdb.getName().equals(session.getVDBName())
-					&& vdb.getVersion() == session.getVDBVersion()) {
-				newSession = session;
-				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, attaching to previously created session", newSession }); //$NON-NLS-1$
-        	}
-			else {
-				LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, re-attach to old session failed; creating a new session", newSession }); //$NON-NLS-1$
-			}
+        // Return a new session info object
+        SessionMetadata newSession = new SessionMetadata();
+        newSession.setSessionToken(new SessionToken(userName));
+        newSession.setSessionId(newSession.getSessionToken().getSessionID());
+        newSession.setUserName(userName);
+        newSession.setCreatedTime(creationTime);
+        newSession.setApplicationName(applicationName);
+        newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
+        newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
+        newSession.setClientHardwareAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC));
+        newSession.setSecurityDomain(securityDomain);
+        if (vdb != null) {
+	        newSession.setVDBName(vdb.getName());
+	        newSession.setVDBVersion(vdb.getVersion());
         }
         
-        if (newSession == null) {
-	        // Return a new session info object
-	        newSession = new SessionMetadata();
-	        newSession.setSessionToken(new SessionToken(userName));
-	        newSession.setSessionId(newSession.getSessionToken().getSessionID());
-	        newSession.setUserName(userName);
-	        newSession.setCreatedTime(creationTime);
-	        newSession.setApplicationName(applicationName);
-	        newSession.setClientHostName(properties.getProperty(TeiidURL.CONNECTION.CLIENT_HOSTNAME));
-	        newSession.setIPAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_IP_ADDRESS));
-	        newSession.setClientHardwareAddress(properties.getProperty(TeiidURL.CONNECTION.CLIENT_MAC));
-	        newSession.setSecurityDomain(securityDomain);
-	        if (vdb != null) {
-		        newSession.setVDBName(vdb.getName());
-		        newSession.setVDBVersion(vdb.getVersion());
-	        }
-	        
-	        // these are local no need for monitoring.
-	        newSession.setSubject(subject);
-	        newSession.setSecurityContext(securityContext);
-	        newSession.setVdb(vdb);
-	        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$ 
-	        this.sessionCache.put(newSession.getSessionId(), newSession);
-        }
+        // these are local no need for monitoring.
+        newSession.setSubject(subject);
+        newSession.setSecurityContext(securityContext);
+        newSession.setVdb(vdb);
+        LogManager.logDetail(LogConstants.CTX_SECURITY, new Object[] {"Logon successful, created", newSession }); //$NON-NLS-1$ 
+        this.sessionCache.put(newSession.getSessionId(), newSession);
         return newSession;
 	}
 

@@ -49,12 +49,17 @@ class EntityList extends AbstractList<OEntity>{
 	private boolean closed = false;
 	private Map<String, Boolean> projectedColumns;
 	private HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
+	private int batchSize;
+	private int skipSize;
+	private int rowsSent = 0;
 	
-	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition) throws SQLException {
+	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition, int skipSize, int batchSize) throws SQLException {
 		this.entitySet = entitySet;
 		this.rs = rs;
 		this.completion = complition;
 		this.projectedColumns = columns;
+		this.batchSize = batchSize;
+		this.skipSize = skipSize;
 		
 		if (this.projectedColumns == null) {
 			this.projectedColumns = new HashMap<String, Boolean>();
@@ -69,6 +74,8 @@ class EntityList extends AbstractList<OEntity>{
 			EdmProperty prop = propIter.next();
 			this.propertyTypes.put(prop.getName(), prop);
 		}
+		
+		this.rs.absolute(this.skipSize);
 		
 		this.prevEntity = getEntity();
 		if (this.prevEntity != null) {
@@ -111,7 +118,8 @@ class EntityList extends AbstractList<OEntity>{
 	private OEntity getEntity() {
 		if (!this.closed) {
 			try {
-				if (rs.next()) {					
+				if ((this.rowsSent < this.batchSize) && rs.next()) {	
+					this.rowsSent++;
 					HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
 					for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 						Object value = rs.getObject(i+1);
@@ -161,6 +169,13 @@ class EntityList extends AbstractList<OEntity>{
 	@Override
 	public int size() {
 		return size;
+	}
+
+	public String nextToken() {
+		if (this.rowsSent < this.batchSize) {
+			return null;
+		}
+		return String.valueOf(this.skipSize + this.rowsSent);
 	}
 
 }

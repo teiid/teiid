@@ -51,7 +51,7 @@ import org.teiid.runtime.RuntimePlugin;
 
 
 public class LocalServerConnection implements ServerConnection {
-	public static final String TEIID_RUNTIME_CONTEXT = "teiid/queryengine"; //$NON-NLS-1$
+	private static final String TEIID_RUNTIME_CONTEXT = "teiid/queryengine"; //$NON-NLS-1$
 	
 	private LogonResult result;
 	private boolean shutdown;
@@ -59,10 +59,14 @@ public class LocalServerConnection implements ServerConnection {
     private DQPWorkContext workContext = new DQPWorkContext();
     private Properties connectionProperties;
     private boolean passthrough;
-
+    
+    public static String jndiNameForRuntime(String embeddedTransportName) {
+    	return TEIID_RUNTIME_CONTEXT+"/"+embeddedTransportName; //$NON-NLS-1$
+    }
+    
 	public LocalServerConnection(Properties connectionProperties, boolean useCallingThread) throws CommunicationException, ConnectionException{
 		this.connectionProperties = connectionProperties;
-		this.csr = getClientServiceRegistry();
+		this.csr = getClientServiceRegistry(connectionProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME, "embedded")); //$NON-NLS-1$
 		
 		String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
 		String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
@@ -86,10 +90,10 @@ public class LocalServerConnection implements ServerConnection {
 		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	}
 
-	protected ClientServiceRegistry getClientServiceRegistry() {
+	protected ClientServiceRegistry getClientServiceRegistry(String transport) {
 		try {
 			InitialContext ic = new InitialContext();
-			return (ClientServiceRegistry)ic.lookup(TEIID_RUNTIME_CONTEXT);
+			return (ClientServiceRegistry)ic.lookup(jndiNameForRuntime(transport));
 		} catch (NamingException e) {
 			 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
 		}

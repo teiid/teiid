@@ -6,21 +6,17 @@
         <param-value>org.teiid.odata.TeiidODataApplication</param-value>
     </context-param>   
     <context-param>
-        <param-name>max-allowed-cursors</param-name>
-        <param-value>100</param-value>
-    </context-param> 
-    <context-param>
         <param-name>batch-size</param-name>
         <param-value>256</param-value>
     </context-param>  
     <context-param>
-        <param-name>cursor-ttl-millis</param-name>
+        <param-name>skiptoken-cache-time</param-name>
         <param-value>300000</param-value>
     </context-param>   
     <context-param>
-        <param-name>cursor-cleanup-every-millis</param-name>
-        <param-value>30000</param-value>
-    </context-param>              
+        <param-name>local-transport-name</param-name>
+        <param-value>odata</param-value>
+    </context-param>      
     <listener>
         <listener-class>org.jboss.resteasy.plugins.server.servlet.ResteasyBootstrap</listener-class>
     </listener>    

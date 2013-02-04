@@ -24,7 +24,6 @@ package org.teiid.odata;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMapOf;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.stub;
 import static org.mockito.Mockito.verify;
@@ -32,7 +31,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.List;
 
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -41,18 +39,26 @@ import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Test;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.odata4j.core.*;
+import org.mockito.Mockito;
+import org.odata4j.core.OEntities;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OProperties;
+import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.format.xml.EdmxFormatWriter;
-import org.odata4j.producer.resources.*;
+import org.odata4j.producer.resources.EntitiesRequestResource;
+import org.odata4j.producer.resources.EntityRequestResource;
+import org.odata4j.producer.resources.ExceptionMappingProvider;
+import org.odata4j.producer.resources.MetadataResource;
+import org.odata4j.producer.resources.ODataBatchProvider;
+import org.odata4j.producer.resources.ServiceDocumentResource;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.odata.Client.Cursor;
-import org.teiid.odata.LocalClient.LocalCursor;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -104,18 +110,19 @@ public class TestODataIntegration extends BaseResourceTest {
 		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
 		
 		OEntity entity = createCustomersEntity(eds);
-		List<OEntity> result = new ArrayList<OEntity>();
-		result.add(entity);
+		ArrayList<OEntity> list = new ArrayList<OEntity>();
+		list.add(entity);
 		
-		LocalCursor cursor = new LocalCursor("foo", "#Temp1", 1000, 10, 123);
+		EntityList result = Mockito.mock(EntityList.class);
+		when(result.get(0)).thenReturn(entity);
+		when(result.size()).thenReturn(1);
+		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.createCursor(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class))).thenReturn(cursor);
-		when(client.fetchCursor(any(Cursor.class), any(EdmEntitySet.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).createCursor(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture());
-        verify(client).fetchCursor(any(LocalCursor.class), entitySet.capture());
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class));
         
         Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());

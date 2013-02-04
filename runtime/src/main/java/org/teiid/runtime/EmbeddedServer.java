@@ -381,7 +381,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				try {
 					conn = new LocalServerConnection(info, useCallingThread) {
 						@Override
-						protected ClientServiceRegistry getClientServiceRegistry() {
+						protected ClientServiceRegistry getClientServiceRegistry(String name) {
 							return services;
 						}
 					};
