@@ -145,7 +145,9 @@ class TeiidAdd extends AbstractAddStepHandler implements DescriptionProvider {
 	protected void populateModel(final OperationContext context, final ModelNode operation, final Resource resource) throws  OperationFailedException {	
 		resource.getModel().setEmptyObject();
 		populate(operation, resource.getModel());
-		deployResources(context);
+		if (context.isNormalServer()) {
+			deployResources(context);
+		}
 	}
 	
 	@Override

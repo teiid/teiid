@@ -38,6 +38,7 @@
                     <include>**/*.sh</include>
                     <include>**/*.bat</include>
                     <include>**/*.html</include>
+                    <include>**/*.cli</include>
                 </includes>
             </resource>
             <resource>
@@ -49,6 +50,7 @@
                     <exclude>**/*.sh</exclude>
                     <exclude>**/*.bat</exclude>
                     <exclude>**/*.html</exclude>
+                    <exclude>**/*.cli</exclude>
                 </excludes>
             </resource>
         </resources>
