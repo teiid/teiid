@@ -26,12 +26,23 @@ import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-import org.odata4j.core.*;
-import org.odata4j.edm.*;
-import org.odata4j.exceptions.ServerErrorException;
-import org.teiid.client.util.ResultsFuture;
+import org.odata4j.core.OEntities;
+import org.odata4j.core.OEntity;
+import org.odata4j.core.OEntityKey;
+import org.odata4j.core.OLink;
+import org.odata4j.core.OLinks;
+import org.odata4j.core.OProperties;
+import org.odata4j.core.OProperty;
+import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmEntityType;
+import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.EdmProperty;
+import org.odata4j.edm.EdmSimpleType;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -39,69 +50,44 @@ import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
 import org.teiid.translator.odata.ODataTypeManager;
 
-class EntityList extends AbstractList<OEntity>{
-	private ResultSet rs;
-	private EdmEntitySet entitySet;
-	ResultsFuture<Boolean> completion;
-	private int size = 0;
-	private OEntity prevEntity;
-	private OEntity currentEntity;
-	private boolean closed = false;
-	private Map<String, Boolean> projectedColumns;
-	private HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
+class EntityList extends ArrayList<OEntity>{
+	private int count = 0;
 	private int batchSize;
 	private int skipSize;
-	private int rowsSent = 0;
 	
-	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs,  ResultsFuture<Boolean> complition, int skipSize, int batchSize) throws SQLException {
-		this.entitySet = entitySet;
-		this.rs = rs;
-		this.completion = complition;
-		this.projectedColumns = columns;
+	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs, int skipSize, int batchSize) throws SQLException, TransformationException, IOException {
 		this.batchSize = batchSize;
 		this.skipSize = skipSize;
 		
-		if (this.projectedColumns == null) {
-			this.projectedColumns = new HashMap<String, Boolean>();
+		if (columns == null) {
+			columns = new HashMap<String, Boolean>();
 			for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-				this.projectedColumns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
+				columns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
 			}
 		}
 
-		EdmEntityType entityType = this.entitySet.getType();
+		HashMap<String, EdmProperty> propertyTypes = new HashMap<String, EdmProperty>();
+		
+		EdmEntityType entityType = entitySet.getType();
 		Iterator<EdmProperty> propIter = entityType.getProperties().iterator();
 		while(propIter.hasNext()) {
 			EdmProperty prop = propIter.next();
-			this.propertyTypes.put(prop.getName(), prop);
+			propertyTypes.put(prop.getName(), prop);
 		}
-		
-		this.rs.absolute(this.skipSize);
-		
-		this.prevEntity = getEntity();
-		if (this.prevEntity != null) {
-			this.size += 1;
+		rs.last();
+		this.count = rs.getRow();
+		int size = Math.min(count, batchSize);
+		for (int i = 0; i < size; i++) {
+			this.add(getEntity(rs, propertyTypes, columns, entitySet, i));
 		}
-	}
-	
-	@Override
-	public OEntity get(int index) {
-		if (this.prevEntity != null) {
-			this.currentEntity = this.prevEntity;
-			this.prevEntity = getEntity();;
-			if (this.prevEntity != null) {
-				this.size += 1;
-			}
-			return this.currentEntity;
-		}
-		return null;
 	}
 	
 	private OProperty<?> buildPropery(String propName, EdmSimpleType expectedType, Object value) throws TransformationException, SQLException, IOException {
 		if (value == null) {
 			return OProperties.null_(propName, expectedType);
 		}
-		Class sourceType = DataTypeManager.getRuntimeType(value.getClass());
-		Class targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType.getFullyQualifiedTypeName()));
+		Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
+		Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType.getFullyQualifiedTypeName()));
 		if (sourceType != targetType) {
 			Transform t = DataTypeManager.getTransform(sourceType,targetType);
 			if (t == null && BlobType.class == targetType && sourceType == ClobType.class) {
@@ -115,67 +101,45 @@ class EntityList extends AbstractList<OEntity>{
 		return OProperties.simple(propName, expectedType,value);
 	}
 
-	private OEntity getEntity() {
-		if (!this.closed) {
-			try {
-				if ((this.rowsSent < this.batchSize) && rs.next()) {	
-					this.rowsSent++;
-					HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
-					for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-						Object value = rs.getObject(i+1);
-						String propName = rs.getMetaData().getColumnLabel(i+1);
-						EdmSimpleType type = (EdmSimpleType)this.propertyTypes.get(propName).getType();
-						OProperty<?> property = buildPropery(propName, type, value);
-						properties.put(rs.getMetaData().getColumnLabel(i+1), property);	
-					}			
-					
-					OEntityKey key = OEntityKey.infer(this.entitySet, new ArrayList<OProperty<?>>(properties.values()));
-					
-					ArrayList<OLink> links = new ArrayList<OLink>();
-					
-					for (EdmNavigationProperty navProperty:this.entitySet.getType().getNavigationProperties()) {
-						links.add(OLinks.relatedEntity(navProperty.getRelationship().getName(), navProperty.getToRole().getRole(), key.toKeyString()));
-					}
+	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet, int index) throws TransformationException, SQLException, IOException {
+		rs.absolute(index+1);
+		HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
+		for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+			Object value = rs.getObject(i+1);
+			String propName = rs.getMetaData().getColumnLabel(i+1);
+			EdmSimpleType type = (EdmSimpleType)propertyTypes.get(propName).getType();
+			OProperty<?> property = buildPropery(propName, type, value);
+			properties.put(rs.getMetaData().getColumnLabel(i+1), property);	
+		}			
+		
+		OEntityKey key = OEntityKey.infer(entitySet, new ArrayList<OProperty<?>>(properties.values()));
+		
+		ArrayList<OLink> links = new ArrayList<OLink>();
+		
+		for (EdmNavigationProperty navProperty:entitySet.getType().getNavigationProperties()) {
+			links.add(OLinks.relatedEntity(navProperty.getRelationship().getName(), navProperty.getToRole().getRole(), key.toKeyString()));
+		}
 
-					// properties can contain more than what is requested in project to build links
-					// filter those columns out.
-					ArrayList<OProperty<?>> projected = new ArrayList<OProperty<?>>();
-					for (String column:this.projectedColumns.keySet()) {
-						if (this.projectedColumns.get(column)) {
-							projected.add(properties.get(column));
-						}
-					}
-					return OEntities.create(this.entitySet, key, projected, links);
-				}
-				this.closed = true;
-				this.completion.getResultsReceiver().receiveResults(Boolean.TRUE);
-			} catch(SQLException e) {
-				// ex ignored on completion				
-				this.completion.getResultsReceiver().exceptionOccurred(e);
-				throw new ServerErrorException(e.getMessage(), e);
-			} catch (TransformationException e) {
-				// ex ignored on completion
-				this.completion.getResultsReceiver().exceptionOccurred(e);
-				throw new ServerErrorException(e.getMessage(), e);
-			} catch (IOException e) {
-				// ex ignored on completion
-				this.completion.getResultsReceiver().exceptionOccurred(e);
-				throw new ServerErrorException(e.getMessage(), e);
+		// properties can contain more than what is requested in project to build links
+		// filter those columns out.
+		ArrayList<OProperty<?>> projected = new ArrayList<OProperty<?>>();
+		for (Map.Entry<String,Boolean> entry:columns.entrySet()) {
+			if (entry.getValue() != null && entry.getValue()) {
+				projected.add(properties.get(entry.getKey()));
 			}
 		}
-		return null;
+		return OEntities.create(entitySet, key, projected, links);
 	}
-
-	@Override
-	public int size() {
-		return size;
+	
+	public int getCount() {
+		return count;
 	}
 
 	public String nextToken() {
-		if (this.rowsSent < this.batchSize) {
+		if (size() < this.batchSize) {
 			return null;
 		}
-		return String.valueOf(this.skipSize + this.rowsSent);
+		return String.valueOf(this.skipSize + size());
 	}
 
 }

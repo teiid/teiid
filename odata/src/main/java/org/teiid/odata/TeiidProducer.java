@@ -69,41 +69,18 @@ public class TeiidProducer implements ODataProducer {
 
 	@Override
 	public EntitiesResponse getEntities(ODataContext context, String entitySetName, QueryInfo queryInfo) {
-		getEntitySet(entitySetName); // validate entity
-		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
-		Query query = visitor.selectString(entitySetName, queryInfo, null, null, false);
-		List<SQLParam> parameters = visitor.getParameters();
-		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
-		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), true, queryInfo.skipToken);
-		return new EntitiesResponse() {
-			@Override
-			public List<OEntity> getEntities() {
-				return entities;
-			}
-			@Override
-			public EdmEntitySet getEntitySet() {
-				return entitySet;
-			}
-			@Override
-			public Integer getInlineCount() {
-				return null;
-			}
-			@Override
-			public String getSkipToken() {
-				return entities.nextToken();
-			}
-		};		
+		return getNavProperty(context, entitySetName, null, null, queryInfo);
 	}
-	
 
 	@Override
-	public BaseResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, QueryInfo queryInfo) {
+	public EntitiesResponse getNavProperty(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, QueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
 		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
 		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), true, queryInfo.skipToken);
+		final boolean returnCount = queryInfo.inlineCount == InlineCount.ALLPAGES;
 		return new EntitiesResponse() {
 			@Override
 			public List<OEntity> getEntities() {
@@ -115,6 +92,9 @@ public class TeiidProducer implements ODataProducer {
 			}
 			@Override
 			public Integer getInlineCount() {
+				if (returnCount) {
+					return entities.getCount();
+				}
 				return null;
 			}
 			@Override
@@ -179,7 +159,7 @@ public class TeiidProducer implements ODataProducer {
 		if (updateCount  == 1) {
 			visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		    OEntityKey entityKey = visitor.buildEntityKey(entitySet, entity);
-		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "created entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$
+		    LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "created entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
 		    return getEntity(context, entitySetName, entityKey, EntityQueryInfo.newBuilder().build());
 		}
 		return null;
@@ -188,7 +168,7 @@ public class TeiidProducer implements ODataProducer {
 	@Override
 	public EntityResponse createEntity(ODataContext context, String entitySetName, OEntityKey entityKey, String navProp, OEntity entity) {
 		// deep inserts are not currently supported.
-		throw new UnsupportedOperationException("Deep inserts are not supported");
+		throw new UnsupportedOperationException("Deep inserts are not supported"); //$NON-NLS-1$
 	}
 
 	@Override
@@ -201,7 +181,7 @@ public class TeiidProducer implements ODataProducer {
 		List<SQLParam> parameters = visitor.getParameters();
 		int deleteCount =  this.client.executeUpdate(query, parameters);
 		if (deleteCount > 0) {
-			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "deleted entity = ", entitySetName, " with key=", entityKey.asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 	}
 
@@ -217,7 +197,7 @@ public class TeiidProducer implements ODataProducer {
 	public void updateEntity(ODataContext context, String entitySetName, OEntity entity) {
 		int updateCount = update(entitySetName, entity);
 		if (updateCount > 0) {
-			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName, " with key=", entity.getEntityKey().asSingleValue()); //$NON-NLS-1$
+			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName, " with key=", entity.getEntityKey().asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
 		}		
 	}
 
@@ -243,7 +223,7 @@ public class TeiidProducer implements ODataProducer {
 			EntityResponse er = (EntityResponse) response;
 			return Responses.singleId(er.getEntity());
 		}
-		throw new NotImplementedException(sourceEntity + " " + targetNavProp);
+		throw new NotImplementedException(sourceEntity + " " + targetNavProp); //$NON-NLS-1$
 	}
 
 	@Override
@@ -272,21 +252,21 @@ public class TeiidProducer implements ODataProducer {
 		StringBuilder sql = new StringBuilder();
 		// fully qualify the procedure name
 		if (function.getReturnType() != null && function.getReturnType().isSimple()) {
-			sql.append("{? = ");
+			sql.append("{? = "); //$NON-NLS-1$
 		}
 		else {
-			sql.append("{");
+			sql.append("{"); //$NON-NLS-1$
 		}
-		sql.append("call ").append(eec.getName()+"."+function.getName());
-		sql.append("(");
+		sql.append("call ").append(eec.getName()+"."+function.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		sql.append("("); //$NON-NLS-1$
 		if (!params.isEmpty()) {
 			for (int i = 0; i < params.size()-1; i++) {
-				sql.append("?, ");
+				sql.append("?, "); //$NON-NLS-1$
 			}
-			sql.append("?");
+			sql.append("?"); //$NON-NLS-1$
 		}
-		sql.append(")");
-		sql.append("}");
+		sql.append(")"); //$NON-NLS-1$
+		sql.append("}"); //$NON-NLS-1$
 		return this.client.executeCall(sql.toString(), params, function.getReturnType());
 	}
 	

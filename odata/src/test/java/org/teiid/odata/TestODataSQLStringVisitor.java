@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,12 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.exceptions.NotFoundException;
-import org.odata4j.expression.*;
+import org.odata4j.expression.BoolCommonExpression;
+import org.odata4j.expression.CommonExpression;
+import org.odata4j.expression.EntitySimpleProperty;
+import org.odata4j.expression.Expression;
+import org.odata4j.expression.ExpressionParser;
+import org.odata4j.expression.OrderByExpression;
 import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.QueryInfo.Builder;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -42,6 +47,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+@SuppressWarnings("nls")
 public class TestODataSQLStringVisitor {
 
 	private void te(String in, String expected) {

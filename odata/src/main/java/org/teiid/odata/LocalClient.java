@@ -21,6 +21,8 @@
  */
 package org.teiid.odata;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -53,8 +55,7 @@ import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.Responses;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.client.RequestMessage.ResultsMode;
-import org.teiid.client.util.ResultsFuture;
+import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.JDBCSQLTypeInfo;
@@ -68,6 +69,7 @@ import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.net.TeiidURL;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
@@ -88,13 +90,19 @@ public class LocalClient implements Client {
 	private int batchSize;
 	private long cacheTime;
 	private String transportName;
+	private String connectionString;
 	
 	public LocalClient(String vdbName, int vdbVersion, Properties props) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
-		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, 256);
+		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
 		this.transportName = props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata"); //$NON-NLS-1$
+		StringBuilder sb = new StringBuilder();
+		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		sb.append(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION+"=true;"); //$NON-NLS-1$
+		sb.append(EmbeddedProfile.TRANSPORT_NAME).append("=").append(this.transportName).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
+		this.connectionString = sb.toString();
 	}
 	
 	@Override
@@ -109,21 +117,14 @@ public class LocalClient implements Client {
 	
 	
 	private ConnectionImpl getConnection() throws SQLException {
-		TeiidDriver driver = new TeiidDriver();
-		StringBuilder sb = new StringBuilder();
-		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";");
-		sb.append("PassthroughAuthentication=true;");
-		sb.append("useCallingThread=true;");
-		sb.append("resultSetCacheMode=true;");
-		sb.append(EmbeddedProfile.TRANSPORT_NAME).append("=").append(this.transportName).append(";");
-		return driver.connect(sb.toString(), null);
+		return TeiidDriver.getInstance().connect(connectionString, null);
 	}	
 	
 	@Override
 	public BaseResponse executeCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType) {
 		ConnectionImpl connection = null;
 		try {
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:"+sql); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			connection = getConnection();
 			final CallableStatementImpl stmt = connection.prepareCall(sql);
 			
@@ -155,8 +156,8 @@ public class LocalClient implements Client {
                 	resultRows.add(erow);
                 }
                 String collectionName = returnType.getFullyQualifiedTypeName();
-                collectionName = collectionName.replace("(", "_");
-                collectionName = collectionName.replace(")", "_");
+                collectionName = collectionName.replace("(", "_"); //$NON-NLS-1$ //$NON-NLS-2$
+                collectionName = collectionName.replace(")", "_"); //$NON-NLS-1$ //$NON-NLS-2$
 				return Responses.collection(resultRows.build(), null, null, null, collectionName);				
 			}
 			
@@ -165,12 +166,10 @@ public class LocalClient implements Client {
             	if (result == null) {
             		result = org.odata4j.expression.Expression.null_();
             	}
-            	return Responses.simple((EdmSimpleType)returnType, "return", result);
+            	return Responses.simple((EdmSimpleType)returnType, "return", result); //$NON-NLS-1$
             }			
 			return Responses.simple(EdmSimpleType.INT32, 1);
-		} catch (SQLException e) {
-			throw new ServerErrorException(e.getMessage(), e);
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
 			if (connection != null) {
@@ -206,6 +205,7 @@ public class LocalClient implements Client {
 	
 	@Override
 	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken) {
+		Connection connection = null;
 		try {
 			if (useSkipToken) {
 				CacheHint hint = new CacheHint();
@@ -216,46 +216,31 @@ public class LocalClient implements Client {
 			
 			String sql = query.toString();
 					
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:"+sql); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			
-			final ConnectionImpl connection = getConnection();
-			final PreparedStatementImpl stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			connection = getConnection();
+			final PreparedStatement stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			if (parameters!= null && !parameters.isEmpty()) {
 				for (int i = 0; i < parameters.size(); i++) {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
 				}
 			}
 			
-			ResultsFuture<Boolean> executionFuture = stmt.submitExecute(ResultsMode.RESULTSET, null);
-			if (executionFuture.get()) {
-				final ResultSet rs = stmt.getResultSet();
-				ResultsFuture<Boolean> result = new ResultsFuture<Boolean>();
-                result.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
-                	public void onCompletion(ResultsFuture<Boolean> future) {
-						try {
-	                		try {
-								stmt.close();
-								connection.close();
-							} catch (SQLException e) {
-								LogManager.logDetail(LogConstants.CTX_ODATA, e, "Error closing statement"); //$NON-NLS-1$
-							}
-							future.get();
-						} catch (Throwable e) {
-							//ignore
-						}
-                	}
-                });				
-                int skipSize = 0;
-                if (skipToken != null) {
-                	skipSize = Integer.parseInt(skipToken);
-                }
-				return new EntityList(projectedColumns, entitySet, rs, result, skipSize, this.batchSize);
+			final ResultSet rs = stmt.executeQuery();
+            int skipSize = 0;
+            if (skipToken != null) {
+            	skipSize = Integer.parseInt(skipToken);
+            }
+			return new EntityList(projectedColumns, entitySet, rs, skipSize, this.batchSize);
+		} catch (Exception e) {
+			throw new ServerErrorException(e.getMessage(), e);
+		} finally {
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (SQLException e) {
+				}
 			}
-			return null;
-		} catch (SQLException e) {
-			throw new ServerErrorException(e.getMessage(), e);
-		} catch (Throwable e) {
-			throw new ServerErrorException(e.getMessage(), e);
 		}
 	}
 	
@@ -264,7 +249,7 @@ public class LocalClient implements Client {
 		ConnectionImpl connection = null;
 		try {
 			String sql = query.toString();
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:"+sql); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			connection = getConnection();
 			final PreparedStatementImpl stmt = connection.prepareStatement(sql);
 			if (!parameters.isEmpty()) {
@@ -278,13 +263,13 @@ public class LocalClient implements Client {
 			rs.close();
 			stmt.close();
 			return Responses.count(count);
-		} catch (SQLException e) {
-			throw new ServerErrorException(e.getMessage(), e);
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
 			try {
-				connection.close();
+				if (connection != null) {
+					connection.close();
+				}
 			} catch (SQLException e) {
 			}
 		}
@@ -295,7 +280,7 @@ public class LocalClient implements Client {
 		ConnectionImpl connection = null;
 		try {
 			String sql = query.toString();
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:"+sql); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			connection = getConnection();
 			final PreparedStatementImpl stmt = connection.prepareStatement(sql);
 			if (!parameters.isEmpty()) {
@@ -306,13 +291,13 @@ public class LocalClient implements Client {
 			int count = stmt.executeUpdate();
 			stmt.close();
 			return count;
-		} catch (SQLException e) {
-			throw new ServerErrorException(e.getMessage(), e);
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
 			try {
-				connection.close();
+				if (connection != null) {
+					connection.close();
+				}
 			} catch (SQLException e) {
 			}
 		}

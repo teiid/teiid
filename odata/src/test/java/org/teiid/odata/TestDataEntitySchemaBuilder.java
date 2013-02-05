@@ -39,6 +39,7 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 
+@SuppressWarnings("nls")
 public class TestDataEntitySchemaBuilder {
 
 	@Test
