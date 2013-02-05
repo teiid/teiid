@@ -76,5 +76,6 @@ deploy --server-groups=main-server-group ../standalone/deployments/teiid-connect
 deploy --server-groups=main-server-group ../standalone/deployments/teiid-connector-ldap.rar      
 deploy --server-groups=main-server-group ../standalone/deployments/teiid-connector-salesforce.rar
 deploy --server-groups=main-server-group ../standalone/deployments/teiid-connector-ws.rar
+deploy --server-groups=main-server-group ../modules/org/jboss/teiid/main/deployments/teiid-odata-${project.version}.war
 
 /server-group=main-server-group:restart-servers  
