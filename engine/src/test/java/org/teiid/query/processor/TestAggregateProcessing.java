@@ -644,5 +644,21 @@ public class TestAggregateProcessing {
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
 		helpProcess(plan, dataManager, expected);
 	}
+	
+	@Test public void testUnaliasedAggInDeleteCompensation() throws Exception {
+		String sql = "delete from pm3.g1 where e1 = (SELECT MAX(e1) FROM pm3.g1 as z where e2 = pm3.g1.e2)"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList(1),
+		};
+
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		
+		dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm3.g1 AS g_0 ORDER BY c_1, c_0", new List<?>[] {Arrays.asList("a", 1)});
+		dataManager.addData("SELECT MAX(g_0.e1) AS c_0, g_0.e2 AS c_1 FROM pm3.g1 AS g_0 GROUP BY g_0.e2 ORDER BY c_1, c_0", new List<?>[] {Arrays.asList("a", 1)});
+		dataManager.addData("DELETE FROM pm3.g1 WHERE pm3.g1.e1 = 'a'", new List<?>[] {Arrays.asList(1)});
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example4(), TestAggregatePushdown.getAggregatesFinder());
+		helpProcess(plan, dataManager, expected);
+	}
 
 }

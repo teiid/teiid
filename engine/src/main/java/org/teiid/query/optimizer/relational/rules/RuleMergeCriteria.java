@@ -48,23 +48,22 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.JoinNode.JoinStrategyType;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
+import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -274,6 +273,9 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		plannedResult.query.setOrderBy(new OrderBy(plannedResult.rightExpressions).clone());
 		for (OrderByItem item : plannedResult.query.getOrderBy().getOrderByItems()) {
 			int index = plannedResult.query.getProjectedSymbols().indexOf(item.getSymbol());
+			if (index >= 0 && !(item.getSymbol() instanceof ElementSymbol)) {
+				item.setSymbol((Expression) plannedResult.query.getProjectedSymbols().get(index).clone());
+			}
 			item.setExpressionPosition(index);
 		}
 		
@@ -522,11 +524,7 @@ public final class RuleMergeCriteria implements OptimizerRule {
 		}
 		for (Expression ses : requiredExpressions) {
 			if (projectedSymbols.add(ses)) {
-				if (ses instanceof Expression) {
-					plannedResult.query.getSelect().addSymbol((Expression)ses);
-				} else {
-					plannedResult.query.getSelect().addSymbol(new ExpressionSymbol("expr", (Expression) ses.clone())); //$NON-NLS-1$
-				}
+				plannedResult.query.getSelect().addSymbol((Expression)ses);
 			}
 		}
 		for (Expression ses : (List<Expression>)plannedResult.rightExpressions) {
