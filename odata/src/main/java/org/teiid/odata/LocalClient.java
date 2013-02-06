@@ -204,7 +204,7 @@ public class LocalClient implements Client {
 
 	
 	@Override
-	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken) {
+	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount) {
 		Connection connection = null;
 		try {
 			if (useSkipToken) {
@@ -231,7 +231,7 @@ public class LocalClient implements Client {
             if (skipToken != null) {
             	skipSize = Integer.parseInt(skipToken);
             }
-			return new EntityList(projectedColumns, entitySet, rs, skipSize, this.batchSize);
+			return new EntityList(projectedColumns, entitySet, rs, skipSize, this.batchSize, getCount);
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {

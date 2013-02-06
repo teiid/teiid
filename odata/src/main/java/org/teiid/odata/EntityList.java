@@ -55,7 +55,7 @@ class EntityList extends ArrayList<OEntity>{
 	private int batchSize;
 	private int skipSize;
 	
-	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs, int skipSize, int batchSize) throws SQLException, TransformationException, IOException {
+	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs, int skipSize, int batchSize, boolean getCount) throws SQLException, TransformationException, IOException {
 		this.batchSize = batchSize;
 		this.skipSize = skipSize;
 		
@@ -74,11 +74,15 @@ class EntityList extends ArrayList<OEntity>{
 			EdmProperty prop = propIter.next();
 			propertyTypes.put(prop.getName(), prop);
 		}
-		rs.last();
-		this.count = rs.getRow();
-		int size = Math.min(count, batchSize);
-		for (int i = 0; i < size; i++) {
-			this.add(getEntity(rs, propertyTypes, columns, entitySet, i));
+		int size = batchSize;
+		if (getCount && rs.last()) {
+			this.count = rs.getRow();
+		}
+		for (int i = 1; i <= size; i++) {
+			if (!rs.absolute(i)) {
+				break;
+			}
+			this.add(getEntity(rs, propertyTypes, columns, entitySet));
 		}
 	}
 	
@@ -101,8 +105,7 @@ class EntityList extends ArrayList<OEntity>{
 		return OProperties.simple(propName, expectedType,value);
 	}
 
-	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet, int index) throws TransformationException, SQLException, IOException {
-		rs.absolute(index+1);
+	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
 		HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
 		for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 			Object value = rs.getObject(i+1);

@@ -79,8 +79,8 @@ public class TeiidProducer implements ODataProducer {
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, navProp, false);
 		final EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
-		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), true, queryInfo.skipToken);
 		final boolean returnCount = queryInfo.inlineCount == InlineCount.ALLPAGES;
+		final EntityList entities = this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), true, queryInfo.skipToken, returnCount);
 		return new EntitiesResponse() {
 			@Override
 			public List<OEntity> getEntities() {
@@ -125,7 +125,7 @@ public class TeiidProducer implements ODataProducer {
 		Query query = visitor.selectString(entitySetName, queryInfo, entityKey, null, false);
 		EdmEntitySet entitySet = getEntitySet(visitor.getEntityTable().getFullName());
 		List<SQLParam> parameters = visitor.getParameters();
-		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), false, null);
+		List<OEntity> entityList =  this.client.executeSQL(query, parameters, entitySet, visitor.getProjectedColumns(), false, null, false);
 		if (entityList.isEmpty()) {
 			return null;
 		}

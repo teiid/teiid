@@ -114,11 +114,11 @@ public class TestODataIntegration extends BaseResourceTest {
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class));
         
         Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());

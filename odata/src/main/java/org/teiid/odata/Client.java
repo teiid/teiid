@@ -43,7 +43,7 @@ public interface Client {
 	
 	BaseResponse executeCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType);
 
-	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken);
+	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount);
 	
 	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	
