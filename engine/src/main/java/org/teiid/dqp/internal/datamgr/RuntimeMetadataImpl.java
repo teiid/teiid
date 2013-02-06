@@ -35,6 +35,7 @@ import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.StoredProcedureInfo;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.sql.lang.SPParameter;
 import org.teiid.translator.TranslatorException;
 
@@ -81,6 +82,7 @@ public class RuntimeMetadataImpl implements RuntimeMetadata {
     }
 
 	public Table getGroup(Object groupId) throws QueryMetadataException, TeiidComponentException {
+		groupId = TempMetadataAdapter.getActualMetadataId(groupId);
 		if (groupId instanceof Table && !metadata.isVirtualGroup(groupId)) {
 			return (Table)groupId;
 		}

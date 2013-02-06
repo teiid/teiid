@@ -72,6 +72,9 @@ public interface QueryMetadataInterface {
     Object getGroupID(String groupName)
         throws TeiidComponentException, QueryMetadataException;
        
+    Object getModelID(String modelName)
+            throws TeiidComponentException, QueryMetadataException;
+    
     /**
      * Get a collection of group names that match the partially qualified group name.
      * @param partialGroupName Partially qualified group name

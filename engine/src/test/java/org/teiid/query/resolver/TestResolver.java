@@ -2923,5 +2923,15 @@ public class TestResolver {
     	Command c = helpResolve("select case when e1 is null then array_agg(e1) when e2 is null then array_agg(e4+1) end from pm1.g1 group by e1, e2");
     	assertTrue(c.getProjectedSymbols().get(0).getType().isArray());
     }
+    
+    @Test public void testForeignTempInvalidModel() {
+        String sql = "create foreign temporary table x (y string) on x"; //$NON-NLS-1$
+        helpResolveException(sql, "TEIID31134 Could not create foreign temporary table, since schema x does not exist."); //$NON-NLS-1$ 
+    }
+
+    @Test public void testForeignTempInvalidModel1() {
+        String sql = "create foreign temporary table x (y string) on vm1"; //$NON-NLS-1$
+        helpResolveException(sql, "TEIID31135 Could not create foreign temporary table, since schema vm1 is not physical."); //$NON-NLS-1$ 
+    }
 
 }

@@ -617,7 +617,7 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
                   .append(ESCAPE)
                   .append(Tokens.SPACE)
                   .append(Tokens.QUOTE)
-                  .append(obj.getEscapeCharacter().toString())
+                  .append(escapeString(String.valueOf(obj.getEscapeCharacter()), Tokens.QUOTE))
                   .append(Tokens.QUOTE);
         }
     }

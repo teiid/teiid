@@ -166,7 +166,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         	}
         	
         	GroupSymbol group = ((ProcedureContainer)command).getGroup();
-        	if (!group.isTempGroupSymbol()) {
+        	if (!modelName.equals(TempMetadataAdapter.TEMP_MODEL.getID()) || !group.isTempGroupSymbol()) {
         		return null;
         	}
         	final String groupKey = group.getNonCorrelationName();
@@ -206,7 +206,11 @@ public class TempTableDataManager implements ProcessorDataManager {
     		if (contextStore.hasTempTable(tempTableName)) {
                  throw new QueryProcessingException(QueryPlugin.Event.TEIID30229, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30229, tempTableName));
             }
-    		contextStore.addTempTable(tempTableName, create, bufferManager, true, context);
+    		if (create.getTableMetadata() != null) {
+        		contextStore.addForeignTempTable(tempTableName, create);
+    		} else {
+        		contextStore.addTempTable(tempTableName, create, bufferManager, true, context);
+    		}
             return CollectionTupleSource.createUpdateCountTupleSource(0);	
     	}
     	if (command instanceof Drop) {

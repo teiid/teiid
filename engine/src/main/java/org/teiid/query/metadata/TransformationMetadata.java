@@ -1164,4 +1164,14 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		return false;
 	}
 	
+	@Override
+	public Object getModelID(String modelName) throws TeiidComponentException,
+			QueryMetadataException {
+		Schema s = this.getMetadataStore().getSchema(modelName);
+		if (s == null) {
+			throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
+		}
+		return s;
+	}
+	
 }

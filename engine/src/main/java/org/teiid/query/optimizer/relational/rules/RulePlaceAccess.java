@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
@@ -44,6 +45,8 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.ResolverUtil;
+import org.teiid.query.sql.lang.Create;
+import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -136,12 +139,17 @@ public final class RulePlaceAccess implements
             if (modelId != null) {
                 accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
-            modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+            if (req instanceof Create || req instanceof Drop) {
+            	modelId = TempMetadataAdapter.TEMP_MODEL;
+            } else {
+            	modelId = RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata);
+            }
             if (modelId != null) {
 	            boolean multiSource = metadata.isMultiSource(modelId);
 	            if (multiSource) {
 	            	accessNode.setProperty(Info.IS_MULTI_SOURCE, multiSource);
 	            }
+	            accessNode.setProperty(NodeConstants.Info.MODEL_ID, modelId);
             }
             
             // Insert

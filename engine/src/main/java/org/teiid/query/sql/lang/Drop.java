@@ -52,46 +52,26 @@ public class Drop extends Command implements TargetedCommand {
         this.table = table;
     }
 
-    /** 
-     * @see org.teiid.query.sql.lang.Command#getType()
-     * @since 5.5
-     */
     public int getType() {
         return Command.TYPE_DROP;
     }
 
-    /** 
-     * @see org.teiid.query.sql.lang.Command#clone()
-     * @since 5.5
-     */
-    public Object clone() {
+    public Drop clone() {
         Drop drop =  new Drop();
-        GroupSymbol copyTable = (GroupSymbol) table.clone();
+        GroupSymbol copyTable = table.clone();
         drop.setTable(copyTable);
         copyMetadataState(drop);
         return drop;
     }
 
-    /** 
-     * @see org.teiid.query.sql.lang.Command#getProjectedSymbols()
-     * @since 5.5
-     */
     public List getProjectedSymbols() {
         return Command.getUpdateCommandSymbol();
     }
 
-    /** 
-     * @see org.teiid.query.sql.lang.Command#areResultsCachable()
-     * @since 5.5
-     */
     public boolean areResultsCachable() {
         return false;
     }
 
-    /** 
-     * @see org.teiid.query.sql.LanguageObject#acceptVisitor(org.teiid.query.sql.LanguageVisitor)
-     * @since 5.5
-     */
     public void acceptVisitor(LanguageVisitor visitor) {
         visitor.visit(this);
     }

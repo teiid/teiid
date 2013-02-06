@@ -694,7 +694,7 @@ public class PlanToProcessConverter {
 			if(modelID == null || modelID instanceof TempMetadataID) {
 				if(command instanceof StoredProcedure){
 					modelID = ((StoredProcedure)command).getModelID();
-				}else{
+				}else if (!(command instanceof Create || command instanceof Drop)){
 					Collection<GroupSymbol> groups = GroupCollectorVisitor.getGroups(command, true);
 					GroupSymbol group = groups.iterator().next();
 

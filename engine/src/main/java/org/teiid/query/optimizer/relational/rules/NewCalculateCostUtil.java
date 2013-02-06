@@ -38,6 +38,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
@@ -496,7 +497,7 @@ public class NewCalculateCostUtil {
             GroupSymbol group = node.getGroups().iterator().next();
             float cardinality = metadata.getCardinality(group.getMetadataID());
             if (cardinality <= QueryMetadataInterface.UNKNOWN_CARDINALITY){
-            	if (group.isTempTable()) {
+            	if (group.isTempTable() && metadata.getModelID(group.getMetadataID()) == TempMetadataAdapter.TEMP_MODEL) {
             		//this should be with-in the scope of a procedure or an undefined size common table
             		//
             		//the typical assumption is that this should drive other joins, thus assume

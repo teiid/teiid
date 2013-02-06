@@ -560,4 +560,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 		return false;
 	}
 	
+	@Override
+	public Object getModelID(String modelName) throws TeiidComponentException,
+			QueryMetadataException {
+		return null;
+	}
+	
 }

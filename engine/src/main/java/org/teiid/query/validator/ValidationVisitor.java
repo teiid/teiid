@@ -52,6 +52,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.AggregateAttributes;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionLibrary;
@@ -945,6 +946,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     public void visit(Create obj) {
     	if (!obj.getPrimaryKey().isEmpty()) {
     		validateSortable(obj.getPrimaryKey());
+    	}
+    	if (obj.getTableMetadata() != null) {
+    		Table t = obj.getTableMetadata();
+    		if (!t.getForeignKeys().isEmpty()) {
+    			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.temp_fk", obj.getTable()), obj); //$NON-NLS-1$
+    		}
     	}
     }
     

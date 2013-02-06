@@ -106,8 +106,9 @@ public class RelationalPlan extends ProcessorPlan {
                                     
         node.initialize(context, bufferMgr, dataMgr);
 
-        RelationalNode[] children = node.getChildren();  
-        for(int i=0; i<children.length; i++) {
+        RelationalNode[] children = node.getChildren();
+        int childCount = node.getChildCount();
+        for(int i=0; i<childCount; i++) {
             if(children[i] != null) {
                 connectExternal(children[i], context, dataMgr, bufferMgr);                
             } else {

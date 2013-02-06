@@ -119,7 +119,7 @@ public class TestProcessor {
     }
 
 	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata) {
-		return helpGetPlan(sql, metadata, new DefaultCapabilitiesFinder());
+		return helpGetPlan(sql, metadata, DefaultCapabilitiesFinder.INSTANCE);
     }
 	
 	public static ProcessorPlan helpGetPlan(String sql, QueryMetadataInterface metadata, CapabilitiesFinder finder) { 
@@ -133,7 +133,7 @@ public class TestProcessor {
     }
 
     static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata) {
-        return helpGetPlan(command, metadata, new DefaultCapabilitiesFinder());
+        return helpGetPlan(command, metadata, DefaultCapabilitiesFinder.INSTANCE);
     }
     
 	static ProcessorPlan helpGetPlan(Command command, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) {

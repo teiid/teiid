@@ -773,6 +773,7 @@ Command userCommand(ParseInfo info) :
 	command = delete(info) |
 	command = dropTable(info) |
 	LOOKAHEAD(2) command = createTempTable(info) |
+	LOOKAHEAD(2) command = createForeignTempTable(info) |
 	command = alter(info) |
 	command = createTrigger(info)
 	)
@@ -4740,13 +4741,11 @@ example={code:sql}CREATE VIEW vw AS SELECT 1{code}
 */
 void createTable(MetadataFactory factory) :
 {
-	Table table = null;
-	String tableName = null;
 	boolean view = false;
-	Command query = null;
+	String tableName = null;
+	Table table = null;
 	Token comment = null;
-	String name = null;
-	AbstractMetadataRecord constraint = null;
+	Command query = null;
 }
 {
 	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
@@ -4755,6 +4754,60 @@ void createTable(MetadataFactory factory) :
 	    table = factory.addTable(tableName);
 	    table.setVirtual(view);
 	}
+	createTableBody(table, factory)
+	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
+	  {
+		   if (!view) {
+     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", table.getName()));
+		   }
+		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
+	  }
+	]
+}
+
+/*
+name=create foreign temp table
+description=Defines a foreign temp table
+example={code:sql}CREATE FOREIGN TEMPORARY TABLE t (x string) ON z{code}
+*/
+Create createForeignTempTable(ParseInfo info) :
+{
+	Table table = null;
+	String tableName = null;
+	String model = null;
+	MetadataFactory factory = getTempMetadataFactory();
+}
+{
+	<CREATE> <FOREIGN> <TEMPORARY> <TABLE>
+	tableName = id(null)
+	{
+		table = new Table();
+		//need to set a dummy/stable uuid
+		table.setUUID("tid:0");
+		table.setTableType(Table.Type.TemporaryTable);
+		table.setName(tableName);
+	} 
+	createTableBody(table, factory)
+	<ON> model = id(null)
+	{
+		Create create = new Create();
+		create.setTableMetadata(table);
+		create.setOn(model);
+		return create;
+	}
+}
+
+/*
+name=create table body
+description=Defines a table.
+example={code:sql}(x string) OPTIONS (CARDINALITY 100){code}
+*/
+void createTableBody(Table table, MetadataFactory factory) :
+{
+	String name = null;
+	AbstractMetadataRecord constraint = null;
+}
+{
 	[<LPAREN>
     createColumn(factory, table)
     (LOOKAHEAD(3) <COMMA>
@@ -4773,14 +4826,7 @@ void createTable(MetadataFactory factory) :
 	      setTableOptions(table);
 	   }
 	]
-	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)]
 	{
-		if (query != null){
-		   if (!view) {
-     		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", tableName));
-		   }
-		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
-		}
 		if (table.getColumns() != null && !table.supportsUpdate()) {
 			for (Column c : table.getColumns()) {
 				c.setUpdatable(false);

@@ -68,6 +68,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.source.XMLSystemFunctions;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.sql.lang.BatchedUpdateCommand;
 import org.teiid.query.sql.lang.Command;
@@ -398,6 +399,12 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			return;
 		}
 		if (!(metadataId instanceof Table)) {
+			if (metadataId instanceof TempMetadataID) {
+				TempMetadataID tid = (TempMetadataID)metadataId;
+				if (tid.getTableData().getModel() != null) {
+					tid.getTableData().dataModified((Integer)results.getResults()[commandIndex].get(0));
+				}
+			}
 			return;
 		} 
 		Table t = (Table)metadataId;

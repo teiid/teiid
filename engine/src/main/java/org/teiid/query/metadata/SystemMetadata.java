@@ -111,9 +111,10 @@ public class SystemMetadata {
 		vdb.setName("System");  //$NON-NLS-1$
 		vdb.setVersion(1);
 		Properties p = new Properties();
-		systemStore = loadSchema(vdb, p, "SYS").asMetadataStore(); //$NON-NLS-1$
+		QueryParser parser = new QueryParser();
+		systemStore = loadSchema(vdb, p, "SYS", parser).asMetadataStore(); //$NON-NLS-1$
 		systemStore.addDataTypes(dataTypes);
-		loadSchema(vdb, p, "SYSADMIN").mergeInto(systemStore); //$NON-NLS-1$
+		loadSchema(vdb, p, "SYSADMIN", parser).mergeInto(systemStore); //$NON-NLS-1$
 		MetadataValidator validator = new MetadataValidator(this.typeMap);
 		ValidatorReport report = validator.validate(vdb, systemStore);
 		if (report.hasItems()) {
@@ -121,14 +122,14 @@ public class SystemMetadata {
 		}
 	}
 
-	private MetadataFactory loadSchema(VDBMetaData vdb, Properties p, String name) {
+	private MetadataFactory loadSchema(VDBMetaData vdb, Properties p, String name, QueryParser parser) {
 		ModelMetaData mmd = new ModelMetaData();
 		mmd.setName(name);
 		vdb.addModel(mmd);
 		InputStream is = SystemMetadata.class.getClassLoader().getResourceAsStream("org/teiid/metadata/"+name+".sql"); //$NON-NLS-1$ //$NON-NLS-2$
 		try {
 			MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), name, typeMap, p, null);
-			QueryParser.getQueryParser().parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
+			parser.parseDDL(factory, new InputStreamReader(is, Charset.forName("UTF-8"))); //$NON-NLS-1$
 			for (Table t : factory.getSchema().getTables().values()) {
 				t.setSystem(true);
 			}

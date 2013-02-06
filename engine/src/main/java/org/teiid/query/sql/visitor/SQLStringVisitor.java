@@ -38,6 +38,7 @@ import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
+import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
@@ -61,7 +62,22 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class SQLStringVisitor extends LanguageVisitor {
 
-    public static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
+    private class DDLVisitor extends DDLStringVisitor {
+    	
+		private DDLVisitor() {
+			super(null, null);
+			this.usePrefixes = false;
+		}
+
+		@Override
+		protected DDLStringVisitor append(Object o) {
+			SQLStringVisitor.this.append(o);
+			return this;
+		}
+		
+	}
+
+	public static final String UNDEFINED = "<undefined>"; //$NON-NLS-1$
     private static final String SPACE = " "; //$NON-NLS-1$
     private static final String BEGIN_HINT = "/*+"; //$NON-NLS-1$
     private static final String END_HINT = "*/"; //$NON-NLS-1$
@@ -300,6 +316,22 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( Create obj ) {
         append(CREATE);
         append(SPACE);
+        if (obj.getTableMetadata() != null) {
+            append(FOREIGN);
+            append(SPACE);
+            append(TEMPORARY);
+            append(SPACE);
+            append(TABLE);
+            append(SPACE);
+            
+            new DDLVisitor().addTableBody(obj.getTableMetadata());
+            
+            append(SPACE);
+            append(ON);
+            append(SPACE);
+            outputLiteral(String.class, false, obj.getOn());
+        	return;
+        }
         append(LOCAL);
         append(SPACE);
         append(TEMPORARY);
@@ -519,9 +551,8 @@ public class SQLStringVisitor extends LanguageVisitor {
         if (obj.getEscapeChar() != MatchCriteria.NULL_ESCAPE_CHAR) {
             append(SPACE);
             append(ESCAPE);
-            append(" '"); //$NON-NLS-1$
-            append(String.valueOf(obj.getEscapeChar()));
-            append("'"); //$NON-NLS-1$
+            append(SPACE);
+            outputLiteral(String.class, false, obj.getEscapeChar());
         }
     }
     

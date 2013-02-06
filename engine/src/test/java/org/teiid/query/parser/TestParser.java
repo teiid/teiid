@@ -2429,7 +2429,7 @@ public class TestParser {
 
         Expression constant1 = new Constant(new Integer(1000));
         Expression constant2 = new Constant(new Integer(5000));
-        Collection constants = new ArrayList(2);
+        Collection<Expression> constants = new ArrayList<Expression>(2);
         constants.add(constant1);
         constants.add(constant2);
         Criteria crit = new SetCriteria(new ElementSymbol("b"), constants); //$NON-NLS-1$
@@ -2454,7 +2454,7 @@ public class TestParser {
 
         Expression constant1 = new Constant(new Integer(1000));
         Expression constant2 = new Constant(new Integer(5000));
-        Collection constants = new ArrayList(2);
+        Collection<Expression> constants = new ArrayList<Expression>(2);
         constants.add(constant1);
         constants.add(constant2);
         SetCriteria crit = new SetCriteria(new ElementSymbol("b"), constants); //$NON-NLS-1$
@@ -2482,7 +2482,7 @@ public class TestParser {
 
 		Criteria crit = new CompareCriteria(new ElementSymbol("b"), CompareCriteria.EQ, new ElementSymbol("aString")); //$NON-NLS-1$ //$NON-NLS-2$
 
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy(elements);
 
@@ -2494,9 +2494,9 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c desc*/
 	@Test public void testOrderByDesc(){
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
-		ArrayList orderTypes = new ArrayList();
+		ArrayList<Boolean> orderTypes = new ArrayList<Boolean>();
 		orderTypes.add(Boolean.FALSE);
 		OrderBy orderBy = new OrderBy(elements, orderTypes);
 		
@@ -2522,7 +2522,7 @@ public class TestParser {
 
 	/** SELECT a FROM db.g WHERE b = aString order by c,d*/
 	@Test public void testOrderBys(){
-		ArrayList elements = new ArrayList();
+		ArrayList<ElementSymbol> elements = new ArrayList<ElementSymbol>();
 		elements.add(new ElementSymbol("c")); //$NON-NLS-1$
 		elements.add(new ElementSymbol("d")); //$NON-NLS-1$
 		OrderBy orderBy = new OrderBy(elements);
@@ -2935,10 +2935,10 @@ public class TestParser {
     @Test public void testInsertWithReference() {
         Insert insert = new Insert();
         insert.setGroup(new GroupSymbol("m.g")); //$NON-NLS-1$
-        List vars = new ArrayList();
+        List<ElementSymbol> vars = new ArrayList<ElementSymbol>();
         vars.add(new ElementSymbol("a"));         //$NON-NLS-1$
         insert.setVariables(vars);
-        List values = new ArrayList();
+        List<Reference> values = new ArrayList<Reference>();
         values.add(new Reference(0));
         insert.setValues(values);
         helpTest("INSERT INTO m.g (a) VALUES (?)",  //$NON-NLS-1$
@@ -3087,7 +3087,7 @@ public class TestParser {
     @Test public void testAssignStatement() throws Exception {
         ElementSymbol a = new ElementSymbol("a"); //$NON-NLS-1$
        
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
         symbols.add(new ElementSymbol("a1"));  //$NON-NLS-1$
         Select select = new Select(symbols);       
         
@@ -3190,7 +3190,7 @@ public class TestParser {
     }
     
     @Test public void testDynamicCommandStatement() throws Exception {
-        List symbols = new ArrayList();
+        List<ElementSymbol> symbols = new ArrayList<ElementSymbol>();
 
         ElementSymbol a1 = new ElementSymbol("a1"); //$NON-NLS-1$
         a1.setType(DataTypeManager.DefaultDataClasses.STRING);
@@ -4430,7 +4430,7 @@ public class TestParser {
     }
 
     @Test public void testCompoundNonJoinCriteriaInFromUWithIN() {        
-        Collection values = new ArrayList();
+        Collection<Expression> values = new ArrayList<Expression>();
         values.add(new Constant(new Integer(0)));
         values.add(new Constant(new Integer(1)));
         PredicateCriteria crit = new SetCriteria(new ElementSymbol("e2"), values); //$NON-NLS-1$
@@ -4509,7 +4509,7 @@ public class TestParser {
 
         ElementSymbol e =  new ElementSymbol("foo"); //$NON-NLS-1$ 
 
-        Insert query = new Insert(g, new ArrayList(), new ArrayList());
+        Insert query = new Insert(g, new ArrayList<ElementSymbol>(), new ArrayList());
         query.addVariable(e);
         query.addValue(new Constant("bar", String.class)); //$NON-NLS-1$
         
@@ -4775,71 +4775,6 @@ public class TestParser {
         helpException("select a from b left outer join c on ()"); //$NON-NLS-1$
     }
     
-    @Test public void testCreateTempTable1() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testCreateTempTable2() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testCreateTempTable3() {
-        helpException("Create TEMPORARY table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
-    }
-    
-    @Test public void testCreateTempTable4() {
-        helpException("Create table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
-    }
-    
-    @Test public void testCreateTempTable5() {
-        helpException("Create  local TEMPORARY table tempTable (c1 boolean primary, c2 byte)"); //$NON-NLS-1$ 
-    }
-        
-    @Test public void testCreateTempTable7() {
-        helpException("Create local TEMPORARY table tempTable (c1.x boolean, c2 byte)" ,"TEIID31100 Parsing error: Encountered \"table tempTable ([*]c1.x[*] boolean,\" at line 1, column 41.\nInvalid simple identifier format: [c1.x]"); //$NON-NLS-1$ //$NON-NLS-2$ 
-    }
-    
-    @Test public void testCreateTempTableWithPrimaryKey() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BOOLEAN);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        create.getPrimaryKey().add(column);
-        helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte, primary key (c2))", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte, PRIMARY KEY(c2))", create); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
-    @Test public void testDropTable() {
-        Drop drop = new Drop();
-        drop.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        helpTest("DROP table tempTable", "DROP TABLE tempTable", drop); //$NON-NLS-1$ //$NON-NLS-2$
-    }
-    
     @Test public void testEscapedOuterJoin() {
         String sql = "SELECT * FROM {oj A LEFT OUTER JOIN B ON (A.x=B.x)}"; //$NON-NLS-1$
         String expected = "SELECT * FROM A LEFT OUTER JOIN B ON A.x = B.x"; //$NON-NLS-1$
@@ -4922,10 +4857,6 @@ public class TestParser {
         helpTest(sql, expected, command);
     }
     
-    @Test public void testBadCreate() {
-        helpException("create insert"); //$NON-NLS-1$
-    }
-    
     @Test public void testCommandWithSemicolon() throws Exception {
         helpTest("select * from pm1.g1;", "SELECT * FROM pm1.g1", QueryParser.getQueryParser().parseCommand("select * from pm1.g1")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     }
@@ -4949,29 +4880,6 @@ public class TestParser {
         helpTest("INSERT INTO m.g VALUES ('a', 'b')",  //$NON-NLS-1$
                  "INSERT INTO m.g VALUES ('a', 'b')",  //$NON-NLS-1$
                  insert);
-    }
-
-    @Test public void testTypeAliases() {
-        Create create = new Create();
-        create.setTable(new GroupSymbol("tempTable")); //$NON-NLS-1$
-        List columns = new ArrayList();
-        ElementSymbol column = new ElementSymbol("c1");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.STRING);
-        columns.add(column);
-        column = new ElementSymbol("c2");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BYTE);
-        columns.add(column);
-        column = new ElementSymbol("c3");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.SHORT);
-        columns.add(column);
-        column = new ElementSymbol("c4");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.FLOAT);
-        columns.add(column);
-        column = new ElementSymbol("c5");//$NON-NLS-1$
-        column.setType(DataTypeManager.DefaultDataClasses.BIG_DECIMAL);
-        columns.add(column);
-        create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 varchar, c2 tinyint, c3 smallint, c4 real, c5 decimal)", create); //$NON-NLS-1$ 
     }
     
     @Test public void testXmlElement() throws Exception {

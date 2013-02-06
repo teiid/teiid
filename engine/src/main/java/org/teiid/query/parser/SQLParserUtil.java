@@ -33,6 +33,7 @@ import java.util.regex.Pattern;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.StringUtil;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
@@ -627,6 +628,11 @@ public class SQLParserUtil {
 			}
 		}
     	return factory.addFunctionBasedIndex(name != null?name:(SQLConstants.NonReserved.INDEX+(fbi?table.getFunctionBasedIndexes().size():table.getIndexes().size())), columnNames, nonColumnExpressions, table);
+	}
+	
+	MetadataFactory getTempMetadataFactory() {
+		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
+		return workContext.getTempMetadataFactory();
 	}
 	
 	static class  ParsedDataType{

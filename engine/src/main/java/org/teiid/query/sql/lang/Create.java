@@ -27,8 +27,9 @@ import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.EquivalenceUtil;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Table;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -45,6 +46,8 @@ public class Create extends Command implements TargetedCommand {
     private List<ElementSymbol> primaryKey = new ArrayList<ElementSymbol>();
     private List<Column> columns = new ArrayList<Column>();
     private List<ElementSymbol> columnSymbols;
+    private Table tableMetadata;
+    private String on;
     
     public GroupSymbol getTable() {
         return table;
@@ -111,6 +114,8 @@ public class Create extends Command implements TargetedCommand {
 		}
         copy.primaryKey = LanguageObject.Util.deepClone(primaryKey, ElementSymbol.class);
         copyMetadataState(copy);
+        copy.setTableMetadata(this.tableMetadata);
+        copy.on = this.on;
         return copy;
     }
 
@@ -186,6 +191,29 @@ public class Create extends Command implements TargetedCommand {
 		}
         
         return EquivalenceUtil.areEqual(getTable(), other.getTable()) &&
-               EquivalenceUtil.areEqual(getPrimaryKey(), other.getPrimaryKey());
+               EquivalenceUtil.areEqual(getPrimaryKey(), other.getPrimaryKey()) &&
+               EquivalenceUtil.areEqual(this.on, other.on) && 
+               //metadata equality methods are basically identity based, so we need a better check
+               ((tableMetadata == null && other.tableMetadata == null) || (tableMetadata != null && other.tableMetadata != null && this.toString().equals(other.toString())));
     }
+    
+    public String getOn() {
+		return on;
+	}
+    
+    public void setOn(String on) {
+		this.on = on;
+	}
+    
+    public Table getTableMetadata() {
+		return tableMetadata;
+	}
+    
+    public void setTableMetadata(Table tableMetadata) {
+    	if (tableMetadata != null) {
+    		this.columns = tableMetadata.getColumns();
+    		this.table = new GroupSymbol(tableMetadata.getName());
+    	}
+		this.tableMetadata = tableMetadata;
+	}
 }

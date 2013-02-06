@@ -419,4 +419,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.isPseudo(elementId);
 	}
 	
+	@Override
+	public Object getModelID(String modelName) throws TeiidComponentException,
+			QueryMetadataException {
+		return actualMetadata.getModelID(modelName);
+	}
+	
 }

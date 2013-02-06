@@ -42,7 +42,9 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		Document,
 		XmlMappingClass,
 		XmlStagingTable,
-		MaterializedTable
+		MaterializedTable,
+		/** Temporary from a Teiid Perspective - will not have a parent set */
+		TemporaryTable 
 	}
 	
     public static enum TriggerEvent {
@@ -350,6 +352,14 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     	if (this.functionBasedIndexes == null) {
     		this.functionBasedIndexes = new ArrayList<KeyRecord>(2);
     	}
+    }
+    
+    @Override
+    public String getFullName() {
+    	if (this.tableType == Type.TemporaryTable) {
+    		return this.getName();
+    	}
+    	return super.getFullName();
     }
 	
 }

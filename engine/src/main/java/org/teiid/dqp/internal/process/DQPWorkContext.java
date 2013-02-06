@@ -44,6 +44,8 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.security.SecurityHelper;
 
 
@@ -119,6 +121,7 @@ public class DQPWorkContext implements Serializable {
     private boolean useCallingThread;
     private Version clientVersion = Version.SEVEN_4;
     private boolean admin;
+    private MetadataFactory metadataFactory;
     
     public DQPWorkContext() {
 	}
@@ -317,6 +320,13 @@ public class DQPWorkContext implements Serializable {
 	
 	public boolean isAdmin() {
 		return admin;
+	}
+
+	public MetadataFactory getTempMetadataFactory() {
+		if (this.metadataFactory == null) {
+			this.metadataFactory = new MetadataFactory("temp", 1, "temp", SystemMetadata.getInstance().getRuntimeTypeMap(), null, null);
+		}
+		return this.metadataFactory;
 	}
 
 }

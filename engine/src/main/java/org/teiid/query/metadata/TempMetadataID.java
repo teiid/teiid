@@ -68,6 +68,7 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		long lastModified = System.currentTimeMillis();
 		int modCount;
 		private LinkedHashMap<Expression, Integer> functionBasedExpressions;
+		private Object model;
 		
 		public long getLastDataModification() {
 			return lastDataModification;
@@ -101,6 +102,14 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		
 		public LinkedHashMap<Expression, Integer> getFunctionBasedExpressions() {
 			return functionBasedExpressions;
+		}
+
+		public void setModel(Object mid) {
+			this.model = mid;
+		}
+		
+		public Object getModel() {
+			return model;
 		}
 		
 	}

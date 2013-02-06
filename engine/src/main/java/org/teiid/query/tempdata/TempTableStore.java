@@ -48,6 +48,7 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -198,6 +199,7 @@ public class TempTableStore {
 	
     private TempMetadataStore tempMetadataStore = new TempMetadataStore(new ConcurrentSkipListMap<String, TempMetadataID>(String.CASE_INSENSITIVE_ORDER));
     private Map<String, TempTable> tempTables = new ConcurrentSkipListMap<String, TempTable>(String.CASE_INSENSITIVE_ORDER);
+    private Map<String, Table> foreignTempTables = new ConcurrentSkipListMap<String, Table>(String.CASE_INSENSITIVE_ORDER);
     private String sessionID;
     private TempTableStore parentTempTableStore;
     
@@ -213,12 +215,22 @@ public class TempTableStore {
 	}
     
     public boolean hasTempTable(String tempTableName) {
-    	return tempTables.containsKey(tempTableName);
+    	return tempTables.containsKey(tempTableName) || foreignTempTables.containsKey(tempTableName);
     }
     
     public void setProcessors(HashMap<String, TableProcessor> plans) {
 		this.processors = plans;
 	}
+    
+    void addForeignTempTable(final String tempTableName, Create create) {
+    	TempMetadataID id = tempMetadataStore.getTempGroupID(tempTableName);
+    	if (id == null) {
+    		id = tempMetadataStore.addTempGroup(tempTableName, create.getColumnSymbols(), false, true);
+    		id.setOriginalMetadataID(create.getTableMetadata());
+    		id.getTableData().setModel(create.getTableMetadata().getParent());
+    	}
+    	this.foreignTempTables.put(tempTableName, create.getTableMetadata());
+    }
 
     TempTable addTempTable(final String tempTableName, Create create, BufferManager buffer, boolean add, CommandContext context) throws TeiidProcessingException {
     	List<ElementSymbol> columns = create.getColumnSymbols();
@@ -248,6 +260,7 @@ public class TempTableStore {
     	tempMetadataStore.removeTempGroup(tempTableName);
         final TempTable table = this.tempTables.remove(tempTableName);
         if (table == null) {
+        	foreignTempTables.remove(tempTableName);
         	return;
         }
 		if (transactionMode != TransactionMode.ISOLATE_WRITES || synch == null || !synch.existingTables.contains(table.getId())) {
@@ -292,6 +305,13 @@ public class TempTableStore {
             
     public void removeTempTables() throws TeiidComponentException {
         for (String name : tempTables.keySet()) {
+            try {
+				removeTempTableByName(name, null);
+			} catch (TeiidProcessingException e) {
+				 throw new TeiidComponentException(QueryPlugin.Event.TEIID30225, e);
+			}
+        }
+        for (String name : foreignTempTables.keySet()) {
             try {
 				removeTempTableByName(name, null);
 			} catch (TeiidProcessingException e) {
@@ -424,7 +444,9 @@ public class TempTableStore {
 	}
     
     public Set<String> getAllTempTables() {
-        return new HashSet<String>(this.tempTables.keySet());
+        Set<String> result = new HashSet<String>(this.tempTables.keySet());
+        result.addAll(this.foreignTempTables.keySet());
+        return result;
     }
     
     Map<String, TempTable> getTempTables() {

@@ -66,6 +66,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ExecutorUtils;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
@@ -84,6 +85,7 @@ import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
+import org.teiid.query.util.Options;
 
 /**
  * Implements the core DQP processing.
@@ -207,6 +209,7 @@ public class DQPCore implements DQP {
 	private AuthorizationValidator authorizationValidator;
 	
 	private EnhancedTimer cancellationTimer;
+	private Options options;
     
     /**
      * perform a full shutdown and wait for 10 seconds for all threads to finish
@@ -333,6 +336,7 @@ public class DQPCore implements DQP {
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
 				workContext, this.prepPlanCache);
+	    request.setOptions(options);
 	    request.setExecutor(this.processWorkerPool);
 		request.setResultSetCacheEnabled(this.rsCache != null);
 		request.setAuthorizationValidator(this.authorizationValidator);
@@ -711,7 +715,10 @@ public class DQPCore implements DQP {
 			}
 		});
         dataTierMgr.setEventDistributor(eventDistributor);
-                
+        //for now options are scoped to the engine - vdb scoping is a todo
+        options = new Options();
+        options.setProperties(System.getProperties());
+        PropertiesUtils.setBeanProperties(options, options.getProperties(), "org.teiid", true); //$NON-NLS-1$
         LogManager.logDetail(LogConstants.CTX_DQP, "DQPCore started maxThreads", this.config.getMaxThreads(), "maxActivePlans", this.maxActivePlans, "source concurrency", this.userRequestSourceConcurrency); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 	

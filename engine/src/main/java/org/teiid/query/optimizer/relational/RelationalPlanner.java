@@ -661,8 +661,8 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false, true);
-		} else if (!container.getGroup().isTempTable() && //we hope for the best, and do a specific validation for subqueries below
-				container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
+		} else if ((!container.getGroup().isTempTable() || metadata.getModelID(container.getGroup().getMetadataID()) != TempMetadataAdapter.TEMP_MODEL) //we hope for the best, and do a specific validation for subqueries below
+				&& container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
 				&& !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
 			//do a workaround of row-by-row processing for update/delete
 			validateRowProcessing(container);
