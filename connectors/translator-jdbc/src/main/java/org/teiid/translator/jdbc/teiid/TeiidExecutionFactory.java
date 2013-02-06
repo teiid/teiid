@@ -44,6 +44,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final String SEVEN_4 = "7.4"; //$NON-NLS-1$
 	public static final String SEVEN_5 = "7.5"; //$NON-NLS-1$
 	public static final String SEVEN_6 = "7.6"; //$NON-NLS-1$
+	public static final String EIGHT_3 = "8.3"; //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 		setDatabaseVersion(SEVEN_0);
@@ -241,6 +242,27 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
     	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    }
+    
+    @Override
+    public boolean supportsFormatLiteral(String literal,
+    		org.teiid.translator.ExecutionFactory.Format format) {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsGeneratedKeys() {
+    	return getDatabaseVersion().compareTo(EIGHT_3) >= 0;
+    }
+    
+    @Override
+    public boolean supportsInsertWithQueryExpression() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsOrderByNullOrdering() {
+    	return true;
     }
     
 }
