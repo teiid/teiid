@@ -129,4 +129,8 @@ public class TestAccessNode {
         Query query = (Query)QueryParser.getQueryParser().parseCommand("SELECT count(*) FROM pm1.g1 where false"); //$NON-NLS-1$
         assertTrue(RelationalNodeUtil.shouldExecute(query, false));
     }
+    
+    @Test public void testUninitailizedClose() throws Exception {
+    	new AccessNode().close();
+    }
 }

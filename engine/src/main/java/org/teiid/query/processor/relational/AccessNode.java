@@ -424,8 +424,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     }
     
 	public void closeDirect() {
-    	getBufferManager().releaseBuffers(reserved);
-    	reserved = 0;
+		if (reserved > 0) {
+	    	getBufferManager().releaseBuffers(reserved);
+	    	reserved = 0;
+		}
 		super.closeDirect();
         closeSources();            
 	}

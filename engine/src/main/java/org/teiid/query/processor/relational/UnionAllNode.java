@@ -224,8 +224,10 @@ public class UnionAllNode extends RelationalNode {
     
     @Override
     public void closeDirect() {
-    	getBufferManager().releaseBuffers(reserved);
-    	reserved = 0;
+    	if (reserved > 0) {
+	    	getBufferManager().releaseBuffers(reserved);
+	    	reserved = 0;
+    	}
     }
 
 	public Object clone(){
