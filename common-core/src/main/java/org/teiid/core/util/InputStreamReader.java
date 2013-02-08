@@ -74,6 +74,7 @@ public class InputStreamReader extends Reader {
         }
 		while (!done && !cb.hasRemaining()) {
 			int read = 0;
+			int pos = bb.position();
 	    	while ((read = rbc.read(bb)) == 0) {
 	    		//blocking read
 	    	}
@@ -90,7 +91,7 @@ public class InputStreamReader extends Reader {
 	    		}
 	    		done = true;
 	    	}
-	    	if (bb.position() != read) {
+	    	if (bb.position() != read + pos) {
 	    		bb.compact();
 	    	} else {
 	    		bb.clear();
