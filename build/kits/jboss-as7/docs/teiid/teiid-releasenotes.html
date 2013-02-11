@@ -39,6 +39,7 @@
 	<li>TEIID-1757 <b>OData Translator</b> - A translator for OData based sources has been added.
 	<li>TEIID-2363 <b>Concurrent Join Processing Enhancements</b> - both sides of a join will processed more when possible.  See also the org.teiid.joinPrefetchBatches system property in the Admin Guide.
 	<li>TEIID-196 <b>Source Temporary Tables</b> - temporary (locally scoped) tables may be defined at runtime against physical sources with a CREATE FOREIGN TEMPORARY TABLE statement.  See the Reference for more.
+	<li>TEIID-2159 <b>JSON Production</p> - added the JSONARRAY, JSONARRAY_AGG, JSONOBJECT, and JSONPARSE constructs for producing JSON.  See the Reference for more. 
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -277,6 +278,10 @@ temporary table access.
 
 The following components have been updated:
 
+<h4>From 8.2</h4>
+<ul>
+    <li>json-simple was removed.
+</ul>
 <h4>From 7.4</h4>
 <ul>
     <li>Saxon was upgraded to 9.2.1.5

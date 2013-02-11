@@ -7,7 +7,6 @@
         <resource-root path="teiid-runtime-${project.version}.jar" />
         <resource-root path="teiid-engine-${project.version}.jar" />
         <resource-root path="saxonhe-9.2.1.5.jar" />
-        <resource-root path="json-simple-1.1.jar" />
         <resource-root path="xom-1.2.jar" />
         <resource-root path="nux-1.6.jar" />
         
