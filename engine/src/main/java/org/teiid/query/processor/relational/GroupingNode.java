@@ -45,17 +45,17 @@ import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.*;
 import org.teiid.query.processor.BatchCollector;
-import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
+import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.TextLine;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -241,6 +241,9 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		case ARRAY_AGG:
 			result = new ArrayAgg();
 			break;                		
+		case JSONARRAY_AGG:
+			result = new JSONArrayAgg();
+			break;
 		case TEXTAGG:
 			result = new TextAgg((TextLine)args[0]);
 			break;     

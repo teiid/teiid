@@ -131,6 +131,9 @@ public class EvaluatableVisitor extends LanguageVisitor {
      */
     public void visit(Reference obj) {
         hasCorrelatedReferences |= obj.isCorrelated();
+        if (obj.isPositional()) {
+        	setDeterminismLevel(Determinism.COMMAND_DETERMINISTIC);
+        }
     	evaluationNotPossible(EvaluationLevel.PROCESSING);
     }
     

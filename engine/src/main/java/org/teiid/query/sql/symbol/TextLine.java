@@ -21,6 +21,7 @@
  */
 package org.teiid.query.sql.symbol;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,6 +46,7 @@ public class TextLine implements Expression {
 	private boolean includeHeader;
 	private List<DerivedColumn> expressions;
 	private String encoding;
+	private String lineEnding = nl;
 	
 	public Character getDelimiter() {
 		return delimiter;
@@ -85,6 +87,14 @@ public class TextLine implements Expression {
 	public void setExpressions(List<DerivedColumn> expressions) {
 		this.expressions = expressions;
 	}	
+	
+	public String getLineEnding() {
+		return lineEnding;
+	}
+	
+	public void setLineEnding(String lineEnding) {
+		this.lineEnding = lineEnding;
+	}
 	
 	@Override
 	public Class<?> getType() {
@@ -137,10 +147,12 @@ public class TextLine implements Expression {
 		Object getValue(T t);
 	}
 	
-	public static <T> String evaluate(final List<T> values, ValueExtractor<T> valueExtractor, Character delimeter, Character quote) throws TransformationException {
+	public static <T> List<Object> evaluate(final List<T> values, ValueExtractor<T> valueExtractor, TextLine textLine) throws TransformationException {
+		Character delimeter = textLine.getDelimiter();
 		if (delimeter == null) {
 			delimeter = new Character(',');
 		}
+		Character quote = textLine.getQuote();
 		String quoteStr = null;		
 		if (quote == null) {
 			quoteStr = "\""; //$NON-NLS-1$
@@ -148,22 +160,22 @@ public class TextLine implements Expression {
 			quoteStr = String.valueOf(quote);
 		}
 		String doubleQuote = quoteStr + quoteStr;
-		StringBuilder sb = new StringBuilder();
+		ArrayList<Object> result = new ArrayList<Object>();
 		for (Iterator<T> iterator = values.iterator(); iterator.hasNext();) {
 			T t = iterator.next();
 			String text = DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
 			if (text == null) {
 				continue;
 			}
-			sb.append(quoteStr);
-			sb.append(StringUtil.replaceAll(text, quoteStr, doubleQuote));
-			sb.append(quoteStr);
+			result.add(quoteStr);
+			result.add(StringUtil.replaceAll(text, quoteStr, doubleQuote));
+			result.add(quoteStr);
 			if (iterator.hasNext()) {
-				sb.append(delimeter);
+				result.add(delimeter);
 			}			
 		}
-		sb.append(nl);
-		return sb.toString();
+		result.add(textLine.getLineEnding());
+		return result;
 	}
 	
 }

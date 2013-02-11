@@ -57,6 +57,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		XMLAGG,
 		TEXTAGG,
 		ARRAY_AGG,
+		JSONARRAY_AGG,
 		ANY,
 		SOME,
 		EVERY,
@@ -208,6 +209,8 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 				return null;
 			}
 			return this.getFunctionDescriptor().getReturnType();
+		case JSONARRAY_AGG:
+			return DataTypeManager.DefaultDataClasses.CLOB;
 		}
 		if (isBoolean()) {
 			return DataTypeManager.DefaultDataClasses.BOOLEAN;
@@ -337,6 +340,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		switch (this.aggregate) {
 		case TEXTAGG:
 		case ARRAY_AGG:
+		case JSONARRAY_AGG:
 			return true;
 		}
 		return false;
@@ -346,6 +350,7 @@ public class AggregateSymbol extends Function implements DerivedExpression {
 		switch (this.aggregate) {
 		case TEXTAGG:
 		case ARRAY_AGG:
+		case JSONARRAY_AGG:
 			return false;
 		case XMLAGG:
 			return orderBy == null;

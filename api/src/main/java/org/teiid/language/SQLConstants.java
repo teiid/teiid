@@ -129,6 +129,7 @@ public class SQLConstants {
 		public static final String EXCEPTION = "EXCEPTION"; //$NON-NLS-1$
 		public static final String RAISE = "RAISE"; //$NON-NLS-1$
 		public static final String CHAIN = "CHAIN"; //$NON-NLS-1$
+		public static final String JSONOBJECT = "JSONOBJECT"; //$NON-NLS-1$
 	}
 	
 	public interface Reserved {

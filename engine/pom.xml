@@ -82,10 +82,6 @@
 			<groupId>net.sourceforge.saxon</groupId>
 			<artifactId>saxonhe</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.googlecode.json-simple</groupId>
-			<artifactId>json-simple</artifactId>
-		</dependency>
 		
 		<dependency>
             <groupId>nux</groupId>

@@ -451,6 +451,13 @@ public class MetadataFactory implements Serializable {
 	 * @throws MetadataException
 	 */
 	public FunctionMethod addFunction(String name, Method method) {
+		FunctionMethod func = createFunctionFromMethod(name, method);
+		setUUID(func);
+		getSchema().addFunction(func);
+		return func;
+	}
+
+	public static FunctionMethod createFunctionFromMethod(String name, Method method) {
 		String returnType = DataTypeManager.getDataTypeName(method.getReturnType());
 		Class<?>[] params = method.getParameterTypes();
 		String[] paramTypes = new String[params.length];
@@ -461,19 +468,24 @@ public class MetadataFactory implements Serializable {
 				nullOnNull = true;
 				clazz = TypeFacility.convertPrimitiveToObject(clazz);
 			}
-			paramTypes[i] = DataTypeManager.getDataTypeName(clazz);
+			if (method.isVarArgs() && i == params.length -1) {
+				paramTypes[i] = DataTypeManager.getDataTypeName(clazz.getComponentType());
+			} else {
+				paramTypes[i] = DataTypeManager.getDataTypeName(clazz);
+			}
 		}
-		if (params.length > 0 && params[0] == CommandContext.class) {
+		if (params.length > 0 && CommandContext.class.isAssignableFrom(params[0])) {
 			paramTypes = Arrays.copyOfRange(paramTypes, 1, paramTypes.length);
 		}
 		FunctionMethod func = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
-		setUUID(func);
-		getSchema().addFunction(func);
 		func.setInvocationMethod(method.getName());
 		func.setPushdown(PushDown.CANNOT_PUSHDOWN);
 		func.setMethod(method);
 		func.setInvocationClass(method.getDeclaringClass().getName());
 		func.setNullOnNull(nullOnNull);
+		if (method.isVarArgs()) {
+			func.setVarArgs(method.isVarArgs());
+		}
 		return func;
 	}
 

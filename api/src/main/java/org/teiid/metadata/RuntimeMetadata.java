@@ -32,23 +32,41 @@ public interface RuntimeMetadata {
     /**
      * Look up an object by identifier
      * @param fullName
-     * @return The object
+     * @return The object or throws a {@link TranslatorException} if the object cannot be found
      */
     Table getTable(String fullName) throws TranslatorException;
 
     /**
      * Look up an object by identifier
+     * @return The object or throws a {@link TranslatorException} if the object cannot be found
+     */
+    Table getTable(String schema, String name) throws TranslatorException;
+
+    /**
+     * Look up an object by identifier
      * @param fullName
-     * @return The object
+     * @return The object or throws a {@link TranslatorException} if the object cannot be found
      */
     Column getColumn(String fullName) throws TranslatorException;
 
     /**
      * Look up an object by identifier
+     * @return The object or throws a {@link TranslatorException} if the object cannot be found
+     */
+    Column getColumn(String schema, String table, String name) throws TranslatorException;
+
+    /**
+     * Look up an object by identifier
      * @param fullName
-     * @return The object
+     * @return The object or throws a {@link TranslatorException} if the object cannot be found
      */
     Procedure getProcedure(String fullName) throws TranslatorException;
+
+    /**
+     * Look up an object by identifier
+     * @return The object or throws a {@link TranslatorException} if the object cannot be found
+     */
+    Procedure getProcedure(String schema, String name) throws TranslatorException;
     
     /**
      * Gets the contents of a VDB resource in binary form.

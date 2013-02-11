@@ -25,27 +25,17 @@ package org.teiid.query.sql.symbol;
 import java.util.List;
 
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
-public class XMLForest implements Expression {
+public class JSONObject implements Expression {
 
 	private List<DerivedColumn> args;
-	private XMLNamespaces namespaces;
 	
-	public XMLForest(List<DerivedColumn> args) {
+	public JSONObject(List<DerivedColumn> args) {
 		this.args = args;
-	}
-	
-	public XMLNamespaces getNamespaces() {
-		return namespaces;
-	}
-	
-	public void setNamespaces(XMLNamespaces namespaces) {
-		this.namespaces = namespaces;
 	}
 	
 	public List<DerivedColumn> getArgs() {
@@ -54,7 +44,7 @@ public class XMLForest implements Expression {
 
 	@Override
 	public Class<?> getType() {
-		return DataTypeManager.DefaultDataClasses.XML;
+		return DataTypeManager.DefaultDataClasses.CLOB;
 	}
 
 	@Override
@@ -63,11 +53,8 @@ public class XMLForest implements Expression {
 	}
 		
 	@Override
-	public XMLForest clone() {
-		XMLForest clone = new XMLForest(LanguageObject.Util.deepClone(args, DerivedColumn.class));
-		if (namespaces != null) {
-			clone.namespaces = namespaces.clone();
-		}
+	public JSONObject clone() {
+		JSONObject clone = new JSONObject(LanguageObject.Util.deepClone(args, DerivedColumn.class));
 		return clone;
 	}
 	
@@ -80,11 +67,11 @@ public class XMLForest implements Expression {
 		if (obj == this) {
 			return true;
 		}
-		if (!(obj instanceof XMLForest)) {
+		if (!(obj instanceof JSONObject)) {
 			return false;
 		}
-		XMLForest other = (XMLForest)obj;
-		return args.equals(other.args) && EquivalenceUtil.areEqual(namespaces, other.namespaces);
+		JSONObject other = (JSONObject)obj;
+		return args.equals(other.args);
 	}
 	
 	@Override

@@ -5218,5 +5218,10 @@ public class TestParser {
     	b.addStatement(errStmt, true);
     	helpStmtTest("BEGIN\nselect * from x;\na = 1;\nexception e\nERROR 'My Error';\nEND", "BEGIN\nSELECT * FROM x;\na = 1;\nEXCEPTION e\nRAISE SQLEXCEPTION 'My Error';\nEND", b); //$NON-NLS-1$
     }
+    
+    @Test public void testJSONObject() throws Exception {
+    	JSONObject f = new JSONObject(Arrays.asList(new DerivedColumn("table", new ElementSymbol("a"))));
+    	helpTestExpression("jsonObject(a as \"table\")", "JSONOBJECT(a AS \"table\")", f);
+    }
 
 }

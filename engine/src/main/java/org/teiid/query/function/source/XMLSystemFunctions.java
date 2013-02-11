@@ -78,9 +78,6 @@ import net.sf.saxon.value.DateValue;
 import net.sf.saxon.value.DayTimeDurationValue;
 import net.sf.saxon.value.TimeValue;
 
-import org.json.simple.parser.ContentHandler;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
@@ -92,6 +89,9 @@ import org.teiid.core.types.*;
 import org.teiid.core.types.XMLType.Type;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
+import org.teiid.json.simple.ContentHandler;
+import org.teiid.json.simple.JSONParser;
+import org.teiid.json.simple.ParseException;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.CharsetUtils;
@@ -222,13 +222,13 @@ public class XMLSystemFunctions {
 
 		@Override
 		public boolean startObjectEntry(String key)
-				throws org.json.simple.parser.ParseException, IOException {
+				throws org.teiid.json.simple.ParseException, IOException {
 			this.nameStack.push(escapeName(key, true));
 			return false;
 		}
 
 		@Override
-		public boolean startObject() throws org.json.simple.parser.ParseException,
+		public boolean startObject() throws org.teiid.json.simple.ParseException,
 				IOException {
 			start();
 			return false;
@@ -243,14 +243,14 @@ public class XMLSystemFunctions {
 		}
 
 		@Override
-		public void startJSON() throws org.json.simple.parser.ParseException,
+		public void startJSON() throws org.teiid.json.simple.ParseException,
 				IOException {
 			//specify the defaults, since different providers emit/omit differently
 			eventStack.add(eventFactory.createStartDocument("UTF-8", "1.0")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 
 		@Override
-		public boolean startArray() throws org.json.simple.parser.ParseException,
+		public boolean startArray() throws org.teiid.json.simple.ParseException,
 				IOException {
 			if (this.nameStack.size() == 1) {
 				this.rootArray = true;
@@ -261,7 +261,7 @@ public class XMLSystemFunctions {
 
 		@Override
 		public boolean primitive(Object value)
-				throws org.json.simple.parser.ParseException, IOException {
+				throws org.teiid.json.simple.ParseException, IOException {
 			start();
 			if (value != null) {
 				String type = "decimal"; //$NON-NLS-1$
@@ -288,27 +288,27 @@ public class XMLSystemFunctions {
 
 		@Override
 		public boolean endObjectEntry()
-				throws org.json.simple.parser.ParseException, IOException {
+				throws org.teiid.json.simple.ParseException, IOException {
 			this.nameStack.pop();
 			return false;
 		}
 
 		@Override
-		public boolean endObject() throws org.json.simple.parser.ParseException,
+		public boolean endObject() throws org.teiid.json.simple.ParseException,
 				IOException {
 			end();
 			return false;
 		}
 
 		@Override
-		public void endJSON() throws org.json.simple.parser.ParseException,
+		public void endJSON() throws org.teiid.json.simple.ParseException,
 				IOException {
 			this.eventStack.add(eventFactory.createEndDocument());
 			end = true;
 		}
 
 		@Override
-		public boolean endArray() throws org.json.simple.parser.ParseException,
+		public boolean endArray() throws org.teiid.json.simple.ParseException,
 				IOException {
 			if (this.nameStack.size() == 1 && rootArray) {
 				end();
@@ -892,20 +892,26 @@ public class XMLSystemFunctions {
     }
     
     public static SQLXML jsonToXml(CommandContext context, final String rootName, final Blob json, boolean stream) throws TeiidComponentException, TeiidProcessingException, SQLException, IOException {
+		Reader r = getJsonReader(json);
+		return jsonToXml(context, rootName, r, stream);
+    }
+
+	public static InputStreamReader getJsonReader(final Blob json) throws SQLException,
+			IOException {
 		InputStream is = json.getBinaryStream();
 		PushbackInputStream pStream = new PushbackInputStream(is, 4);
-		byte[] encoding = new byte[3];
+		byte[] encoding = new byte[4];
 		int read = pStream.read(encoding);
 		pStream.unread(encoding, 0, read);
 		Charset charset = UTF_8;
-		if (read > 2) {
-			if (encoding[0] == 0) {
+		if (read > 3) {
+			if (encoding[0] == 0 && encoding[2] == 0) {
 				if (encoding[1] == 0) {
 					charset = UTF_32BE; 
 				} else {
 					charset = UTF_16BE;
 				}
-			} else if (encoding[1] == 0) {
+			} else if (encoding[1] == 0 && encoding[3] == 0) {
 				if (encoding[2] == 0) {
 					charset = UTF_32LE; 
 				} else {
@@ -913,9 +919,8 @@ public class XMLSystemFunctions {
 				}
 			}
 		}
-		Reader r = new InputStreamReader(pStream, charset);
-		return jsonToXml(context, rootName, r, stream);
-    }
+		return new InputStreamReader(pStream, charset);
+	}
     
     public static SQLXML jsonToXml(CommandContext context, final String rootName, final Clob json) throws TeiidComponentException, TeiidProcessingException, SQLException {
     	return jsonToXml(context, rootName, json, false);

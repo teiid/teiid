@@ -462,6 +462,13 @@ public class PreOrPostOrderNavigator extends AbstractNavigator {
     }
     
     @Override
+    public void visit(JSONObject obj) {
+    	preVisitVisitor(obj);
+    	visitNodes(obj.getArgs());
+        postVisitVisitor(obj);
+    }
+    
+    @Override
     public void visit(XMLAttributes obj) {
     	preVisitVisitor(obj);
     	visitNodes(obj.getArgs());

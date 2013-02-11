@@ -458,6 +458,8 @@ TOKEN : /* NonReserved words */
 |   <EXCEPTION: "exception">
 |   <RAISE: "raise">
 |   <CHAIN: "chain">
+|   <JSONARRAY_AGG: "jsonarray_agg">
+|   <JSONOBJECT: "jsonobject">
 
 }
 /*
@@ -565,7 +567,7 @@ Token nonReserved() :
      |<TO_BYTES>|<TIMESTAMPADD>|<TIMESTAMPDIFF>|<QUERYSTRING>|<NAMESPACE>|<RESULT>|<INDEX>|<ACCESSPATTERN>|<AUTO_INCREMENT>|<WELLFORMED>|<SQL_TSI_FRAC_SECOND>
      |<SQL_TSI_SECOND>|<SQL_TSI_MINUTE>|<SQL_TSI_HOUR>|<SQL_TSI_DAY>|<SQL_TSI_WEEK>|<SQL_TSI_MONTH>|<SQL_TSI_QUARTER>|<SQL_TSI_YEAR>|<TEXTTABLE>|<ARRAYTABLE>
      |<SELECTOR>|<SKIP_KEYWORD>|<WIDTH>|<PASSING>|<NAME>|<ENCODING>|<COLUMNS>|<DELIMITER>|<QUOTE>|<HEADER>|<NULLS>|<OBJECTTABLE>
-     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>)
+     |<VERSION>|<INCLUDING>|<EXCLUDING>|<XMLDECLARATION>|<VARIADIC>|<RAISE>|<EXCEPTION>|<CHAIN>|<JSONARRAY_AGG>|<JSONOBJECT>)
     {
     	return getToken(0);
     }	
@@ -2070,7 +2072,7 @@ AggregateSymbol orderedAgg(ParseInfo info) :
 	OrderBy orderBy = null;
 }
 {
-	(t=<XMLAGG>|t=<ARRAY_AGG>)
+	(t=<XMLAGG>|t=<ARRAY_AGG>|t=<JSONARRAY_AGG>)
 	<LPAREN>
 	expression = expression(info)
 	[ orderBy = orderby(info) ]
@@ -4127,6 +4129,10 @@ Expression function(ParseInfo info) :
 		{
 			return expression;
 		}
+	|	LOOKAHEAD(<JSONOBJECT>) expression = jsonObject(info)
+		{
+			return expression;
+		}
 	|	expression = xmlSerialize(info)
 		{
 			return expression;
@@ -4279,21 +4285,35 @@ XMLAttributes xmlAttributes(ParseInfo info) :
 }
 
 /*
-name=xml forest
-description=Produces an element for each derived column.
-example={code:sql}XMLFOREST(col1 AS ELEM1, col2 AS ELEM2){code}
+name=json object
+description=Produces a JSON object containing name value pairs.
+example={code:sql}JSONOBJECT(col1 AS val1, col2 AS val2){code}
 */
-XMLForest xmlForest(ParseInfo info) :
+JSONObject jsonObject(ParseInfo info) :
+{
+	ArrayList<DerivedColumn> args = null;
+}
+{
+ 	<JSONOBJECT> <LPAREN>
+ 	args = derivedColumnList(info)
+ 	<RPAREN>  		
+	{
+		JSONObject result = new JSONObject(args);
+		return result;
+	}
+}
+
+/*
+name=derived column list
+description=a list of name value pairs
+example={code:sql}col1 AS val1, col2 AS val2{code}
+*/
+ArrayList<DerivedColumn> derivedColumnList(ParseInfo info) :
 {
 	DerivedColumn expression = null;
-	XMLNamespaces xmlNamespaces = null;
 	ArrayList<DerivedColumn> args = new ArrayList<DerivedColumn>(2);
 }
 {
- 	<XMLFOREST> <LPAREN>
-	[
-		xmlNamespaces = xmlNamespaces(info) <COMMA>
-	]
 	expression = derivedColumn(info)
 	{
 		args.add(expression);
@@ -4303,6 +4323,28 @@ XMLForest xmlForest(ParseInfo info) :
 		args.add(expression);
 	 }
 	)*
+	{ 
+		return args;
+	}
+}
+
+/*
+name=xml forest
+description=Produces an element for each derived column.
+example={code:sql}XMLFOREST(col1 AS ELEM1, col2 AS ELEM2){code}
+*/
+XMLForest xmlForest(ParseInfo info) :
+{
+	DerivedColumn expression = null;
+	XMLNamespaces xmlNamespaces = null;
+	ArrayList<DerivedColumn> args = null;
+}
+{
+ 	<XMLFOREST> <LPAREN>
+	[
+		xmlNamespaces = xmlNamespaces(info) <COMMA>
+	]
+	args = derivedColumnList(info)
 	<RPAREN>  		
 	{
 		XMLForest result = new XMLForest(args);

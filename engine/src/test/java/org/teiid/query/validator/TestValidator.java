@@ -1786,5 +1786,23 @@ public class TestValidator {
         
         helpValidate(userUpdateStr, new String[]{"vm1.g2"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
+    
+    @Test public void testJsonArrayBlob() {
+        String sql = "select jsonArray(to_bytes('hello', 'us-ascii'))"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{"jsonArray(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testJsonArrayClob() {
+        String sql = "select jsonArray(cast('hello' as clob))"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testJsonObject() {
+        String sql = "select jsonObject(to_bytes('hello', 'us-ascii'))"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{"JSONOBJECT(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
 	
 }

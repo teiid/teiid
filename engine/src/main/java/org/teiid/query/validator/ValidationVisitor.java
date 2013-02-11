@@ -44,6 +44,7 @@ import net.sf.saxon.trans.XPathException;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
@@ -379,6 +380,11 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         	}
         } else if (obj.isAggregate()) {
         	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.user_defined_aggregate_as_function", obj, obj.getName()), obj); //$NON-NLS-1$
+        } else if (FunctionLibrary.JSONARRAY.equalsIgnoreCase(obj.getName())) {
+        	Expression[] args = obj.getArgs();
+        	for (Expression expression : args) {
+        		validateJSONValue(obj, expression);
+			}
         }
     }
 
@@ -1055,6 +1061,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
 		}
     }
     
+    public void visit(JSONObject obj) {
+    	for (DerivedColumn dc : obj.getArgs()) {
+    		validateJSONValue(obj, dc.getExpression());
+		}
+    }
+    
     @Override
     public void visit(WindowFunction windowFunction) {
     	AggregateSymbol.Type type = windowFunction.getFunction().getAggregateFunction();
@@ -1068,6 +1080,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		break;
     	case TEXTAGG:
     	case ARRAY_AGG:
+    	case JSONARRAY_AGG:
+    	case XMLAGG:
     		if (windowFunction.getWindowSpecification().getOrderBy() != null) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.window_order_by", windowFunction), windowFunction); //$NON-NLS-1$
             }
@@ -1121,6 +1135,8 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_xml", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
         	} else if (obj.isBoolean() && aggExps[0].getType() != DataTypeManager.DefaultDataClasses.BOOLEAN) {
         		handleValidationError(QueryPlugin.Util.getString("AggregateValidationVisitor.non_boolean", new Object[] {aggregateFunction, obj}), obj); //$NON-NLS-1$
+        	} else if (aggregateFunction == Type.JSONARRAY_AGG) {
+				validateJSONValue(obj, aggExps[0]);
         	}
         }
         if((obj.isDistinct() || aggregateFunction == Type.MIN || aggregateFunction == Type.MAX) && DataTypeManager.isNonComparable(DataTypeManager.getDataTypeName(aggExps[0].getType()))) {
@@ -1153,6 +1169,12 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     		}
     	}
     }
+
+	private void validateJSONValue(LanguageObject obj, Expression expr) {
+		if (expr.getType() != DataTypeManager.DefaultDataClasses.STRING && !DataTypeManager.isTransformable(expr.getType(), DataTypeManager.DefaultDataClasses.STRING)) {
+			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.invalid_json_value", expr, obj), obj); //$NON-NLS-1$
+		}
+	}
 
 	private void validateNoSubqueriesOrOuterReferences(Expression expr) {
 		if (!ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(expr).isEmpty()) {

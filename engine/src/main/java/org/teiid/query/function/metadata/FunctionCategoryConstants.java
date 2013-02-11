@@ -64,6 +64,11 @@ public interface FunctionCategoryConstants {
      * "XML" functions are for manipulating XML documents.
      */
     public static final String XML = "XML"; //$NON-NLS-1$
+    
+    /**
+     * "JSON" functions are for manipulating JSON documents.
+     */
+    public static final String JSON = "JSON"; //$NON-NLS-1$
 
     /**
      * "Security" functions check authentication or authorization information

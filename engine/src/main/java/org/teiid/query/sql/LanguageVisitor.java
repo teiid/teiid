@@ -149,4 +149,6 @@ public abstract class LanguageVisitor {
 	public void visit(ExceptionExpression obj) {}
 
 	public void visit(ReturnStatement obj) {}
+	
+	public void visit(JSONObject obj) {}
 }

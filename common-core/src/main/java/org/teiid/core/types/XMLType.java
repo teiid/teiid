@@ -162,11 +162,7 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		}
 		try {
 			if (version > 0) {
-				try {
-					this.type = ExternalizeUtil.readEnum(in, Type.class);
-				} catch (IllegalArgumentException e) {
-					this.type = Type.UNKNOWN;
-				}
+				this.type = ExternalizeUtil.readEnum(in, Type.class, Type.UNKNOWN);
 			} else {
 				this.type = (Type)in.readObject();
 			}

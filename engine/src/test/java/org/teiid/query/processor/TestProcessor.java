@@ -25,8 +25,10 @@ package org.teiid.query.processor;
 import static org.junit.Assert.*;
 import static org.teiid.query.optimizer.TestOptimizer.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
@@ -44,6 +46,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.XMLType;
 import org.teiid.dqp.internal.process.CachedResults;
@@ -285,10 +288,11 @@ public class TestProcessor {
      * @param tsID
      * @throws TeiidComponentException
      * @throws TeiidProcessingException 
+     * @throws IOException 
      * @since 4.3
      */
     static void examineResults(List[] expectedResults,BufferManager bufferMgr,TupleBuffer tsID) 
-        throws TeiidComponentException,SQLException, TeiidProcessingException {
+        throws TeiidComponentException,SQLException, TeiidProcessingException, IOException {
         
         // Create QueryResults from TupleSource
         TupleSource ts = tsID.createIndexedTupleSource();
@@ -320,6 +324,13 @@ public class TestProcessor {
                 		compareDocuments((String)expectedResults[i].get(0), actualDoc);
                         continue;
                 	}
+            	} else if(cellValue instanceof Clob){
+                    Clob id =  (Clob)cellValue; 
+                    String actualDoc = ClobType.getString(id); 
+                	if (expectedResults[i].size() == 1) {
+                		compareDocuments((String)expectedResults[i].get(0), actualDoc);
+                        continue;
+                	}
             	} 
             }
             
@@ -334,13 +345,13 @@ public class TestProcessor {
 		while(tokens1.hasMoreTokens()){
 			String token1 = tokens1.nextToken().trim();
 			if(!tokens2.hasMoreTokens()){
-				fail("XML doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
+				fail("doc mismatch: expected=" + token1 + "\nactual=none");//$NON-NLS-1$ //$NON-NLS-2$
 			}
 			String token2 = tokens2.nextToken().trim();
-			assertEquals("XML doc mismatch: ", token1, token2); //$NON-NLS-1$
+			assertEquals("doc mismatch: ", token1, token2); //$NON-NLS-1$
 		}
 		if(tokens2.hasMoreTokens()){
-			fail("XML doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
+			fail("doc mismatch: expected=none\nactual=" + tokens2.nextToken().trim());//$NON-NLS-1$
 		}
 	}
 

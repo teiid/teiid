@@ -93,6 +93,7 @@ public class FunctionLibrary {
 
     public static final String SPACE = "space"; //$NON-NLS-1$
 	public static final String ARRAY_GET = "array_get"; //$NON-NLS-1$
+	public static final String JSONARRAY = "jsonarray"; //$NON-NLS-1$
 	
     // Function tree for system functions (never reloaded)
     private FunctionTree systemFunctions;

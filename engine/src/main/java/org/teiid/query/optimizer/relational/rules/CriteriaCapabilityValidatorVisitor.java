@@ -107,6 +107,11 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit(JSONObject obj) {
+    	markInvalid(obj, "Pushdown of JSONObject not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
     public void visit(XMLElement obj) {
     	markInvalid(obj, "Pushdown of XMLElement not allowed"); //$NON-NLS-1$
     }

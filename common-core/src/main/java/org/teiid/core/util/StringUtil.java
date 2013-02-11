@@ -873,7 +873,7 @@ public final class StringUtil {
 	 * @param sb a scratch buffer to use
 	 * @return
 	 */
-    public static String unescape(CharSequence string, int quoteChar, boolean useAsciiExcapes, StringBuilder sb) {
+    public static String unescape(CharSequence string, int quoteChar, boolean useAsciiEscapes, StringBuilder sb) {
     	boolean escaped = false;
     	
     	for (int i = 0; i < string.length(); i++) {
@@ -902,7 +902,7 @@ public final class StringUtil {
     			default:
     				if (c == quoteChar) {
     					sb.append(quoteChar);
-    				} else if (useAsciiExcapes) {
+    				} else if (useAsciiEscapes) {
 	    				int value = Character.digit(c, 8);
 						if (value == -1) {
 							sb.append(c);

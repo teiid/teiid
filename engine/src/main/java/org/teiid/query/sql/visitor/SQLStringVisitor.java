@@ -1735,6 +1735,14 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
     
     @Override
+    public void visit( JSONObject obj ) {
+        append(NonReserved.JSONOBJECT);
+        append("("); //$NON-NLS-1$
+        registerNodes(obj.getArgs(), 0);
+        append(")"); //$NON-NLS-1$
+    }
+    
+    @Override
     public void visit( TextLine obj ) {
         append(FOR); 
         append(SPACE);

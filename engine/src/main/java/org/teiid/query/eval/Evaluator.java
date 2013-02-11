@@ -63,6 +63,7 @@ import org.teiid.language.Like.MatchMode;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
+import org.teiid.query.function.JSONFunctionMethods.JSONBuilder;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.function.source.XMLSystemFunctions.XmlConcat;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -645,6 +646,8 @@ public class Evaluator {
 		   return evaluateXMLElement(tuple, (XMLElement)expression);
 	   } else if (expression instanceof XMLForest){
 		   return evaluateXMLForest(tuple, (XMLForest)expression);
+	   } else if (expression instanceof JSONObject){
+		   return evaluateJSONObject(tuple, (JSONObject)expression);
 	   } else if (expression instanceof XMLSerialize){
 		   return evaluateXMLSerialize(tuple, (XMLSerialize)expression);
 	   } else if (expression instanceof XMLQuery) {
@@ -868,7 +871,7 @@ public class Evaluator {
 				public Object getValue(NameValuePair<Object> t) {
 					return t.value;
 				}
-			}, function.getDelimiter(), function.getQuote());
+			}, function);
 		} catch (TransformationException e) {
 			 throw new ExpressionEvaluationException(e);
 		}
@@ -884,6 +887,22 @@ public class Evaluator {
 			return XMLSystemFunctions.xmlForest(context, namespaces(function.getNamespaces()), nameValuePairs);
 		} catch (TeiidProcessingException e) {
 			 throw new FunctionExecutionException(e);
+		}
+	}
+	
+	private Object evaluateJSONObject(List<?> tuple, JSONObject function)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException, FunctionExecutionException {
+		List<DerivedColumn> args = function.getArgs();
+		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, false);
+		try {
+			JSONBuilder builder = new JSONBuilder(context.getBufferManager(), false);
+			for (NameValuePair<Object> nameValuePair : nameValuePairs) {
+				builder.addValue(nameValuePair.name, nameValuePair.value);
+			}
+			return builder.close();
+		} catch (TeiidProcessingException e) {
+			throw new FunctionExecutionException(e);
 		}
 	}
 
@@ -977,6 +996,9 @@ public class Evaluator {
 				if (xmlNames) {
 					name = XMLSystemFunctions.escapeName(name, true);
 				}
+			}
+			if (!xmlNames && name == null) {
+				name = "expr" + (i+1); //$NON-NLS-1$
 			}
 			nameValuePairs[i] = new Evaluator.NameValuePair<Object>(name, internalEvaluate(ex, tuple));
 		}

@@ -22,6 +22,7 @@
 
 package org.teiid.query.function.source;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,9 +32,12 @@ import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
+import org.teiid.query.function.JSONFunctionMethods;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.SourceSystemFunctions;
@@ -195,7 +199,33 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addArrayGet();
         addArrayLength();
         addTrimFunction();
+        addFunctions(JSONFunctionMethods.class);
     }
+    
+    private void addFunctions(Class<?> clazz) {
+		Method[] methods = clazz.getMethods();
+		for (Method method : methods) {
+			TeiidFunction f = method.getAnnotation(TeiidFunction.class);
+			if (f == null) {
+				continue;
+			}
+			String name = f.name();
+			if (name.isEmpty()) {
+				name = method.getName();
+			}
+			FunctionMethod func = MetadataFactory.createFunctionFromMethod(name, method);
+			func.setDescription(QueryPlugin.Util.getString("SystemSource." + name + "_description")); //$NON-NLS-1$ //$NON-NLS-2$
+			func.setCategory(f.category());
+			for (int i = 0; i < func.getInputParameterCount(); i++) {
+				func.getInputParameters().get(i).setDescription("SystemSource." + name + "_param" + (i+1)); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			func.getOutputParameter().setDescription("SystemSource." + name + "_result"); //$NON-NLS-1$ //$NON-NLS-2$
+			if (f.nullOnNull()) {
+				func.setNullOnNull(true);
+			}
+			functions.add(func);
+		}
+	}
     
     private void addTrimFunction() {
         functions.add(
