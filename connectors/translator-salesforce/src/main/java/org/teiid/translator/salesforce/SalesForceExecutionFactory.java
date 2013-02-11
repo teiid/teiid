@@ -63,6 +63,7 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	private static final String EXCLUDES = "excludes";//$NON-NLS-1$
 	private static final String INCLUDES = "includes";//$NON-NLS-1$
 	private boolean auditModelFields = false;
+	private int maxInsertBatchSize = 2048;
 	
 	public SalesForceExecutionFactory() {
 	    // http://jira.jboss.org/jira/browse/JBEDSP-306
@@ -100,11 +101,11 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, SalesforceConnection connection) throws TranslatorException {
 		UpdateExecution result = null;
 		if(command instanceof org.teiid.language.Delete) {
-			result = new DeleteExecutionImpl(command, connection, metadata, executionContext);
+			result = new DeleteExecutionImpl(this, command, connection, metadata, executionContext);
 		} else if (command instanceof org.teiid.language.Insert) {
-			result = new InsertExecutionImpl(command, connection, metadata, executionContext);
+			result = new InsertExecutionImpl(this, command, connection, metadata, executionContext);
 		} else if (command instanceof org.teiid.language.Update) {
-			result = new UpdateExecutionImpl(command, connection, metadata, executionContext);
+			result = new UpdateExecutionImpl(this, command, connection, metadata, executionContext);
 		}
 		return result;
 
@@ -266,4 +267,20 @@ public class SalesForceExecutionFactory extends ExecutionFactory<ConnectionFacto
     	return true;
     }
     
+    @Override
+    public boolean supportsBulkUpdate() {
+    	return true;
+    }    
+    
+    @TranslatorProperty(display="Max Bulk Insert Batch Size", description="The max size of a bulk insert batch.  Default 2048.", advanced=true)
+    public int getMaxBulkInsertBatchSize() {
+    	return maxInsertBatchSize;
+    }
+    
+    public void setMaxBulkInsertBatchSize(int maxInsertBatchSize) {
+    	if (maxInsertBatchSize < 1) {
+    		throw new AssertionError("Max bulk insert batch size must be greater than 0"); //$NON-NLS-1$
+    	}
+		this.maxInsertBatchSize = maxInsertBatchSize;
+	}
 }

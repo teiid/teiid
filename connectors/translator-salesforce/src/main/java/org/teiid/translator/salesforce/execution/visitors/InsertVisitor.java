@@ -21,29 +21,12 @@
  */
 package org.teiid.translator.salesforce.execution.visitors;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
-
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.salesforce.Util;
 
 
 public class InsertVisitor extends CriteriaVisitor {
-
-	@SuppressWarnings("unchecked")
-	List<JAXBElement> elements = new ArrayList<JAXBElement>();
-	
-	private static Class<?> stringClazz = new String().getClass();
 	
 	public InsertVisitor(RuntimeMetadata metadata) {
 		super(metadata);
@@ -54,41 +37,8 @@ public class InsertVisitor extends CriteriaVisitor {
 		super.visit(insert);
 		try {
 			loadColumnMetadata(insert.getTable());
-			
-			List<ColumnReference> columns = insert.getColumns();
-			List<Expression> values = ((ExpressionValueSource)insert.getValueSource()).getValues();
-			if(columns.size() != values.size()) {
-				throw new TranslatorException("Error:  columns.size and values.size are not the same.");
-			}
-			
-			for(int i = 0; i < columns.size(); i++) {
-				ColumnReference element = columns.get(i);
-				Column column = element.getMetadataObject();
-				Object value = values.get(i);
-				String val;
-				if(value instanceof Literal) {
-					Literal literalValue = (Literal)value;
-					val = literalValue.getValue().toString();
-					if(null != val && !val.isEmpty()) {
-						val = Util.stripQutes(val);
-					}
-				} else {
-					val = value.toString();
-				}
-				QName qname = new QName(column.getNameInSource());
-			    @SuppressWarnings( "unchecked" )
-			    JAXBElement jbe = new JAXBElement( qname, stringClazz, val );
-				elements.add(jbe);
-			}
-			
 		} catch (TranslatorException ce) {
 			exceptions.add(ce);
 		}
 	}
-
-	@SuppressWarnings("unchecked")
-	public List<JAXBElement> getMessageElements() {
-		return elements;
-	}
-
 }
