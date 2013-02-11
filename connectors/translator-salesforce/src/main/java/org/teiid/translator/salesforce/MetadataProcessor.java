@@ -74,6 +74,15 @@ public class MetadataProcessor {
 				addTable(object);
 			}  
 			addRelationships();
+			
+			// Mark id fields are auto increment values, as they are not allowed to be updated
+			for (Table table:this.metadataFactory.getSchema().getTables().values()) {
+				for (Column column:table.getPrimaryKey().getColumns()) {
+					if (!column.isUpdatable()) {
+						column.setAutoIncremented(true);
+					}
+				}
+			}
 		} catch (ResourceException e) {
 			throw new TranslatorException(e);
 		}

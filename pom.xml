@@ -44,6 +44,7 @@
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
         <version.core4j>0.5</version.core4j>
         <version.resteasy-jaxrs>2.3.2.Final</version.resteasy-jaxrs>
+        <version.com.force.api>26.0.0</version.com.force.api>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -730,7 +731,22 @@
                 <groupId>org.jboss.spec.javax.servlet</groupId>
                 <artifactId>jboss-servlet-api_3.0_spec</artifactId>
                 <version>1.0.0.Final</version>
-            </dependency>                  
+            </dependency>     
+            <dependency>
+                <groupId>com.force.api</groupId>
+                <artifactId>force-wsc</artifactId>
+                <version>${version.com.force.api}</version>
+              <exclusions>                
+                    <exclusion>
+                        <groupId>com.google.code.gson</groupId>
+                        <artifactId>gson</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>rhino</groupId>
+                        <artifactId>js</artifactId>
+                    </exclusion>
+               </exclusions>                
+            </dependency>                         
 		</dependencies>
 	</dependencyManagement>
 	<modules>

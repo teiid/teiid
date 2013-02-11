@@ -31,6 +31,9 @@ import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
+import com.sforce.async.BatchResult;
+import com.sforce.async.JobInfo;
+import com.sforce.async.SObject;
 import com.sforce.soap.partner.DescribeGlobalResult;
 import com.sforce.soap.partner.DescribeSObjectResult;
 import com.sforce.soap.partner.QueryResult;
@@ -59,5 +62,9 @@ public interface SalesforceConnection extends Connection {
 	
 	public DescribeSObjectResult getObjectMetaData(String objectName) throws ResourceException;
 	
+	public JobInfo executeBulkJob(String objectName, List<SObject> payload) throws ResourceException;
 	
+	public BatchResult getBulkResults(JobInfo job) throws ResourceException;
+
+	public void cancelBulkJob(JobInfo job) throws ResourceException;
 }
