@@ -35,17 +35,29 @@ import org.apache.cxf.BusFactory;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
+import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.salesforce.SalesforceConnection;
 import org.teiid.translator.salesforce.execution.DataPayload;
 import org.teiid.translator.salesforce.execution.DeletedObject;
 import org.teiid.translator.salesforce.execution.DeletedResult;
 import org.teiid.translator.salesforce.execution.UpdatedResult;
 
+import com.sforce.async.AsyncApiException;
+import com.sforce.async.BatchInfo;
+import com.sforce.async.BatchInfoList;
+import com.sforce.async.BatchRequest;
+import com.sforce.async.BatchResult;
+import com.sforce.async.BulkConnection;
+import com.sforce.async.ContentType;
+import com.sforce.async.JobInfo;
+import com.sforce.async.OperationEnum;
 import com.sforce.soap.partner.*;
 import com.sforce.soap.partner.sobject.SObject;
+import com.sforce.ws.ConnectorConfig;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
 	private Soap sfSoap;
+	private BulkConnection bulkConnection; 
 	
 	private ObjectFactory partnerFactory = new ObjectFactory();
 	
@@ -99,11 +111,14 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			
 			// Set the SessionId after login, for subsequent calls
 			sh.setSessionId(loginResult.getSessionId());
+			this.bulkConnection = getBulkConnection(loginResult.getServerUrl(), loginResult.getSessionId());
 		} catch (LoginFault e) {
 			throw new ResourceException(e);
 		} catch (InvalidIdFault e) {
 			throw new ResourceException(e);
 		} catch (com.sforce.soap.partner.UnexpectedErrorFault e) {
+			throw new ResourceException(e);
+		} catch(AsyncApiException e) {
 			throw new ResourceException(e);
 		} finally {
 			BusFactory.setThreadDefaultBus(bus);
@@ -375,4 +390,72 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 	public boolean isAlive() {
 		return isValid();
 	}
+
+	private JobInfo createBulkJob(String objectName) throws ResourceException {
+        try {
+			JobInfo job = new JobInfo();
+			job.setObject(objectName);
+			job.setOperation(OperationEnum.insert);
+			job.setContentType(ContentType.XML);
+			return this.bulkConnection.createJob(job);
+		} catch (AsyncApiException e) {
+			throw new ResourceException(e);
+		}
+	}
+
+	@Override
+	public JobInfo executeBulkJob(String objectName, List<com.sforce.async.SObject> payload) throws ResourceException {
+		try {
+			JobInfo job = createBulkJob(objectName);
+			BatchRequest request = this.bulkConnection.createBatch(job);
+			request.addSObjects(payload.toArray(new com.sforce.async.SObject[payload.size()]));
+			request.completeRequest();
+			return this.bulkConnection.closeJob(job.getId());
+		} catch (AsyncApiException e) {
+			throw new ResourceException(e);
+		}
+	}
+
+	@Override
+	public BatchResult getBulkResults(JobInfo job) throws ResourceException {
+		try {
+			BatchInfoList batchInfo = this.bulkConnection.getBatchInfoList(job.getId());
+			BatchInfo[] batches = batchInfo.getBatchInfo();
+			if (batches.length > 0) {
+				BatchResult batchResult = this.bulkConnection.getBatchResult(job.getId(), batches[0].getId());
+				if (batchResult.isPartialResult()) {
+					throw new DataNotAvailableException(500);
+				}
+				return batchResult;
+			}
+			throw new DataNotAvailableException(500);
+		} catch (AsyncApiException e) {
+			throw new ResourceException(e);
+		}
+	}
+	
+    private BulkConnection getBulkConnection(String endpoint, String sessionid) throws AsyncApiException {
+          ConnectorConfig config = new ConnectorConfig();
+          config.setSessionId(sessionid);
+          // The endpoint for the Bulk API service is the same as for the normal
+          // SOAP uri until the /Soap/ part. From here it's '/async/versionNumber'
+          int index = endpoint.indexOf("Soap/u/"); //$NON-NLS-1$
+          int endIndex = endpoint.indexOf('/', index+7);
+          String apiVersion = endpoint.substring(index+7,endIndex);
+          String restEndpoint = endpoint.substring(0, endpoint.indexOf("Soap/"))+ "async/" + apiVersion;//$NON-NLS-1$ //$NON-NLS-2$
+          config.setRestEndpoint(restEndpoint);
+          config.setCompression(true);
+          config.setTraceMessage(false);
+          BulkConnection connection = new BulkConnection(config);
+          return connection;
+      }
+
+	@Override
+	public void cancelBulkJob(JobInfo job) throws ResourceException {
+		try {
+			this.bulkConnection.abortJob(job.getId());
+		} catch (AsyncApiException e) {
+			throw new ResourceException(e);
+		}
+	}	
 }
