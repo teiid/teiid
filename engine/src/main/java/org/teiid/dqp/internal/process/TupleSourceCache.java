@@ -152,7 +152,7 @@ public class TupleSourceCache {
 		if (state == null) {
 			state = new SharedState();
 			state.expectedReaders = parameterObject.info.sharingCount;
-			RegisterRequestParameter param = new RegisterRequestParameter(parameterObject.connectorBindingId, 0, -1);
+			RegisterRequestParameter param = new RegisterRequestParameter(parameterObject.connectorBindingId, parameterObject.nodeID, -1);
 			param.fetchSize = parameterObject.fetchSize;
 			state.ts = pdm.registerRequest(context, command, modelName, param);
 			if (param.doNotCache) {
