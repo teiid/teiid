@@ -625,7 +625,7 @@ public class TestProcedureProcessor {
 
         // Set up data
         HardcodedDataManager dataMgr = new HardcodedDataManager();
-        dataMgr.addData("INSERT INTO pm1.g1 (pm1.g1.e2) VALUES (5)", new List[] {Arrays.asList(1)});
+        dataMgr.addData("INSERT INTO pm1.g1 (e2) VALUES (5)", new List[] {Arrays.asList(1)});
                     
         // Create expected results
         List[] expected = new List[] {

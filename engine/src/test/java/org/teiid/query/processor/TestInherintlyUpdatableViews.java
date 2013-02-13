@@ -92,7 +92,7 @@ public class TestInherintlyUpdatableViews {
 	@Test public void testInsertPassThrough() throws Exception {
 		String userSql = "insert into vm1.gx (e1) values (1)"; //$NON-NLS-1$
     	String viewSql = "select * from pm1.g1 where e3 < 5";
-        String expectedSql = "INSERT INTO pm1.g1 (pm1.g1.e1) VALUES ('1')";
+        String expectedSql = "INSERT INTO pm1.g1 (e1) VALUES ('1')";
         helpTest(userSql, viewSql, expectedSql, null);
 	}
 	
@@ -111,7 +111,7 @@ public class TestInherintlyUpdatableViews {
 	@Test public void testInsertPassThrough1() throws Exception {
 		String userSql = "insert into vm1.gx (e1) values (1)"; //$NON-NLS-1$
     	String viewSql = "select g2.* from pm1.g1 inner join pm1.g2 on g1.e1 = g2.e1";
-        String expectedSql = "INSERT INTO pm1.g2 (pm1.g2.e1) VALUES ('1')";
+        String expectedSql = "INSERT INTO pm1.g2 (e1) VALUES ('1')";
         helpTest(userSql, viewSql, expectedSql, null);	
 	}
 	

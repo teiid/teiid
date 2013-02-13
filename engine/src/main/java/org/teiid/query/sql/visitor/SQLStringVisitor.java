@@ -289,7 +289,9 @@ public class SQLStringVisitor extends LanguageVisitor {
             List<ElementSymbol> vars = obj.getVariables();
             if (vars != null) {
                 append("("); //$NON-NLS-1$
+                this.shortNameOnly = true;
                 registerNodes(vars, 0);
+                this.shortNameOnly = false;
                 append(")"); //$NON-NLS-1$
             }
         }

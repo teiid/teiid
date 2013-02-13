@@ -109,7 +109,7 @@ public class TestInsertProcessing {
                                          Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
         
         if (doBulkInsert) {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
         } 
         else 
@@ -117,9 +117,9 @@ public class TestInsertProcessing {
             dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
         } else {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});             
         }
 
@@ -140,8 +140,8 @@ public class TestInsertProcessing {
         if ( !doBulkInsert && doBatching ) {
             BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(1);
             assertEquals(2, bu.getUpdateCommands().size());
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
     }
     
@@ -165,7 +165,7 @@ public class TestInsertProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (...)",  //$NON-NLS-1$ 
+        dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES (...)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
         String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
@@ -199,7 +199,7 @@ public class TestInsertProcessing {
         QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "foo");
         
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES (1, 1.0)",  //$NON-NLS-1$ 
+        dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES (1, 1.0)",  //$NON-NLS-1$ 
                             new List[] { Arrays.asList(new Object[] { new Integer(1) })}); 
         
         String sql = "SELECT 1, convert(1, float) INTO pm1.g1"; //$NON-NLS-1$
@@ -259,7 +259,7 @@ public class TestInsertProcessing {
         if (cap != null) {
         	switch (cap) {
 	        case INSERT_WITH_ITERATOR:
-	            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
+	            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
 	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
 	            break;
 	        case BATCHED_UPDATES:
@@ -267,14 +267,14 @@ public class TestInsertProcessing {
 	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
 	            break;
 	        case INSERT_WITH_QUERYEXPRESSION:
-	        	dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
+	        	dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1",  //$NON-NLS-1$ 
 	                    new List[] { Arrays.asList(new Object[] { new Integer(2)})});
 	        	break;
 	        }
         } else {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});             
         }
 
@@ -295,8 +295,8 @@ public class TestInsertProcessing {
         if ( cap == Capability.BATCHED_UPDATES ) {
             BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(1);
             assertEquals(2, bu.getUpdateCommands().size());
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
     }
     
@@ -339,7 +339,7 @@ public class TestInsertProcessing {
                                          Arrays.asList(new Object[] { "2", new Integer(2), Boolean.TRUE, new Double(2) })});    //$NON-NLS-1$
         
         if (doBulkInsert) {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES (...)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES (...)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(4)})});             
         } 
         else 
@@ -347,9 +347,9 @@ public class TestInsertProcessing {
             dataManager.addData("BatchedUpdate{I,I}",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(2)})});             
         } else {
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});
-            dataManager.addData("INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
+            dataManager.addData("INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)",  //$NON-NLS-1$ 
                                 new List[] { Arrays.asList(new Object[] { new Integer(1)})});             
         }
 
@@ -371,8 +371,8 @@ public class TestInsertProcessing {
         if ( !doBulkInsert && doBatching ) {
             BatchedUpdateCommand bu = (BatchedUpdateCommand)dataManager.getCommandHistory().get(2);
             assertEquals(2, bu.getUpdateCommands().size());
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
-            assertEquals( "INSERT INTO pm1.g2 (pm1.g2.e1, pm1.g2.e2, pm1.g2.e3, pm1.g2.e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('1', 1, FALSE, 1.0)", bu.getUpdateCommands().get(0).toString() );  //$NON-NLS-1$
+            assertEquals( "INSERT INTO pm1.g2 (e1, e2, e3, e4) VALUES ('2', 2, TRUE, 2.0)", bu.getUpdateCommands().get(1).toString() );  //$NON-NLS-1$ 
         }        
     }
     

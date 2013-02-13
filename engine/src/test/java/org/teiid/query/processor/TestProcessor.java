@@ -3795,7 +3795,7 @@ public class TestProcessor {
 
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager();
-        dataManager.addData("INSERT INTO pm1.g1 (pm1.g1.e1, pm1.g1.e2) VALUES ('MyString', 1)", new List[] {Arrays.asList(1)});
+        dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES ('MyString', 1)", new List[] {Arrays.asList(1)});
 
         // Plan query
         ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
