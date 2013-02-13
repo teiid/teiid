@@ -241,6 +241,7 @@ public class RelationalPlanner {
 				if (queryCommand == null || CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode) == null) {
 					supportsWithPushdown = false;
 				} else {
+					//TODO: do this prior to alias generation, or rerun alias generation here
 					queryCommand.setWith(pushDownWith);
 				}
         	} else {

@@ -83,6 +83,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     private static final String END_HINT = "*/"; //$NON-NLS-1$
     private static final char ID_ESCAPE_CHAR = '\"';
 	protected StringBuilder parts = new StringBuilder();
+	private boolean shortNameOnly = false;
 
     /**
      * Helper to quickly get the parser string for an object using the visitor.
@@ -722,7 +723,9 @@ public class SQLStringVisitor extends LanguageVisitor {
     	append(SPACE);
     	if (obj.getColumns() != null && !obj.getColumns().isEmpty()) {
     		append(Tokens.LPAREN);
+    		shortNameOnly = true;
     		registerNodes(obj.getColumns(), 0);
+    		shortNameOnly = false;
     		append(Tokens.RPAREN);
     		append(SPACE);
     	}
@@ -1274,7 +1277,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     }
 
     public void visit( ElementSymbol obj ) {
-        if (obj.getDisplayMode().equals(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME)) {
+        if (obj.getDisplayMode().equals(ElementSymbol.DisplayMode.SHORT_OUTPUT_NAME) || shortNameOnly) {
             outputShortName(obj);
             return;
         }

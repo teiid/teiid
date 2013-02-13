@@ -35,13 +35,13 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.*;
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Select;
-import org.teiid.language.WindowSpecification;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.SortSpecification.Ordering;
 import org.teiid.language.SubqueryComparison.Quantifier;
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.Select;
+import org.teiid.language.WindowSpecification;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.query.QueryPlugin;
@@ -261,6 +261,7 @@ public class LanguageBridgeFactory {
 		        for (ElementSymbol es: withQueryCommand.getColumns()) {
 		            translatedElements.add(translate(es));
 		        }
+				item.setColumns(translatedElements);
 			}
 			item.setSubquery(translate(withQueryCommand.getCommand()));
 			items.add(item);
