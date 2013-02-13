@@ -26,7 +26,6 @@ import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -136,7 +135,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private TransactionService transactionService;
 		private SourceHint sourceHint;
 		private Executor executor = ExecutorUtils.getDirectExecutor();
-		Map<String, ReusableExecution<?>> reusableExecutions;
+		Map<Object, List<ReusableExecution<?>>> reusableExecutions;
 	    Set<CommandListener> commandListeners = null;
 	    private LRUCache<String, DecimalFormat> decimalFormatCache;
 		private LRUCache<String, SimpleDateFormat> dateFormatCache;
@@ -647,32 +646,43 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		this.globalState.executor = e;
 	}
 	
-	public ReusableExecution<?> getReusableExecution(String nodeId) {
+	public ReusableExecution<?> getReusableExecution(Object key) {
 		synchronized (this.globalState) {
 			if (this.globalState.reusableExecutions == null) {
 				return null;
 			}
-			return this.globalState.reusableExecutions.get(nodeId);
+			List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
+			if (reusableExecutions != null && !reusableExecutions.isEmpty()) {
+				return reusableExecutions.remove(0);
+			}
+			return null;
 		}
 	}
 	
-	public void putReusableExecution(String nodeId, ReusableExecution<?> execution) {
+	public void putReusableExecution(Object key, ReusableExecution<?> execution) {
 		synchronized (this.globalState) {
 			if (this.globalState.reusableExecutions == null) {
-				this.globalState.reusableExecutions = new ConcurrentHashMap<String, ReusableExecution<?>>();
+				this.globalState.reusableExecutions = new HashMap<Object, List<ReusableExecution<?>>>();
 			}
-			this.globalState.reusableExecutions.put(nodeId, execution);
+			List<ReusableExecution<?>> reusableExecutions = this.globalState.reusableExecutions.get(key);
+			if (reusableExecutions == null) {
+				reusableExecutions = new LinkedList<ReusableExecution<?>>();
+				this.globalState.reusableExecutions.put(key, reusableExecutions);
+			}
+			reusableExecutions.add(execution);
 		}
 	}
 
 	public void close() {
 		synchronized (this.globalState) {
 			if (this.globalState.reusableExecutions != null) {
-				for (ReusableExecution<?> reusableExecution : this.globalState.reusableExecutions.values()) {
-					try {
-						reusableExecution.dispose();
-					} catch (Exception e) {
-						LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
+				for (List<ReusableExecution<?>> reusableExecutions : this.globalState.reusableExecutions.values()) {
+					for (ReusableExecution<?> reusableExecution : reusableExecutions) {
+						try {
+							reusableExecution.dispose();
+						} catch (Exception e) {
+							LogManager.logWarning(LogConstants.CTX_DQP, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30030));
+						}
 					}
 				}
 				this.globalState.reusableExecutions.clear();

@@ -33,10 +33,10 @@ import org.teiid.core.util.Assertion;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.logging.CommandLogMessage;
+import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
-import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -57,6 +57,7 @@ public class ConnectorManager  {
 
 	private String translatorName;
 	private String connectionName;
+	private List<String> id;
 	
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
@@ -69,6 +70,7 @@ public class ConnectorManager  {
     public ConnectorManager(String translatorName, String connectionName) {
     	this.translatorName = translatorName;
     	this.connectionName = connectionName;
+    	this.id = Arrays.asList(translatorName, connectionName);
     }
     
     public String getStausMessage() {
@@ -107,7 +109,7 @@ public class ConnectorManager  {
 
 		checkStatus();
 		ExecutionFactory<Object, Object> translator = getExecutionFactory();
-		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, Arrays.asList(translatorName, connectionName));
+		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, id);
 		cachedCapabilities = resultCaps;
 		return resultCaps;
     }
@@ -244,5 +246,9 @@ public class ConnectorManager  {
     public String getConnectionName() {
     	return this.connectionName;
     }
+    
+    public List<String> getId() {
+		return id;
+	}
     
 }

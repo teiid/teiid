@@ -156,7 +156,10 @@ public class ConnectorWorkItem implements ConnectorWork {
         try {
 	        if (execution != null) {
 	            execution.close();
-	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed execution"}); //$NON-NLS-1$                    
+	            LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Closed execution"}); //$NON-NLS-1$
+	            if (execution instanceof ReusableExecution<?>) {
+		        	this.requestMsg.getCommandContext().putReusableExecution(this.manager.getId(), (ReusableExecution<?>) execution);
+		        }
 	        }	        
         } catch (Throwable e) {
             LogManager.logError(LogConstants.CTX_CONNECTOR, e, e.getMessage());
@@ -238,14 +241,11 @@ public class ConnectorWorkItem implements ConnectorWork {
 		        	this.expectedColumns = ((StoredProcedure)command).getResultSetColumns().size();
 		        }
 	
-				Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.securityContext.getPartIdentifier());
+				Execution exec = this.requestMsg.getCommandContext().getReusableExecution(this.manager.getId());
 				if (exec != null) {
 					((ReusableExecution)exec).reset(translatedCommand, this.securityContext, connection);
 				} else {
 			        exec = connector.createExecution(translatedCommand, this.securityContext, queryMetadata, (unwrapped == null) ? this.connection:unwrapped);
-			        if (exec instanceof ReusableExecution<?>) {
-			        	this.requestMsg.getCommandContext().putReusableExecution(this.securityContext.getPartIdentifier(), (ReusableExecution<?>) exec);
-			        }
 				}
 		        setExecution(command, translatedCommand, exec);
 				
