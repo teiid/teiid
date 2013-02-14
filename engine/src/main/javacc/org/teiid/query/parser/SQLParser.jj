@@ -4613,6 +4613,7 @@ void ddlStmt(MetadataFactory factory) :
 	(LOOKAHEAD(3) 	createTable(factory) | 
 	 LOOKAHEAD(4)	createDDLProcedure(factory, new ParseInfo()) |
 	 LOOKAHEAD(2)	createNameSpace(factory) |
+	 LOOKAHEAD(4)	alterStatement(factory) |
 	 LOOKAHEAD(4) 	command=createTrigger(new ParseInfo())
 	 {
 	 	createDDLTrigger(factory, (AlterTrigger)command);
@@ -5092,4 +5093,103 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 	 	}
 	 	record.setProperty(key, val); 
 	 } 
+}
+
+/*
+name=alter in ddl metadata
+description=alter statements that can be used with DDL based metadata
+example={code:sql}ALTER FOREIGN TABLE foo ADD cardinality 100, ALTER COLUMN bar ADD updatable true, ALTER COLUMN bar DROP something{code}
+*/
+void alterStatement(MetadataFactory factory) :
+{
+	boolean table = false;
+	boolean proc = false;
+	String objectName = null;
+	AbstractMetadataRecord record = null;
+	String key = null;
+}
+{ 
+	<ALTER> [<VIRTUAL> | <FOREIGN>] (<TABLE> {table = true;} | <VIEW> {table = true;} | <PROCEDURE> {proc=true;})
+	objectName = id(null)
+	{
+		if (table){
+			record = factory.getSchema().getTable(objectName);
+			if (record == null){
+				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_table_doesnot_exist", objectName));
+			}
+		}
+		if (proc){
+			record = factory.getSchema().getProcedure(objectName);
+			if (record == null){
+				throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_doesnot_exist", objectName));
+			}
+		}		
+	}
+	[LOOKAHEAD(2)((<ADD>|<SET>) 
+	 {
+	 	optionPair(record, factory);
+	 	if (table){
+	 		setTableOptions((Table)record);
+	 	}
+	 	if (proc){
+	 		setProcedureOptions((Procedure)record);
+	 	}
+	 } | 
+	 <DROP>
+	 {
+	 	key = id(null);
+	 	if (table){
+	 		removeTableOption(key, (Table)record);
+	 	}
+	 	if (proc){
+	 		removeProcedureOption(key, (Procedure)record);
+	 	}
+	 }
+	 )]
+	(<COMMA> alterColumn(record, factory))*
+}
+
+/*
+name=alter in ddl metadata
+description=alter statements that can be used with DDL based metadata
+example={code:sql}ALTER COLUMN bar ADD updatable true{code}
+*/
+void alterColumn(AbstractMetadataRecord parent, MetadataFactory factory) :
+{
+	boolean column = false;
+	boolean param = false;
+	String objectName = null;
+	Table parentTable = null;
+	AbstractMetadataRecord record = null;
+	String key = null;
+}
+{ 
+	<ALTER> (<COLUMN> {column=true;}|<PARAMETER>{param=true;})
+	objectName = id(null)
+	{
+		if (column){
+			record = getColumn(objectName, (Table)parent);
+		}
+		
+		if (param){
+			record = getParameter(objectName, (Procedure)parent);
+		}		
+	}
+	((<ADD>|<SET>) 
+	{
+		optionPair(record, factory);
+		if (column){
+			setColumnOptions((Column)record);
+		}
+	} |
+	<DROP>
+	{
+	 	key = id(null);
+	 	if (column){
+	 		removeColumnOption(key, (Column)record);
+	 	}
+	 	if (param){
+	 		((Procedure)record).setProperty(key, null);
+	 	}		
+	})
 }
