@@ -339,6 +339,82 @@ public class SQLParserUtil {
     		setColumnOptions((Column)c, props);
     	}
     }
+    
+    void removeColumnOption(String key, BaseColumn c)  throws MetadataException {
+    	if (c.getProperty(key, false) != null) {
+    		c.setProperty(key, null);
+    	}    	
+		removeCommonProperty(key, c);
+		
+    	if (key.equals(DDLConstants.RADIX)) {
+    		c.setRadix(0);
+    	}
+    	
+    	if (c instanceof Column) {
+    		removeColumnOption(key, (Column)c);
+    	}
+    }    
+    
+    private void removeColumnOption(String key, Column c) {
+        if (key.equals(DDLConstants.CASE_SENSITIVE)) {
+        	c.setCaseSensitive(false);
+        }
+    	
+    	if (key.equals(DDLConstants.SELECTABLE)) {
+    		c.setSelectable(true);
+    	}
+    	
+    	if (key.equals(DDLConstants.UPDATABLE)) {
+    		c.setUpdatable(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.SIGNED)) {
+    		c.setSigned(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.CURRENCY)) {
+    		c.setSigned(false);
+    	}
+
+    	if (key.equals(DDLConstants.FIXED_LENGTH)) {
+    		c.setFixedLength(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.SEARCHABLE)) {
+    		c.setSearchType(null);
+    	}
+    	
+    	if (key.equals(DDLConstants.MIN_VALUE)) {
+    		c.setMinimumValue(null);
+    	}
+    	
+    	if (key.equals(DDLConstants.MAX_VALUE)) {
+    		c.setMaximumValue(null);
+    	}
+    	
+    	if (key.equals(DDLConstants.CHAR_OCTET_LENGTH)) {
+    		c.setCharOctetLength(0);
+    	}
+        
+    	if (key.equals(DDLConstants.NATIVE_TYPE)) {
+    		c.setNativeType(null);
+    	}
+
+    	if (key.equals(DDLConstants.NULL_VALUE_COUNT)) {
+    		c.setNullValues(-1);
+    	}
+    	
+    	if (key.equals(DDLConstants.DISTINCT_VALUES)) {
+    		c.setDistinctValues(-1);
+    	}
+
+    	if (key.equals(DDLConstants.UDT)) {
+			c.setDatatype(null);
+			c.setLength(0);
+			c.setPrecision(0);
+			c.setScale(0);
+    	}    	
+    }
 
 	private void setColumnOptions(Column c, Map<String, String> props) throws MetadataException {
 		String v = props.remove(DDLConstants.CASE_SENSITIVE); 
@@ -438,6 +514,20 @@ public class SQLParserUtil {
 			c.setNameInSource(v);
 		}
 	}
+	
+	void removeCommonProperty(String key, AbstractMetadataRecord c) {
+		if (key.equals(DDLConstants.UUID)) {
+			c.setUUID(null);
+		}
+		
+    	if (key.equals(DDLConstants.ANNOTATION)) {
+    		c.setAnnotation(null);
+    	}
+		
+		if (key.equals(DDLConstants.NAMEINSOURCE)) {
+			c.setNameInSource(null);
+		}
+	}	
     
     void setTableOptions(Table table) {
     	Map<String, String> props = table.getProperties();
@@ -465,6 +555,29 @@ public class SQLParserUtil {
     		table.setCardinality(Integer.parseInt(value));
     	}
     }     
+    
+    void removeTableOption(String key, Table table) {
+    	if (table.getProperty(key, false) != null) {
+    		table.setProperty(key, null);
+    	}
+    	removeCommonProperty(key, table);
+    	
+    	if (key.equals(DDLConstants.MATERIALIZED)) {
+    		table.setMaterialized(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.MATERIALIZED_TABLE)) {
+    		table.setMaterializedTable(null);
+    	}
+    	
+    	if (key.equals(DDLConstants.UPDATABLE)) {
+    		table.setSupportsUpdate(false);
+    	}
+    	
+    	if (key.equals(DDLConstants.CARDINALITY)) {
+    		table.setCardinality(-1);
+    	}    	
+    }
     
 	static void replaceProcedureWithFunction(MetadataFactory factory,
 			Procedure proc) throws MetadataException {
@@ -534,6 +647,17 @@ public class SQLParserUtil {
     		proc.setUpdateCount(Integer.parseInt(value));
     	}
     }
+    
+    void removeProcedureOption(String key, Procedure proc) {
+    	if (proc.getProperty(key, false) != null) {
+    		proc.setProperty(key, null);
+    	}    	
+    	removeCommonProperty(key, proc);
+    	
+    	if (key.equals("UPDATECOUNT")) { //$NON-NLS-1$
+    		proc.setUpdateCount(1);
+    	}
+    }    
 
     public static boolean isTrue(final String text) {
         return Boolean.valueOf(text);
@@ -546,6 +670,26 @@ public class SQLParserUtil {
 		}
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}
+	
+	ProcedureParameter getParameter(String paramName, Procedure proc) throws MetadataException {
+		List<ProcedureParameter> params = proc.getParameters();
+		for (ProcedureParameter param:params) {
+			if (param.getName().equalsIgnoreCase(paramName)) {
+				return param;
+			}
+		}
+		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_param_doesnot_exist", paramName, proc.getName())); //$NON-NLS-1$
+	}
+	
+	FunctionParameter getParameter(String paramName, FunctionMethod func) throws MetadataException {
+		List<FunctionParameter> params = func.getInputParameters();
+		for (FunctionParameter param:params) {
+			if (param.getName().equalsIgnoreCase(paramName)) {
+				return param;
+			}
+		}
+		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_function_param_doesnot_exist", paramName, func.getName())); //$NON-NLS-1$
+	}	
 	
 	void createDDLTrigger(MetadataFactory schema, AlterTrigger trigger) {
 		GroupSymbol group = trigger.getTarget();
