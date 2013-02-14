@@ -81,6 +81,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 		this.transactionServerImpl.setWorkManager(getWorkManagerInjector().getValue());
 		this.transactionServerImpl.setXaTerminator(getXaTerminatorInjector().getValue());
 		this.transactionServerImpl.setTransactionManager(getTxnManagerInjector().getValue());
+		this.transactionServerImpl.setDetectTransactions(true);
 		
 		setAuthorizationValidator(authorizationValidatorInjector.getValue());
 		this.dqpCore.setBufferManager(bufferManagerInjector.getValue());

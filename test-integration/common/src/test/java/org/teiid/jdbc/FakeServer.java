@@ -104,15 +104,17 @@ public class FakeServer extends EmbeddedServer {
 	}
 
 	public void start(EmbeddedConfiguration config, boolean realBufferMangaer) {
+		boolean detectTxn = true;
 		if (config.getTransactionManager() == null) {
 			config.setTransactionManager(SimpleMock.createSimpleMock(TransactionManager.class));
 			this.transactionService.setXaTerminator(SimpleMock.createSimpleMock(XATerminator.class));
 			this.transactionService.setWorkManager(new FakeWorkManager());
-			detectTransactions = false;
+			detectTxn = false;
 		}
 		this.repo.odbcEnabled();
 		this.realBufferManager = realBufferMangaer;
 		start(config);
+		this.transactionService.setDetectTransactions(detectTxn);
 	}
 	
 	@Override

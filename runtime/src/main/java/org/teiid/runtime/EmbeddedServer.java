@@ -35,10 +35,6 @@ import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.transaction.RollbackException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
 
 import org.teiid.adminapi.VDB.Status;
@@ -65,8 +61,6 @@ import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.TransactionServerImpl;
 import org.teiid.dqp.service.BufferService;
-import org.teiid.dqp.service.TransactionContext;
-import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
@@ -141,45 +135,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		
 	}
 
-	protected final class TransactionDetectingTransactionServer extends
-			TransactionServerImpl {
-		
-		/**
-		 * Override to detect existing thread bound transactions.
-		 * This may be of interest for local connections as well, but
-		 * we assume there that a managed datasource will be used.
-		 * A managed datasource is not possible here.
-		 */
-		public TransactionContext getOrCreateTransactionContext(final String threadId) {
-			TransactionContext tc = super.getOrCreateTransactionContext(threadId);
-			if (useCallingThread && detectTransactions && tc.getTransaction() == null) {
-				try {
-					Transaction tx = transactionManager.getTransaction();
-					if (tx != null) {
-						tx.registerSynchronization(new Synchronization() {
-							
-							@Override
-							public void beforeCompletion() {
-							}
-							
-							@Override
-							public void afterCompletion(int status) {
-								transactions.removeTransactionContext(threadId);
-							}
-						});
-						tc.setTransaction(tx);
-						tc.setTransactionType(Scope.GLOBAL);
-					}
-				} catch (SystemException e) {
-				} catch (IllegalStateException e) {
-				} catch (RollbackException e) {
-				}
-			}
-			
-			return tc;
-		}
-	}
-
 	protected class ProviderAwareConnectorManagerRepository extends
 			ConnectorManagerRepository {
 		
@@ -252,7 +207,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected SessionServiceImpl sessionService = new SessionServiceImpl();
 	protected ObjectReplicator replicator;
 	protected BufferServiceImpl bufferService = new BufferServiceImpl();
-	protected TransactionDetectingTransactionServer transactionService = new TransactionDetectingTransactionServer();
+	protected TransactionServerImpl transactionService = new TransactionServerImpl();
 	protected boolean waitForLoad;
 	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl() {
 		public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
@@ -282,9 +237,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		}
 	};
 	protected boolean useCallingThread = true;
-	//TODO: allow for configurablity - in environments that support subtransations it would be fine
-	//to allow teiid to start a request transaction under an existing thread bound transaction
-	protected boolean detectTransactions = true;
 	private Boolean running;
 	private EmbeddedConfiguration config;
 	private SessionAwareCache<CachedResults> rs;
@@ -323,8 +275,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 					throw new UnsupportedOperationException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40089));
 				}
 			}));
-			this.detectTransactions = false;
 		} else {
+			this.transactionService.setDetectTransactions(true);
 			this.transactionService.setTransactionManager(config.getTransactionManager());
 		}
 		if (config.getSecurityHelper() != null) {

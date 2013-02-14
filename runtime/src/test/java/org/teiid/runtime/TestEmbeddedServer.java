@@ -54,6 +54,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
 import org.teiid.jdbc.TeiidDriver;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.language.Command;
 import org.teiid.language.Literal;
 import org.teiid.language.QueryExpression;
@@ -384,6 +385,18 @@ public class TestEmbeddedServer {
 		assertEquals(1, tm.txnHistory.size());
 		txn = tm.txnHistory.remove(0);
 		Mockito.verify(txn).commit();
+
+		//test detection
+		tm.txnHistory.clear();
+		tm.begin();
+		try {
+			c.setAutoCommit(false);
+			s.execute("select 1"); //needed since we lazily start the transaction
+			fail("should fail since we aren't allowing a nested transaction");
+		} catch (TeiidSQLException e) {
+		}
+		txn = tm.txnHistory.remove(0);
+		Mockito.verify(txn, Mockito.times(0)).commit();
 	}
 	
 	@Test public void testMultiSourcePreparedDynamicUpdate() throws Exception {
