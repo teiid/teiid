@@ -102,12 +102,12 @@ public class Schema extends AbstractMetadataRecord {
 	}
 	
 	/**
-	 * Get a funciton by uuid
+	 * Get a function by uid
 	 * @param funcName
 	 * @return
 	 */
-	public FunctionMethod getFunction(String funcName) {
-		return functions.get(funcName);
+	public FunctionMethod getFunction(String uid) {
+		return functions.get(uid);
 	}	
 	
     public String getPrimaryMetamodelUri() {

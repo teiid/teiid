@@ -648,6 +648,30 @@ public class SQLParserUtil {
     	}
     }
     
+    void removeOption(String option, AbstractMetadataRecord record) {
+    	if (record instanceof Table) {
+    		removeTableOption(option, (Table)record);
+    	}
+    	if (record instanceof Procedure) {
+    		removeProcedureOption(option, (Procedure)record);
+    	}
+    	if (record instanceof BaseColumn) {
+    		removeColumnOption(option, (BaseColumn)record);
+    	}
+    }
+    
+    void setOptions(AbstractMetadataRecord record) {
+    	if (record instanceof Table) {
+    		setTableOptions((Table)record);
+    	}
+    	if (record instanceof Procedure) {
+    		setProcedureOptions((Procedure)record);
+    	}
+    	if (record instanceof BaseColumn) {
+    		setColumnOptions((BaseColumn)record);
+    	}
+    }
+    
     void removeProcedureOption(String key, Procedure proc) {
     	if (proc.getProperty(key, false) != null) {
     		proc.setProperty(key, null);
@@ -662,6 +686,17 @@ public class SQLParserUtil {
     public static boolean isTrue(final String text) {
         return Boolean.valueOf(text);
     }    
+    
+    AbstractMetadataRecord getChild(String name, AbstractMetadataRecord record, boolean parameter) {
+    	if (record instanceof Table) {
+    		if (parameter) {
+    			throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_table_param", name, record.getName())); //$NON-NLS-1$
+    		}
+    		return getColumn(name, (Table)record);
+    	}
+		return getColumn(name, (Procedure)record, parameter);
+    	//TODO: function is not supported yet because we store by uid, which should instead be a more friendly "unique name"
+    }
 	
 	Column getColumn(String columnName, Table table) throws MetadataException {
 		Column c = table.getColumnByName(columnName);
@@ -671,11 +706,19 @@ public class SQLParserUtil {
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.no_column", columnName, table.getName())); //$NON-NLS-1$
 	}
 	
-	ProcedureParameter getParameter(String paramName, Procedure proc) throws MetadataException {
-		List<ProcedureParameter> params = proc.getParameters();
-		for (ProcedureParameter param:params) {
-			if (param.getName().equalsIgnoreCase(paramName)) {
-				return param;
+	AbstractMetadataRecord getColumn(String paramName, Procedure proc, boolean parameter) throws MetadataException {
+		if (proc.getResultSet() != null) {
+			Column result = proc.getResultSet().getColumnByName(paramName);
+			if (result != null) {
+				return result;
+			}
+		}
+		if (parameter) {
+			List<ProcedureParameter> params = proc.getParameters();
+			for (ProcedureParameter param:params) {
+				if (param.getName().equalsIgnoreCase(paramName)) {
+					return param;
+				}
 			}
 		}
 		throw new MetadataException(QueryPlugin.Util.getString("SQLParser.alter_procedure_param_doesnot_exist", paramName, proc.getName())); //$NON-NLS-1$

@@ -5098,15 +5098,15 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 /*
 name=alter in ddl metadata
 description=alter statements that can be used with DDL based metadata
-example={code:sql}ALTER FOREIGN TABLE foo ADD cardinality 100, ALTER COLUMN bar ADD updatable true, ALTER COLUMN bar DROP something{code}
+example={code:sql}ALTER FOREIGN TABLE foo OPTIONS (ADD cardinality 100){code}
 */
 void alterStatement(MetadataFactory factory) :
 {
 	boolean table = false;
 	boolean proc = false;
+	boolean func = false;
 	String objectName = null;
 	AbstractMetadataRecord record = null;
-	String key = null;
 }
 { 
 	<ALTER> [<VIRTUAL> | <FOREIGN>] (<TABLE> {table = true;} | <VIEW> {table = true;} | <PROCEDURE> {proc=true;})
@@ -5125,71 +5125,77 @@ void alterStatement(MetadataFactory factory) :
 			}
 		}		
 	}
-	[LOOKAHEAD(2)((<ADD>|<SET>) 
-	 {
-	 	optionPair(record, factory);
-	 	if (table){
-	 		setTableOptions((Table)record);
-	 	}
-	 	if (proc){
-	 		setProcedureOptions((Procedure)record);
-	 	}
-	 } | 
-	 <DROP>
-	 {
-	 	key = id(null);
-	 	if (table){
-	 		removeTableOption(key, (Table)record);
-	 	}
-	 	if (proc){
-	 		removeProcedureOption(key, (Procedure)record);
-	 	}
-	 }
-	 )]
-	(<COMMA> alterColumn(record, factory))*
+	
+	(alterOptionsList(record, factory) | 
+	 alterColumn(record, factory))
+}
+
+/*
+name=alter options list
+description=a list of alterations to options
+example={code:sql}OPTIONS (ADD updatable true){code}
+*/
+void alterOptionsList(AbstractMetadataRecord record, MetadataFactory factory) :
+{
+
+}
+{
+  <OPTIONS> <LPAREN>
+  (addSetOption(record, factory) |
+   dropOption(record))
+  (<COMMA> (addSetOption(record, factory) |
+   dropOption(record)))*
+  <RPAREN>
+  {
+ 		setOptions(record);
+  }
+}
+
+/*
+name=drop option
+description=drop option
+example={code:sql}DROP updatable{code}
+*/
+void dropOption(AbstractMetadataRecord record) :
+{
+	String key = null;
+}
+{
+   <DROP> key = id(null) 
+   {
+ 		removeOption(key, record);
+   }
+}
+
+/*
+name=add set option
+description=add or set an option pair
+example={code:sql}ADD updatable true{code}
+*/
+void addSetOption(AbstractMetadataRecord record, MetadataFactory factory) :
+{
+}
+{
+   (<ADD>|<SET>) optionPair(record, factory) 
 }
 
 /*
 name=alter in ddl metadata
 description=alter statements that can be used with DDL based metadata
-example={code:sql}ALTER COLUMN bar ADD updatable true{code}
+example={code:sql}ALTER COLUMN bar OPTIONS (ADD updatable true){code}
 */
 void alterColumn(AbstractMetadataRecord parent, MetadataFactory factory) :
 {
-	boolean column = false;
 	boolean param = false;
 	String objectName = null;
-	Table parentTable = null;
 	AbstractMetadataRecord record = null;
 	String key = null;
 }
 { 
-	<ALTER> (<COLUMN> {column=true;}|<PARAMETER>{param=true;})
+	<ALTER> [<COLUMN>|<PARAMETER>{param=true;}]
 	objectName = id(null)
 	{
-		if (column){
-			record = getColumn(objectName, (Table)parent);
-		}
-		
-		if (param){
-			record = getParameter(objectName, (Procedure)parent);
-		}		
+		record = getChild(objectName, parent, param);
 	}
-	((<ADD>|<SET>) 
-	{
-		optionPair(record, factory);
-		if (column){
-			setColumnOptions((Column)record);
-		}
-	} |
-	<DROP>
-	{
-	 	key = id(null);
-	 	if (column){
-	 		removeColumnOption(key, (Column)record);
-	 	}
-	 	if (param){
-	 		((Procedure)record).setProperty(key, null);
-	 	}		
-	})
+	alterOptionsList(record, factory)
 }

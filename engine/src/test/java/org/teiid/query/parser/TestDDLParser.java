@@ -29,8 +29,8 @@ import java.util.Properties;
 import org.junit.Test;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
+import org.teiid.metadata.*;
 import org.teiid.metadata.Column.SearchType;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
@@ -682,8 +682,8 @@ public class TestDDLParser {
 	@Test
 	public void testAlterTableAddOptions() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
-				"ALTER FOREIGN TABLE G1 ADD CARDINALITY 12;" +
-				"ALTER FOREIGN TABLE G1 ADD FOO 'BAR';";
+				"ALTER FOREIGN TABLE G1 OPTIONS(ADD CARDINALITY 12);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(ADD FOO 'BAR');";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -697,8 +697,8 @@ public class TestDDLParser {
 	@Test
 	public void testAlterTableModifyOptions() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date) OPTIONS(CARDINALITY 12, FOO 'BAR');" +
-				"ALTER FOREIGN TABLE G1 SET CARDINALITY 24;" +
-				"ALTER FOREIGN TABLE G1 SET FOO 'BARBAR';";
+				"ALTER FOREIGN TABLE G1 OPTIONS(SET CARDINALITY 24);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(SET FOO 'BARBAR');";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -712,8 +712,8 @@ public class TestDDLParser {
 	@Test
 	public void testAlterTableDropOptions() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date) OPTIONS(CARDINALITY 12, FOO 'BAR');" +
-				"ALTER FOREIGN TABLE G1 DROP CARDINALITY;" +
-				"ALTER FOREIGN TABLE G1 DROP FOO;";
+				"ALTER FOREIGN TABLE G1 OPTIONS(DROP CARDINALITY);" +
+				"ALTER FOREIGN TABLE G1 OPTIONS(DROP FOO);";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -727,8 +727,9 @@ public class TestDDLParser {
 	@Test
 	public void testAlterTableAddColumnOptions() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar, e3 date);" +
-				"ALTER FOREIGN TABLE G1 ADD CARDINALITY 12, ALTER COLUMN e1 ADD NULL_VALUE_COUNT 12, " +
-				"ALTER COLUMN e1 ADD FOO 'BAR';";
+				"ALTER FOREIGN TABLE G1 OPTIONS(ADD CARDINALITY 12);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(ADD NULL_VALUE_COUNT 12);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(ADD FOO 'BAR');";
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -746,7 +747,9 @@ public class TestDDLParser {
 	@Test
 	public void testAlterTableRemoveColumnOptions() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer OPTIONS (NULL_VALUE_COUNT 12, FOO 'BAR'), e2 varchar, e3 date);" +
-				"ALTER FOREIGN TABLE G1, ALTER COLUMN e1 DROP NULL_VALUE_COUNT, ALTER COLUMN e1 DROP FOO, ALTER COLUMN e1 ADD x 'y'" ;
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(DROP NULL_VALUE_COUNT);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS(DROP FOO);" +
+				"ALTER FOREIGN TABLE G1 ALTER COLUMN e1 OPTIONS( ADD x 'y');" ;
 
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -766,8 +769,9 @@ public class TestDDLParser {
 		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
 				"RETURNS (r1 varchar, r2 decimal)" +
 				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');" +
-				"ALTER FOREIGN PROCEDURE myProc SET NAMEINSOURCE 'x', ALTER PARAMETER p2 ADD x 'y';" +
-				"ALTER FOREIGN PROCEDURE myProc DROP UPDATECOUNT;";
+				"ALTER FOREIGN PROCEDURE myProc OPTIONS(SET NAMEINSOURCE 'x')" +
+				"ALTER FOREIGN PROCEDURE myProc ALTER PARAMETER p2 OPTIONS (ADD x 'y');" +
+				"ALTER FOREIGN PROCEDURE myProc OPTIONS(DROP UPDATECOUNT);";
 		
 		Schema s = helpParse(ddl, "model").getSchema();
 		Procedure proc = s.getProcedure("myProc");
