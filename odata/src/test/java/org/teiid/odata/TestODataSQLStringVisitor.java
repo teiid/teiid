@@ -21,13 +21,12 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.odata4j.core.OEntityKey;
@@ -301,10 +300,9 @@ public class TestODataSQLStringVisitor {
 	}	
 		
 	@Test
-	@Ignore
 	public void testAll() throws Exception {		
 		testSelect(
-				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 INNER JOIN OrderDetails AS ol ON g0.OrderID = ol.OrderID WHERE ol.Quantity > 10",
+				"SELECT g0.EmployeeID, g0.ShipVia, g0.OrderID, g0.CustomerID FROM nw.Orders AS g0 WHERE 10 < ALL (SELECT ol.Quantity FROM OrderDetails AS ol WHERE g0.OrderID = ol.OrderID) ORDER BY g0.OrderID",
 				"nw.Orders", "OrderDetails/all(ol: ol/Quantity gt 10)",
 				"OrderID", null, -1, null, null);
 	}		
