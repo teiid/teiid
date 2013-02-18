@@ -688,6 +688,37 @@ public class TestAggregateProcessing {
     	
     	helpProcess(plan, dataManager, expected);
     }
+	
+	@Test public void testCountOfGroupingColumn() {
+    	Command command = helpParse("select e1, count(e1) from pm1.g1, (select 1 from pm1.g2 limit 2) x group by e1"); //$NON-NLS-1$
+    	
+    	FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	capFinder.addCapabilities("pm1", bsc); //$NON-NLS-1$
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e1 FROM pm1.g1 AS g_0", //$NON-NLS-1$ 
+    			new List[] {
+    			Arrays.asList("a"),
+    			Arrays.asList("a"),
+    			Arrays.asList("b"),
+    				 //$NON-NLS-1$
+    			});
+    	dataManager.addData("SELECT 1 FROM pm1.g2 AS g_0", //$NON-NLS-1$ 
+    			new List[] { //$NON-NLS-1$
+    			Arrays.asList(1),
+    			Arrays.asList(1),
+    			});
+    	
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
+    	
+    	List[] expected = new List[] { 
+                Arrays.asList("a", 4), //$NON-NLS-1$
+                Arrays.asList("b", 2) //$NON-NLS-1$
+            };    
+    	
+    	helpProcess(plan, dataManager, expected);
+    }
 
 
 }

@@ -824,7 +824,7 @@ public class RulePushAggregates implements
         //remove any aggregates that are computed over a group by column
         for (final Iterator<AggregateSymbol> iterator = aggregates.iterator(); iterator.hasNext();) {
             final AggregateSymbol symbol = iterator.next();
-            if (symbol.getArgs().length != 1) {
+            if (symbol.getArgs().length != 1 || symbol.isCardinalityDependent()) {
             	continue;
             }
             Expression expr = symbol.getArg(0);
