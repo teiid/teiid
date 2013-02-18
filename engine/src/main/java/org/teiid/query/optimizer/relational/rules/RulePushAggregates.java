@@ -1008,13 +1008,14 @@ public class RulePushAggregates implements
 
             Type aggFunction = partitionAgg.getAggregateFunction();
             if (aggFunction == Type.COUNT) {
-                //COUNT(x) -> CONVERT(SUM(COUNT(x)), INTEGER)
+                //COUNT(x) -> IFNULL(CONVERT(SUM(COUNT(x)), INTEGER), 0)
                 AggregateSymbol newAgg = new AggregateSymbol(NonReserved.SUM, false, partitionAgg); 
                 // Build conversion function to convert SUM (which returns LONG) back to INTEGER
                 Function convertFunc = new Function(FunctionLibrary.CONVERT, new Expression[] {newAgg, new Constant(DataTypeManager.getDataTypeName(partitionAgg.getType()))});
-                ResolverVisitor.resolveLanguageObject(convertFunc, metadata);
-
-                newExpression = convertFunc;  
+                Function ifnull = new Function(FunctionLibrary.IFNULL, new Expression[] {convertFunc, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER)});
+                ResolverVisitor.resolveLanguageObject(ifnull, metadata);
+                
+                newExpression = ifnull;  
                 nestedAggregates.add(partitionAgg);
             } else if (aggFunction == Type.AVG) {
                 //AVG(x) -> SUM(SUM(x)) / SUM(COUNT(x))

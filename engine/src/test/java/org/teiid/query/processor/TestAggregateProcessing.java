@@ -48,6 +48,7 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.resolver.TestResolver;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -660,5 +661,33 @@ public class TestAggregateProcessing {
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example4(), TestAggregatePushdown.getAggregatesFinder());
 		helpProcess(plan, dataManager, expected);
 	}
+	
+	@Test public void testEmptyCountOverJoin() {
+    	Command command = helpParse("select count(pm1.g1.e2) from pm1.g1, pm1.g2 where pm1.g1.e1 = pm1.g2.e1"); //$NON-NLS-1$
+    	
+    	FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+    	BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+    	bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, false);
+    	capFinder.addCapabilities("pm1", bsc); //$NON-NLS-1$
+    	HardcodedDataManager dataManager = new HardcodedDataManager();
+    	
+    	dataManager.addData("SELECT g_0.e1 AS c_0, COUNT(g_0.e2) AS c_1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY c_0", //$NON-NLS-1$ 
+    			new List[] {
+    				 //$NON-NLS-1$
+    			});
+    	dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0", //$NON-NLS-1$ 
+    			new List[] { //$NON-NLS-1$
+    			});
+    	
+    	ProcessorPlan plan = helpGetPlan(command, RealMetadataFactory.example1Cached(), capFinder);
+    	
+    	List[] expected = new List[] { 
+                Arrays.asList(0) //$NON-NLS-1$
+            };    
+    	
+    	helpProcess(plan, dataManager, expected);
+    }
+
 
 }
