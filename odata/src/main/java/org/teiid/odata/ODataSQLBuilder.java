@@ -924,13 +924,22 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(AggregateAllFunction expr) {
-		throw new UnsupportedOperationException("TODO");
+		//throw new UnsupportedOperationException("TODO");
 		// http://host/service.svc/Orders?$filter=OrderLines/all(ol: ol/Quantity gt 10)
 		// select * from orders where ALL (select quantity from orderlines where fk = pk) > 10
 		
-		//String joinTableName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
-		//joinTable(joinTableName, expr.getVariable(), JoinType.JOIN_INNER);
-		//expr.getPredicate().visitThis(this);
+		String tblName = ((EntitySimpleProperty)expr.getSource()).getPropertyName();
+		Table joinTable = findTable(tblName, this.metadata);
+		GroupSymbol joinGroup = new GroupSymbol(expr.getVariable(),tblName);
+		
+		if (joinTable == null) {
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16009, tblName));
+		}
+		
+		ODataAggregateAnyBuilder builder = new ODataAggregateAnyBuilder(expr,
+				this.resultEntityTable, this.resultEntityGroup, joinTable, joinGroup);
+		this.criteria = builder.getCriteria();
+		stack.push(criteria);
 	}
 
 	private Table findTable(String tableName, MetadataStore store) {
@@ -1051,7 +1060,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		return update;
 	}
 	
-	private List<String> getColumnNames(List<Column> columns){
+	static List<String> getColumnNames(List<Column> columns){
 		ArrayList<String> columnNames = new ArrayList<String>();
 		for (Column column:columns) {
 			columnNames.add(column.getName());
