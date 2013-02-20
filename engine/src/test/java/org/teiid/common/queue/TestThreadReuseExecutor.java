@@ -25,6 +25,8 @@ package org.teiid.common.queue;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
@@ -37,9 +39,9 @@ import javax.resource.spi.work.Work;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 
 /**
  */
@@ -106,8 +108,9 @@ public class TestThreadReuseExecutor {
     
     @Test public void testSchedule() throws Exception {
     	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-        final ArrayList<String> result = new ArrayList<String>(); 
-    	pool.schedule(new Work() {
+        final List<String> result = Collections.synchronizedList(new ArrayList<String>());
+        long time = System.currentTimeMillis();
+    	ScheduledFuture<?> sf = pool.schedule(new Work() {
 			
 			@Override
 			public void run() {
@@ -118,8 +121,9 @@ public class TestThreadReuseExecutor {
 			public void release() {
 				
 			}
-		}, 5, TimeUnit.MILLISECONDS);
-    	Thread.sleep(100);
+		}, 50, TimeUnit.MILLISECONDS);
+    	sf.get();
+    	assertTrue(System.currentTimeMillis() - time >= 50);
     	pool.shutdown();
     	pool.awaitTermination(1000, TimeUnit.MILLISECONDS);
     	assertEquals(1, result.size());
