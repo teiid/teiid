@@ -35,6 +35,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
@@ -139,7 +140,7 @@ public class TestDynamicImportedMetaData {
     	try {
     		getMetadata(importProperties, conn);
     		fail();
-    	} catch (TranslatorException e) {
+    	} catch (DuplicateRecordException e) {
     		
     	}
     }

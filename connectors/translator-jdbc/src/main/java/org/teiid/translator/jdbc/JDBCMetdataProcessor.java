@@ -44,7 +44,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.ProcedureParameter.Type;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 
 
@@ -96,7 +95,7 @@ public class JDBCMetdataProcessor {
 	private int excludedTables;
 	
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)
-			throws SQLException, TranslatorException {
+			throws SQLException {
 		DatabaseMetaData metadata = conn.getMetaData();
 		
 		quoteString = metadata.getIdentifierQuoteString();
@@ -115,22 +114,18 @@ public class JDBCMetdataProcessor {
 			}
 		}
 		
-		try {
-			Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
-			HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
-			if (importKeys) {
-				getPrimaryKeys(metadataFactory, metadata, tables);
-				getIndexes(metadataFactory, metadata, tables, !importIndexes);
-				getForeignKeys(metadataFactory, metadata, tables, tableMap);
-			} else if (importIndexes) {
-				getIndexes(metadataFactory, metadata, tables, false);
-			}
-			
-			if (importProcedures) {
-				getProcedures(metadataFactory, metadata);
-			}
-		} catch (DuplicateRecordException e) {
-			 throw new TranslatorException(JDBCPlugin.Event.TEIID11006, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID11006));
+		Map<String, TableInfo> tableMap = getTables(metadataFactory, metadata);
+		HashSet<TableInfo> tables = new LinkedHashSet<TableInfo>(tableMap.values());
+		if (importKeys) {
+			getPrimaryKeys(metadataFactory, metadata, tables);
+			getIndexes(metadataFactory, metadata, tables, !importIndexes);
+			getForeignKeys(metadataFactory, metadata, tables, tableMap);
+		} else if (importIndexes) {
+			getIndexes(metadataFactory, metadata, tables, false);
+		}
+		
+		if (importProcedures) {
+			getProcedures(metadataFactory, metadata);
 		}
 		
 	}
@@ -397,7 +392,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private void getForeignKeys(MetadataFactory metadataFactory,
-			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException, TranslatorException {
+			DatabaseMetaData metadata, Collection<TableInfo> tables, Map<String, TableInfo> tableMap) throws SQLException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "JDBCMetadataProcessor - Importing foreign keys"); //$NON-NLS-1$
 		for (TableInfo tableInfo : tables) {
 			ResultSet fks = metadata.getImportedKeys(tableInfo.catalog, tableInfo.schema, tableInfo.name);
@@ -453,7 +448,7 @@ public class JDBCMetdataProcessor {
 		}
 	}
 	
-	private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) throws TranslatorException {
+	private KeyRecord autoCreateUniqueKeys(boolean create, MetadataFactory factory, String name, TreeMap<Short, String> referencedKeyColumns, Table pkTable) {
 		if (referencedKeyColumns != null && pkTable.getPrimaryKey() == null && pkTable.getUniqueKeys().isEmpty()) {
 			factory.addIndex(name + "_unique", false, new ArrayList<String>(referencedKeyColumns.values()), pkTable); //$NON-NLS-1$
 		}
