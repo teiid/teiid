@@ -112,6 +112,7 @@ public class IntegrationTestDeployment {
 		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
 		props.setProperty("user-name", "sa");
 		props.setProperty("password", "sa");
+		props.setProperty("connection-properties", "foo=bar,blah=blah");
 		
 		admin.createDataSource("Oracle11_PushDS", "h2", props);
 		
@@ -334,7 +335,8 @@ public class IntegrationTestDeployment {
 		assertTrue(props.contains("user-name"));
 		assertTrue(props.contains("password"));
 		assertTrue(props.contains("check-valid-connection-sql"));
-		
+		assertTrue(props.contains("max-pool-size"));
+		assertTrue(props.contains("connection-properties"));
 		
 		HashSet<String> rar_props = new HashSet<String>();
 		pds = admin.getTemplatePropertyDefinitions("teiid-connector-file.rar");
