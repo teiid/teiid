@@ -59,8 +59,7 @@ import org.teiid.core.util.ObjectConverterUtil;
  */
 @SuppressWarnings("nls")
 public class AdminFactory {
-	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
-	private static Set<String> optionalProps = new HashSet<String>(Arrays.asList("user-name", "password", "check-valid-connection-sql", "pool-prefill", "max-pool-size", "min-pool-size"));
+	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());	
 	private static AdminFactory INSTANCE = new AdminFactory();
 	
 	public static AdminFactory getInstance() {
@@ -154,6 +153,7 @@ public class AdminFactory {
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName;
+    	private List<PropertyDefinition> dataSourceProperties;
     	
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
@@ -381,6 +381,7 @@ public class AdminFactory {
         		 throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, templateName));
         	}
         	
+        	Collection<PropertyDefinition> dsProperties = getTemplatePropertyDefinitions(templateName); 
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        ModelNode request;
 	        try {
@@ -399,12 +400,15 @@ public class AdminFactory {
 	            
 	            if (properties != null) {
 		            builder.addProperty("connection-url", properties.getProperty("connection-url"));
-		            for (String prop : optionalProps) {
-		            	String value = properties.getProperty(prop);
-		            	if (value != null) {
-		            		builder.addProperty(prop, value);
+		            for (PropertyDefinition prop : dsProperties) {
+		            	if (prop.getName().equals("connection-properties")) {
+		            		continue;
 		            	}
-		            }
+		            	String value = properties.getProperty(prop.getName());
+		            	if (value != null) {
+		            		builder.addProperty(prop.getName(), value);
+		            	}
+		            }		            
 	            }
 	            else {
 	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70005, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70005));
@@ -417,6 +421,18 @@ public class AdminFactory {
 	        
 	        // execute request
 	        execute(request);
+
+	        // add connection properties that are specific to driver 
+            String cp = properties.getProperty("connection-properties");
+            if (cp != null) {
+            	StringTokenizer st = new StringTokenizer(cp, ",");
+            	while(st.hasMoreTokens()) {
+            		String prop = st.nextToken();
+            		String key = prop.substring(0, prop.indexOf('='));
+            		String value = prop.substring(prop.indexOf('=')+1);
+            		addConnectionProperty(deploymentName, key, value);
+            	}
+            }
 
 	        // issue the "enable" operation
 			builder = new DefaultOperationRequestBuilder();
@@ -432,6 +448,25 @@ public class AdminFactory {
 	        execute(request);
 		}
 
+		// /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
+		private void addConnectionProperty(String deploymentName, String key, String value) throws AdminProcessingException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+	        try {
+	        	addProfileNode(builder);	        	
+	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("connection-properties", key); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.setOperationName("add"); 
+	            builder.addProperty("value", value);
+	            request = builder.buildRequest();
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        }
+	        execute(request);
+		}		
+		
+		
 		private void execute(final ModelNode request) throws AdminProcessingException {
 			try {
 	            ModelNode outcome = this.connection.execute(request);
@@ -897,28 +932,46 @@ public class AdminFactory {
 			        } catch (IOException e) {
 			        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70027, e);
 			        }			            
+			        return buildPropertyDefinitions(result.asList());
 	        	}
-	        	else {
-	        		result = new ModelNode();
-	        		result.add(buildProperty("connection-url", "Connection URL", ModelType.STRING, "connection url to database", true));
-	        		result.add(buildProperty("user-name", "User Name", ModelType.STRING, "user name", false));
-	        		result.add(buildProperty("password", "Password", ModelType.STRING, "password", false));
-	        		result.add(buildProperty("check-valid-connection-sql", "Connection Validate SQL", ModelType.STRING, "SQL to be used to validate the connection", false));
-	        	}
+
+        		// these are going to be JDBC sources
+	        	if (this.dataSourceProperties != null) {
+        			return this.dataSourceProperties;
+        		}
 	        	
+        		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        	addProfileNode(builder);	        		
+	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
+	            builder.addNode("data-source", templateName);
+	            builder.setOperationName("read-resource-description"); //$NON-NLS-1$
+	            request = builder.buildRequest();					
+		        
+	            try {
+		            ModelNode outcome = this.connection.execute(request);
+		            if (!Util.isSuccess(outcome)) {
+		                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70026, Util.getFailureDescription(outcome));
+		            }
+		            result = outcome.get("result").get("attributes");		            
+		        } catch (IOException e) {
+		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70027, e);
+		        }
+		        
+		        this.dataSourceProperties = buildPropertyDefinitions(result.asList());
+		        
+		        // add driver specific properties
+		        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
+		        cp.setName("connection-properties");
+		        cp.setDisplayName("Addtional Driver Properties");
+		        cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
+		        cp.setRequired(false);
+		        cp.setAdvanced(true);
+		        this.dataSourceProperties.add(cp);
+		        return this.dataSourceProperties;
+		        
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
-	        return buildPropertyDefinitions(result.asList());
-		}
-		
-		private ModelNode buildProperty(String name, String displayName, ModelType modelType, String description, boolean required) {
-			ModelNode node = new ModelNode();
-			node.get(name, "type").set(modelType);
-	        node.get(name, "description").set(description);
-	        node.get(name, "required").set(required);
-	        node.get(name, "display").set(displayName);
-	        return node;
 		}
 
 		private ArrayList<PropertyDefinition> buildPropertyDefinitions(List<ModelNode> propsNodes) {
@@ -928,11 +981,17 @@ public class AdminFactory {
         		Set<String> keys = node.keys();
         		
         		String name = keys.iterator().next();
+        		if (excludeProperty(name)) {
+        			continue;
+        		}
         		def.setName(name);
         		node = node.get(name);
 
         		if (node.hasDefined("display")) {
         			def.setDisplayName(node.get("display").asString());
+        		}
+        		else {
+        			def.setDisplayName(name);
         		}
         		
         		if (node.hasDefined("description")) {
@@ -956,6 +1015,16 @@ public class AdminFactory {
         			String access = node.get("read-only").asString();
         			def.setModifiable(Boolean.parseBoolean(access));
         		}
+        		
+        		if (node.hasDefined("access-type")) {
+        			String access = node.get("access-type").asString();
+        			if ("read-write".equals(access)) {
+        				def.setModifiable(true);
+        			}
+        			else {
+        				def.setModifiable(false);
+        			}
+        		}       
         		
         		if (node.hasDefined("advanced")) {
         			String access = node.get("advanced").asString();
@@ -1014,6 +1083,34 @@ public class AdminFactory {
         		propDefinitions.add(def);
         	}
 			return propDefinitions;
+		}
+
+		private boolean excludeProperty(String name) {
+			String[] names = { "jndi-name", 
+					"pool-name", 
+					"driver-name",
+					"reauth-plugin-class-name", "enabled",
+					"valid-connection-checker-class-name",
+					"valid-connection-checker-properties",
+					"stale-connection-checker-class-name",
+					"stale-connection-checker-properties",
+					"exception-sorter-class-name",
+					"exception-sorter-properties",
+					"use-try-lock",
+					"allocation-retry",
+					"allocation-retry-wait-millis",
+					"jta",
+					"use-java-context",
+					"url-selector-strategy-class-name",
+					"driver-class",
+					"datasource-class",
+					"use-ccm"};
+			for (String n:names) {
+				if (n.equalsIgnoreCase(name)) {
+					return true;
+				}
+			}
+			return false;
 		}
 
 		@Override
