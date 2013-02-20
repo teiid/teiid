@@ -31,14 +31,13 @@ import java.util.List;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 
 public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 
 	@Override
-	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)	throws SQLException, TranslatorException {
+	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)	throws SQLException {
 		List<String> tables = getTables(conn);
 		for (String table:tables) {
 			addTable(table, conn, metadataFactory);
