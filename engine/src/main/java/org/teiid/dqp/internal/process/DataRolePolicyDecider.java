@@ -23,7 +23,9 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -80,6 +82,9 @@ public class DataRolePolicyDecider implements PolicyDecider {
 	@Override
 	public boolean isTempAccessable(PermissionType action, String resource,
 			Context context, CommandContext commandContext) {
+		if (resource != null) {
+			return getInaccessibleResources(action, new HashSet<String>(Arrays.asList(resource)), context, commandContext).isEmpty();
+		}
 		Boolean result = null;
     	for(DataPolicy p:commandContext.getAllowedDataPolicies().values()) {
 			DataPolicyMetadata policy = (DataPolicyMetadata)p;

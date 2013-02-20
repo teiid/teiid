@@ -35,9 +35,9 @@ import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
@@ -178,6 +178,8 @@ public class TestAuthorizationValidationVisitor {
     	DataPolicyMetadata svc = new DataPolicyMetadata();
     	svc.setName("test"); //$NON-NLS-1$
     	svc.addPermission(addResource(DataPolicy.PermissionType.ALTER, "VQT.SmallA_2589")); //$NON-NLS-1$
+    	svc.addPermission(addResource(DataPolicy.PermissionType.CREATE, "bqt1")); //$NON-NLS-1$
+    	svc.setAllowCreateTemporaryTables(true);
         return svc;
     }
 
@@ -357,5 +359,11 @@ public class TestAuthorizationValidationVisitor {
     	policy.addPermission(addResource(PermissionType.LANGUAGE, "javascript"));
     	helpTest("select * from objecttable(language 'javascript' 'teiid_context' columns x string 'teiid_row.userName') as x", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), policy); //$NON-NLS-1$ //$NON-NLS-2$
     }
+    
+    @Test public void testCreateForeignTemp() throws Exception {
+        helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {"CREATE FOREIGN TEMPORARY TABLE x (\n	id string\n) ON 'bqt1'"}, RealMetadataFactory.exampleBQTVDB(), exampleAuthSvc1); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTest("create foreign temporary table x (id string) on bqt1", RealMetadataFactory.exampleBQTCached(), new String[] {}, RealMetadataFactory.exampleBQTVDB(), examplePolicyBQT()); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
     
 }

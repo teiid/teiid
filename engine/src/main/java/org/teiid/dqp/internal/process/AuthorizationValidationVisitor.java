@@ -67,7 +67,10 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(Create obj) {
-    	validateTemp(PermissionType.CREATE, obj.getTable(), Context.CREATE);
+    	validateTemp(PermissionType.CREATE, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.CREATE);
+    	if (obj.getTableMetadata() != null) {
+    		validateTemp(PermissionType.CREATE, obj.getOn(), true, obj, Context.CREATE);
+    	}
     }
     
     @Override
@@ -96,18 +99,17 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     	validateEntitlements(PermissionType.LANGUAGE, Context.QUERY, map);
     }
 
-	private void validateTemp(DataPolicy.PermissionType action, GroupSymbol symbol, Context context) {
-		String resource = symbol.getNonCorrelationName();
+	private void validateTemp(DataPolicy.PermissionType action, String resource, boolean schema, LanguageObject object, Context context) {
 		Set<String> resources = Collections.singleton(resource);
 		logRequest(resources, context);
         
-    	boolean allowed = decider.isTempAccessable(action, resource, context, commandContext);
+    	boolean allowed = decider.isTempAccessable(action, schema?resource:null, context, commandContext);
     	
     	logResult(resources, context, allowed);
     	if (!allowed) {
 		    handleValidationError(
 			        QueryPlugin.Util.getString("ERR.018.005.0095", commandContext.getUserName(), "CREATE_TEMPORARY_TABLES"), //$NON-NLS-1$  //$NON-NLS-2$
-			        Arrays.asList(symbol));
+			        Arrays.asList(object));
     	}
 	}
 
@@ -121,7 +123,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
     
     @Override
     public void visit(Drop obj) {
-    	validateTemp(PermissionType.DROP, obj.getTable(), Context.DROP);
+    	validateTemp(PermissionType.DROP, obj.getTable().getNonCorrelationName(), false, obj.getTable(), Context.DROP);
     }
     
     public void visit(Delete obj) {
@@ -296,7 +298,7 @@ public class AuthorizationValidationVisitor extends AbstractValidationVisitor {
                     		addToNameMap(((TempMetadataID)metadataID).getOriginalMetadataID(), symbol, procMap);
                     		validateEntitlements(PermissionType.EXECUTE, auditContext, procMap);
                     	} else if (group.isTempTable() && group.isImplicitTempGroupSymbol()) {
-                    		validateTemp(actionCode, group, auditContext);
+                    		validateTemp(actionCode, group.getNonCorrelationName(), false, group, auditContext);
                     	}
                         continue;
                     }
