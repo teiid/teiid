@@ -144,7 +144,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	}
     }
     
-    public void close() {
+    public synchronized void close() {
     	this.securityContext.setRequestWorkItem(null);
     	if (!manager.removeState(this.id)) {
     		return; //already closed
@@ -202,7 +202,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return new TranslatorException(t);
     }
     
-	public void execute() throws TranslatorException {
+	public synchronized void execute() throws TranslatorException {
         if(isCancelled()) {
     		 throw new TranslatorException(QueryPlugin.Event.TEIID30476, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30476));
     	}

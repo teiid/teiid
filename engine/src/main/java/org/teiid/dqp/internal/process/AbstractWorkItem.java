@@ -42,11 +42,14 @@ public abstract class AbstractWorkItem implements Work, WorkListener {
     
     private ThreadState threadState = ThreadState.MORE_WORK;
     private volatile boolean isProcessing;
+    private Object processLock = new Object();
     
     public void run() {
 		startProcessing();
 		try {
-			process();
+			synchronized (processLock) {
+				process();
+			}
 		} finally {
 			endProcessing();
 		}
