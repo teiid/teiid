@@ -116,16 +116,7 @@ public class CompositeVDB {
 			return;
 		}
 		
-		VDBMetaData newMergedVDB = new VDBMetaData();
-		newMergedVDB.setName(this.vdb.getName());
-		newMergedVDB.setVersion(this.vdb.getVersion());
-		newMergedVDB.setModels(this.vdb.getModelMetaDatas().values());
-		newMergedVDB.setDataPolicies(this.vdb.getDataPolicies());
-		newMergedVDB.setDescription(this.vdb.getDescription());
-		newMergedVDB.setStatus(this.vdb.getStatus());
-		newMergedVDB.setProperties(this.vdb.getProperties());
-		newMergedVDB.getAttachments().putAll(this.vdb.getAttachments());
-		newMergedVDB.setConnectionType(this.vdb.getConnectionType());
+		VDBMetaData newMergedVDB = this.vdb.clone();
 		ConnectorManagerRepository mergedRepo = this.cmr;
 		if (!this.cmr.isShared()) {
 			mergedRepo = new ConnectorManagerRepository();

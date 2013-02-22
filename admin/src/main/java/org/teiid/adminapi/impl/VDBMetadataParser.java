@@ -442,6 +442,9 @@ public class VDBMetadataParser {
 		// models
 		Collection<ModelMetaData> models = vdb.getModelMetaDatas().values();
 		for (ModelMetaData model:models) {
+			if (vdb.getImportedModels().contains(model.getName())) {
+				continue;
+			}
 			writeModel(writer, model);
 		}
 		

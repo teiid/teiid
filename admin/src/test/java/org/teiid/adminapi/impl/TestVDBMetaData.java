@@ -140,7 +140,7 @@ public class TestVDBMetaData {
 		assertTrue(lang);
 	}
 
-	private VDBMetaData buildVDB() {
+	static VDBMetaData buildVDB() {
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("myVDB"); //$NON-NLS-1$
 		vdb.setDescription("vdb description"); //$NON-NLS-1$
@@ -246,5 +246,15 @@ public class TestVDBMetaData {
 		String actual = node.toJSONString(false);
 		
 		assertEquals(ObjectConverterUtil.convertFileToString(new File(UnitTestUtil.getTestDataPath() + "/vdb-describe.txt")), actual);
+	}
+	
+	@Test
+	public void testClone() {
+		VDBMetaData vdb = buildVDB();
+		vdb.setDynamic(true);
+		VDBMetaData clone = vdb.clone();
+		assertTrue(clone.isDynamic());
+		assertEquals(1, vdb.getVDBImports().size());
+		assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
 	}
 }

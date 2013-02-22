@@ -38,7 +38,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	private String hostName;
 		
 	private Map<String, String> properties = new HashMap<String, String>(2);
-	private transient Map<Class<?>, Object> attachments;
+	protected transient Map<Class<?>, Object> attachments;
 		
 	@Override
 	public String getName() {

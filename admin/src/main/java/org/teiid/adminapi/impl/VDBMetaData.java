@@ -34,9 +34,10 @@ import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.core.TeiidRuntimeException;
 
 
-public class VDBMetaData extends AdminObjectImpl implements VDB {
+public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 
 	private static final String VERSION_DELIM = "."; //$NON-NLS-1$
 
@@ -261,5 +262,20 @@ public class VDBMetaData extends AdminObjectImpl implements VDB {
 	
 	public void setEntries(List<EntryMetaData> entries) {
 		this.entries = entries;
+	}
+	
+	@Override
+	public VDBMetaData clone() {
+		try {
+			VDBMetaData clone = (VDBMetaData) super.clone();
+			clone.models = new LinkedHashMap<String, ModelMetaData>(this.models);
+			if (this.attachments != null) {
+				clone.attachments = null;
+				clone.getAttachments().putAll(this.getAttachments());
+			}
+			return clone;
+		} catch (CloneNotSupportedException e) {
+			throw new TeiidRuntimeException(e);
+		}
 	}
 }
