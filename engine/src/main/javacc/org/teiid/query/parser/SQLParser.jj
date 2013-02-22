@@ -5096,8 +5096,8 @@ void optionPair(AbstractMetadataRecord record, MetadataFactory factory) :
 }
 
 /*
-name=alter in ddl metadata
-description=alter statements that can be used with DDL based metadata
+name=alter options
+description=alters options of tables/procedure
 example={code:sql}ALTER FOREIGN TABLE foo OPTIONS (ADD cardinality 100){code}
 */
 void alterStatement(MetadataFactory factory) :
@@ -5180,8 +5180,8 @@ void addSetOption(AbstractMetadataRecord record, MetadataFactory factory) :
 }
 
 /*
-name=alter in ddl metadata
-description=alter statements that can be used with DDL based metadata
+name=alter column options
+description=alters a set of column options
 example={code:sql}ALTER COLUMN bar OPTIONS (ADD updatable true){code}
 */
 void alterColumn(AbstractMetadataRecord parent, MetadataFactory factory) :

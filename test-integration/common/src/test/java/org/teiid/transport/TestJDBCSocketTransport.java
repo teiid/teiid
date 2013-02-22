@@ -174,6 +174,12 @@ public class TestJDBCSocketTransport {
 		}
 	}
 	
+	/**
+	 * Tests to ensure that a SynchronousTtl/synchTimeout does
+	 * not cause a cancel.
+	 * TODO: had to increase the values since the test would fail on slow machine runs
+	 * @throws Exception
+	 */
 	@Test public void testSyncTimeout() throws Exception {
 		TeiidDriver td = new TeiidDriver();
 		td.setSocketProfile(new ConnectionProfile() {
@@ -195,8 +201,8 @@ public class TestJDBCSocketTransport {
 		Properties p = new Properties();
 		p.setProperty("user", "testuser");
 		p.setProperty("password", "testpassword");
-		p.setProperty("org.teiid.sockets.soTimeout", "200");
-		p.setProperty("org.teiid.sockets.SynchronousTtl", "100");
+		p.setProperty("org.teiid.sockets.soTimeout", "1000");
+		p.setProperty("org.teiid.sockets.SynchronousTtl", "500");
 		ConnectorManagerRepository cmr = server.getConnectorManagerRepository();
 		AutoGenDataService agds = new AutoGenDataService() {
 			@Override
@@ -205,7 +211,7 @@ public class TestJDBCSocketTransport {
 				return null;
 			}
 		};
-		agds.setSleep(500); //wait longer than the synch ttl/soTimeout, we should still succeed
+		agds.setSleep(2000); //wait longer than the synch ttl/soTimeout, we should still succeed
 		cmr.addConnectorManager("source", agds);
 		try {
 			conn = td.connect("jdbc:teiid:parts@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), p);

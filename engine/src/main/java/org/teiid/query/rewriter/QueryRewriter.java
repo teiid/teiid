@@ -1018,7 +1018,7 @@ public class QueryRewriter {
      * Rewrite the given conjunct
      * @return null if the conjunct was internally handled 
      */
-    private Criteria rewriteAndConjunct(Criteria converted, Map<Expression, Criteria> exprMap, LinkedHashSet<Criteria> newCrits) throws ExpressionEvaluationException {
+    private Criteria rewriteAndConjunct(Criteria converted, Map<Expression, Criteria> exprMap, LinkedHashSet<Criteria> newCrits) {
     	if (converted instanceof IsNullCriteria) {
         	IsNullCriteria inc = (IsNullCriteria)converted;
         	if (!inc.isNegated()) {
