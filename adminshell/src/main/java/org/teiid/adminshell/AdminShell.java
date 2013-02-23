@@ -224,6 +224,12 @@ public class AdminShell {
 		return getAdmin().getCacheStats(identifier);
 	}
 	
+	@Doc(text = "Get engine statistics for Teiid")
+	public static Collection<? extends EngineStatistics> getEngineStats()
+			throws AdminException {
+		return getAdmin().getEngineStats();
+	}	
+	
 	@Doc(text = "Remove a mapped role for the data role")
 	public static void removeDataRoleMapping(
 			@Doc(text = "vdb name") String vdbName, 

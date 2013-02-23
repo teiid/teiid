@@ -691,6 +691,20 @@ public class AdminFactory {
 	        }
 	        return null;
 		}
+		
+		@Override
+		public Collection<? extends EngineStatistics> getEngineStats() throws AdminException {
+	        final ModelNode request = buildRequest("teiid", "engine-statistics");//$NON-NLS-1$ //$NON-NLS-2$
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (Util.isSuccess(outcome)) {
+	            	return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE);	            	
+	            }
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
+	        }
+	        return null;
+		}		
 
 		@Override
 		public Collection<String> getCacheTypes() throws AdminException {

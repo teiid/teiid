@@ -970,6 +970,82 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		}
 	}
 	
+	public static class EngineStatisticsMetadataMapper implements MetadataMapper<EngineStatisticsMetadata>{
+		private static final String SESSION_COUNT = "session-count"; //$NON-NLS-1$
+		private static final String TOTAL_MEMORY_USED_IN_KB = "total-memory-inuse-kb"; //$NON-NLS-1$
+		private static final String MEMORY_IN_USE_BY_ACTIVE_PLANS = "total-memory-inuse-active-plans-kb";//$NON-NLS-1$
+		private static final String DISK_WRITE_COUNT = "buffermgr-disk-write-count"; //$NON-NLS-1$
+		private static final String DISK_READ_COUNT = "buffermgr-disk-read-count"; //$NON-NLS-1$
+		private static final String CACHE_WRITE_COUNT = "buffermgr-cache-write-count"; //$NON-NLS-1$
+		private static final String CACHE_READ_COUNT = "buffermgr-cache-read-count"; //$NON-NLS-1$
+		private static final String DISK_SPACE_USED = "buffermgr-diskspace-used-mb"; //$NON-NLS-1$
+		private static final String ACTIVE_PLAN_COUNT = "active-plans-count"; //$NON-NLS-1$
+		private static final String WAITING_PLAN_COUNT = "waiting-plans-count"; //$NON-NLS-1$
+		private static final String MAX_WAIT_PLAN_COUNT = "max-waitplan-watermark"; //$NON-NLS-1$
+		private static final String AVG_TIME_WAIT_PLAN = "avg-waitplan-time-milli"; //$NON-NLS-1$
+		
+		public static EngineStatisticsMetadataMapper INSTANCE = new EngineStatisticsMetadataMapper();
+		
+		public ModelNode wrap(EngineStatisticsMetadata object, ModelNode node) {
+			if (object == null)
+				return null;
+			
+			node.get(SESSION_COUNT).set(object.getSessionCount());
+			node.get(TOTAL_MEMORY_USED_IN_KB).set(object.getTotalMemoryUsedInKB());
+			node.get(MEMORY_IN_USE_BY_ACTIVE_PLANS).set(object.getMemoryUsedByActivePlansInKB());
+			node.get(DISK_WRITE_COUNT).set(object.getDiskWriteCount());
+			node.get(DISK_READ_COUNT).set(object.getDiskReadCount());
+			node.get(CACHE_WRITE_COUNT).set(object.getCacheWriteCount());	
+			node.get(CACHE_READ_COUNT).set(object.getCacheReadCount());
+			node.get(DISK_SPACE_USED).set(object.getDiskSpaceUsedInMB());
+			node.get(ACTIVE_PLAN_COUNT).set(object.getActivePlanCount());
+			node.get(WAITING_PLAN_COUNT).set(object.getWaitPlanCount());
+			node.get(MAX_WAIT_PLAN_COUNT).set(object.getMaxWaitPlanWaterMark());
+			node.get(AVG_TIME_WAIT_PLAN).set(object.getAverageWaitPlanTimeInMilli());				
+			
+			wrapDomain(object, node);
+			return node;
+		}
+
+		public EngineStatisticsMetadata unwrap(ModelNode node) {
+			if (node == null)
+				return null;
+				
+			EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
+			stats.setSessionCount(node.get(SESSION_COUNT).asInt());
+			stats.setTotalMemoryUsedInKB(node.get(TOTAL_MEMORY_USED_IN_KB).asLong());
+			stats.setMemoryUsedByActivePlansInKB(node.get(MEMORY_IN_USE_BY_ACTIVE_PLANS).asLong());
+			stats.setDiskWriteCount(node.get(DISK_WRITE_COUNT).asLong());
+			stats.setDiskReadCount(node.get(DISK_READ_COUNT).asLong());
+			stats.setCacheReadCount(node.get(CACHE_READ_COUNT).asLong());
+			stats.setCacheWriteCount(node.get(CACHE_WRITE_COUNT).asLong());
+			stats.setDiskSpaceUsedInMB(node.get(DISK_SPACE_USED).asLong());
+			stats.setActivePlanCount(node.get(ACTIVE_PLAN_COUNT).asInt());
+			stats.setWaitPlanCount(node.get(WAITING_PLAN_COUNT).asInt());
+			stats.setMaxWaitPlanWaterMark(node.get(MAX_WAIT_PLAN_COUNT).asInt());
+			stats.setAverageWaitPlanTimeInMilli(node.get(AVG_TIME_WAIT_PLAN).asLong());
+			
+			unwrapDomain(stats, node);
+			return stats;
+		}
+		
+		public ModelNode describe(ModelNode node) {
+			addAttribute(node, SESSION_COUNT, ModelType.INT, true);
+			addAttribute(node, TOTAL_MEMORY_USED_IN_KB, ModelType.LONG, true);
+			addAttribute(node, MEMORY_IN_USE_BY_ACTIVE_PLANS, ModelType.LONG, true);
+			addAttribute(node, DISK_WRITE_COUNT, ModelType.LONG, true);
+			addAttribute(node, DISK_READ_COUNT, ModelType.LONG, true);
+			addAttribute(node, CACHE_READ_COUNT, ModelType.LONG, true);
+			addAttribute(node, CACHE_WRITE_COUNT, ModelType.LONG, true);
+			addAttribute(node, DISK_SPACE_USED, ModelType.LONG, true);
+			addAttribute(node, ACTIVE_PLAN_COUNT, ModelType.INT, true);
+			addAttribute(node, WAITING_PLAN_COUNT, ModelType.INT, true);
+			addAttribute(node, MAX_WAIT_PLAN_COUNT, ModelType.INT, true);
+			addAttribute(node, AVG_TIME_WAIT_PLAN, ModelType.LONG, true);			
+			return node;
+		}
+	}	
+	
 	public static class CacheStatisticsMetadataMapper implements MetadataMapper<CacheStatisticsMetadata>{
 		private static final String HITRATIO = "hit-ratio"; //$NON-NLS-1$
 		private static final String TOTAL_ENTRIES = "total-entries"; //$NON-NLS-1$
