@@ -220,6 +220,18 @@ public class BufferServiceImpl implements BufferService, Serializable {
     public void setMaxBufferSpace(long maxBufferSpace) {
 		this.maxBufferSpace = maxBufferSpace;
 	}
+    
+    public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
+		this.memoryBufferOffHeap = memoryBufferOffHeap;
+	}
+
+    public void setMemoryBufferSpace(int memoryBufferSpace) {
+		this.memoryBufferSpace = memoryBufferSpace;
+	}
+
+    public void setMaxStorageObjectSize(int maxStorageObjectSize) {
+		this.maxStorageObjectSize = maxStorageObjectSize;
+	}    
 
     public long getUserBufferSpace() {
     	if (fsm != null) {
@@ -228,18 +240,36 @@ public class BufferServiceImpl implements BufferService, Serializable {
     	return 0;
     }
 
-	public long getBatchesAdded() {
-		return bufferMgr.getBatchesAdded();
+	public long getTotalMemoryInUseKB() {
+		return bufferMgr.getActiveBatchBytes()/1024 + getMaxReservedKb() - bufferMgr.getMaxReserveKB();
 	}
 
-	public long getReadCount() {
-		return bufferMgr.getReadCount();
+	public long getMemoryInUseByActivePlansKB() {
+		return ((getMaxReservedKb()*1024) - bufferMgr.getReserveBatchBytes())/1024;
 	}
-
-    public long getWriteCount() {
-		return bufferMgr.getWriteCount();
+	
+	public long getDiskReadCount() {
+		if (bufferMgr.getCache() instanceof BufferFrontedFileStoreCache) {
+			return ((BufferFrontedFileStoreCache)bufferMgr.getCache()).getStorageReads();
+		}
+		return 0;
 	}
-
+	
+    public long getDiskWriteCount() {
+		if (bufferMgr.getCache() instanceof BufferFrontedFileStoreCache) {
+			return ((BufferFrontedFileStoreCache)bufferMgr.getCache()).getStorageWrites();
+		}
+		return 0;	
+    }
+    
+    public long getCacheReadCount() {
+    	return bufferMgr.getReadCount();
+    }
+    
+    public long getCacheWriteCount() {
+    	return bufferMgr.getWriteCount();
+    }    
+	
 	public long getReadAttempts() {
 		return bufferMgr.getReadAttempts();
 	}
@@ -254,17 +284,5 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public boolean isMemoryBufferOffHeap() {
 		return memoryBufferOffHeap;
-	}
-    
-    public void setMemoryBufferOffHeap(boolean memoryBufferOffHeap) {
-		this.memoryBufferOffHeap = memoryBufferOffHeap;
-	}
-
-    public void setMemoryBufferSpace(int memoryBufferSpace) {
-		this.memoryBufferSpace = memoryBufferSpace;
-	}
-
-    public void setMaxStorageObjectSize(int maxStorageObjectSize) {
-		this.maxStorageObjectSize = maxStorageObjectSize;
-	}
+	}       
 }

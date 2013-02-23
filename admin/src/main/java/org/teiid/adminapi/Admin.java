@@ -201,6 +201,13 @@ public interface Admin {
     Collection<? extends CacheStatistics> getCacheStats(String cacheType) throws AdminException;
     
     /**
+     * Get the Engine Statistics for the given type
+     * @return Collection of {@link EngineStatistics} 
+     * @throws AdminException  
+     */
+    Collection<? extends EngineStatistics> getEngineStats() throws AdminException;    
+    
+    /**
      * Terminate the Session
      *
      * @param identifier  Session Identifier {@link org.teiid.adminapi.Session}.
