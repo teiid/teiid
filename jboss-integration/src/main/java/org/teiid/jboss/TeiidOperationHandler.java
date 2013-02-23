@@ -21,7 +21,15 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE_TYPE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -55,19 +63,12 @@ import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
 import org.teiid.adminapi.Admin;
+import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminProcessingException;
 import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.Admin.SchemaObjectType;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.CacheStatisticsMetadata;
-import org.teiid.adminapi.impl.RequestMetadata;
-import org.teiid.adminapi.impl.SessionMetadata;
-import org.teiid.adminapi.impl.TransactionMetadata;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.adminapi.impl.VDBMetadataMapper;
-import org.teiid.adminapi.impl.VDBTranslatorMetaData;
-import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
+import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.client.RequestMessage;
@@ -77,9 +78,9 @@ import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
 import org.teiid.deployers.RuntimeVDB;
+import org.teiid.deployers.RuntimeVDB.ReplaceResult;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
-import org.teiid.deployers.RuntimeVDB.ReplaceResult;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -97,6 +98,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	List<TransportService> transports = new ArrayList<TransportService>();
 	protected VDBRepository vdbRepo;
 	protected DQPCore engine;
+	protected BufferManagerService bufferMgrSvc;
 	
 	protected TeiidOperationHandler(String operationName){
 		super(operationName);
@@ -108,6 +110,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 		this.transports.clear();
 		this.vdbRepo = null;
 		this.engine = null;
+		this.bufferMgrSvc = null;
 		
         List<ServiceName> services = context.getServiceRegistry(false).getServiceNames();
         for (ServiceName name:services) {
@@ -123,11 +126,24 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         	this.vdbRepo = VDBRepository.class.cast(repo.getValue());
         }
         
-        ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.ENGINE);
-        if (sc != null) {
-        	this.engine = DQPCore.class.cast(sc.getValue());
+        repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.BUFFER_MGR);
+        if (repo != null) {
+        	this.bufferMgrSvc = BufferManagerService.class.cast(repo.getService());
+        }        
+        
+        repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.ENGINE);
+        if (repo != null) {
+        	this.engine = DQPCore.class.cast(repo.getValue());
         }
         return this.engine;	
+	}	
+	
+	int getSessionCount() throws AdminException {
+		int count = 0;
+		for (TransportService t: this.transports) {
+			count += t.getActiveSessionsCount();
+		}
+		return count;
 	}	
 }
 
@@ -186,15 +202,12 @@ class GetActiveSessionsCount extends TeiidOperationHandler{
 	@Override
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
 		try {
-			int count = 0;
-			for (TransportService t: this.transports) {
-				count += t.getActiveSessionsCount();
-			}
-			context.getResult().set(count);
+			context.getResult().set(getSessionCount());
 		} catch (AdminException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
 		}
 	}
+
 	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
 		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
 		reply.get(TYPE).set(ModelType.INT);		
@@ -1560,5 +1573,41 @@ class ReadRARDescription extends TeiidOperationHandler {
 		reply.get(TYPE).set(ModelType.LIST);	
 		// this is incomplete
 		reply.get(VALUE_TYPE).set(ModelType.STRING);		
+	}	
+}
+
+//TEIID-2404
+class EngineStatistics extends TeiidOperationHandler {
+	protected EngineStatistics() {
+		super("engine-statistics"); //$NON-NLS-1$
 	}
+	
+	@Override
+	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException{
+		EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
+		try {
+			stats.setSessionCount(getSessionCount());
+			stats.setTotalMemoryUsedInKB(this.bufferMgrSvc.getTotalMemoryInUseKB());
+			stats.setMemoryUsedByActivePlansInKB(this.bufferMgrSvc.getMemoryInUseByActivePlansKB());
+			stats.setDiskWriteCount(this.bufferMgrSvc.getDiskWriteCount());
+			stats.setDiskReadCount(this.bufferMgrSvc.getDiskReadCount());
+			stats.setCacheReadCount(this.bufferMgrSvc.getCacheReadCount());
+			stats.setCacheWriteCount(this.bufferMgrSvc.getCacheWriteCount());
+			stats.setDiskSpaceUsedInMB(this.bufferMgrSvc.getUserBufferSpace());
+			stats.setActivePlanCount(this.engine.getActivePlanCount());
+			stats.setWaitPlanCount(this.engine.getWaitingPlanCount());
+			stats.setMaxWaitPlanWaterMark(this.engine.getMaxWaitingPlanWatermark());
+			stats.setAverageWaitPlanTimeInMilli(this.engine.getAverageTimespentInQueueMilli());		
+			VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.wrap(stats, context.getResult());
+		} catch (AdminException e) {
+			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
+		}
+	}
+	
+	protected void describeParameters(ModelNode operationNode, ResourceBundle bundle) {
+		ModelNode reply = operationNode.get(REPLY_PROPERTIES);
+		reply.get(TYPE).set(ModelType.OBJECT);		
+		VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.describe(reply.get(VALUE_TYPE));
+		
+	}		
 }

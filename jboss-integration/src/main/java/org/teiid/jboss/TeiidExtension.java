@@ -21,7 +21,12 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ATTRIBUTES;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILDREN;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -149,6 +154,7 @@ public class TeiidExtension implements Extension {
 		new MarkDataSourceAvailable().register(teiidSubsystem);
 		new ReadRARDescription().register(teiidSubsystem);
 		new GetSchema().register(teiidSubsystem);
+		new EngineStatistics().register(teiidSubsystem);
 	}
 
 	@Override

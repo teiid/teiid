@@ -1085,6 +1085,10 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		return memoryEntries.size();
 	}
 	
+	public long getActiveBatchBytes() {
+		return activeBatchBytes.get();
+	}
+	
 	@Override
 	public boolean hasState(String stateId) {
 		return this.getTupleBuffer(stateId) != null;

@@ -205,7 +205,9 @@ public class DQPCore implements DQP {
     private int userRequestSourceConcurrency;
     private LinkedList<RequestWorkItem> waitingPlans = new LinkedList<RequestWorkItem>();
     private LinkedHashSet<RequestWorkItem> bufferFullPlans = new LinkedHashSet<RequestWorkItem>();
-
+    private int maxWaitingPlans = 0;
+    private long totalPlansQueuedToWait;
+    private long totalTimeSpentInQueue;
 	private AuthorizationValidator authorizationValidator;
 	
 	private EnhancedTimer cancellationTimer;
@@ -383,6 +385,8 @@ public class DQPCore implements DQP {
 	        		bufferFull.moreWork();
 	        	}
 				waitingPlans.add(workItem);
+				maxWaitingPlans = Math.max(this.maxWaitingPlans, waitingPlans.size());
+				totalPlansQueuedToWait++;
 			}
 		}
         if (runInThread) {
@@ -429,9 +433,16 @@ public class DQPCore implements DQP {
     		currentlyActivePlans--;
     		bufferFullPlans.remove(workItem.requestID);
 			if (!waitingPlans.isEmpty()) {
-				startActivePlan(waitingPlans.remove(), true);
+				RequestWorkItem work = waitingPlans.remove();
+				long timeSpentInQueue = System.currentTimeMillis() - work.getCreationTime();
+				totalTimeSpentInQueue += timeSpentInQueue;
+				startActivePlan(work, true);
 			}
 		}
+    }
+    
+    public int getActivePlanCount() {
+    	return this.currentlyActivePlans;
     }
     
     public boolean hasWaitingPlans(RequestWorkItem item) {
@@ -442,6 +453,21 @@ public class DQPCore implements DQP {
     		this.bufferFullPlans.add(item);
 		}
     	return false;
+    }
+    
+    public int getWaitingPlanCount() {
+    	return waitingPlans.size();
+    }
+    
+    public long getAverageTimespentInQueueMilli() {
+    	if (this.totalPlansQueuedToWait > 0) {
+    		return this.totalTimeSpentInQueue/(this.totalPlansQueuedToWait-getWaitingPlanCount());
+    	}
+    	return 0L;
+    }    
+    
+    public int getMaxWaitingPlanWatermark() {
+    	return this.maxWaitingPlans;
     }
     
     void removeRequest(final RequestWorkItem workItem) {
