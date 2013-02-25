@@ -37,7 +37,6 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 	private int activePlanCount;
 	private int waitPlanCount;
 	private int maxWaitPlanCount;
-	private long averageWaitPlanTimeInMilli;
 	
 	@Override
 	public int getSessionCount() {
@@ -94,11 +93,6 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 		return maxWaitPlanCount;
 	}
 
-	@Override
-	public long getAverageWaitPlanTimeInMilli() {
-		return averageWaitPlanTimeInMilli;
-	}
-
 	public void setSessionCount(int sessionCount) {
 		this.sessionCount = sessionCount;
 	}
@@ -143,7 +137,4 @@ public class EngineStatisticsMetadata extends AdminObjectImpl implements EngineS
 		this.maxWaitPlanCount = maxWaitPlanCount;
 	}
 
-	public void setAverageWaitPlanTimeInMilli(long averageWaitPlanTimeInMilli) {
-		this.averageWaitPlanTimeInMilli = averageWaitPlanTimeInMilli;
-	}
 }

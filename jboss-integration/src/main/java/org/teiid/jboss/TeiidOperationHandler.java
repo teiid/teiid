@@ -1589,7 +1589,6 @@ class EngineStatistics extends TeiidOperationHandler {
 			stats.setActivePlanCount(this.engine.getActivePlanCount());
 			stats.setWaitPlanCount(this.engine.getWaitingPlanCount());
 			stats.setMaxWaitPlanWaterMark(this.engine.getMaxWaitingPlanWatermark());
-			stats.setAverageWaitPlanTimeInMilli(this.engine.getAverageTimespentInQueueMilli());		
 			VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.wrap(stats, context.getResult());
 		} catch (AdminException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));

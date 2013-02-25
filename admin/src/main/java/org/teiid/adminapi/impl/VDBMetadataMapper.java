@@ -982,7 +982,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String ACTIVE_PLAN_COUNT = "active-plans-count"; //$NON-NLS-1$
 		private static final String WAITING_PLAN_COUNT = "waiting-plans-count"; //$NON-NLS-1$
 		private static final String MAX_WAIT_PLAN_COUNT = "max-waitplan-watermark"; //$NON-NLS-1$
-		private static final String AVG_TIME_WAIT_PLAN = "avg-waitplan-time-milli"; //$NON-NLS-1$
 		
 		public static EngineStatisticsMetadataMapper INSTANCE = new EngineStatisticsMetadataMapper();
 		
@@ -1001,7 +1000,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			node.get(ACTIVE_PLAN_COUNT).set(object.getActivePlanCount());
 			node.get(WAITING_PLAN_COUNT).set(object.getWaitPlanCount());
 			node.get(MAX_WAIT_PLAN_COUNT).set(object.getMaxWaitPlanWaterMark());
-			node.get(AVG_TIME_WAIT_PLAN).set(object.getAverageWaitPlanTimeInMilli());				
 			
 			wrapDomain(object, node);
 			return node;
@@ -1023,7 +1021,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			stats.setActivePlanCount(node.get(ACTIVE_PLAN_COUNT).asInt());
 			stats.setWaitPlanCount(node.get(WAITING_PLAN_COUNT).asInt());
 			stats.setMaxWaitPlanWaterMark(node.get(MAX_WAIT_PLAN_COUNT).asInt());
-			stats.setAverageWaitPlanTimeInMilli(node.get(AVG_TIME_WAIT_PLAN).asLong());
 			
 			unwrapDomain(stats, node);
 			return stats;
@@ -1041,7 +1038,6 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, ACTIVE_PLAN_COUNT, ModelType.INT, true);
 			addAttribute(node, WAITING_PLAN_COUNT, ModelType.INT, true);
 			addAttribute(node, MAX_WAIT_PLAN_COUNT, ModelType.INT, true);
-			addAttribute(node, AVG_TIME_WAIT_PLAN, ModelType.LONG, true);			
 			return node;
 		}
 	}	

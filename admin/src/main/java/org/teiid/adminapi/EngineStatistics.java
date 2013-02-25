@@ -89,9 +89,4 @@ public interface EngineStatistics extends AdminObject, DomainAware {
 	 */
 	int getMaxWaitPlanWaterMark();
 	
-	/**
-	 * Average amount of time that plan spent waiting queue 
-	 * @return
-	 */
-	long getAverageWaitPlanTimeInMilli();
 }
