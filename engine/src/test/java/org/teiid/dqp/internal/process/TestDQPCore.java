@@ -325,6 +325,27 @@ public class TestDQPCore {
 	        	break;
 	        }
         }
+        
+        //insensitive should not block
+        reqMsg.setCursorType(ResultSet.TYPE_SCROLL_INSENSITIVE);
+        
+        message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+
+		assertEquals(rowsPerBatch, rm.getResultsList().size());
+        item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+
+        message = core.processCursorRequest(reqMsg.getExecutionId(), 9, rowsPerBatch);
+        rm = message.get(500000, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(rowsPerBatch, rm.getResultsList().size());
+        //ensure that we are idle
+        for (int i = 0; i < 10 && item.getThreadState() != ThreadState.IDLE; i++) {
+        	Thread.sleep(100);
+        }
+        assertEquals(ThreadState.IDLE, item.getThreadState());
+        assertEquals(item.resultsBuffer.getManagedRowCount(), 400); //should have the full results
     }
     
     @Test public void testBufferReuse() throws Exception {
