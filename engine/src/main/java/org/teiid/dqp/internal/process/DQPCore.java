@@ -445,14 +445,17 @@ public class DQPCore implements DQP {
     	return this.currentlyActivePlans;
     }
     
-    public boolean hasWaitingPlans(RequestWorkItem item) {
+    public boolean blockOnOutputBuffer(RequestWorkItem item) {
     	synchronized (waitingPlans) {
     		if (!waitingPlans.isEmpty()) {
-    			return true;
+    			return false;
+    		}
+    		if (item.useCallingThread || item.getDqpWorkContext().getSession().isEmbedded()) {
+    			return false;
     		}
     		this.bufferFullPlans.add(item);
 		}
-    	return false;
+    	return true;
     }
     
     public int getWaitingPlanCount() {

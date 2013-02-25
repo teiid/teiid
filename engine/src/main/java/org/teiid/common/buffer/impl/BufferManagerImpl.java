@@ -117,7 +117,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 					LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", impl.reserveBatchBytes.get(), impl.maxReserveBytes.get(), impl.activeBatchBytes.get()); //$NON-NLS-1$
 				}
-				impl.doEvictions(0, false);
+				impl.doEvictions(0, !agingOut);
 				if (!agingOut) {
 					try {
 						Thread.sleep(100); //we don't want to evict too fast, because the processing threads are more than capable of evicting
@@ -694,13 +694,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 			return;
 		}
-		long maxToFree = Math.max(maxProcessingBytes>>1, reserveBatch>>3);
+		long maxToFree = Math.min(maxProcessingBytes, (activeBatch - reserveBatch)<<1);
 		doEvictions(maxToFree, true);
 	}
 
 	void doEvictions(long maxToFree, boolean checkActiveBatch) {
 		int freed = 0;
-		while (freed <= maxToFree && (!checkActiveBatch || activeBatchBytes.get() > reserveBatchBytes.get() * .8)) {
+		while (freed <= maxToFree && (!checkActiveBatch || (maxToFree == 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .7) || (maxToFree > 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .8))) {
 			CacheEntry ce = evictionQueue.firstEntry(true);
 			if (ce == null) {
 				break;
@@ -718,9 +718,14 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			} finally {
 				synchronized (ce) {
 					if (evicted && memoryEntries.remove(ce.getId()) != null) {
-						freed += ce.getSizeEstimate();
+						if (maxToFree > 0) {
+							freed += ce.getSizeEstimate();
+						}
 						activeBatchBytes.addAndGet(-ce.getSizeEstimate());
 						evictionQueue.remove(ce); //ensures that an intervening get will still be cleaned
+						if (!checkActiveBatch) {
+							break;
+						}
 					}
 				}
 			}

@@ -591,7 +591,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 							&& !batch.getTerminationFlag() 
 							&& transactionState != TransactionState.ACTIVE
 							&& this.getTupleBuffer().getManagedRowCount() >= OUTPUT_BUFFER_MAX_BATCHES * this.getTupleBuffer().getBatchSize()) {
-						if (!dqpCore.hasWaitingPlans(RequestWorkItem.this)) {
+						if (dqpCore.blockOnOutputBuffer(RequestWorkItem.this)) {
 							//requestMore will trigger more processing
 							throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
 									this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
