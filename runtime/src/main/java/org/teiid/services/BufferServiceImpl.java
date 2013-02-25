@@ -67,6 +67,8 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private int maxStorageObjectSize = BufferFrontedFileStoreCache.DEFAuLT_MAX_OBJECT_SIZE;
     private boolean memoryBufferOffHeap;
 	private FileStorageManager fsm;
+	private BufferFrontedFileStoreCache fsc;
+	private int workingMaxReserveKb;
 	
     /**
      * Clean the file storage directory on startup 
@@ -103,7 +105,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
-                BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+                fsc = new BufferFrontedFileStoreCache();
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
                 fsc.setDirect(memoryBufferOffHeap);
                 int batchOverheadKB = (int)(this.memoryBufferSpace<0?(this.bufferMgr.getMaxReserveKB()<<8):this.memoryBufferSpace)>>20;
@@ -122,6 +124,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsc.setStorageManager(ssm);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
+                this.workingMaxReserveKb = this.bufferMgr.getMaxReserveKB();
             } else {
             	this.bufferMgr.setCache(new MemoryStorageManager());
             }
@@ -233,33 +236,40 @@ public class BufferServiceImpl implements BufferService, Serializable {
 		this.maxStorageObjectSize = maxStorageObjectSize;
 	}    
 
-    public long getUserBufferSpace() {
+    public long getUsedDiskBufferSpaceMB() {
     	if (fsm != null) {
     		return fsm.getUsedBufferSpace()/MB;
     	}
     	return 0;
     }
 
-	public long getTotalMemoryInUseKB() {
-		return bufferMgr.getActiveBatchBytes()/1024 + getMaxReservedKb() - bufferMgr.getMaxReserveKB();
+	public long getHeapCacheMemoryInUseKB() {
+		return bufferMgr.getActiveBatchBytes()/1024 + workingMaxReserveKb - bufferMgr.getMaxReserveKB();
 	}
 
-	public long getMemoryInUseByActivePlansKB() {
-		return ((getMaxReservedKb()*1024) - bufferMgr.getReserveBatchBytes())/1024;
+	public long getHeapMemoryInUseByActivePlansKB() {
+		return workingMaxReserveKb - bufferMgr.getReserveBatchBytes()/1024;
 	}
 	
 	public long getDiskReadCount() {
-		if (bufferMgr.getCache() instanceof BufferFrontedFileStoreCache) {
-			return ((BufferFrontedFileStoreCache)bufferMgr.getCache()).getStorageReads();
+		if (fsc != null) {
+			return fsc.getStorageReads();
 		}
 		return 0;
 	}
 	
     public long getDiskWriteCount() {
-		if (bufferMgr.getCache() instanceof BufferFrontedFileStoreCache) {
-			return ((BufferFrontedFileStoreCache)bufferMgr.getCache()).getStorageWrites();
-		}
-		return 0;	
+    	if (fsc != null) {
+    		return fsc.getStorageWrites();
+    	}
+    	return 0;
+    }
+    
+    public long getMemoryBufferUsedKB() {
+    	if (fsc != null) {
+    		return fsc.getMemoryInUseBytes() >> 10;
+    	}
+    	return 0;
     }
     
     public long getCacheReadCount() {

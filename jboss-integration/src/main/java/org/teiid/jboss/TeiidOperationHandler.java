@@ -21,15 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.VALUE_TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1587,13 +1579,13 @@ class EngineStatistics extends TeiidOperationHandler {
 		EngineStatisticsMetadata stats = new EngineStatisticsMetadata();
 		try {
 			stats.setSessionCount(getSessionCount());
-			stats.setTotalMemoryUsedInKB(this.bufferMgrSvc.getTotalMemoryInUseKB());
-			stats.setMemoryUsedByActivePlansInKB(this.bufferMgrSvc.getMemoryInUseByActivePlansKB());
+			stats.setTotalMemoryUsedInKB(this.bufferMgrSvc.getHeapCacheMemoryInUseKB());
+			stats.setMemoryUsedByActivePlansInKB(this.bufferMgrSvc.getHeapMemoryInUseByActivePlansKB());
 			stats.setDiskWriteCount(this.bufferMgrSvc.getDiskWriteCount());
 			stats.setDiskReadCount(this.bufferMgrSvc.getDiskReadCount());
 			stats.setCacheReadCount(this.bufferMgrSvc.getCacheReadCount());
 			stats.setCacheWriteCount(this.bufferMgrSvc.getCacheWriteCount());
-			stats.setDiskSpaceUsedInMB(this.bufferMgrSvc.getUserBufferSpace());
+			stats.setDiskSpaceUsedInMB(this.bufferMgrSvc.getUsedDiskBufferSpaceMB());
 			stats.setActivePlanCount(this.engine.getActivePlanCount());
 			stats.setWaitPlanCount(this.engine.getWaitingPlanCount());
 			stats.setMaxWaitPlanWaterMark(this.engine.getMaxWaitingPlanWatermark());

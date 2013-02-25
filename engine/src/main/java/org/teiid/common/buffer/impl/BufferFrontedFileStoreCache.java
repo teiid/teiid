@@ -1092,5 +1092,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	public int getMaxMemoryBlocks() {
 		return maxMemoryBlocks;
 	}
+	
+	public long getMemoryInUseBytes() {
+		return this.blocksInuse.getBitsSet() * BLOCK_SIZE + this.inodesInuse.getBitsSet() * (1 << LOG_INODE_SIZE);
+	}
 
 }
