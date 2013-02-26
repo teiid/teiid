@@ -81,7 +81,7 @@ public abstract class AbstractVDBDeployer {
 			if (model.isSupportsMultiSourceBindings() && Boolean.valueOf(model.getPropertyValue("multisource.addColumn"))) { //$NON-NLS-1$
 				List<MetadataRepository<?, ?>> repos = new ArrayList<MetadataRepository<?, ?>>(2);
 				repos.add(repo);
-				String columnName = deployment.getPropertyValue(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME);
+				String columnName = model.getPropertyValue(MultiSourceMetadataWrapper.MULTISOURCE_COLUMN_NAME);
 				repos.add(new MultiSourceMetadataRepository(columnName==null?MultiSourceElement.DEFAULT_MULTI_SOURCE_ELEMENT_NAME:columnName));
 				repo = new ChainingMetadataRepository(repos);
 			}

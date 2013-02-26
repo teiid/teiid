@@ -465,6 +465,17 @@ public class TestEmbeddedServer {
 		ps = c.prepareStatement("select * from t");
 		metadata = ps.getMetaData();
 		assertEquals(2, metadata.getColumnCount());
+		
+		mmd1.addProperty("multisource.columnName", "y");
+		
+		es.undeployVDB("vdb");
+		es.deployVDB("vdb", mmd1);
+		
+		c = es.getDriver().connect("jdbc:teiid:vdb", null);
+		ps = c.prepareStatement("select * from t");
+		metadata = ps.getMetaData();
+		assertEquals(2, metadata.getColumnCount());
+		assertEquals("y", metadata.getColumnName(2));
 	}
 	
 	@Test public void testDynamicUpdate() throws Exception {
