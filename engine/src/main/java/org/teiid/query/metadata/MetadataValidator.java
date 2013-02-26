@@ -106,7 +106,7 @@ public class MetadataValidator {
 				
 				for (Table t:schema.getTables().values()) {
 					if (t.getColumns() == null || t.getColumns().size() == 0) {
-						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, t.getName()));
+						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31071, t.getFullName()));
 					}					
 				}
 				
@@ -134,7 +134,7 @@ public class MetadataValidator {
 				ModelMetaData model = vdb.getModel(schema.getName());
 				for (Table t:schema.getTables().values()) {
 					if (t.isPhysical() && !model.isSource()) {
-						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31075, t.getName(), model.getName()));
+						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31075, t.getFullName(), model.getName()));
 					}
 				}
 				
@@ -153,11 +153,11 @@ public class MetadataValidator {
 							hasReturn = true;
 						}
 						if (!names.add(param.getName())) {
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31106, p.getFullName(), param.getName()));
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31106, p.getFullName(), param.getFullName()));
 						}
 					}
 					if (!p.isVirtual() && !model.isSource()) {
-						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31077, p.getName(), model.getName()));
+						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31077, p.getFullName(), model.getName()));
 					}
 				}
 				
@@ -168,7 +168,7 @@ public class MetadataValidator {
 						}
 					}
 					if (func.getPushdown().equals(FunctionMethod.PushDown.MUST_PUSHDOWN) && !model.isSource()) {
-						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31078, func.getName(), model.getName()));
+						metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31078, func.getFullName(), model.getName()));
 					}
 				}
 			}
@@ -207,7 +207,7 @@ public class MetadataValidator {
 						}
 						if (t.isVirtual()) {
 							if (t.getSelectTransformation() == null) {
-								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getName(), model.getName()));
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getFullName(), model.getName()));
 							}
 							else {
 								metadataValidator.validate(vdb, model, t, report, metadata, mf);
@@ -217,7 +217,7 @@ public class MetadataValidator {
 						Procedure p = (Procedure)record;
 						if (p.isVirtual() && !p.isFunction()) {
 							if (p.getQueryPlan() == null) {
-								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getName(), model.getName()));
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31081, p.getFullName(), model.getName()));
 							}
 							else {
 								metadataValidator.validate(vdb, model, p, report, metadata, mf);
@@ -356,18 +356,18 @@ public class MetadataValidator {
 							String matTableName = t.getMaterializedTable().getName();
 							int index = matTableName.indexOf(Table.NAME_DELIM_CHAR);
 							if (index == -1) {
-								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31088, matTableName, t.getName()));
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31088, matTableName, t.getFullName()));
 							}
 							else {
 								String schemaName = matTableName.substring(0, index);
 								Schema matSchema = store.getSchema(schemaName);
 								if (matSchema == null) {
-									metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31089, schemaName, matTableName, t.getName()));
+									metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31089, schemaName, matTableName, t.getFullName()));
 								}
 								else {
 									Table matTable = matSchema.getTable(matTableName.substring(index+1));
 									if (matTable == null) {
-										metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31090, matTableName.substring(index+1), schemaName, t.getName()));
+										metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31090, matTableName.substring(index+1), schemaName, t.getFullName()));
 									}
 									else {
 										t.setMaterializedTable(matTable);
@@ -389,7 +389,7 @@ public class MetadataValidator {
 						
 						String referenceTableName = fk.getReferenceTableName();
 						if (referenceTableName == null){
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getName()));
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31091, t.getFullName()));
 							continue;
 						}
 						
@@ -403,21 +403,21 @@ public class MetadataValidator {
 							referenceSchemaName = referenceTableName.substring(0, index);
 							Schema referenceSchema = store.getSchema(referenceSchemaName);
 							if (referenceSchema == null) {
-								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31093, referenceSchemaName, t.getName()));
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31093, referenceSchemaName, t.getFullName()));
 								continue;
 							}
 							referenceTable = referenceSchema.getTable(referenceTableName.substring(index+1));
 						}
 						
 						if (referenceTable == null) {
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31092, t.getName(), referenceTableName.substring(index+1), referenceSchemaName));
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31092, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName));
 							continue;
 						}
 
 						KeyRecord uniqueKey = null;
 						if (fk.getReferenceColumns() == null || fk.getReferenceColumns().isEmpty()) {
 							if (referenceTable.getPrimaryKey() == null) {
-								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31094, t.getName(), referenceTableName.substring(index+1), referenceSchemaName));
+								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31094, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName));
 							}
 							else {
 								uniqueKey = referenceTable.getPrimaryKey();										
@@ -435,7 +435,7 @@ public class MetadataValidator {
 							}
 						}
 						if (uniqueKey == null) {
-							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31095, t.getName(), referenceTableName.substring(index+1), referenceSchemaName, fk.getReferenceColumns()));
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31095, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName, fk.getReferenceColumns()));
 						}
 						else {
 							fk.setPrimaryKey(uniqueKey);
