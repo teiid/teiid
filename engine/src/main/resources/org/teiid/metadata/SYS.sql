@@ -136,7 +136,7 @@ CREATE FOREIGN TABLE Properties (
 	UID string(50) NOT NULL,
 	OID integer,
 	ClobValue clob(2097152),
-	UNIQUE(UID)
+	UNIQUE(UID, Name)
 );
 
 CREATE FOREIGN TABLE ReferenceKeyColumns (
