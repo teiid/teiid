@@ -64,8 +64,8 @@ public class TempMetadataID implements Serializable, Modifiable, DataModifiable 
 		CacheHint cacheHint;
 		List<List<TempMetadataID>> keys;
 		List<TempMetadataID> indexes;
-		long lastDataModification;
-		long lastModified = System.currentTimeMillis();
+		volatile long lastDataModification;
+		volatile long lastModified = System.currentTimeMillis();
 		int modCount;
 		private LinkedHashMap<Expression, Integer> functionBasedExpressions;
 		private Object model;

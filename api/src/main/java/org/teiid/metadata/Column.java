@@ -56,13 +56,13 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private boolean currency;
     private boolean fixedLength;
     private SearchType searchType;
-    private String minimumValue;
-    private String maximumValue;
+    private volatile String minimumValue;
+    private volatile String maximumValue;
     private String nativeType;
     private String format;
     private int charOctetLength;
-    private int distinctValues = -1;
-    private int nullValues = -1;
+    private volatile int distinctValues = -1;
+    private volatile  int nullValues = -1;
     private ColumnSet<?> parent;
     
     

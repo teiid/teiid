@@ -53,7 +53,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		DELETE
 	}
 
-	private int cardinality = -1;
+	private volatile int cardinality = -1;
     private Type tableType;
     private boolean isVirtual;
     private boolean isSystem;
@@ -67,13 +67,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     private KeyRecord primaryKey;
 
     //view information
-	private String selectTransformation;
-    private String insertPlan;
-    private String updatePlan;
-    private String deletePlan;
-    private boolean insertPlanEnabled;
-    private boolean updatePlanEnabled;
-    private boolean deletePlanEnabled;
+	private volatile String selectTransformation;
+    private volatile String insertPlan;
+    private volatile String updatePlan;
+    private volatile String deletePlan;
+    private volatile boolean insertPlanEnabled;
+    private volatile boolean updatePlanEnabled;
+    private volatile boolean deletePlanEnabled;
     private Table materializedStageTable;
     private Table materializedTable;
 
@@ -82,8 +82,8 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	private List<String> schemaPaths;
 	private String resourcePath;
 	
-	private transient long lastModified;
-	private transient long lastDataModification;
+	private volatile transient long lastModified;
+	private volatile transient long lastDataModification;
 	
     public List<String> getBindings() {
 		return bindings;

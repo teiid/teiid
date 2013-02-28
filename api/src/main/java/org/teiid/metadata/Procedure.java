@@ -47,10 +47,10 @@ public class Procedure extends AbstractMetadataRecord implements Modifiable {
     private int updateCount = 1;
     private List<ProcedureParameter> parameters = new ArrayList<ProcedureParameter>(2);
     private ColumnSet<Procedure> resultSet;
-    private String queryPlan;
+    private volatile String queryPlan;
     
     private Schema parent;
-    private transient long lastModified;
+    private volatile transient long lastModified;
     
     public void setParent(Schema parent) {
 		this.parent = parent;
