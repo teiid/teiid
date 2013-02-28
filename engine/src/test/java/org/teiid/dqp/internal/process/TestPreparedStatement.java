@@ -154,6 +154,23 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
 	}
     
+    @Test public void testObjectCast() throws Exception { 
+        // Create query 
+        String preparedSql = "SELECT array_length(cast(? as object))"; //$NON-NLS-1$
+        
+        // Create expected results
+        List<?>[] expected = new List[] { 
+            Arrays.asList(1), //$NON-NLS-1$
+        };    
+    
+		List<?> values = Arrays.asList(new double[] {1.0});
+		FakeDataManager dataManager = new FakeDataManager();
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
+		
+		values = Arrays.asList(new Object[] {new Double[] {1.0}});
+		helpTestProcessing(preparedSql, values, expected, dataManager, RealMetadataFactory.example1Cached(), false, RealMetadataFactory.example1VDB());
+	}
+    
     @Test public void testSessionSpecificFunction() throws Exception { 
         // Create query 
         String preparedSql = "SELECT session_id(), e2, pm1.g1.e3 as a, e4 as b FROM pm1.g1 WHERE e2=?"; //$NON-NLS-1$

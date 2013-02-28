@@ -156,13 +156,13 @@ public class Constant implements Expression, Comparable<Constant> {
 		} else { 
 			this.type = this.value.getClass();
 			Class<?> originalType = type;
-	        while (type.isArray()) {
+	        while (type.isArray() && !type.getComponentType().isPrimitive()) {
 	        	type = type.getComponentType();
 	        }
 			if (DataTypeManager.getAllDataTypeClasses().contains(type)) {
 				//array of a runtime-type
 				this.type = originalType;
-			} else if (originalType.isArray()) {
+			} else if (originalType.isArray() && !originalType.getComponentType().isPrimitive()) {
 				this.type = DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.OBJECT);
 			} else {
 				this.type = DataTypeManager.DefaultDataClasses.OBJECT;

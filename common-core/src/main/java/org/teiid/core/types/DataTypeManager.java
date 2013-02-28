@@ -555,6 +555,9 @@ public class DataTypeManager {
 		if (DefaultDataTypes.NULL.equals(srcType) && !DefaultDataTypes.NULL.equals(tgtType)) {
 			return true;
 		}
+		if (DefaultDataTypes.OBJECT.equals(tgtType) && !DefaultDataTypes.OBJECT.equals(srcType)) {
+			return true;
+		}
 		if (isArrayType(srcType) && isArrayType(tgtType)) {
 			return isImplicitConversion(getComponentType(srcType), getComponentType(tgtType));
 		}
