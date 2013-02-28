@@ -404,4 +404,12 @@ public final class LogManager {
             ClassLoader classLoader) {
     		return Proxy.newProxyInstance(classLoader, interfaces, new LoggingProxy(instance, loggingContext, level));
     }
+    
+    public static void putMdc(String key, String val) {
+    	logListener.putMdc(key, val);
+    }
+
+	public static void removeMdc(String key) {
+    	logListener.removeMdc(key);
+	}
 }

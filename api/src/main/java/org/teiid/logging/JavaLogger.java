@@ -54,17 +54,7 @@ public class JavaLogger implements org.teiid.logging.Logger {
 	}
 
     public void log(int level, String context, Object... msg) {
-    	Logger logger = getLogger(context);
-    	
-    	Level javaLevel = convertLevel(level);
-		if (msg.length == 1 && msg[0] instanceof String) {
-    		logger.log(javaLevel, msg[0].toString());
-    	}
-    	else {
-    		LogRecord record = new LogRecord(javaLevel, StringUtil.toString(msg));
-    		record.setParameters(msg);
-    		logger.log(record);
-    	}
+    	log(level, context, null, msg);
     }
     
     public void log(int level, String context, Throwable t, Object... msg) {
@@ -81,6 +71,7 @@ public class JavaLogger implements org.teiid.logging.Logger {
     	else {
     		LogRecord record = new LogRecord(javaLevel, StringUtil.toString(msg)); 
     		record.setParameters(msg);
+    		record.setThrown(t);
     		logger.log(record);
     	}		
     }
@@ -103,6 +94,16 @@ public class JavaLogger implements org.teiid.logging.Logger {
     }
 
     public void shutdown() {
+    }
+    
+    @Override
+    public void putMdc(String key, String val) {
+
+    }
+    
+    @Override
+    public void removeMdc(String key) {
+    	
     }
 
 }

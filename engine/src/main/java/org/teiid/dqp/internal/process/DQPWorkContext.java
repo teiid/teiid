@@ -44,6 +44,7 @@ import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.security.SessionToken;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.security.SecurityHelper;
@@ -51,7 +52,11 @@ import org.teiid.security.SecurityHelper;
 
 public class DQPWorkContext implements Serializable {
 	
-	private static final long serialVersionUID = -6389893410233192977L;
+	private static final String TEIID_VDB = "teiid-vdb"; //$NON-NLS-1$
+
+	private static final String TEIID_SESSION = "teiid-session"; //$NON-NLS-1$
+
+	private static final long serialVersionUID = -6389893410233192977L; 
 	
 	private static final boolean longDatesTimes = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.longDatesTimes", false); //$NON-NLS-1$
 	
@@ -246,6 +251,12 @@ public class DQPWorkContext implements Serializable {
 		DQPWorkContext previous = DQPWorkContext.getWorkContext();
 		DQPWorkContext.setWorkContext(this);
 		Object previousSecurityContext = null;
+		if (this.session != null) {
+			LogManager.putMdc(TEIID_SESSION, this.session.getSessionId());
+			if (this.session.getVdb() != null) {
+				LogManager.putMdc(TEIID_VDB, this.session.getVdb().getFullName());
+			}
+		}
 		if (securityHelper != null) {
 			previousSecurityContext = securityHelper.associateSecurityContext(this.getSecurityContext());			
 		}
@@ -256,6 +267,8 @@ public class DQPWorkContext implements Serializable {
 				securityHelper.associateSecurityContext(previousSecurityContext);			
 			}
 			DQPWorkContext.setWorkContext(previous);
+			LogManager.removeMdc(TEIID_SESSION);
+			LogManager.removeMdc(TEIID_VDB);
 		}
 	}
 

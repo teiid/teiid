@@ -22,10 +22,9 @@
 
 package org.teiid.jboss;
 
-import java.util.logging.LogRecord;
-
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
+import org.jboss.logging.MDC;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.MessageLevel;
 
@@ -43,30 +42,21 @@ public class JBossLogger implements org.teiid.logging.Logger {
 
 	@Override
 	public void log(int level, String context, Object... msg) {
-		Logger logger = getLogger(context);
-		Level jbossLevel = convert2JbossLevel(level);
-		
-		if (msg.length == 1 && msg[0] instanceof String) {
-    		logger.log(jbossLevel, msg[0].toString());
-    	}
-    	else {
-    		logger.log(jbossLevel, msg[0].toString(), msg);
-    	}		
+		log(level, context, null, msg);
 	}
 
 	@Override
 	public void log(int level, String context, Throwable t, Object... msg) {
 		Logger logger = getLogger(context);
 		Level jbossLevel = convert2JbossLevel(level);
-		
 		if (msg.length == 0) {
 			logger.log(jbossLevel, null, t);
 		}
 		else if (msg.length == 1 && msg[0] instanceof String) {
-			logger.log(jbossLevel, msg[0].toString(), t);	
+			logger.log(jbossLevel, msg[0], t);	
 		}
     	else {
-    		logger.log(jbossLevel, msg[0].toString(), msg);
+    		logger.logv(jbossLevel, t, StringUtil.toString(msg), msg);
     	}		
 	}
 	
@@ -127,6 +117,16 @@ public class JBossLogger implements org.teiid.logging.Logger {
 					
 	@Override
 	public void shutdown() {
+	}
+
+	@Override
+	public void putMdc(String key, String val) {
+		MDC.put(key, val);
+	}
+
+	@Override
+	public void removeMdc(String key) {
+		MDC.remove(key);
 	}
 
 }
