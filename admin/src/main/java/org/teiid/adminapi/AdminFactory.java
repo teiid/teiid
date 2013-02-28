@@ -147,13 +147,21 @@ public class AdminFactory {
 
     }    
     
+	private class ResultCallback {
+		@SuppressWarnings("unused")
+		void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
+		}
+		void onFailure(String msg) throws AdminProcessingException {
+			throw new AdminProcessingException(AdminPlugin.Event.TEIID70006, msg);
+		}
+	}    
+    
     public class AdminImpl implements Admin{
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName;
-    	private List<PropertyDefinition> dataSourceProperties;
     	
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
@@ -165,17 +173,18 @@ public class AdminFactory {
     	
 		@Override
 		public void clearCache(String cacheType) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "clear-cache", "cache-type", cacheType);//$NON-NLS-1$ //$NON-NLS-2$
-	        execute(request);
+			cliCall("clear-cache",
+					new String[] { "subsystem", "teiid" },
+					new String[] { "cache-type", cacheType},
+					new ResultCallback());	        
 		}
 
 		@Override
 		public void clearCache(String cacheType, String vdbName, int vdbVersion) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "clear-cache", 
-	        		"cache-type", cacheType,
-	        		"vdb-name", vdbName,
-	        		"vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$ //$NON-NLS-2$
-	        execute(request);
+			cliCall("clear-cache",
+					new String[] { "subsystem", "teiid" },
+					new String[] { "cache-type", cacheType, "vdb-name",vdbName, "vdb-version", String.valueOf(vdbVersion) },
+					new ResultCallback());
 		}
 
 		@Override
@@ -198,76 +207,71 @@ public class AdminFactory {
 				addResourceAdapter(deploymentName, rarName);
 			}
 			
-			///subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS:add(jndi-name=java\:\/fooDS)
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-
-	        try {
-	        	addProfileNode(builder);	        	
-	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("add"); 
-	            builder.addProperty("jndi-name", addJavaContext(deploymentName));
-	            builder.addProperty("enabled", "true");
-	            if (properties.getProperty(CLASS_NAME) != null) {
-	            	builder.addProperty(CLASS_NAME, properties.getProperty(CLASS_NAME));
-	            }
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
+			BuildPropertyDefinitions bpd = new BuildPropertyDefinitions();
+			buildResourceAdpaterProperties(rarName, bpd);
+			ArrayList<PropertyDefinition> jcaSpecific = bpd.getPropertyDefinitions();
 			
-	        execute(request);
+			///subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS:add(jndi-name=java\:\/fooDS)       
+	        ArrayList<String> parameters = new ArrayList<String>();
+	        parameters.add("jndi-name");
+	        parameters.add(addJavaContext(deploymentName));
+	        parameters.add("enabled");
+	        parameters.add("true");
+            if (properties.getProperty(CLASS_NAME) != null) {
+    	        parameters.add(CLASS_NAME);
+    	        parameters.add(properties.getProperty(CLASS_NAME));            	
+            }	 
+            
+            // add jca specific proeprties
+            for (PropertyDefinition pd:jcaSpecific) {
+                if (properties.getProperty(pd.getName()) != null) {
+        	        parameters.add(pd.getName());
+        	        parameters.add(properties.getProperty(pd.getName()));            	
+                }
+            }
+            	
+			cliCall("add", new String[] { "subsystem", "resource-adapters",
+					"resource-adapter", deploymentName,
+					"connection-definitions", deploymentName }, 
+					parameters.toArray(new String[parameters.size()]), new ResultCallback());
 	        
 	        // add all the config properties
             Enumeration keys = properties.propertyNames();
             while (keys.hasMoreElements()) {
+            	boolean add = true;
             	String key = (String)keys.nextElement();
             	if (key.equals(CLASS_NAME)) {
-            		continue;
+            		add = false;
             	}
-            	addConfigProperty(deploymentName, key, properties.getProperty(key));
+            	for (PropertyDefinition pd:jcaSpecific) {
+            		if (key.equals(pd.getName())) {
+            			add = false;
+            			break;
+            		}
+            	}
+            	if (add) {
+            		addConfigProperty(deploymentName, key, properties.getProperty(key));
+            	}
             }
             
             activateConnectionFactory(deploymentName);
 		}
+		
 
 		// /subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS/config-properties=ParentDirectory2:add(value=/home/rareddy/testing)
 		private void addConfigProperty(String deploymentName, String key, String value) throws AdminProcessingException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-	        try {
-	        	addProfileNode(builder);	        	
-	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("connection-definitions", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("config-properties", key); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("add"); 
-	            builder.addProperty("value", value);
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-			
-	        execute(request);
+			cliCall("add", new String[] { "subsystem", "resource-adapters",
+					"resource-adapter", deploymentName, 
+					"connection-definitions", deploymentName,
+					"config-properties", key},
+					new String[] {"value", value}, new ResultCallback());	        
 		}
 		
 		// /subsystem=resource-adapters/resource-adapter=fileDS:activate
 		private void activateConnectionFactory(String deploymentName) throws AdminProcessingException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-	        try {
-	        	addProfileNode(builder);
-	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("activate"); 
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-			
-	        execute(request);
+			cliCall("activate", new String[] { "subsystem", "resource-adapters",
+					"resource-adapter", deploymentName },
+					null, new ResultCallback());	        
 		}
 
 		private void addProfileNode(DefaultOperationRequestBuilder builder) throws AdminProcessingException {
@@ -281,22 +285,10 @@ public class AdminFactory {
 
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
 		private void addResourceAdapter(String deploymentName, String rarName) throws AdminProcessingException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-
-	        try {
-	        	addProfileNode(builder);	        	
-	            builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("resource-adapter", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("add"); 
-	            request = builder.buildRequest();
-	            request.get("archive").set(rarName);
-	            request.get("transaction-support").set("NoTransaction");
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-			
-	        execute(request);				
+			cliCall("add", new String[] { "subsystem", "resource-adapters",
+					"resource-adapter", deploymentName },
+					new String[] { "archive", rarName, "transaction-support","NoTransaction" }, 
+					new ResultCallback());
 		}
 		
 		class AbstractMetadatMapper implements MetadataMapper<String>{
@@ -381,46 +373,39 @@ public class AdminFactory {
         		 throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, templateName));
         	}
         	
+        	// build properties
         	Collection<PropertyDefinition> dsProperties = getTemplatePropertyDefinitions(templateName); 
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        ModelNode request;
-	        try {
-	        	
-	        	addProfileNode(builder);
-	        	
-	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$	        		
-	        	
-	            builder.setOperationName("add"); 
-	            
-	            builder.addProperty("jndi-name", addJavaContext(deploymentName));
-	            builder.addProperty("driver-name", templateName);
-	            
-	            builder.addProperty("pool-name", deploymentName);
-	            
-	            if (properties != null) {
-		            builder.addProperty("connection-url", properties.getProperty("connection-url"));
-		            for (PropertyDefinition prop : dsProperties) {
-		            	if (prop.getName().equals("connection-properties")) {
-		            		continue;
-		            	}
-		            	String value = properties.getProperty(prop.getName());
-		            	if (value != null) {
-		            		builder.addProperty(prop.getName(), value);
-		            	}
-		            }		            
-	            }
-	            else {
-	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70005, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70005));
-	            }
-	            
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-	        
-	        // execute request
-	        execute(request);
+        	ArrayList<String> parameters = new ArrayList<String>();
+            if (properties != null) {
+            	parameters.add("connection-url");
+            	parameters.add(properties.getProperty("connection-url")); 
+            	
+	            for (PropertyDefinition prop : dsProperties) {
+	            	if (prop.getName().equals("connection-properties")) {
+	            		continue;
+	            	}
+	            	String value = properties.getProperty(prop.getName());
+	            	if (value != null) {
+	                	parameters.add(prop.getName());
+	                	parameters.add(value); 	            		
+	            	}
+	            }		            
+            }
+            else {
+            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70005, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70005));
+            }        	
+
+        	parameters.add("jndi-name");
+        	parameters.add(addJavaContext(deploymentName));
+        	parameters.add("driver-name");
+        	parameters.add(templateName);        	
+        	parameters.add("pool-name");
+        	parameters.add(deploymentName);             
+
+        	// add data source
+			cliCall("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
+					parameters.toArray(new String[parameters.size()]),
+					new ResultCallback());
 
 	        // add connection properties that are specific to driver 
             String cp = properties.getProperty("connection-properties");
@@ -435,37 +420,17 @@ public class AdminFactory {
             }
 
 	        // issue the "enable" operation
-			builder = new DefaultOperationRequestBuilder();
-	        try {
-	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$
-	            builder.setOperationName("enable"); 
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-	        
-	        execute(request);
+			cliCall("enable", new String[] { "subsystem", "datasources","data-source", deploymentName }, 
+					null, new ResultCallback());
 		}
-
+		
 		// /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
 		private void addConnectionProperty(String deploymentName, String key, String value) throws AdminProcessingException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        final ModelNode request;
-	        try {
-	        	addProfileNode(builder);	        	
-	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("data-source", deploymentName); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("connection-properties", key); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.setOperationName("add"); 
-	            builder.addProperty("value", value);
-	            request = builder.buildRequest();
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-	        execute(request);
-		}		
-		
+			cliCall("add", new String[] { "subsystem", "datasources",
+					"data-source", deploymentName,
+					"connection-properties", key }, 
+					new String[] {"value", value }, new ResultCallback());
+		}
 		
 		private void execute(final ModelNode request) throws AdminProcessingException {
 			try {
@@ -477,7 +442,125 @@ public class AdminFactory {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70007, e);
 	        }
 		}
+		
+		@Override
+		public Properties getDataSource(String deployedName) throws AdminException {
+			deployedName = removeJavaContext(deployedName);
+			
+			Collection<String> dsNames = getDataSourceNames();
+			if (!dsNames.contains(deployedName)) {
+				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
+			}
+			
+			Properties dsProperties = new Properties();
+			
+			// check regular data-source
+			cliCall("read-resource", 
+					new String[] { "subsystem", "datasources", "data-source", deployedName}, null,
+					new DataSourceProperties(dsProperties));
+			
+			// check xa connections
+			if (dsProperties.isEmpty()) {
+				cliCall("read-resource", 
+						new String[] {"subsystem", "datasources", "xa-data-source", deployedName}, null, 
+						new DataSourceProperties(dsProperties));
+			}
+			
+			// check connection factories
+			if (dsProperties.isEmpty()) {
+				Map<String, String> raDSMap = getResourceAdapterDataSources();
+				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
+				String rarName = raDSMap.get(deployedName);
+				if (rarName != null) {
+					cliCall("read-resource", 
+							new String[] { "subsystem", "resource-adapters", "resource-adapter", rarName, "connection-definitions", deployedName}, 
+							null, new ConnectionFactoryProperties(dsProperties, rarName, deployedName, null));
+				} 
+			}
+			return dsProperties;
+		}
+		
+		private class DataSourceProperties extends ResultCallback {
+			private Properties dsProperties;
+			DataSourceProperties(Properties props){
+				dsProperties = props;
+			}
+			@Override
+			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
+	    		List<ModelNode> props = outcome.get("result").asList();
+        		for (ModelNode prop:props) {
+        			if (prop.getType().equals(ModelType.PROPERTY)) {
+        				org.jboss.dmr.Property p = prop.asProperty();
+        				ModelType type = p.getValue().getType();
+        				if (p.getValue().isDefined() && !type.equals(ModelType.LIST) && !type.equals(ModelType.OBJECT)) {
+        					if (!excludeProperty(p.getName()) || p.getName().equals("driver-name")) {
+        						dsProperties.setProperty(p.getName(), p.getValue().asString());
+        					}
+        				}
+        			}
+        		}
+			}
+			@Override
+			public void onFailure(String msg) throws AdminProcessingException {
+			}
+		}		
+		
+		private class ConnectionFactoryProperties extends ResultCallback {
+			private Properties dsProperties;
+			private String deployedName;
+			private String rarName;
+			private String configName;
+			
+			ConnectionFactoryProperties(Properties props, String rarName, String deployedName, String configName){
+				this.dsProperties = props;
+				this.rarName = rarName;
+				this.deployedName = deployedName;
+				this.configName = configName;
+			}
+			
+			@Override
+			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
+	    		List<ModelNode> props = outcome.get("result").asList();
+        		for (ModelNode prop:props) {
+        			if (!prop.getType().equals(ModelType.PROPERTY)) {
+        				continue;
+        			}
+    				org.jboss.dmr.Property p = prop.asProperty();
+    				if (!p.getValue().isDefined() || excludeProperty(p.getName())) {
+    					continue;
+    				}
+					if (p.getName().equals("archive")) {
+						dsProperties.setProperty("driver-name", p.getValue().asString());
+					}
+					if (p.getName().equals("value")) {
+						dsProperties.setProperty(this.configName, p.getValue().asString());
+					}		        						
+					else if (p.getName().equals("config-properties")) {
+						List<ModelNode> configs = p.getValue().asList();
+						for (ModelNode config:configs) {
+							if (config.getType().equals(ModelType.PROPERTY)) {
+								org.jboss.dmr.Property p1 = config.asProperty();
+								//getConnectionFactoryProperties(rarName, dsProps, subsystem[0], subsystem[1], subsystem[2], subsystem[3], );
+								cliCall("read-resource",
+										new String[] {"subsystem","resource-adapters",
+												"resource-adapter",rarName,
+												"connection-definitions",deployedName,
+												"config-properties",p1.getName()}, null, 
+												new ConnectionFactoryProperties(this.dsProperties, this.rarName, this.deployedName, p1.getName()));
+							}
+						}
+					}
+					else {
+						dsProperties.setProperty(p.getName(), p.getValue().asString());
+					}
+        		}
+			}
 
+			@Override
+			public void onFailure(String msg) throws AdminProcessingException {
+			}
+		}
+		
 		@Override
 		public void deleteDataSource(String deployedName) throws AdminException {
 			deployedName = removeJavaContext(deployedName);
@@ -770,36 +853,26 @@ public class AdminFactory {
 			}
 			return datasourceNames;
 		}
-
-		private void getResourceAdpaterConnections(HashMap<String, String> datasourceNames, String rarName) throws AdminProcessingException {
-			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-			try {
-	        	addProfileNode(builder);				
-			    builder.addNode("subsystem", "resource-adapters"); //$NON-NLS-1$ //$NON-NLS-2$
-			    builder.addNode("resource-adapter", rarName); //$NON-NLS-1$ //$NON-NLS-2$
-			    builder.setOperationName("read-resource"); 
-			    ModelNode request = builder.buildRequest();
-			    
-			    ModelNode outcome = this.connection.execute(request);
-			    if (Util.isSuccess(outcome)) {
-			    	if (outcome.hasDefined("result")) {
-			    		ModelNode result = outcome.get("result");
-			        	if (result.hasDefined("connection-definitions")) {
-			        		List<ModelNode> connDefs = result.get("connection-definitions").asList();
-			        		for (ModelNode conn:connDefs) {
-			        			Iterator<String> it = conn.keys().iterator();
-			        			if (it.hasNext()) {
-			        				datasourceNames.put(it.next(), rarName);
-			        			}
-			        		}
-			        	}
-			    	}
-			    }
-			} catch (OperationFormatException e) {
-			     throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
-			} catch (IOException e) {
-				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70016, e, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70016));
-			}
+		
+		private void getResourceAdpaterConnections(final HashMap<String, String> datasourceNames, final String rarName) throws AdminProcessingException {
+			cliCall("read-resource", new String[] {"subsystem", "resource-adapters", "resource-adapter", rarName}, null, new ResultCallback() {
+				@Override
+				public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
+		        	if (result.hasDefined("connection-definitions")) {
+		        		List<ModelNode> connDefs = result.get("connection-definitions").asList();
+		        		for (ModelNode conn:connDefs) {
+		        			Iterator<String> it = conn.keys().iterator();
+		        			if (it.hasNext()) {
+		        				datasourceNames.put(it.next(), rarName);
+		        			}
+		        		}
+		        	}				
+		        }
+				@Override
+				public void onFailure(String msg) throws AdminProcessingException {
+					// no-op
+				}
+			});
 		}
 		
 		/**
@@ -920,183 +993,176 @@ public class AdminFactory {
 		}
 
 		/**
+		 * /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar/connection-definitions=foo:read-resource-description
+		 */
+		private void buildResourceAdpaterProperties(String rarName, BuildPropertyDefinitions builder) throws AdminProcessingException {
+			cliCall("read-resource-description", new String[] { "subsystem","resource-adapters", 
+					"resource-adapter", rarName,
+					"connection-definitions", "any" }, null, builder);
+		}
+		
+		/**
 		 * pattern on CLI
 		 * /subsystem=datasources/data-source=foo:read-resource-description
 		 */
 		@Override		
 		public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
 
-			ModelNode request = null;
-			ModelNode result = null;
-			try {
-				Set<String> resourceAdapters = getAvailableResourceAdapterNames();
-	        	if (resourceAdapters.contains(templateName)) {
-	        		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-		        	addProfileNode(builder);	        		
-		            builder.addNode("subsystem", "teiid"); //$NON-NLS-1$ //$NON-NLS-2$
-		            builder.setOperationName("read-rar-description"); //$NON-NLS-1$
-		            builder.addProperty("rar-name", templateName);
-		            request = builder.buildRequest();					
-			        try {
-			            ModelNode outcome = this.connection.execute(request);
-			            if (!Util.isSuccess(outcome)) {
-			                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70026, Util.getFailureDescription(outcome));
-			            }
-			            result = outcome.get("result");
-			        } catch (IOException e) {
-			        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70027, e);
-			        }			            
-			        return buildPropertyDefinitions(result.asList());
-	        	}
-
-        		// these are going to be JDBC sources
-	        	if (this.dataSourceProperties != null) {
-        			return this.dataSourceProperties;
-        		}
-	        	
-        		DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
-	        	addProfileNode(builder);	        		
-	            builder.addNode("subsystem", "datasources"); //$NON-NLS-1$ //$NON-NLS-2$
-	            builder.addNode("data-source", templateName);
-	            builder.setOperationName("read-resource-description"); //$NON-NLS-1$
-	            request = builder.buildRequest();					
-		        
-	            try {
-		            ModelNode outcome = this.connection.execute(request);
-		            if (!Util.isSuccess(outcome)) {
-		                 throw new AdminProcessingException(AdminPlugin.Event.TEIID70026, Util.getFailureDescription(outcome));
-		            }
-		            result = outcome.get("result").get("attributes");		            
-		        } catch (IOException e) {
-		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70027, e);
-		        }
-		        
-		        this.dataSourceProperties = buildPropertyDefinitions(result.asList());
-		        
-		        // add driver specific properties
-		        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
-		        cp.setName("connection-properties");
-		        cp.setDisplayName("Addtional Driver Properties");
-		        cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
-		        cp.setRequired(false);
-		        cp.setAdvanced(true);
-		        this.dataSourceProperties.add(cp);
-		        return this.dataSourceProperties;
-		        
-	        } catch (OperationFormatException e) {
-	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
-	        }
-		}
-
-		private ArrayList<PropertyDefinition> buildPropertyDefinitions(List<ModelNode> propsNodes) {
-			ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();
-        	for (ModelNode node:propsNodes) {
-        		PropertyDefinitionMetadata def = new PropertyDefinitionMetadata();
-        		Set<String> keys = node.keys();
-        		
-        		String name = keys.iterator().next();
-        		if (excludeProperty(name)) {
-        			continue;
-        		}
-        		def.setName(name);
-        		node = node.get(name);
-
-        		if (node.hasDefined("display")) {
-        			def.setDisplayName(node.get("display").asString());
-        		}
-        		else {
-        			def.setDisplayName(name);
-        		}
-        		
-        		if (node.hasDefined("description")) {
-        			def.setDescription(node.get("description").asString());
-        		}
-        		
-        		if (node.hasDefined("allowed")) {
-        			List<ModelNode> allowed = node.get("allowed").asList();
-        			ArrayList<String> list = new ArrayList<String>();
-        			for(ModelNode m:allowed) {
-        				list.add(m.asString());
-        			}
-        			def.setAllowedValues(list);
-        		}        		
-        		
-        		if (node.hasDefined("required")) {
-        			def.setRequired(node.get("required").asBoolean());
-        		}
-        		
-        		if (node.hasDefined("read-only")) {
-        			String access = node.get("read-only").asString();
-        			def.setModifiable(Boolean.parseBoolean(access));
-        		}
-        		
-        		if (node.hasDefined("access-type")) {
-        			String access = node.get("access-type").asString();
-        			if ("read-write".equals(access)) {
-        				def.setModifiable(true);
-        			}
-        			else {
-        				def.setModifiable(false);
-        			}
-        		}       
-        		
-        		if (node.hasDefined("advanced")) {
-        			String access = node.get("advanced").asString();
-        			def.setAdvanced(Boolean.parseBoolean(access));
-        		}        		
-        		
-        		if (node.hasDefined("masked")) {
-        			String access = node.get("masked").asString();
-        			def.setAdvanced(Boolean.parseBoolean(access));
-        		} 
-        		
-        		if (node.hasDefined("restart-required")) {
-        			def.setRequiresRestart(RestartType.NONE);
-        		}
-
-        		String type = node.get("type").asString();
-        		if (ModelType.STRING.name().equals(type)) {
-        			def.setPropertyTypeClassName(String.class.getName());
-        		}
-        		else if (ModelType.INT.name().equals(type)) {
-        			def.setPropertyTypeClassName(Integer.class.getName());
-        		}
-        		else if (ModelType.LONG.name().equals(type)) {
-        			def.setPropertyTypeClassName(Long.class.getName());
-        		}        		
-        		else if (ModelType.BOOLEAN.name().equals(type)) {
-        			def.setPropertyTypeClassName(Boolean.class.getName());
-        		}
-        		else if (ModelType.BIG_INTEGER.name().equals(type)) {
-        			def.setPropertyTypeClassName(BigInteger.class.getName());
-        		}        		
-        		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
-        			def.setPropertyTypeClassName(BigDecimal.class.getName());
-        		}     
-        		
-        		if (node.hasDefined("default")) {
-            		if (ModelType.STRING.name().equals(type)) {
-            			def.setDefaultValue(node.get("default").asString());
-            		}
-            		else if (ModelType.INT.name().equals(type)) {
-            			def.setDefaultValue(node.get("default").asInt());
-            		}
-            		else if (ModelType.LONG.name().equals(type)) {
-            			def.setDefaultValue(node.get("default").asLong());
-            		}        		
-            		else if (ModelType.BOOLEAN.name().equals(type)) {
-            			def.setDefaultValue(node.get("default").asBoolean());
-            		}
-            		else if (ModelType.BIG_INTEGER.name().equals(type)) {
-            			def.setDefaultValue(node.get("default").asBigInteger());
-            		}        		
-            		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
-            			def.setDefaultValue(node.get("default").asBigDecimal());
-            		}          			
-        		}
-        		propDefinitions.add(def);
+			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
+			
+			// RAR properties
+			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
+        	if (resourceAdapters.contains(templateName)) {
+        		cliCall("read-rar-description", new String[] {"subsystem", "teiid"}, new String[] {"rar-name", templateName}, builder);
+        		buildResourceAdpaterProperties(templateName, builder);
+		        return builder.getPropertyDefinitions();
         	}
-			return propDefinitions;
+
+        	// get JDBC properties
+    		cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
+        	
+	        // add driver specific properties
+	        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
+	        cp.setName("connection-properties");
+	        cp.setDisplayName("Addtional Driver Properties");
+	        cp.setDescription("The connection-properties element allows you to pass in arbitrary connection properties to the Driver.connect(url, props) method. Supply comma separated name-value pairs"); //$NON-NLS-1$
+	        cp.setRequired(false);
+	        cp.setAdvanced(true);
+	        ArrayList<PropertyDefinition> props = builder.getPropertyDefinitions();
+	        props.add(cp);
+	        return props;
+		}
+		
+		private class BuildPropertyDefinitions extends ResultCallback{
+			private ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();
+			
+			@Override
+			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
+				if (result.getType().equals(ModelType.LIST)) {
+					buildPropertyDefinitions(result.asList());
+				}
+				else if (result.get("attributes").isDefined()) {
+						buildPropertyDefinitions(result.get("attributes").asList());
+				}
+			}
+
+			@Override
+			public void onFailure(String msg) throws AdminProcessingException {
+				throw new AdminProcessingException(AdminPlugin.Event.TEIID70026, msg);
+			}
+			
+			ArrayList<PropertyDefinition> getPropertyDefinitions() {
+				return this.propDefinitions;
+			}
+		
+			private void buildPropertyDefinitions(List<ModelNode> propsNodes) {
+	        	for (ModelNode node:propsNodes) {
+	        		PropertyDefinitionMetadata def = new PropertyDefinitionMetadata();
+	        		Set<String> keys = node.keys();
+	        		
+	        		String name = keys.iterator().next();
+	        		if (excludeProperty(name)) {
+	        			continue;
+	        		}
+	        		def.setName(name);
+	        		node = node.get(name);
+	
+	        		if (node.hasDefined("display")) {
+	        			def.setDisplayName(node.get("display").asString());
+	        		}
+	        		else {
+	        			def.setDisplayName(name);
+	        		}
+	        		
+	        		if (node.hasDefined("description")) {
+	        			def.setDescription(node.get("description").asString());
+	        		}
+	        		
+	        		if (node.hasDefined("allowed")) {
+	        			List<ModelNode> allowed = node.get("allowed").asList();
+	        			ArrayList<String> list = new ArrayList<String>();
+	        			for(ModelNode m:allowed) {
+	        				list.add(m.asString());
+	        			}
+	        			def.setAllowedValues(list);
+	        		}        		
+	        		
+	        		if (node.hasDefined("required")) {
+	        			def.setRequired(node.get("required").asBoolean());
+	        		}
+	        		
+	        		if (node.hasDefined("read-only")) {
+	        			String access = node.get("read-only").asString();
+	        			def.setModifiable(Boolean.parseBoolean(access));
+	        		}
+	        		
+	        		if (node.hasDefined("access-type")) {
+	        			String access = node.get("access-type").asString();
+	        			if ("read-write".equals(access)) {
+	        				def.setModifiable(true);
+	        			}
+	        			else {
+	        				def.setModifiable(false);
+	        			}
+	        		}       
+	        		
+	        		if (node.hasDefined("advanced")) {
+	        			String access = node.get("advanced").asString();
+	        			def.setAdvanced(Boolean.parseBoolean(access));
+	        		}        		
+	        		
+	        		if (node.hasDefined("masked")) {
+	        			String access = node.get("masked").asString();
+	        			def.setAdvanced(Boolean.parseBoolean(access));
+	        		} 
+	        		
+	        		if (node.hasDefined("restart-required")) {
+	        			def.setRequiresRestart(RestartType.NONE);
+	        		}
+	
+	        		String type = node.get("type").asString();
+	        		if (ModelType.STRING.name().equals(type)) {
+	        			def.setPropertyTypeClassName(String.class.getName());
+	        		}
+	        		else if (ModelType.INT.name().equals(type)) {
+	        			def.setPropertyTypeClassName(Integer.class.getName());
+	        		}
+	        		else if (ModelType.LONG.name().equals(type)) {
+	        			def.setPropertyTypeClassName(Long.class.getName());
+	        		}        		
+	        		else if (ModelType.BOOLEAN.name().equals(type)) {
+	        			def.setPropertyTypeClassName(Boolean.class.getName());
+	        		}
+	        		else if (ModelType.BIG_INTEGER.name().equals(type)) {
+	        			def.setPropertyTypeClassName(BigInteger.class.getName());
+	        		}        		
+	        		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
+	        			def.setPropertyTypeClassName(BigDecimal.class.getName());
+	        		}     
+	        		
+	        		if (node.hasDefined("default")) {
+	            		if (ModelType.STRING.name().equals(type)) {
+	            			def.setDefaultValue(node.get("default").asString());
+	            		}
+	            		else if (ModelType.INT.name().equals(type)) {
+	            			def.setDefaultValue(node.get("default").asInt());
+	            		}
+	            		else if (ModelType.LONG.name().equals(type)) {
+	            			def.setDefaultValue(node.get("default").asLong());
+	            		}        		
+	            		else if (ModelType.BOOLEAN.name().equals(type)) {
+	            			def.setDefaultValue(node.get("default").asBoolean());
+	            		}
+	            		else if (ModelType.BIG_INTEGER.name().equals(type)) {
+	            			def.setDefaultValue(node.get("default").asBigInteger());
+	            		}        		
+	            		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
+	            			def.setDefaultValue(node.get("default").asBigDecimal());
+	            		}          			
+	        		}
+	        		this.propDefinitions.add(def);
+	        	}
+			}
 		}
 
 		private boolean excludeProperty(String name) {
@@ -1218,7 +1284,6 @@ public class AdminFactory {
 
 	        return Collections.emptyList();
 		}
-		
 		private ModelNode buildRequest(String subsystem, String operationName, String... params) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
@@ -1238,6 +1303,42 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
 			return request;
+		}
+				
+		private void cliCall(String operationName, String[] address, String[] params, ResultCallback callback) throws AdminProcessingException {
+			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
+	        final ModelNode request;
+	        try {
+	        	if (address.length % 2 != 0) {
+	        		throw new IllegalStateException("Failed to build operation"); //$NON-NLS-1$
+	        	}
+	        	addProfileNode(builder);
+	        	for (int i = 0; i < address.length; i+=2) {
+		            builder.addNode(address[i], address[i+1]); //$NON-NLS-1$ //$NON-NLS-2$
+	        	}
+	            builder.setOperationName(operationName); 
+	            request = builder.buildRequest();
+	            if (params != null && params.length % 2 == 0) {
+	            	for (int i = 0; i < params.length; i+=2) {
+	            		builder.addProperty(params[i], params[i+1]);
+	            	}
+	            }
+	            ModelNode outcome = this.connection.execute(request);
+	            ModelNode result = null;
+	            if (Util.isSuccess(outcome)) {
+			    	if (outcome.hasDefined("result")) {
+			    		result = outcome.get("result");
+			    	}
+	                callback.onSuccess(outcome, result);
+	            }
+	            else {
+	            	callback.onFailure(Util.getFailureDescription(outcome));
+	            }
+	        } catch (OperationFormatException e) {
+	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
+	        } catch (IOException e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70007, e);
+	        }	        
 		}
 		
 		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper) {

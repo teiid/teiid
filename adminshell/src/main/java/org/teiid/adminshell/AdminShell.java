@@ -335,6 +335,10 @@ public class AdminShell {
 		return getAdmin().getDataSourceNames();
 	}
 
+	public static Properties getDataSource(@Doc(text = "Data Source Name")String deployedName) throws AdminException {
+		return getAdmin().getDataSource(deployedName);
+	}
+	
 	@Doc(text = "Available data source template names")
 	public static Set<String> getDataSourceTemplateNames() throws AdminException{
 		return getAdmin().getDataSourceTemplateNames();

@@ -278,6 +278,14 @@ public interface Admin {
     void createDataSource(String deploymentName, String templateName, Properties properties) throws AdminException;
     
     /**
+     * Given the deployed name of the data source, this will return all the configuration properties 
+     * used to create the datasource. If sensitive information like passwords are masked, they will NOT
+     * be decrypted. "driver-name" property on the returned properties defines the template name used 
+     * to create this data source.
+     */
+    Properties getDataSource(String deployedName) throws AdminException;
+    
+    /**
      * Delete data source. 
      * @param deployedName
      * @throws AdminException
