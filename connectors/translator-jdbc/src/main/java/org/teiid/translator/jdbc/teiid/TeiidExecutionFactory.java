@@ -159,6 +159,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         	supportedFunctions.add(SourceSystemFunctions.TRIM);
         }
         
+        if (getDatabaseVersion().compareTo(EIGHT_3) >= 0) {
+        	supportedFunctions.add(SourceSystemFunctions.ENDSWITH);
+        }
+        
         return supportedFunctions;
     }
     

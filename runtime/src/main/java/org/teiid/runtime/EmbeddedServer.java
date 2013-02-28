@@ -414,7 +414,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @param ef
 	 * @throws TranslatorException 
 	 */
-	public void addTranslator(Class<? extends ExecutionFactory<?, ?>> clazz) throws TranslatorException {
+	public void addTranslator(Class<? extends ExecutionFactory> clazz) throws TranslatorException {
 		Translator t = clazz.getAnnotation(Translator.class);
 		String name = clazz.getName();
 		if (t != null) {

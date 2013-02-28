@@ -22,38 +22,45 @@
 
 package org.teiid.translator.loopback;
 
-import java.util.Arrays;
-import java.util.List;
-
+import org.teiid.core.util.ApplicationInfo;
 import org.teiid.language.Command;
+import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.BaseDelegatingExecutionFactory;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
-import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.jdbc.teiid.TeiidExecutionFactory;
 
 /**
  * Loopback translator.
  */
 @Translator(name="loopback", description="A translator for testing, that returns mock data")
-public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
+public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 
 	private int waitTime = 0;
 	private int rowCount = 1;
 	private boolean throwError = false;
 	private long pollIntervalInMilli = -1;
 	private boolean incrementRows = false;
-	private boolean disableCapabilities = false;
 	private int charValueSize = 10;
 	
 	public LoopbackExecutionFactory() {
-		setSupportsFullOuterJoins(true);
-		setSupportsOrderBy(true);
-		setSupportsOuterJoins(true);
-		setSupportsSelectDistinct(true);
-		setSupportsInnerJoins(true);
+		
+	}
+	
+	@Override
+	public void start() throws TranslatorException {
+		if (this.getDelegateName() == null) {
+			//mimic "all" capabilities
+			TeiidExecutionFactory tef = new TeiidExecutionFactory();
+			tef.setDatabaseTimeZone(ApplicationInfo.getInstance().getReleaseNumber());
+			tef.start();
+			this.setDelegate(tef);	
+		}
+		super.start();
 	}
 	
 	@TranslatorProperty(display="Size of values for CLOB, VARCHAR, etc.", advanced=true)
@@ -72,15 +79,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	
 	public void setIncrementRows(boolean incrementRows) {
 		this.incrementRows = incrementRows;
-	}	
-	
-	@TranslatorProperty(display="If set to true all translator capabilities will be disabled", advanced=false)
-	public boolean getDisableCapabilities() {
-		return disableCapabilities;
-	}	
-	
-	public void setDisableCapabilities(boolean disableCapabilities) {
-		this.disableCapabilities = disableCapabilities;
 	}	
 	
 	@Override
@@ -123,10 +121,6 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	public void setPollIntervalInMilli(long intervel) {
 		this.pollIntervalInMilli = intervel;
 	}
-	@Override
-	public void start() throws TranslatorException {
-		super.start();
-	}
 
     @Override
     public Execution createExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Object connection)
@@ -137,192 +131,16 @@ public class LoopbackExecutionFactory extends ExecutionFactory<Object, Object> {
 	@Override
 	public boolean isSourceRequired() {
 		return false;
-	}    
+	}   
 	
 	@Override
-    public List<String> getSupportedFunctions() {
-        List<String> functions = Arrays.asList(new String[] {
-            "+", "-", "*", "/", "abs", "acos", "asin", "atan", "atan2", "ceiling", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$ //$NON-NLS-10$
-            "bitand", "bitnot", "bitor", "bitxor", "cos", "cot", "degrees", "cos", "cot", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "degrees", "exp", "floor", "log", "log10", "mod", "pi", "power", "radians",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "round", "sign", "sin", "sqrt", "tan",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
-            "ascii", "chr", "char", "concat", "initcap", "insert", "lcase", "left", "length", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "locate", "lower", "lpad", "ltrim", "repeat", "replace", "right", "rpad", "rtrim", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$ //$NON-NLS-8$ //$NON-NLS-9$
-            "substring", "translate", "ucase", "upper",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-            "curdate", "curtime", "now", "dayname", "dayofmonth", "dayofweek", "dayofyear",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            "hour", "minute", "month", "monthname", "quarter", "second", "timestampadd",  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$ //$NON-NLS-7$
-            "timestampdiff", "week", "year", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            "cast", "convert", "ifnull", "nvl"  //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
-        });
-        return functions;
-    }
-    
-    @Override
-    public boolean supportsGroupBy() {
-    	return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesAvg() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesCount() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesCountStar() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesDistinct() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesMax() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesMin() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAggregatesSum() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsAliasedTable() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsCompareCriteriaEquals() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsCorrelatedSubqueries() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsExistsCriteria() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsInCriteria() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsInCriteriaSubquery() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsIsNullCriteria() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsLikeCriteria() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsLikeCriteriaEscapeCharacter() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsNotCriteria() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsOrCriteria() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsQuantifiedCompareCriteriaAll() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsScalarSubqueries() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsSearchedCaseExpressions() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsSelfJoins() {
-        return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsInlineViews() {
-        return isCapabilityEnabled();
-    }
-
-    @Override
-    public boolean supportsQuantifiedCompareCriteriaSome() {
-        return isCapabilityEnabled();
-    }
-    @Override
-    public boolean supportsRowLimit() {
-        return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsSelectExpression() {
-    	return isCapabilityEnabled();
-    }
-        
-    @Override
-    public boolean supportsSetQueryOrderBy() {
-    	return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsUnions() {
-    	return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsCompareCriteriaOrdered() {
-    	return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsExcept() {
-    	return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsHaving() {
-    	return isCapabilityEnabled();
-    }
-    
-    @Override
-    public boolean supportsIntersect() {
-    	return isCapabilityEnabled();
-    }
-    
-	private boolean isCapabilityEnabled(){
-		return !disableCapabilities;
+	public boolean isSourceRequiredForMetadata() {
+		return false;
 	}
-
+	
+	@Override
+	public void getMetadata(MetadataFactory metadataFactory, Object conn)
+			throws TranslatorException {
+	}
+	
 }

@@ -56,6 +56,7 @@ public class TestASTQueries {
     	server.start(new EmbeddedConfiguration());
     	LoopbackExecutionFactory loopy = new LoopbackExecutionFactory();
     	loopy.setRowCount(10);
+    	loopy.start();
     	server.addTranslator("l", loopy);
     	
     	String DDL = "CREATE FOREIGN TABLE G1 (e1 string, e2 integer);";
