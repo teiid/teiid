@@ -127,6 +127,35 @@ public class IntegrationTestDeployment {
 		vdb = admin.getVDB("bqt", 1);
 		assertFalse(vdb.isValid());
 	}
+	
+	public void testGetDatasourceProperties() throws Exception {
+		Properties props = new Properties();
+		props.setProperty("connection-url","jdbc:h2:mem:test;DB_CLOSE_DELAY=-1");
+		props.setProperty("user-name", "sa");
+		props.setProperty("password", "sa");
+		props.setProperty("connection-properties", "foo=bar,blah=blah");
+		props.setProperty("max-pool-size", "4");
+		
+		admin.createDataSource("Oracle11_PushDS", "h2", props);	
+		
+		Properties p = admin.getDataSource("Oracle11_PushDS");
+		assertEquals("4", p.getProperty("max-pool-size"));
+		assertEquals("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", p.getProperty("connection-url"));
+		
+		admin.deleteDataSource("Oracle11_PushDS");
+		
+		p = new Properties();
+		p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
+		p.setProperty("EndPoint", "{endpoint}");
+		props.setProperty("max-pool-size", "4");
+		admin.createDataSource("nowhere", "teiid-connector-ws.rar", p);		
+		
+		assertEquals("org.teiid.resource.adapter.ws.WSManagedConnectionFactory", p.getProperty("class-name"));
+		assertEquals("4", p.getProperty("max-pool-size"));
+		assertEquals("{endpoint}", p.getProperty("EndPoint"));
+		
+		admin.deleteDataSource("nowhere");		
+	}
 
 	@Test
 	public void testTraslators() throws Exception {
@@ -337,6 +366,7 @@ public class IntegrationTestDeployment {
 		assertTrue(props.contains("check-valid-connection-sql"));
 		assertTrue(props.contains("max-pool-size"));
 		assertTrue(props.contains("connection-properties"));
+		assertTrue(props.contains("max-pool-size"));
 		
 		HashSet<String> rar_props = new HashSet<String>();
 		pds = admin.getTemplatePropertyDefinitions("teiid-connector-file.rar");
@@ -349,6 +379,7 @@ public class IntegrationTestDeployment {
 		assertTrue(rar_props.contains("AllowParentPaths"));
 		assertTrue(rar_props.contains("resourceadapter-class"));
 		assertTrue(rar_props.contains("managedconnectionfactory-class"));
+		assertTrue(rar_props.contains("max-pool-size"));
 	}
 	
 	@Test
