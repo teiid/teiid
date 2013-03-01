@@ -334,7 +334,7 @@ public class SessionServiceImpl implements SessionService {
 			closeSession(terminatedSessionID);
 			return true;
 		} catch (InvalidSessionException e) {
-			LogManager.logWarning(LogConstants.CTX_SECURITY,e,e.getMessage());
+			LogManager.logDetail(LogConstants.CTX_SECURITY,e,e.getMessage());
 			return false;
 		}
 	}

@@ -397,9 +397,10 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						
 						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true);
 			    	} else {
-			    		model.addRuntimeError(ex.getMessage()); 
+			    		String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
+			    		model.addRuntimeError(errorMsg); 
 			    		//log the exception of a non-teiid runtime exception as it may indicate a problem 
-						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), ex.getMessage()));
+						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {
 							metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, false);
 						} else {

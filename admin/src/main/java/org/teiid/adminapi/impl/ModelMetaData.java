@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
+import org.teiid.core.util.Assertion;
 
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
@@ -257,6 +258,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
         
         public Message(Severity severity, String msg) {
         	this.severity = severity;
+        	Assertion.isNotNull(msg);
         	this.value = msg;
         }
     	
@@ -265,6 +267,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 		}
 
 		public void setValue(String value) {
+			Assertion.isNotNull(value);
 			this.value = value;
 		}
 
