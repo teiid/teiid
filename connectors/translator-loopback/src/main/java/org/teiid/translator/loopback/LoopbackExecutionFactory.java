@@ -48,17 +48,15 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 	private int charValueSize = 10;
 	
 	public LoopbackExecutionFactory() {
-		
+		TeiidExecutionFactory tef = new TeiidExecutionFactory();
+		tef.setDatabaseVersion(ApplicationInfo.getInstance().getReleaseNumber());
+		this.setDelegate(tef);
 	}
 	
 	@Override
 	public void start() throws TranslatorException {
-		if (this.getDelegateName() == null) {
-			//mimic "all" capabilities
-			TeiidExecutionFactory tef = new TeiidExecutionFactory();
-			tef.setDatabaseTimeZone(ApplicationInfo.getInstance().getReleaseNumber());
-			tef.start();
-			this.setDelegate(tef);	
+		if (this.getDelegateName() == null && this.getDelegate() != null) {
+			this.getDelegate().start();
 		}
 		super.start();
 	}
@@ -83,6 +81,12 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 	
 	@Override
 	public Object getConnection(Object factory) throws TranslatorException {
+		return null;
+	}
+	
+	@Override
+	public Object getConnection(Object factory,
+			ExecutionContext executionContext) throws TranslatorException {
 		return null;
 	}
 	
@@ -141,6 +145,13 @@ public class LoopbackExecutionFactory extends BaseDelegatingExecutionFactory {
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, Object conn)
 			throws TranslatorException {
+	}
+	
+	//override to set as non required
+	@Override
+	@TranslatorProperty(display = "Delegate name", required = false)
+	public String getDelegateName() {
+		return super.getDelegateName();
 	}
 	
 }

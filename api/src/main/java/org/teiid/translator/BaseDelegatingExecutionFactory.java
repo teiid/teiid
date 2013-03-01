@@ -56,7 +56,7 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	/**
 	 * For testing only
 	 */
-	ExecutionFactory<F, C> getDelegate() {
+	protected ExecutionFactory<F, C> getDelegate() {
 		return this.delegate;
 	}
 	
