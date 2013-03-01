@@ -24,7 +24,7 @@ package org.teiid.deployers;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
@@ -46,7 +46,12 @@ public class TranslatorUtil {
     public static final String DEPLOYMENT_NAME = "deployment-name"; //$NON-NLS-1$
 	
 	public static Map<Method, TranslatorProperty> getTranslatorProperties(Class<?> attachmentClass) {
-		Map<Method, TranslatorProperty> props = new HashMap<Method,  TranslatorProperty>();
+		Map<Method, TranslatorProperty> props = new TreeMap<Method,  TranslatorProperty>(new Comparator<Method>() {
+			@Override
+			public int compare(Method o1, Method o2) {
+				return o1.getName().compareTo(o2.getName());
+			}
+		});
 		buildTranslatorProperties(attachmentClass, props);
 		return props;
 	}
@@ -71,21 +76,20 @@ public class TranslatorUtil {
 	}
 	
 	private static void buildTranslatorProperties(Class<?> attachmentClass, Map<Method, TranslatorProperty> props){
+		Class<?>[] baseInterfaces = attachmentClass.getInterfaces();
+		for (Class<?> clazz:baseInterfaces) {
+			buildTranslatorProperties(clazz, props);
+		}
+		Class<?> superClass = attachmentClass.getSuperclass();
+		if (superClass != null) {
+			buildTranslatorProperties(superClass, props);
+		}
 		Method[] methods = attachmentClass.getMethods();
 		for (Method m:methods) {
 			TranslatorProperty tp = m.getAnnotation(TranslatorProperty.class);
 			if (tp != null) {
 				props.put(m, tp);
 			}
-		}
-		// Now look at the base interfaces
-		Class[] baseInterfaces = attachmentClass.getInterfaces();
-		for (Class clazz:baseInterfaces) {
-			buildTranslatorProperties(clazz, props);
-		}
-		Class superClass = attachmentClass.getSuperclass();
-		if (superClass != null) {
-			buildTranslatorProperties(superClass, props);
 		}
 	}	
 	

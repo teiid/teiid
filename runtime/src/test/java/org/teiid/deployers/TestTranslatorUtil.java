@@ -21,7 +21,7 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -53,11 +53,22 @@ public class TestTranslatorUtil {
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
 	
+	@Test public void testBuildExecutionFactory1() throws Exception {
+		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
+		
+		tm.addProperty("someproperty", "correctly-assigned");
+		tm.setExecutionFactoryClass(MyTranslator1.class);
+		MyTranslator1 my = (MyTranslator1)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
+		
+		assertNull(my.getMyProperty());
+		assertEquals("correctly-assigned", my.getSomeProperty());
+	}
+	
 	@Translator(name="my-translator")
 	public static class MyTranslator extends ExecutionFactory<Object, Object> {
 		String mine;
 		
-		@TranslatorProperty(display="my-property")
+		@TranslatorProperty(display="my-property", required=true)
 		public String getMyProperty() {
 			return mine;
 		}
@@ -65,5 +76,36 @@ public class TestTranslatorUtil {
 		public void setMyProperty(String value) {
 			this.mine = value;
 		}
+	}
+	
+	public interface SomeProperty {
+		
+		@TranslatorProperty(display="my-property", required=false)
+		String getSomeProperty();
+		
+		void setSomeProperty(String value);
+		
+	}
+	
+	@Translator(name="my-translator1")
+	public static class MyTranslator1 extends MyTranslator implements SomeProperty {
+		
+		private String someProperty;
+		
+		@TranslatorProperty(display="my-property", required=false)
+		public String getMyProperty() {
+			return super.getMyProperty();
+		}
+		
+		@Override
+		public String getSomeProperty() {
+			return someProperty;
+		}
+		
+		@Override
+		public void setSomeProperty(String value) {
+			this.someProperty = value;
+		}
+		
 	}
 }
