@@ -31,6 +31,16 @@
         <fileMode>0644</fileMode>
         <directoryMode>0755</directoryMode>
     </fileSet>
+    
+    <fileSet>
+        <directory>target/kits/jboss-as7</directory>
+        <outputDirectory>/</outputDirectory>      
+        <excludes>
+          <exclude>**/*.properties</exclude>
+        </excludes>      
+        <fileMode>0600</fileMode>
+        <directoryMode>0755</directoryMode>
+    </fileSet>    
           
     <fileSet>
         <directory>../client/src/main/resources</directory>
