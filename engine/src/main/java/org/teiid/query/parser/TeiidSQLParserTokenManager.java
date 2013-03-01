@@ -24,6 +24,8 @@ package org.teiid.query.parser;
 
 import java.io.IOException;
 
+import org.teiid.core.types.DataTypeManager;
+
 /**
  * A customized TokenManager to keep a token history and to treat lexical errors as invalid single character tokens
  */
@@ -50,6 +52,9 @@ class TeiidSQLParserTokenManager extends SQLParserTokenManager {
 			//this logic is not perfect as deep lookaheads can ruin the positioning
 			if (tokenCount == 0) {
 				head = t;
+			}
+			if (t.image != null) {
+				t.image = DataTypeManager.getCanonicalString(t.image);
 			}
 			tokenCount++;
 			if (tokenCount > 10) {
