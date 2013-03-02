@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.sql.CallableStatement;
 import java.sql.ParameterMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -311,6 +312,18 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	@Test public void testArrayAggType() throws Exception {
 		String sql = "SELECT array_agg(name) from tables"; //$NON-NLS-1$
 		checkResult("testArrayAggType", sql); //$NON-NLS-1$ //$NON-NLS-2$
+	}
+	
+	@Test public void testExecuteUpdateWithStoredProcedure() throws Exception {
+		PreparedStatement cs = this.internalConnection.prepareStatement("call logMsg(?, ?, ?)");
+		//different case
+		cs.setString(1, "DEBUG");
+		cs.setString(2, "org.teiid.foo");
+		cs.setString(3, "hello world");
+		assertEquals(0, cs.executeUpdate());
+		
+		Statement s = this.internalConnection.createStatement();
+		assertEquals(0, s.executeUpdate("call logMsg('DEBUG', 'org.teiid.foo', 'hello world')"));
 	}
 	
 }
