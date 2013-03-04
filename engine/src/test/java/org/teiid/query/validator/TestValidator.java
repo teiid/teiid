@@ -34,6 +34,7 @@ import java.util.Set;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.metadata.ParameterInfo;
@@ -239,16 +240,9 @@ public class TestValidator {
 		return command;
     }
     
-    static Command helpResolve(String sql, GroupSymbol container, int type, QueryMetadataInterface metadata) { 
-    	Command command = null;
-		
-		try { 
-			command = QueryParser.getQueryParser().parseCommand(sql);
-			QueryResolver.resolveCommand(command, container, type, metadata);
-		} catch(Exception e) {
-            throw new TeiidRuntimeException(e);
-		} 
-
+    static Command helpResolve(String sql, GroupSymbol container, int type, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException { 
+    	Command command = QueryParser.getQueryParser().parseCommand(sql);
+		QueryResolver.resolveCommand(command, container, type, metadata, false);
 		return command;
     }
         
@@ -1245,10 +1239,10 @@ public class TestValidator {
     }
     
     private ValidatorReport helpValidateInModeler(String procName, String procSql, QueryMetadataInterface metadata) throws Exception {
-        Command command = new QueryParser().parseCommand(procSql);
+        Command command = QueryParser.getQueryParser().parseCommand(procSql);
         
         GroupSymbol group = new GroupSymbol(procName);
-        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata);
+        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata, true);
         
         // Validate
         return Validator.validate(command, metadata);         
@@ -1263,6 +1257,17 @@ public class TestValidator {
         ValidatorReport report = helpValidateInModeler("pm1.vsp36", sql, metadata);  //$NON-NLS-1$
         assertEquals(1, report.getItems().size());
         assertEquals("Wrong number of elements being SELECTed INTO the target table. Expected 4 elements, but was 1.", report.toString()); //$NON-NLS-1$
+    }
+    
+    @Test public void testValidateInModeler() throws Exception{
+        // SQL is same as pm1.vsp36() in example1 
+        String sql = "CREATE VIRTUAL PROCEDURE BEGIN select 1, 2; END";  //$NON-NLS-1$        
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        Command command = QueryParser.getQueryParser().parseCommand(sql);
+        GroupSymbol group = new GroupSymbol("pm1.vsp36");
+        QueryResolver.resolveCommand(command, group, Command.TYPE_STORED_PROCEDURE, metadata, true);
+
+        assertEquals(2, command.getResultSetColumns().size());
     }
     
     @Test public void testDynamicDupUsing() throws Exception {
@@ -1388,7 +1393,7 @@ public class TestValidator {
      * 
      * This virtual procedure calls a physical stored procedure directly.  
      */
-    @Test public void testCase4237() {
+    @Test public void testCase4237() throws Exception {
 
         QueryMetadataInterface metadata = helpCreateCase4237VirtualProcedureMetadata();
         
@@ -1401,7 +1406,7 @@ public class TestValidator {
      * This test was already working before the case was logged, due for some reason
      * to the exec() statement being inside an inline view.  This is a control test. 
      */
-    @Test public void testCase4237InlineView() {
+    @Test public void testCase4237InlineView() throws Exception {
 
         QueryMetadataInterface metadata = helpCreateCase4237VirtualProcedureMetadata();
         

@@ -248,10 +248,11 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 	
 	/**
 	 * Set the appropriate "external" metadata for the given command
+	 * @param inferProcedureResultSetColumns 
 	 * @throws QueryResolverException 
 	 */
 	public static void findChildCommandMetadata(Command currentCommand,
-			GroupSymbol container, int type, QueryMetadataInterface metadata)
+			GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns)
 			throws QueryMetadataException, TeiidComponentException, QueryResolverException {
 		//find the childMetadata using a clean metadata store
 	    TempMetadataStore childMetadata = new TempMetadataStore();
@@ -295,6 +296,9 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
 		            } else {
 		            	rsColumns = param.getResultSetColumns();
 		            }
+		        }
+		        if (inferProcedureResultSetColumns) {
+		        	rsColumns = null;
 		        }
 		        GroupSymbol gs = ProcedureContainerResolver.addScalarGroup(procName, childMetadata, externalGroups, tempElements, updatable);
 		        if (cupc.getReturnVariable() != null) {

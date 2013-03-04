@@ -251,7 +251,7 @@ public class MetadataValidator {
     		if (record instanceof Procedure) {
     			Procedure p = (Procedure)record;
     			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
-    			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata);
+    			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
     			resolverReport =  Validator.validate(command, metadata);
     		} else if (record instanceof Table) {
     			Table t = (Table)record;

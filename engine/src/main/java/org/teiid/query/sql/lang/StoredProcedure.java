@@ -227,7 +227,8 @@ public class StoredProcedure extends ProcedureContainer {
     }
 
     public boolean returnsResultSet(){
-        return !getResultSetColumns().isEmpty();
+        SPParameter param = getResultSetParameter();
+        return param != null && !param.getResultSetColumns().isEmpty();
     }
 
     public boolean returnsScalarValue(){

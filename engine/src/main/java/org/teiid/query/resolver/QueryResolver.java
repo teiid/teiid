@@ -102,7 +102,7 @@ public class QueryResolver {
     	if (command == null) {
     		return null;
     	}
-    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata());
+    	resolveCommand(command, proc.getGroup(), proc.getType(), metadata.getDesignTimeMetadata(), false);
     	return command;
     }
 
@@ -127,8 +127,9 @@ public class QueryResolver {
 	/**
 	 * Resolve a command in a given type container and type context.
 	 * @param type The {@link Command} type
+	 * @param inferProcedureResultSetColumns if true and the currentCommand is a procedure definition, then resolving will set the getResultSetColumns on the command to what is discoverable in the procedure body.
 	 */
-    public static TempMetadataStore resolveCommand(Command currentCommand, GroupSymbol container, int type, QueryMetadataInterface metadata) throws QueryResolverException, TeiidComponentException {
+    public static TempMetadataStore resolveCommand(Command currentCommand, GroupSymbol container, int type, QueryMetadataInterface metadata, boolean inferProcedureResultSetColumns) throws QueryResolverException, TeiidComponentException {
     	ResolverUtil.resolveGroup(container, metadata);
     	switch (type) {
 	    case Command.TYPE_QUERY:
@@ -140,7 +141,7 @@ public class QueryResolver {
     	case Command.TYPE_UPDATE:
     	case Command.TYPE_DELETE:
     	case Command.TYPE_STORED_PROCEDURE:
-    		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata);
+    		ProcedureContainerResolver.findChildCommandMetadata(currentCommand, container, type, metadata, inferProcedureResultSetColumns);
     	}
     	return resolveCommand(currentCommand, metadata, false);
     }
