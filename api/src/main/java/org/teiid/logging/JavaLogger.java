@@ -65,15 +65,16 @@ public class JavaLogger implements org.teiid.logging.Logger {
 		if (msg.length == 0) {
 			logger.log(javaLevel, null, t);
 		}
-		else if (msg.length == 1 && msg[0] instanceof String) {
-			logger.log(javaLevel, msg[0].toString(), t);	
-		}
-    	else {
-    		LogRecord record = new LogRecord(javaLevel, StringUtil.toString(msg)); 
+		else if (msg.length == 1 && !(msg[0] instanceof String)) {
+    		String msgStr = StringUtil.toString(msg, " ", false); //$NON-NLS-1$
+    		LogRecord record = new LogRecord(javaLevel, msgStr); 
     		record.setParameters(msg);
     		record.setThrown(t);
     		logger.log(record);
-    	}		
+		}
+    	else {
+			logger.log(javaLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
+    	}
     }
     
     public Level convertLevel(int level) {

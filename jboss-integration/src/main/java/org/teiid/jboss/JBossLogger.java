@@ -52,11 +52,15 @@ public class JBossLogger implements org.teiid.logging.Logger {
 		if (msg.length == 0) {
 			logger.log(jbossLevel, null, t);
 		}
-		else if (msg.length == 1 && msg[0] instanceof String) {
-			logger.log(jbossLevel, msg[0], t);	
+		else if (msg.length == 1 && !(msg[0] instanceof String)) {
+    		String msgStr = StringUtil.toString(msg, " ", false); //$NON-NLS-1$
+    		if (msgStr.indexOf('%') > -1) {
+    			msgStr = StringUtil.replaceAll(msgStr, "%", "%%"); //$NON-NLS-1$ //$NON-NLS-2$
+    		}
+    		logger.logf(jbossLevel, t, msgStr, msg); 
 		}
     	else {
-    		logger.logv(jbossLevel, t, StringUtil.toString(msg), msg);
+			logger.log(jbossLevel, StringUtil.toString(msg, " ", false), t); //$NON-NLS-1$
     	}		
 	}
 	
