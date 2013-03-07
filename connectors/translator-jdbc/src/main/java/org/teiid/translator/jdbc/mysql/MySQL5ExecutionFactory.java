@@ -68,7 +68,9 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 			}
 		}); 
 		
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
+		addPushDownFunction("mysql", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() { 
 			
 			@Override
 			public List<?> translate(Function function) {
