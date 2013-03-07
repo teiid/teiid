@@ -48,7 +48,6 @@
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
-  <li>The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.(TEIID-2267)
 </ul>
 
 <h4>from 8.2</h4>
@@ -62,6 +61,9 @@
         switched to false for later versions unless the issues with implicit join planning are addressed.   
      </ul>
   <li>TEIID-2317 byte[] char[] and java.util.Date instances returned as object values will be left in tact and not automatically converted to BinaryType, ClobType, and Timestamp respectively.  The values may still be cast to those types.
+  <li>TEIID-2267 The approach for custom appenders for command and audit logging has been changed; now they need to be developed for a java.util.logging based Handler.  See the Developer's Guide for more.
+  <li>TEIID-2422 The timestampdiff function will now be computed based upon calendar fields and the number of date parts crossed by default, rather than based upon canonical intervals (365 days in a year, 91 days in a quarter, 30 days in a month, etc.).  For example the difference in months between 2013-03-24 and 2013-04-01 will now be reported as 1
+      rather than 0.  To use the pre-8.3 behavior, set the system property org.teiid.calendarTimestampDif to false.   
 <ul>
 
 <h4>from 8.1</h4>

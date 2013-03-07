@@ -25,6 +25,7 @@ package org.teiid.query.function;
 import static org.junit.Assert.*;
 
 import java.sql.Timestamp;
+import java.util.TimeZone;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -38,7 +39,7 @@ public class TestFunctionMethods {
 	
 	@BeforeClass public static void oneTimeSetup() {
 		TimestampWithTimezone.ISO8601_WEEK = true;
-		TimestampWithTimezone.resetCalendar(null);
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-0600"));
 	}
 	
 	@AfterClass public static void oneTimeTearDown() {
@@ -66,11 +67,57 @@ public class TestFunctionMethods {
 		assertEquals(1, FunctionMethods.dayOfWeek(TimestampUtil.createDate(111, 10, 28)));
 	}
 	
-	
 	@Test public void testTimestampDiffTimeStamp_ErrorUsingEndDate2304() throws Exception {
-		assertEquals(Long.valueOf(106752), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_DAY, 
+		assertEquals(Long.valueOf(106753), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_DAY, 
 				new Timestamp(TimestampUtil.createDate(112, 0, 1).getTime()),
-				new Timestamp(TimestampUtil.createDate(404, 3, 13).getTime())));
+				new Timestamp(TimestampUtil.createDate(404, 3, 13).getTime()), false));
+	}
+	
+	@Test public void testTimestampDiffTimeStamp_ErrorUsingEndDate2304a() throws Exception {
+		assertEquals(Long.valueOf(32244), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_DAY, 
+				new Timestamp(TimestampUtil.createDate(112, 0, 1).getTime()),
+				new Timestamp(TimestampUtil.createDate(200, 3, 13).getTime()), true));
+	}
+	
+	@Test public void testTimestampDiffCalendarBasedHour() throws Exception {
+		assertEquals(Long.valueOf(2562072), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_HOUR, 
+				new Timestamp(TimestampUtil.createDate(112, 0, 1).getTime()),
+				new Timestamp(TimestampUtil.createDate(404, 3, 13).getTime()), true));
+	}
+	
+	@Test public void testTimestampDiffCalendarBasedHour1() throws Exception {
+		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("America/New York"));
+		try {
+			assertEquals(Long.valueOf(2472), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_HOUR, 
+				new Timestamp(TimestampUtil.createDate(112, 0, 1).getTime()),
+				new Timestamp(TimestampUtil.createDate(112, 3, 13).getTime()), true));
+		} finally {
+			TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-0600"));
+		}
+	}
+	
+	@Test public void testTimestampDiffCalendarBasedMonth() throws Exception {
+		assertEquals(Long.valueOf(1), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_MONTH, 
+				new Timestamp(TimestampUtil.createDate(112, 0, 10).getTime()),
+				new Timestamp(TimestampUtil.createDate(112, 1, 1).getTime()), true));
+	}
+	
+	@Test public void testTimestampDiffCalendarBasedWeek() throws Exception {
+		assertEquals(Long.valueOf(1), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_WEEK, 
+				new Timestamp(TimestampUtil.createDate(113, 2, 2).getTime()),
+				new Timestamp(TimestampUtil.createDate(113, 2, 3).getTime()), true));
+	}
+	
+	@Test public void testTimestampDiffCalendarBasedWeek1() throws Exception {
+		assertEquals(Long.valueOf(0), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_WEEK, 
+				new Timestamp(TimestampUtil.createDate(113, 2, 3).getTime()),
+				new Timestamp(TimestampUtil.createDate(113, 2, 4).getTime()), true));
+	}
+	
+	@Test public void testTimestampDiffCalendarBasedWeek2() throws Exception {
+		assertEquals(Long.valueOf(0), FunctionMethods.timestampDiff(NonReserved.SQL_TSI_WEEK, 
+				new Timestamp(TimestampUtil.createDate(113, 2, 4).getTime()),
+				new Timestamp(TimestampUtil.createDate(113, 2, 3).getTime()), true));
 	}
 		 
 }
