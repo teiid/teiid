@@ -68,7 +68,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	protected boolean jtdsDriver;
 	
 	public SybaseExecutionFactory() {
-		setDatabaseVersion(TWELVE_5);
+		setDatabaseVersion(FIFTEEN_0_2);
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
 		setMaxDependentInPredicates(8);
