@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
 
 /** 
@@ -16,6 +18,12 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
  */
 @Translator(name="metamatrix", description="A translator for MetaMatrix 5.5 or later")
 public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
+	
+	@Override
+	public void start() throws TranslatorException {
+		super.start();
+		addPushDownFunction("mm", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+	}
     
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
