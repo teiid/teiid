@@ -24,7 +24,6 @@
  */
 package org.teiid.translator.jdbc.sybase;
 
-import java.sql.CallableStatement;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -383,14 +382,14 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 		this.jtdsDriver = jtdsDriver;
 	}
 	
-	protected boolean setFetchSizeOnCallableStatements() {
-		return false;
+	protected boolean setFetchSize() {
+		return isJtdsDriver();
 	}
 	
 	@Override
 	public void setFetchSize(Command command, ExecutionContext context,
 			Statement statement, int fetchSize) throws SQLException {
-		if (!isJtdsDriver() && !setFetchSizeOnCallableStatements() && statement instanceof CallableStatement) {
+		if (!setFetchSize()) {
 			return;
 		}
 		super.setFetchSize(command, context, statement, fetchSize);
