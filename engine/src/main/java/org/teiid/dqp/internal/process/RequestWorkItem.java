@@ -343,12 +343,22 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    	}
 		    	StackTraceElement[] elems = cause.getStackTrace();
 		    	Object elem = null;
-		    	if (elems.length > 0) {
-		    		elem = cause.getStackTrace()[0];
-		    	} else {
-		    		elem = cause.getMessage();
+		    	String causeMsg = cause.getMessage();
+	    		if (elems.length > 0) {
+		    		StackTraceElement ste = cause.getStackTrace()[0];
+		    		if (ste.getLineNumber() > 0 && ste.getFileName() != null) {
+		    			elem = ste.getFileName() + ":" + ste.getLineNumber(); //$NON-NLS-1$
+		    		} else {
+		    			elem = ste;
+		    		}
+		    		String msg = e.getMessage();
+		    		if (causeMsg != null && cause != e && !msg.contains(causeMsg)) {
+		    			elem = "'" + causeMsg + "' " + elem; //$NON-NLS-1$ //$NON-NLS-2$
+		    		} 
+		    	} else if (cause != e && causeMsg != null) {
+		    		elem = "'" + cause.getMessage() + "'"; //$NON-NLS-1$ //$NON-NLS-2$
 		    	}
-		        String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getName(), elem);
+		        String msg = QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30020, e.getMessage(), requestID, e.getClass().getSimpleName(), elem);
 		    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
 		    		LogManager.logWarning(LogConstants.CTX_DQP, e, msg);
 		    	} else {

@@ -32,8 +32,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.resource.spi.work.Work;
 
@@ -164,11 +164,11 @@ public class TestThreadReuseExecutor {
     
     @Test public void testFailingWork() throws Exception {
     	ThreadReuseExecutor pool = new ThreadReuseExecutor("test", 5); //$NON-NLS-1$
-    	final AtomicInteger count = new AtomicInteger();
+    	final Semaphore signal = new Semaphore(1);
     	pool.execute(new Work() {
     		@Override
     		public void run() {
-    			count.getAndIncrement();
+    			signal.release();
     			throw new RuntimeException();
     		}
     		
@@ -177,8 +177,7 @@ public class TestThreadReuseExecutor {
     			
     		}
     	});
-    	Thread.sleep(100);
-    	assertEquals(1, count.get());
+    	assertTrue(signal.tryAcquire(2, TimeUnit.SECONDS));
     }
     
     @Test public void testPriorities() throws Exception {

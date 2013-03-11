@@ -228,7 +228,7 @@ public class ExecutionFactory<F, C> {
 	
 	/**
      * Flag that indicates if a underlying source connection required for this execution factory to return metadata 
-     * @return {@link Boolean#TRUE} if required, null if possibly required, or {@link Boolean#FALSE} if not required
+     * @return true if required
      */
 	public boolean isSourceRequiredForMetadata() {
 		if (sourceRequiredForMetadata == null) {

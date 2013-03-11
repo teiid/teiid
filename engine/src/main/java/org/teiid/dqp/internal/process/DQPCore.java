@@ -396,7 +396,7 @@ public class DQPCore implements DQP {
 	public ResultsFuture<ResultsMessage> processCursorRequest(long reqID,
 			int batchFirst, int fetchSize) throws TeiidProcessingException {
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-            LogManager.logDetail(LogConstants.CTX_DQP, "DQP process cursor request from " + batchFirst);  //$NON-NLS-1$
+            LogManager.logDetail(LogConstants.CTX_DQP, "DQP process cursor request", batchFirst, fetchSize);  //$NON-NLS-1$
         }
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
         ResultsFuture<ResultsMessage> resultsFuture = new ResultsFuture<ResultsMessage>();
