@@ -127,6 +127,14 @@ public class TestDDLParser {
 		mf.mergeInto(mds);
 	}
 	
+	@Test public void testAutoIncrementPrimarykey() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1( e1 integer auto_increment primary key, e2 varchar)";
+		MetadataStore mds = new MetadataStore();
+		MetadataFactory mf = new MetadataFactory(null, 1, "model", getDataTypes(), new Properties(), null); 
+		parser.parseDDL(mf, ddl);
+		mf.mergeInto(mds);
+	}
+	
 	@Test
 	public void testUDT() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1( e1 integer, e2 varchar OPTIONS (UDT 'NMTOKENS(12,13,14)'))";

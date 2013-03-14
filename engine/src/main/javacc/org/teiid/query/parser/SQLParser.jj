@@ -4797,7 +4797,11 @@ void createTable(MetadataFactory factory) :
 	    table = factory.addTable(tableName);
 	    table.setVirtual(view);
 	}
-	createTableBody(table, factory)
+	(createTableBody(table, factory) | [optionsClause(table, factory)
+	   {
+	      setTableOptions(table);
+	   }
+	])
 	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
 	  {
 		   if (!view) {
@@ -4851,7 +4855,7 @@ void createTableBody(Table table, MetadataFactory factory) :
 	AbstractMetadataRecord constraint = null;
 }
 {
-	[<LPAREN>
+	<LPAREN>
     createColumn(factory, table)
     (LOOKAHEAD(3) <COMMA>
       createColumn(factory, table)
@@ -4863,7 +4867,7 @@ void createTableBody(Table table, MetadataFactory factory) :
 	   }
 	]
     )*
-    <RPAREN>]    
+    <RPAREN>    
     [optionsClause(table, factory)
 	   {
 	      setTableOptions(table);
@@ -5026,13 +5030,8 @@ void createColumn(MetadataFactory factory, Table table) :
 	  }
 	 )
 	 [<NOT> <NULL> { column.setNullType(Column.NullType.No_Nulls); }]
-	 ([(<UNIQUE> { unique = true;  })
-	  |((word = <INDEX> | word = <AUTO_INCREMENT>)  
-	    { if (word.image.equalsIgnoreCase("INDEX")) index = true;
-	      else if (word.image.equalsIgnoreCase("AUTO_INCREMENT")) autoIncrement = true; 
-	    })+	 
-	  |(<PRIMARY> <KEY> { pk = true; })	 
-	  ])
+	 [<AUTO_INCREMENT> {  autoIncrement = true; }]
+	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
 	 [<DEFAULT_KEYWORD> defalt = stringVal() {column.setDefaultValue(defalt);}]
 	 [optionsClause(column, factory)
 	   {
