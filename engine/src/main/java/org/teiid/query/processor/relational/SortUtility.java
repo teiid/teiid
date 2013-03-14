@@ -31,11 +31,11 @@ import java.util.TreeSet;
 
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.IndexedTupleSource;
-import org.teiid.common.buffer.TupleBuffer;
-import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.common.buffer.TupleBuffer.TupleBufferTupleSource;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
@@ -52,6 +52,7 @@ import org.teiid.query.sql.symbol.Expression;
  * Implements several modes of a multi-pass sort.
  * 
  * TODO: could consider using an index for dup_removal and maintaining a separate output buffer
+ * TODO: release the tuple buffer in the last merge pass if sublists will fit in processing batch size
  */
 public class SortUtility {
 	
@@ -72,7 +73,7 @@ public class SortUtility {
 	private class SortedSublist implements Comparable<SortedSublist> {
 		List<?> tuple;
 		int index;
-		IndexedTupleSource its;
+		TupleBufferTupleSource its;
 		int limit = Integer.MAX_VALUE;
 		
 		@Override
@@ -96,6 +97,7 @@ public class SortUtility {
     private int schemaSize;
     private int batchSize;
 	private ListNestedSortComparator comparator;
+	private int targetRowCount;
 
     private TupleBuffer output;
     private boolean doneReading;
@@ -103,13 +105,15 @@ public class SortUtility {
     private List<TupleBuffer> activeTupleBuffers = new ArrayList<TupleBuffer>();
     private int masterSortIndex;
     
-    private int collected;
+    private int processed;
 
     // Phase constants for readability
     private static final int INITIAL_SORT = 1;
     private static final int MERGE = 2;
     private static final int DONE = 3;
-	private Collection<List<?>> workingTuples;
+	private TupleBuffer workingBuffer;
+	private boolean skipBuffer;
+	private int processingAttempts;
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
                         String groupName, List<? extends Expression> schema) {
@@ -166,6 +170,7 @@ public class SortUtility {
         this.schema = schema;
         this.schemaSize = bufferManager.getSchemaSize(this.schema);
         this.batchSize = bufferManager.getProcessorBatchSize(this.schema);
+        this.targetRowCount = Math.max(bufferManager.getMaxProcessingSize()/this.schemaSize, 2)*this.batchSize;
         this.comparator = new ListNestedSortComparator(cols, sortTypes);
         int distinctIndex = cols.length - 1;
         this.comparator.setDistinctIndex(distinctIndex);
@@ -181,7 +186,7 @@ public class SortUtility {
         throws TeiidComponentException, TeiidProcessingException {
 
         if(this.phase == INITIAL_SORT) {
-            initialSort();
+            initialSort(false);
         }
         
         if(this.phase == MERGE) {
@@ -197,7 +202,7 @@ public class SortUtility {
     	assert this.mode != Mode.DUP_REMOVE;
     	
     	if(this.phase == INITIAL_SORT) {
-            initialSort();
+            initialSort(true);
         }
     	
     	for (TupleBuffer tb : activeTupleBuffers) {
@@ -206,11 +211,11 @@ public class SortUtility {
     	
     	return activeTupleBuffers;
     }
-
+    
 	private TupleBuffer createTupleBuffer() throws TeiidComponentException {
 		TupleBuffer tb = bufferManager.createTupleBuffer(this.schema, this.groupName, TupleSourceType.PROCESSOR);
 		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Created intermediate sort buffer ", tb); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_DQP, "Created intermediate sort buffer", tb); //$NON-NLS-1$
 		}
 		tb.setForwardOnly(true);
 		return tb;
@@ -219,22 +224,109 @@ public class SortUtility {
 	/**
 	 * creates sorted sublists stored in tuplebuffers
 	 */
-    protected void initialSort() throws TeiidComponentException, TeiidProcessingException {
-    	while(!doneReading) {
-    		if (workingTuples == null) {
-	            if (mode == Mode.SORT) {
-	            	workingTuples = new ArrayList<List<?>>();
-	            } else {
-	            	workingTuples = new TreeSet<List<?>>(comparator);
-	            }
-    		}
+    protected void initialSort(boolean onePass) throws TeiidComponentException, TeiidProcessingException {
+    	outer: while (!doneReading) {
     		
-            int totalReservedBuffers = 0;
-            try {
-	            int maxRows = this.batchSize;
-		        while(!doneReading) {
-		        	//attempt to reserve more working memory if there are additional rows available before blocking
+    		if (!this.skipBuffer) {
+	    		//sub-phase 1 - build up a working buffer of tuples
+	    		if (this.workingBuffer == null) {
+	    			this.workingBuffer = createTupleBuffer();
+	    		}
+	    		
+	    		while (!doneReading) {
+		            try {
+		            	List<?> tuple = source.nextTuple();
+		            	
+		            	if (tuple == null) {
+		            		doneReading = true;
+		            		break;
+		            	}
+		            	this.workingBuffer.addTuple(tuple);
+		            } catch(BlockedException e) {
+		            	/*there are three cases here
+		            	 * 1. a fully blocking sort (optionally dup removal)
+		            	 * 2. a streaming dup removal
+		            	 * 3. a one pass sort (for grace join like processing)
+		            	 */
+		            	if (!onePass && mode != Mode.DUP_REMOVE) {
+		            		throw e; //read fully before processing
+		            	}
+		            	if (!onePass) {
+		            		//streaming dup remove - we have to balance latency vs. performance
+		            		//each merge phase is a full scan over the intermediate results
+		            		if (this.output != null && this.workingBuffer.getRowCount() < 2*this.processed) {
+		            			throw e;
+		            		}
+		            	} else {
+		            		//we're trying to create intermediate buffers that will comfortably be small memory sorts
+		            		if (this.workingBuffer.getRowCount() < this.targetRowCount) {
+		            			throw e;
+		            		}	
+		            	}
+		            	break outer; //there's processing that we can do
+		            } 
+	    		}
+    		} else {
+    			doneReading = true;
+    		}
+        }
+    	
+		//sub-phase 2 - perform a memory sort on the workingbuffer/source
+    	int totalReservedBuffers = 0;
+        try {
+    		int maxRows = this.batchSize;
+    		boolean resizable = true;    
+    		Collection<List<?>> workingTuples = null;
+    		TupleSource ts = source;
+            boolean done = false;
+
+    		if (this.workingBuffer != null) {
+    			/*
+    			 * if we have a working buffer, then we can balance the work between the initial / multi-pass sort based upon the row count
+    			 * and an updated estimate of the batch memory size 
+    			 */
+    			this.workingBuffer.close();
+    			schemaSize = Math.max(1, this.workingBuffer.getBatchMemorySizeEstimate());
+    			resizable = false;
+    			long memorySpaceNeeded = spaceNeeded(workingBuffer.getRowCount());
+    			if (onePass) {
+    				//one pass just needs small sub-lists
+    				memorySpaceNeeded = Math.min(memorySpaceNeeded, bufferManager.getMaxProcessingSize());
+    			}
+    			totalReservedBuffers = bufferManager.reserveBuffers(Math.min(bufferManager.getMaxProcessingSize(), (int)Math.min(memorySpaceNeeded, Integer.MAX_VALUE)), BufferReserveMode.FORCE);
+
+    			if (totalReservedBuffers != memorySpaceNeeded) {
+    				int processingSublists = Math.max(2, bufferManager.getMaxProcessingSize()/schemaSize);
+    				int desiredSpace = (int)Math.min(Integer.MAX_VALUE, spaceNeeded(workingBuffer.getRowCount()/processingSublists + (workingBuffer.getRowCount()%processingSublists)));
+					if (desiredSpace > totalReservedBuffers) {
+						totalReservedBuffers += bufferManager.reserveBuffers(desiredSpace - totalReservedBuffers, BufferReserveMode.NO_WAIT);
+						//TODO: wait to force 2/3 pass processing
+					} else if (memorySpaceNeeded <= Integer.MAX_VALUE) {
+						totalReservedBuffers += bufferManager.reserveBuffers((int)memorySpaceNeeded - totalReservedBuffers, BufferReserveMode.NO_WAIT);
+					}
+					if (totalReservedBuffers > schemaSize) {
+						int additional = totalReservedBuffers%schemaSize;
+    					totalReservedBuffers-=additional;
+    					//release any excess
+    		            bufferManager.releaseBuffers(additional);
+    				}
+    			}
+    			ts = workingBuffer.createIndexedTupleSource(true);
+    			processed+=this.workingBuffer.getRowCount();
+				maxRows = Math.max(1, (totalReservedBuffers/schemaSize))*batchSize;
+    		}
+            if (mode == Mode.SORT) {
+            	workingTuples = new ArrayList<List<?>>();
+            } else {
+            	workingTuples = new TreeSet<List<?>>(comparator);
+            }
+            outer: while (!done) {
+                while(!done) {
 		        	if (workingTuples.size() >= maxRows) {
+		        		if (!resizable) {
+		        			break;
+		        		}
+		        		//attempt to reserve more working memory incrementally
 	        			int reserved = bufferManager.reserveBuffers(schemaSize, 
 	        					(totalReservedBuffers + schemaSize <= bufferManager.getMaxProcessingSize())?BufferReserveMode.FORCE:BufferReserveMode.NO_WAIT);
 		        		totalReservedBuffers += reserved;
@@ -243,33 +335,18 @@ public class SortUtility {
 		        		} 
 		        		maxRows += this.batchSize;	
 		        	}
-		            try {
-		            	List<?> tuple = source.nextTuple();
-		            	
-		            	if (tuple == null) {
-		            		doneReading = true;
-		            		break;
-		            	}
-	                    if (workingTuples.add(tuple)) {
-	                    	this.collected++;
-	                    }
-		            } catch(BlockedException e) {
-		            	if (workingTuples.size() >= this.batchSize) {
-		            		break;
-		            	}
-		            	if (mode != Mode.DUP_REMOVE  
-		            			|| (this.output != null && collected < this.output.getRowCount() * 2) 
-		            			|| (this.output == null && this.workingTuples.isEmpty() && this.activeTupleBuffers.isEmpty())) {
-	            			throw e; //block if no work can be performed
-		            	}
-		            	break;
-		            } 
+	            	List<?> tuple = ts.nextTuple();
+	            	
+	            	if (tuple == null) {
+	            		done = true;
+	            		if(workingTuples.isEmpty()) {
+				        	break outer;
+				        }
+	            		break;
+	            	}
+                    workingTuples.add(tuple);
 		        } 
 		
-		        if(workingTuples.isEmpty()) {
-		        	break;
-		        }
-			
 		        TupleBuffer sublist = createTupleBuffer();
 		        activeTupleBuffers.add(sublist);
 		        if (this.mode == Mode.SORT) {
@@ -279,40 +356,88 @@ public class SortUtility {
 		        for (List<?> list : workingTuples) {
 					sublist.addTuple(list);
 				}
-		        workingTuples = null;
-	            
+		        workingTuples.clear();
 		        sublist.saveBatch();
-            } finally {
-        		bufferManager.releaseBuffers(totalReservedBuffers);
+		        if (resizable) {
+	        		schemaSize = Math.max(1, sublist.getBatchMemorySizeEstimate());
+	        		resizable = false;
+	        		maxRows = Math.max(batchSize, totalReservedBuffers/schemaSize);
+	        		if (totalReservedBuffers > schemaSize) {
+						int additional = totalReservedBuffers%schemaSize;
+						totalReservedBuffers -= additional;
+						bufferManager.releaseBuffers(additional);
+					}
+		        }
             }
+        } catch (BlockedException e) {
+        	Assertion.failed("should not block during memory sublist sorting"); //$NON-NLS-1$
+        } finally {
+    		bufferManager.releaseBuffers(totalReservedBuffers);
+    		if (this.workingBuffer != null) {
+        		this.workingBuffer.remove();
+        		this.workingBuffer = null;
+    		}
         }
     	
     	if (this.activeTupleBuffers.isEmpty()) {
             activeTupleBuffers.add(createTupleBuffer());
         }  
-    	this.collected = 0;
         this.phase = MERGE;
     }
 
+	private long spaceNeeded(int rows) {
+		return (rows/batchSize + ((rows%batchSize)!=0?1:0))*(long)schemaSize;
+	}
+    
+    public void setSkipBuffer(boolean skipBuffer) {
+		this.skipBuffer = skipBuffer;
+	}
+    
     protected void mergePhase() throws TeiidComponentException, TeiidProcessingException {
-    	while(this.activeTupleBuffers.size() > 1) {    		
-    		ArrayList<SortedSublist> sublists = new ArrayList<SortedSublist>(activeTupleBuffers.size());
-            
-            TupleBuffer merged = createTupleBuffer();
+        long desiredSpace = activeTupleBuffers.size() * (long)schemaSize;
+        int toForce = (int)Math.min(desiredSpace, Math.max(2*schemaSize, this.bufferManager.getMaxProcessingSize()));
+        int reserved = 0;
+        
+        if (desiredSpace > toForce) {
+        	int subLists = Math.max(2, this.bufferManager.getMaxProcessingSize()/schemaSize);
+        	int twoPass = subLists * subLists;
+        	if (twoPass < activeTupleBuffers.size()) {
+        		//wait for 2-pass
+    			int needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), .5));
+    	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, processingAttempts++, false);
+        		processingAttempts = 0;
+        		if (reserved == 0 && twoPass*subLists < activeTupleBuffers.size()) {
+        			//force 3-pass
+        			needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), 1/3d));
+        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, processingAttempts++, true);
+        	        processingAttempts = 0;
+        		}
+        	} else if (desiredSpace < Integer.MAX_VALUE) {
+        		//wait for 1-pass
+        		reserved += bufferManager.reserveBuffersBlocking((int)desiredSpace - toForce, processingAttempts++, false);
+        		processingAttempts = 0;
+        	}
+        }
+        int total = reserved + toForce;
+        if (total > schemaSize) {
+            toForce -= total % schemaSize;
+        }
+        reserved += bufferManager.reserveBuffers(toForce, BufferReserveMode.FORCE);
+        
+        try {
+        	while(this.activeTupleBuffers.size() > 1) {    		
+	    		ArrayList<SortedSublist> sublists = new ArrayList<SortedSublist>(activeTupleBuffers.size());
+	            
+	            TupleBuffer merged = createTupleBuffer();
 
-            int desiredSpace = activeTupleBuffers.size() * schemaSize;
-            int reserved = Math.min(desiredSpace, Math.max(2*schemaSize, this.bufferManager.getMaxProcessingSize()));
-            bufferManager.reserveBuffers(reserved, BufferReserveMode.FORCE);
-            if (desiredSpace > reserved) {
-            	reserved += bufferManager.reserveAdditionalBuffers(desiredSpace - reserved);
-            }
-            int maxSortIndex = Math.max(2, reserved / schemaSize); //always allow progress
-            //release any partial excess
-            int release = reserved % schemaSize > 0 ? 1 : 0;
-            bufferManager.releaseBuffers(release);
-            reserved -= release;
-            try {
-	        	if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
+	            desiredSpace = activeTupleBuffers.size() * (long)schemaSize;
+	            if (desiredSpace < reserved) {
+	            	bufferManager.releaseBuffers(reserved - (int)desiredSpace);
+	            	reserved = (int)desiredSpace;
+	            }
+	            int maxSortIndex = Math.max(2, reserved / schemaSize); //always allow progress
+	            
+            	if (LogManager.isMessageToBeRecorded(org.teiid.logging.LogConstants.CTX_DQP, MessageLevel.TRACE)) {
 	            	LogManager.logTrace(org.teiid.logging.LogConstants.CTX_DQP, "Merging", maxSortIndex, "sublists out of", activeTupleBuffers.size()); //$NON-NLS-1$ //$NON-NLS-2$
 	            }
 	        	// initialize the sublists with the min value
@@ -320,6 +445,7 @@ public class SortUtility {
 	             	TupleBuffer activeID = activeTupleBuffers.get(i);
 	             	SortedSublist sortedSublist = new SortedSublist();
 	            	sortedSublist.its = activeID.createIndexedTupleSource();
+	            	sortedSublist.its.setNoBlocking(true);
 	            	sortedSublist.index = i;
 	            	if (activeID == output) {
 	            		sortedSublist.limit = output.getRowCount();
@@ -350,9 +476,9 @@ public class SortUtility {
 	            if (masterSortIndex < 0) {
 	            	masterSortIndex = this.activeTupleBuffers.size() - 1;
 	            }
-            } finally {
-            	this.bufferManager.releaseBuffers(reserved);
-            }
+    		}
+        } finally {
+        	this.bufferManager.releaseBuffers(reserved);
         }
     	
         // Close sorted source (all others have been removed)
@@ -384,11 +510,7 @@ public class SortUtility {
 			if (sortedSublist.limit < sortedSublist.its.getCurrentIndex()) {
 				return; //special case for still reading the output tuplebuffer
 			}
-			try {
-				sortedSublist.tuple = sortedSublist.its.nextTuple();
-	        } catch (BlockedException e) {
-	        	//intermediate sources aren't closed
-	        }  
+			sortedSublist.tuple = sortedSublist.its.nextTuple();
 	        if (sortedSublist.tuple == null) {
 	        	return; // done with this sublist
 	        }

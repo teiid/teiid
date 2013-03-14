@@ -45,6 +45,58 @@ import org.teiid.query.sql.symbol.Expression;
 
 public class TupleBuffer {
 	
+	public final class TupleBufferTupleSource extends
+			AbstractTupleSource {
+		private final boolean singleUse;
+		private boolean noBlocking;
+
+		private TupleBufferTupleSource(boolean singleUse) {
+			this.singleUse = singleUse;
+		}
+
+		@Override
+		protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
+			if(isFinal || noBlocking) {
+		        return null;
+		    } 
+			if (rowSourceLock == null) { 
+				throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			synchronized (rowSourceLock) {
+				while (!isFinal && available() < 1) {
+					try {
+						rowSourceLock.wait();
+					} catch (InterruptedException e) {
+						throw new TeiidRuntimeException(e);
+					}
+				}
+				return getCurrentTuple();
+			}
+		}
+
+		@Override
+		public int available() {
+			return rowCount - getCurrentIndex() + 1;
+		}
+
+		@Override
+		protected TupleBatch getBatch(int row) throws TeiidComponentException {
+			return TupleBuffer.this.getBatch(row);
+		}
+
+		@Override
+		public void closeSource() {
+			super.closeSource();
+			if (singleUse) {
+				remove();
+			}
+		}
+		
+		public void setNoBlocking(boolean noBlocking) {
+			this.noBlocking = noBlocking;
+		}
+	}
+
 	/**
      * Gets the data type names for each of the input expressions, in order.
      * @param expressions List of Expressions
@@ -315,7 +367,7 @@ public class TupleBuffer {
 		this.forwardOnly = forwardOnly;
 	}
     
-	public IndexedTupleSource createIndexedTupleSource() {
+	public TupleBufferTupleSource createIndexedTupleSource() {
 		return createIndexedTupleSource(false);
 	}
     
@@ -323,50 +375,11 @@ public class TupleBuffer {
 	 * Create a new iterator for this buffer
 	 * @return
 	 */
-	public IndexedTupleSource createIndexedTupleSource(final boolean singleUse) {
+	public TupleBufferTupleSource createIndexedTupleSource(final boolean singleUse) {
 		if (singleUse) {
 			setForwardOnly(true);
 		}
-		return new AbstractTupleSource() {
-			
-			@Override
-			protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
-				if(isFinal) {
-		            return null;
-		        } 
-				if (rowSourceLock == null) { 
-					throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
-				}
-				synchronized (rowSourceLock) {
-					while (!isFinal && available() < 1) {
-						try {
-							rowSourceLock.wait();
-						} catch (InterruptedException e) {
-							throw new TeiidRuntimeException(e);
-						}
-					}
-					return getCurrentTuple();
-				}
-			}
-			
-			@Override
-			public int available() {
-				return rowCount - getCurrentIndex() + 1;
-			}
-			
-			@Override
-			protected TupleBatch getBatch(int row) throws TeiidComponentException {
-				return TupleBuffer.this.getBatch(row);
-			}
-			
-			@Override
-			public void closeSource() {
-				super.closeSource();
-				if (singleUse) {
-					remove();
-				}
-			}
-		};
+		return new TupleBufferTupleSource(singleUse);
 	}
 	
 	@Override
@@ -430,6 +443,13 @@ public class TupleBuffer {
 			addTuple(iter.next());
 		}
 		saveBatch(false);
+	}
+	
+	/**
+	 * Return a more accurate batch estimate or 0 if a new estimate is not available
+	 */
+	public int getBatchMemorySizeEstimate() {
+		return this.manager.getRowSizeEstimate()*this.batchSize;
 	}
 	
 }

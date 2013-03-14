@@ -83,8 +83,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	 * Asynch cleaner attempts to age out old entries and to reduce the memory size when 
 	 * little is reserved.
 	 */
+	private static final int MAX_READ_AGE = 1<<18;
 	private static final class Cleaner extends TimerTask {
-		private static final int MAX_READ_AGE = 1<<28;
 		WeakReference<BufferManagerImpl> bufferRef;
 		
 		public Cleaner(BufferManagerImpl bufferManagerImpl) {
@@ -93,39 +93,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		
 		@Override
 		public void run() {
-			while (true) {
-				BufferManagerImpl impl = this.bufferRef.get();
-				if (impl == null) {
-					this.cancel();
-					return;
-				}
-				boolean agingOut = false;
-				if (impl.reserveBatchBytes.get() < impl.maxReserveBytes.get()*.9 || impl.activeBatchBytes.get() < impl.maxReserveBytes.get()*.7) {
-					CacheEntry entry = impl.evictionQueue.firstEntry(false);
-					if (entry == null) {
-						return;
-					}
-					//we aren't holding too many memory entries, ensure that
-					//entries aren't old
-					long lastAccess = entry.getKey().getLastAccess();
-					long currentTime = impl.readAttempts.get();
-					if (currentTime - lastAccess < MAX_READ_AGE) {
-						return;
-					}
-					agingOut = true;
-				}
-				if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-					LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", impl.reserveBatchBytes.get(), impl.maxReserveBytes.get(), impl.activeBatchBytes.get()); //$NON-NLS-1$
-				}
-				impl.doEvictions(0, !agingOut);
-				if (!agingOut) {
-					try {
-						Thread.sleep(100); //we don't want to evict too fast, because the processing threads are more than capable of evicting
-					} catch (InterruptedException e) {
-						 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30051, e);
-					}
-				}
+			BufferManagerImpl impl = this.bufferRef.get();
+			if (impl == null) {
+				this.cancel();
+				return;
 			}
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", impl.reserveBatchBytes.get(), impl.maxReserveBytes.get(), impl.activeBatchBytes.get()); //$NON-NLS-1$
+			}
+			impl.doEvictions(0, false);
 		}
 	}
 	
@@ -157,6 +133,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		AtomicBoolean prefersMemory = new AtomicBoolean();
 		String[] types;
 		private LobManager lobManager;
+		private long totalSize;
+		private long rowsSampled;
 
 		private BatchManagerImpl(Long newID, Class<?>[] types) {
 			this.id = newID;
@@ -219,6 +197,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				} else {
 					old = fastGet(previous, prefersMemory.get(), true);
 				}
+			} else {
+				totalSize += sizeEstimate;
+				rowsSampled += batch.size();
 			}
 			CacheKey key = new CacheKey(oid, (int)readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
 			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
@@ -329,6 +310,14 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		public String toString() {
 			return id.toString();
 		}
+		
+		@Override
+		public int getRowSizeEstimate() {
+			if (rowsSampled == 0) {
+				return 0;
+			}
+			return (int)(totalSize/rowsSampled);
+		}
 	}
 	
 	private static class BatchSoftReference extends SoftReference<CacheEntry> {
@@ -360,8 +349,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     private boolean inlineLobs = true;
     private int targetBytesPerRow = TARGET_BYTES_PER_ROW;
     private int maxSoftReferences;
+    private int nominalProcessingMemoryMax = maxProcessingBytes;
 
-    private ReentrantLock lock = new ReentrantLock(true);
+    private ReentrantLock lock = new ReentrantLock();
     private Condition batchesFreed = lock.newCondition();
     
     AtomicLong activeBatchBytes = new AtomicLong();
@@ -371,13 +361,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     LrfuEvictionQueue<CacheEntry> evictionQueue = new LrfuEvictionQueue<CacheEntry>(readAttempts);
     ConcurrentHashMap<Long, CacheEntry> memoryEntries = new ConcurrentHashMap<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL);
     
-    private static class IntegerThreadLocal extends ThreadLocal<int[]> {
-    	protected int[] initialValue() {
-    		return new int[1];
+    private static class ResourceThreadLocal extends ThreadLocal<long[]> {
+    	protected long[] initialValue() {
+    		long[] result = new long[2];
+    		result[1] = Long.MIN_VALUE;
+    		return result;
     	}
     };
     
-    private ThreadLocal<int[]> reservedByThread = new IntegerThreadLocal();
+    private ThreadLocal<long[]> reservedByThread = new ResourceThreadLocal();
     
     //limited size reference caches based upon the memory settings
     private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
@@ -406,10 +398,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	private AtomicLong writeCount = new AtomicLong();
 	private AtomicLong referenceHit = new AtomicLong();
 	
+	//TODO: this does not scale well with multiple embedded instances
 	private static final Timer timer = new Timer("BufferManager Cleaner", true); //$NON-NLS-1$
+	private Cleaner cleaner;
 	
 	public BufferManagerImpl() {
-		timer.schedule(new Cleaner(this), 15000, 15000);
+		this.cleaner = new Cleaner(this);
+		timer.schedule(cleaner, 1000, 100);
 	}
 	
 	void clearSoftReference(BatchSoftReference bsr) {
@@ -485,7 +480,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		}
     	TupleBuffer tupleBuffer = new TupleBuffer(batchManager, String.valueOf(newID), elements, lobManager, getProcessorBatchSize(elements));
         if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
-        	LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating TupleBuffer:", newID, elements, Arrays.toString(types), "of type", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$
+        	LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Creating TupleBuffer:", newID, elements, Arrays.toString(types), "batch size", tupleBuffer.getBatchSize(), "of type", tupleSourceType); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         }
     	tupleBuffer.setInlineLobs(inlineLobs);
         return tupleBuffer;
@@ -562,13 +557,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	@Override
 	public void initialize() throws TeiidComponentException {
 		long maxMemory = Runtime.getRuntime().maxMemory();
-		maxMemory = Math.max(0, maxMemory - (SYSTEM_OVERHEAD_MEGS << 20)); //assume 300 megs of overhead for the AS/system stuff
+		maxMemory = Math.max(0, maxMemory - (SYSTEM_OVERHEAD_MEGS << 20)); //assume an overhead for the AS/system stuff
 		if (getMaxReserveKB() < 0) {
 			this.maxReserveBytes.set(0);
 			int one_gig = 1 << 30;
 			if (maxMemory > one_gig) {
-				//assume 75% of the memory over the first gig
-				this.maxReserveBytes.addAndGet((long)Math.max(0, (maxMemory - one_gig) * .75));
+				//assume 70% of the memory over the first gig
+				this.maxReserveBytes.addAndGet((long)Math.max(0, (maxMemory - one_gig) * .7));
 			}
 			this.maxReserveBytes.addAndGet(Math.max(0, Math.min(one_gig, maxMemory) >> 1));
     	}
@@ -578,7 +573,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			this.maxProcessingBytesOrig = this.maxProcessingBytes;
 		}
 		if (this.maxProcessingBytesOrig < 0) {
-			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 8l, (.1 * maxMemory)/maxActivePlans),  Integer.MAX_VALUE);
+			this.maxProcessingBytes = (int)Math.min(Math.max(processorBatchSize * targetBytesPerRow * 16l, (.2 * maxMemory)/maxActivePlans),  Integer.MAX_VALUE);
 		} 
 		//make a guess at the max number of batches
 		long memoryBatches = maxMemory / (processorBatchSize * targetBytesPerRow);
@@ -588,6 +583,11 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			weakReferenceCache = new WeakReferenceHashedValueCache<CacheEntry>(Math.min(30, logSize));
 		}
 		this.maxSoftReferences = 1 << Math.min(30, logSize);
+		this.nominalProcessingMemoryMax = (int)Math.min(Integer.MAX_VALUE, this.maxReserveBytes.get()/(Math.max(1, maxActivePlans/2) + Runtime.getRuntime().availableProcessors())/2);
+	}
+	
+	void setNominalProcessingMemoryMax(int nominalProcessingMemoryMax) {
+		this.nominalProcessingMemoryMax = nominalProcessingMemoryMax;
 	}
 	
     @Override
@@ -595,7 +595,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (count < 1) {
     		return;
     	}
-    	int[] val = reservedByThread.get();
+    	long[] val = reservedByThread.get();
     	val[0] -= count;
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Releasing buffer space", count); //$NON-NLS-1$
@@ -603,44 +603,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	lock.lock();
     	try {
         	this.reserveBatchBytes.addAndGet(count);
-	    	batchesFreed.signalAll();
+	    	batchesFreed.signal();
     	} finally {
     		lock.unlock();
-    	}
-    }
-    
-    /**
-     * TODO: should consider other reservations by the current thread
-     */
-    @Override
-    public int reserveAdditionalBuffers(int additional) {
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-    		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reserving buffer space", additional, "WAIT"); //$NON-NLS-1$ //$NON-NLS-2$
-    	}
-    	lock.lock();
-    	try {
-			//don't wait for more than is available
-			int waitCount = Math.min(additional, this.getMaxReserveKB() - reservedByThread.get()[0]);
-			int committed = 0;
-	    	while (waitCount > 0 && waitCount > this.reserveBatchBytes.get() && committed < additional) {
-	    		long reserveBatchSample = this.reserveBatchBytes.get();
-	    		try {
-					batchesFreed.await(100, TimeUnit.MILLISECONDS);
-				} catch (InterruptedException e) {
-					 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30053, e);
-				}
-				if (reserveBatchSample >= this.reserveBatchBytes.get()) {
-					waitCount >>= 3;
-				} else {
-					waitCount >>= 1;
-				}
-		    	int result = noWaitReserve(additional - committed, false);
-		    	committed += result;
-	    	}	
-	    	return committed;
-    	} finally {
-    		lock.unlock();
-    		persistBatchReferences();
     	}
     }
     
@@ -651,18 +616,99 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	}
     	int result = count;
     	if (mode == BufferReserveMode.FORCE) {
-    		this.reserveBatchBytes.addAndGet(-count);
+    		reserve(count);
     	} else {
-    		result = noWaitReserve(count, true);
+    		lock.lock();
+    		try {
+    			count = Math.min(count, nominalProcessingMemoryMax);
+    			result = noWaitReserve(count, false);
+    		} finally {
+    			lock.unlock();
+    		}
     	}
-    	int[] val = reservedByThread.get();
-    	val[0] += result;
+		persistBatchReferences();
+    	return result;
+    }
+
+	private void reserve(int count) {
+		this.reserveBatchBytes.addAndGet(-count);
+		long[] val = reservedByThread.get();
+		val[0] += count;
+	}
+    
+    @Override
+    public int reserveBuffersBlocking(int count, int attempts, boolean force) throws BlockedException {
+    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+    		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reserving buffer space", count, force); //$NON-NLS-1$
+    	}
+    	assert count >= 0;
+    	if (count == 0) {
+    		return 0;
+    	}
+		long[] val = reservedByThread.get();
+    	int result = 0;
+		int count_orig = count;
+		count = Math.min(count, (int)Math.min(Integer.MAX_VALUE, Math.max(0, nominalProcessingMemoryMax - val[0])));
+		if (count_orig != count && !force) {
+			return 0; //is not possible to reserve the desired amount
+		}
+		if (force && count == 0) {
+			reserve(count_orig);
+			result = count_orig;
+		} else {
+			result = noWaitReserve(count, true);
+		}
+		if (result == 0) {
+			if (val[1] == Long.MIN_VALUE) {
+				val[1] = System.currentTimeMillis();
+			} else if (attempts > 1) {
+				long last = val[1];
+				val[1] = System.currentTimeMillis();
+				try {
+					lock.lock();
+					if (val[1] - last < 10) {
+						//if the time difference is too close, then wait to prevent tight spins
+						//but we can't wait too long as we don't want to thread starve the system
+						batchesFreed.await(20, TimeUnit.MILLISECONDS);
+					}
+					if ((attempts >> 4) >= (count >> 20)) {
+						//aging out 
+						//TOOD: ideally we should be using a priority queue and better scheduling
+						if (!force) {
+							return 0;
+						}
+						reserve(count_orig);
+						result = count_orig;
+					} else {
+						int min = 0;
+						if (force) {
+							min = 3*count/4;
+						} else {
+							min = 4*count/5;
+						}
+						//if a sample looks good proceed
+						if (reserveBatchBytes.get() > min){
+							reserve(count_orig);
+							result = count_orig;
+						}
+					}
+				} catch (InterruptedException e) {
+					throw new TeiidRuntimeException(e);
+				} finally {
+					lock.unlock();
+				}
+			}
+			if (result == 0) {
+				throw BlockedException.BLOCKED_ON_MEMORY_EXCEPTION;
+			}
+		}
 		persistBatchReferences();
     	return result;
     }
 
 	private int noWaitReserve(int count, boolean allOrNothing) {
-		for (int i = 0; i < 2; i++) {
+		boolean success = false;
+		for (int i = 0; !success && i < 2; i++) {
 			long reserveBatch = this.reserveBatchBytes.get();
 			if (allOrNothing && count > reserveBatch) {
 				return 0;
@@ -672,11 +718,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				return 0;
 			}
 			if (this.reserveBatchBytes.compareAndSet(reserveBatch, reserveBatch - count)) {
-				return count;
+				success = true;
 			}
 		}
 		//the value is changing rapidly, but we've already potentially adjusted the value twice, so just proceed
-		this.reserveBatchBytes.addAndGet(-count);
+		if (!success) {
+			this.reserveBatchBytes.addAndGet(-count);
+		}
+		long[] val = reservedByThread.get();
+    	val[0] += count;
 		return count;
 	}
     
@@ -701,13 +751,22 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	void doEvictions(long maxToFree, boolean checkActiveBatch) {
 		int freed = 0;
 		while (freed <= maxToFree && (!checkActiveBatch || (maxToFree == 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .7) || (maxToFree > 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .8))) {
-			CacheEntry ce = evictionQueue.firstEntry(true);
+			CacheEntry ce = evictionQueue.firstEntry(checkActiveBatch);
 			if (ce == null) {
 				break;
 			}
 			synchronized (ce) {
 				if (!memoryEntries.containsKey(ce.getId())) {
+					checkActiveBatch = true;
 					continue; //not currently a valid eviction
+				}
+			}
+			if (!checkActiveBatch) {
+				long lastAccess = ce.getKey().getLastAccess();
+				long currentTime = readAttempts.get();
+				if (currentTime - lastAccess < MAX_READ_AGE) {
+					checkActiveBatch = true;
+					continue;
 				}
 			}
 			boolean evicted = true;
@@ -723,9 +782,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 						}
 						activeBatchBytes.addAndGet(-ce.getSizeEstimate());
 						evictionQueue.remove(ce); //ensures that an intervening get will still be cleaned
-						if (!checkActiveBatch) {
-							break;
-						}
+						checkActiveBatch = true;
 					}
 				}
 			}
@@ -940,6 +997,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		this.cache = null;
 		this.memoryEntries.clear();
 		this.evictionQueue.getEvictionQueue().clear();
+		this.cleaner.cancel();
 	}
 
 	@Override

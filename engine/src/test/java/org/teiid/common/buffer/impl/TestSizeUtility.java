@@ -24,6 +24,7 @@ package org.teiid.common.buffer.impl;
 
 import static org.junit.Assert.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Date;
@@ -38,6 +39,13 @@ import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 
 public class TestSizeUtility {
+	
+	private static class SomeObject implements Serializable {
+		private String state;
+		public SomeObject(String state) {
+			this.state = state;
+		}
+	}
 
     public void helpTestGetStaticSize(Object obj, long expectedSize) {
         helpTestGetSize(obj, expectedSize);
@@ -98,6 +106,14 @@ public class TestSizeUtility {
 
     @Test public void testGetSizeShortString() {
         helpTestGetSize("abcdefghij", 64); //$NON-NLS-1$
+    }
+    
+    @Test public void testGetSizeObject() {
+        helpTestGetStaticSize(new SomeObject(null), 16);
+        helpTestGetStaticSize(new SomeObject("Hello world"), 56);  //$NON-NLS-1$
+        Object obj = new SomeObject(null);
+        //still biased toward the initial estimate
+        assertEquals(160, new SizeUtility(null).getSize(obj, DataTypeManager.determineDataTypeClass(obj), false, false));
     }
 
     @Test public void testGetSizeRow1() {

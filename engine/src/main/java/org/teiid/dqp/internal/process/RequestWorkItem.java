@@ -303,6 +303,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- processor blocked"); //$NON-NLS-1$ //$NON-NLS-2$
         	}
+        	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+        		//requeue
+        		this.moreWork();
+        	}
         } catch (QueryProcessor.ExpiredTimeSliceException e) {
         	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$

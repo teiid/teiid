@@ -47,4 +47,6 @@ public interface BatchManager {
 	Reference<? extends BatchManager> getBatchManagerReference();
 	
 	String[] getTypes();
+	
+	int getRowSizeEstimate();
 }

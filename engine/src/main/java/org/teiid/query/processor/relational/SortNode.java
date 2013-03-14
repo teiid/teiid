@@ -96,8 +96,15 @@ public class SortNode extends RelationalNode {
 
     private void sortPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.sortUtility == null) {
-	        this.sortUtility = new SortUtility(new BatchIterator(getChildren()[0]), items, this.mode, getBufferManager(),
-	                                            getConnectionID(), getChildren()[0].getElements());
+    		TupleSource ts = null;
+    		if (getChildren()[0].hasFinalBuffer()) {
+    			ts = getChildren()[0].getFinalBuffer(-1).createIndexedTupleSource(true);
+    		} else {
+    			ts = new BatchIterator(getChildren()[0]);
+    		}
+	        this.sortUtility = new SortUtility(ts, items, this.mode, getBufferManager(),
+                    getConnectionID(), getChildren()[0].getElements());
+
 		}
 		this.output = this.sortUtility.sort();
 		if (this.outputTs == null) {

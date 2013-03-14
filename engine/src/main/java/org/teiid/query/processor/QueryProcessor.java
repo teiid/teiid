@@ -112,6 +112,9 @@ public class QueryProcessor implements BatchProducer {
 	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
 	    		}
+		    	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+		    		continue; //TODO: pass the commandcontext into sortutility
+		    	}
 	    	}
     		try {
                 Thread.sleep(wait);
@@ -266,6 +269,9 @@ public class QueryProcessor implements BatchProducer {
 	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
 	    		}
+		    	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+		    		continue; //TODO: pass the commandcontext into sortutility
+		    	}
 	    	} catch (TeiidComponentException e) {
 	    		closeProcessing();
 	    		throw e;

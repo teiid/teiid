@@ -125,13 +125,8 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 	 */
 	void setMaxActivePlans(int maxActivePlans);
 
-	/**
-	 * Wait for additional buffers to become available.
-	 * @param additional
-	 * @return
-	 */
-	int reserveAdditionalBuffers(int additional);
-	
 	Streamable<?> persistLob(final Streamable<?> lob,
 			final FileStore store, byte[] bytes) throws TeiidComponentException;
+
+	int reserveBuffersBlocking(int count, int attempts, boolean force) throws BlockedException;
 }
