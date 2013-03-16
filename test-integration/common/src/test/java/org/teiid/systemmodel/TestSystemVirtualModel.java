@@ -29,6 +29,7 @@ import java.sql.CallableStatement;
 import java.sql.ParameterMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
@@ -324,6 +325,22 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		
 		Statement s = this.internalConnection.createStatement();
 		assertEquals(0, s.executeUpdate("call logMsg('DEBUG', 'org.teiid.foo', 'hello world')"));
+	}
+	
+	@Test public void testExpectedTypes() throws Exception {
+		ResultSet rs = this.internalConnection.createStatement().executeQuery("select name from tables where schemaname in ('SYS', 'SYSADMIN')");
+		while (rs.next()) {
+			String name = rs.getString(1);
+			System.out.println(name);
+			ResultSet rs1 = this.internalConnection.createStatement().executeQuery("select * from " + name + " limit 1");
+			ResultSetMetaData metadata = rs1.getMetaData();
+			if (rs1.next()) {
+				for (int i = 1; i <= metadata.getColumnCount(); i++) {
+					Object o = rs1.getObject(i);
+					assertTrue("Type mismatch for " + name + " " + metadata.getColumnName(i), o == null || Class.forName(metadata.getColumnClassName(i)).isAssignableFrom(o.getClass()));
+				}
+			}
+		}
 	}
 	
 }

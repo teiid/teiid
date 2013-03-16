@@ -171,8 +171,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     private Map<SystemTables, BaseExtractionTable<?>> systemTables = new HashMap<SystemTables, BaseExtractionTable<?>>();
     private Map<SystemAdminTables, BaseExtractionTable<?>> systemAdminTables = new HashMap<SystemAdminTables, BaseExtractionTable<?>>();
     
-    private int i;
-
     public DataTierManagerImpl(DQPCore requestMgr, BufferManager bufferMgr, boolean detectChangeEvents) {
 		this.requestMgr = requestMgr;
         this.bufferManager = bufferMgr;
@@ -356,7 +354,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         			VDBMetaData vdb, TransformationMetadata metadata,
         			CommandContext cc, SimpleIterator<VDBMetaData> iter) {
         		row.add(record.getName());
-        		row.add(record.getVersion());
+        		row.add(String.valueOf(record.getVersion()));
         	}
 		});
         name = SystemTables.PROCEDUREPARAMS.name();
