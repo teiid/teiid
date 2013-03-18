@@ -194,7 +194,7 @@ public abstract class FileStore implements Removable {
 	
 	protected abstract void removeDirect();
 	
-	public InputStream createInputStream(final long start, final long length) {
+	public ExtensibleBufferedInputStream createInputStream(final long start, final long length) {
 		return new ExtensibleBufferedInputStream() {
 			private long offset = start;
 			private long streamLength = length;

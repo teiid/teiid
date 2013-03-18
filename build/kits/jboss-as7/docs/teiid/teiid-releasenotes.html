@@ -26,21 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-	<li>TEIID-2253 <b>Multi-source improvements</b> - multi-source planning was significantly improved, which will result in much better plans when using multi-source models.  
-	The user may also now configure the multi-source column name, auto-populate the multi-column in the actual metadata, and use non-literal multi-source column values.
-	<li>TEIID-1557 <b>Generated Key Retrieval</b> - JDBC now supports generated key retrieval, see the Client and the Developers Guides for more.
-	<li>TEIID-2311 <b>Permission Conditions</b> - data roles can now specify SQL conditions that will enforce row-based security and physical table insert/update checked constraints.  See the Reference Guide for more.
-	<li>TEIID-2341 <b>Join Planning Improvements</b> - ANSI join structures can now be preserved with the preserve hint, i.e. FROM /*+ PRESERVE */ (tbl1 INNER JOIN tbl2 ON ...), which is similar to the Oracle ORDERED hint.  
-	Also sources restricted to only outer joins (such as Salesforce) can have INNER or effectively INNER joins pushed to them.
-	<li>TEIID-2312 <b>Source security domains</b> - Ldap, Salesforce, google-spreadsheet and ws (basic auth) translators can now define "security-domain" in their resource-adaptor configuration for security. When defined along with caller-identity the logged in user's credentials are passed to source for authentication. 
-	<li>TEIID-2182 <b>Events</b> - Capture the VDB loading and unloading events now from registering a listener on EventDistributor
-	<li>TEIID-2241 <b>CLI script for Standalone</b> - Install Teiid into any AS7 standalone configuration using the provided CLI script. 
-	<li>TEIID-2152 <b>Basic MERGE support</b> - support for a simplistic MERGE statement was added.  See the Reference for more.
-	<li>TEIID-1757 <b>OData Translator</b> - A translator for OData based sources has been added.
-	<li>TEIID-2363 <b>Concurrent Join Processing Enhancements</b> - both sides of a join will processed more when possible.  See also the org.teiid.joinPrefetchBatches system property in the Admin Guide.
-	<li>TEIID-196 <b>Source Temporary Tables</b> - temporary (locally scoped) tables may be defined at runtime against physical sources with a CREATE FOREIGN TEMPORARY TABLE statement.  See the Reference for more.
-	<li>TEIID-2159 <b>JSON Production</b> - added the JSONARRAY, JSONARRAY_AGG, JSONOBJECT, and JSONPARSE constructs for producing JSON.  See the Reference for more. 
-	<li>TEIID-2248 <b>Bulk Salesforce Inserts</b> - added the ability for the Salesforce translator to perform bulk inserts. 
+	
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -187,6 +173,11 @@ for how to access the underlying SQLWarning chains.
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 8.3</h4>
+<ul>
+  <li>TEIID-2429 the default for maxProcessingKb has effectively doubled (the old default would use approaximately 4MB), while the maxReserveKb default has been reduced to 70% of the memory past the first gigabyte instead of 75%.
+</ul>
 
 <h4>from 8.1</h4>
 <ul>

@@ -109,7 +109,7 @@ public final class SizeUtility {
 	
 	private static class ClassStats {
 		AtomicInteger samples = new AtomicInteger();
-		int averageSize = UNKNOWN_SIZE_BYTES;
+		volatile int averageSize = UNKNOWN_SIZE_BYTES;
 	}
 	
 	private static ConcurrentHashMap<String, ClassStats> objectEstimates = new ConcurrentHashMap<String, ClassStats>();

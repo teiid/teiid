@@ -53,6 +53,7 @@ import org.teiid.common.buffer.AutoCleanupUtil;
 import org.teiid.common.buffer.Cache;
 import org.teiid.common.buffer.CacheEntry;
 import org.teiid.common.buffer.CacheKey;
+import org.teiid.common.buffer.ExtensibleBufferedInputStream;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.Serializer;
 import org.teiid.common.buffer.StorageManager;
@@ -690,6 +691,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		}
 		InputStream is = null;
 		Lock lock = null;
+		ExtensibleBufferedInputStream eis = null;
 		int memoryBlocks = 0;
 		try {
 			synchronized (info) {
@@ -714,7 +716,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 					int segment = info.block/blockStore.blocksInUse.getBitsPerSegment();
 					FileStore fs = blockStore.stores[segment];
 					long blockOffset = (info.block%blockStore.blocksInUse.getBitsPerSegment())*blockStore.blockSize;
-					is = fs.createInputStream(blockOffset, info.memoryBlockCount<<LOG_BLOCK_SIZE);
+					eis = fs.createInputStream(blockOffset, info.memoryBlockCount<<LOG_BLOCK_SIZE);
 					lock = blockStore.locks[segment].writeLock();
 					memoryBlocks = info.memoryBlockCount;
 				} else {
@@ -722,7 +724,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				}
 			}
 			if (lock != null) {
-				is = readIntoMemory(info, is, lock, memoryBlocks);
+				is = readIntoMemory(info, eis, lock, memoryBlocks);
 			}
 			ObjectInput dis = new ObjectInputStream(is);
 			dis.readFully(HEADER_SKIP_BUFFER);
@@ -746,7 +748,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	/**
 	 * Transfer into memory to release memory/file locks
 	 */
-	private InputStream readIntoMemory(PhysicalInfo info, InputStream is,
+	private InputStream readIntoMemory(PhysicalInfo info, ExtensibleBufferedInputStream is,
 			Lock fileLock, int memoryBlocks) throws InterruptedException,
 			IOException {
 		checkForLowMemory();
@@ -766,11 +768,14 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			locked = true;
 			ExtensibleBufferedOutputStream os = new BlockOutputStream(manager, -1);
 			//TODO: there is still an extra buffer being created here, we could FileChannels to do better
-			int b = -1;
-			while ((b = is.read()) != -1) {
-				os.write(b);
+			ByteBuffer bb = null;
+			while ((bb = is.getBuffer()) != null) {
+				byte[] array = bb.array();
+				os.write(array, bb.position() + bb.arrayOffset(), bb.remaining());
+				bb.position(bb.position()+bb.remaining());
 			}
 			fileLock.unlock();
+			os.close();
 			locked = false;
 		    synchronized (info) {
 		        info.inode = manager.getInode();

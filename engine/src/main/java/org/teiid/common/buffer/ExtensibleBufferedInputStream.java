@@ -58,12 +58,12 @@ public abstract class ExtensibleBufferedInputStream extends InputStream {
 		buf.get(b, off, len);
 		return len;
 	}
-	
-	@Override
-	public void reset() throws IOException {
-		if (buf != null) {
-			buf.rewind();
+		
+	public ByteBuffer getBuffer() throws IOException {
+		if (!ensureBytes()) {
+			return null;
 		}
+		return buf;
 	}
 	
 }

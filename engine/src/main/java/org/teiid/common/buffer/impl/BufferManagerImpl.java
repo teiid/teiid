@@ -206,8 +206,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			maxReserveBytes.addAndGet(-BATCH_OVERHEAD);
-			reserveBatchBytes.addAndGet(-BATCH_OVERHEAD);
+			overheadBytes.addAndGet(BATCH_OVERHEAD);
 			cache.addToCacheGroup(id, ce.getId());
 			addMemoryEntry(ce, true);
 			return oid;
@@ -344,6 +343,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     private Integer maxProcessingBytesOrig;
     AtomicLong maxReserveBytes = new AtomicLong(1 << 28);
     AtomicLong reserveBatchBytes = new AtomicLong();
+    AtomicLong overheadBytes = new AtomicLong();
     private int maxActivePlans = DQPConfiguration.DEFAULT_MAX_ACTIVE_PLANS; //used as a hint to set the reserveBatchKB
     private boolean useWeakReferences = true;
     private boolean inlineLobs = true;
@@ -409,8 +409,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	
 	void clearSoftReference(BatchSoftReference bsr) {
 		synchronized (bsr) {
-			maxReserveBytes.addAndGet(bsr.sizeEstimate);
-			reserveBatchBytes.addAndGet(bsr.sizeEstimate);
+			overheadBytes.addAndGet(-bsr.sizeEstimate);
 			bsr.sizeEstimate = 0;
 		}
 		bsr.clear();
@@ -418,8 +417,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	
 	void removeFromCache(Long gid, Long batch) {
 		if (cache.remove(gid, batch)) {
-			maxReserveBytes.addAndGet(BATCH_OVERHEAD);
-			reserveBatchBytes.addAndGet(BATCH_OVERHEAD);
+			overheadBytes.addAndGet(-BATCH_OVERHEAD);
 		}
 	}
 	
@@ -583,7 +581,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			weakReferenceCache = new WeakReferenceHashedValueCache<CacheEntry>(Math.min(30, logSize));
 		}
 		this.maxSoftReferences = 1 << Math.min(30, logSize);
-		this.nominalProcessingMemoryMax = (int)Math.min(Integer.MAX_VALUE, this.maxReserveBytes.get()/(Math.max(1, maxActivePlans/2) + Runtime.getRuntime().availableProcessors())/2);
+		this.nominalProcessingMemoryMax = (int)Math.max(Math.min(this.maxReserveBytes.get(), this.maxProcessingBytes), Math.min(Integer.MAX_VALUE, 2*this.maxReserveBytes.get()/(Math.max(1, maxActivePlans/2) + Runtime.getRuntime().availableProcessors())));
 	}
 	
 	void setNominalProcessingMemoryMax(int nominalProcessingMemoryMax) {
@@ -671,7 +669,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 						//but we can't wait too long as we don't want to thread starve the system
 						batchesFreed.await(20, TimeUnit.MILLISECONDS);
 					}
-					if ((attempts >> 4) >= (count >> 20)) {
+					if ((attempts << (force?16:18)) > count) {
 						//aging out 
 						//TOOD: ideally we should be using a priority queue and better scheduling
 						if (!force) {
@@ -682,7 +680,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					} else {
 						int min = 0;
 						if (force) {
-							min = 3*count/4;
+							min = 2*count/3;
 						} else {
 							min = 4*count/5;
 						}
@@ -710,10 +708,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		boolean success = false;
 		for (int i = 0; !success && i < 2; i++) {
 			long reserveBatch = this.reserveBatchBytes.get();
-			if (allOrNothing && count > reserveBatch) {
-				return 0;
+			long overhead = this.overheadBytes.get();
+			long current = reserveBatch - overhead;
+			if (allOrNothing) {
+				if (count > reserveBatch) {
+					return 0;
+				}
+			} else if (count > current) {
+				count = (int)Math.max(0, current);
 			}
-			count = (int)Math.min(count, Math.max(0, reserveBatch));
 			if (count == 0) {
 				return 0;
 			}
@@ -731,7 +734,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
     
 	void persistBatchReferences() {
-		long activeBatch = activeBatchBytes.get();
+		long activeBatch = activeBatchBytes.get() + overheadBytes.get();
 		long reserveBatch = reserveBatchBytes.get();
 		if (activeBatch <= reserveBatch) {
     		long memoryCount = activeBatch + getMaxReserveKB() - reserveBatch;
@@ -750,7 +753,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 
 	void doEvictions(long maxToFree, boolean checkActiveBatch) {
 		int freed = 0;
-		while (freed <= maxToFree && (!checkActiveBatch || (maxToFree == 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .7) || (maxToFree > 0 && activeBatchBytes.get() > reserveBatchBytes.get() * .8))) {
+		while (freed <= maxToFree && (!checkActiveBatch || (maxToFree == 0 && activeBatchBytes.get() + overheadBytes.get() > reserveBatchBytes.get() * .7) || (maxToFree > 0 && activeBatchBytes.get() + overheadBytes.get() > reserveBatchBytes.get() * .8))) {
 			CacheEntry ce = evictionQueue.firstEntry(checkActiveBatch);
 			if (ce == null) {
 				break;
@@ -822,8 +825,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		int sizeEstimate = ce.getSizeEstimate()/2;
 		BatchSoftReference ref = new BatchSoftReference(ce, SOFT_QUEUE, sizeEstimate);
 		softCache.put(ce.getId(), ref);
-		maxReserveBytes.addAndGet(- sizeEstimate);
-		reserveBatchBytes.addAndGet(- sizeEstimate);
+		overheadBytes.addAndGet(sizeEstimate);
 	}
 	
 	/**
@@ -925,8 +927,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		cleanSoftReferences();
 		Collection<Long> vals = cache.removeCacheGroup(id);
 		long overhead = vals.size() * BATCH_OVERHEAD;
-		maxReserveBytes.addAndGet(overhead);
-		reserveBatchBytes.addAndGet(overhead);
+		overheadBytes.addAndGet(-overhead);
 		if (!vals.isEmpty()) {
 			for (Long val : vals) {
 				//TODO: we will unnecessarily call remove on the cache, but that should be low cost

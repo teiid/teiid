@@ -52,7 +52,7 @@ public abstract class ExtensibleBufferedOutputStream extends OutputStream {
 	}
 
     public void write(byte b[], int off, int len) throws IOException {
-    	while (true) {
+    	while (len > 0) {
         	ensureBuffer();
     		int toCopy = Math.min(buf.remaining(), len);
     		buf.put(b, off, toCopy);

@@ -39,6 +39,7 @@ import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
@@ -67,14 +68,7 @@ import org.teiid.query.processor.FakeDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestTextTable;
-import org.teiid.query.processor.relational.BlockingFakeRelationalNode;
-import org.teiid.query.processor.relational.EnhancedSortMergeJoinStrategy;
-import org.teiid.query.processor.relational.FakeRelationalNode;
-import org.teiid.query.processor.relational.JoinNode;
-import org.teiid.query.processor.relational.JoinStrategy;
-import org.teiid.query.processor.relational.MergeJoinStrategy;
-import org.teiid.query.processor.relational.RelationalNode;
-import org.teiid.query.processor.relational.SortNode;
+import org.teiid.query.processor.relational.*;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.Command;
@@ -145,9 +139,9 @@ public class TestEnginePerformance {
 				
 			});
 		}
-		es.invokeAll(tasks);
-		for (Callable<Void> callable : tasks) {
-			callable.call();
+		List<Future<Void>> result = es.invokeAll(tasks);
+		for (Future<Void> future : result) {
+			future.get();
 		}
 	}
 	
@@ -452,6 +446,91 @@ public class TestEnginePerformance {
 				return null;
 			}
 		});
+	}
+	
+	private void helpTestLargeSort(int iterations, int threads, final int rows) throws InterruptedException, Exception {
+		final List<ElementSymbol> elems = new ArrayList<ElementSymbol>();
+		final int cols = 50;
+		for (int i = 0; i < cols; i++) {
+			ElementSymbol elem1 = new ElementSymbol("e" + i);
+			elem1.setType(DataTypeManager.DefaultDataClasses.STRING);
+			elems.add(elem1);
+		}
+		
+		final List<ElementSymbol> sortElements = Arrays.asList(elems.get(0));
+		
+		final Task task = new Task() {
+			@Override
+			public Void call() throws Exception {
+				CommandContext context = new CommandContext ("pid", "test", null, null, 1);               //$NON-NLS-1$ //$NON-NLS-2$
+				SortNode sortNode = new SortNode(1);
+		    	sortNode.setSortElements(new OrderBy(sortElements).getOrderByItems());
+		        sortNode.setMode(Mode.SORT);
+				sortNode.setElements(elems);
+				RelationalNode rn = new RelationalNode(2) {
+					int blockingPeriod = 3;
+					int count = 0;
+					int batches = 0;
+					
+					@Override
+					protected TupleBatch nextBatchDirect() throws BlockedException,
+							TeiidComponentException, TeiidProcessingException {
+						if (count++%blockingPeriod==0) {
+							throw BlockedException.INSTANCE;
+						}
+						int batchSize = this.getBatchSize();
+						int batchRows = batchSize;
+						boolean done = false;
+						int start = batches++ * batchSize;
+						if (start + batchSize >= rows) {
+							done = true;
+							batchRows = rows - start;  
+						}
+						ArrayList<List<?>> batch = new ArrayList<List<?>>(batchRows);
+						for (int i = 0; i < batchRows; i++) {
+							ArrayList<Object> row = new ArrayList<Object>();
+							for (int j = 0; j < cols; j++) {
+								if (j == 0) {
+									row.add(String.valueOf((i * 279470273) % 4294967291l));
+								} else {
+									row.add(i + "abcdefghijklmnop" + j);	
+								}
+							}
+							batch.add(row);
+						}
+						TupleBatch result = new TupleBatch(start+1, batch);
+						if (done) {
+							result.setTerminationFlag(true);
+						}
+						return result;
+					}
+					
+					@Override
+					public Object clone() {
+						return null;
+					}
+				};
+				rn.setElements(elems);
+		        sortNode.addChild(rn);        
+				sortNode.initialize(context, bm, null);    
+		        rn.initialize(context, bm, null);
+		        process(sortNode, rows);
+				return null;
+			}
+		};
+		runTask(iterations, threads, task);
+	}
+	
+	@Test public void runWideSort_1_100000() throws Exception {
+		helpTestLargeSort(4, 1, 100000);
+	}
+	
+	@Test public void runWideSort_4_50000() throws Exception {
+		helpTestLargeSort(4, 4, 50000);
+	}
+
+	@Test public void runWideSort_16_25000() throws Exception {
+		helpTestLargeSort(4, 16, 25000);
 	}
 	
 	/**
