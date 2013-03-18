@@ -356,7 +356,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	protected String quoteName(String name) {
-		if (quoteNameInSource) {
+		if (quoteNameInSource && quoteString != null) {
 			return quoteString + StringUtil.replaceAll(name, quoteString, quoteString + quoteString) + quoteString;
 		}
 		return name;

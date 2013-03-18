@@ -323,7 +323,7 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
 		try {
 			HiveMetadataProcessor metadataProcessor = new HiveMetadataProcessor();
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getImportProperties(), "importer"); //$NON-NLS-1$
+			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
 		} catch (SQLException e) {
 			throw new TranslatorException(e);

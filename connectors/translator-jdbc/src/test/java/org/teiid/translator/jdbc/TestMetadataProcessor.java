@@ -71,4 +71,12 @@ public class TestMetadataProcessor {
 		assertTrue(t.getIndexes().isEmpty());
 	}
 	
+	/**
+	 * JDBC says to return an empty string, but some sources return null and we need to handle the null case anyways
+	 */
+	@Test public void testQuoteStringNull() {
+		JDBCMetdataProcessor jmp = new JDBCMetdataProcessor();
+		assertEquals("x", jmp.quoteName("x"));
+	}
+	
 }
