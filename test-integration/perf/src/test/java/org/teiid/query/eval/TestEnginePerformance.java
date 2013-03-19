@@ -525,14 +525,10 @@ public class TestEnginePerformance {
 		helpTestLargeSort(4, 1, 100000);
 	}
 	
-	@Test public void runWideSort_4_50000() throws Exception {
-		helpTestLargeSort(4, 4, 50000);
+	@Test public void runWideSort_4_100000() throws Exception {
+		helpTestLargeSort(2, 4, 100000);
 	}
 
-	@Test public void runWideSort_16_25000() throws Exception {
-		helpTestLargeSort(4, 16, 25000);
-	}
-	
 	/**
 	 * Generates a 5 MB document
 	 */

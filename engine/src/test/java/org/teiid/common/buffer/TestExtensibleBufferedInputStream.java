@@ -22,55 +22,36 @@
 
 package org.teiid.common.buffer;
 
+import static org.junit.Assert.*;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
-public abstract class ExtensibleBufferedInputStream extends InputStream {
-	ByteBuffer buf;
+import org.junit.Test;
 
-	@Override
-	public int read() throws IOException {
-		if (!ensureBytes()) {
-			return -1;
-		}
-		return buf.get() & 0xff;
-	}
-
-	private boolean ensureBytes() throws IOException {
-		if (buf == null || buf.remaining() == 0) {
-			buf = nextBuffer();
-			if (buf == null) {
-				return false;
+public class TestExtensibleBufferedInputStream {
+	
+	@Test public void testReset() throws IOException {
+		InputStream is = new ExtensibleBufferedInputStream() {
+			boolean returned = false;
+			@Override
+			protected ByteBuffer nextBuffer() throws IOException {
+				if (returned) {
+					return null;
+				}
+				ByteBuffer result = ByteBuffer.allocate(3);
+				returned = true;
+				return result;
 			}
+		};
+		is.read();
+		is.read();
+		is.reset();
+		for (int i = 0; i < 3; i++) {
+			assertEquals(0, is.read());
 		}
-		return true;
+		assertEquals(-1, is.read());
 	}
 
-	protected abstract ByteBuffer nextBuffer() throws IOException;
-
-	@Override
-	public int read(byte[] b, int off, int len) throws IOException {
-		if (!ensureBytes()) {
-			return -1;
-		}
-		len = Math.min(len, buf.remaining());
-		buf.get(b, off, len);
-		return len;
-	}
-	
-	@Override
-	public void reset() throws IOException {
-		if (buf != null) {
-			buf.rewind();
-		}
-	}
-		
-	public ByteBuffer getBuffer() throws IOException {
-		if (!ensureBytes()) {
-			return null;
-		}
-		return buf;
-	}
-	
 }
