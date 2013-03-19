@@ -40,10 +40,10 @@ public class TestBufferManagerImpl {
         //restricted by nominal max
         assertEquals(512000, bufferManager.reserveBuffers(1024000, BufferReserveMode.NO_WAIT));
 		//forced
-        assertEquals(1024000, bufferManager.reserveBuffersBlocking(1024000, 0, true));
+        assertEquals(1024000, bufferManager.reserveBuffersBlocking(1024000, new long[] {0,0}, true));
         
         //not forced, so we get noting
-        assertEquals(0, bufferManager.reserveBuffersBlocking(1024000, 0, false));
+        assertEquals(0, bufferManager.reserveBuffersBlocking(1024000, new long[] {0,0}, false));
         
         bufferManager.releaseBuffers(512000);
         //the difference between 1mb and 1000k

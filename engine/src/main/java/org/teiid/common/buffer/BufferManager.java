@@ -128,5 +128,7 @@ public interface BufferManager extends StorageManager, TupleBufferCache {
 	Streamable<?> persistLob(final Streamable<?> lob,
 			final FileStore store, byte[] bytes) throws TeiidComponentException;
 
-	int reserveBuffersBlocking(int count, int attempts, boolean force) throws BlockedException;
+	int reserveBuffersBlocking(int count, long[] attempts, boolean force) throws BlockedException;
+
+	void releaseOrphanedBuffers(long count);
 }

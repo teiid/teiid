@@ -63,6 +63,7 @@ import org.teiid.query.ReplicatedObject;
 import org.teiid.query.processor.relational.ListNestedSortComparator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.util.CommandContext;
 
 
 /**
@@ -361,16 +362,6 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     LrfuEvictionQueue<CacheEntry> evictionQueue = new LrfuEvictionQueue<CacheEntry>(readAttempts);
     ConcurrentHashMap<Long, CacheEntry> memoryEntries = new ConcurrentHashMap<Long, CacheEntry>(16, .75f, CONCURRENCY_LEVEL);
     
-    private static class ResourceThreadLocal extends ThreadLocal<long[]> {
-    	protected long[] initialValue() {
-    		long[] result = new long[2];
-    		result[1] = Long.MIN_VALUE;
-    		return result;
-    	}
-    };
-    
-    private ThreadLocal<long[]> reservedByThread = new ResourceThreadLocal();
-    
     //limited size reference caches based upon the memory settings
     private WeakReferenceHashedValueCache<CacheEntry> weakReferenceCache; 
     private Map<Long, BatchSoftReference> softCache = Collections.synchronizedMap(new LinkedHashMap<Long, BatchSoftReference>(16, .75f, false) {
@@ -587,16 +578,33 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	void setNominalProcessingMemoryMax(int nominalProcessingMemoryMax) {
 		this.nominalProcessingMemoryMax = nominalProcessingMemoryMax;
 	}
-	
+
+    @Override
+    public void releaseOrphanedBuffers(long count) {
+    	releaseBuffers(count, false);
+    }
+    	
     @Override
     public void releaseBuffers(int count) {
+    	releaseBuffers(count, true);
+    }
+    
+    private void releaseBuffers(long count, boolean updateContext) {
     	if (count < 1) {
     		return;
     	}
-    	long[] val = reservedByThread.get();
-    	val[0] -= count;
-    	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
-    		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Releasing buffer space", count); //$NON-NLS-1$
+    	if (updateContext) {
+        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
+        		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Releasing buffer space", count); //$NON-NLS-1$
+        	}
+	    	CommandContext context = CommandContext.getThreadLocalContext();
+	    	if (context != null) {
+	    		context.addAndGetReservedBuffers((int)-count);
+	    	}
+    	} else {
+        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.INFO)) {
+        		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Releasing orphaned buffer space", count); //$NON-NLS-1$
+        	}
     	}
     	lock.lock();
     	try {
@@ -612,14 +620,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reserving buffer space", count, mode); //$NON-NLS-1$
     	}
+		CommandContext context = CommandContext.getThreadLocalContext();
     	int result = count;
     	if (mode == BufferReserveMode.FORCE) {
-    		reserve(count);
+    		reserve(count, context);
     	} else {
     		lock.lock();
     		try {
     			count = Math.min(count, nominalProcessingMemoryMax);
-    			result = noWaitReserve(count, false);
+    			result = noWaitReserve(count, false, context);
     		} finally {
     			lock.unlock();
     		}
@@ -628,14 +637,15 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	return result;
     }
 
-	private void reserve(int count) {
+	private void reserve(int count, CommandContext context) {
 		this.reserveBatchBytes.addAndGet(-count);
-		long[] val = reservedByThread.get();
-		val[0] += count;
+		if (context != null) {
+			context.addAndGetReservedBuffers(count);
+		}
 	}
     
     @Override
-    public int reserveBuffersBlocking(int count, int attempts, boolean force) throws BlockedException {
+    public int reserveBuffersBlocking(int count, long[] val, boolean force) throws BlockedException {
     	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
     		LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Reserving buffer space", count, force); //$NON-NLS-1$
     	}
@@ -643,23 +653,25 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
     	if (count == 0) {
     		return 0;
     	}
-		long[] val = reservedByThread.get();
     	int result = 0;
 		int count_orig = count;
-		count = Math.min(count, (int)Math.min(Integer.MAX_VALUE, Math.max(0, nominalProcessingMemoryMax - val[0])));
+		CommandContext context = CommandContext.getThreadLocalContext();
+		long reserved = 0;
+		if (context != null) {
+			context.addAndGetReservedBuffers(0);
+			//TODO: in theory we have to check the whole stack as we could be 
+			//issuing embedded queries back to ourselves
+		}
+		count = Math.min(count, (int)Math.min(Integer.MAX_VALUE, nominalProcessingMemoryMax - reserved));
 		if (count_orig != count && !force) {
 			return 0; //is not possible to reserve the desired amount
 		}
-		if (force && count == 0) {
-			reserve(count_orig);
-			result = count_orig;
-		} else {
-			result = noWaitReserve(count, true);
-		}
+		result = noWaitReserve(count, true, context);
 		if (result == 0) {
-			if (val[1] == Long.MIN_VALUE) {
+			if (val[0]++ == 0) {
 				val[1] = System.currentTimeMillis();
-			} else if (attempts > 1) {
+			}
+			if (val[1] > 1) {
 				long last = val[1];
 				val[1] = System.currentTimeMillis();
 				try {
@@ -669,13 +681,13 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 						//but we can't wait too long as we don't want to thread starve the system
 						batchesFreed.await(20, TimeUnit.MILLISECONDS);
 					}
-					if ((attempts << (force?16:18)) > count) {
+					if ((val[0] << (force?16:18)) > count) {
 						//aging out 
 						//TOOD: ideally we should be using a priority queue and better scheduling
 						if (!force) {
 							return 0;
 						}
-						reserve(count_orig);
+						reserve(count_orig, context);
 						result = count_orig;
 					} else {
 						int min = 0;
@@ -686,7 +698,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 						}
 						//if a sample looks good proceed
 						if (reserveBatchBytes.get() > min){
-							reserve(count_orig);
+							reserve(count_orig, context);
 							result = count_orig;
 						}
 					}
@@ -700,18 +712,23 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				throw BlockedException.BLOCKED_ON_MEMORY_EXCEPTION;
 			}
 		}
+		if (force && result < count_orig) {
+			reserve(count_orig - result, context);
+			result = count_orig;
+		}
+		val[0] = 0;
 		persistBatchReferences();
     	return result;
     }
 
-	private int noWaitReserve(int count, boolean allOrNothing) {
+	private int noWaitReserve(int count, boolean allOrNothing, CommandContext context) {
 		boolean success = false;
 		for (int i = 0; !success && i < 2; i++) {
 			long reserveBatch = this.reserveBatchBytes.get();
 			long overhead = this.overheadBytes.get();
 			long current = reserveBatch - overhead;
 			if (allOrNothing) {
-				if (count > reserveBatch) {
+				if (count > current) {
 					return 0;
 				}
 			} else if (count > current) {
@@ -728,8 +745,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		if (!success) {
 			this.reserveBatchBytes.addAndGet(-count);
 		}
-		long[] val = reservedByThread.get();
-    	val[0] += count;
+		if (context != null) {
+			context.addAndGetReservedBuffers(count);
+		}
 		return count;
 	}
     

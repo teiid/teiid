@@ -113,7 +113,7 @@ public class SortUtility {
     private static final int DONE = 3;
 	private TupleBuffer workingBuffer;
 	private boolean skipBuffer;
-	private int processingAttempts;
+	private long[] attempts = new long[2];
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
                         String groupName, List<? extends Expression> schema) {
@@ -404,18 +404,15 @@ public class SortUtility {
         	if (twoPass < activeTupleBuffers.size()) {
         		//wait for 2-pass
     			int needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), .5));
-    	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, processingAttempts++, false);
-        		processingAttempts = 0;
+    	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, false);
         		if (reserved == 0 && twoPass*subLists < activeTupleBuffers.size()) {
         			//force 3-pass
         			needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), 1/3d));
-        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, processingAttempts++, true);
-        	        processingAttempts = 0;
+        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, true);
         		}
         	} else if (desiredSpace < Integer.MAX_VALUE) {
         		//wait for 1-pass
-        		reserved += bufferManager.reserveBuffersBlocking((int)desiredSpace - toForce, processingAttempts++, false);
-        		processingAttempts = 0;
+        		reserved += bufferManager.reserveBuffersBlocking((int)desiredSpace - toForce, attempts, false);
         	}
         }
         int total = reserved + toForce;
