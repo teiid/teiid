@@ -49,6 +49,7 @@ public class TupleBuffer {
 			AbstractTupleSource {
 		private final boolean singleUse;
 		private boolean noBlocking;
+		private boolean reverse;
 
 		private TupleBufferTupleSource(boolean singleUse) {
 			this.singleUse = singleUse;
@@ -56,7 +57,7 @@ public class TupleBuffer {
 
 		@Override
 		protected List<?> finalRow() throws TeiidComponentException, TeiidProcessingException {
-			if(isFinal || noBlocking) {
+			if(isFinal || noBlocking || reverse) {
 		        return null;
 		    } 
 			if (rowSourceLock == null) { 
@@ -76,7 +77,10 @@ public class TupleBuffer {
 
 		@Override
 		public int available() {
-			return rowCount - getCurrentIndex() + 1;
+			if (!reverse) {
+				return rowCount - getCurrentIndex() + 1;
+			}
+			return getCurrentIndex();
 		}
 
 		@Override
@@ -95,6 +99,19 @@ public class TupleBuffer {
 		public void setNoBlocking(boolean noBlocking) {
 			this.noBlocking = noBlocking;
 		}
+		
+		public void setReverse(boolean reverse) {
+			this.reverse = reverse;
+		}
+		
+		@Override
+		public int getCurrentIndex() {
+			if (!reverse) {
+				return super.getCurrentIndex();
+			}
+			return getRowCount() - super.getCurrentIndex() + 1;
+		}
+		
 	}
 
 	/**
@@ -448,8 +465,8 @@ public class TupleBuffer {
 	/**
 	 * Return a more accurate batch estimate or 0 if a new estimate is not available
 	 */
-	public int getBatchMemorySizeEstimate() {
-		return this.manager.getRowSizeEstimate()*this.batchSize;
+	public int getRowSizeEstimate() {
+		return this.manager.getRowSizeEstimate();
 	}
 	
 }

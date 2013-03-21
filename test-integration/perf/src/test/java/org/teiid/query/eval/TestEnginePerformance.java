@@ -34,6 +34,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -44,6 +45,7 @@ import java.util.concurrent.Future;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
@@ -82,7 +84,10 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings("nls")
 public class TestEnginePerformance {
 	
+	private static boolean debug = false;
+	
 	private static BufferManagerImpl bm;
+	private static BufferFrontedFileStoreCache cache;
 	private static ExecutorService es;
 	private static Random r = new Random(0);
 	
@@ -191,7 +196,7 @@ public class TestEnginePerformance {
 		for (int i = 0; i < rowCount; i++) {
 			data[i] = Arrays.asList(i, String.valueOf(i));
 		}
-		//Collections.shuffle(Arrays.asList(data), r);
+		Collections.shuffle(Arrays.asList(data), r);
 		return data;
 	}
 	
@@ -260,11 +265,11 @@ public class TestEnginePerformance {
 		bm = new BufferManagerImpl();
 
 		bm.setMaxProcessingKB(1<<12);
-		bm.setMaxReserveKB((1<<19)-(1<<17));
+		bm.setMaxReserveKB((1<<18)-(1<<16));
 		bm.setMaxActivePlans(20);
 		
-		BufferFrontedFileStoreCache cache = new BufferFrontedFileStoreCache();
-		cache.setMemoryBufferSpace(1<<27);
+		cache = new BufferFrontedFileStoreCache();
+		cache.setMemoryBufferSpace(1<<26);
 		FileStorageManager fsm = new FileStorageManager();
 		fsm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + "/data");
 		cache.setStorageManager(fsm);
@@ -273,6 +278,12 @@ public class TestEnginePerformance {
 		bm.initialize();
 		
 		es = Executors.newCachedThreadPool();
+	}
+	
+	@After public void tearDown() throws Exception {
+		if (debug) {
+			showStats();
+		}
 	}
 	
 	private void helpTestXMLTable(int iterations, int threadCount, String file, int expectedRowCount) throws QueryParserException,
@@ -527,6 +538,16 @@ public class TestEnginePerformance {
 	
 	@Test public void runWideSort_4_100000() throws Exception {
 		helpTestLargeSort(2, 4, 100000);
+	}
+
+	private static void showStats() {
+		System.out.println(bm.getBatchesAdded());
+		System.out.println(bm.getReferenceHits());
+		System.out.println(bm.getReadAttempts());
+		System.out.println(bm.getReadCount());
+		System.out.println(bm.getWriteCount());
+		System.out.println(cache.getStorageReads());
+		System.out.println(cache.getStorageWrites());
 	}
 
 	/**

@@ -57,10 +57,11 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 			BlockedException, TeiidProcessingException {
 		if (available() > 0) {
 			//if (forwardOnly) {
-				if (batch == null || !batch.containsRow(currentRow)) {
-					batch = getBatch(currentRow);
+				int row = getCurrentIndex();
+				if (batch == null || !batch.containsRow(row)) {
+					batch = getBatch(row);
 				}
-				return batch.getTuple(currentRow);
+				return batch.getTuple(row);
 			//} 
 			//TODO: determine if we should directly hold a soft reference here
 			//return getRow(currentRow);

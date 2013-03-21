@@ -105,8 +105,8 @@ public class DependentCriteriaProcessor {
 		                    }
 		                }
 		                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
-		                this.sortUtility = new SortUtility(originalVs.getTupleBuffer().createIndexedTupleSource(), sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
-		                this.sortUtility.setSkipBuffer(true);
+		                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
+		            	this.sortUtility.setWorkingBuffer(originalVs.getTupleBuffer());
 	            	}
 	            	dvs = new DependentValueSource(sortUtility.sort());
                 } else {

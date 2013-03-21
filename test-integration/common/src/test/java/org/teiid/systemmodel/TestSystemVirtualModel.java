@@ -131,7 +131,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 
 	@Test public void testColumns() throws Exception {
-		checkResult("testColumns", "select* from SYS.Columns order by Name"); //$NON-NLS-1$ //$NON-NLS-2$
+		checkResult("testColumns", "select* from SYS.Columns order by Name, uid"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 
 	@Test public void testTableType() throws Exception {

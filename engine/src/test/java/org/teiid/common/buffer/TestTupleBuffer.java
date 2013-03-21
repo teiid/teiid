@@ -31,6 +31,7 @@ import javax.sql.rowset.serial.SerialClob;
 
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
+import org.teiid.common.buffer.TupleBuffer.TupleBufferTupleSource;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -58,6 +59,21 @@ public class TestTupleBuffer {
 		batch = tb.getBatch(2);
 		assertTrue(batch.getTerminationFlag());
 		assertEquals(2, batch.getBeginRow());
+	}
+	
+	@Test public void testReverseIteration() throws Exception {
+		ElementSymbol x = new ElementSymbol("x"); //$NON-NLS-1$
+		x.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+		List<ElementSymbol> schema = Arrays.asList(x);
+		TupleBuffer tb = BufferManagerFactory.getStandaloneBufferManager().createTupleBuffer(schema, "x", TupleSourceType.PROCESSOR); //$NON-NLS-1$ 
+		tb.addTuple(Arrays.asList(1));
+		tb.addTuple(Arrays.asList(2));
+		TupleBufferTupleSource tbts = tb.createIndexedTupleSource();
+		tbts.setReverse(true);
+		assertTrue(tbts.hasNext());
+		assertEquals(2, tbts.nextTuple().get(0));
+		assertEquals(1, tbts.nextTuple().get(0));
+		assertFalse(tbts.hasNext());
 	}
 	
 	@Test public void testTruncate() throws Exception {

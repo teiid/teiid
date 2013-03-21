@@ -280,16 +280,12 @@ class SourceState {
     	}
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
-    		boolean skipBuffer = false;
     		if (this.buffer != null) {
     			this.buffer.setForwardOnly(true);
     			if (this.prefetch != null) {
     				this.prefetch.setPosition(1);
     				this.prefetch.disableSave();
     				ts = this.prefetch;
-    			} else {
-	    			ts = this.buffer.createIndexedTupleSource();
-	    			skipBuffer = true;
     			}
     		} else {
     			ts = new BatchIterator(this.source);
@@ -297,7 +293,9 @@ class SourceState {
 		    this.sortUtility = new SortUtility(ts, expressions, Collections.nCopies(expressions.size(), OrderBy.ASC), 
 		    		sortOption == SortOption.SORT_DISTINCT?Mode.DUP_REMOVE_SORT:Mode.SORT, this.source.getBufferManager(), this.source.getConnectionID(), source.getElements());
 		    this.markDistinct(sortOption == SortOption.SORT_DISTINCT && expressions.size() == this.getOuterVals().size());
-		    this.sortUtility.setSkipBuffer(skipBuffer);
+		    if (ts == null) {
+		    	this.sortUtility.setWorkingBuffer(this.buffer);
+		    }
 		}
     	if (sortOption == SortOption.NOT_SORTED) {
     		this.buffers = sortUtility.onePassSort();

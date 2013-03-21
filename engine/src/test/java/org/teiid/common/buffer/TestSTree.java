@@ -134,8 +134,8 @@ public class TestSTree {
 	}
 	
 	@Test public void testSearch() throws TeiidComponentException, TeiidProcessingException {
-		BufferManagerImpl bm = BufferManagerFactory.createBufferManager();
-		bm.setProcessorBatchSize(1);
+		//due to buffering changes we need to hold this in memory directly rather than serialize it out as that will lead to GC overhead errors
+		BufferManagerImpl bm = BufferManagerFactory.getTestBufferManager(Integer.MAX_VALUE, 1);
 		
 		ElementSymbol e1 = new ElementSymbol("x");
 		e1.setType(Integer.class);

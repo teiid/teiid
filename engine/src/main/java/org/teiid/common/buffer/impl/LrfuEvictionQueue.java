@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.teiid.common.buffer.BaseCacheEntry;
@@ -48,6 +49,7 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	protected AtomicLong clock;
 	protected long maxInterval;
 	protected long halfLife;
+	private AtomicInteger size = new AtomicInteger();
 	
 	public LrfuEvictionQueue(AtomicLong clock) {
 		this.clock = clock;
@@ -55,11 +57,19 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	}
 
 	public boolean remove(V value) {
-		return evictionQueue.remove(value.getKey()) != null;
+		if (evictionQueue.remove(value.getKey()) != null) {
+			size.addAndGet(-1);
+			return true;
+		}
+		return false;
 	}
 	
 	public boolean add(V value) {
-		return evictionQueue.put(value.getKey(), value) == null;
+		if (evictionQueue.put(value.getKey(), value) == null) {
+			size.addAndGet(1);
+			return true;
+		}
+		return false;
 	}
 	
 	public void touch(V value) {
@@ -80,6 +90,9 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 		Map.Entry<CacheKey, V> entry = null;
 		if (poll) {
 			entry = evictionQueue.pollFirstEntry();
+			if (entry != null) {
+				size.addAndGet(-1);
+			}
 		} else {
 			entry = evictionQueue.firstEntry();
 		}
@@ -128,6 +141,10 @@ public class LrfuEvictionQueue<V extends BaseCacheEntry> {
 	public void setHalfLife(long halfLife) {
 		this.halfLife = halfLife;
 		this.maxInterval = 62*this.halfLife;
+	}
+	
+	public int getSize() {
+		return size.get();
 	}
 	
 }

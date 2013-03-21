@@ -126,8 +126,9 @@ public class SortingFilter extends AggregateFunction {
 
             // Sort
             if (sortUtility == null) {
-            	sortUtility = new SortUtility(collectionBuffer.createIndexedTupleSource(true), sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName, collectionBuffer.getSchema());
-            	this.sortUtility.setSkipBuffer(true);
+            	sortUtility = new SortUtility(null, sortItems, removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, mgr, groupName, collectionBuffer.getSchema());
+            	collectionBuffer.setForwardOnly(true);
+            	this.sortUtility.setWorkingBuffer(collectionBuffer);
             }
             TupleBuffer sorted = sortUtility.sort();
             sorted.setForwardOnly(true);

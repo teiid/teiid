@@ -809,19 +809,19 @@ public class TestJoinNode {
         this.leftTuples[11] = Arrays.asList((Integer)null);
         
         expected = new List[] {
-        		Arrays.asList(64, 64),
-        		Arrays.asList(36, 36),
-        		Arrays.asList(8, 8),
-        		Arrays.asList(48, 48),
+        		Arrays.asList(0, 0),
+        		Arrays.asList(0, 0),
+        		Arrays.asList(28, 28),
+        		Arrays.asList(56, 56),
+        		Arrays.asList(16, 16),
+        		Arrays.asList(4, 4),
+        		Arrays.asList(32, 32),
         		Arrays.asList(20, 20),
         		Arrays.asList(60, 60),
-        		Arrays.asList(32, 32),
-        		Arrays.asList(4, 4),
-        		Arrays.asList(16, 16),
-        		Arrays.asList(56, 56),
-        		Arrays.asList(28, 28),
-        		Arrays.asList(0, 0),
-        		Arrays.asList(0, 0),
+        		Arrays.asList(48, 48),
+        		Arrays.asList(8, 8),
+        		Arrays.asList(36, 36),
+        		Arrays.asList(64, 64),
         };
         helpCreateJoin();               
         EnhancedSortMergeJoinStrategy psj = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
