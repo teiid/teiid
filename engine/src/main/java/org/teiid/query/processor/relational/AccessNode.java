@@ -477,7 +477,6 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         if (this.projection != null && this.projection.length > 0 && this.originalSelect != null) {
         	props.addProperty(PROP_SELECT_COLS, this.originalSelect.toString());
         }
-        props.addProperty(PROP_MODEL_NAME, this.modelName);
         if (this.info != null) {
         	props.addProperty(PROP_SHARING_ID, String.valueOf(this.info.id));
         }

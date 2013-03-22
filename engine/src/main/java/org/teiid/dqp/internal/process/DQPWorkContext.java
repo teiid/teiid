@@ -111,9 +111,17 @@ public class DQPWorkContext implements Serializable {
 	}
 	
 	public static void setWorkContext(DQPWorkContext context) {
+		LogManager.removeMdc(TEIID_SESSION);
+		LogManager.removeMdc(TEIID_VDB);
 		if (context == null) {
 			CONTEXTS.remove();
 		} else {
+			if (context.session != null) {
+				LogManager.putMdc(TEIID_SESSION, context.session.getSessionId());
+				if (context.session.getVdb() != null) {
+					LogManager.putMdc(TEIID_VDB, context.session.getVdb().getFullName());
+				}
+			}
 			CONTEXTS.set(context);
 		}
 	}
@@ -251,12 +259,6 @@ public class DQPWorkContext implements Serializable {
 		DQPWorkContext previous = DQPWorkContext.getWorkContext();
 		DQPWorkContext.setWorkContext(this);
 		Object previousSecurityContext = null;
-		if (this.session != null) {
-			LogManager.putMdc(TEIID_SESSION, this.session.getSessionId());
-			if (this.session.getVdb() != null) {
-				LogManager.putMdc(TEIID_VDB, this.session.getVdb().getFullName());
-			}
-		}
 		if (securityHelper != null) {
 			previousSecurityContext = securityHelper.associateSecurityContext(this.getSecurityContext());			
 		}
@@ -267,8 +269,6 @@ public class DQPWorkContext implements Serializable {
 				securityHelper.associateSecurityContext(previousSecurityContext);			
 			}
 			DQPWorkContext.setWorkContext(previous);
-			LogManager.removeMdc(TEIID_SESSION);
-			LogManager.removeMdc(TEIID_VDB);
 		}
 	}
 
