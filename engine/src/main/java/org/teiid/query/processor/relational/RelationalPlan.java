@@ -128,7 +128,7 @@ public class RelationalPlan extends ProcessorPlan {
     @Override
     public void open()
         throws TeiidComponentException, TeiidProcessingException {
-    	if (with != null) {
+    	if (with != null && tempTableStore.getProcessors() == null) {
 	    	HashMap<String, TableProcessor> processors = new HashMap<String, TableProcessor>();
 	        tempTableStore.setProcessors(processors);
 			for (WithQueryCommand withCommand : this.with) {
