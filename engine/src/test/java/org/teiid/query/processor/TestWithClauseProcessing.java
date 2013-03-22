@@ -29,6 +29,7 @@ public class TestWithClauseProcessing {
 	    };    
 	
 	    FakeDataManager dataManager = new FakeDataManager();
+	    dataManager.setBlockOnce();
 	    sampleData1(dataManager);
 	    
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());
@@ -49,6 +50,7 @@ public class TestWithClauseProcessing {
 	    };    
 	
 	    FakeDataManager dataManager = new FakeDataManager();
+	    dataManager.setBlockOnce();
 	    sampleData1(dataManager);
 	    
 	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached());

@@ -368,7 +368,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 
 	private TupleSource registerQuery(final CommandContext context,
-			TempTableStore contextStore, Query query)
+			final TempTableStore contextStore, final Query query)
 			throws TeiidComponentException, QueryMetadataException,
 			TeiidProcessingException, ExpressionEvaluationException,
 			QueryProcessingException {
@@ -410,7 +410,31 @@ public class TempTableDataManager implements ProcessorDataManager {
 			table = globalStore.getTempTableStore().getOrCreateTempTable(tableName, query, bufferManager, false, false, context);
 			context.accessedDataObject(group.getMetadataID());
 		} else {
-			table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
+			try {
+				table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
+			} catch (BlockedException e) {
+				//it's not expected for a blocked exception to bubble up from here
+				return new TupleSource() {
+					TupleSource ts = null;
+					
+					@Override
+					public List<?> nextTuple() throws TeiidComponentException,
+							TeiidProcessingException {
+						if (ts == null) {
+							TempTable tt = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
+							ts = tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+						}
+						return ts.nextTuple();
+					}
+					
+					@Override
+					public void closeSource() {
+						if (ts != null) {
+							ts.closeSource();
+						}
+					}
+				};
+			}
 			if (context.getDataObjects() != null) {
 				Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
 				if (id != null) {
