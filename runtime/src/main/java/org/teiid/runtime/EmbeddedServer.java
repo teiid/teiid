@@ -23,6 +23,7 @@
 package org.teiid.runtime;
 
 
+import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -36,10 +37,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.transaction.TransactionManager;
+import javax.xml.stream.XMLStreamException;
 
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
@@ -255,6 +258,15 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public void addConnectionFactoryProvider(String name,
 			ConnectionFactoryProvider<?> connectionFactoryProvider) {
 		this.connectionFactoryProviders.put(name, connectionFactoryProvider);
+	}
+	
+	/**
+	 * Adds the object as the named connection factory to replace the default JNDI lookup strategy.
+	 * @param name
+	 * @param connectionFactoryr
+	 */
+	public void addConnectionFactory(String name, Object connectionFactory) {
+		this.connectionFactoryProviders.put(name, new SimpleConnectionFactoryProvider<Object>(connectionFactory));
 	}
 	
 	public synchronized void start(@SuppressWarnings("hiding") EmbeddedConfiguration config) {
@@ -473,9 +485,25 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		deployVDB(vdb);
 	}
 	
+	/**
+	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
+	 * @param is which will be closed by this deployment
+	 * @throws XMLStreamException 
+	 * @throws TranslatorException 
+	 * @throws ConnectorManagerException 
+	 * @throws VirtualDatabaseException 
+	 */
+	public void deployVDB(InputStream is) throws XMLStreamException, VirtualDatabaseException, ConnectorManagerException, TranslatorException {
+		VDBMetaData metadata = VDBMetadataParser.unmarshell(is);
+		deployVDB(metadata);
+	}
+	
 	protected void deployVDB(VDBMetaData vdb) 
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		checkStarted();
+		if (!vdb.getOverrideTranslators().isEmpty()) {
+			throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40106, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40106, vdb.getName()));
+		}
 		cmr.createConnectorManagers(vdb, this);
 		MetadataStore metadataStore = new MetadataStore();
 		UDFMetaData udfMetaData = new UDFMetaData();

@@ -116,6 +116,7 @@ public class RuntimePlugin {
     	TEIID40102,
     	TEIID40103,
     	TEIID40104, 
-    	TEIID40105
+    	TEIID40105, 
+    	TEIID40106, //override translators not allowed in embedded 
     }
 }

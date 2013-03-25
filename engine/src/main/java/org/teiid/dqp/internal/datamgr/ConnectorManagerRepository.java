@@ -49,7 +49,16 @@ public class ConnectorManagerRepository implements Serializable{
 		}
 	}
 	
+	/**
+	 * Provides {@link ExecutionFactory}s to the {@link ConnectorManagerRepository}
+	 */
 	public interface ExecutionFactoryProvider {
+		/**
+		 * 
+		 * @param name
+		 * @return the named {@link ExecutionFactory} or throw a {@link ConnectorManagerException} if it does not exist
+		 * @throws ConnectorManagerException
+		 */
 		ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException;
 	}
 	

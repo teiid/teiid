@@ -24,6 +24,7 @@ package org.teiid.runtime;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -286,6 +287,19 @@ public class TestEmbeddedServer {
 		
 		assertNotNull(es.getSchemaDdl("empty", "SYS"));
 		assertNull(es.getSchemaDdl("empty", "xxx"));
+	}
+	
+	@Test public void testXMLDeploy() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model></vdb>".getBytes()));
+		ResultSet rs =es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+		rs.next();
+		assertEquals("HELLO WORLD", rs.getString(1));
+	}
+	
+	@Test(expected=VirtualDatabaseException.class) public void testXMLDeployFails() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model><translator name=\"foo\" type=\"h2\"></translator></vdb>".getBytes()));
 	}
 	
 	@Test(expected=VirtualDatabaseException.class) public void testDeploymentError() throws Exception {
