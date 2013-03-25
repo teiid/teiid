@@ -32,23 +32,13 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.ModificationItem;
 import javax.naming.ldap.LdapContext;
 
-import org.teiid.language.ColumnReference;
-import org.teiid.language.Command;
-import org.teiid.language.Comparison;
-import org.teiid.language.Condition;
-import org.teiid.language.Delete;
-import org.teiid.language.Expression;
-import org.teiid.language.ExpressionValueSource;
-import org.teiid.language.Insert;
-import org.teiid.language.Literal;
-import org.teiid.language.SetClause;
-import org.teiid.language.Update;
+import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
-import org.teiid.translator.TranslatorException;
 import org.teiid.translator.DataNotAvailableException;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 
@@ -297,7 +287,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 		ColumnReference leftElement;
 		Expression rightExpr;
 		String nameLeftElement;
-		Object valueRightExpr;
+		Object valueRightExpr = null;
 		// iterate through the supplied list of updates (each of
 		// which is an ICompareCriteria with an IElement on the left
 		// side and an IExpression on the right, per the Connector
@@ -315,8 +305,7 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			if (!(rightExpr instanceof Literal)) { 
 	            final String msg = LDAPPlugin.Util.getString("LDAPUpdateExecution.valueNotLiteralError",nameLeftElement); //$NON-NLS-1$
 				throw new TranslatorException(msg);
-		}
-			valueRightExpr = ((Literal)rightExpr).getValue();
+			}
 			// add in the modification as a replacement - meaning
 			// any existing value(s) for this attribute will
 			// be replaced by the new value.  If the attribute
@@ -325,6 +314,9 @@ public class LDAPUpdateExecution implements UpdateExecution {
 			// value, we don't do any special handling of it right
 			// now.  But maybe null should mean to delete an
 			// attribute?
+			if (((Literal)rightExpr).getValue() != null) {
+				valueRightExpr = IQueryToLdapSearchParser.getExpressionString((Literal)rightExpr);
+			}
 		        updateMods[i] = new ModificationItem(DirContext.REPLACE_ATTRIBUTE, new BasicAttribute(nameLeftElement, valueRightExpr));
 		}
 		// just try to update an LDAP entry using the DN and
