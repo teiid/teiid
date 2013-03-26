@@ -892,5 +892,15 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public long addAndGetReservedBuffers(int i) {
 		return globalState.reservedBuffers += i;
 	}
+
+	@Override
+	public Object setVariable(String key, Object value) {
+		return this.globalState.dqpWorkContext.getSessionVariables().put(key, value);
+	}
+
+	@Override
+	public Object getVariable(String key) {
+		return this.globalState.dqpWorkContext.getSessionVariables().get(key);
+	}
 	
 }

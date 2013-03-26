@@ -192,6 +192,19 @@ public interface CommandContext {
 	 * Returns the last set of generated keys or null if no keys have been generated.
 	 */
 	GeneratedKeys getGeneratedKeys();
-
-
+	
+	/**
+	 * Set the session variable and return the old value if any
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	Object setVariable(String key, Object value);
+	
+	/**
+	 * Get the session variable
+	 * @param key
+	 * @return
+	 */
+	Object getVariable(String key);
 }

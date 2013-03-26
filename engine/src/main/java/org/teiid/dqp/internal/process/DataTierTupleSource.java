@@ -61,7 +61,6 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.ReaderInputStream;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.events.EventDistributor;

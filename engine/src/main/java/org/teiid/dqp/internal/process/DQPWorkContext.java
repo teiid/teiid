@@ -135,6 +135,7 @@ public class DQPWorkContext implements Serializable {
     private Version clientVersion = Version.SEVEN_4;
     private boolean admin;
     private MetadataFactory metadataFactory;
+	private Map<String, Object> sessionVariables = Collections.synchronizedMap(new HashMap<String, Object>(2));
     
     public DQPWorkContext() {
 	}
@@ -337,9 +338,13 @@ public class DQPWorkContext implements Serializable {
 
 	public MetadataFactory getTempMetadataFactory() {
 		if (this.metadataFactory == null) {
-			this.metadataFactory = new MetadataFactory("temp", 1, "temp", SystemMetadata.getInstance().getRuntimeTypeMap(), null, null);
+			this.metadataFactory = new MetadataFactory("temp", 1, "temp", SystemMetadata.getInstance().getRuntimeTypeMap(), null, null); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		return this.metadataFactory;
+	}
+	
+	public Map<String, Object> getSessionVariables() {
+		return sessionVariables;
 	}
 
 }

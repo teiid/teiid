@@ -34,11 +34,9 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import javax.resource.spi.work.Work;
 import javax.transaction.xa.Xid;
 
 import org.teiid.adminapi.AdminException;
@@ -67,7 +65,6 @@ import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ApplicationInfo;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.dqp.internal.process.ThreadReuseExecutor.PrioritizedRunnable;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
@@ -94,93 +91,6 @@ public class DQPCore implements DQP {
 	
 	public interface CompletionListener<T> {
 		void onCompletion(FutureWork<T> future);
-	}
-	
-	public final static class FutureWork<T> extends FutureTask<T> implements PrioritizedRunnable, Work {
-		private int priority;
-		private long creationTime = System.currentTimeMillis();
-		private DQPWorkContext workContext = DQPWorkContext.getWorkContext();
-		private List<CompletionListener<T>> completionListeners = new LinkedList<CompletionListener<T>>();
-		private String parentName;
-
-		public FutureWork(final Callable<T> processor, int priority) {
-			super(processor);
-			this.parentName = Thread.currentThread().getName();
-			this.priority = priority;
-		}
-		
-		public FutureWork(final Runnable processor, T result, int priority) {
-			super(processor, result);
-			this.priority = priority;
-		}
-		
-		@Override
-		public void run() {
-			LogManager.logDetail(LogConstants.CTX_DQP, "Running task for parent thread", parentName); //$NON-NLS-1$
-			super.run();
-		}
-		
-		@Override
-		public int getPriority() {
-			return priority;
-		}
-		
-		@Override
-		public long getCreationTime() {
-			return creationTime;
-		}
-		
-		@Override
-		public DQPWorkContext getDqpWorkContext() {
-			return workContext;
-		}
-		
-		@Override
-		public void release() {
-			
-		}
-		
-		void addCompletionListener(CompletionListener<T> completionListener) {
-			this.completionListeners.add(completionListener);
-		}
-		
-		@Override
-		protected void done() {
-			for (CompletionListener<T> listener : this.completionListeners) {
-				listener.onCompletion(this);
-			}
-			completionListeners.clear();
-		}
-		
-	}	
-	
-	static class ClientState {
-		List<RequestID> requests;
-		TempTableStore sessionTables;
-		
-		public ClientState(TempTableStore tableStoreImpl) {
-			this.sessionTables = tableStoreImpl;
-		}
-		
-		public synchronized void addRequest(RequestID requestID) {
-			if (requests == null) {
-				requests = new LinkedList<RequestID>();
-			}
-			requests.add(requestID);
-		}
-		
-		public synchronized List<RequestID> getRequests() {
-			if (requests == null) {
-				return Collections.emptyList();
-			}
-			return new ArrayList<RequestID>(requests);
-		}
-
-		public synchronized void removeRequest(RequestID requestID) {
-			if (requests != null) {
-				requests.remove(requestID);
-			}
-		}
 	}
 	
 	private TeiidExecutor processWorkerPool;

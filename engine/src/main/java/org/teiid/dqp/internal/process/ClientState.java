@@ -20,24 +20,45 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.query.function;
+package org.teiid.dqp.internal.process;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
-import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.dqp.message.RequestID;
+import org.teiid.query.tempdata.TempTableStore;
 
-@Target({ElementType.METHOD})
-@Retention(RetentionPolicy.RUNTIME)
-@Inherited
-@Documented
-public @interface TeiidFunction {
-	String name() default "";
-	String category();
-	boolean nullOnNull() default false;
-	Determinism determinism() default Determinism.DETERMINISTIC;
+/**
+ *
+ */
+//TODO: merge with DQPWorkContext
+class ClientState {
+	List<RequestID> requests;
+	TempTableStore sessionTables;
+	
+	public ClientState(TempTableStore tableStoreImpl) {
+		this.sessionTables = tableStoreImpl;
+	}
+	
+	public synchronized void addRequest(RequestID requestID) {
+		if (requests == null) {
+			requests = new LinkedList<RequestID>();
+		}
+		requests.add(requestID);
+	}
+	
+	public synchronized List<RequestID> getRequests() {
+		if (requests == null) {
+			return Collections.emptyList();
+		}
+		return new ArrayList<RequestID>(requests);
+	}
+
+	public synchronized void removeRequest(RequestID requestID) {
+		if (requests != null) {
+			requests.remove(requestID);
+		}
+	}
 }

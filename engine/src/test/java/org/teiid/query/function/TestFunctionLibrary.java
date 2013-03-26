@@ -55,6 +55,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
+import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.sql.symbol.Expression;
@@ -1439,5 +1440,18 @@ public class TestFunctionLibrary {
 		helpInvokeMethod("cast", new Object[] {new java.util.Date(0), "time"}, new Time(24*60*60*1000)); //$NON-NLS-1$
 		helpInvokeMethod("cast", new Object[] {new byte[0], "blob"}, new BlobType(BlobType.createBlob(new byte[0]))); //$NON-NLS-1$
 	}
+	
+	@Test public void testSessionVariables() throws Exception {
+        CommandContext c = new CommandContext();
+        c.setDQPWorkContext(new DQPWorkContext());
+        Object result = helpInvokeMethod("teiid_session_set", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, new Object[] {"key", "value"}, c);
+        assertNull(result);
+        result = helpInvokeMethod("teiid_session_get", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] {"key"}, c);
+        assertEquals("value", result);
+        result = helpInvokeMethod("teiid_session_set", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, new Object[] {"key", "value1"}, c);
+        assertEquals("value", result);
+        result = helpInvokeMethod("teiid_session_get", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] {"key"}, c);
+        assertEquals("value1", result);
+    }
 
 }

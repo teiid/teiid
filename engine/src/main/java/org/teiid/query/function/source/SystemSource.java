@@ -34,10 +34,11 @@ import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.QueryPlugin;
-import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.function.FunctionMethods;
 import org.teiid.query.function.JSONFunctionMethods;
+import org.teiid.query.function.SystemFunctionMethods;
+import org.teiid.query.function.TeiidFunction;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.SourceSystemFunctions;
@@ -200,6 +201,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addArrayLength();
         addTrimFunction();
         addFunctions(JSONFunctionMethods.class);
+        addFunctions(SystemFunctionMethods.class);
     }
     
     private void addFunctions(Class<?> clazz) {
@@ -223,6 +225,7 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
 			if (f.nullOnNull()) {
 				func.setNullOnNull(true);
 			}
+			func.setDeterminism(f.determinism());
 			functions.add(func);
 		}
 	}

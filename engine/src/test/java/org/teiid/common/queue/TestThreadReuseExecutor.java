@@ -39,7 +39,7 @@ import javax.resource.spi.work.Work;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
-import org.teiid.dqp.internal.process.DQPCore.FutureWork;
+import org.teiid.dqp.internal.process.FutureWork;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 

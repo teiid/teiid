@@ -35,7 +35,6 @@ import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
-import org.teiid.dqp.internal.process.DQPCore.ClientState;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.sql.lang.Command;

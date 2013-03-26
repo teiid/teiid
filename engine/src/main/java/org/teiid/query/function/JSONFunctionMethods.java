@@ -44,6 +44,7 @@ import org.teiid.json.simple.ContentHandler;
 import org.teiid.json.simple.JSONParser;
 import org.teiid.json.simple.ParseException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.util.CommandContext;
 
@@ -200,7 +201,7 @@ public class JSONFunctionMethods {
 		
 	}
 
-	@TeiidFunction(category="JSON")
+	@TeiidFunction(category=FunctionCategoryConstants.JSON)
 	public static ClobType jsonParse(ClobType val, boolean wellformed) throws SQLException, IOException, ParseException {
 		Reader r = null;
 		if (val.getType() == Type.JSON) {
@@ -224,7 +225,7 @@ public class JSONFunctionMethods {
 		}
 	}
 	
-	@TeiidFunction(category="JSON")
+	@TeiidFunction(category=FunctionCategoryConstants.JSON)
 	public static ClobType jsonParse(BlobType val, boolean wellformed) throws SQLException, IOException, ParseException {
 		InputStreamReader r = XMLSystemFunctions.getJsonReader(val);
 		try {
@@ -243,7 +244,7 @@ public class JSONFunctionMethods {
 		}
 	}
 	
-	@TeiidFunction(category="JSON")
+	@TeiidFunction(category=FunctionCategoryConstants.JSON)
 	public static ClobType jsonArray(CommandContext context, Object... vals) throws TeiidProcessingException {
 		if (vals == null) {
 			return null;
