@@ -276,23 +276,48 @@ public class BatchSerializer {
     	@Override
     	protected void writeObject(ObjectOutput out, Object obj) throws IOException {
     		String str = (String)obj;
-        	if (str.length() <= MAX_UTF) {
-        		//skip object serialization if we have a short string
-        	    out.writeByte(ObjectStreamConstants.TC_STRING);
-        	    out.writeUTF(str);
-        	} else {
-        		out.writeByte(ObjectStreamConstants.TC_LONGSTRING);
-        		out.writeObject(obj);
-        	}
+            int length = str.length();
+            out.writeInt(length);
+            boolean writingShort = true;
+            char c;
+            for (int i = 0 ; i < length; i++) {
+                if (writingShort) {
+                    c = str.charAt(i);
+                    if (c < 0x80) {
+                        out.write(c);
+                    } else {
+                        out.write(0x80);
+                        writingShort = false;
+                        out.writeChar(c);
+                    }
+                } else {
+                    out.writeChar(str.charAt(i));
+                }
+            }	
         }
     	
     	@Override
     	protected Object readObject(ObjectInput in) throws IOException,
     			ClassNotFoundException {
-    		if (in.readByte() == ObjectStreamConstants.TC_STRING) {
-    			return in.readUTF();
-    		}
-    		return super.readObject(in);
+            int b;
+            boolean readingShort;
+            int length = in.readInt();
+            char[] chars = new char[length];
+            readingShort = true;
+            for (int i = 0; i < length; i++) {
+                if (readingShort) {
+                    b = in.read();
+                    if (b == 0x80) {
+                        readingShort = false;
+                        chars[i] = in.readChar();
+                    } else {
+                        chars[i] = ((char)b);
+                    }
+                } else {
+                    chars[i] = in.readChar();
+                }
+            }
+            return new String(chars);
     	}
     }
 

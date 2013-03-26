@@ -74,4 +74,16 @@ public class ConnectionContext {
 		}
 		return defalt;
 	}
+	
+	public static TeiidSecurityCredential getWSSecurityCredential(Subject subject, BasicManagedConnectionFactory mcf) {
+		Set<TeiidSecurityCredential> creds = subject.getPrivateCredentials(TeiidSecurityCredential.class);
+		if (creds != null && creds.size() > 0) {
+			for (TeiidSecurityCredential cred : creds) {
+				if (cred.getManagedConnectionFactory().equals(mcf)) {
+					return cred;
+				}
+			}
+		}
+		return null;
+	}	
 }

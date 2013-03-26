@@ -38,18 +38,28 @@ import javax.activation.DataSource;
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 import javax.xml.namespace.QName;
-import javax.xml.ws.*;
+import javax.xml.ws.AsyncHandler;
+import javax.xml.ws.Binding;
+import javax.xml.ws.Dispatch;
+import javax.xml.ws.EndpointReference;
+import javax.xml.ws.Response;
+import javax.xml.ws.Service;
 import javax.xml.ws.Service.Mode;
+import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
 import org.apache.cxf.Bus;
 import org.apache.cxf.BusFactory;
+import org.apache.cxf.binding.soap.saaj.SAAJInInterceptor;
+import org.apache.cxf.binding.soap.saaj.SAAJOutInterceptor;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.DispatchImpl;
 import org.apache.cxf.service.model.MessagePartInfo;
+import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
+import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -59,6 +69,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
+import org.teiid.resource.spi.TeiidSecurityCredential;
 import org.teiid.translator.WSConnection;
 
 /**
@@ -288,12 +299,27 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			
 			dispatch = svc.createDispatch(mcf.getPortQName(), type, mode);
 			
-			if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity 
-					&& mcf.getOutInterceptors() != null) {
+			if (mcf.getAsSecurityType() == WSManagedConnectionFactory.SecurityType.WSSecurity) {
 				Client client = ((DispatchImpl)dispatch).getClient();
 				Endpoint ep = client.getEndpoint();
-				for (Interceptor i : mcf.getOutInterceptors()) {
-					ep.getOutInterceptors().add(i);
+			
+				// spring configuration file 
+				if (mcf.getOutInterceptors() != null) {
+					for (Interceptor i : mcf.getOutInterceptors()) {
+						ep.getOutInterceptors().add(i);
+					}
+				}
+
+				// ws-security pass-thru from custom jaas domain
+				Subject subject = ConnectionContext.getSubject();
+				if (subject != null) {
+					TeiidSecurityCredential credential = ConnectionContext.getWSSecurityCredential(subject, mcf);
+					if (credential != null) {
+						ep.getOutInterceptors().add(new WSS4JOutInterceptor(credential.getRequestPropterties()));
+						ep.getOutInterceptors().add(new SAAJOutInterceptor());
+						ep.getInInterceptors().add(new WSS4JInInterceptor(credential.getResponsePropterties()));
+						ep.getOutInterceptors().add(new SAAJInInterceptor());
+					}
 				}
 			}
 		}
