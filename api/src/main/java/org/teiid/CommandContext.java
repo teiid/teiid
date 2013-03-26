@@ -199,12 +199,12 @@ public interface CommandContext {
 	 * @param value
 	 * @return
 	 */
-	Object setVariable(String key, Object value);
+	Object setSessionVariable(String key, Object value);
 	
 	/**
 	 * Get the session variable
 	 * @param key
 	 * @return
 	 */
-	Object getVariable(String key);
+	Object getSessionVariable(String key);
 }

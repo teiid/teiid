@@ -37,7 +37,7 @@ public class SystemFunctionMethods {
 
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, nullOnNull=true, determinism=Determinism.COMMAND_DETERMINISTIC)
 	public static Object teiid_session_get(CommandContext context, String key) {
-		return context.getVariable(key);
+		return context.getSessionVariable(key);
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.COMMAND_DETERMINISTIC)
@@ -47,7 +47,7 @@ public class SystemFunctionMethods {
 		if (variables.size() > MAX_VARIABLES && !variables.containsKey(key)) {
 			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31136, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31136, MAX_VARIABLES));
 		}
-		return context.setVariable(key, value);
+		return context.setSessionVariable(key, value);
 	}
 
 }

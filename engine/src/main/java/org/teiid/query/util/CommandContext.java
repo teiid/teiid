@@ -894,12 +894,12 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	}
 
 	@Override
-	public Object setVariable(String key, Object value) {
+	public Object setSessionVariable(String key, Object value) {
 		return this.globalState.dqpWorkContext.getSessionVariables().put(key, value);
 	}
 
 	@Override
-	public Object getVariable(String key) {
+	public Object getSessionVariable(String key) {
 		return this.globalState.dqpWorkContext.getSessionVariables().get(key);
 	}
 	
