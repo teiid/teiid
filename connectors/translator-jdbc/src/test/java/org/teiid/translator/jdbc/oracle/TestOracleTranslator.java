@@ -887,7 +887,16 @@ public class TestOracleTranslator {
     
     @Test public void testCallWithResultSet() throws Exception {
         String input = "call spTest5(1)"; //$NON-NLS-1$
-        String output = "{ ?= call spTest5(?)}";  //$NON-NLS-1$
+        String output = "{?= call spTest5(?)}";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
+    @Test public void testCallWithoutResultSet() throws Exception {
+        String input = "call sp_noreturn()"; //$NON-NLS-1$
+        String output = "{call sp_noreturn()}";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
@@ -902,7 +911,7 @@ public class TestOracleTranslator {
 		ResultSet rs = Mockito.mock(ResultSet.class);
 		Mockito.stub(cs.getObject(1)).toReturn(rs);
 		Mockito.stub(cs.getInt(3)).toReturn(4);
-		Mockito.stub(connection.prepareCall("{ ?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+		Mockito.stub(connection.prepareCall("{?= call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
 		OracleExecutionFactory ef = new OracleExecutionFactory();
 		
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);

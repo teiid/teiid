@@ -715,7 +715,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		this.oracleSuppliedDriver = oracleNative;
 	}
     
-	@TranslatorProperty(display="Oracle Native Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
+	@TranslatorProperty(display="Oracle Supplied Driver", description="True if the driver is an Oracle supplied driver",advanced=true)
     public boolean isOracleSuppliedDriver() {
 		return oracleSuppliedDriver;
 	}
@@ -724,7 +724,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public List<?> translate(LanguageObject obj, ExecutionContext context) {
     	if (oracleSuppliedDriver && obj instanceof Call) {
     		Call call = (Call)obj;
-    		if (call.getReturnType() == null && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
+    		if (call.getReturnType() == null && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
     			//oracle returns the resultset as a parameter
     			call.setReturnType(RefCursorType.class);
     		}

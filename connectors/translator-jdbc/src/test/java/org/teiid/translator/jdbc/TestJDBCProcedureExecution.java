@@ -22,7 +22,7 @@
 
 package org.teiid.translator.jdbc;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -42,7 +42,7 @@ public class TestJDBCProcedureExecution {
 		CallableStatement cs = Mockito.mock(CallableStatement.class);
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
 		Mockito.stub(cs.getInt(1)).toReturn(5);
-		Mockito.stub(connection.prepareCall("{  call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
+		Mockito.stub(connection.prepareCall("{call spTest8a(?)}")).toReturn(cs); //$NON-NLS-1$
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
@@ -56,7 +56,7 @@ public class TestJDBCProcedureExecution {
 		CallableStatement cs = Mockito.mock(CallableStatement.class);
 		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
 		Mockito.stub(cs.getInt(2)).toReturn(5);
-		Mockito.stub(connection.prepareCall("{  call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
+		Mockito.stub(connection.prepareCall("{call spTest8(?,?)}")).toReturn(cs); //$NON-NLS-1$
 		JDBCExecutionFactory config = new JDBCExecutionFactory();
 
 		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class), config);

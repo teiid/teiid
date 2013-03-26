@@ -285,20 +285,19 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
      */
     protected String generateSqlForStoredProcedure(Call exec) {
         StringBuffer prepareCallBuffer = new StringBuffer();
-        prepareCallBuffer.append("{ "); //$NON-NLS-1$
+        prepareCallBuffer.append(getSourceComment(exec));
+        prepareCallBuffer.append("{"); //$NON-NLS-1$
 
         List<Argument> params = exec.getArguments();
 
         //check whether a "?" is needed if there are returns
         boolean needQuestionMark = exec.getReturnType() != null;
         
-        prepareCallBuffer.append(getSourceComment(exec));
-        
         if(needQuestionMark){
-            prepareCallBuffer.append("?="); //$NON-NLS-1$
+            prepareCallBuffer.append("?= "); //$NON-NLS-1$
         }
 
-        prepareCallBuffer.append(" call ");//$NON-NLS-1$
+        prepareCallBuffer.append("call ");//$NON-NLS-1$
         prepareCallBuffer.append(exec.getMetadataObject() != null ? getName(exec.getMetadataObject()) : exec.getProcedureName());
         prepareCallBuffer.append("("); //$NON-NLS-1$
 
