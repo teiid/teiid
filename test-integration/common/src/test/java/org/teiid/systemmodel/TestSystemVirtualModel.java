@@ -331,7 +331,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		ResultSet rs = this.internalConnection.createStatement().executeQuery("select name from tables where schemaname in ('SYS', 'SYSADMIN')");
 		while (rs.next()) {
 			String name = rs.getString(1);
-			System.out.println(name);
 			ResultSet rs1 = this.internalConnection.createStatement().executeQuery("select * from " + name + " limit 1");
 			ResultSetMetaData metadata = rs1.getMetaData();
 			if (rs1.next()) {
@@ -341,6 +340,16 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 				}
 			}
 		}
+	}
+	
+	@Test public void testPrefixSearches() throws Exception {
+		this.execute("select name from schemas where ucase(name) >= 'BAZ_BAR' and ucase(name) <= 'A'");
+		//should be 0 rows rather than an exception
+		assertRowCount(0); 
+
+		this.execute("select name from schemas where upper(name) like 'ab[_'");
+		//should be 0 rows rather than an exception
+		assertRowCount(0);		
 	}
 	
 }

@@ -43,6 +43,7 @@ import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 
 /**
@@ -163,7 +164,12 @@ public class BaseIndexInfo<T extends SearchableTable> {
 					}
 					if (prefix.length() > 0) {
 						this.addCondition(i, new Constant(prefix.toString()), CompareCriteria.GE);
-						this.addCondition(i, new Constant(prefix.substring(0, prefix.length() -1) + (char) (prefix.charAt(prefix.length()-1)+1)), CompareCriteria.LE);
+						if (matchCriteria.getLeftExpression() instanceof Function && table.supportsOrdering(i, matchCriteria.getLeftExpression())) {
+							//this comparison needs to be aware of case
+							this.addCondition(i, new Constant(prefix.substring(0, prefix.length() -1) + (char) (Character.toLowerCase(prefix.charAt(prefix.length()-1))+1)), CompareCriteria.LE);
+						} else {
+							this.addCondition(i, new Constant(prefix.substring(0, prefix.length() -1) + (char) (prefix.charAt(prefix.length()-1)+1)), CompareCriteria.LE);
+						}
 					} else {
 						critIter.remove();
 					}
