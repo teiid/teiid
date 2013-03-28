@@ -37,7 +37,8 @@ import org.teiid.core.util.Assertion;
 public class ModelMetaData extends AdminObjectImpl implements Model {
 	
 	private static final int DEFAULT_ERROR_HISTORY = 10;
-	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "supports-multi-source-bindings"; //$NON-NLS-1$
+	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD = "supports-multi-source-bindings"; //$NON-NLS-1$
+	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "multisource"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
 	protected LinkedHashMap<String, SourceMappingMetadata> sources = new LinkedHashMap<String, SourceMappingMetadata>();	
@@ -88,8 +89,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 
 	@Override
     public boolean isSupportsMultiSourceBindings() {
-		String supports = getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY);
-		return Boolean.parseBoolean(supports);
+		return this.sources.size() > 1 || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY)) || Boolean.parseBoolean(getPropertyValue(SUPPORTS_MULTI_SOURCE_BINDINGS_KEY_OLD));
     }    
 	
     public void setSupportsMultiSourceBindings(boolean supports) {

@@ -438,6 +438,15 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		
+		String prop = vdb.getPropertyValue("cache-metadata"); //$NON-NLS-1$
+		if (prop != null) {
+			cache = Boolean.valueOf(prop);	
+		}
+		prop = model.getPropertyValue("cache-metadata"); //$NON-NLS-1$
+		if (prop != null) {
+			cache = Boolean.valueOf(prop);	
+		}
+				
 		if (cache) {
 			final File cachedFile = getSerializer().buildModelFile(vdb, model.getName());
 			try {
