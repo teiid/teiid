@@ -21,8 +21,8 @@
  */
 package org.teiid.jboss;
 
+import java.io.IOException;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -40,19 +40,12 @@ import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.modules.ModuleClassLoader;
-import org.jboss.msc.service.AbstractServiceListener;
-import org.jboss.msc.service.Service;
-import org.jboss.msc.service.ServiceBuilder;
-import org.jboss.msc.service.ServiceController;
-import org.jboss.msc.service.ServiceName;
-import org.jboss.msc.service.ServiceTarget;
-import org.jboss.msc.service.StartContext;
-import org.jboss.msc.service.StartException;
-import org.jboss.msc.service.StopContext;
+import org.jboss.msc.service.*;
 import org.jboss.msc.service.ServiceBuilder.DependencyType;
 import org.jboss.msc.service.ServiceController.Mode;
 import org.jboss.msc.service.ServiceController.State;
 import org.jboss.msc.value.InjectedValue;
+import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
@@ -70,9 +63,8 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataRepository;
-import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.vdb.runtime.VDBKey;
 
 
@@ -142,20 +134,18 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		udf.setFunctionClassLoader(classLoader);
 		deployment.addAttchment(UDFMetaData.class, udf);
 		
-		// set up the metadata repositories for each models
-		IndexMetadataRepository indexRepo = null;
-		IndexMetadataStore indexFactory = deploymentUnit.removeAttachment(TeiidAttachments.INDEX_METADATA);
-		LinkedHashMap<String, Resource> visibilityMap = null;
-		if (indexFactory != null) {
-			indexRepo = new IndexMetadataRepository(indexFactory);
-			visibilityMap = indexFactory.getEntriesPlusVisibilities();
+		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
+		VDBResources resources;
+		try {
+			resources = new VDBResources(file, deployment);
+		} catch (IOException e) {
+			throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);
 		}
+		
 		this.vdbRepository.addPendingDeployment(deployment);
 		// build a VDB service
-		final VDBService vdb = new VDBService(deployment, visibilityMap);
-		if (indexRepo != null) {
-			vdb.addMetadataRepository("index", indexRepo); //$NON-NLS-1$
-		}
+		final VDBService vdb = new VDBService(deployment, resources);
+		vdb.addMetadataRepository("index", new IndexMetadataRepository()); //$NON-NLS-1$
 		
 		final ServiceBuilder<RuntimeVDB> vdbService = context.getServiceTarget().addService(TeiidServiceNames.vdbServiceName(deployment.getName(), deployment.getVersion()), vdb);
 		

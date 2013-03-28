@@ -51,7 +51,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 	
 	private int version = 1;
 	private String description;
-	private boolean dynamic = false;
+	private boolean xmlDeployment = false;
 	private volatile VDB.Status status = VDB.Status.ACTIVE;
 	private ConnectionType connectionType = VDB.ConnectionType.BY_VERSION;
 	private long queryTimeout = Long.MIN_VALUE;
@@ -191,12 +191,16 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		return this.models.get(modelName);
 	}
 		
-	public boolean isDynamic() {
-		return dynamic;
+	/**
+	 * If this is a *-vdb.xml deployment
+	 * @return
+	 */
+	public boolean isXmlDeployment() {
+		return xmlDeployment;
 	}
 
-	public void setDynamic(boolean dynamic) {
-		this.dynamic = dynamic;
+	public void setXmlDeployment(boolean dynamic) {
+		this.xmlDeployment = dynamic;
 	}	
 	
 	@Override

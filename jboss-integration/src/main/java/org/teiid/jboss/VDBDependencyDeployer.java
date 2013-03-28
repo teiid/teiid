@@ -27,8 +27,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.jboss.as.server.deployment.*;
-import org.jboss.as.server.deployment.module.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
+import org.jboss.as.server.deployment.module.ModuleDependency;
+import org.jboss.as.server.deployment.module.ModuleRootMarker;
+import org.jboss.as.server.deployment.module.ModuleSpecification;
+import org.jboss.as.server.deployment.module.MountHandle;
+import org.jboss.as.server.deployment.module.ResourceRoot;
+import org.jboss.as.server.deployment.module.TempFileProviderService;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
 import org.jboss.modules.ModuleLoadException;
@@ -79,7 +88,7 @@ class VDBDependencyDeployer implements DeploymentUnitProcessor {
         	}
         }
         
-		if (!TeiidAttachments.isDynamicVDB(deploymentUnit)) {
+		if (!TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
 			try {
 				final ResourceRoot deploymentResourceRoot = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT);
 				final VirtualFile deploymentRoot = deploymentResourceRoot.getRoot();

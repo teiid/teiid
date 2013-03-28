@@ -234,6 +234,9 @@ public final class SizeUtility {
 		    			if (length >= 0) {
 		    				return 40 + alignMemory(length);
 		    			}
+					} else if (isf.getStorageMode() == StorageMode.PERSISTENT) {
+						long length = isf.getLength();
+	    				return 40 + alignMemory(Math.min(DataTypeManager.MAX_LOB_MEMORY_BYTES, length));
 					}
 	    		}
 			} catch (Exception e) {

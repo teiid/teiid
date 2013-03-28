@@ -22,16 +22,37 @@
 
 package org.teiid.metadata;
 
-
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
- * Constants used for VDB processing.
+ * Represents a resource available with the VDB deployment.
  */
-public interface VdbConstants {
+public interface VDBResource {
+	
+	/**
+	 * Open an {@link InputStream} to the resource
+	 * @return
+	 * @throws IOException
+	 */
+	InputStream openStream() throws IOException;
+	
+	/**
+	 * Get the size in bytes
+	 * @return
+	 */
+	long getSize();
+	
+	/**
+	 * Get the resource name.
+	 * @return
+	 */
+	String getName();
+	
+	/**
+	 * If the resource if visible in system metadata
+	 * @return
+	 */
+	boolean isVisible();
 
-    public static final String DEPLOYMENT_FILE = "vdb.xml"; // !!! DO NOT CHANGE VALUE as this would cause problems with existing VDBs having DEF files !!! //$NON-NLS-1$
-    public static final String VDB_ARCHIVE_EXTENSION = ".vdb"; //$NON-NLS-1$
-    public final static String INDEX_EXT        = ".INDEX";     //$NON-NLS-1$
-    public final static String SEARCH_INDEX_EXT = ".SEARCH_INDEX";     //$NON-NLS-1$
-    public final static String MODEL_EXT = ".xmi";     //$NON-NLS-1$
 }

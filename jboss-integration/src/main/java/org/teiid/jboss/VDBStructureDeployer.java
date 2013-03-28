@@ -21,9 +21,13 @@
  */
 package org.teiid.jboss;
 
-import org.jboss.as.server.deployment.*;
+import org.jboss.as.server.deployment.Attachments;
+import org.jboss.as.server.deployment.DeploymentPhaseContext;
+import org.jboss.as.server.deployment.DeploymentUnit;
+import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
+import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.vfs.VirtualFile;
-import org.teiid.metadata.VdbConstants;
+import org.teiid.query.metadata.VDBResources;
 
 
 
@@ -48,14 +52,14 @@ class VDBStructureDeployer  implements DeploymentUnitProcessor {
 				return;
 			}
 			
-			if (metainf.getChild(VdbConstants.DEPLOYMENT_FILE) == null) {
+			if (metainf.getChild(VDBResources.DEPLOYMENT_FILE) == null) {
 				return;
 			}
 			// adds a TYPE attachment.
 			TeiidAttachments.setAsVDBDeployment(deploymentUnit);
         }
         else if (deploymentName.endsWith(DYNAMIC_VDB_STRUCTURE)) {
-	        TeiidAttachments.setAsDynamicVDBDeployment(deploymentUnit);			        	
+	        TeiidAttachments.setAsVDBXMLDeployment(deploymentUnit);			        	
         }
 	}
 	

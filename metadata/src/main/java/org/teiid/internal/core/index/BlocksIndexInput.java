@@ -16,11 +16,11 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import org.jboss.vfs.VirtualFile;
 import org.teiid.core.index.IDocument;
 import org.teiid.core.index.IEntryResult;
 import org.teiid.core.index.IQueryResult;
 import org.teiid.core.util.LRUCache;
+import org.teiid.metadata.VDBResource;
 import org.teiid.metadata.index.RuntimeMetadataPlugin;
 
 
@@ -35,12 +35,12 @@ public class BlocksIndexInput extends IndexInput {
 	protected IndexBlock currentIndexBlock;
 	private RandomAccessFile raf;
 	private VirtualRandomAccessFile vraf;
-	protected VirtualFile indexFile;
+	protected VDBResource indexFile;
 	protected LRUCache blockCache;
 
 	protected IndexSummary summary;
 
-	public BlocksIndexInput(VirtualFile inputFile) {
+	public BlocksIndexInput(VDBResource inputFile) {
 		this.indexFile= inputFile;
 		blockCache= new LRUCache(CACHE_SIZE);
 	}

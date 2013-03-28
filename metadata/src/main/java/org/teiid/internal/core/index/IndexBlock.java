@@ -24,18 +24,6 @@ public abstract class IndexBlock extends Block {
 	public IndexBlock(int blockSize) {
 		super(blockSize);
 	}
-	/**
-	 * Adds the given wordEntry to the indexBlock.
-	 */
-
-	public abstract boolean addEntry(WordEntry entry);
-	/**
-	 * @see Block#clear()
-	 */
-	public void clear() {
-		reset();
-		super.clear();
-	}
 	public WordEntry findEntryPrefixedBy(char[] word, boolean isCaseSensitive) {
 		reset();
 		WordEntry entry= new WordEntry();

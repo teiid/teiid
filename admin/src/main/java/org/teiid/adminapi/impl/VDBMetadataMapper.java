@@ -49,7 +49,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String OVERRIDE_TRANSLATORS = "override-translators"; //$NON-NLS-1$
 	private static final String VDB_DESCRIPTION = "vdb-description"; //$NON-NLS-1$
 	private static final String PROPERTIES = "properties"; //$NON-NLS-1$
-	private static final String DYNAMIC = "dynamic"; //$NON-NLS-1$
+	private static final String XML_DEPLOYMENT = "xml-deployment"; //$NON-NLS-1$
 	private static final String DATA_POLICIES = "data-policies"; //$NON-NLS-1$
 	private static final String DESCRIPTION = "description"; //$NON-NLS-1$
 	private static final String ENTRIES = "entries"; //$NON-NLS-1$
@@ -68,7 +68,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if (vdb.getDescription() != null) {
 			node.get(VDB_DESCRIPTION).set(vdb.getDescription());
 		}
-		node.get(DYNAMIC).set(vdb.isDynamic());
+		node.get(XML_DEPLOYMENT).set(vdb.isXmlDeployment());
 		
 		//PROPERTIES
 		Properties properties = vdb.getProperties();
@@ -148,8 +148,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		if(node.has(VDB_DESCRIPTION)) {
 			vdb.setDescription(node.get(VDB_DESCRIPTION).asString());
 		}
-		if (node.has(DYNAMIC)) {
-			vdb.setDynamic(node.get(DYNAMIC).asBoolean());
+		if (node.has(XML_DEPLOYMENT)) {
+			vdb.setXmlDeployment(node.get(XML_DEPLOYMENT).asBoolean());
 		}
 
 		//PROPERTIES
@@ -242,7 +242,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		
 		addAttribute(node, VERSION, ModelType.INT, true);
 		addAttribute(node, VDB_DESCRIPTION, ModelType.STRING, false);
-		addAttribute(node, DYNAMIC, ModelType.BOOLEAN, false);
+		addAttribute(node, XML_DEPLOYMENT, ModelType.BOOLEAN, false);
 		
 		ModelNode props = node.get(PROPERTIES);
 		props.get(TYPE).set(ModelType.LIST);

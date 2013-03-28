@@ -23,6 +23,7 @@ package org.teiid.jdbc;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -51,8 +52,9 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
-import org.teiid.metadata.index.IndexMetadataStore;
 import org.teiid.metadata.index.VDBMetadataFactory;
+import org.teiid.metadata.index.VDBMetadataFactory.IndexVDB;
+import org.teiid.query.metadata.VDBResources.Resource;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.runtime.EmbeddedConfiguration;
@@ -67,6 +69,7 @@ public class FakeServer extends EmbeddedServer {
 		public Map<String, Collection<FunctionMethod>> udfs;
 		public MetadataRepository<?, ?> metadataRepo;
 		public List<VDBImportMetadata> vdbImports;
+		public LinkedHashMap<String, Resource> vdbResources;
 
 		public DeployVDBParameter(Map<String, Collection<FunctionMethod>> udfs,
 				MetadataRepository<?, ?> metadataRepo) {
@@ -147,8 +150,9 @@ public class FakeServer extends EmbeddedServer {
 	}	
 
 	public void deployVDB(String vdbName, String vdbPath, DeployVDBParameter parameterObject) throws Exception {
-		IndexMetadataStore imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
-        deployVDB(vdbName, imf, parameterObject);		
+		IndexVDB imf = VDBMetadataFactory.loadMetadata(vdbName, new File(vdbPath).toURI().toURL());
+		parameterObject.vdbResources = imf.resources.getEntriesPlusVisibilities();
+        deployVDB(vdbName, imf.store, parameterObject);		
 	}
 	
 	public void deployVDB(String vdbName, MetadataStore metadata) {
@@ -165,7 +169,7 @@ public class FakeServer extends EmbeddedServer {
         	if (parameterObject.metadataRepo != null) {
         		model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
         		//fakeserver does not load through the repository framework, so call load after the fact here.
-        		MetadataFactory mf = createMetadataFactory(vdbMetaData, model);
+        		MetadataFactory mf = createMetadataFactory(vdbMetaData, model, parameterObject.vdbResources);
         		mf.setSchema(schema);
         		try {
 					parameterObject.metadataRepo.loadMetadata(mf, null, null);
@@ -190,7 +194,7 @@ public class FakeServer extends EmbeddedServer {
 				}
         	}
         	
-			this.repo.addVDB(vdbMetaData, metadata, (metadata instanceof IndexMetadataStore)?((IndexMetadataStore)metadata).getEntriesPlusVisibilities():null, udfMetaData, cmr);
+			this.repo.addVDB(vdbMetaData, metadata, parameterObject.vdbResources, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
 			this.repo.getLiveVDB(vdbMetaData.getName(), vdbMetaData.getVersion()).setStatus(VDB.Status.ACTIVE);
 		} catch (VirtualDatabaseException e) {

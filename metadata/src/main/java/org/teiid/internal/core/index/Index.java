@@ -12,11 +12,11 @@
 package org.teiid.internal.core.index;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.jboss.vfs.VirtualFile;
-import org.teiid.core.index.*;
+import org.teiid.core.index.IEntryResult;
+import org.teiid.core.index.IIndex;
+import org.teiid.core.index.IQueryResult;
+import org.teiid.metadata.VDBResource;
 
 
 /**
@@ -33,31 +33,7 @@ public class Index implements IIndex {
 	 */
 	public static final int MAX_FOOTPRINT= 10000000;
 
-	/**
-	 * Index in memory, who is merged with mainIndex each times it 
-	 * reaches a certain size.
-	 */
-	protected InMemoryIndex addsIndex;
-	protected IndexInput addsIndexInput;
-
-	/**
-	 * State of the indexGenerator: addsIndex empty <=> MERGED, or
-	 * addsIndex not empty <=> CAN_MERGE
-	 */
-	protected int state;
-
-	/**
-	 * Files removed form the addsIndex.
-	 */
-	protected Map removedInAdds;
-
-	/**
-	 * Files removed form the oldIndex.
-	 */
-	protected Map removedInOld;
-	protected static final int CAN_MERGE= 0;
-	protected static final int MERGED= 1;
-	private VirtualFile indexFile;
+	private VDBResource indexFile;
     
     /* 
      * Caching the index input object so we can keep it open for multiple pass querying rather than
@@ -72,73 +48,11 @@ public class Index implements IIndex {
 	 */
 	public String toString;
     
-	public Index(VirtualFile f, boolean reuseExistingFile) throws IOException {
-		state = MERGED;
+	public Index(VDBResource f) throws IOException {
 		indexFile = f;
-		initialize(reuseExistingFile);
-        //System.out.println("  Index()  Name = " + indexName);
+		initialize();
 	}
 
-	/**
-	 * Indexes the given document, using the appropriate indexer registered in the indexerRegistry.
-	 * If the document already exists in the index, it overrides the previous one. The changes will be 
-	 * taken into account after a merge.
-	 */
-	public void add(IDocument document, IIndexer indexer) throws IOException {
-		if (timeToMerge()) {
-			merge();
-		}
-
-		IndexedFile indexedFile= addsIndex.getIndexedFile(document.getName());
-		if (indexedFile != null /*&& removedInAdds.get(document.getName()) == null*/
-			) {
-			remove(indexedFile, MergeFactory.ADDS_INDEX);
-        }
-		IndexerOutput output= new IndexerOutput(addsIndex);
-		indexer.index(document, output);
-		state= CAN_MERGE;
-	}
-    
-	/**
-	 * Returns true if the index in memory is not empty, so 
-	 * merge() can be called to fill the mainIndex with the files and words
-	 * contained in the addsIndex. 
-	 */
-	protected boolean canMerge() {
-		return state == CAN_MERGE;
-	}
-    
-	/**
-	 * Initialises the indexGenerator.
-	 */
-	public void empty() throws IOException {
-
-		if (indexFile.exists()){
-            //System.out.println(" Index.empty(): Deleting Index file = " + indexFile.getName());
-			indexFile.delete();
-			//initialisation of mainIndex
-			InMemoryIndex mainIndex= new InMemoryIndex();
-			IndexOutput mainIndexOutput= new BlocksIndexOutput(indexFile);
-			if (!indexFile.exists())
-				mainIndex.save(mainIndexOutput);
-		}
-
-		//initialisation of addsIndex
-		addsIndex= new InMemoryIndex();
-		addsIndexInput= new SimpleIndexInput(addsIndex);
-
-		//vectors who keep track of the removed Files
-		removedInAdds= new HashMap(11);
-		removedInOld= new HashMap(11);
-	}
-    
-	/**
-	 * @see IIndex#getIndexFile
-	 */
-	public VirtualFile getIndexFile() {
-		return indexFile;
-	}
-    
 	/**
 	 * @see IIndex#getNumDocuments
 	 */
@@ -170,117 +84,29 @@ public class Index implements IIndex {
 	}
     
 	/**
-	 * Returns the path corresponding to a given document number
-	 */
-	public String getPath(int documentNumber) throws IOException {
-        BlocksIndexInput input = getBlocksIndexInput();
-		try {
-            input.open();
-			IndexedFile file = input.getIndexedFile(documentNumber);
-			if (file == null) return null;
-			return file.getPath();
-		} finally {
-            if( !doCache ) {
-                input.close();
-            }
-		}		
-	}
-    
-	/**
-	 * see IIndex.hasChanged
-	 */
-	public boolean hasChanged() {
-		return canMerge();
-	}
-    
-	/**
 	 * Initialises the indexGenerator.
 	 */
-	public void initialize(boolean reuseExistingFile) throws IOException {
+	public void initialize() throws IOException {
 		
-		//initialisation of addsIndex
-		addsIndex= new InMemoryIndex();
-		addsIndexInput= new SimpleIndexInput(addsIndex);
-
-		//vectors who keep track of the removed Files
-		removedInAdds= new HashMap(11);
-		removedInOld= new HashMap(11);
-
 		// check whether existing index file can be read
-		if (reuseExistingFile && indexFile.exists() && indexFile.getSize() > 0) {
-            BlocksIndexInput mainIndexInput= getBlocksIndexInput();
-			try {
-				mainIndexInput.open();
-			} catch(IOException e) {
-				BlocksIndexInput input = mainIndexInput;
-				try {
-					input.setOpen(true);
-					input.close();
-				} finally {
-                    input.setOpen(false);
-				}
-                //System.out.println(" Index.initialize(): Deleting Index file = " + indexFile.getName());
-				indexFile.delete();
-				mainIndexInput = null;
-				throw e;
-			}
-            if( !doCache ) {
-                mainIndexInput.close();
-            }
-		} else {
-			InMemoryIndex mainIndex= new InMemoryIndex();			
-			IndexOutput mainIndexOutput= new BlocksIndexOutput(indexFile);
-			mainIndex.save(mainIndexOutput);
-		}
-	}
-    
-	/**
-	 * Merges the in memory index and the index on the disk, and saves the results on the disk.
-	 */
-	protected void merge() throws IOException {
-		/*
-		//initialisation of tempIndex
-		VirtualFile tempFile= new File(indexFile.getAbsolutePath() + "TempVA"); //$NON-NLS-1$
-
-		IndexInput mainIndexInput= getBlocksIndexInput();
-		BlocksIndexOutput tempIndexOutput= new BlocksIndexOutput(tempFile);
-
+        BlocksIndexInput mainIndexInput= getBlocksIndexInput();
 		try {
-			//invoke a mergeFactory
-			new MergeFactory(
-				mainIndexInput, 
-				addsIndexInput, 
-				tempIndexOutput, 
-				removedInOld, 
-				removedInAdds).merge();
-			
-			//rename the file created to become the main index
-			File mainIndexFile= (File) mainIndexInput.getSource();
-			File tempIndexFile= (File) tempIndexOutput.getDestination();
-            //System.out.println(" Index.merge(): Deleting Index file = " + mainIndexFile.getName());
-            
-			mainIndexFile.delete();
-			tempIndexFile.renameTo(mainIndexFile);
-            //if( doCache ) {
-                //mainIndexInput.open();
-            //}
-            //System.out.println(" Index.merge(): Renaming Index file = " + mainIndexFile.getName());
-		} finally {		
-			//initialise remove vectors and addsindex, and change the state
-			removedInAdds.clear();
-			removedInOld.clear();
-			addsIndex.init();
-			addsIndexInput= new SimpleIndexInput(addsIndex);
-            if( tempFile.exists() ) {
-                // remove it
-                if( !tempFile.delete() ) {
-                    tempFile.deleteOnExit();
-                }
-            }
-			state= MERGED;
+			mainIndexInput.open();
+		} catch(IOException e) {
+			BlocksIndexInput input = mainIndexInput;
+			try {
+				input.setOpen(true);
+				input.close();
+			} finally {
+                input.setOpen(false);
+			}
+            //System.out.println(" Index.initialize(): Deleting Index file = " + indexFile.getName());
+			mainIndexInput = null;
+			throw e;
 		}
-		*/
-		throw new IOException("Can not merge the Index files. These are read only files for Teiid purpose.");
+        if( !doCache ) {
+            mainIndexInput.close();
+        }
 	}
     
 	/**
@@ -366,58 +192,7 @@ public class Index implements IIndex {
         }
     }    
     
-	/**
-	 * @see IIndex#remove
-	 */
-	public void remove(String documentName) throws IOException {
-		IndexedFile file= addsIndex.getIndexedFile(documentName);
-		if (file != null) {
-			//the file is in the adds Index, we remove it from this one
-			int[] lastRemoved= (int[]) removedInAdds.get(documentName);
-			if (lastRemoved != null) {
-				int fileNum= file.getFileNumber();
-				if (lastRemoved[0] < fileNum)
-					lastRemoved[0] = fileNum;
-			} else
-				removedInAdds.put(documentName, new int[] {file.getFileNumber()});
-		} else {
-			//we remove the file from the old index
-			removedInOld.put(documentName, new int[] {1});
-		}
-		state= CAN_MERGE;
-	}
-    
-	/**
-	 * Removes the given document from the given index (MergeFactory.ADDS_INDEX for the
-	 * in memory index, MergeFactory.OLD_INDEX for the index on the disk).
-	 */
-	protected void remove(IndexedFile file, int index) throws IOException {
-		String name= file.getPath();
-		if (index == MergeFactory.ADDS_INDEX) {
-			int[] lastRemoved= (int[])removedInAdds.get(name);
-			if (lastRemoved != null) {
-				if (lastRemoved[0] < file.getFileNumber())
-					lastRemoved[0] = file.getFileNumber();
-			} else
-				removedInAdds.put(name, new int[] {file.getFileNumber()});
-		} else if (index == MergeFactory.OLD_INDEX)
-			removedInOld.put(name, new int[] {1});
-		else
-			throw new Error();
-		state= CAN_MERGE;
-	}
-    
-	/**
-	 * @see IIndex#save
-	 */
-	public void save() throws IOException {
-		if (canMerge()) {
-            //System.out.println(" Index.save():  Index file = " + indexFile.getName() + "   Model = " + resourceFileName);
-			merge();
-        }
-	}
-    
-    protected BlocksIndexInput getBlocksIndexInput() {
+	protected BlocksIndexInput getBlocksIndexInput() {
         if( doCache ) {
             if( getCachedInput() == null  ) {
                 boolean wasLoaded = false;
@@ -454,23 +229,10 @@ public class Index implements IIndex {
         }
     }
     
-    public void dispose() {
-        close();
-	    indexFile.delete();
-    }
-    
-	/**
-	 * Returns true if the in memory index reaches a critical size, 
-	 * to merge it with the index on the disk.
-	 */
-	protected boolean timeToMerge() {
-		return (addsIndex.getFootprint() >= MAX_FOOTPRINT);
-	}
-    
     public String toString() {
     	String str = this.toString;
     	if (str == null) str = super.toString();
-		str += "(length: "+ getIndexFile().getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
+		str += "(length: "+ indexFile.getSize() +")"; //$NON-NLS-1$ //$NON-NLS-2$
     	return str;
     }
     

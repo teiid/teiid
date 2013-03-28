@@ -45,11 +45,11 @@
         "description" : "Description of the Virtual Database",
         "required" : false
     },
-    "dynamic" : {
+    "xml-deployment" : {
         "type" : {
             "TYPE_MODEL_VALUE" : "BOOLEAN"
         },
-        "description" : "Dynamic Virtual Database",
+        "description" : "If the deployment is only the vdb.xml file.",
         "required" : false
     },
     "properties" : {

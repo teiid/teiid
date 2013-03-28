@@ -17,7 +17,6 @@ import java.io.UTFDataFormatException;
  * Uses prefix coding on words, and gamma coding of document numbers differences.
  */
 public class GammaCompressedIndexBlock extends IndexBlock {
-	CodeByteStream writeCodeStream= new CodeByteStream();
 	CodeByteStream readCodeStream;
 	char[] prevWord= null;
 	int offset= 0;
@@ -25,47 +24,6 @@ public class GammaCompressedIndexBlock extends IndexBlock {
 	public GammaCompressedIndexBlock(int blockSize) {
 		super(blockSize);
 		readCodeStream= new CodeByteStream(field.buffer());
-	}
-	/**
-	 * @see IndexBlock#addEntry
-	 */
-	public boolean addEntry(WordEntry entry) {
-		writeCodeStream.reset();
-		encodeEntry(entry, prevWord, writeCodeStream);
-		if (offset + writeCodeStream.byteLength() > this.blockSize - 2) {
-			return false;
-		}
-		byte[] bytes= writeCodeStream.toByteArray();
-		field.put(offset, bytes);
-		offset += bytes.length;
-		prevWord= entry.getWord();
-		return true;
-	}
-	protected void encodeEntry(WordEntry entry, char[] prevWord, CodeByteStream codeStream) {
-		char[] word= entry.getWord();
-		int prefixLen= prevWord == null ? 0 : Math.min(Util.prefixLength(prevWord, word), 255);
-		codeStream.writeByte(prefixLen);
-		codeStream.writeUTF(word, prefixLen, word.length);
-		int n= entry.getNumRefs();
-		codeStream.writeGamma(n);
-		int prevRef= 0;
-		for (int i= 0; i < n; ++i) {
-			int ref= entry.getRef(i);
-			if (ref <= prevRef)
-				throw new IllegalArgumentException();
-			codeStream.writeGamma(ref - prevRef);
-			prevRef= ref;
-		}
-	}
-	/**
-	 * @see IndexBlock#flush
-	 */
-	public void flush() {
-		if (offset > 0) {
-			field.putInt2(offset, 0);
-			offset= 0;
-			prevWord= null;
-		}
 	}
 	/**
 	 * @see IndexBlock#isEmpty

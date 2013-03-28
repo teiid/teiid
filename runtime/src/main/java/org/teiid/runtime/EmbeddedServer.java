@@ -31,6 +31,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,7 +88,7 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DDLStringVisitor;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
@@ -479,7 +480,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public void deployVDB(String name, ModelMetaData... models)
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		VDBMetaData vdb = new VDBMetaData();
-		vdb.setDynamic(true);
+		vdb.setXmlDeployment(true);
 		vdb.setName(name);
 		vdb.setModels(Arrays.asList(models));
 		deployVDB(vdb);
@@ -509,7 +510,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		UDFMetaData udfMetaData = new UDFMetaData();
 		udfMetaData.setFunctionClassLoader(Thread.currentThread().getContextClassLoader());
 		this.assignMetadataRepositories(vdb, null);
-		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, Resource>(), udfMetaData, cmr);
+		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, VDBResources.Resource>(), udfMetaData, cmr);
 		try {
 			this.loadMetadata(vdb, cmr, metadataStore);
 		} catch (VDBValidationError e) {
@@ -525,7 +526,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
 			AtomicInteger loadCount) throws TranslatorException {
-		MetadataFactory factory = createMetadataFactory(vdb, model);
+		MetadataFactory factory = createMetadataFactory(vdb, model, Collections.EMPTY_MAP);
 		
 		ExecutionFactory ef = null;
 		Object cf = null;

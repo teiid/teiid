@@ -93,5 +93,19 @@ public class IntegrationTestDynamicViewDefinition extends AbstractMMQueryTestCas
 		execute("SELECT func('a')"); //$NON-NLS-1$
 		assertRowCount(1);
 	}
+	
+	@Test public void testVdbZipWithDDL() throws Exception {
+		JavaArchive jar = ShrinkWrap.create(JavaArchive.class, "temp.jar")
+			      .addAsManifestResource(UnitTestUtil.getTestDataFile("vdb.xml"))
+			      .addAsResource(UnitTestUtil.getTestDataFile("test.ddl"));
+		admin.deploy("dynamic-ddl.vdb", jar.as(ZipExporter.class).exportAsInputStream());
+		
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic-ddl", 1, 3));
+		
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:dynamic-ddl@mm://localhost:31000;user=user;password=user", null);
+		
+		execute("SELECT * from stock"); //$NON-NLS-1$
+		assertRowCount(1);
+	}
 
 }

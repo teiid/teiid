@@ -42,8 +42,7 @@ import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.metadata.VdbConstants;
-import org.teiid.metadata.index.IndexMetadataStore;
+import org.teiid.query.metadata.VDBResources;
 import org.xml.sax.SAXException;
 
 
@@ -63,8 +62,8 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		
-		if (TeiidAttachments.isDynamicVDB(deploymentUnit)) {
-			parseVDBXML(file, deploymentUnit, phaseContext).setDynamic(true);			
+		if (TeiidAttachments.isVDBXMLDeployment(deploymentUnit)) {
+			parseVDBXML(file, deploymentUnit, phaseContext).setXmlDeployment(true);			
 		}
 		else {
 			// scan for different files 
@@ -85,18 +84,10 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 			}
 		}
 		else {
-			if (file.getName().toLowerCase().equals(VdbConstants.DEPLOYMENT_FILE)) {
+			if (file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE)) {
 				parseVDBXML(file, deploymentUnit, phaseContext);
 			}
-			else if (file.getName().endsWith(VdbConstants.INDEX_EXT)) {
-				IndexMetadataStore imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
-				if (imf == null) {
-					imf = new IndexMetadataStore();
-					deploymentUnit.putAttachment(TeiidAttachments.INDEX_METADATA, imf);
-				}
-				imf.addIndexFile(file);
-			}
-			else if (file.getName().toLowerCase().endsWith(VdbConstants.MODEL_EXT)) {
+			else if (file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
 				UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
 				if (udf == null) {
 					udf = new FileUDFMetaData();
@@ -135,7 +126,6 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 	protected VDBMetaData mergeMetaData(DeploymentUnit deploymentUnit) throws DeploymentUnitProcessingException {
 		VDBMetaData vdb = deploymentUnit.getAttachment(TeiidAttachments.VDB_METADATA);
 		UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
-		IndexMetadataStore imf = deploymentUnit.getAttachment(TeiidAttachments.INDEX_METADATA);
 		
 		VirtualFile file = deploymentUnit.getAttachment(Attachments.DEPLOYMENT_ROOT).getRoot();
 		if (vdb == null) {
@@ -144,14 +134,6 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 		
 		try {
-			// build the metadata store
-			if (imf != null) {
-				imf.addEntriesPlusVisibilities(file, vdb);
-					
-				// This time stamp is used to check if the VDB is modified after the metadata is written to disk
-				//vdb.addProperty(VDBService.VDB_LASTMODIFIED_TIME, String.valueOf(file.getLastModified()));
-			}
-			
 			if (udf != null) {
 				// load the UDF
 				for(Model model:vdb.getModels()) {

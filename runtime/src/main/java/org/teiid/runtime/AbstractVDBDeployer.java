@@ -48,7 +48,9 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.VDBResource;
 import org.teiid.query.metadata.ChainingMetadataRepository;
+import org.teiid.query.metadata.DDLFileMetadataRepository;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
@@ -62,6 +64,7 @@ public abstract class AbstractVDBDeployer {
 	public AbstractVDBDeployer() {
 		repositories.put("ddl", new DDLMetadataRepository()); //$NON-NLS-1$
 		repositories.put("native", new NativeMetadataRepository()); //$NON-NLS-1$
+		repositories.put("ddl-file", new DDLFileMetadataRepository()); //$NON-NLS-1$
 	}
 	
 	public void addMetadataRepository(String name, MetadataRepository<?, ?> metadataRepository) {
@@ -91,7 +94,7 @@ public abstract class AbstractVDBDeployer {
 	
 	private MetadataRepository<?, ?> getMetadataRepository(VDBMetaData vdb, ModelMetaData model, MetadataRepository<?, ?> defaultRepo) throws VirtualDatabaseException {
 		if (model.getSchemaSourceType() == null) {
-			if (!vdb.isDynamic()) {
+			if (defaultRepo != null) {
 				return defaultRepo;
 			}
 			if (model.isSource()) {
@@ -182,12 +185,13 @@ public abstract class AbstractVDBDeployer {
 	}
 	
 	protected MetadataFactory createMetadataFactory(VDBMetaData vdb,
-			ModelMetaData model) {
+			ModelMetaData model, Map<String, ? extends VDBResource> vdbResources) {
 		Map<String, Datatype> datatypes = this.getVDBRepository().getRuntimeTypeMap();
 		MetadataFactory factory = new MetadataFactory(vdb.getName(), vdb.getVersion(), datatypes, model);
 		factory.setBuiltinDataTypes(this.getVDBRepository().getSystemStore().getDatatypes());
 		factory.getSchema().setPhysical(model.isSource());
 		factory.setParser(new QueryParser()); //for thread safety each factory gets it's own instance.
+		factory.setVdbResources(vdbResources);
 		return factory;
 	}
 

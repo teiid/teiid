@@ -33,7 +33,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
-import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -96,30 +95,20 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 
 	private final class VirtualFileInputStreamFactory extends
 			InputStreamFactory {
-		private final VirtualFile f;
-		private InputStream is;
+		private final VDBResources.Resource r;
 
-		private VirtualFileInputStreamFactory(VirtualFile f) {
-			this.f = f;
+		private VirtualFileInputStreamFactory(VDBResources.Resource r) {
+			this.r = r;
 		}
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			this.is = f.openStream();
-			return is;
+			return r.openStream();
 		}
 		
 		@Override
 		public long getLength() {
-			return f.getSize();
-		}
-		
-		@Override
-		public void free() {
-			try {
-				this.is.close();
-			} catch (IOException e) {
-			}
+			return r.getSize();
 		}
 		
 		@Override
@@ -128,15 +117,6 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 		}
 	}
 
-	public static class Resource {
-		public Resource(VirtualFile file, boolean visible) {
-			this.file = file;
-			this.visible = visible;
-		}
-		VirtualFile file;
-		boolean visible;
-	}
-	
 	private static final long serialVersionUID = 1058627332954475287L;
 	
 	/** Delimiter character used when specifying fully qualified entity names */
@@ -149,7 +129,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private static Properties EMPTY_PROPS = new Properties();
     
     private final CompositeMetadataStore store;
-    private Map<String, Resource> vdbEntries;
+    private Map<String, VDBResources.Resource> vdbEntries;
     private FunctionLibrary functionLibrary;
     private VDBMetaData vdbMetaData;
     private ScriptEngineManager scriptEngineManager;
@@ -168,7 +148,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * TransformationMetadata constructor
      * @param context Object containing the info needed to lookup metadta.
      */
-    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
+    public TransformationMetadata(VDBMetaData vdbMetadata, final CompositeMetadataStore store, Map<String, VDBResources.Resource> vdbEntries, FunctionTree systemFunctions, Collection<FunctionTree> functionTrees) {
     	ArgCheck.isNotNull(store);
     	this.vdbMetaData = vdbMetadata;
     	if (this.vdbMetaData !=null) {
@@ -980,7 +960,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      * @since 4.3
      */
     public byte[] getBinaryVDBResource(String resourcePath) throws TeiidComponentException, QueryMetadataException {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
@@ -992,7 +972,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     public ClobImpl getVDBResourceAsClob(String resourcePath) {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
@@ -1000,7 +980,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     public SQLXMLImpl getVDBResourceAsSQLXML(String resourcePath) {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
@@ -1008,22 +988,18 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     }
     
     public BlobImpl getVDBResourceAsBlob(String resourcePath) {
-    	final VirtualFile f = getFile(resourcePath);
+    	final VDBResources.Resource f = getFile(resourcePath);
     	if (f == null) {
     		return null;
     	}
     	return new BlobImpl(new VirtualFileInputStreamFactory(f));
     }
     
-    private VirtualFile getFile(String resourcePath) {
+    private VDBResources.Resource getFile(String resourcePath) {
     	if (resourcePath == null) {
     		return null;
     	}
-    	Resource r = this.vdbEntries.get(resourcePath);
-    	if (r != null) {
-    		return r.file;
-    	}
-    	return null;
+    	return this.vdbEntries.get(resourcePath);
     }
 
     /** 
@@ -1052,7 +1028,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
      */
     public String[] getVDBResourcePaths() throws TeiidComponentException, QueryMetadataException {
     	LinkedList<String> paths = new LinkedList<String>();
-    	for (Map.Entry<String, Resource> entry : this.vdbEntries.entrySet()) {
+    	for (Map.Entry<String, VDBResources.Resource> entry : this.vdbEntries.entrySet()) {
 			paths.add(entry.getKey());
     	}
     	return paths.toArray(new String[paths.size()]);

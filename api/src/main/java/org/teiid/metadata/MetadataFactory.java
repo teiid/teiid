@@ -72,6 +72,7 @@ public class MetadataFactory implements Serializable {
 	protected int count;
 	private transient Parser parser;
 	private transient ModelMetaData model;
+	private transient Map<String, ? extends VDBResource> vdbResources;
 	
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -636,5 +637,13 @@ public class MetadataFactory implements Serializable {
 	
 	public Parser getParser() {
 		return parser;
+	}
+
+	public Map<String, ? extends VDBResource> getVDBResources() {
+		return this.vdbResources;
+	}
+	
+	public void setVdbResources(Map<String, ? extends VDBResource> vdbResources) {
+		this.vdbResources = vdbResources;
 	}
 }

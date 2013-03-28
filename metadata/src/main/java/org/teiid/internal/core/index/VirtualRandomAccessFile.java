@@ -24,15 +24,15 @@ package org.teiid.internal.core.index;
 import java.io.File;
 import java.io.IOException;
 
-import org.jboss.vfs.VirtualFile;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.metadata.VDBResource;
 
 
 public class VirtualRandomAccessFile {
 	File indexFile;
 	String mode;
 	
-	public VirtualRandomAccessFile(VirtualFile file, String mode) throws IOException{
+	public VirtualRandomAccessFile(VDBResource file, String mode) throws IOException{
 		this.indexFile = File.createTempFile(file.getName(), null);
 		ObjectConverterUtil.write(file.openStream(), indexFile);
 		this.mode = mode;

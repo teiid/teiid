@@ -29,6 +29,7 @@
   <li>TEIID-2429 Improved sort performance for large data sets especially under heavy load.
   <li>TEIID-2423 Added an xml deployment option for Teiid Embedded.
   <li>TEIID-1092 Added the teiid_session_set and teiid_session_get methods to maintain session variables.
+  <li>TEIID-2449 Added the ability to deploy non-Designer based vdb zip artifacts with the ability to place DDL outside of the VDB.xml via the DDL-FILE metadata repository.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -36,9 +37,14 @@
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
-  <li>The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.(TEIID-2267)
+  <li>TEIID-2267 The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.
 </ul>
 
+<h4>from 8.2</h4>
+<ul>
+   <li>TEIID-2429 Sorts over data sets over a single batch are not guaranteed to be sorted in a stable manor to improve performance.  The sort will still be correct with respect to the sort keys.   
+</ul>
+   
 <h4>from 8.2</h4>
 <ul>
   <li>TEIID-2253 the multi-source implementation logic was significantly altered the following changes were introduced.

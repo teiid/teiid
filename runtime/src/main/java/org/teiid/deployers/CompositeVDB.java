@@ -46,7 +46,7 @@ import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
 
@@ -56,7 +56,7 @@ import org.teiid.vdb.runtime.VDBKey;
 public class CompositeVDB {
 	private VDBMetaData vdb;
 	private MetadataStore store;
-	private LinkedHashMap<String, Resource> visibilityMap;
+	private LinkedHashMap<String, VDBResources.Resource> visibilityMap;
 	private UDFMetaData udf;
 	private LinkedHashMap<VDBKey, CompositeVDB> children;
 	private MetadataStore[] additionalStores;
@@ -66,7 +66,7 @@ public class CompositeVDB {
 	private VDBMetaData mergedVDB;
 	private VDBMetaData originalVDB;
 	
-	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
+	public CompositeVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, FunctionTree systemFunctions, ConnectorManagerRepository cmr, VDBRepository vdbRepository, MetadataStore... additionalStores) throws VirtualDatabaseException {
 		this.vdb = vdb;
 		this.store = metadataStore;
 		this.visibilityMap = visibilityMap;
@@ -79,7 +79,7 @@ public class CompositeVDB {
 		buildCompositeState(vdbRepository);
 	}
 	
-	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
+	private static TransformationMetadata buildTransformationMetaData(VDBMetaData vdb, LinkedHashMap<String, VDBResources.Resource> visibilityMap, MetadataStore store, UDFMetaData udf, FunctionTree systemFunctions, MetadataStore[] additionalStores) {
 		Collection <FunctionTree> udfs = new ArrayList<FunctionTree>();
 		if (udf != null) {			
 			for (Map.Entry<String, UDFSource> entry : udf.getFunctions().entrySet()) {
@@ -197,17 +197,17 @@ public class CompositeVDB {
 	/**
 	 * TODO: we are not checking for collisions here.
 	 */
-	private LinkedHashMap<String, Resource> getVisibilityMap() {
+	private LinkedHashMap<String, VDBResources.Resource> getVisibilityMap() {
 		if (this.children == null || this.children.isEmpty()) {
 			return this.visibilityMap;
 		}
 		
-		LinkedHashMap<String, Resource> mergedvisibilityMap = new LinkedHashMap<String, Resource>();
+		LinkedHashMap<String, VDBResources.Resource> mergedvisibilityMap = new LinkedHashMap<String, VDBResources.Resource>();
 		if (this.visibilityMap != null) {
 			mergedvisibilityMap.putAll(this.visibilityMap);
 		}
 		for (CompositeVDB child:this.children.values()) {
-			LinkedHashMap<String, Resource> vm = child.getVisibilityMap();
+			LinkedHashMap<String, VDBResources.Resource> vm = child.getVisibilityMap();
 			if ( vm != null) {
 				mergedvisibilityMap.putAll(vm);
 			}

@@ -275,7 +275,7 @@ public class TestMatViews {
 		server.deployVDB("base", mmd, mmd1, mmd2);
 		
 		VDBMetaData vdbMetaData = new VDBMetaData();
-		vdbMetaData.setDynamic(true);
+		vdbMetaData.setXmlDeployment(true);
 		VDBImportMetadata importVDB = new VDBImportMetadata();
 		importVDB.setName("base");
 		importVDB.setVersion(1);

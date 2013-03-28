@@ -251,9 +251,9 @@ public class TestVDBMetaData {
 	@Test
 	public void testClone() {
 		VDBMetaData vdb = buildVDB();
-		vdb.setDynamic(true);
+		vdb.setXmlDeployment(true);
 		VDBMetaData clone = vdb.clone();
-		assertTrue(clone.isDynamic());
+		assertTrue(clone.isXmlDeployment());
 		assertEquals(1, vdb.getVDBImports().size());
 		assertNotSame(clone.getModelMetaDatas(), vdb.getModelMetaDatas());
 	}

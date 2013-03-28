@@ -44,7 +44,8 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.metadata.VDBResources.Resource;
 
 @SuppressWarnings("nls")
 public class TestMetadataFactory {
@@ -72,8 +73,8 @@ public class TestMetadataFactory {
     	VDBMetaData vdbMetaData = new VDBMetaData();
     	vdbMetaData.setName("foo"); //$NON-NLS-1$
     	vdbMetaData.setVersion(1);
-    	Map<String, Resource> vdbEntries = new LinkedHashMap<String, Resource>();
-    	vdbEntries.put(MY_RESOURCE_PATH, new Resource(root.getChild("foo"), true));
+    	Map<String, VDBResources.Resource> vdbEntries = new LinkedHashMap<String, VDBResources.Resource>();
+    	vdbEntries.put(MY_RESOURCE_PATH, new VDBResources.Resource(root.getChild("foo"), true));
         metadataFactory = new RuntimeMetadataImpl(new TransformationMetadata(vdbMetaData, store, vdbEntries, null, null));
     }
     

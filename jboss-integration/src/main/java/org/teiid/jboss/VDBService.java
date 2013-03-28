@@ -27,7 +27,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -80,9 +79,10 @@ import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.metadata.TransformationMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.runtime.AbstractVDBDeployer;
@@ -106,11 +106,11 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	
 	private VDBLifeCycleListener vdbListener;
 	private VDBLifeCycleListener restEasyListener;
-	private LinkedHashMap<String, Resource> visibilityMap;
+	private VDBResources vdbResources;
 	
-	public VDBService(VDBMetaData metadata, LinkedHashMap<String, Resource> visibilityMap) {
+	public VDBService(VDBMetaData metadata, VDBResources vdbResources) {
 		this.vdb = metadata;
-		this.visibilityMap = visibilityMap;
+		this.vdbResources = vdbResources;
 	}
 	
 	@Override
@@ -158,6 +158,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				if (!name.equals(VDBService.this.vdb.getName()) || version != VDBService.this.vdb.getVersion()) {
 					return;
 				}
+				//clear out the indexmetadatarepository as it holds state that is no longer necessary
+				repositories.put("index", new IndexMetadataRepository()); //$NON-NLS-1$ 
 				VDBMetaData vdbInstance = cvdb.getVDB();
 				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
 					// add object replication to temp/matview tables
@@ -183,9 +185,18 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		MetadataStore store = new MetadataStore();
 		
 		try {
-			this.assignMetadataRepositories(vdb, super.getMetadataRepository("index")); //$NON-NLS-1$
+			//check to see if there is an index file.  if there is then we assume
+			//that index is the default metadata repo
+			MetadataRepository<?, ?> defaultRepo = null;
+			for (String s : this.vdbResources.getEntriesPlusVisibilities().keySet()) {
+				if (s.endsWith(VDBResources.INDEX_EXT)) {
+					defaultRepo = super.getMetadataRepository("index"); //$NON-NLS-1$
+					break;
+				}
+			}
+			this.assignMetadataRepositories(vdb, defaultRepo); 
 			// add transformation metadata to the repository.
-			getVDBRepository().addVDB(this.vdb, store, visibilityMap, udf, cmr);
+			getVDBRepository().addVDB(this.vdb, store, vdbResources.getEntriesPlusVisibilities(), udf, cmr);
 		} catch (VirtualDatabaseException e) {
 			throw new StartException(e);
 		}		
@@ -367,7 +378,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					cached = true;
 					LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was loaded from cached metadata"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				} else {
-					factory = createMetadataFactory(vdb, model);
+					factory = createMetadataFactory(vdb, model, vdbResources.getEntriesPlusVisibilities());
 					ExecutionFactory ef = null;
 					Object cf = null;
 					
@@ -421,10 +432,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	}	
     
-    // if is not dynamic always cache; else check for the flag (this may need to be revisited with index vdb)
 	private void cacheMetadataStore(final ModelMetaData model, MetadataFactory schema) {
-		boolean cache = !vdb.isDynamic();
-		if (vdb.isDynamic()) {
+		boolean cache = true;
+		if (vdb.isXmlDeployment()) {
 			cache = "cached".equalsIgnoreCase(vdb.getPropertyValue("UseConnectorMetadata")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		

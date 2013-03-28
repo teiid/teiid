@@ -53,7 +53,7 @@ import org.teiid.net.ConnectionException;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.SystemMetadata;
-import org.teiid.query.metadata.TransformationMetadata.Resource;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.vdb.runtime.VDBKey;
@@ -78,7 +78,7 @@ public class VDBRepository implements Serializable{
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition vdbAdded = lock.newCondition();
 	
-	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
+	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
 		VDBKey key = vdbId(vdb);
 		
 		// get the system VDB metadata store
