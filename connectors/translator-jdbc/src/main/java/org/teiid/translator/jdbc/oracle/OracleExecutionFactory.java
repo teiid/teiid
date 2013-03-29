@@ -37,6 +37,7 @@ import java.util.List;
 
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.CollectorVisitor;
@@ -576,6 +577,34 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			super.visit(obj);
     		}
     		
+    		@Override
+    		public void visit(Call call) {
+        		if (oracleSuppliedDriver && call.getReturnType() == null && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
+        			//oracle returns the resultset as a parameter
+        			call.setReturnType(RefCursorType.class);
+        		}
+        		super.visit(call);
+    		}
+    		
+    		@Override
+    		public void visit(Like obj) {
+    			if (obj.getMode() == MatchMode.REGEX) {
+    				if (obj.isNegated()) {
+    					buffer.append("NOT("); //$NON-NLS-1$
+    				}
+    				buffer.append("REGEXP_LIKE(");  //$NON-NLS-1$
+    				append(obj.getLeftExpression());
+    				buffer.append(", ");  //$NON-NLS-1$
+    				append(obj.getRightExpression());
+    				buffer.append(")");  //$NON-NLS-1$
+    				if (obj.isNegated()) {
+    					buffer.append(")");  //$NON-NLS-1$
+    				}
+    			} else {
+    				super.visit(obj);
+    			}
+    		}
+    		
     	};
     }
     
@@ -706,11 +735,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
-    @Override
-    public String getLikeRegexString() {
-    	return "REGEXP_LIKE"; //$NON-NLS-1$
-    }
-    
     public void setOracleSuppliedDriver(boolean oracleNative) {
 		this.oracleSuppliedDriver = oracleNative;
 	}
@@ -720,18 +744,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 		return oracleSuppliedDriver;
 	}
 		
-    @Override
-    public List<?> translate(LanguageObject obj, ExecutionContext context) {
-    	if (oracleSuppliedDriver && obj instanceof Call) {
-    		Call call = (Call)obj;
-    		if (call.getReturnType() == null && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
-    			//oracle returns the resultset as a parameter
-    			call.setReturnType(RefCursorType.class);
-    		}
-    	}
-    	return super.translate(obj, context);
-    }
-    
     @Override
     protected void registerSpecificTypeOfOutParameter(
     		CallableStatement statement, Class<?> runtimeType, int index)

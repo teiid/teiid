@@ -878,7 +878,7 @@ public class TestOracleTranslator {
     
     @Test public void testLikeRegex() throws Exception {
         String input = "SELECT intkey FROM BQT1.SMALLA where stringkey like_regex 'ab.*c+' and stringkey not like_regex 'ab{3,5}c'"; //$NON-NLS-1$
-        String output = "SELECT SmallA.IntKey FROM SmallA WHERE SmallA.StringKey REGEXP_LIKE 'ab.*c+' AND SmallA.StringKey NOT REGEXP_LIKE 'ab{3,5}c'";  //$NON-NLS-1$
+        String output = "SELECT SmallA.IntKey FROM SmallA WHERE REGEXP_LIKE(SmallA.StringKey, 'ab.*c+') AND NOT(REGEXP_LIKE(SmallA.StringKey, 'ab{3,5}c'))";  //$NON-NLS-1$
 
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
