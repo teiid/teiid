@@ -27,6 +27,7 @@ import java.util.Map;
 
 import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
@@ -40,7 +41,7 @@ import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
-    
+	private static DefaultCacheManager container;
 	static final class InfinispanConnection implements ObjectConnection {
 		private final CacheContainer container;
 
@@ -86,7 +87,7 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 		
 		factory = new InfinispanExecutionFactory();
 
-		final DefaultCacheManager container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml");
+		container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml");
 
 		factory.start();
 		
@@ -94,6 +95,11 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 
 		conn = new InfinispanConnection(container);
 	}
+	
+	@AfterClass
+	public static void afterClass() {
+		container.stop();
+	}	
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {

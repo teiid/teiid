@@ -21,26 +21,21 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIBE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REMOVE;
-
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 import org.jboss.as.controller.AbstractRemoveStepHandler;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.naming.deployment.ContextNames;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.msc.service.ServiceName;
 import org.jboss.msc.service.ServiceRegistry;
+import org.teiid.transport.LocalServerConnection;
 
-class TransportRemove extends AbstractRemoveStepHandler implements DescriptionProvider {
-
+class TransportRemove extends AbstractRemoveStepHandler {
+	public static TransportRemove INSTANCE = new TransportRemove();
+	
 	@Override
     protected void performRuntime(OperationContext context, ModelNode operation, ModelNode model) {
 
@@ -50,32 +45,18 @@ class TransportRemove extends AbstractRemoveStepHandler implements DescriptionPr
     	String transportName = pathAddress.getLastElement().getValue();
 
     	final ServiceRegistry serviceRegistry = context.getServiceRegistry(true);
+    	
     	ServiceName serviceName = TeiidServiceNames.transportServiceName(transportName);
 		final ServiceController<?> controller = serviceRegistry.getService(serviceName);
-		if (controller != null) {			 
-			 context.removeService(serviceName);
+		if (controller != null) {
+			TransportService transport = TransportService.class.cast(controller.getValue());
+			
+			if (transport.isEmbedded()) {
+				final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.jndiNameForRuntime(transportName));
+				context.removeService(bindInfo.getBinderServiceName());
+				context.removeService(TeiidServiceNames.embeddedTransportServiceName(transportName).append("reference-factory")); //$NON-NLS-1$
+			}
+			context.removeService(serviceName);
 		}
-
-//		final ServiceName referenceFactoryServiceName = TeiidServiceNames.transportServiceName(transportName).append("reference-factory"); //$NON-NLS-1$
-//		final ServiceController<?> referceFactoryController = serviceRegistry.getService(referenceFactoryServiceName);
-//		if (referceFactoryController != null) {			 
-//			 context.removeService(referenceFactoryServiceName);
-//		}
-//		
-//        final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(LocalServerConnection.TEIID_RUNTIME_CONTEXT+transportName);
-//        final ServiceController<?> binderController = serviceRegistry.getService(bindInfo.getBinderServiceName());
-//        if (binderController != null) {
-//        	context.removeService(bindInfo.getBinderServiceName());
-//        }
     }
-
-	@Override
-	public ModelNode getModelDescription(Locale locale) {
-        final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-        final ModelNode operation = new ModelNode();
-        operation.get(OPERATION_NAME).set(REMOVE);
-        operation.get(DESCRIPTION).set(bundle.getString(REMOVE+"."+DESCRIBE)); //$NON-NLS-1$
-        return operation;
-	}
-    
 }

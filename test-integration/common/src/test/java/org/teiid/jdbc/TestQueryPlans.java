@@ -34,17 +34,18 @@ import org.teiid.core.util.UnitTestUtil;
 
 @SuppressWarnings("nls")
 public class TestQueryPlans {
-
+	static FakeServer server;
 	private static Connection conn;
 	
 	@BeforeClass public static void setUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.deployVDB("test", UnitTestUtil.getTestDataPath() + "/TestCase3473/test.vdb");
     	conn = server.createConnection("jdbc:teiid:test"); //$NON-NLS-1$ //$NON-NLS-2$		
     }
 	
 	@AfterClass public static void tearDown() throws Exception {
 		conn.close();
+		server.stop();
 	}
 	
 	@Test public void testNoExec() throws Exception {

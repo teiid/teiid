@@ -188,7 +188,9 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 		if (this.cacheFactory == null) {
 			try {
 				manager = new DefaultCacheManager(this.infinispanConfigFile, true);
-				manager.startCaches(manager.getCacheNames().toArray(new String[manager.getCacheNames().size()]));
+				for(String cacheName:manager.getCacheNames()) {
+					manager.startCache(cacheName);
+				}
 				this.cacheFactory = new InfinispanCacheFactory(manager, this.getClass().getClassLoader());
 			} catch (IOException e) {
 				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40100, e);

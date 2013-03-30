@@ -34,7 +34,11 @@ import java.net.UnknownHostException;
 import java.util.*;
 import java.util.logging.Logger;
 
-import javax.security.auth.callback.*;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.CallbackHandler;
+import javax.security.auth.callback.NameCallback;
+import javax.security.auth.callback.PasswordCallback;
+import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
 import javax.security.sasl.RealmChoiceCallback;
 
@@ -47,10 +51,15 @@ import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.PropertyDefinition.RestartType;
 import org.teiid.adminapi.VDB.ConnectionType;
-import org.teiid.adminapi.impl.*;
+import org.teiid.adminapi.impl.AdminObjectImpl;
+import org.teiid.adminapi.impl.MetadataMapper;
+import org.teiid.adminapi.impl.PropertyDefinitionMetadata;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.RequestMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.SessionMetadataMapper;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
+import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 
 

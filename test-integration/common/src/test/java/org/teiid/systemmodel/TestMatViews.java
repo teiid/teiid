@@ -80,8 +80,8 @@ public class TestMatViews {
     }
 	
 	@After public void tearDown() throws Exception {
-		server.stop();
 		conn.close();
+		server.stop();
 	}
 	
 	@Test public void testSystemMatViewsWithImplicitLoad() throws Exception {

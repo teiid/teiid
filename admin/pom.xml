@@ -35,7 +35,7 @@
         </dependency> 
         <dependency>
             <groupId>org.jboss.as</groupId>
-            <artifactId>jboss-as-controller-client</artifactId>   
+            <artifactId>jboss-as-controller</artifactId>   
         </dependency>    
 	</dependencies>
 </project>
