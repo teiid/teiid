@@ -24,7 +24,6 @@ package org.teiid.jboss;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 
 import java.util.Locale;
-import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import org.jboss.as.controller.OperationContext;
