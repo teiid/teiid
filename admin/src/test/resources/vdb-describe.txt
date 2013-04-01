@@ -113,13 +113,7 @@
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
                 "description" : "Name of the model",
-                "required" : true,
-                "allowed" : [
-                    "PHYSICAL",
-                    "VIRTUAL",
-                    "FUNCTION",
-                    "OTHER"
-                ]
+                "required" : true
             },
             "description" : {
                 "type" : {
@@ -140,7 +134,13 @@
                     "TYPE_MODEL_VALUE" : "STRING"
                 },
                 "description" : "Type of the Model(PHYSICAL, VIRTUAL, FUNCTION, OTHER)",
-                "required" : true
+                "required" : true,
+                "allowed" : [
+                    "PHYSICAL",
+                    "VIRTUAL",
+                    "FUNCTION",
+                    "OTHER"
+                ]
             },
             "model-path" : {
                 "type" : {

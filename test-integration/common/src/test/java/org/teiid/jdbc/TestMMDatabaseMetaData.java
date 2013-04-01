@@ -122,7 +122,8 @@ public class TestMMDatabaseMetaData {
     //==============================================================================
     private static final int ResultSet_HOLD_CURSORS_OVER_COMMIT = 1; // ResultSet.HOLD_CURSORS_OVER_COMMIT == 1
     private static final int ResultSet_CLOSE_CURSORS_AT_COMMIT = 2; // ResultSet.CLOSE_CURSORS_AT_COMMIT  == 2
-
+    private static FakeServer server;
+    
     @Before
     public void setUp() throws Exception {
         dbmd = new DatabaseMetaDataImpl((ConnectionImpl) conn);
@@ -133,11 +134,12 @@ public class TestMMDatabaseMetaData {
     	if (conn != null) {
             conn.close();
         }
+    	server.stop();
     }    
     
     @BeforeClass
     public static void oneTimeSetUp() throws Exception {
-    	FakeServer server = new FakeServer(true);
+    	server = new FakeServer(true);
     	server.setThrowMetadataErrors(false); //there are invalid views due to aggregate datatype changes
     	server.deployVDB("QT_Ora9DS", UnitTestUtil.getTestDataPath()+"/QT_Ora9DS_1.vdb");
         conn = server.createConnection("jdbc:teiid:QT_Ora9DS"); //$NON-NLS-1$ //$NON-NLS-2$

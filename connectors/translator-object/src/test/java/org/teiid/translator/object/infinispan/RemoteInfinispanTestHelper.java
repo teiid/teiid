@@ -106,6 +106,7 @@ public class RemoteInfinispanTestHelper {
             try {
                 // System.out.println("Stopping HotRot Server at " + hostAddress() + ":" + hostPort());
                 server.stop();
+                getCacheManager().stop();
             } finally {
                 server = null;
             }

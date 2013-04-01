@@ -21,17 +21,11 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUEST_PROPERTIES;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 import javax.naming.InitialContext;
 
@@ -40,9 +34,6 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
-import org.jboss.as.controller.registry.AttributeAccess.Storage;
-import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.naming.ManagedReferenceFactory;
 import org.jboss.as.naming.ServiceBasedNamingStore;
 import org.jboss.as.naming.deployment.ContextNames;
@@ -58,6 +49,7 @@ import org.jboss.msc.service.ServiceTarget;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
+import org.teiid.jboss.TeiidConstants.TeiidAttribute;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.AuthenticationType;
@@ -65,70 +57,45 @@ import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
+import static org.teiid.jboss.TeiidConstants.*;
 
-class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider {
-
-	private static Element[] attributes = {
-		Element.TRANSPORT_PROTOCOL_ATTRIBUTE,
-		Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE,
-		Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE,
-		Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE,
-		Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE,
+class TransportAdd extends AbstractAddStepHandler {
+	public static TransportAdd INSTANCE = new TransportAdd();
+	
+	public static TeiidAttribute[] ATTRIBUTES = {
+		TeiidConstants.TRANSPORT_PROTOCOL_ATTRIBUTE,
+		TeiidConstants.TRANSPORT_SOCKET_BINDING_ATTRIBUTE,
+		TeiidConstants.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE,
+		TeiidConstants.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE,
+		TeiidConstants.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE,
 		
-		Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE,
-		Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
-		Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
-		Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE,
+		TeiidConstants.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE,
 		
-		Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
+		TeiidConstants.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT,
 		
-		Element.SSL_MODE_ATTRIBUTE,
-		Element.SSL_AUTH_MODE_ATTRIBUTE,
-		Element.SSL_SSL_PROTOCOL_ATTRIBUTE,
-		Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE,
-		Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE,
-		Element.SSL_KETSTORE_NAME_ATTRIBUTE,
-		Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE,
-		Element.SSL_KETSTORE_TYPE_ATTRIBUTE,
-		Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE,
-		Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE,
-		Element.SSL_KETSTORE_ALIAS_ATTRIBUTE
-		
+		TeiidConstants.SSL_MODE_ATTRIBUTE,
+		TeiidConstants.SSL_AUTH_MODE_ATTRIBUTE,
+		TeiidConstants.SSL_SSL_PROTOCOL_ATTRIBUTE,
+		TeiidConstants.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE,
+		TeiidConstants.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE,
+		TeiidConstants.SSL_KETSTORE_NAME_ATTRIBUTE,
+		TeiidConstants.SSL_KETSTORE_PASSWORD_ATTRIBUTE,
+		TeiidConstants.SSL_KETSTORE_TYPE_ATTRIBUTE,
+		TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE,
+		TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE,
+		TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE
 	};
 	
 	@Override
-	public ModelNode getModelDescription(Locale locale) {
-		final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-		
-        final ModelNode node = new ModelNode();
-        node.get(OPERATION_NAME).set(ADD);
-        node.get(DESCRIPTION).set("transport.add");  //$NON-NLS-1$
-        
-        describeTransport(node, REQUEST_PROPERTIES, bundle);
-        return node;
-	}
-	
-	static void describeTransport(ModelNode node, String type, ResourceBundle bundle) {
-		transportDescribe(node, type, bundle);
-	}
-
-	static void transportDescribe(ModelNode node, String type, ResourceBundle bundle) {
-		for (int i = 0; i < attributes.length; i++) {
-			attributes[i].describe(node, type, bundle);
+	protected void populateModel(ModelNode operation, ModelNode model) throws OperationFailedException {
+		for (int i = 0; i < ATTRIBUTES.length; i++) {
+			ATTRIBUTES[i].validateAndSet(operation, model);
 		}
 	}
-	
-	@Override
-	protected void populateModel(ModelNode operation, ModelNode model) {
-		populate(operation, model);
-	}
 
-	public static void populate(ModelNode operation, ModelNode model) {
-		for (int i = 0; i < attributes.length; i++) {
-			attributes[i].populate(operation, model);
-		}
-	}
-	
 	@Override
 	protected void performRuntime(final OperationContext context, final ModelNode operation, final ModelNode model,
             final ServiceVerificationHandler verificationHandler, final List<ServiceController<?>> newControllers) throws OperationFailedException {
@@ -142,8 +109,8 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
     	TransportService transport = new TransportService(transportName);
     	    	
     	String socketBinding = null;
-		if (Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.isDefined(operation)) {
-			socketBinding = Element.TRANSPORT_SOCKET_BINDING_ATTRIBUTE.asString(operation, context);
+		if (TRANSPORT_SOCKET_BINDING_ATTRIBUTE.isDefined(operation, context)) {
+			socketBinding = TRANSPORT_SOCKET_BINDING_ATTRIBUTE.asString(operation, context);
     		transport.setSocketConfig(buildSocketConfiguration(context, operation));
 		}
 		else {
@@ -152,29 +119,29 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 		}
     	
     	List<String> domainList = Collections.emptyList();
-   		if (Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.isDefined(operation)) {
-    		String domains = Element.AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation, context);
+   		if (AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.isDefined(operation, context)) {
+    		String domains = AUTHENTICATION_SECURITY_DOMAIN_ATTRIBUTE.asString(operation, context);
     		domainList = Arrays.asList(domains.split(","));//$NON-NLS-1$
     	}  
    		transport.setAuthenticationDomains(domainList);
    		
-   		if (Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.isDefined(operation)) {
-   			transport.setSessionMaxLimit(Element.AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.asLong(operation, context));
+   		if (AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.isDefined(operation, context)) {
+   			transport.setSessionMaxLimit(AUTHENTICATION_MAX_SESSIONS_ALLOWED_ATTRIBUTE.asLong(operation, context));
    		}
     	
-   		if (Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.isDefined(operation)) {
-   			transport.setSessionExpirationTimeLimit(Element.AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation, context));
+   		if (AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.isDefined(operation, context)) {
+   			transport.setSessionExpirationTimeLimit(AUTHENTICATION_SESSION_EXPIRATION_TIME_LIMIT_ATTRIBUTE.asLong(operation, context));
    		}   		
-   		if (Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.isDefined(operation)) {
+   		if (AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.isDefined(operation, context)) {
    			transport.setAuthenticationType(AuthenticationType.GSS);
-   			transport.setKrb5Domain(Element.AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation, context));
+   			transport.setKrb5Domain(AUTHENTICATION_KRB5_DOMAIN_ATTRIBUTE.asString(operation, context));
    		}
    		else {
    			transport.setAuthenticationType(AuthenticationType.CLEARTEXT);
    		}
    		
-   		if (Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.isDefined(operation)) {
-   			transport.setMaxODBCLobSizeAllowed(Element.PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.asInt(operation, context));
+   		if (PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.isDefined(operation, context)) {
+   			transport.setMaxODBCLobSizeAllowed(PG_MAX_LOB_SIZE_ALLOWED_ELEMENT.asInt(operation, context));
    		}
    		
     	ServiceBuilder<ClientServiceRegistry> transportBuilder = target.addService(TeiidServiceNames.transportServiceName(transportName), transport);
@@ -229,74 +196,67 @@ class TransportAdd extends AbstractAddStepHandler implements DescriptionProvider
 		
 		SocketConfiguration socket = new SocketConfiguration();
 
-		if (Element.TRANSPORT_PROTOCOL_ATTRIBUTE.isDefined(node)) {
-			socket.setProtocol(Element.TRANSPORT_PROTOCOL_ATTRIBUTE.asString(node, context));
+		if (TRANSPORT_PROTOCOL_ATTRIBUTE.isDefined(node, context)) {
+			socket.setProtocol(TRANSPORT_PROTOCOL_ATTRIBUTE.asString(node, context));
 		}
 				
-   		if (Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.isDefined(node)) {
-    		socket.setMaxSocketThreads(Element.TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.asInt(node, context));
+   		if (TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.isDefined(node, context)) {
+    		socket.setMaxSocketThreads(TRANSPORT_MAX_SOCKET_THREADS_ATTRIBUTE.asInt(node, context));
     	}
    		
-    	if (Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.isDefined(node)) {
-    		socket.setInputBufferSize(Element.TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.asInt(node, context));
+    	if (TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.isDefined(node, context)) {
+    		socket.setInputBufferSize(TRANSPORT_IN_BUFFER_SIZE_ATTRIBUTE.asInt(node, context));
     	}	
     	
-    	if (Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.isDefined(node)) {
-    		socket.setOutputBufferSize(Element.TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.asInt(node, context));
+    	if (TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.isDefined(node, context)) {
+    		socket.setOutputBufferSize(TRANSPORT_OUT_BUFFER_SIZE_ATTRIBUTE.asInt(node, context));
     	}		   
     	
     	SSLConfiguration ssl = new SSLConfiguration();
 
-    	if (Element.SSL_MODE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setMode(Element.SSL_MODE_ATTRIBUTE.asString(node, context));
+    	if (SSL_MODE_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setMode(SSL_MODE_ATTRIBUTE.asString(node, context));
     	}
     	
-    	if (Element.SSL_SSL_PROTOCOL_ATTRIBUTE.isDefined(node)) {
-    		ssl.setSslProtocol(Element.SSL_SSL_PROTOCOL_ATTRIBUTE.asString(node, context));
+    	if (SSL_SSL_PROTOCOL_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setSslProtocol(SSL_SSL_PROTOCOL_ATTRIBUTE.asString(node, context));
     	}	    	
     	
-    	if (Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeymanagementAlgorithm(Element.SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.asString(node, context));
+    	if (SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setKeymanagementAlgorithm(SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE.asString(node, context));
     	}    	
     	
-    	if (Element.SSL_AUTH_MODE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setAuthenticationMode(Element.SSL_AUTH_MODE_ATTRIBUTE.asString(node, context));
+    	if (SSL_AUTH_MODE_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setAuthenticationMode(SSL_AUTH_MODE_ATTRIBUTE.asString(node, context));
     	}
     	
-    	if (Element.SSL_KETSTORE_NAME_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystoreFilename(Element.SSL_KETSTORE_NAME_ATTRIBUTE.asString(node, context));
+    	if (SSL_KETSTORE_NAME_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setKeystoreFilename(SSL_KETSTORE_NAME_ATTRIBUTE.asString(node, context));
     	}	
     	
-    	if (Element.SSL_KETSTORE_ALIAS_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystorekeyAlias(Element.SSL_KETSTORE_ALIAS_ATTRIBUTE.asString(node, context));
+    	if (SSL_KETSTORE_ALIAS_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setKeystorekeyAlias(SSL_KETSTORE_ALIAS_ATTRIBUTE.asString(node, context));
     	}    	
     	
-    	if (Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.isDefined(node)) {
-    		ssl.setEnabledCipherSuites(Element.SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.asString(node, context));
+    	if (SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setEnabledCipherSuites(SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.asString(node, context));
     	}
     	
-    	if (Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystorePassword(Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node, context));
+    	if (SSL_KETSTORE_PASSWORD_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setKeystorePassword(SSL_KETSTORE_PASSWORD_ATTRIBUTE.asString(node, context));
     	}	
     	
-    	if (Element.SSL_KETSTORE_TYPE_ATTRIBUTE.isDefined(node)) {
-    		ssl.setKeystoreType(Element.SSL_KETSTORE_TYPE_ATTRIBUTE.asString(node, context));
+    	if (SSL_KETSTORE_TYPE_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setKeystoreType(SSL_KETSTORE_TYPE_ATTRIBUTE.asString(node, context));
     	}		
 
-    	if (Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.isDefined(node)) {
-    		ssl.setTruststoreFilename(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE.asString(node, context));
+    	if (SSL_TRUSTSTORE_NAME_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setTruststoreFilename(SSL_TRUSTSTORE_NAME_ATTRIBUTE.asString(node, context));
     	}
-    	if (Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.isDefined(node)) {
-    		ssl.setTruststorePassword(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node, context));
+    	if (SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setTruststorePassword(SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE.asString(node, context));
     	}
 		socket.setSSLConfiguration(ssl);
 		return socket;
-	}
-
-	
-	public static void registerReadWriteAttributes(ManagementResourceRegistration subsystem) {
-		for (int i = 0; i < attributes.length; i++) {
-			subsystem.registerReadWriteAttribute(attributes[i].getModelName(), null, AttributeWrite.INSTANCE, Storage.CONFIGURATION);
-		}		
 	}
 }

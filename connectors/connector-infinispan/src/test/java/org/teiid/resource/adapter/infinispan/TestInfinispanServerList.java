@@ -30,11 +30,13 @@ import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.translator.object.ObjectConnection;
 
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestInfinispanServerList {
 	    private InfinispanManagedConnectionFactory factory = null;
 			
