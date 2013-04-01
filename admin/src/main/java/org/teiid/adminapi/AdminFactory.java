@@ -776,7 +776,13 @@ public class AdminFactory {
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
-	            	return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE);	            	
+	            	if (this.domainMode) {
+	            		return getDomainAwareList(outcome, VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE);
+	            	}
+	            	if (outcome.hasDefined("result")) {
+	            		ModelNode result = outcome.get("result");
+	            		return Arrays.asList(VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.unwrap(result));
+	            	}	     
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
@@ -788,10 +794,16 @@ public class AdminFactory {
 		public Collection<? extends EngineStatistics> getEngineStats() throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "engine-statistics");//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
-	            ModelNode outcome = this.connection.execute(request);
+	            ModelNode outcome = this.connection.execute(request);	            
 	            if (Util.isSuccess(outcome)) {
-	            	return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE);	            	
-	            }
+	            	if (this.domainMode) {
+	            		return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE);
+	            	}
+	            	if (outcome.hasDefined("result")) {
+	            		ModelNode result = outcome.get("result");
+	            		return Arrays.asList(VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.unwrap(result));
+	            	}	     
+	            }	            
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
 	        }
@@ -927,8 +939,14 @@ public class AdminFactory {
 		        try {
 		            ModelNode outcome = this.connection.execute(request);
 		            if (Util.isSuccess(outcome)) {
-		            	return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE);
-		            }		            
+		            	if (this.domainMode) {
+		            		return getDomainAwareList(outcome, VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE);
+		            	}
+		            	if (outcome.hasDefined("result")) {
+		            		ModelNode result = outcome.get("result");
+		            		return Arrays.asList(VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.unwrap(result));
+		            	}		            
+		            }	
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70020, e);
 		        }
@@ -962,6 +980,7 @@ public class AdminFactory {
 		            if (Util.isSuccess(outcome)) {
 		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE);
 		            }
+		            
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70023, e);
 		        }
