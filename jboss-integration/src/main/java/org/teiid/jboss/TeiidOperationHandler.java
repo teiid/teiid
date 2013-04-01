@@ -881,8 +881,8 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.VDB_NAME);
 		builder.addParameter(OperationsConstants.VDB_VERSION);
-		builder.setReplyType(ModelType.LIST);
-		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
+//		builder.setReplyType(ModelType.LIST);
+//		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
 	}	
 }
 
@@ -981,8 +981,8 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 		}
 	}
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
-		builder.setReplyType(ModelType.LIST);
-		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
+//		builder.setReplyType(ModelType.LIST);
+//		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
 	}	
 }
 
@@ -1028,8 +1028,8 @@ class GetTranslator extends TranslatorOperationHandler{
 	
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);
-		builder.setReplyType(ModelType.LIST);
-		builder.setReplyParameters(VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition());
+		//builder.setReplyType(ModelType.OBJECT);
+		//builder.setReplyParameters(VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition());
 	}	
 }
 
