@@ -25,6 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.jboss.as.controller.AttributeDefinition;
+import org.jboss.as.controller.ObjectListAttributeDefinition;
+import org.jboss.as.controller.ObjectTypeAttributeDefinition;
+import org.jboss.as.controller.SimpleAttributeDefinition;
+import org.jboss.as.controller.StringListAttributeDefinition;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
 import org.teiid.adminapi.AdminPlugin;
@@ -271,6 +276,29 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		return node;
 	}
 	
+	
+	public AttributeDefinition[] getAttributeDefinitions() {
+		ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+		ObjectListAttributeDefinition vdbimports = new ObjectListAttributeDefinition.Builder(IMPORT_VDBS, (ObjectTypeAttributeDefinition)VDBImportMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition models = new ObjectListAttributeDefinition.Builder(MODELS, (ObjectTypeAttributeDefinition)ModelMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition translators = new ObjectListAttributeDefinition.Builder(OVERRIDE_TRANSLATORS, (ObjectTypeAttributeDefinition)VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition policies = new ObjectListAttributeDefinition.Builder(DATA_POLICIES, (ObjectTypeAttributeDefinition)DataPolicyMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+		
+		return new AttributeDefinition[] {
+				new SimpleAttributeDefinition(VDBNAME, ModelType.STRING, false),
+				new SimpleAttributeDefinition(CONNECTIONTYPE, ModelType.INT, false),
+				new SimpleAttributeDefinition(STATUS, ModelType.BOOLEAN, false),
+				new SimpleAttributeDefinition(VERSION, ModelType.BOOLEAN, false),
+				new SimpleAttributeDefinition(VDB_DESCRIPTION, ModelType.BOOLEAN, true),
+				new SimpleAttributeDefinition(DYNAMIC, ModelType.BOOLEAN, true),
+				properties,
+				vdbimports,
+				models,
+				translators,
+				policies
+			};
+	}	
+	
 	/**
 	 * model metadata mapper
 	 */
@@ -403,11 +431,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			modelTypes.add(Model.Type.FUNCTION.toString());
 			modelTypes.add(Model.Type.OTHER.toString());
 			addAttribute(node, MODEL_NAME, ModelType.STRING, true);
-			node.get(MODEL_NAME).get(ALLOWED).set(modelTypes);
+			
 			
 			addAttribute(node, DESCRIPTION, ModelType.STRING, false);
 			addAttribute(node, VISIBLE, ModelType.BOOLEAN, false);
 			addAttribute(node, MODEL_TYPE, ModelType.STRING, true);
+			node.get(MODEL_TYPE).get(ALLOWED).set(modelTypes);
 			addAttribute(node, MODELPATH, ModelType.STRING, false);
 			
 			ModelNode props = node.get(PROPERTIES);
@@ -427,6 +456,24 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			
 			return node; 
 		}
+		
+		public AttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+			ObjectListAttributeDefinition sourceMappings = new ObjectListAttributeDefinition.Builder(SOURCE_MAPPINGS, (ObjectTypeAttributeDefinition)SourceMappingMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+			ObjectListAttributeDefinition errors = new ObjectListAttributeDefinition.Builder(VALIDITY_ERRORS, (ObjectTypeAttributeDefinition)ValidationErrorMapper.INSTANCE.getAttributeDefinition()).build();
+			
+			return ObjectTypeAttributeDefinition.Builder.of("ModelMetadataMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(MODEL_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(DESCRIPTION, ModelType.INT, true),
+					new SimpleAttributeDefinition(VISIBLE, ModelType.INT, true),
+					new SimpleAttributeDefinition(MODEL_TYPE, ModelType.BOOLEAN, false),
+					new SimpleAttributeDefinition(MODELPATH, ModelType.BOOLEAN, true),
+					properties,
+					sourceMappings,
+					errors
+			}).build();
+		}		
 	}	
 	
 	/**
@@ -474,6 +521,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, VDB_VERSION, ModelType.INT, true);
 			addAttribute(node, IMPORT_POLICIES, ModelType.BOOLEAN, false);
 			return node; 
+		}
+		
+		public AttributeDefinition getAttributeDefinition() {
+			return ObjectTypeAttributeDefinition.Builder.of("VDBImportMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(VDB_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(VDB_VERSION, ModelType.INT, false),
+					new SimpleAttributeDefinition(IMPORT_POLICIES, ModelType.BOOLEAN, true)
+			}).build();
 		}
 	}	
 	
@@ -525,7 +581,16 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, SEVERITY, ModelType.STRING, true);
 			addAttribute(node, MESSAGE, ModelType.STRING, true);
 			return node; 
-		}			
+		}
+		
+		public AttributeDefinition getAttributeDefinition() {
+			return ObjectTypeAttributeDefinition.Builder.of("ValidationErrorMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(ERROR_PATH, ModelType.STRING, true), 
+					new SimpleAttributeDefinition(SEVERITY, ModelType.STRING, false),
+					new SimpleAttributeDefinition(MESSAGE, ModelType.STRING, false)
+			}).build();
+		}
 	}		
 	
 	/**
@@ -573,6 +638,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, JNDI_NAME, ModelType.STRING, true);
 			addAttribute(node, TRANSLATOR_NAME, ModelType.STRING, true);
 			return node; 
+		}		
+		
+		public AttributeDefinition getAttributeDefinition() {
+			return ObjectTypeAttributeDefinition.Builder.of("SourceMappingMetadataMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(SOURCE_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(JNDI_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(TRANSLATOR_NAME, ModelType.STRING, false)
+			}).build();
 		}		
 	}		
 	
@@ -659,6 +733,29 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			props.get(DESCRIPTION).set(AdminPlugin.Util.getString(PROPERTIES+DOT_DESC));
 			PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 			return node; 
+		}	
+		
+		public AttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+			return ObjectTypeAttributeDefinition.Builder.of("VDBTranslatorMetaDataMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(TRANSLATOR_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(BASETYPE, ModelType.STRING, false),
+					new SimpleAttributeDefinition(TRANSLATOR_DESCRIPTION, ModelType.STRING, true),
+					new SimpleAttributeDefinition(MODULE_NAME, ModelType.STRING, true),	
+					properties
+			}).build();
+		}		
+		
+		public AttributeDefinition[] getAttributeDefinitions() {
+			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+			return new AttributeDefinition[] {
+					new SimpleAttributeDefinition(TRANSLATOR_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(BASETYPE, ModelType.STRING, false),
+					new SimpleAttributeDefinition(TRANSLATOR_DESCRIPTION, ModelType.STRING, true),
+					new SimpleAttributeDefinition(MODULE_NAME, ModelType.STRING, true),	
+					properties
+			};
 		}		
 	}	
 	
@@ -698,6 +795,14 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, PROPERTY_VALUE, ModelType.STRING, true);
 			return node; 
 		}
+		
+		public AttributeDefinition getAttributes() {
+			return ObjectTypeAttributeDefinition.Builder.of("PropertyMetaDataMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(PROPERTY_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(PROPERTY_VALUE, ModelType.STRING, false),
+			}).build();
+		}		
 	}		
 	
 	
@@ -767,6 +872,16 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			PropertyMetaDataMapper.INSTANCE.describe(props.get(VALUE_TYPE));
 			return node; 
 		}
+		
+		public AttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+			return ObjectTypeAttributeDefinition.Builder.of("EntryMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(PATH, ModelType.STRING, false),
+					properties
+			}).build();
+		}
+		
 	}		
 	
 	/**
@@ -872,6 +987,20 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			roleNames.get(VALUE_TYPE).set(ModelType.STRING);
 			return node; 
 		}
+		
+		public AttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition dataPermisstions = new ObjectListAttributeDefinition.Builder(DATA_PERMISSIONS, (ObjectTypeAttributeDefinition)PermissionMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+			StringListAttributeDefinition roleNames = new StringListAttributeDefinition.Builder(MAPPED_ROLE_NAMES).build();
+			return ObjectTypeAttributeDefinition.Builder.of("DataPolicyMetadataMapper", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(POLICY_NAME, ModelType.STRING, true),
+					new SimpleAttributeDefinition(POLICY_DESCRIPTION, ModelType.STRING, true),
+					new SimpleAttributeDefinition(ALLOW_CREATE_TEMP_TABLES, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ANY_AUTHENTICATED, ModelType.BOOLEAN, true),
+					dataPermisstions,
+					roleNames
+			}).build();
+		}		
 	}	
 	
 	public static class PermissionMetaDataMapper implements MetadataMapper<PermissionMetaData>{
@@ -968,6 +1097,20 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, ALLOW_LANGUAGE, ModelType.BOOLEAN, false);
 			return node;
 		}
+		
+		public AttributeDefinition getAttributeDefinition() {
+			return ObjectTypeAttributeDefinition.Builder.of("PermissionMetaData", //$NON-NLS-1$
+				new AttributeDefinition[] {
+					new SimpleAttributeDefinition(RESOURCE_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(ALLOW_CREATE, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ALLOW_DELETE, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ALLOW_UPADTE, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ALLOW_READ, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ALLOW_EXECUTE, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ALLOW_ALTER, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(ALLOW_LANGUAGE, ModelType.BOOLEAN, true)
+			}).build();
+		}
 	}
 	
 	public static class EngineStatisticsMetadataMapper implements MetadataMapper<EngineStatisticsMetadata>{
@@ -1040,6 +1183,22 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, MAX_WAIT_PLAN_COUNT, ModelType.INT, true);
 			return node;
 		}
+		
+		public AttributeDefinition[] getAttributeDefinitions() {
+			return new AttributeDefinition[] {
+					new SimpleAttributeDefinition(SESSION_COUNT, ModelType.INT, false),
+					new SimpleAttributeDefinition(TOTAL_MEMORY_USED_IN_KB, ModelType.LONG, false),
+					new SimpleAttributeDefinition(MEMORY_IN_USE_BY_ACTIVE_PLANS, ModelType.LONG, false),
+					new SimpleAttributeDefinition(DISK_WRITE_COUNT, ModelType.LONG, false),
+					new SimpleAttributeDefinition(DISK_READ_COUNT, ModelType.LONG, false),
+					new SimpleAttributeDefinition(CACHE_READ_COUNT, ModelType.LONG, false),
+					new SimpleAttributeDefinition(CACHE_WRITE_COUNT, ModelType.LONG, false),
+					new SimpleAttributeDefinition(DISK_SPACE_USED, ModelType.LONG, false),
+					new SimpleAttributeDefinition(ACTIVE_PLAN_COUNT, ModelType.INT, false),
+					new SimpleAttributeDefinition(WAITING_PLAN_COUNT, ModelType.INT, false),
+					new SimpleAttributeDefinition(MAX_WAIT_PLAN_COUNT, ModelType.INT, false)
+			};
+		}		
 	}	
 	
 	public static class CacheStatisticsMetadataMapper implements MetadataMapper<CacheStatisticsMetadata>{
@@ -1079,6 +1238,14 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, HITRATIO, ModelType.STRING, true);
 			addAttribute(node, REQUEST_COUNT, ModelType.STRING, true);
 			return node; 		
+		}
+		
+		public AttributeDefinition[] getAttributeDefinitions() {
+			return new AttributeDefinition[] {
+					new SimpleAttributeDefinition(TOTAL_ENTRIES, ModelType.STRING, false),
+					new SimpleAttributeDefinition(HITRATIO, ModelType.STRING, false),
+					new SimpleAttributeDefinition(REQUEST_COUNT, ModelType.STRING, false)
+			};
 		}
 	}	
 	
@@ -1152,6 +1319,20 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, STATE, ModelType.STRING, true);
 			addAttribute(node, THREAD_STATE, ModelType.STRING, true);
 			return node; 		
+		}
+		
+		public AttributeDefinition[] getAttributeDefinitions() {
+			return new AttributeDefinition[] {
+					new SimpleAttributeDefinition(EXECUTION_ID, ModelType.LONG, false),
+					new SimpleAttributeDefinition(SESSION_ID, ModelType.STRING, false),
+					new SimpleAttributeDefinition(START_TIME, ModelType.LONG, false),
+					new SimpleAttributeDefinition(COMMAND, ModelType.STRING, false),
+					new SimpleAttributeDefinition(SOURCE_REQUEST, ModelType.BOOLEAN, false),
+					new SimpleAttributeDefinition(NODE_ID, ModelType.INT, true),
+					new SimpleAttributeDefinition(TRANSACTION_ID, ModelType.STRING, true),
+					new SimpleAttributeDefinition(STATE, ModelType.STRING, false),
+					new SimpleAttributeDefinition(THREAD_STATE, ModelType.STRING, false)
+			};
 		}
 	}
 	
@@ -1248,6 +1429,21 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, SECURITY_DOMAIN, ModelType.STRING, false);
 			return node;
 		}
+		
+		public AttributeDefinition[] getAttributeDefinitions() {
+			return new AttributeDefinition[] {
+					new SimpleAttributeDefinition(APPLICATION_NAME, ModelType.STRING, true),
+					new SimpleAttributeDefinition(CREATED_TIME, ModelType.LONG, false),
+					new SimpleAttributeDefinition(CLIENT_HOST_NAME, ModelType.LONG, false),
+					new SimpleAttributeDefinition(IP_ADDRESS, ModelType.STRING, false),
+					new SimpleAttributeDefinition(LAST_PING_TIME, ModelType.LONG, false),
+					new SimpleAttributeDefinition(SESSION_ID, ModelType.STRING, false),
+					new SimpleAttributeDefinition(USER_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(VDB_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(VDB_VERSION, ModelType.INT, false),
+					new SimpleAttributeDefinition(SECURITY_DOMAIN, ModelType.STRING, true)
+			};
+		}
 	}	
 	
 	public static class TransactionMetadataMapper implements MetadataMapper<TransactionMetadata>{
@@ -1290,6 +1486,15 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, ID, ModelType.STRING, true);
 			return node;
 		}
+		
+		public AttributeDefinition[] getAttributeDefinitions() {
+			return new AttributeDefinition[] {
+					new SimpleAttributeDefinition(ASSOCIATED_SESSION, ModelType.STRING, false),
+					new SimpleAttributeDefinition(CREATED_TIME, ModelType.LONG, false),
+					new SimpleAttributeDefinition(SCOPE, ModelType.LONG, false),
+					new SimpleAttributeDefinition(ID, ModelType.STRING, false)
+			};
+		};
 	}	
 
 	public static class WorkerPoolStatisticsMetadataMapper implements MetadataMapper<WorkerPoolStatisticsMetadata>{
@@ -1348,6 +1553,19 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			addAttribute(node, MAX_THREADS, ModelType.INT, true);
 			return node;
 		}
+
+		public AttributeDefinition[] getAttributeDefinitions() {
+			return new AttributeDefinition[] { 
+					new SimpleAttributeDefinition(ACTIVE_THREADS, ModelType.INT, false),
+					new SimpleAttributeDefinition(HIGHEST_ACTIVE_THREADS, ModelType.INT, false),
+					new SimpleAttributeDefinition(TOTAL_COMPLETED, ModelType.LONG, false),
+					new SimpleAttributeDefinition(TOTAL_SUBMITTED, ModelType.LONG, false),
+					new SimpleAttributeDefinition(QUEUE_NAME, ModelType.STRING, false),
+					new SimpleAttributeDefinition(QUEUED, ModelType.INT, false),
+					new SimpleAttributeDefinition(HIGHEST_QUEUED, ModelType.INT, false),
+					new SimpleAttributeDefinition(MAX_THREADS, ModelType.INT, false)
+				};
+		}
 	}
 	
 	public static void wrapDomain(AdminObjectImpl anObj, ModelNode node) {
@@ -1382,13 +1600,13 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static final String REQUIRED = "required"; //$NON-NLS-1$
 	private static final String ALLOWED = "allowed"; //$NON-NLS-1$
 	private static final String VALUE_TYPE = "value-type"; //$NON-NLS-1$
+	
 	static ModelNode addAttribute(ModelNode node, String name, ModelType dataType, boolean required) {
 		node.get(name, TYPE).set(dataType);
         node.get(name, DESCRIPTION).set(AdminPlugin.Util.getString(name+DOT_DESC));
         node.get(name, REQUIRED).set(required);
         return node;
     }
-	
 }
 
 

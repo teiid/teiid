@@ -23,15 +23,11 @@
   -->
 
 <module xmlns="urn:jboss:module:1.1" name="org.jboss.resteasy.resteasy-jaxrs">
-    <properties>
-        <property name="jboss.api" value="private"/>
-    </properties>
 
     <resources>
-       <resource-root path="resteasy-teiid-patch.jar"/>
-        <resource-root path="async-http-servlet-3.0-2.3.2.Final.jar"/>
-        <resource-root path="resteasy-jaxrs-2.3.2.Final.jar"/>
-	<resource-root path="resteasy-jaxrs-2.3.2.Final-jandex.jar"/>
+        <resource-root path="resteasy-teiid-patch.jar"/>
+        <resource-root path="async-http-servlet-3.0-2.3.5.Final.jar"/>
+        <resource-root path="resteasy-jaxrs-2.3.5.Final.jar"/>
         <!-- Insert resources here -->
     </resources>
 
@@ -46,5 +42,6 @@
         <module name="org.scannotation.scannotation" />
         <module name="org.slf4j" />
         <module name="javax.servlet.api"/>
+        <module name="org.apache.commons.io"/>
     </dependencies>
 </module>

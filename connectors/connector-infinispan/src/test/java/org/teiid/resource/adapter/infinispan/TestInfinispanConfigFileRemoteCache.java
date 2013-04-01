@@ -30,11 +30,13 @@ import java.util.Properties;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.translator.object.ObjectConnection;
 
 @SuppressWarnings("nls")
+@Ignore
 public class TestInfinispanConfigFileRemoteCache {
     
     private static InfinispanManagedConnectionFactory factory = null;

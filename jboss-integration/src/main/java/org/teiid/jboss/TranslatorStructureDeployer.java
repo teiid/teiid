@@ -23,7 +23,6 @@ package org.teiid.jboss;
 
 import java.util.List;
 
-import org.jboss.as.server.deployment.Attachments;
 import org.jboss.as.server.deployment.DeploymentPhaseContext;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
@@ -50,7 +49,7 @@ public final class TranslatorStructureDeployer implements DeploymentUnitProcesso
 
             if (deploymentRoot.getChild("META-INF/services/org.teiid.translator.ExecutionFactory").exists())  { //$NON-NLS-1$
                 TeiidAttachments.setAsTranslatorDeployment(deploymentUnit);
-                deploymentUnit.putAttachment(Attachments.IGNORE_OSGI, Boolean.TRUE);
+                //deploymentUnit.putAttachment(Attachments.IGNORE_OSGI, Boolean.TRUE);
                 break;
             }
         }

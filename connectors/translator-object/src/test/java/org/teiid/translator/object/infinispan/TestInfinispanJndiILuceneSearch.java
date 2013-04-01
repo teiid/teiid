@@ -21,10 +21,10 @@
  */
 package org.teiid.translator.object.infinispan;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
-import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,7 +39,7 @@ import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
-    private static CacheContainer container = null;
+    private static DefaultCacheManager container = null;
 	private static ExecutionContext context;
     private static ObjectConnection conn;
     private InfinispanExecutionFactory factory = null;
@@ -61,6 +61,11 @@ public class TestInfinispanJndiILuceneSearch extends BasicSearchTest {
 		factory.setSupportsLuceneSearching(true);
 		factory.start();
     }
+	
+	@AfterClass
+	public static void afterClass() {
+		container.stop();
+	}
 
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {

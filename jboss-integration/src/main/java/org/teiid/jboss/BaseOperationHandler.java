@@ -21,10 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OPERATION_NAME;
 import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REPLY_PROPERTIES;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -33,18 +30,22 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.controller.SimpleOperationDefinition;
+import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
+import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
+import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
+import org.jboss.as.controller.services.path.ResolvePathHandler;
 import org.jboss.dmr.ModelNode;
 import org.jboss.msc.service.ServiceController;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.deployers.VDBRepository;
 
-public abstract class BaseOperationHandler<T> implements DescriptionProvider, OperationStepHandler {
+public abstract class BaseOperationHandler<T> implements OperationStepHandler {
 	private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
-	private static final String REPLY = ".reply"; //$NON-NLS-1$
 	protected static final String MISSING = ".missing"; //$NON-NLS-1$
+	protected static final String REPLY = ".reply"; //$NON-NLS-1$
 	
 	private String operationName; 
 	
@@ -53,7 +54,7 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
 	}
 	
 	public void register(ManagementResourceRegistration subsystem) {
-		subsystem.registerOperationHandler(this.operationName, this, this);
+		subsystem.registerOperationHandler(getOperationDefinition(), this);
 	}
 	
 	public String name() {
@@ -70,12 +71,12 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
                     
                     executeOperation(context, getService(context, pathAddress, operation), operation);
                 	
-                	context.completeStep();
+                	context.stepCompleted();
                 }
                 
             }, OperationContext.Stage.RUNTIME);            
         }
-        context.completeStep();
+        context.stepCompleted();
     }
 	
     @SuppressWarnings("unused")
@@ -83,27 +84,62 @@ public abstract class BaseOperationHandler<T> implements DescriptionProvider, Op
     	return null;
     }
 	
-    @Override
-    public ModelNode getModelDescription(final Locale locale) {
-        final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-        final ModelNode operation = new ModelNode();
-        operation.get(OPERATION_NAME).set(this.operationName);
-        operation.get(DESCRIPTION).set(bundle.getString(name()+DESCRIBE));
-		
-        ModelNode reply = operation.get(REPLY_PROPERTIES);
-		reply.get(DESCRIPTION).set(bundle.getString(name()+REPLY));
-		
-        describeParameters(operation, bundle);
-        return operation;
+    public SimpleOperationDefinition getOperationDefinition() {
+        SimpleOperationDefinitionBuilder builder = new SimpleOperationDefinitionBuilder(this.operationName, new TeiidResourceDescriptionResolver(this.operationName));
+        builder.setRuntimeOnly();
+        describeParameters(builder);
+        return builder.build();
     }	
     
-    protected String getParameterDescription(ResourceBundle bundle, String paramName) {
-    	return bundle.getString(name()+"."+paramName+DESCRIBE); //$NON-NLS-1$ 
+    private static class TeiidResourceDescriptionResolver extends StandardResourceDescriptionResolver {
+        private final String operationName;
+
+        public ResourceBundle getResourceBundle(Locale locale) {
+            if (locale == null) {
+                locale = Locale.getDefault();
+            }
+            return IntegrationPlugin.getResourceBundle(locale);
+        }
+
+        @Override
+        public String getResourceAttributeDescription(String attributeName, Locale locale, ResourceBundle bundle) {
+        	return bundle.getString(attributeName);
+        }
+        
+        
+        public TeiidResourceDescriptionResolver(final String operationName) {
+            super(ModelDescriptionConstants.PATH, IntegrationPlugin.BUNDLE_NAME, ResolvePathHandler.class.getClassLoader(), false, false);
+            this.operationName = operationName;
+        }
+
+        @Override
+        public String getOperationDescription(String operationName, Locale locale, ResourceBundle bundle) {
+            if (this.operationName.equals(operationName)) {
+                return bundle.getString(operationName+DESCRIBE);
+            }
+            return super.getOperationParameterDescription(operationName, operationName, locale, bundle);
+        }
+
+        @Override
+        public String getOperationParameterDescription(final String operationName, final String paramName, final Locale locale, final ResourceBundle bundle) {
+            if (this.operationName.equals(operationName)) {
+           		return bundle.getString(this.operationName+"."+paramName+DESCRIBE); //$NON-NLS-1$
+            }
+            return super.getOperationParameterDescription(operationName, paramName, locale, bundle);
+        }
+
+        @Override
+        public String getOperationReplyDescription(String operationName, Locale locale, ResourceBundle bundle) {
+            if (this.operationName.equals(operationName)) {
+                return bundle.getString(this.operationName+BaseOperationHandler.REPLY);
+            }
+            return super.getOperationReplyDescription(operationName, locale, bundle);
+        }
     }    
     
 	abstract protected void executeOperation(OperationContext context, T service, ModelNode operation) throws OperationFailedException;
 	
-	protected void describeParameters(@SuppressWarnings("unused") ModelNode operationNode, @SuppressWarnings("unused")ResourceBundle bundle) {
+	protected void describeParameters(@SuppressWarnings("unused") SimpleOperationDefinitionBuilder builder) {
 	}
 	
 	boolean isValidVDB(OperationContext context, String vdbName, int vdbVersion) {

@@ -10,7 +10,8 @@
         <module name="org.jboss.dmr" />
         <module name="javax.api" />
         <module name="org.jboss.as.cli"/>
-        <module name="org.jboss.as.controller-client"/> 
+        <module name="org.jboss.as.controller-client"/>
+        <module name="org.jboss.as.controller"/> 
     </dependencies>
 
 </module>

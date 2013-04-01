@@ -21,11 +21,9 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
 
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import java.util.ServiceLoader;
 
 import org.jboss.as.controller.AbstractAddStepHandler;
@@ -33,7 +31,6 @@ import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.ServiceVerificationHandler;
-import org.jboss.as.controller.descriptions.DescriptionProvider;
 import org.jboss.dmr.ModelNode;
 import org.jboss.modules.Module;
 import org.jboss.modules.ModuleIdentifier;
@@ -46,27 +43,14 @@ import org.teiid.deployers.TranslatorUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionFactory;
+import static org.teiid.jboss.TeiidConstants.*;
 
-class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvider {
-
-    @Override
-    public ModelNode getModelDescription(final Locale locale) {
-        final ResourceBundle bundle = IntegrationPlugin.getResourceBundle(locale);
-        final ModelNode operation = new ModelNode();
-        operation.get(OPERATION_NAME).set(ADD);
-        operation.get(DESCRIPTION).set(bundle.getString("translator.add")); //$NON-NLS-1$
-        
-        Element.TRANSLATOR_MODULE_ATTRIBUTE.describe(operation, REQUEST_PROPERTIES, bundle);
-        return operation;
-    }
+class TranslatorAdd extends AbstractAddStepHandler {
+	public static TranslatorAdd INSTANCE = new TranslatorAdd();
     
 	@Override
 	protected void populateModel(final ModelNode operation, final ModelNode model) throws OperationFailedException{
-        populate(operation, model);
-	}
-	
-	static void populate(ModelNode operation, ModelNode model) {
-		Element.TRANSLATOR_MODULE_ATTRIBUTE.populate(operation, model);
+		TRANSLATOR_MODULE_ATTRIBUTE.validateAndSet(operation, model);
 	}
 	
 	@Override
@@ -79,8 +63,8 @@ class TranslatorAdd extends AbstractAddStepHandler implements DescriptionProvide
     	final String translatorName = pathAddress.getLastElement().getValue();
 		
     	String moduleName = null;
-    	if (Element.TRANSLATOR_MODULE_ATTRIBUTE.isDefined(operation)) {
-    		moduleName = Element.TRANSLATOR_MODULE_ATTRIBUTE.asString(operation, context);
+    	if (TRANSLATOR_MODULE_ATTRIBUTE.isDefined(operation, context)) {
+    		moduleName = TRANSLATOR_MODULE_ATTRIBUTE.asString(operation, context);
     	}
 		
         final ServiceTarget target = context.getServiceTarget();

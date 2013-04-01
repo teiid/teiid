@@ -75,7 +75,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/common-core/main</outputDirectory>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/common-core/main</outputDirectory>
       </binaries>
     </moduleSet>
 
@@ -87,7 +87,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/api/main</outputDirectory>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/api/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -99,7 +99,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>    
             
@@ -111,7 +111,7 @@
       <binaries>
 		<includeDependencies>false</includeDependencies>
 		<unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/client/main</outputDirectory>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/client/main</outputDirectory>
       </binaries>
     </moduleSet>
     
@@ -123,7 +123,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/main/deployments</outputDirectory>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/main/deployments</outputDirectory>
       </binaries>
     </moduleSet>    
 
@@ -154,7 +154,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>
-            <outputDirectory>modules/org/jboss/teiid/main</outputDirectory>
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/main</outputDirectory>
             <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -168,7 +168,7 @@
       <binaries>
         <includeDependencies>false</includeDependencies>
         <unpack>false</unpack>
-        <outputDirectory>modules/org/jboss/teiid/admin/main</outputDirectory>
+        <outputDirectory>modules/system/layers/base/org/jboss/teiid/admin/main</outputDirectory>
       </binaries>
     </moduleSet>    
     
@@ -226,7 +226,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/jdbc/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/jdbc/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -251,7 +251,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/loopback/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/loopback/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -275,7 +275,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/file/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/file/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -299,7 +299,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/ldap/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/ldap/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -323,7 +323,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/google/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/google/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -346,7 +346,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/google/api/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/google/api/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -369,7 +369,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/salesforce/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/salesforce/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -392,7 +392,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/salesforce/api/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>    
@@ -415,7 +415,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/ws/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/ws/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -439,7 +439,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/olap/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/olap/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
       
@@ -462,7 +462,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/hive/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/hive/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>      
@@ -484,7 +484,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/org/jboss/teiid/translator/jpa/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/jpa/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>        
@@ -506,7 +506,7 @@
                       <useDefaultExcludes>true</useDefaultExcludes>
                   </dependencySet>
               </dependencySets>          
-              <outputDirectory>modules/org/jboss/teiid/translator/object/main</outputDirectory>
+              <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/object/main</outputDirectory>
               <fileMode>0644</fileMode>
           </binaries>
       </moduleSet>   
@@ -528,7 +528,7 @@
                       <useDefaultExcludes>true</useDefaultExcludes>
                   </dependencySet>
               </dependencySets>          
-              <outputDirectory>modules/org/jboss/teiid/translator/odata/main</outputDirectory>
+              <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/odata/main</outputDirectory>
               <fileMode>0644</fileMode>
           </binaries>
       </moduleSet>
