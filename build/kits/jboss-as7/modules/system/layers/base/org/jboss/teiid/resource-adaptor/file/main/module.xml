@@ -1,0 +1,14 @@
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adaptor.file">
+   
+    <resources>
+        <resource-root path="teiid-connector-file.rar"/>
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
+    </dependencies>
+</module>

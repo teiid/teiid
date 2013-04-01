@@ -247,7 +247,28 @@
         <subsystem xmlns="urn:jboss:domain:remoting:1.1">
             <connector name="remoting-connector" socket-binding="remoting" security-realm="ApplicationRealm"/>
         </subsystem>
-        <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1"/>
+        <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+            <resource-adapters>
+                <resource-adapter>
+                    <module id="org.jboss.teiid.resource-adaptor.file"/>
+                </resource-adapter>
+                <resource-adapter>
+                    <module id="org.jboss.teiid.resource-adaptor.google"/>
+                </resource-adapter>
+                <resource-adapter>
+                    <module id="org.jboss.teiid.resource-adaptor.infinispan"/>
+                </resource-adapter>
+                <resource-adapter>
+                    <module id="org.jboss.teiid.resource-adaptor.ldap"/>
+                </resource-adapter>
+                <resource-adapter>
+                    <module id="org.jboss.teiid.resource-adaptor.salesforce"/>
+                </resource-adapter>
+                <resource-adapter>
+                    <module id="org.jboss.teiid.resource-adaptor.ws"/>
+                </resource-adapter>
+            </resource-adapters>        
+        </subsystem>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
         <subsystem xmlns="urn:jboss:domain:security:1.2">
             <security-domains>
