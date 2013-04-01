@@ -1121,7 +1121,7 @@ public class AdminFactory {
 	        		
 	        		if (node.hasDefined("read-only")) {
 	        			String access = node.get("read-only").asString();
-	        			def.setModifiable(Boolean.parseBoolean(access));
+	        			def.setModifiable(!Boolean.parseBoolean(access));
 	        		}
 	        		
 	        		if (node.hasDefined("access-type")) {
