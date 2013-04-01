@@ -619,7 +619,7 @@ class WorkerPoolStatistics extends TeiidOperationHandler{
 	protected void executeOperation(OperationContext context, DQPCore engine, ModelNode operation) throws OperationFailedException {
 		ModelNode result = context.getResult();
 		WorkerPoolStatisticsMetadata stats = engine.getWorkerPoolStatistics();
-		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.wrap(stats, result.add());
+		VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.wrap(stats, result);
 	}
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.setReplyType(ModelType.LIST);
