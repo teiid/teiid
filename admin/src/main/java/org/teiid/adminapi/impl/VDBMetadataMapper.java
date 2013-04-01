@@ -290,7 +290,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				new SimpleAttributeDefinition(STATUS, ModelType.BOOLEAN, false),
 				new SimpleAttributeDefinition(VERSION, ModelType.BOOLEAN, false),
 				new SimpleAttributeDefinition(VDB_DESCRIPTION, ModelType.BOOLEAN, true),
-				new SimpleAttributeDefinition(DYNAMIC, ModelType.BOOLEAN, true),
+				new SimpleAttributeDefinition(XML_DEPLOYMENT, ModelType.BOOLEAN, true),
 				properties,
 				vdbimports,
 				models,
