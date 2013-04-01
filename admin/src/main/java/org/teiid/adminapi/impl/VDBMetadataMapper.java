@@ -278,11 +278,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	
 	
 	public AttributeDefinition[] getAttributeDefinitions() {
-		ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
-		ObjectListAttributeDefinition vdbimports = new ObjectListAttributeDefinition.Builder(IMPORT_VDBS, (ObjectTypeAttributeDefinition)VDBImportMapper.INSTANCE.getAttributeDefinition()).build();
-		ObjectListAttributeDefinition models = new ObjectListAttributeDefinition.Builder(MODELS, (ObjectTypeAttributeDefinition)ModelMetadataMapper.INSTANCE.getAttributeDefinition()).build();
-		ObjectListAttributeDefinition translators = new ObjectListAttributeDefinition.Builder(OVERRIDE_TRANSLATORS, (ObjectTypeAttributeDefinition)VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
-		ObjectListAttributeDefinition policies = new ObjectListAttributeDefinition.Builder(DATA_POLICIES, (ObjectTypeAttributeDefinition)DataPolicyMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition vdbimports = ObjectListAttributeDefinition.Builder.of(IMPORT_VDBS, VDBImportMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition models = ObjectListAttributeDefinition.Builder.of(MODELS, ModelMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition translators = ObjectListAttributeDefinition.Builder.of(OVERRIDE_TRANSLATORS, VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+		ObjectListAttributeDefinition policies = ObjectListAttributeDefinition.Builder.of(DATA_POLICIES, DataPolicyMetadataMapper.INSTANCE.getAttributeDefinition()).build();
 		
 		return new AttributeDefinition[] {
 				new SimpleAttributeDefinition(VDBNAME, ModelType.STRING, false),
@@ -457,10 +457,10 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}
 		
-		public AttributeDefinition getAttributeDefinition() {
-			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
-			ObjectListAttributeDefinition sourceMappings = new ObjectListAttributeDefinition.Builder(SOURCE_MAPPINGS, (ObjectTypeAttributeDefinition)SourceMappingMetadataMapper.INSTANCE.getAttributeDefinition()).build();
-			ObjectListAttributeDefinition errors = new ObjectListAttributeDefinition.Builder(VALIDITY_ERRORS, (ObjectTypeAttributeDefinition)ValidationErrorMapper.INSTANCE.getAttributeDefinition()).build();
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+			ObjectListAttributeDefinition sourceMappings = ObjectListAttributeDefinition.Builder.of(SOURCE_MAPPINGS, SourceMappingMetadataMapper.INSTANCE.getAttributeDefinition()).build();
+			ObjectListAttributeDefinition errors = ObjectListAttributeDefinition.Builder.of(VALIDITY_ERRORS, ValidationErrorMapper.INSTANCE.getAttributeDefinition()).build();
 			
 			return ObjectTypeAttributeDefinition.Builder.of("ModelMetadataMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
@@ -469,9 +469,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					new SimpleAttributeDefinition(VISIBLE, ModelType.INT, true),
 					new SimpleAttributeDefinition(MODEL_TYPE, ModelType.BOOLEAN, false),
 					new SimpleAttributeDefinition(MODELPATH, ModelType.BOOLEAN, true),
-					properties,
-					sourceMappings,
-					errors
+					ObjectTypeAttributeDefinition.Builder.of(PROPERTIES, properties).build(),
+					ObjectTypeAttributeDefinition.Builder.of(SOURCE_MAPPINGS, sourceMappings).build(),
+					ObjectTypeAttributeDefinition.Builder.of(VALIDITY_ERRORS, errors).build(),
 			}).build();
 		}		
 	}	
@@ -523,7 +523,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}
 		
-		public AttributeDefinition getAttributeDefinition() {
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
 			return ObjectTypeAttributeDefinition.Builder.of("VDBImportMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(VDB_NAME, ModelType.STRING, false),
@@ -583,7 +583,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}
 		
-		public AttributeDefinition getAttributeDefinition() {
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
 			return ObjectTypeAttributeDefinition.Builder.of("ValidationErrorMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(ERROR_PATH, ModelType.STRING, true), 
@@ -640,7 +640,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}		
 		
-		public AttributeDefinition getAttributeDefinition() {
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
 			return ObjectTypeAttributeDefinition.Builder.of("SourceMappingMetadataMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(SOURCE_NAME, ModelType.STRING, false),
@@ -735,20 +735,13 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}	
 		
-		public AttributeDefinition getAttributeDefinition() {
-			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
 			return ObjectTypeAttributeDefinition.Builder.of("VDBTranslatorMetaDataMapper", //$NON-NLS-1$
-				new AttributeDefinition[] {
-					new SimpleAttributeDefinition(TRANSLATOR_NAME, ModelType.STRING, false),
-					new SimpleAttributeDefinition(BASETYPE, ModelType.STRING, false),
-					new SimpleAttributeDefinition(TRANSLATOR_DESCRIPTION, ModelType.STRING, true),
-					new SimpleAttributeDefinition(MODULE_NAME, ModelType.STRING, true),	
-					properties
-			}).build();
+					getAttributeDefinitions()).build();
 		}		
 		
 		public AttributeDefinition[] getAttributeDefinitions() {
-			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+			ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
 			return new AttributeDefinition[] {
 					new SimpleAttributeDefinition(TRANSLATOR_NAME, ModelType.STRING, false),
 					new SimpleAttributeDefinition(BASETYPE, ModelType.STRING, false),
@@ -796,12 +789,11 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}
 		
-		public AttributeDefinition getAttributes() {
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
 			return ObjectTypeAttributeDefinition.Builder.of("PropertyMetaDataMapper", //$NON-NLS-1$
-				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(PROPERTY_NAME, ModelType.STRING, false),
-					new SimpleAttributeDefinition(PROPERTY_VALUE, ModelType.STRING, false),
-			}).build();
+					new SimpleAttributeDefinition(PROPERTY_VALUE, ModelType.STRING, false)
+			).build();
 		}		
 	}		
 	
@@ -873,8 +865,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}
 		
-		public AttributeDefinition getAttributeDefinition() {
-			ObjectListAttributeDefinition properties = new ObjectListAttributeDefinition.Builder(PROPERTIES, (ObjectTypeAttributeDefinition)PropertyMetaDataMapper.INSTANCE.getAttributes()).build();
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition properties = ObjectListAttributeDefinition.Builder.of(PROPERTIES, PropertyMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
 			return ObjectTypeAttributeDefinition.Builder.of("EntryMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(PATH, ModelType.STRING, false),
@@ -988,8 +980,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node; 
 		}
 		
-		public AttributeDefinition getAttributeDefinition() {
-			ObjectListAttributeDefinition dataPermisstions = new ObjectListAttributeDefinition.Builder(DATA_PERMISSIONS, (ObjectTypeAttributeDefinition)PermissionMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
+			ObjectListAttributeDefinition dataPermisstions = ObjectListAttributeDefinition.Builder.of(DATA_PERMISSIONS, PermissionMetaDataMapper.INSTANCE.getAttributeDefinition()).build();
 			StringListAttributeDefinition roleNames = new StringListAttributeDefinition.Builder(MAPPED_ROLE_NAMES).build();
 			return ObjectTypeAttributeDefinition.Builder.of("DataPolicyMetadataMapper", //$NON-NLS-1$
 				new AttributeDefinition[] {
@@ -1098,7 +1090,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			return node;
 		}
 		
-		public AttributeDefinition getAttributeDefinition() {
+		public ObjectTypeAttributeDefinition getAttributeDefinition() {
 			return ObjectTypeAttributeDefinition.Builder.of("PermissionMetaData", //$NON-NLS-1$
 				new AttributeDefinition[] {
 					new SimpleAttributeDefinition(RESOURCE_NAME, ModelType.STRING, false),
