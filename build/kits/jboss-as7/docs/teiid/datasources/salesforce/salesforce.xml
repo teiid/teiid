@@ -1,8 +1,8 @@
 <!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
-<subsystem xmlns="urn:jboss:domain:resource-adapters:1.0">
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
     <resource-adapters>
-        <resource-adapter>
-            <archive>teiid-connector-salesforce.rar</archive>
+        <resource-adapter id="salesforce">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.salesforce"/>
             <transaction-support>NoTransaction</transaction-support>
             <connection-definitions>
                 <connection-definition class-name="org.teiid.resource.adapter.salesforce.SalesForceManagedConnectionFactory" 
