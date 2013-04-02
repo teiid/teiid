@@ -247,7 +247,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 					valid = info.isValid();
 					state = info.getState().name();
 					updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
-					TempMetadataID id = globalStore.getTempTableStore().getMetadataStore().getTempGroupID(matTableName);
+					TempMetadataID id = globalStore.getGlobalTempTableMetadataId(matTableName);
 					if (id != null) {
 						cardinaltity = id.getCardinality();
 					}

@@ -50,6 +50,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -91,7 +92,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.tempdata.GlobalTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 import org.teiid.services.AbstractEventDistributorFactoryService;
@@ -382,14 +382,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				if (!vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
 					return;
 				}
-				GlobalTableStore gts = new GlobalTableStoreImpl(dqp.getBufferManager(), vdb.getVDB().getAttachment(TransformationMetadata.class));
-				if (replicator != null) {
-					try {
-						gts = replicator.replicate(name + version, GlobalTableStore.class, gts, 300000);
-					} catch (Exception e) {
-						throw new RuntimeException(e);
-					}
-				}
+				GlobalTableStore gts = CompositeGlobalTableStore.createInstance(vdb, dqp.getBufferManager(), replicator);
+				
 				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 			}
 		});

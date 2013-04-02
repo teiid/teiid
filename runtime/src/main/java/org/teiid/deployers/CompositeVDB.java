@@ -58,7 +58,7 @@ public class CompositeVDB {
 	private MetadataStore store;
 	private LinkedHashMap<String, VDBResources.Resource> visibilityMap;
 	private UDFMetaData udf;
-	private LinkedHashMap<VDBKey, CompositeVDB> children;
+	LinkedHashMap<VDBKey, CompositeVDB> children;
 	private MetadataStore[] additionalStores;
 	private ConnectorManagerRepository cmr;
 	private FunctionTree systemFunctions;
@@ -260,6 +260,10 @@ public class CompositeVDB {
 		mergedVDB.addAttchment(QueryMetadataInterface.class, qmi);
 		mergedVDB.addAttchment(TransformationMetadata.class, metadata);
 		mergedVDB.addAttchment(MetadataStore.class, mergedStore);
+	}
+	
+	LinkedHashMap<VDBKey, CompositeVDB> getChildren() {
+		return children;
 	}
 	
 }

@@ -134,9 +134,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			odbcTransport = new ODBCSocketListener(addr, config, Mockito.mock(ClientServiceRegistryImpl.class), BufferManagerFactory.getStandaloneBufferManager(), 100000, Mockito.mock(ILogon.class), server.getDriver());
 			odbcTransport.setMaxBufferSize(1000); //set to a small size to ensure buffering over the limit works
 			
-			server.setUseCallingThread(false);
 			server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
-			
 		}
 		
 		public void stop() {

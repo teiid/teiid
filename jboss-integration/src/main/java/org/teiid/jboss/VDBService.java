@@ -60,6 +60,7 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.RuntimeVDB;
 import org.teiid.deployers.TranslatorUtil;
@@ -81,10 +82,8 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
-import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.tempdata.GlobalTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.runtime.AbstractVDBDeployer;
 import org.teiid.translator.DelegatingExecutionFactory;
 import org.teiid.translator.ExecutionFactory;
@@ -163,14 +162,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				VDBMetaData vdbInstance = cvdb.getVDB();
 				if (vdbInstance.getStatus().equals(Status.ACTIVE)) {
 					// add object replication to temp/matview tables
-					GlobalTableStore gts = new GlobalTableStoreImpl(getBuffermanager(), vdbInstance.getAttachment(TransformationMetadata.class));
-					if (objectReplicatorInjector.getValue() != null) {
-						try {
-							gts = objectReplicatorInjector.getValue().replicate(name + version, GlobalTableStore.class, gts, 300000);
-						} catch (Exception e) {
-							LogManager.logError(LogConstants.CTX_RUNTIME, e, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50023, gts)); 
-						}
-					}
+					GlobalTableStore gts = CompositeGlobalTableStore.createInstance(cvdb, getBuffermanager(), objectReplicatorInjector.getValue());
+
 					vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					vdbService.install();
 				}
@@ -368,6 +361,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				
 				boolean cached = false;
 				Exception ex = null;
+				TranslatorException te = null;
 				// designer based models define data types based on their built in data types, which are system vdb data types
 				Map<String, Datatype> datatypes = getVDBRepository().getRuntimeTypeMap();
 				Map<String, Datatype> builtin = getVDBRepository().getSystemStore().getDatatypes();
@@ -389,7 +383,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 							cf = cm.getConnectionFactory();
 						}
 					} catch (TranslatorException e) {
-						//cf not available
+						LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+						te = e;
 					}
 					try {
 						metadataRepo.loadMetadata(factory, ef, cf);		
@@ -409,6 +404,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 						metadataLoaded(vdb, model, vdbMetadataStore, loadCount, factory, true);
 			    	} else {
 			    		String errorMsg = ex.getMessage()==null?ex.getClass().getName():ex.getMessage();
+			    		if (te != null) {
+			    			errorMsg += ": " + te.getMessage(); //$NON-NLS-1$ 
+			    		}
 			    		model.addRuntimeError(errorMsg); 
 			    		//log the exception of a non-teiid runtime exception as it may indicate a problem 
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));

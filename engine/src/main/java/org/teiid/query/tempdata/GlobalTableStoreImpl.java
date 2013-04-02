@@ -326,10 +326,10 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
     	ElementSymbol returnElement = new ElementSymbol(matTableName + ElementSymbol.SEPARATOR + returnElementName);
 		keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
     	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
-    	TempMetadataID id = this.getTempTableStore().getMetadataStore().getTempGroupID(matTableName);
+    	TempMetadataID id = this.tableStore.getMetadataStore().getTempGroupID(matTableName);
     	if (id == null) {
     		synchronized (this) {
-    	    	id = this.getTempTableStore().getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
+    	    	id = this.tableStore.getMetadataStore().addTempGroup(matTableName, Arrays.asList(keyElement, returnElement), false, true);
     	    	String queryString = Reserved.SELECT + ' ' + keyElementName + " ," + returnElementName + ' ' + Reserved.FROM + ' ' + codeTableName; //$NON-NLS-1$ 
     	    	id.setQueryNode(new QueryNode(queryString));
     	    	id.setPrimaryKey(id.getElements().subList(0, 1));
@@ -392,7 +392,6 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		return null;
 	}
 
-	@Override
 	public TempTableStore getTempTableStore() {
 		return this.tableStore;
 	}
@@ -409,7 +408,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
 			create.getPrimaryKey().addAll(pkColumns);
 		}
-		TempTable table = getTempTableStore().addTempTable(tableName, create, bufferManager, false, null);
+		TempTable table = tableStore.addTempTable(tableName, create, bufferManager, false, null);
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
 		if (hint != null) {
@@ -576,6 +575,16 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	@Override
 	public boolean hasState(String stateId) {
 		return this.tableStore.getTempTable(stateId) != null;
+	}
+	
+	@Override
+	public TempMetadataID getGlobalTempTableMetadataId(String matTableName) {
+		return this.tableStore.getMetadataStore().getTempGroupID(matTableName);
+	}
+
+	@Override
+	public TempTable getTempTable(String matTableName) {
+		return this.tableStore.getTempTable(matTableName);
 	}
 
 }

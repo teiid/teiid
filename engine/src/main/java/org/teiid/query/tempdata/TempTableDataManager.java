@@ -322,7 +322,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (!info.isValid()) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
 			}
-			TempTable tempTable = globalStore.getTempTableStore().getTempTable(matTableName);
+			TempTable tempTable = globalStore.getTempTable(matTableName);
 			if (!tempTable.isUpdatable()) {
 				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30232, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30232, matViewName));
 			}
@@ -407,7 +407,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 					loadAsynch(context, tableName);
 				}
 			} 
-			table = globalStore.getTempTableStore().getOrCreateTempTable(tableName, query, bufferManager, false, false, context);
+			table = globalStore.getTempTable(tableName);
 			context.accessedDataObject(group.getMetadataID());
 		} else {
 			try {

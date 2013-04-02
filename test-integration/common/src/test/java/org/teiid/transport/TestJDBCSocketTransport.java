@@ -70,7 +70,6 @@ public class TestJDBCSocketTransport {
 		dqpConfig.setMaxActivePlans(2);
 		server = new FakeServer(false);
 		server.start(dqpConfig, false);
-		server.setUseCallingThread(false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		
 		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager());
