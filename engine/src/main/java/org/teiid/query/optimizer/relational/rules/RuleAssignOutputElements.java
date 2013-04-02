@@ -44,10 +44,10 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.processor.relational.RelationalNode;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -452,7 +452,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
         boolean updateGroups = outputColumns.size() != originalOrder.size();
         boolean[] seenIndex = new boolean[outputColumns.size()];
         boolean newSymbols = false;
-        
+        int newSymbolIndex = 0;
         for (int i = 0; i < outputColumns.size(); i++) {
             Expression expr = outputColumns.get(i);
             filteredIndex[i] = originalOrder.indexOf(expr);
@@ -460,6 +460,8 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             	updateGroups = true;
             	//we're adding this symbol, which needs to be updated against respective symbol maps
             	newSymbols = true;
+            } else {
+            	newSymbolIndex++;
             }
             if (!updateGroups) {
             	seenIndex[filteredIndex[i]] = true;
@@ -491,7 +493,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 					Expression ex = (Expression) outputColumns.get(j).clone();
 					ExpressionMappingVisitor.mapExpressions(ex, childMap.asMap());
 					newCols.set(j, ex);
-					filteredIndex[j] = j;
+					filteredIndex[j] = newSymbolIndex++;
 				}
             }
             
@@ -517,7 +519,10 @@ public final class RuleAssignOutputElements implements OptimizerRule {
             List<Expression> originalExpressionOrder = symbolMap.getValues();
 
         	for (int i = 0; i < filteredIndex.length; i++) {
-        		newMap.addMapping(originalOrder.get(filteredIndex[i]), originalExpressionOrder.get(filteredIndex[i]));
+        		if (filteredIndex[i] < originalOrder.size()) {
+        			newMap.addMapping(originalOrder.get(filteredIndex[i]), originalExpressionOrder.get(filteredIndex[i]));
+        		}
+        		//else TODO: we may need to create a fake symbol
 			}
         	sourceNode.setProperty(NodeConstants.Info.SYMBOL_MAP, newMap);
         }
@@ -668,7 +673,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 */        
         // Add any columns to required that are in this node's output but were not created here
         for (Expression currentOutputSymbol : outputCols) {
-            if(!(createdSymbols.contains(currentOutputSymbol)) ) {
+			if (!createdSymbols.contains(currentOutputSymbol) && (finalRun || node.getType() != NodeConstants.Types.PROJECT || currentOutputSymbol instanceof ElementSymbol)) {
                 requiredSymbols.add(currentOutputSymbol);
             }
         }
