@@ -211,9 +211,9 @@ public class AdminFactory {
 		
 		private void createConnectionFactory(String deploymentName,	String rarName, Properties properties)	throws AdminException {
 
-			if (!getDeployedResourceAdapterNames().contains(deploymentName)) {
+			if (!getInstalledResourceAdaptorNames().contains(rarName)) {
 				///subsystem=resource-adapters/resource-adapter=fileDS:add
-				addResourceAdapter(deploymentName, rarName);
+				addResourceAdapter(rarName);
 			}
 			
 			BuildPropertyDefinitions bpd = new BuildPropertyDefinitions();
@@ -240,7 +240,7 @@ public class AdminFactory {
             }
             	
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
-					"resource-adapter", deploymentName,
+					"resource-adapter", rarName,
 					"connection-definitions", deploymentName }, 
 					parameters.toArray(new String[parameters.size()]), new ResultCallback());
 	        
@@ -259,27 +259,28 @@ public class AdminFactory {
             		}
             	}
             	if (add) {
-            		addConfigProperty(deploymentName, key, properties.getProperty(key));
+            		addConfigProperty(rarName, deploymentName, key, properties.getProperty(key));
             	}
             }
             
-            activateConnectionFactory(deploymentName);
+            // activate 
+            activateConnectionFactory(rarName);
 		}
 		
 
 		// /subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS/config-properties=ParentDirectory2:add(value=/home/rareddy/testing)
-		private void addConfigProperty(String deploymentName, String key, String value) throws AdminProcessingException {
+		private void addConfigProperty(String rarName, String deploymentName, String key, String value) throws AdminProcessingException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
-					"resource-adapter", deploymentName, 
+					"resource-adapter", rarName, 
 					"connection-definitions", deploymentName,
 					"config-properties", key},
 					new String[] {"value", value}, new ResultCallback());	        
 		}
 		
 		// /subsystem=resource-adapters/resource-adapter=fileDS:activate
-		private void activateConnectionFactory(String deploymentName) throws AdminProcessingException {
+		private void activateConnectionFactory(String rarName) throws AdminProcessingException {
 			cliCall("activate", new String[] { "subsystem", "resource-adapters",
-					"resource-adapter", deploymentName },
+					"resource-adapter", rarName },
 					null, new ResultCallback());	        
 		}
 
@@ -293,9 +294,9 @@ public class AdminFactory {
 		}
 
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
-		private void addResourceAdapter(String deploymentName, String rarName) throws AdminProcessingException {
+		private void addResourceAdapter(String rarName) throws AdminProcessingException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
-					"resource-adapter", deploymentName },
+					"resource-adapter", rarName },
 					new String[] { "archive", rarName, "transaction-support","NoTransaction" }, 
 					new ResultCallback());
 		}
@@ -371,7 +372,7 @@ public class AdminFactory {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70003, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70003, deploymentName));
 			}
 			
-			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
+			Set<String> resourceAdapters = getResourceAdapterNames();
         	if (resourceAdapters.contains(templateName)) {
 	            createConnectionFactory(deploymentName, templateName, properties);
 	            return;
@@ -477,7 +478,7 @@ public class AdminFactory {
 			
 			// check connection factories
 			if (dsProperties.isEmpty()) {
-				Map<String, String> raDSMap = getResourceAdapterDataSources();
+				Map<String, String> raDSMap = getConnectionFactoryNames();
 				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
 				String rarName = raDSMap.get(deployedName);
 				if (rarName != null) {
@@ -588,15 +589,19 @@ public class AdminFactory {
 			
 			// check connection factories
 			if (!deleted) {
-				Map<String, String> raDSMap = getResourceAdapterDataSources();
+				Map<String, String> raDSMap = getConnectionFactoryNames();
 				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
 				String rarName = raDSMap.get(deployedName);
 				if (rarName != null) {
-					deleted = deleteDS(rarName,"resource-adapters", "resource-adapter", deployedName);	
+					cliCall("remove", new String[] { "subsystem",
+							"resource-adapters", "resource-adapter", rarName,
+							"connection-definitions", deployedName }, null,
+							new ResultCallback());
 				}
 			}
 			
-			if (!deleted) {
+			dsNames = getDataSourceNames();
+			if (dsNames.contains(deployedName)) {
 				throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
 		}
@@ -852,7 +857,7 @@ public class AdminFactory {
 			Set<String> datasourceNames = new HashSet<String>();
 			datasourceNames.addAll(getChildNodeNames("datasources", "data-source"));
 			datasourceNames.addAll(getChildNodeNames("datasources", "xa-data-source"));
-			datasourceNames.addAll(getResourceAdapterDataSources().keySet());
+			datasourceNames.addAll(getConnectionFactoryNames().keySet());
 			
 			Set<String> dsNames = new HashSet<String>();
 			for (String s:datasourceNames) {
@@ -866,16 +871,16 @@ public class AdminFactory {
 	        return dsNames;	
 		}
 
-		private Map<String, String> getResourceAdapterDataSources() throws AdminException {
+		private Map<String, String> getConnectionFactoryNames() throws AdminException {
 			HashMap<String, String> datasourceNames = new HashMap<String, String>();
-			Set<String> resourceAdapters = getDeployedResourceAdapterNames();
+			Set<String> resourceAdapters = getInstalledResourceAdaptorNames();
 			for (String resource:resourceAdapters) {
-				getResourceAdpaterConnections(datasourceNames, resource);
+				getRAConnections(datasourceNames, resource);
 			}
 			return datasourceNames;
 		}
 		
-		private void getResourceAdpaterConnections(final HashMap<String, String> datasourceNames, final String rarName) throws AdminProcessingException {
+		private void getRAConnections(final HashMap<String, String> datasourceNames, final String rarName) throws AdminProcessingException {
 			cliCall("read-resource", new String[] {"subsystem", "resource-adapters", "resource-adapter", rarName}, null, new ResultCallback() {
 				@Override
 				public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
@@ -902,22 +907,28 @@ public class AdminFactory {
 		 * @return
 		 * @throws AdminException
 		 */
-		private Set<String> getDeployedResourceAdapterNames() throws AdminProcessingException {
+		private Set<String> getInstalledResourceAdaptorNames() throws AdminProcessingException {
 			Set<String> templates = new HashSet<String>();
 			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
 	        return templates;					
 		}
 
 		// :read-children-names(child-type=deployment)
-		private Set<String> getAvailableResourceAdapterNames() throws AdminProcessingException {
-			List<String> deployments = getChildNodeNames(null, "deployment");
+		private Set<String> getResourceAdapterNames() throws AdminProcessingException {
+			Set<String> templates = getDeployedResourceAdaptorNames();
+            templates.addAll(getInstalledResourceAdaptorNames());
+	        return templates;
+		}
+
+		private Set<String> getDeployedResourceAdaptorNames() throws AdminProcessingException {
 			Set<String> templates = new HashSet<String>();
+			List<String> deployments = getChildNodeNames(null, "deployment");
             for (String deployment:deployments) {
             	if (deployment.endsWith(".rar")) {
             		templates.add(deployment);
             	}
             }
-	        return templates;
+			return templates;
 		}
 		
 		public List<String> getDeployments(){
@@ -928,7 +939,7 @@ public class AdminFactory {
 		public Set<String> getDataSourceTemplateNames() throws AdminProcessingException {
 			Set<String> templates = new HashSet<String>();
 			templates.addAll(getInstalledJDBCDrivers());
-			templates.addAll(getAvailableResourceAdapterNames());
+			templates.addAll(getResourceAdapterNames());
 			return templates;
 		}
 		
@@ -1039,7 +1050,7 @@ public class AdminFactory {
 			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
 			
 			// RAR properties
-			Set<String> resourceAdapters = getAvailableResourceAdapterNames();
+			Set<String> resourceAdapters = getResourceAdapterNames();
         	if (resourceAdapters.contains(templateName)) {
         		cliCall("read-rar-description", new String[] {"subsystem", "teiid"}, new String[] {"rar-name", templateName}, builder);
         		buildResourceAdpaterProperties(templateName, builder);

@@ -1,7 +1,8 @@
-<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adaptor.file">
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.ldap">
    
     <resources>
-        <resource-root path="teiid-connector-file.rar"/>
+        <resource-root path="connector-ldap-${project.version}.jar"/>
+        <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
 
@@ -10,5 +11,6 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
+        <module name="sun.jdk"/>
     </dependencies>
 </module>

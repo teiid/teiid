@@ -173,7 +173,7 @@
     </moduleSet>    
     
     <!-- ******************************************************** 
-        These are built in resource-adaptors  
+        These are built in resource-adapters  
         *********************************************************-->
     <moduleSet>
         <includeSubModules>true</includeSubModules>
@@ -186,7 +186,7 @@
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
+          <unpack>true</unpack>
             <dependencySets>
                 <dependencySet>
                     <useProjectArtifact>true</useProjectArtifact>
@@ -195,7 +195,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adaptor/file/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/file/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -211,7 +211,7 @@
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
+          <unpack>true</unpack>
             <dependencySets>
                 <dependencySet>
                     <useProjectArtifact>true</useProjectArtifact>
@@ -220,7 +220,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adaptor/ldap/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/ldap/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -236,7 +236,7 @@
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
+          <unpack>true</unpack>
             <dependencySets>
                 <dependencySet>
                     <useProjectArtifact>true</useProjectArtifact>
@@ -245,7 +245,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adaptor/salesforce/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/salesforce/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -261,7 +261,7 @@
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
+          <unpack>true</unpack>
             <dependencySets>
                 <dependencySet>
                     <useProjectArtifact>true</useProjectArtifact>
@@ -270,7 +270,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adaptor/google/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/google/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -286,7 +286,7 @@
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
+          <unpack>true</unpack>
             <dependencySets>
                 <dependencySet>
                     <useProjectArtifact>true</useProjectArtifact>
@@ -295,7 +295,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adaptor/ws/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/webservice/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -311,7 +311,7 @@
         <binaries>   
           <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
+          <unpack>true</unpack>
             <dependencySets>
                 <dependencySet>
                     <useProjectArtifact>true</useProjectArtifact>
@@ -320,7 +320,7 @@
                     <useDefaultExcludes>true</useDefaultExcludes>
                 </dependencySet>
             </dependencySets>          
-          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adaptor/infinispan/main</outputDirectory>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/infinispan/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>

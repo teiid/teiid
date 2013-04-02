@@ -44,6 +44,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import org.jboss.as.connector.metadata.xmldescriptors.ConnectorXmlDescriptor;
+import org.jboss.as.connector.services.resourceadapters.deployment.InactiveResourceAdapterDeploymentService.InactiveResourceAdapterDeployment;
+import org.jboss.as.connector.util.ConnectorServices;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
@@ -68,7 +70,6 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
-import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.plan.PlanNode;
@@ -1319,21 +1320,31 @@ class ReadRARDescription extends TeiidOperationHandler {
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.RAR_NAME.getName()+MISSING)));
 		}
 		String rarName = operation.get(OperationsConstants.RAR_NAME.getName()).asString();
-				
-		ServiceName svcName = ServiceName.JBOSS.append("deployment", "unit").append(rarName); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		ResourceAdapter ra = null;				
+		ServiceName svcName = ConnectorServices.INACTIVE_RESOURCE_ADAPTER_SERVICE.append(rarName);
 		ServiceController<?> sc = context.getServiceRegistry(false).getService(svcName);
-		if (sc == null) {
-			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("RAR_notfound")));  //$NON-NLS-1$
+		if (sc != null) {
+			InactiveResourceAdapterDeployment deployment = InactiveResourceAdapterDeployment.class.cast(sc.getValue());
+			ConnectorXmlDescriptor descriptor = deployment.getConnectorXmlDescriptor();
+			ra = descriptor.getConnector().getResourceadapter();
 		}
-		DeploymentUnit du = DeploymentUnit.class.cast(sc.getValue()); 
-		ConnectorXmlDescriptor cd = du.getAttachment(ConnectorXmlDescriptor.ATTACHMENT_KEY);
-		ResourceAdapter ra = cd.getConnector().getResourceadapter();
+		else {
+			svcName = ServiceName.JBOSS.append("deployment", "unit").append(rarName); //$NON-NLS-1$ //$NON-NLS-2$
+			sc = context.getServiceRegistry(false).getService(svcName);
+			if (sc == null) {
+				throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("RAR_notfound")));  //$NON-NLS-1$
+			}
+			DeploymentUnit du = DeploymentUnit.class.cast(sc.getValue()); 
+			ConnectorXmlDescriptor cd = du.getAttachment(ConnectorXmlDescriptor.ATTACHMENT_KEY);
+			ra = cd.getConnector().getResourceadapter();
+		}
 		if (ra instanceof ResourceAdapter1516) {
 			ResourceAdapter1516 ra1516 = (ResourceAdapter1516)ra;
 			result.add(buildReadOnlyNode("resourceadapter-class", ra1516.getResourceadapterClass())); //$NON-NLS-1$
 			List<ConnectionDefinition> connDefinitions = ra1516.getOutboundResourceadapter().getConnectionDefinitions();
 			for (ConnectionDefinition p:connDefinitions) {
-				result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().toString())); //$NON-NLS-1$
+				result.add(buildReadOnlyNode("managedconnectionfactory-class", p.getManagedConnectionFactoryClass().getValue())); //$NON-NLS-1$
 				List<? extends ConfigProperty> props = p.getConfigProperties();
 				for (ConfigProperty prop:props) {
 					result.add(buildNode(prop));

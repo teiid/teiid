@@ -249,23 +249,23 @@
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
             <resource-adapters>
-                <resource-adapter>
-                    <module id="org.jboss.teiid.resource-adaptor.file"/>
+                <resource-adapter id="file">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.file"/>
                 </resource-adapter>
-                <resource-adapter>
-                    <module id="org.jboss.teiid.resource-adaptor.google"/>
+                <resource-adapter id="google">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.google"/>
                 </resource-adapter>
-                <resource-adapter>
-                    <module id="org.jboss.teiid.resource-adaptor.infinispan"/>
+                <resource-adapter id="infinispan">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.infinispan"/>
                 </resource-adapter>
-                <resource-adapter>
-                    <module id="org.jboss.teiid.resource-adaptor.ldap"/>
+                <resource-adapter id="ldap">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.ldap"/>
                 </resource-adapter>
-                <resource-adapter>
-                    <module id="org.jboss.teiid.resource-adaptor.salesforce"/>
+                <resource-adapter id="salesforce">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.salesforce"/>
                 </resource-adapter>
-                <resource-adapter>
-                    <module id="org.jboss.teiid.resource-adaptor.ws"/>
+                <resource-adapter id="webservice">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
                 </resource-adapter>
             </resource-adapters>        
         </subsystem>

@@ -1,7 +1,8 @@
-<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adaptor.google">
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.file">
    
     <resources>
-        <resource-root path="teiid-connector-google.rar"/>
+        <resource-root path="connector-file-${project.version}.jar"/>
+        <resource-root path="."/>
         <!-- Insert resources here -->
     </resources>
 
@@ -10,6 +11,5 @@
         <module name="javax.resource.api"/>
         <module name="org.jboss.teiid.common-core"/>
         <module name="org.jboss.teiid.api"/>
-        <module name="org.jboss.teiid.translator.google.api"/>
     </dependencies>
 </module>
