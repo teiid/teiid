@@ -65,7 +65,7 @@ public class IntegrationTestVDBReuse extends AbstractMMQueryTestCase {
 		props.setProperty("AllowParentPaths", "true");
 		props.setProperty("class-name", "org.teiid.resource.adapter.file.FileManagedConnectionFactory");
 		
-		AdminUtil.createDataSource(admin, "marketdata-file", "teiid-connector-file.rar", props);
+		AdminUtil.createDataSource(admin, "marketdata-file", "file", props);
 		
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "dynamic", 1, 3));
 		
