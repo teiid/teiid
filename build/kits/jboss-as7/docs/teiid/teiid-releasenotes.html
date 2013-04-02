@@ -31,6 +31,7 @@
   <li>TEIID-1092 Added the teiid_session_set and teiid_session_get methods to maintain session variables.
   <li>TEIID-2449 Added the ability to deploy non-Designer based vdb zip artifacts with the ability to place DDL outside of the VDB.xml via the DDL-FILE metadata repository.
   <li>TEIID-2326 Materialized views from imported vdbs will be reused rather than recreated in each importing vdb.
+  <li>TEIID-2444 The deployment platform for Teiid has been changed to EAP 6.1.Alpha1
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -39,6 +40,7 @@
   <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
   <li>TEIID-2267 The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.
+  <li>TEIID-1979 The resource adaptors are now deployed through modules, and have shorter names as identifiers. Connection Factories created with previous versions must be re-configured.
 </ul>
 
 <h4>from 8.2</h4>
