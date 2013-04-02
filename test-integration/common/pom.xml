@@ -55,6 +55,7 @@
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-arquillian-container-managed</artifactId>
+                <version>${arquillian-container-version}</version>
             </dependency>
         </dependencies>
             <build>
@@ -98,7 +99,7 @@
                                             <classifier>jboss-dist</classifier>
                                             <type>zip</type>
                                             <overWrite>false</overWrite>
-                                            <outputDirectory>${project.build.directory}/jboss-as-${jbossas-version}</outputDirectory>
+                                            <outputDirectory>${project.build.directory}/${jbossas-test-version}</outputDirectory>
                                         </artifactItem>
                                     </artifactItems>
                                 </configuration>
@@ -116,7 +117,7 @@
                                 </goals>
                                 <configuration>
                                     <systemPropertyVariables>
-                                        <jbossHome>${project.build.directory}/jboss-as-${jbossas-version}</jbossHome>
+                                        <jbossHome>${project.build.directory}/${jbossas-test-version}</jbossHome>
                                         <serverConfig>standalone-teiid.xml</serverConfig>
                                     </systemPropertyVariables>
                                     <includes>

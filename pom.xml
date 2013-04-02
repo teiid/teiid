@@ -15,6 +15,8 @@
 	<properties>
 		<site.url>http://www.jboss.org/teiid</site.url>
         <jbossas-version>7.2.0.Alpha1-redhat-4</jbossas-version>
+        <jbossas-test-version>jboss-eap-6.1</jbossas-test-version>
+        <arquillian-container-version>7.2.0.Final</arquillian-container-version>
         <version.ant.plugin>1.7.0</version.ant.plugin>
         <version.org.jboss.common-core>2.2.17.GA</version.org.jboss.common-core>
         <version.org.jboss.staxmapper>1.1.0.Final</version.org.jboss.staxmapper>
