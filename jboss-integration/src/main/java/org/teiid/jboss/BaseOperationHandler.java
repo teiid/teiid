@@ -27,10 +27,10 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 
 import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathAddress;
-import org.jboss.as.controller.SimpleOperationDefinition;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
 import org.jboss.as.controller.descriptions.ModelDescriptionConstants;
 import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
@@ -84,14 +84,14 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
     	return null;
     }
 	
-    public SimpleOperationDefinition getOperationDefinition() {
+    public OperationDefinition getOperationDefinition() {
         SimpleOperationDefinitionBuilder builder = new SimpleOperationDefinitionBuilder(this.operationName, new TeiidResourceDescriptionResolver(this.operationName));
         builder.setRuntimeOnly();
         describeParameters(builder);
         return builder.build();
     }	
     
-    private static class TeiidResourceDescriptionResolver extends StandardResourceDescriptionResolver {
+    static class TeiidResourceDescriptionResolver extends StandardResourceDescriptionResolver {
         private final String operationName;
 
         public ResourceBundle getResourceBundle(Locale locale) {

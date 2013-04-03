@@ -39,6 +39,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -49,9 +51,14 @@ import org.jboss.as.connector.util.ConnectorServices;
 import org.jboss.as.controller.AbstractWriteAttributeHandler;
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.OperationContext;
+import org.jboss.as.controller.OperationDefinition;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.SimpleOperationDefinitionBuilder;
+import org.jboss.as.controller.descriptions.DefaultOperationDescriptionProvider;
+import org.jboss.as.controller.descriptions.DescriptionProvider;
+import org.jboss.as.controller.descriptions.ResourceDescriptionResolver;
+import org.jboss.as.controller.registry.OperationEntry;
 import org.jboss.as.server.deployment.DeploymentUnit;
 import org.jboss.dmr.ModelNode;
 import org.jboss.dmr.ModelType;
@@ -70,6 +77,7 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.VDB.ConnectionType;
 import org.teiid.adminapi.impl.*;
 import org.teiid.adminapi.impl.VDBMetadataMapper.TransactionMetadataMapper;
+import org.teiid.adminapi.impl.VDBMetadataMapper.VDBTranslatorMetaDataMapper;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.plan.PlanNode;
@@ -879,12 +887,23 @@ class GetVDB extends BaseOperationHandler<VDBRepository>{
 		}
 	}
 	
-	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
-		builder.addParameter(OperationsConstants.VDB_NAME);
-		builder.addParameter(OperationsConstants.VDB_VERSION);
-//		builder.setReplyType(ModelType.LIST);
-//		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
-	}	
+	
+	@Override
+    public OperationDefinition getOperationDefinition() {
+    	final AttributeDefinition[] parameters = new AttributeDefinition[] {OperationsConstants.VDB_NAME, OperationsConstants.VDB_VERSION};
+    	final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
+        return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
+			@Override
+			public DescriptionProvider getDescriptionProvider() {
+				return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.OBJECT, ModelType.OBJECT, null, null, parameters) {
+					@Override
+				    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
+						return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
+				    }					
+				};
+			}
+        };
+    }	
 }
 
 class GetSchema extends BaseOperationHandler<VDBRepository>{
@@ -981,10 +1000,23 @@ class ListVDBs extends BaseOperationHandler<VDBRepository>{
 			VDBMetadataMapper.INSTANCE.wrap(vdb, result.add());
 		}
 	}
-	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
-//		builder.setReplyType(ModelType.LIST);
-//		builder.setReplyParameters(VDBMetadataMapper.INSTANCE.getAttributeDefinitions());
-	}	
+	
+	@Override
+    public OperationDefinition getOperationDefinition() {
+    	final AttributeDefinition[] parameters = new AttributeDefinition[0];
+    	final ResourceDescriptionResolver resolver = new TeiidResourceDescriptionResolver(name());
+        return new OperationDefinition(name(), OperationEntry.EntryType.PUBLIC, EnumSet.noneOf(OperationEntry.Flag.class), ModelType.OBJECT, null, true, null, null, parameters) {
+			@Override
+			public DescriptionProvider getDescriptionProvider() {
+				return new DefaultOperationDescriptionProvider(name(), resolver, resolver,  ModelType.LIST, ModelType.OBJECT, null, null, parameters) {
+					@Override
+				    protected ModelNode getReplyValueTypeDescription(ResourceDescriptionResolver descriptionResolver, Locale locale, ResourceBundle bundle) {
+						return VDBMetadataMapper.INSTANCE.describe( new ModelNode());
+				    }					
+				};
+			}
+        };
+    }		
 }
 
 class ListTranslators extends TranslatorOperationHandler{
@@ -1029,8 +1061,8 @@ class GetTranslator extends TranslatorOperationHandler{
 	
 	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
 		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);
-		//builder.setReplyType(ModelType.OBJECT);
-		//builder.setReplyParameters(VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinition());
+		builder.setReplyType(ModelType.OBJECT);
+		builder.setReplyParameters(VDBTranslatorMetaDataMapper.INSTANCE.getAttributeDefinitions());
 	}	
 }
 
