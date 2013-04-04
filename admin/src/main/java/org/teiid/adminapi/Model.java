@@ -33,6 +33,7 @@ import java.util.List;
 public interface Model extends AdminObject {
 	
 	enum Type {PHYSICAL, VIRTUAL, FUNCTION, OTHER};
+	enum MetadataStatus {LOADING, LOADED, FAILED, RETRYING};
 	
 	/**
 	 * Description about the model
@@ -94,4 +95,10 @@ public interface Model extends AdminObject {
      * @return
      */
     List<String> getValidityErrors();
+    
+    /**
+     * Metadata Load status of the model.
+     * @return
+     */
+    MetadataStatus getMetadataStatus();    
 }
