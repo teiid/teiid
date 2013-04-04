@@ -605,6 +605,20 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     			}
     		}
     		
+    		@Override
+    		public void visit(WithItem obj) {
+    			if (obj.getColumns() != null) {
+    				List<ColumnReference> cols = obj.getColumns();
+    				obj.setColumns(null);
+    				Select select = obj.getSubquery().getProjectedQuery();
+    				List<DerivedColumn> selectClause = select.getDerivedColumns();
+    				for (int i = 0; i < cols.size(); i++) {
+    					selectClause.get(i).setAlias(cols.get(i).getName());
+    				}
+    			}
+    			super.visit(obj);
+    		}
+    		
     	};
     }
     

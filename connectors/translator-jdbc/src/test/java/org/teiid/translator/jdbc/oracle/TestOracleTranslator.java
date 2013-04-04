@@ -1014,5 +1014,14 @@ public class TestOracleTranslator {
         comp.setRightExpression(new Array(comp.getLeftExpression().getType(), Arrays.asList(comp.getRightExpression(), new Literal(2, TypeFacility.RUNTIME_TYPES.INTEGER))));
         TranslationHelper.helpTestVisitor(output, TRANSLATOR, obj);
     }
+    
+    @Test public void testWith() throws Exception {
+        String input = "with a (col) as (select intkey from bqt1.smallb) select intkey, col from bqt1.smalla, a where intkey = 5"; //$NON-NLS-1$
+        String output = "WITH a AS (SELECT SmallB.IntKey AS col FROM SmallB) SELECT SmallA.IntKey, a.col FROM SmallA, a WHERE SmallA.IntKey = 5"; //$NON-NLS-1$
+               
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, null,
+                input, output, 
+                TRANSLATOR);
+    }
 
 }
