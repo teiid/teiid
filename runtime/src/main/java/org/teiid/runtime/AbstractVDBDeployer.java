@@ -174,7 +174,9 @@ public abstract class AbstractVDBDeployer {
 		
 			//TODO: this is not quite correct, the source may be missing
 			model.clearRuntimeMessages();
+			model.setMetadataStatus(Model.MetadataStatus.LOADED);
 		} else {
+			model.setMetadataStatus(Model.MetadataStatus.FAILED);
 			vdb.setStatus(Status.FAILED);
 			//TODO: abort the other loads
 		}

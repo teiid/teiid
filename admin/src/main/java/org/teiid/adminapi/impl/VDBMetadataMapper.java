@@ -313,6 +313,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String VALIDITY_ERRORS = "validity-errors"; //$NON-NLS-1$
 		private static final String METADATA= "metadata"; //$NON-NLS-1$
 		private static final String METADATA_TYPE = "metadata-type"; //$NON-NLS-1$
+		private static final String METADATA_STATUS = "metadata-status"; //$NON-NLS-1$
 		
 		
 		public static ModelMetadataMapper INSTANCE = new ModelMetadataMapper();
@@ -361,6 +362,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (model.getSchemaSourceType() != null) {
 				node.get(METADATA_TYPE).set(model.getSchemaSourceType());
 			}
+			node.get(METADATA_STATUS).set(model.getMetadataStatus().name());
 			return node;
 		}
 		
@@ -421,6 +423,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			if (node.get(METADATA_TYPE).isDefined()) {
 				model.setSchemaSourceType(node.get(METADATA_TYPE).asString());
 			}
+			if (node.get(METADATA_STATUS).isDefined()) {
+				model.setMetadataStatus(node.get(METADATA_STATUS).asString());
+			}			
 			return model;
 		}
 		
@@ -454,6 +459,13 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			errors.get(DESCRIPTION).set(AdminPlugin.Util.getString(VALIDITY_ERRORS+DOT_DESC));
 			ValidationErrorMapper.INSTANCE.describe(errors.get(VALUE_TYPE));
 			
+			ModelNode status = new ModelNode();
+			status.add(Model.MetadataStatus.LOADING.name());
+			status.add(Model.MetadataStatus.LOADED.name());
+			status.add(Model.MetadataStatus.FAILED.name());
+			status.add(Model.MetadataStatus.RETRYING.name());
+			addAttribute(node, METADATA_STATUS, ModelType.STRING, true);
+			node.get(METADATA_STATUS).get(ALLOWED).set(status);
 			return node; 
 		}
 		
@@ -469,6 +481,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 					new SimpleAttributeDefinition(VISIBLE, ModelType.INT, true),
 					new SimpleAttributeDefinition(MODEL_TYPE, ModelType.BOOLEAN, false),
 					new SimpleAttributeDefinition(MODELPATH, ModelType.BOOLEAN, true),
+					new SimpleAttributeDefinition(METADATA_STATUS, ModelType.STRING, true),
 					ObjectTypeAttributeDefinition.Builder.of(PROPERTIES, properties).build(),
 					ObjectTypeAttributeDefinition.Builder.of(SOURCE_MAPPINGS, sourceMappings).build(),
 					ObjectTypeAttributeDefinition.Builder.of(VALIDITY_ERRORS, errors).build(),
