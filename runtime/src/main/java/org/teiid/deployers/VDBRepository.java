@@ -36,6 +36,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.SourceMappingMetadata;
@@ -335,6 +336,7 @@ public class VDBRepository implements Serializable{
 						String msg = cm.getStausMessage();
 						if (msg != null && msg.length() > 0) {
 							model.addRuntimeError(msg);
+							model.setMetadataStatus(Model.MetadataStatus.FAILED);
 							LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 						}
 					}					

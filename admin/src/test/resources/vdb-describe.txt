@@ -228,6 +228,19 @@
                         "required" : true
                     }
                 }
+            },
+            "metadata-status" : {
+                "type" : {
+                    "TYPE_MODEL_VALUE" : "STRING"
+                },
+                "description" : "Model metadata loading status",
+                "required" : true,
+                "allowed" : [
+                    "LOADING",
+                    "LOADED",
+                    "FAILED",
+                    "RETRYING"
+                ]
             }
         },
         "description" : "Models inside a virtual database"

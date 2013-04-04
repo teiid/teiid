@@ -50,6 +50,7 @@ import org.jboss.msc.service.StartException;
 import org.jboss.msc.service.StopContext;
 import org.jboss.msc.value.InjectedValue;
 import org.teiid.adminapi.AdminProcessingException;
+import org.teiid.adminapi.Model;
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -351,7 +352,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 	@SuppressWarnings({"rawtypes","unchecked"})
     protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
 
-    	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())); 
+    	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date()));
+    	model.setMetadataStatus(Model.MetadataStatus.LOADING);
 		model.addRuntimeMessage(Severity.INFO, msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
@@ -362,6 +364,12 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				boolean cached = false;
 				Exception ex = null;
 				TranslatorException te = null;
+				
+				// if this is not the first time trying to load metadata
+				if (model.getMetadataStatus() != Model.MetadataStatus.LOADING) {
+					model.setMetadataStatus(Model.MetadataStatus.RETRYING);
+				}
+				
 				// designer based models define data types based on their built in data types, which are system vdb data types
 				Map<String, Datatype> datatypes = getVDBRepository().getRuntimeTypeMap();
 				Map<String, Datatype> builtin = getVDBRepository().getSystemStore().getDatatypes();
@@ -407,7 +415,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			    		if (te != null) {
 			    			errorMsg += ": " + te.getMessage(); //$NON-NLS-1$ 
 			    		}
-			    		model.addRuntimeError(errorMsg); 
+			    		model.addRuntimeError(errorMsg);
+			    		model.setMetadataStatus(Model.MetadataStatus.FAILED);
 			    		//log the exception of a non-teiid runtime exception as it may indicate a problem 
 						LogManager.logWarning(LogConstants.CTX_RUNTIME, (ex instanceof RuntimeException && !(ex instanceof TeiidRuntimeException))?ex:null, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50036,vdb.getName(), vdb.getVersion(), model.getName(), errorMsg));
 						if (ex instanceof RuntimeException) {

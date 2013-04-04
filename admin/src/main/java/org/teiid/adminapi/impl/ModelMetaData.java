@@ -50,6 +50,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     protected transient List<Message> runtimeMessages;
     protected String schemaSourceType;
 	protected String schemaText;
+	protected MetadataStatus metadataStatus = MetadataStatus.LOADING;
 
 	@Override
 	public String getDescription() {
@@ -107,6 +108,21 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     		this.modelType = null;
     	}
     }    
+    
+	@Override
+	public MetadataStatus getMetadataStatus() {
+		return metadataStatus;
+	}
+
+    public void setMetadataStatus(Model.MetadataStatus status) {
+        this.metadataStatus = status;
+    }
+    
+    void setMetadataStatus(String status) {
+    	if (status != null) {
+    		this.metadataStatus = Model.MetadataStatus.valueOf(status);
+    	}
+    }
     
     public String toString() {
 		return getName() + this.sources;
