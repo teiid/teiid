@@ -306,7 +306,8 @@ class SourceState {
     		return;
     	} 
     	TupleBuffer sorted = sortUtility.sort();
-    	if (this.buffer != null) {
+    	//only remove the buffer if this is the first time through
+    	if (this.buffer != null && this.buffer != sorted) {
     		this.buffer.remove();
     	}
     	this.prefetch = null;
