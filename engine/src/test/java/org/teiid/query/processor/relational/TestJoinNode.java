@@ -174,7 +174,7 @@ public class TestJoinNode {
         
         List leftElements = new ArrayList();
         leftElements.add(es1);
-        leftNode = new FakeRelationalNode(1, leftTuples);
+        leftNode = new BlockingFakeRelationalNode(1, leftTuples);
         leftNode.setElements(leftElements);
         
         List rightElements = new ArrayList();
@@ -287,7 +287,7 @@ public class TestJoinNode {
         expectedReversed = expected;
         helpTestJoin();        
     }
-
+    
     @Test public void testLeftOuterJoin() throws Exception {
         joinType = JoinType.JOIN_LEFT_OUTER;
         expected = new List[] {
