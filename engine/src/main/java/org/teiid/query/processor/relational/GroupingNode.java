@@ -445,6 +445,10 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     		this.sortBuffer.remove();
     		this.sortBuffer = null;
     	}
+    	if (this.sortUtility != null) {
+    		this.sortUtility.remove();
+    		this.sortUtility = null;
+    	}
     }
 
 	protected void getNodeString(StringBuffer str) {

@@ -33,13 +33,13 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.IndexedTupleSource;
 import org.teiid.common.buffer.STree;
+import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
-import org.teiid.common.buffer.BufferManager.TupleSourceType;
-import org.teiid.common.buffer.STree.InsertMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
@@ -52,11 +52,11 @@ import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.symbol.WindowSpecification;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.util.CommandContext;
 
@@ -326,7 +326,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 					List<ElementSymbol> elements = Arrays.asList(key, value);
 					partitionMapping[specIndex] = this.getBufferManager().createSTree(elements, this.getConnectionID(), 1);
 				}
-				SortUtility su = new SortUtility(specificationTs, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
+				SortUtility su = new SortUtility(null, Mode.SORT, this.getBufferManager(), this.getConnectionID(), tb.getSchema(), info.orderType, info.nullOrderings, sortKeys);
+				su.setWorkingBuffer(tb);
+				su.setNonBlocking(true);
 				TupleBuffer sorted = su.sort();
 				specificationTs = sorted.createIndexedTupleSource(true);
 			}

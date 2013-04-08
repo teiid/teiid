@@ -108,6 +108,10 @@ class SourceState {
     		//do nothing
     	}
         this.open = false;
+        if (this.sortUtility != null) {
+        	this.sortUtility.remove();
+        	this.sortUtility = null;
+        }
     }
 
 	private void closeBuffer() {

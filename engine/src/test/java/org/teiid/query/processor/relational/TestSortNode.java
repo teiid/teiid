@@ -47,7 +47,7 @@ import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings("rawtypes")
 public class TestSortNode {
     
     public static final int BATCH_SIZE = 100;

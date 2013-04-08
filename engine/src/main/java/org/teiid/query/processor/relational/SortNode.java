@@ -154,6 +154,10 @@ public class SortNode extends RelationalNode {
         	}
         	this.output = null;
         }
+        if (this.sortUtility != null) {
+        	this.sortUtility.remove();
+        	this.sortUtility = null;
+        }
         this.outputTs = null;
     }
 

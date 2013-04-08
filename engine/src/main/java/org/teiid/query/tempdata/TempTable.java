@@ -505,16 +505,19 @@ public class TempTable implements Cloneable, SearchableTable {
 		TupleSource ts = new QueryTupleSource(browser, columnMap, agg?getColumns():projectedCols, condition);
 		
 		boolean usingQueryTupleSource = false;
+		boolean success = false;
+		TupleBuffer tb = null;
 		try {
-			TupleBuffer tb = null;
 			if (ii.ordering == null && orderBy != null) {
 				SortUtility sort = new SortUtility(ts, orderBy.getOrderByItems(), Mode.SORT, bm, sessionID, projectedCols);
+				sort.setNonBlocking(true);
 				tb = sort.sort();
 			} else if (agg) {
 				int count = 0;
 				while (ts.nextTuple() != null) {
 					count++;
 				}
+				success = true;
 				return new CollectionTupleSource(Arrays.asList(Collections.nCopies(projectedCols.size(), count)).iterator());
 			} else if (updatable) {
 				tb = bm.createTupleBuffer(projectedCols, sessionID, TupleSourceType.PROCESSOR);
@@ -524,11 +527,16 @@ public class TempTable implements Cloneable, SearchableTable {
 				}
 			} else {
 				usingQueryTupleSource = true;
+				success = true;
 				return ts;
 			}
 			tb.close();
+			success = true;
 			return tb.createIndexedTupleSource(true);
 		} finally {
+			if (!success && tb != null) { 
+				tb.remove();
+			}
 			if (!usingQueryTupleSource) {
 				//ensure the buffers get released
 				ts.closeSource();

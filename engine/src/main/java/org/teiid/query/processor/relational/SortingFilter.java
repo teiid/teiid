@@ -92,9 +92,12 @@ public class SortingFilter extends AggregateFunction {
 	private void close() {
 		if (this.collectionBuffer != null) {
         	collectionBuffer.remove();
+            this.collectionBuffer = null;
         }
-        this.collectionBuffer = null;
-        this.sortUtility = null;
+		if (this.sortUtility != null) {
+			sortUtility.remove();
+	        this.sortUtility = null;
+		}
 	}
 	
 	@Override

@@ -165,8 +165,11 @@ public class DependentCriteriaProcessor {
         }
         
         public void close() {
+        	if (this.sortUtility != null) {
+        		this.sortUtility.remove();
+        		sortUtility = null;
+        	}
             if (dvs != null) {
-            	sortUtility = null;
             	if (dvs != originalVs) {
             		dvs.getTupleBuffer().remove();
             	}

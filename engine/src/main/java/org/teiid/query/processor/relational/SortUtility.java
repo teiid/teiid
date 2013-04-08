@@ -113,6 +113,7 @@ public class SortUtility {
     private static final int DONE = 3;
 	private TupleBuffer workingBuffer;
 	private long[] attempts = new long[2];
+	private boolean nonBlocking;
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
                         String groupName, List<? extends Expression> schema) {
@@ -183,32 +184,51 @@ public class SortUtility {
 
     public TupleBuffer sort()
         throws TeiidComponentException, TeiidProcessingException {
-
-        if(this.phase == INITIAL_SORT) {
-            initialSort(false);
+    	boolean success = false;
+    	try {
+	        if(this.phase == INITIAL_SORT) {
+	            initialSort(false);
+	        }
+	        
+	        if(this.phase == MERGE) {
+	            mergePhase();
+	        }
+	        success = true;
+	        if (this.output != null) {
+	        	return this.output;
+	        }
+	        return this.activeTupleBuffers.get(0);
+    	} catch (BlockedException e) {
+    		success = true;
+    		throw e;
+    	} finally {
+        	if (!success) {
+        		remove();
+        	}
         }
-        
-        if(this.phase == MERGE) {
-            mergePhase();
-        }
-        if (this.output != null) {
-        	return this.output;
-        }
-        return this.activeTupleBuffers.get(0);
     }
     
     public List<TupleBuffer> onePassSort() throws TeiidComponentException, TeiidProcessingException {
+    	boolean success = false;
     	assert this.mode != Mode.DUP_REMOVE;
-    	
-    	if(this.phase == INITIAL_SORT) {
-            initialSort(true);
-        }
-    	
-    	for (TupleBuffer tb : activeTupleBuffers) {
-			tb.close();
-		}
-    	
-    	return activeTupleBuffers;
+    	try {
+	    	if(this.phase == INITIAL_SORT) {
+	            initialSort(true);
+	        }
+	    	
+	    	for (TupleBuffer tb : activeTupleBuffers) {
+				tb.close();
+			}
+	    	success = true;
+	    	return activeTupleBuffers;
+    	} catch (BlockedException e) {
+    		success = true;
+    		throw e;
+    	} finally {
+    		if (!success) {
+    			remove();
+    		}
+    	}
     }
     
 	private TupleBuffer createTupleBuffer() throws TeiidComponentException {
@@ -370,20 +390,26 @@ public class SortUtility {
         int reserved = 0;
         
         if (desiredSpace > toForce) {
-        	int subLists = Math.max(2, this.bufferManager.getMaxProcessingSize()/schemaSize);
-        	int twoPass = subLists * subLists;
-        	if (twoPass < activeTupleBuffers.size()) {
-        		//wait for 2-pass
-    			int needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), .5));
-    	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, false);
-        		if (reserved == 0 && twoPass*subLists < activeTupleBuffers.size()) {
-        			//force 3-pass
-        			needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), 1/3d));
-        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, true);
+        	try {
+	        	int subLists = Math.max(2, this.bufferManager.getMaxProcessingSize()/schemaSize);
+	        	int twoPass = subLists * subLists;
+	        	if (twoPass < activeTupleBuffers.size()) {
+	        		//wait for 2-pass
+	    			int needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), .5));
+	    	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, false);
+	        		if (reserved == 0 && twoPass*subLists < activeTupleBuffers.size()) {
+	        			//force 3-pass
+	        			needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), 1/3d));
+	        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, true);
+	        		}
+	        	} else if (desiredSpace < Integer.MAX_VALUE) {
+	        		//wait for 1-pass
+	        		reserved += bufferManager.reserveBuffersBlocking((int)desiredSpace - toForce, attempts, false);
+	        	}
+        	} catch (BlockedException be) {
+        		if (!nonBlocking) {
+        			throw be;
         		}
-        	} else if (desiredSpace < Integer.MAX_VALUE) {
-        		//wait for 1-pass
-        		reserved += bufferManager.reserveBuffersBlocking((int)desiredSpace - toForce, attempts, false);
         	}
         }
         int total = reserved + toForce;
@@ -504,5 +530,29 @@ public class SortUtility {
     public boolean isDistinct() {
     	return this.comparator.isDistinct();
     }
+
+	public void remove() {
+		if (workingBuffer != null && source != null) {
+			workingBuffer.remove();
+			workingBuffer = null;
+		}
+		if (!this.activeTupleBuffers.isEmpty()) {
+			//these can be leaked with a single pass, but
+			//they should not be reused whole
+			for (int i = 0; i < this.activeTupleBuffers.size(); i++) {
+				TupleBuffer tb = this.activeTupleBuffers.get(i);
+				if (tb == output || (i == 0 && phase == DONE)) {
+					continue;
+				}
+				tb.remove();
+			}
+			this.activeTupleBuffers.clear();
+		}
+		this.output = null;
+	}
+
+	public void setNonBlocking(boolean b) {
+		this.nonBlocking = b;
+	}
     
 }
