@@ -51,8 +51,9 @@ public interface Cache<T> extends StorageManager {
 	 * Must be called prior to adding an entry
 	 * @param gid
 	 * @param oid
+	 * @return if the add was successful
 	 */
-	void addToCacheGroup(Long gid, Long oid); 
+	boolean addToCacheGroup(Long gid, Long oid); 
 
 	/**
 	 * Lock the object for load and return an identifier/lock

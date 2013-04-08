@@ -499,6 +499,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	private AtomicLong storageReads = new AtomicLong();
 	
 	private long minDefrag = DEFAULT_MIN_DEFRAG;
+	private BufferManagerImpl bufferManager;
 	
 	@Override
 	public void initialize() throws TeiidComponentException {
@@ -823,12 +824,13 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	}
 	
 	@Override
-	public void addToCacheGroup(Long gid, Long oid) {
+	public boolean addToCacheGroup(Long gid, Long oid) {
 		Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 		if (map == null) {
-			return;
+			return false;
 		}
 		map.put(oid, null);
+		return true;
 	}
 	
 	@Override
@@ -913,7 +915,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				block = blockStore.writeToStorageBlock(info, is);
 			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30016, oid));
+			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30016, oid, info.gid));
 		} finally {
 			//ensure post conditions
 			synchronized (info) {
@@ -957,6 +959,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 					} finally {
 						freedLock.unlock();
 					}
+				}
+				if (block == EMPTY_ADDRESS && demote && this.bufferManager != null) {
+					//failed to demote
+					this.bufferManager.invalidCacheGroup(info.gid);
 				}
 			}
 		}
@@ -1100,6 +1106,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	
 	public long getMemoryInUseBytes() {
 		return this.blocksInuse.getBitsSet() * BLOCK_SIZE + this.inodesInuse.getBitsSet() * (1 << LOG_INODE_SIZE);
+	}
+	
+	public void setBufferManager(BufferManagerImpl bufferManager) {
+		this.bufferManager = bufferManager;
 	}
 
 }

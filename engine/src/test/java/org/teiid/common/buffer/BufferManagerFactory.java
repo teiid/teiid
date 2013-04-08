@@ -77,6 +77,7 @@ public class BufferManagerFactory {
 			SplittableStorageManager ssm = new SplittableStorageManager(storageManager);
 			ssm.setMaxFileSizeDirect(MemoryStorageManager.MAX_FILE_SIZE);
 			BufferFrontedFileStoreCache fsc = new BufferFrontedFileStoreCache();
+			fsc.setBufferManager(bufferManager);
 			//use conservative allocations
 			fsc.setDirect(false); //allow the space to be GCed easily
 			fsc.setMaxStorageObjectSize(1<<20);

@@ -106,6 +106,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
                 fsc = new BufferFrontedFileStoreCache();
+                fsc.setBufferManager(this.bufferMgr);
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
                 fsc.setDirect(memoryBufferOffHeap);
                 int batchOverheadKB = (int)(this.memoryBufferSpace<0?(this.bufferMgr.getMaxReserveKB()<<8):this.memoryBufferSpace)>>20;

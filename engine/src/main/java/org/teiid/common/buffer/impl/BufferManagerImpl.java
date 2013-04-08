@@ -222,11 +222,14 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 			CacheKey key = new CacheKey(oid, (int)readAttempts.get(), old!=null?old.getKey().getOrderingValue():0);
 			CacheEntry ce = new CacheEntry(key, sizeEstimate, batch, this.ref, false);
+			if (!cache.addToCacheGroup(id, ce.getId())) {
+				this.remove();
+				throw new TeiidComponentException(QueryPlugin.Event.TEIID31138, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31138, id));
+			}
+			overheadBytes.addAndGet(BATCH_OVERHEAD);
 			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 				LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Add batch to BufferManager", ce.getId(), "with size estimate", ce.getSizeEstimate()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
-			overheadBytes.addAndGet(BATCH_OVERHEAD);
-			cache.addToCacheGroup(id, ce.getId());
 			addMemoryEntry(ce, true);
 			return oid;
 		}
@@ -903,7 +906,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	/**
 	 * Get a CacheEntry without hitting storage
 	 */
-	CacheEntry fastGet(Long batch, boolean prefersMemory, boolean retain) {
+	CacheEntry fastGet(Long batch, Boolean prefersMemory, boolean retain) {
 		CacheEntry ce = null;
 		if (retain) {
 			ce = memoryEntries.get(batch);
@@ -934,7 +937,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			}
 			return ce;
 		}
-		if (prefersMemory) {
+		if (prefersMemory == null || prefersMemory) {
 			BatchSoftReference bsr = softCache.remove(batch);
 			if (bsr != null) {
 				ce = bsr.get();
@@ -942,7 +945,8 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 					clearSoftReference(bsr);
 				}
 			}
-		} else if (useWeakReferences) {
+		}
+		if (ce == null && (prefersMemory == null || !prefersMemory) && useWeakReferences) {
 			ce = weakReferenceCache.getByHash(batch);
 			if (ce == null || !ce.getId().equals(batch)) {
 				return null;
@@ -1002,7 +1006,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		activeBatchBytes.getAndAdd(ce.getSizeEstimate());
 	}
 	
-	void removeCacheGroup(Long id, boolean prefersMemory) {
+	void removeCacheGroup(Long id, Boolean prefersMemory) {
 		cleanSoftReferences();
 		Collection<Long> vals = cache.removeCacheGroup(id);
 		long overhead = vals.size() * BATCH_OVERHEAD;
@@ -1246,6 +1250,10 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	public Streamable<?> persistLob(Streamable<?> lob, FileStore store,
 			byte[] bytes) throws TeiidComponentException {
 		return LobManager.persistLob(lob, store, bytes, inlineLobs, DataTypeManager.MAX_LOB_MEMORY_BYTES);
+	}
+
+	public void invalidCacheGroup(Long gid) {
+		removeCacheGroup(gid, null);
 	}
 	
 }
