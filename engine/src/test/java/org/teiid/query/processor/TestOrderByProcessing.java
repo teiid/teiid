@@ -211,5 +211,14 @@ public class TestOrderByProcessing {
         sampleData1(fdm);
         helpProcess(plan, fdm, new List[] {Arrays.asList("a", 0, false, 2.0d)});
     }
+    
+    @Test public void testSortFunctionOverView1() {
+    	String sql = "select e1 from (select * from pm1.g1) as x order by cast(e3 as string) desc, cast(e2 as string) limit 1"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        FakeDataManager fdm = new FakeDataManager();
+        sampleData1(fdm);
+        helpProcess(plan, fdm, new List[] {Arrays.asList("c")});
+    }
 
 }

@@ -221,6 +221,7 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            break;
 		    }
 		    default: {
+		    	PlanNode sortNode = null;
 		    	if (root.getType() == NodeConstants.Types.PROJECT) {
 		    		GroupSymbol intoGroup = (GroupSymbol)root.getProperty(NodeConstants.Info.INTO_GROUP);
 		            if (intoGroup != null) { //if this is a project into, treat the nodes under the source as a new plan root
@@ -229,28 +230,13 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 		                return;
 		            }
 	            	List<Expression> projectCols = outputElements;
-	            	boolean modifiedProject = false;
-	            	PlanNode sortNode = NodeEditor.findParent(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
-	            	if (sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
-	            		//if this is the initial rule run, remove unrelated order before changing the project cols
-			            if (!finalRun) {
-		            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
-		            		projectCols = new ArrayList<Expression>(projectCols);
-		            		for (OrderByItem item : elements.getOrderByItems()) {
-		            			if (item.getExpressionPosition() == -1) {
-		            				projectCols.remove(item.getSymbol());
-		            			}
-		            		}
-	            		} else {
-	            			modifiedProject = true;
-	            		}
-		            }
-		            root.setProperty(NodeConstants.Info.PROJECT_COLS, projectCols);
-	            	if (modifiedProject) {
-		            	root.getGroups().clear();
+	            	sortNode = NodeEditor.findParent(root, NodeConstants.Types.SORT, NodeConstants.Types.SOURCE);
+	            	if (finalRun && sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+            			root.getGroups().clear();
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(projectCols));
 		            	root.addGroups(GroupsUsedByElementsVisitor.getGroups(root.getCorrelatedReferenceElements()));
-	            	}
+		            }
+		            root.setProperty(NodeConstants.Info.PROJECT_COLS, projectCols);
 	            	if (root.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
 	            		Set<WindowFunction> windowFunctions = getWindowFunctions(projectCols);
 	            		if (windowFunctions.isEmpty()) {
@@ -277,6 +263,17 @@ public final class RuleAssignOutputElements implements OptimizerRule {
 	            // Call children recursively
 	            if(root.getChildCount() == 1) {
 	                assignOutputElements(root.getLastChild(), requiredInput, metadata, capFinder, rules, analysisRecord, context);
+	                if (!finalRun && root.getType() == NodeConstants.Types.PROJECT && sortNode != null && sortNode.hasBooleanProperty(NodeConstants.Info.UNRELATED_SORT)) {
+                		//if this is the initial rule run, remove unrelated order to preserve the original projection
+	            		OrderBy elements = (OrderBy) sortNode.getProperty(NodeConstants.Info.SORT_ORDER);
+	            		outputElements = new ArrayList<Expression>(outputElements);
+	            		for (OrderByItem item : elements.getOrderByItems()) {
+	            			if (item.getExpressionPosition() == -1) {
+	            				outputElements.remove(item.getSymbol());
+	            			}
+	            		}
+	            		root.setProperty(NodeConstants.Info.PROJECT_COLS, outputElements);
+	                }
 	            } else {
 	                //determine which elements go to each side of the join
 	                for (PlanNode childNode : root.getChildren()) {
