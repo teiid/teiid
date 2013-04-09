@@ -284,5 +284,30 @@ public class TestMatViews {
 		
 		server.deployVDB(vdbMetaData);
 	}
+	
+	@Test public void testImportedMatView() throws Exception {
+		ModelMetaData mmd2 = new ModelMetaData();
+		mmd2.setName("view1");
+		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setSchemaSourceType("DDL");
+		mmd2.setSchemaText("CREATE VIEW v1 ( col1 string ) OPTIONS (MATERIALIZED true) AS select current_database()");
+		server.deployVDB("base", mmd2);
+		
+		VDBMetaData vdbMetaData = new VDBMetaData();
+		vdbMetaData.setXmlDeployment(true);
+		VDBImportMetadata importVDB = new VDBImportMetadata();
+		importVDB.setName("base");
+		importVDB.setVersion(1);
+		vdbMetaData.getVDBImports().add(importVDB);
+		vdbMetaData.setName("importing");
+		
+		server.deployVDB(vdbMetaData);
+		
+		Connection c = server.getDriver().connect("jdbc:teiid:importing", null);
+		Statement s = c.createStatement();
+		ResultSet rs = s.executeQuery("select * from v1");
+		rs.next();
+		assertEquals("base", rs.getString(1));
+	}
 
 }

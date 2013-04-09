@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.teiid.client.plan.Annotation;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
@@ -146,12 +147,12 @@ public class TestMaterialization {
     @Test public void testDefaultMaterialization() throws Exception {
         String userSql = "SELECT * from vgroup2"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         CommandContext cc = new CommandContext();
-    	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata);
+    	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
     	cc.setGlobalTableStore(gts);
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP2.x FROM #MAT_MATVIEW.VGROUP2"}, plan);
@@ -164,12 +165,12 @@ public class TestMaterialization {
     @Test public void testDefaultMaterializationWithPK() throws Exception {
         String userSql = "SELECT * from vgroup3 where x = 'foo'"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         CommandContext cc = new CommandContext();
-        GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata);
+        GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
     	cc.setGlobalTableStore(gts);
         RelationalPlan plan = (RelationalPlan)TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         assertEquals(1f, plan.getRootNode().getEstimateNodeCardinality());
@@ -183,12 +184,12 @@ public class TestMaterialization {
     @Test public void testDefaultMaterializationWithCacheHint() throws Exception {
         String userSql = "SELECT * from vgroup4"; //$NON-NLS-1$
         
-        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        TransformationMetadata metadata = RealMetadataFactory.exampleMaterializedView();
         AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
         
         Command command = helpGetCommand(userSql, metadata, null);
         CommandContext cc = new CommandContext();
-        GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata);
+        GlobalTableStoreImpl gts = new GlobalTableStoreImpl(null, metadata.getVdbMetaData(), metadata);
     	cc.setGlobalTableStore(gts);
         ProcessorPlan plan = TestOptimizer.getPlan(command, metadata, getGenericFinder(), analysis, true, cc);
         TestOptimizer.checkAtomicQueries(new String[] {"SELECT #MAT_MATVIEW.VGROUP4.x FROM #MAT_MATVIEW.VGROUP4"}, plan);

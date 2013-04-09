@@ -242,7 +242,7 @@ public class TestProcessor {
         	context.setTempTableStore(new TempTableStore(context.getConnectionId(), TransactionMode.ISOLATE_WRITES));
         }
         if (context.getGlobalTableStore() == null) {
-        	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(bufferMgr, context.getMetadata());
+        	GlobalTableStoreImpl gts = new GlobalTableStoreImpl(bufferMgr, null, context.getMetadata());
         	context.setGlobalTableStore(gts);
         }
         if (!(dataManager instanceof TempTableDataManager)) {
@@ -5260,6 +5260,9 @@ public class TestProcessor {
 		VariableContext vc = new VariableContext();
         Iterator<?> valIter = values.iterator();
         for (Reference ref : ReferenceCollectorVisitor.getReferences(command)) {
+        	if (!ref.isPositional()) {
+        		continue;
+        	}
             vc.setGlobalValue(ref.getContextSymbol(),  valIter.next()); //$NON-NLS-1$
 		}
         context.setVariableContext(vc);

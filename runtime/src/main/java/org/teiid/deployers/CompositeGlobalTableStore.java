@@ -51,7 +51,7 @@ public class CompositeGlobalTableStore implements GlobalTableStore {
 	public static GlobalTableStore createInstance(CompositeVDB vdb, BufferManager bufferManager, ObjectReplicator replicator) {
 		VDBMetaData vdbMetadata = vdb.getVDB();
 		QueryMetadataInterface metadata = vdbMetadata.getAttachment(TransformationMetadata.class);
-		GlobalTableStore gts = new GlobalTableStoreImpl(bufferManager, metadata);
+		GlobalTableStore gts = new GlobalTableStoreImpl(bufferManager, vdbMetadata, metadata);
 		if (replicator != null) {
 			try {
 				gts = replicator.replicate(vdbMetadata.getFullName(), GlobalTableStore.class, gts, 300000);

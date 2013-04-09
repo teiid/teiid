@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
@@ -175,6 +176,10 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			return ttl;
 		}
 		
+		public VDBMetaData getVdbMetaData() {
+			return vdbMetaData;
+		}
+		
 	}
 	
 	private ConcurrentHashMap<String, MatTableInfo> matTables = new ConcurrentHashMap<String, MatTableInfo>();
@@ -182,9 +187,11 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	private BufferManager bufferManager;
 	private QueryMetadataInterface metadata;
 	private Serializable localAddress;
+	private VDBMetaData vdbMetaData;
 	
-	public GlobalTableStoreImpl(BufferManager bufferManager, QueryMetadataInterface metadata) {
+	public GlobalTableStoreImpl(BufferManager bufferManager, VDBMetaData vdbMetaData, QueryMetadataInterface metadata) {
 		this.bufferManager = bufferManager;
+		this.vdbMetaData = vdbMetaData;
 		this.metadata = new TempMetadataAdapter(metadata, new TempMetadataStore());
 	}
 

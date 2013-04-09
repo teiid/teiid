@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -35,7 +36,9 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.security.SessionToken;
+import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
@@ -43,6 +46,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
@@ -88,7 +92,7 @@ import org.teiid.query.util.CommandContext;
 public class TempTableDataManager implements ProcessorDataManager {
 	
 	public interface RequestExecutor {
-		void execute(String command, List<?> parameters);
+		ResultsFuture<ResultsMessage> execute(String command, List<?> parameters, boolean asynch);
 	}
 	
 	private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
@@ -391,20 +395,27 @@ public class TempTableDataManager implements ProcessorDataManager {
 					}
 				}
 				synchronized (info) {
-					try {
-						info.wait(30000);
-					} catch (InterruptedException e) {
-						 throw new TeiidComponentException(QueryPlugin.Event.TEIID30235, e);
+					if (!info.isUpToDate()) {
+						try {
+							info.wait(30000);
+						} catch (InterruptedException e) {
+							 throw new TeiidComponentException(QueryPlugin.Event.TEIID30235, e);
+						}
 					}
 				}
 			}
 			if (load) {
 				if (!info.isValid() || executor == null) {
 					//blocking load
-					loadGlobalTable(context, group, tableName, globalStore);
+					if (info.getVdbMetaData() != null && context.getDQPWorkContext() != null && !info.getVdbMetaData().getFullName().equals(context.getDQPWorkContext().getVDB().getFullName())) {
+						assert executor != null;
+						//load with a refresh to pretend we're in the imported vdb
+						loadViaRefresh(context, tableName, info.getVdbMetaData(), info, false);
+					} else {
+						loadGlobalTable(context, group, tableName, globalStore);
+					}
 				} else {
-					info.setAsynchLoad();
-					loadAsynch(context, tableName);
+					loadViaRefresh(context, tableName, context.getDQPWorkContext().getVDB(), info, true);
 				}
 			} 
 			table = globalStore.getTempTable(tableName);
@@ -445,26 +456,57 @@ public class TempTableDataManager implements ProcessorDataManager {
 		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 	}
 
-	private void loadAsynch(final CommandContext context, final String tableName) {
-		SessionMetadata session = createTemporarySession(context.getUserName(), "asynch-mat-view-load", context.getDQPWorkContext().getVDB()); //$NON-NLS-1$
-		session.setSubject(context.getSubject());
-		session.setSecurityDomain(context.getSession().getSecurityDomain());
-		session.setSecurityContext(context.getSession().getSecurityContext());
-		DQPWorkContext workContext = new DQPWorkContext();
-		workContext.setAdmin(true);
-		DQPWorkContext current = context.getDQPWorkContext();
-		workContext.setSession(session);
-		workContext.setPolicies(current.getAllowedDataPolicies());
-		workContext.setSecurityHelper(current.getSecurityHelper());
-		final String viewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
-		workContext.runInContext(new Runnable() {
-
-			@Override
-			public void run() {
-				executor.execute(REFRESH_SQL, Arrays.asList(viewName, Boolean.FALSE.toString()));
+	/**
+	 * we use this for two types of refreshes, full asynch is just fire and forget.
+	 * non-asynch is used to create a temp session to pretend that we're using an imported vdb so that we don't modify the
+	 * current session.
+	 */
+	private void loadViaRefresh(final CommandContext context, final String tableName, VDBMetaData vdb, MatTableInfo info, final boolean asynch) throws TeiidProcessingException, TeiidComponentException {
+		ResultsFuture<ResultsMessage> result = null;
+		synchronized (info) {
+			info.setAsynchLoad();
+			SessionMetadata session = createTemporarySession(context.getUserName(), "asynch-mat-view-load", vdb); //$NON-NLS-1$
+			session.setSubject(context.getSubject());
+			session.setSecurityDomain(context.getSession().getSecurityDomain());
+			session.setSecurityContext(context.getSession().getSecurityContext());
+			DQPWorkContext workContext = new DQPWorkContext();
+			workContext.setAdmin(true);
+			DQPWorkContext current = context.getDQPWorkContext();
+			workContext.setSession(session);
+			workContext.setPolicies(current.getAllowedDataPolicies());
+			workContext.setSecurityHelper(current.getSecurityHelper());
+			final String viewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
+			try {
+				result = workContext.runInContext(new Callable<ResultsFuture<ResultsMessage>>() {
+					@Override
+					public ResultsFuture<ResultsMessage> call() {
+						return executor.execute(REFRESH_SQL, Arrays.asList(viewName, Boolean.FALSE), asynch);
+					}
+				});
+			} catch (Throwable e) {
+				throw new TeiidRuntimeException(e);
 			}
-			
-		});
+		}
+		if (!asynch) {
+			ResultsMessage message;
+			try {
+				message = result.get();
+			} catch (Exception e) {
+				throw new TeiidRuntimeException(e);
+			}
+			if (message.getException() != null) {
+				if (message.getException() instanceof TeiidProcessingException) {
+					throw (TeiidProcessingException)message.getException();
+				}
+				if (message.getException() instanceof TeiidComponentException) {
+					throw (TeiidComponentException)message.getException();
+				}
+				throw new TeiidRuntimeException(message.getException());
+			}
+			if (Integer.valueOf(-1).equals(message.getResultsList().get(0).get(0))) {
+				throw new AssertionError("failed to load via refresh"); //$NON-NLS-1$
+			}
+		}
 	}
 
 	private int loadGlobalTable(CommandContext context,

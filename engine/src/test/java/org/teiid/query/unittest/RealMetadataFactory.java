@@ -366,7 +366,7 @@ public class RealMetadataFactory {
      * @return
      * @since 4.2
      */
-    public static QueryMetadataInterface exampleMaterializedView() {
+    public static TransformationMetadata exampleMaterializedView() {
     	MetadataStore metadataStore = new MetadataStore();
         Schema virtModel = createVirtualModel("MatView", metadataStore); //$NON-NLS-1$
         Schema physModel = createPhysicalModel("MatTable", metadataStore); //$NON-NLS-1$

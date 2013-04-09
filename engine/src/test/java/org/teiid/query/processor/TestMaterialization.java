@@ -39,15 +39,15 @@ import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
-import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
+import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -65,8 +65,8 @@ public class TestMaterialization {
 	@Before public void setUp() {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-	    QueryMetadataInterface actualMetadata = RealMetadataFactory.exampleMaterializedView();
-	    globalStore = new GlobalTableStoreImpl(bm, actualMetadata);
+	    TransformationMetadata actualMetadata = RealMetadataFactory.exampleMaterializedView();
+	    globalStore = new GlobalTableStoreImpl(bm, actualMetadata.getVdbMetaData(), actualMetadata);
 		metadata = new TempMetadataAdapter(actualMetadata, tempStore.getMetadataStore());
 		hdm = new HardcodedDataManager();
 		hdm.addData("SELECT MatSrc.MatSrc.x FROM MatSrc.MatSrc", new List[] {Arrays.asList((String)null), Arrays.asList("one"), Arrays.asList("two"), Arrays.asList("three")});

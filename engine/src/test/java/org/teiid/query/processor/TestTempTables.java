@@ -183,7 +183,7 @@ public class TestTempTables {
 	}
 	
 	@Test public void testIsolateReads() throws Exception {
-		GlobalTableStoreImpl gtsi = new GlobalTableStoreImpl(BufferManagerFactory.getStandaloneBufferManager(), RealMetadataFactory.example1Cached());
+		GlobalTableStoreImpl gtsi = new GlobalTableStoreImpl(BufferManagerFactory.getStandaloneBufferManager(), RealMetadataFactory.example1Cached().getVdbMetaData(), RealMetadataFactory.example1Cached());
 		tempStore = gtsi.getTempTableStore();
 		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
 		execute("create local temporary table x (e1 string, e2 integer)", new List[] {Arrays.asList(0)}); //$NON-NLS-1$

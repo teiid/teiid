@@ -123,14 +123,18 @@ public class CompositeVDB {
 			mergedRepo.getConnectorManagers().putAll(this.cmr.getConnectorManagers());
 		}
 		newMergedVDB.addAttchment(ConnectorManagerRepository.class, mergedRepo);
+		ClassLoader[] toSearch = new ClassLoader[vdb.getVDBImports().size()+1];
+		toSearch[0] = this.vdb.getAttachment(ClassLoader.class);
 		this.children = new LinkedHashMap<VDBKey, CompositeVDB>();
 		newMergedVDB.setImportedModels(new TreeSet<String>(String.CASE_INSENSITIVE_ORDER));
+		int i = 1;
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
 			CompositeVDB importedVDB = vdbRepository.getCompositeVDB(new VDBKey(vdbImport.getName(), vdbImport.getVersion()));
 			if (importedVDB == null) {
 				throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40083, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40083, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion()));
 			}
 			VDBMetaData childVDB = importedVDB.getVDB();
+			toSearch[i++] = childVDB.getAttachment(ClassLoader.class);
 			this.children.put(new VDBKey(childVDB.getName(), childVDB.getVersion()), importedVDB);
 			
 			if (vdbImport.isImportDataPolicies()) {
@@ -159,6 +163,10 @@ public class CompositeVDB {
 					}
 				}
 			}
+		}
+		if (toSearch[0] != null) {
+			CombinedClassLoader ccl = new CombinedClassLoader(toSearch[0].getParent(), toSearch);
+			this.mergedVDB.addAttchment(ClassLoader.class, ccl);
 		}
 		this.mergedVDB = newMergedVDB;
 	}

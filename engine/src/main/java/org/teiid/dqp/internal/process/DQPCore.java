@@ -619,11 +619,12 @@ public class DQPCore implements DQP {
 		dataTierMgr.setExecutor(new TempTableDataManager.RequestExecutor() {
 			
 			@Override
-			public void execute(String command, List<?> parameters) {
+			public ResultsFuture<ResultsMessage> execute(String command, List<?> parameters, boolean asynch) {
 				final String sessionId = DQPWorkContext.getWorkContext().getSessionId();
 				RequestMessage request = new RequestMessage(command);
 				request.setParameterValues(parameters);
 				request.setStatementType(StatementType.PREPARED);
+				request.setSync(!asynch);
 				ResultsFuture<ResultsMessage> result;
 				try {
 					result = executeRequest(0, request);
@@ -639,6 +640,7 @@ public class DQPCore implements DQP {
 					}
 					
 				});
+				return result;
 			}
 		});
         dataTierMgr.setEventDistributor(eventDistributor);
