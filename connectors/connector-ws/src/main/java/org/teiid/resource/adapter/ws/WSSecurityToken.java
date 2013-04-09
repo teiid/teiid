@@ -29,7 +29,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 
 import org.apache.ws.security.handler.WSHandlerConstants;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 
 
 /**
@@ -39,11 +38,11 @@ public abstract class WSSecurityToken {
     private WSSecurityToken nextToken;
     private WSSecurityToken prevToken;
 
-    Object getProperty(TeiidSecurityCredential credential, String name) {
+    Object getProperty(WSSecurityCredential credential, String name) {
         return credential.getRequestPropterties().get(name);
     }
 
-    public void handleSecurity(TeiidSecurityCredential credential) {
+    public void handleSecurity(WSSecurityCredential credential) {
         addSecurity(credential);
         if (this.nextToken != null) {
             this.nextToken.handleSecurity(credential);
@@ -60,9 +59,9 @@ public abstract class WSSecurityToken {
         return token;
     }
 
-    abstract void addSecurity(TeiidSecurityCredential credential);
+    abstract void addSecurity(WSSecurityCredential credential);
 
-    void setAction(TeiidSecurityCredential credential, String action) {
+    void setAction(WSSecurityCredential credential, String action) {
         String prev = (String)credential.getRequestPropterties().get(WSHandlerConstants.ACTION);
         if ((prev == null) || (prev.length() == 0)) {
         	credential.getRequestPropterties().put(WSHandlerConstants.ACTION, action);
@@ -70,6 +69,7 @@ public abstract class WSSecurityToken {
         else {
         	credential.getRequestPropterties().put(WSHandlerConstants.ACTION, prev+" "+action); //$NON-NLS-1$
         }
+        credential.getResponsePropterties().put(WSHandlerConstants.ACTION, WSHandlerConstants.NO_SECURITY);
     }
 
     void handleCallback(Callback[] callbacks) throws IOException, UnsupportedCallbackException {

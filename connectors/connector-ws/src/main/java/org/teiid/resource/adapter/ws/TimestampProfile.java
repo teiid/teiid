@@ -23,7 +23,6 @@ package org.teiid.resource.adapter.ws;
 
 import org.apache.ws.security.handler.WSHandlerConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 
 /**
  * Timestamp Profile using WSS4J
@@ -40,7 +39,7 @@ public class TimestampProfile extends WSSecurityToken {
     }
 
     @Override
-    public void addSecurity(TeiidSecurityCredential credential) {
+    public void addSecurity(WSSecurityCredential credential) {
         setAction(credential, WSHandlerConstants.TIMESTAMP);
 
         // How long ( in seconds ) message is valid since send.

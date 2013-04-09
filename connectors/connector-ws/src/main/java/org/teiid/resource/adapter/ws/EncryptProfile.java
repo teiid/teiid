@@ -25,7 +25,6 @@ import java.util.Properties;
 
 import org.apache.ws.security.handler.WSHandlerConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 
 /**
  * Encrypt the message
@@ -60,7 +59,7 @@ public class EncryptProfile extends WSSecurityToken {
 	 * @param encryptionSymAlgorithm
 	 * @param encryptionKeyTransportAlgorithm
 	 */
-	public EncryptProfile(TeiidSecurityCredential credential,
+	public EncryptProfile(WSSecurityCredential credential,
 			String encryptionUser, Properties encryptionProperties,
 			String encryptionKeyIdentifier, String encryptionParts,
 			String encryptionSymAlgorithm,
@@ -76,7 +75,7 @@ public class EncryptProfile extends WSSecurityToken {
     }
 
     @Override
-    public void addSecurity(TeiidSecurityCredential credential) {
+    public void addSecurity(WSSecurityCredential credential) {
         setAction(credential, WSHandlerConstants.ENCRYPT);
 
         // if null defaults to USER property

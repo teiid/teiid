@@ -24,7 +24,6 @@ package org.teiid.resource.adapter.ws;
 import javax.security.auth.callback.CallbackHandler;
 
 import org.apache.ws.security.handler.WSHandlerConstants;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 
 /**
  * SAML Profile based authentication using WSS4J.
@@ -54,7 +53,7 @@ public class SAMLTokenProfile extends WSSecurityToken {
     }
 
     @Override
-    public void addSecurity(TeiidSecurityCredential credential) {
+    public void addSecurity(WSSecurityCredential credential) {
         if (this.signed) {
             setAction(credential, WSHandlerConstants.SAML_TOKEN_SIGNED);
         }

@@ -34,7 +34,6 @@ import org.apache.ws.security.handler.WSHandlerConstants;
 import org.apache.ws.security.message.token.UsernameToken;
 import org.apache.ws.security.util.Base64;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 
 /**
  * This class uses the WS-Security using standard OASIS Web Services Security
@@ -53,7 +52,7 @@ public class UsernameTokenProfile extends WSSecurityToken implements CallbackHan
     }
 
     @Override
-    public void addSecurity(TeiidSecurityCredential credential) {
+    public void addSecurity(WSSecurityCredential credential) {
         setAction(credential, WSHandlerConstants.USERNAME_TOKEN);
 
         credential.getRequestPropterties().put(WSHandlerConstants.USER, this.user);

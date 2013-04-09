@@ -56,6 +56,7 @@ import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.DispatchImpl;
 import org.apache.cxf.service.model.MessagePartInfo;
+import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.teiid.core.util.ArgCheck;
@@ -67,7 +68,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.resource.spi.ConnectionContext;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 import org.teiid.translator.WSConnection;
 
 /**
@@ -311,13 +311,16 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				// ws-security pass-thru from custom jaas domain
 				Subject subject = ConnectionContext.getSubject();
 				if (subject != null) {
-					TeiidSecurityCredential credential = ConnectionContext.getWSSecurityCredential(subject, this.mcf);
+					WSSecurityCredential credential = ConnectionContext.getSecurityCredential(subject, WSSecurityCredential.class);
 					if (credential != null) {
-						if(credential.getSecurityHandler() == TeiidSecurityCredential.SecurityHandler.WSS4J) {
+						if (credential.useSts()) {
+							dispatch.getRequestContext().put(SecurityConstants.STS_CLIENT, credential.buildStsClient(bus));
+						}
+						if(credential.getSecurityHandler() == WSSecurityCredential.SecurityHandler.WSS4J) {
 							ep.getOutInterceptors().add(new WSS4JOutInterceptor(credential.getRequestPropterties()));
 							ep.getInInterceptors().add(new WSS4JInInterceptor(credential.getResponsePropterties()));
 						}
-						else if (credential.getSecurityHandler() == TeiidSecurityCredential.SecurityHandler.WSPOLICY) {
+						else if (credential.getSecurityHandler() == WSSecurityCredential.SecurityHandler.WSPOLICY) {
 							dispatch.getRequestContext().putAll(credential.getRequestPropterties());
 							dispatch.getResponseContext().putAll(credential.getResponsePropterties());
 						}

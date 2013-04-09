@@ -12,7 +12,7 @@
     <packaging>rar</packaging>
     <description>This connector reads data from Web Services</description>
 	<properties>
-		<cxf.version>2.4.6</cxf.version>
+		<cxf.version>2.6.6</cxf.version>
 	</properties>
     <dependencies>
         <dependency>

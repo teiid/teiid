@@ -31,7 +31,6 @@ import javax.security.auth.callback.UnsupportedCallbackException;
 import org.apache.ws.security.WSPasswordCallback;
 import org.apache.ws.security.handler.WSHandlerConstants;
 import org.teiid.logging.LogManager;
-import org.teiid.resource.spi.TeiidSecurityCredential;
 
 /**
  * Signing a message is used to validate to the recipient that the message could
@@ -86,7 +85,7 @@ public class SignatureProfile extends WSSecurityToken implements CallbackHandler
     }
 
     @Override
-    public void addSecurity(TeiidSecurityCredential credential) {
+    public void addSecurity(WSSecurityCredential credential) {
         setAction(credential, WSHandlerConstants.SIGNATURE);
 
         if (this.signatureUser != null) {
