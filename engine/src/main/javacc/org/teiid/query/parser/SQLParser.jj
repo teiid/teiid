@@ -3813,7 +3813,11 @@ Expression unsignedValueExpressionPrimary(ParseInfo info) :
 			expression = new ScalarSubquery(subquery);
 		}
 		if (condition != null) {
-			((AggregateSymbol)expression).setCondition(condition);
+			if (expression instanceof WindowFunction) {
+    	   		((WindowFunction)expression).getFunction().setCondition(condition);
+           	} else {
+                ((AggregateSymbol)expression).setCondition(condition);
+          	}
 		}
 		if (indexExpr != null) {
 			expression = new Function("array_get", new Expression[] {expression, indexExpr});		

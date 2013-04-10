@@ -303,5 +303,18 @@ public class TestWindowFunctions {
         helpProcess(plan, dataManager, expected);
     }
 
+	@Test public void testXMLAggDelimitedConcatFiltered() throws Exception {
+		String sql = "SELECT XMLAGG(XMLPARSE(CONTENT (case when rn = 1 then '' else ',' end) || e1 WELLFORMED) ORDER BY rn) FROM (SELECT e1, e2, row_number() FILTER (WHERE e1 IS NOT NULL) over (order by e1) as rn FROM pm1.g1) X"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a,a,a,b,c"),
+        };    
+    
+        FakeDataManager dataManager = new FakeDataManager();
+    	sampleData1(dataManager);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        
+        helpProcess(plan, dataManager, expected);
+    }
     
 }
