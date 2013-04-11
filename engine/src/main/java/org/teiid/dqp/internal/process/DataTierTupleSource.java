@@ -30,7 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.activation.DataSource;
@@ -90,7 +90,7 @@ import org.teiid.util.XMLInputStream;
  */
 public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
 	
-	private static final class MoreWorkTask implements Runnable {
+	public static final class MoreWorkTask implements Runnable {
 
 		WeakReference<RequestWorkItem> ref;
 
@@ -141,7 +141,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	Scope scope; //this is to avoid synchronization
 	
 	private long waitUntil;
-	private ScheduledFuture<?> scheduledFuture;
+	private Future<Void> scheduledFuture;
     
     public DataTierTupleSource(AtomicRequestMessage aqr, RequestWorkItem workItem, ConnectorWork cwi, DataTierManagerImpl dtm, int limit) {
         this.aqr = aqr;
@@ -379,7 +379,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (scheduledFuture != null) {
 			this.scheduledFuture.cancel(false);
 		}
-		scheduledFuture = workItem.scheduleWork(new MoreWorkTask(workItem), 10, timeDiff);
+		scheduledFuture = workItem.scheduleWork(new MoreWorkTask(workItem), timeDiff);
 	}
 
 	private void checkForUpdates(AtomicResultsMessage results, Command command,
@@ -587,6 +587,10 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			cwi.close();
 		}
 		running = false;		
+	}
+	
+	public boolean isExplicitClose() {
+		return explicitClose;
 	}
 	
 }

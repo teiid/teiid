@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.transaction.xa.Xid;
@@ -384,14 +384,8 @@ public class DQPCore implements DQP {
 		this.processWorkerPool.execute(work);
     }
     
-    ScheduledFuture<?> scheduleWork(final Runnable r, int priority, long delay) {
-		return this.processWorkerPool.schedule(new FutureWork<Void>(new Callable<Void>() {
-			@Override
-			public Void call() throws Exception {
-				r.run();
-				return null;
-			}
-		}, priority), delay, TimeUnit.MILLISECONDS);
+    Future<Void> scheduleWork(final Runnable r, long delay) {
+    	return this.cancellationTimer.add(r, delay);
     }
     
 	public ResultsFuture<?> closeLobChunkStream(int lobRequestId,

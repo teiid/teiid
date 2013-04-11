@@ -25,6 +25,7 @@ package org.teiid.jdbc;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.Executor;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.Level;
@@ -42,19 +43,13 @@ public class EnhancedTimer {
 	private static final Logger LOGGER = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	private static AtomicLong id = new AtomicLong();
 	
-	public class Task implements Comparable<Task>, Runnable {
+	public class Task extends FutureTask<Void> implements Comparable<Task> {
 		final long endTime;
 		final long seqId = id.getAndIncrement();
-		final Runnable task;
 		
 		public Task(Runnable task, long delay) {
+			super(task, null);
 			this.endTime = System.currentTimeMillis() + delay;
-			this.task = task;
-		}
-		
-		@Override
-		public void run() {
-			this.task.run();
 		}
 		
 		@Override
@@ -66,14 +61,23 @@ public class EnhancedTimer {
 			return result;
 		}
 		
-		public boolean cancel() {
-			lock.readLock().lock();
-			try {
-				return queue.remove(this);
-			} finally {
-				lock.readLock().unlock();
+		@Override
+		public boolean cancel(boolean mayInterruptIfRunning) {
+			if (!isDone()) {
+ 				lock.readLock().lock();
+				try {
+					return queue.remove(this);
+				} finally {
+					lock.readLock().unlock();
+				}
 			}
+			return super.cancel(mayInterruptIfRunning);
 		}
+		
+		public void cancel() {
+			cancel(false);
+		}
+
 	}
 	
 	private final ConcurrentSkipListSet<Task> queue = new ConcurrentSkipListSet<Task>();
@@ -102,7 +106,7 @@ public class EnhancedTimer {
 			@Override
 			public void run() {
 				try {
-					while (doCancellations()) {
+					while (doTasks()) {
 					}
 				} catch (InterruptedException e) {
 				}
@@ -111,7 +115,7 @@ public class EnhancedTimer {
 		running = true;
 	}
 	
-	private boolean doCancellations() throws InterruptedException {
+	private boolean doTasks() throws InterruptedException {
 		Task task = null;
 		lock.writeLock().lock();
 		try {
