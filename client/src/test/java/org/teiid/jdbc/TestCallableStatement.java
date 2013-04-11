@@ -25,12 +25,17 @@ package org.teiid.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.io.InputStream;
+import java.io.Reader;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -93,6 +98,26 @@ public class TestCallableStatement {
 		} catch (SQLException e) {
 			assertEquals("Parameter 0 was not found.", e.getMessage());
 		}
+	}
+	
+	@Test public void testSetLobs() throws Exception {
+		CallableStatementImpl mmcs = getCallableStatement();
+		mmcs.paramsByName = new TreeMap<String, Integer>();
+		mmcs.paramsByName.put("foo", 2);
+		mmcs.paramsByName.put("bar", 4);
+		
+		mmcs.setBlob(1, Mockito.mock(InputStream.class));
+		mmcs.setBlob("foo", Mockito.mock(InputStream.class));
+		mmcs.setNClob(3, Mockito.mock(Reader.class));
+		mmcs.setBlob("bar", Mockito.mock(InputStream.class), 1);
+		mmcs.setClob(5, Mockito.mock(Reader.class));
+		
+		List<Object> params = mmcs.getParameterValues();
+		assertTrue(params.get(0) instanceof Blob);
+		assertTrue(params.get(1) instanceof Blob);
+		assertTrue(params.get(2) instanceof Clob);
+		assertTrue(params.get(3) instanceof Blob);
+		assertTrue(params.get(4) instanceof Clob);
 	}
 
 	private CallableStatementImpl getCallableStatement() throws SQLException {

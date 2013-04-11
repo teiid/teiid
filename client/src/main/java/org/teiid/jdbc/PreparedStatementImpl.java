@@ -73,7 +73,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
     //map that holds parameter index to values for prepared statements
     private Map<Integer, Object> parameterMap;
-    private TreeMap<String, Integer> paramsByName;
+    TreeMap<String, Integer> paramsByName;
     
     //a list of map that holds parameter index to values for prepared statements
     protected List<List<Object>> batchParameterList;
@@ -657,7 +657,7 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
 	public void setBlob(int parameterIndex, final InputStream inputStream)
 	throws SQLException {
-		setBlob(parameterIndex, inputStream);
+		setBlob(Integer.valueOf(parameterIndex), inputStream);
 	}
 	
 	void setBlob(Object parameterIndex, final InputStream inputStream)
