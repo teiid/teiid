@@ -32,7 +32,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -45,17 +44,6 @@ import org.teiid.core.util.SqlUtil;
 
 
 public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaData {
-	private static final HashSet<String> DATATYPES_WITH_NO_PRECISION = new HashSet<String>(
-			Arrays.asList(DataTypeManager.DefaultDataTypes.CHAR,
-					DataTypeManager.DefaultDataTypes.CLOB,
-					DataTypeManager.DefaultDataTypes.BLOB,
-					DataTypeManager.DefaultDataTypes.BOOLEAN,
-					DataTypeManager.DefaultDataTypes.DATE,
-					DataTypeManager.DefaultDataTypes.TIME,
-					DataTypeManager.DefaultDataTypes.TIMESTAMP,
-					DataTypeManager.DefaultDataTypes.OBJECT,
-					DataTypeManager.DefaultDataTypes.XML,
-					DataTypeManager.DefaultDataTypes.VARBINARY));
 
 	private static final String IS_NULLABLE = "CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE"; //$NON-NLS-1$
 
@@ -552,7 +540,7 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
                 Integer precision = (Integer)currentRow.get(JDBCColumnPositions.COLUMNS.COLUMN_SIZE-1);
                 if (typeName != null) {
                 	currentRow.set(JDBCColumnPositions.COLUMNS.DATA_TYPE-1, JDBCSQLTypeInfo.getSQLType(typeName));
-                	if (DATATYPES_WITH_NO_PRECISION.contains(typeName)) {
+                	if (!Number.class.isAssignableFrom(DataTypeManager.getDataTypeClass(typeName))) {
                 		if (length != null && length <= 0) {
                 			currentRow.set(JDBCColumnPositions.COLUMNS.COLUMN_SIZE-1, JDBCSQLTypeInfo.getDefaultPrecision(typeName));
                 		} else {
