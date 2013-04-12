@@ -79,7 +79,6 @@ public class TestProjectIntoNode {
         node.setModelName("myModel"); //$NON-NLS-1$
         
         CommandContext context = new CommandContext();
-        context.setProcessorID("processorID"); //$NON-NLS-1$
         BufferManager bm = BufferManagerFactory.getTestBufferManager(tupleBatchSize, tupleBatchSize);
         ProcessorDataManager dataManager = new FakePDM(tupleBatchSize);
         

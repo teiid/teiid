@@ -23,6 +23,7 @@
 package org.teiid.query.util;
 
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -43,6 +44,7 @@ import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.PreparedPlan;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.TupleSourceCache;
@@ -81,8 +83,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	};
 	
 	private static class GlobalState {
-	    /** Uniquely identify the command being processed */
-	    private Object processorID;
+	    private WeakReference<RequestWorkItem> processorID;
 	    
 	    /** Identify a group of related commands, which typically get cleaned up together */
 	    private String connectionID;
@@ -170,9 +171,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     /**
      * Construct a new context.
      */
-    public CommandContext(Object processorID, String connectionID, String userName, 
-        Serializable commandPayload, String vdbName, int vdbVersion, boolean collectNodeStatistics) {
-        setProcessorID(processorID);
+    public CommandContext(String connectionID, String userName, Serializable commandPayload, 
+        String vdbName, int vdbVersion, boolean collectNodeStatistics) {
         setConnectionID(connectionID);
         setUserName(userName);
         setCommandPayload(commandPayload);
@@ -187,8 +187,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     public CommandContext(Object processorID, String connectionID, String userName, 
         String vdbName, int vdbVersion) {
 
-        this(processorID, connectionID, userName, null, vdbName, 
-            vdbVersion, false);            
+        this(connectionID, userName, null, vdbName, vdbVersion, 
+            false);            
              
     }
 
@@ -219,16 +219,16 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     /**
      * @return
      */
-    public Object getProcessorID() {
-        return globalState.processorID;
+    public RequestWorkItem getWorkItem() {
+        return globalState.processorID.get();
     }
 
     /**
      * @param object
      */
-    public void setProcessorID(Object object) {
+    public void setWorkItem(RequestWorkItem object) {
         ArgCheck.isNotNull(object);
-        globalState.processorID = object;
+        globalState.processorID = new WeakReference<RequestWorkItem>(object);
     }
 
     public CommandContext clone() {

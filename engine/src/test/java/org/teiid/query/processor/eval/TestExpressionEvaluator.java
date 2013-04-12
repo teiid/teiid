@@ -323,7 +323,7 @@ public class TestExpressionEvaluator {
         func.setFunctionDescriptor(desc);
         
         FakeDataManager dataMgr = new FakeDataManager();       
-        CommandContext context = new CommandContext(new Long(-1), null, "user", payload, "vdb", 1, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+        CommandContext context = new CommandContext(null, "user", payload, "vdb", 1, false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
 
         if(property != null) {
             func.setArgs(new Expression[] {new Constant(property)}); 

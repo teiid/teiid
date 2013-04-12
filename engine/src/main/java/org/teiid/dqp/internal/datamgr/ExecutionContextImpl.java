@@ -23,7 +23,6 @@
 package org.teiid.dqp.internal.datamgr;
 
 import java.io.Serializable;
-import java.lang.ref.WeakReference;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -59,7 +58,6 @@ public class ExecutionContextImpl implements ExecutionContext {
     private int batchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
-	private WeakReference<RequestWorkItem> worktItem;
 	private boolean dataAvailable;
 	private String generalHint;
 	private String hint;
@@ -210,13 +208,9 @@ public class ExecutionContextImpl implements ExecutionContext {
 		this.session = session;
 	}
 
-	public void setRequestWorkItem(RequestWorkItem item) {
-		this.worktItem = new WeakReference<RequestWorkItem>(item);
-	}
-	
 	@Override
 	public synchronized void dataAvailable() {
-		RequestWorkItem requestWorkItem = this.worktItem.get();
+		RequestWorkItem requestWorkItem = this.commandContext.getWorkItem();
 		dataAvailable = true;
 		if (requestWorkItem != null) {
 			requestWorkItem.moreWork();

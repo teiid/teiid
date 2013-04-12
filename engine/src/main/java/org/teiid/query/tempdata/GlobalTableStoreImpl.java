@@ -28,9 +28,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,6 +48,8 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.process.RequestWorkItem;
+import org.teiid.dqp.message.RequestID;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
@@ -94,6 +98,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		private long ttl = -1;
 		private boolean valid;
 		private boolean asynch; //sub state of loading
+		private Map<RequestID, WeakReference<RequestWorkItem>> waiters = new HashMap<RequestID, WeakReference<RequestWorkItem>>(2);
 		
 		protected MatTableInfo() {}
 		
@@ -144,7 +149,13 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			}
 			this.state = state;
 			this.updateTime = System.currentTimeMillis();
-			notifyAll();
+			for (WeakReference<RequestWorkItem> request : waiters.values()) {
+				RequestWorkItem workItem = request.get();
+				if (workItem != null) {
+					workItem.moreWork();
+				}
+			}
+			waiters.clear();
 		}
 		
 		public synchronized void setAsynchLoad() {
@@ -178,6 +189,10 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		
 		public VDBMetaData getVdbMetaData() {
 			return vdbMetaData;
+		}
+
+		public synchronized void addWaiter(RequestWorkItem waiter) {
+			waiters.put(waiter.getRequestID(), new WeakReference<RequestWorkItem>(waiter));
 		}
 		
 	}

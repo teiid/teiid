@@ -42,7 +42,6 @@ import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
 import org.teiid.dqp.internal.datamgr.ConnectorWorkItem;
-import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
 import org.teiid.query.optimizer.TestOptimizer;
@@ -114,7 +113,6 @@ public class AutoGenDataService extends ConnectorManager{
         msg.setFinalRow(rows);
         return new ConnectorWork() {
         	
-        	RequestWorkItem item;
         	boolean returnedInitial;
         	
         	@Override
@@ -127,11 +125,6 @@ public class AutoGenDataService extends ConnectorManager{
         		return false;
         	}
         	
-        	@Override
-        	public void setRequestWorkItem(RequestWorkItem item) {
-        		this.item = item;
-        	}
-			
 			@Override
 			public AtomicResultsMessage more() throws TranslatorException {
 				if (dataNotAvailable != null) {

@@ -67,7 +67,6 @@ import org.teiid.dqp.internal.process.RecordTable.SimpleIteratorWrapper;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.TupleSourceCache.CachableVisitor;
 import org.teiid.dqp.message.AtomicRequestMessage;
-import org.teiid.dqp.message.RequestID;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -632,8 +631,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	}
     
 	public TupleSource registerRequest(CommandContext context, Command command, String modelName, final RegisterRequestParameter parameterObject) throws TeiidComponentException, TeiidProcessingException {
-		RequestWorkItem workItem = requestMgr.getRequestWorkItem((RequestID)context.getProcessorID());
-		
+		RequestWorkItem workItem = context.getWorkItem();
+		Assertion.isNotNull(workItem);
 		if(CoreConstants.SYSTEM_MODEL.equals(modelName) || CoreConstants.SYSTEM_ADMIN_MODEL.equals(modelName)) {
 			return processSystemQuery(context, command, workItem.getDqpWorkContext());
 		}
@@ -699,7 +698,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				LogManager.logTrace(LogConstants.CTX_DQP, aqr.getAtomicRequestID(), "command not cachable"); //$NON-NLS-1$
 			}
 		}
-		work.setRequestWorkItem(workItem);
 		DataTierTupleSource dtts = new DataTierTupleSource(aqr, workItem, work, this, parameterObject.limit);
         if (cid != null) {
         	TupleBuffer tb = getBufferManager().createTupleBuffer(aqr.getCommand().getProjectedSymbols(), aqr.getCommandContext().getConnectionId(), TupleSourceType.PROCESSOR);

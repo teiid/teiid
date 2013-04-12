@@ -136,7 +136,7 @@ public class TestMultiSourcePlanToProcessConverter {
         CapabilitiesFinder finder = new TempCapabilitiesFinder(fakeFinder);
         IDGenerator idGenerator = new IDGenerator();
         
-        CommandContext context = new CommandContext("0", "test", "user", null, vdb.getName(), vdb.getVersion(), false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+        CommandContext context = new CommandContext("test", "user", null, vdb.getName(), vdb.getVersion(), false); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         context.setDQPWorkContext(workContext);
         context.setOptions(options);
         ProcessorPlan plan = QueryOptimizer.optimizePlan(command, wrapper, idGenerator, finder, analysis, context);

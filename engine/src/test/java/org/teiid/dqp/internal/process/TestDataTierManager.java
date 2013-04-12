@@ -48,9 +48,9 @@ import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
-import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
@@ -115,12 +115,11 @@ public class TestDataTierManager {
         
         context = new CommandContext();
         context.setSession(workContext.getSession());
-        context.setProcessorID(requestID);
         context.setVdbName("test"); //$NON-NLS-1$
         context.setVdbVersion(1);
         context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(dtm.getBufferManager(), dtm, new DefaultCapabilitiesFinder(), null, metadata));
         workItem = TestDQPCoreRequestHandling.addRequest(rm, original, requestID, null, workContext);
-        
+        context.setWorkItem(workItem);
         AtomicRequestMessage request = new AtomicRequestMessage(original, workContext, nodeId);
         request.setCommand(command);
         request.setConnectorName("FakeConnectorID"); //$NON-NLS-1$

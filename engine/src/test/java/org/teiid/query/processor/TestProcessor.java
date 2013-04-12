@@ -359,7 +359,7 @@ public class TestProcessor {
 		Properties props = new Properties();
 		props.setProperty("soap_host", "my.host.com"); //$NON-NLS-1$ //$NON-NLS-2$
 		props.setProperty("soap_port", "12345"); //$NON-NLS-1$ //$NON-NLS-2$
-		CommandContext context = new CommandContext("0", "test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+		CommandContext context = new CommandContext("test", "user", null, "myvdb", 1, DEBUG); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
         context.setProcessorBatchSize(BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE);
         context.setBufferManager(BufferManagerFactory.getStandaloneBufferManager());
         context.setPreparedPlanCache(new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0));

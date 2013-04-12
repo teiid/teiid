@@ -34,7 +34,6 @@ import org.mockito.Mockito;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
-import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.FakeBufferService;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -42,6 +41,7 @@ import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.HardcodedDataManager;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -109,11 +109,12 @@ public class TestXMLTypeTranslations extends BaseQueryTest {
         workContext.getSession().setVdb(vdb);
         Mockito.stub(rwi.getDqpWorkContext()).toReturn(workContext);
         
-        Mockito.stub(core.getRequestWorkItem((RequestID)Mockito.anyObject())).toReturn(rwi);
         DataTierManagerImpl dataMgr = new DataTierManagerImpl(core, new FakeBufferService().getBufferManager(), true);
+        CommandContext cc = createCommandContext();
+        cc.setWorkItem(rwi);
         doProcess(metadata,  
                 sql, 
-                finder, dataMgr , new List[] {Arrays.asList(new String(ObjectConverterUtil.convertToByteArray(new FileInputStream(UnitTestUtil.getTestDataFile("test-schema.xsd")))))}, DEBUG); //$NON-NLS-1$
+                finder, dataMgr , new List[] {Arrays.asList(new String(ObjectConverterUtil.convertToByteArray(new FileInputStream(UnitTestUtil.getTestDataFile("test-schema.xsd")))))}, DEBUG, cc); //$NON-NLS-1$
         
     }
     

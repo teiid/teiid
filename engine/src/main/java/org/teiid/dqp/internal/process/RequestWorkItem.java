@@ -22,6 +22,7 @@
 
 package org.teiid.dqp.internal.process;
 
+import java.lang.ref.WeakReference;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -85,6 +86,23 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	
 	//TODO: this could be configurable
 	private static final int OUTPUT_BUFFER_MAX_BATCHES = 20;
+	
+	public static final class MoreWorkTask implements Runnable {
+
+		WeakReference<RequestWorkItem> ref;
+
+    	public MoreWorkTask(RequestWorkItem workItem) {
+    		ref = new WeakReference<RequestWorkItem>(workItem);
+		}
+
+		@Override
+		public void run() {
+			RequestWorkItem item = ref.get();
+			if (item != null) {
+				item.moreWork();
+			}
+		}
+	}
 
 	private final class WorkWrapper<T> implements
 			DQPCore.CompletionListener<T> {
@@ -413,7 +431,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 			this.processor.getContext().setTimeSliceEnd(System.currentTimeMillis() + this.processorTimeslice);
 			sendResultsIfNeeded(null);
-			this.resultsBuffer = collector.collectTuples();
+			try {
+				CommandContext.pushThreadLocalContext(this.processor.getContext());
+				this.resultsBuffer = collector.collectTuples();
+			} finally {
+				CommandContext.popThreadLocalContext();
+			}
 			if (!doneProducingBatches) {
 				done();
 			}
@@ -585,6 +608,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	//turn on the collection of data objects used
         	request.processor.getContext().setDataObjects(new HashSet<Object>(4));
         }
+        request.processor.getContext().setWorkItem(this);
 		processor = request.processor;
 		this.dqpCore.logMMCommand(this, Event.PLAN, null);
 		collector = new BatchCollector(processor, processor.getBufferManager(), this.request.context, isForwardOnly()) {
@@ -638,7 +662,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 							}
 							if (getThreadState() != ThreadState.MORE_WORK) {
 								//we schedule the work to ensure that an idle client won't just indefinitely hold resources
-								moreWorkTask = dqpCore.scheduleWork(new DataTierTupleSource.MoreWorkTask(RequestWorkItem.this), timeOut); 
+								moreWorkTask = scheduleWork(timeOut); 
 							}
 							throw BlockedException.block(requestID, "Blocking due to full results TupleBuffer", //$NON-NLS-1$
 									this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
@@ -1129,8 +1153,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	return work;
     }
     
-    Future<Void> scheduleWork(Runnable r, long delay) {
-    	return dqpCore.scheduleWork(r, delay);
+    public Future<Void> scheduleWork(long delay) {
+    	return dqpCore.scheduleWork(new MoreWorkTask(this), delay);
     }
     
     public void setCancelTask(Task cancelTask) {
@@ -1139,6 +1163,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     public QueryProcessor getProcessor() {
 		return processor;
+	}
+    
+    public RequestID getRequestID() {
+		return requestID;
 	}
 
 }

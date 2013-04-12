@@ -214,12 +214,11 @@ public class Request implements SecurityFunctionEvaluator {
         
         this.context =
             new CommandContext(
-                reqID,
                 groupName,
                 workContext.getUserName(),
-                requestMsg.getExecutionPayload(), 
+                requestMsg.getExecutionPayload(),
                 workContext.getVdbName(), 
-                workContext.getVdbVersion(),
+                workContext.getVdbVersion(), 
                 this.requestMsg.getShowPlan() != ShowPlan.OFF);
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);

@@ -25,7 +25,6 @@ package org.teiid.dqp.internal.process;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -90,23 +89,6 @@ import org.teiid.util.XMLInputStream;
  */
 public class DataTierTupleSource implements TupleSource, CompletionListener<AtomicResultsMessage> {
 	
-	public static final class MoreWorkTask implements Runnable {
-
-		WeakReference<RequestWorkItem> ref;
-
-    	public MoreWorkTask(RequestWorkItem workItem) {
-    		ref = new WeakReference<RequestWorkItem>(workItem);
-		}
-
-		@Override
-		public void run() {
-			RequestWorkItem item = ref.get();
-			if (item != null) {
-				item.moreWork();
-			}
-		}
-	}
-
 	// Construction state
     private final AtomicRequestMessage aqr;
     private final RequestWorkItem workItem;
@@ -379,7 +361,7 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		if (scheduledFuture != null) {
 			this.scheduledFuture.cancel(false);
 		}
-		scheduledFuture = workItem.scheduleWork(new MoreWorkTask(workItem), timeDiff);
+		scheduledFuture = workItem.scheduleWork(timeDiff);
 	}
 
 	private void checkForUpdates(AtomicResultsMessage results, Command command,

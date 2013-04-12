@@ -33,7 +33,6 @@ import org.teiid.client.ResizingArrayList;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -105,11 +104,6 @@ public class ConnectorWorkItem implements ConnectorWork {
         translatedCommand = factory.translate(message.getCommand());
     }
     
-    @Override
-    public void setRequestWorkItem(RequestWorkItem item) {
-    	this.securityContext.setRequestWorkItem(item);
-    }
-    
     public AtomicRequestID getId() {
 		return id;
 	}
@@ -145,7 +139,6 @@ public class ConnectorWorkItem implements ConnectorWork {
     }
     
     public synchronized void close() {
-    	this.securityContext.setRequestWorkItem(null);
     	if (!manager.removeState(this.id)) {
     		return; //already closed
     	}

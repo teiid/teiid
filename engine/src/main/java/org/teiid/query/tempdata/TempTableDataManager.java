@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -52,6 +53,7 @@ import org.teiid.core.util.Assertion;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.DQPWorkContext;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.TupleSourceCache;
@@ -372,88 +374,108 @@ public class TempTableDataManager implements ProcessorDataManager {
 	}
 
 	private TupleSource registerQuery(final CommandContext context,
-			final TempTableStore contextStore, final Query query)
-			throws TeiidComponentException, QueryMetadataException,
-			TeiidProcessingException, ExpressionEvaluationException,
-			QueryProcessingException {
-		GroupSymbol group = query.getFrom().getGroups().get(0);
+			final TempTableStore contextStore, final Query query) {
+		final GroupSymbol group = query.getFrom().getGroups().get(0);
 		if (!group.isTempGroupSymbol()) {
 			return null;
 		}
 		final String tableName = group.getNonCorrelationName();
-		TempTable table = null;
 		if (group.isGlobalTable()) {
 			final GlobalTableStore globalStore = context.getGlobalTableStore();
 			final MatTableInfo info = globalStore.getMatTableInfo(tableName);
-			boolean load = false;
-			while (!info.isUpToDate()) {
-				load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, false);
-				if (load) {
-					load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, false);
-					if (load) {
-						break;
-					}
-				}
-				synchronized (info) {
-					if (!info.isUpToDate()) {
-						try {
-							info.wait(30000);
-						} catch (InterruptedException e) {
-							 throw new TeiidComponentException(QueryPlugin.Event.TEIID30235, e);
+			return new TupleSource() {
+				TupleSource ts = null;
+				Future<Void> moreWork = null;
+				
+				@Override
+				public List<?> nextTuple() throws TeiidComponentException,
+						TeiidProcessingException {
+					if (ts == null) {
+						boolean load = false;
+						
+						if (!info.isUpToDate()) {
+							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, false);
+							if (load) {
+								load = globalStore.needsLoading(tableName, globalStore.getAddress(), false, false, false);
+							}
+							if (!load) {
+								synchronized (info) {
+									if (!info.isUpToDate()) {
+										RequestWorkItem workItem = (RequestWorkItem)context.getWorkItem();
+										info.addWaiter(workItem);
+										if (moreWork != null) {
+											moreWork.cancel(false);
+										}
+										moreWork = workItem.scheduleWork(10000); //fail-safe - attempt again in 10 seconds
+										throw BlockedException.block("Blocking on mat view load", tableName); //$NON-NLS-1$
+									}
+								}
+							}
+						}
+						if (load) {
+							if (!info.isValid() || executor == null) {
+								//blocking load
+								if (info.getVdbMetaData() != null && context.getDQPWorkContext() != null && !info.getVdbMetaData().getFullName().equals(context.getDQPWorkContext().getVDB().getFullName())) {
+									assert executor != null;
+									//load with a refresh to pretend we're in the imported vdb
+									loadViaRefresh(context, tableName, info.getVdbMetaData(), info, false);
+								} else {
+									loadGlobalTable(context, group, tableName, globalStore);
+								}
+							} else {
+								loadViaRefresh(context, tableName, context.getDQPWorkContext().getVDB(), info, true);
+							}
+						} 
+						TempTable table = globalStore.getTempTable(tableName);
+						context.accessedDataObject(group.getMetadataID());
+						ts = table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+						if (moreWork != null) {
+							moreWork.cancel(false);
+							moreWork = null;
 						}
 					}
+					return ts.nextTuple();
 				}
-			}
-			if (load) {
-				if (!info.isValid() || executor == null) {
-					//blocking load
-					if (info.getVdbMetaData() != null && context.getDQPWorkContext() != null && !info.getVdbMetaData().getFullName().equals(context.getDQPWorkContext().getVDB().getFullName())) {
-						assert executor != null;
-						//load with a refresh to pretend we're in the imported vdb
-						loadViaRefresh(context, tableName, info.getVdbMetaData(), info, false);
-					} else {
-						loadGlobalTable(context, group, tableName, globalStore);
+				
+				@Override
+				public void closeSource() {
+					if (ts != null) {
+						ts.closeSource();
+					}	
+					if (moreWork != null) {
+						moreWork.cancel(false);
+						moreWork = null;
 					}
-				} else {
-					loadViaRefresh(context, tableName, context.getDQPWorkContext().getVDB(), info, true);
 				}
-			} 
-			table = globalStore.getTempTable(tableName);
-			context.accessedDataObject(group.getMetadataID());
-		} else {
-			try {
-				table = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
-			} catch (BlockedException e) {
-				//it's not expected for a blocked exception to bubble up from here
-				return new TupleSource() {
-					TupleSource ts = null;
-					
-					@Override
-					public List<?> nextTuple() throws TeiidComponentException,
-							TeiidProcessingException {
-						if (ts == null) {
-							TempTable tt = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
-							ts = tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
-						}
-						return ts.nextTuple();
-					}
-					
-					@Override
-					public void closeSource() {
-						if (ts != null) {
-							ts.closeSource();
-						}
-					}
-				};
-			}
-			if (context.getDataObjects() != null) {
-				Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
-				if (id != null) {
-					context.accessedDataObject(group.getMetadataID());
-				}
-			}
+			};
 		}
-		return table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+		//it's not expected for a blocked exception to bubble up from here, so return a tuplesource to perform getOrCreateTempTable
+		return new TupleSource() {
+			TupleSource ts = null;
+			
+			@Override
+			public List<?> nextTuple() throws TeiidComponentException,
+					TeiidProcessingException {
+				if (ts == null) {
+					TempTable tt = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
+					if (context.getDataObjects() != null) {
+						Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
+						if (id != null) {
+							context.accessedDataObject(group.getMetadataID());
+						}
+					}
+					ts = tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+				}
+				return ts.nextTuple();
+			}
+			
+			@Override
+			public void closeSource() {
+				if (ts != null) {
+					ts.closeSource();
+				}
+			}
+		};
 	}
 
 	/**

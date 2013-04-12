@@ -93,39 +93,30 @@ public class QueryProcessor implements BatchProducer {
 		return context;
 	}
     
-	public Object getProcessID() {
-		return this.context.getProcessorID();
-	}
-	
     public ProcessorPlan getProcessorPlan() {
         return this.processPlan;
     }
 
 	public TupleBatch nextBatch()
 		throws BlockedException, TeiidProcessingException, TeiidComponentException {
-		CommandContext.pushThreadLocalContext(this.context);
-		try {
-		    while (true) {
-		    	long wait = DEFAULT_WAIT;
-		    	try {
-		    		return nextBatchDirect();
-		    	} catch (BlockedException e) {
-		    		if (!this.context.isNonBlocking()) {
-		    			throw e;
-		    		}
-			    	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
-			    		continue; //TODO: pass the commandcontext into sortutility
-			    	}
+	    while (true) {
+	    	long wait = DEFAULT_WAIT;
+	    	try {
+	    		return nextBatchDirect();
+	    	} catch (BlockedException e) {
+	    		if (!this.context.isNonBlocking()) {
+	    			throw e;
+	    		}
+		    	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+		    		continue; //TODO: pass the commandcontext into sortutility
 		    	}
-	    		try {
-	                Thread.sleep(wait);
-	            } catch (InterruptedException err) {
-	                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30159, err);
-	            }
-		    }
-		} finally {
-			CommandContext.popThreadLocalContext();
-		}
+	    	}
+    		try {
+                Thread.sleep(wait);
+            } catch (InterruptedException err) {
+                 throw new TeiidComponentException(QueryPlugin.Event.TEIID30159, err);
+            }
+	    }
 	}
 	
 	private TupleBatch nextBatchDirect()
@@ -143,7 +134,7 @@ public class QueryProcessor implements BatchProducer {
 			
 	        while(currentTime < context.getTimeSliceEnd() || context.isNonBlocking()) {
 	        	if (requestCanceled) {
-	                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, getProcessID()));
+	                 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30160, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30160, this.context.getRequestId()));
 	            }
 	        	if (currentTime > context.getTimeoutEnd()) {
 	        		 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30161, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30161));
