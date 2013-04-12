@@ -92,10 +92,10 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 				if (parts.length > 0) {
 					obj = sc.getAttribute(parts[0]);
 				}
-				if (obj == null) {
-					return null;
-				}
 				for (int i = 1; i < parts.length; i++) {
+					if (obj == null) {
+						return null;
+					}
 					String part = parts[i];
 					Map<String, Method> methodMap = getMethodMap(obj.getClass());
 					Method m = methodMap.get(part);
