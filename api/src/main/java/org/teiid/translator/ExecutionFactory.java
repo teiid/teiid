@@ -171,7 +171,7 @@ public class ExecutionFactory<F, C> {
 				 throw new TranslatorException(DataPlugin.Event.TEIID60000, e);
 			}
 		}
-		throw new AssertionError("A connection factory was supplied, but no implementation was provided getConnection"); //$NON-NLS-1$
+		throw new AssertionError(factory.getClass().getName() + " is was not a ConnectionFactory implementation"); //$NON-NLS-1$
 	}
 	
 	/**

@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 import org.junit.After;
@@ -44,6 +45,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.FakeServer;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
+import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -288,9 +290,13 @@ public class TestMatViews {
 	@Test public void testImportedMatView() throws Exception {
 		ModelMetaData mmd2 = new ModelMetaData();
 		mmd2.setName("view1");
-		mmd2.setModelType(Type.VIRTUAL);
+		mmd2.setModelType(Type.PHYSICAL);
 		mmd2.setSchemaSourceType("DDL");
-		mmd2.setSchemaText("CREATE VIEW v1 ( col1 string ) OPTIONS (MATERIALIZED true) AS select current_database()");
+		mmd2.setSchemaText("create foreign table x (col integer); CREATE VIEW v1 ( col1 string ) OPTIONS (MATERIALIZED true) AS select current_database() from x");
+		mmd2.addSourceMapping("a", "a", null);
+		HardCodedExecutionFactory hcef = new HardCodedExecutionFactory();
+		hcef.addData("SELECT x.col FROM x", Arrays.asList(Collections.singletonList(1)));
+		server.addTranslator("a", hcef);
 		server.deployVDB("base", mmd2);
 		
 		VDBMetaData vdbMetaData = new VDBMetaData();

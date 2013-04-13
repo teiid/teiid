@@ -25,15 +25,16 @@ package org.teiid.query.processor;
 import java.util.Arrays;
 import java.util.List;
 
+import junit.framework.TestCase;
+
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.eval.SecurityFunctionEvaluator;
+import org.teiid.dqp.internal.process.AuthorizationValidator;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
-
-import junit.framework.TestCase;
 
 
 public class TestSecurityFunctions extends TestCase {
@@ -79,11 +80,21 @@ public class TestSecurityFunctions extends TestCase {
         }); 
         
         CommandContext context = new CommandContext();
-        context.setSecurityFunctionEvaluator(new SecurityFunctionEvaluator() {
-            public boolean hasRole(String roleType,
-                                   String roleName) throws TeiidComponentException {
-                return false;
-            }});
+        context.setAuthoriziationValidator(new AuthorizationValidator() {
+
+			@Override
+			public boolean validate(String[] originalSql, Command command,
+					QueryMetadataInterface metadata,
+					CommandContext commandContext, CommandType commandType)
+					throws QueryValidatorException, TeiidComponentException {
+				return false;
+			}
+
+			@Override
+			public boolean hasRole(String roleName,
+					CommandContext commandContext) {
+				return false;
+			}});
         
         Command command = TestProcessor.helpParse(sql);   
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);

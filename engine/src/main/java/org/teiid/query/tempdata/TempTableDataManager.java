@@ -37,9 +37,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.QueryValidatorException;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.security.SessionToken;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBuffer;
@@ -94,7 +92,31 @@ import org.teiid.query.util.CommandContext;
 public class TempTableDataManager implements ProcessorDataManager {
 	
 	public interface RequestExecutor {
-		ResultsFuture<ResultsMessage> execute(String command, List<?> parameters, boolean asynch);
+		void execute(String command, List<?> parameters);
+	}
+	
+	public abstract class ProxyTupleSource implements TupleSource {
+		TupleSource actual;
+		
+		@Override
+		public List<?> nextTuple() throws TeiidComponentException,
+				TeiidProcessingException {
+			if (actual == null) {
+				actual = createTupleSource();
+			}
+			return actual.nextTuple();
+		}
+		
+		protected abstract TupleSource createTupleSource() throws TeiidComponentException,
+		TeiidProcessingException;
+
+		@Override
+		public void closeSource() {
+			if (actual != null) {
+				actual.closeSource();
+			}
+		}
+		
 	}
 	
 	private static final String REFRESHMATVIEWROW = ".refreshmatviewrow"; //$NON-NLS-1$
@@ -239,7 +261,7 @@ public class TempTableDataManager implements ProcessorDataManager {
         return null;
     }
 
-	private TupleSource handleCachedProcedure(CommandContext context,
+	private TupleSource handleCachedProcedure(final CommandContext context,
 			StoredProcedure proc) throws TeiidComponentException,
 			QueryMetadataException, TeiidProcessingException {
 		String fullName = context.getMetadata().getFullName(proc.getProcedureID());
@@ -253,7 +275,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		hash |= (hash >>> 16);
 		hash |= (hash >>> 8);
 		hash &= 0x000000ff;
-		CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(), 
+		final CacheID cid = new CacheID(new ParseInfo(), fullName + hash, context.getVdbName(), 
 				context.getVdbVersion(), context.getConnectionId(), context.getUserName());
 		cid.setParameters(vals);
 		CachedResults results = cache.get(cid);
@@ -262,41 +284,62 @@ public class TempTableDataManager implements ProcessorDataManager {
 			return buffer.createIndexedTupleSource();
 		}
 		//construct a query with a no cache hint
-		CacheHint hint = proc.getCacheHint();
+		final CacheHint hint = proc.getCacheHint();
 		proc.setCacheHint(null);
 		Option option = new Option();
 		option.setNoCache(true);
 		option.addNoCacheGroup(fullName);
 		proc.setOption(option);
-		Determinism determinismLevel = context.resetDeterminismLevel();
 		StoredProcedure cloneProc = (StoredProcedure)proc.clone();
 		int i = 0;
 		for (SPParameter param : cloneProc.getInputParameters()) {
 			param.setExpression(new Reference(i++));
 		}
-		QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(cloneProc.toString(), fullName.toUpperCase(), context, vals.toArray());
-		qp.setNonBlocking(true);
+		final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(cloneProc.toString(), fullName.toUpperCase(), context, vals.toArray());
 		qp.getContext().setDataObjects(null);
-		BatchCollector bc = qp.createBatchCollector();
-		TupleBuffer tb = bc.collectTuples();
-		CachedResults cr = new CachedResults();
-		cr.setResults(tb, qp.getProcessorPlan());
-		if (hint != null && hint.getDeterminism() != null) {
-			LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",determinismLevel, " to ", hint.getDeterminism() }); //$NON-NLS-1$ //$NON-NLS-2$
-			determinismLevel = hint.getDeterminism();
-		}
-		cache.put(cid, determinismLevel, cr, hint != null?hint.getTtl():null);
-		context.setDeterminismLevel(determinismLevel);
-		return tb.createIndexedTupleSource();
+		final BatchCollector bc = qp.createBatchCollector();
+		
+		return new ProxyTupleSource() {
+			Determinism determinismLevelOrig = context.resetDeterminismLevel();
+			boolean success = false;
+			
+			@Override
+			protected TupleSource createTupleSource() throws TeiidComponentException,
+					TeiidProcessingException {
+				TupleBuffer tb = bc.collectTuples();
+				CachedResults cr = new CachedResults();
+				cr.setResults(tb, qp.getProcessorPlan());
+				//there is a chance that this level is not correct as other stuff may have been processed along with this plan
+				Determinism determinismLevel = context.getDeterminismLevel();
+				if (hint != null && hint.getDeterminism() != null) {
+					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",determinismLevel, " to ", hint.getDeterminism() }); //$NON-NLS-1$ //$NON-NLS-2$
+					determinismLevel = hint.getDeterminism();
+				}
+				cache.put(cid, determinismLevel, cr, hint != null?hint.getTtl():null);
+				context.setDeterminismLevel(determinismLevelOrig);
+				success = true;
+				return tb.createIndexedTupleSource();
+			}
+			
+			@Override
+			public void closeSource() {
+				context.setDeterminismLevel(determinismLevelOrig);
+				super.closeSource();
+				qp.closeProcessing();
+				if (!success && bc.getTupleBuffer() != null) {
+					bc.getTupleBuffer().remove();
+				}
+			}
+		};
 	}
 
-	private TupleSource handleSystemProcedures(CommandContext context, StoredProcedure proc)
+	private TupleSource handleSystemProcedures(final CommandContext context, StoredProcedure proc)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryProcessingException, QueryResolverException,
 			QueryValidatorException, TeiidProcessingException,
 			ExpressionEvaluationException {
-		QueryMetadataInterface metadata = context.getMetadata();
-		GlobalTableStore globalStore = context.getGlobalTableStore();
+		final QueryMetadataInterface metadata = context.getMetadata();
+		final GlobalTableStore globalStore = context.getGlobalTableStore();
 		if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEW)) {
 			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
 			Object matTableId = globalStore.getGlobalTempTableMetadataId(groupID);
@@ -310,10 +353,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			}
 			GroupSymbol matTable = new GroupSymbol(matTableName);
 			matTable.setMetadataID(matTableId);
-			int rowCount = loadGlobalTable(context, matTable, matTableName, globalStore);
-			return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
+			return loadGlobalTable(context, matTable, matTableName, globalStore);
 		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
-			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
+			final Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
 			Object pk = metadata.getPrimaryKey(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			if (pk == null) {
@@ -323,7 +365,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 			if (ids.size() > 1) {
 				 throw new QueryProcessingException(QueryPlugin.Event.TEIID30231, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30231, matViewName));
 			}
-			String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
+			final String matTableName = RelationalPlanner.MAT_PREFIX+matViewName.toUpperCase();
 			MatTableInfo info = globalStore.getMatTableInfo(matTableName);
 			if (!info.isValid()) {
 				return CollectionTupleSource.createUpdateCountTupleSource(-1);
@@ -336,26 +378,40 @@ public class TempTableDataManager implements ProcessorDataManager {
 			LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30012, matViewName, key));
 			Object id = ids.iterator().next();
 			String targetTypeName = metadata.getElementType(id);
-			Object value = DataTypeManager.transformValue(key.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
+			final Object value = DataTypeManager.transformValue(key.getValue(), DataTypeManager.getDataTypeClass(targetTypeName));
 			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
 				metadata.getFullName(id) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
-			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, value);
-			qp.setNonBlocking(true);
+			final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, value);
 			qp.getContext().setDataObjects(null);
-			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
-			List<?> tuple = ts.nextTuple();
-			boolean delete = false;
-			if (tuple == null) {
-				delete = true;
-				tuple = Arrays.asList(value);
-			} else {
-				tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
-			}
-			List<?> result = globalStore.updateMatViewRow(matTableName, tuple, delete);
-			if (eventDistributor != null) {
-				this.eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), metadata.getName(metadata.getModelID(groupID)), metadata.getName(groupID), tuple, delete);
-			}
-			return CollectionTupleSource.createUpdateCountTupleSource(result != null ? 1 : 0);
+			final TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
+			return new ProxyTupleSource() {
+
+				@Override
+				protected TupleSource createTupleSource()
+						throws TeiidComponentException,
+						TeiidProcessingException {
+					List<?> tuple = ts.nextTuple();
+					boolean delete = false;
+					if (tuple == null) {
+						delete = true;
+						tuple = Arrays.asList(value);
+					} else {
+						tuple = new ArrayList<Object>(tuple); //ensure the list is serializable 
+					}
+					List<?> result = globalStore.updateMatViewRow(matTableName, tuple, delete);
+					if (eventDistributor != null) {
+						eventDistributor.updateMatViewRow(context.getVdbName(), context.getVdbVersion(), metadata.getName(metadata.getModelID(groupID)), metadata.getName(groupID), tuple, delete);
+					}
+					return CollectionTupleSource.createUpdateCountTupleSource(result != null ? 1 : 0);
+				}
+				
+				@Override
+				public void closeSource() {
+					super.closeSource();
+					qp.closeProcessing();
+				}
+				
+			};
 		}
 		return null;
 	}
@@ -383,16 +439,19 @@ public class TempTableDataManager implements ProcessorDataManager {
 		if (group.isGlobalTable()) {
 			final GlobalTableStore globalStore = context.getGlobalTableStore();
 			final MatTableInfo info = globalStore.getMatTableInfo(tableName);
-			return new TupleSource() {
-				TupleSource ts = null;
+			return new ProxyTupleSource() {
 				Future<Void> moreWork = null;
-				
+				TupleSource loadingTupleSource;
+				DQPWorkContext newWorkContext;
+
 				@Override
-				public List<?> nextTuple() throws TeiidComponentException,
+				protected TupleSource createTupleSource()
+						throws TeiidComponentException,
 						TeiidProcessingException {
-					if (ts == null) {
+					if (loadingTupleSource != null) {
+						load();
+					} else {
 						boolean load = false;
-						
 						if (!info.isUpToDate()) {
 							load = globalStore.needsLoading(tableName, globalStore.getAddress(), true, false, false);
 							if (load) {
@@ -401,7 +460,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 							if (!load) {
 								synchronized (info) {
 									if (!info.isUpToDate()) {
-										RequestWorkItem workItem = (RequestWorkItem)context.getWorkItem();
+										RequestWorkItem workItem = context.getWorkItem();
 										info.addWaiter(workItem);
 										if (moreWork != null) {
 											moreWork.cancel(false);
@@ -410,175 +469,187 @@ public class TempTableDataManager implements ProcessorDataManager {
 										throw BlockedException.block("Blocking on mat view load", tableName); //$NON-NLS-1$
 									}
 								}
-							}
-						}
-						if (load) {
-							if (!info.isValid() || executor == null) {
-								//blocking load
-								if (info.getVdbMetaData() != null && context.getDQPWorkContext() != null && !info.getVdbMetaData().getFullName().equals(context.getDQPWorkContext().getVDB().getFullName())) {
-									assert executor != null;
-									//load with a refresh to pretend we're in the imported vdb
-									loadViaRefresh(context, tableName, info.getVdbMetaData(), info, false);
-								} else {
-									loadGlobalTable(context, group, tableName, globalStore);
-								}
 							} else {
-								loadViaRefresh(context, tableName, context.getDQPWorkContext().getVDB(), info, true);
-							}
-						} 
-						TempTable table = globalStore.getTempTable(tableName);
-						context.accessedDataObject(group.getMetadataID());
-						ts = table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
-						if (moreWork != null) {
-							moreWork.cancel(false);
-							moreWork = null;
+								if (!info.isValid() || executor == null) {
+									//blocking load
+									//TODO: we should probably do all loads using a temp session
+									if (info.getVdbMetaData() != null && context.getDQPWorkContext() != null && !info.getVdbMetaData().getFullName().equals(context.getDQPWorkContext().getVDB().getFullName())) {
+										assert executor != null;
+										//load with by pretending we're in the imported vdb
+										newWorkContext = createWorkContext(context, info.getVdbMetaData());
+										CommandContext newContext = context.clone();
+										newContext.setNewVDBState(newWorkContext);
+										loadingTupleSource = loadGlobalTable(newContext, group, tableName, newContext.getGlobalTableStore());
+									} else {
+										loadingTupleSource = loadGlobalTable(context, group, tableName, globalStore);
+									}
+									load();
+								} else {
+									loadViaRefresh(context, tableName, context.getDQPWorkContext().getVDB(), info);
+								}
+							} 
 						}
 					}
-					return ts.nextTuple();
+					TempTable table = globalStore.getTempTable(tableName);
+					context.accessedDataObject(group.getMetadataID());
+					TupleSource result = table.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
+					cancelMoreWork();
+					return result;
 				}
-				
-				@Override
-				public void closeSource() {
-					if (ts != null) {
-						ts.closeSource();
-					}	
+
+				private void load() throws TeiidComponentException,
+						TeiidProcessingException {
+					if (newWorkContext != null) {
+						try {
+							newWorkContext.runInContext(new Callable<Void>() {
+								@Override
+								public Void call() throws Exception {
+									loadingTupleSource.nextTuple();
+									return null;
+								}
+							});
+						} catch (Throwable e) {
+							rethrow(e);
+						}
+					} else {
+						loadingTupleSource.nextTuple();
+					}
+				}
+
+				private void cancelMoreWork() {
 					if (moreWork != null) {
 						moreWork.cancel(false);
 						moreWork = null;
 					}
 				}
+
+				@Override
+				public void closeSource() {
+					if (loadingTupleSource != null) {
+						loadingTupleSource.closeSource();
+					}
+					super.closeSource();
+					cancelMoreWork();
+				}
+
 			};
 		}
 		//it's not expected for a blocked exception to bubble up from here, so return a tuplesource to perform getOrCreateTempTable
-		return new TupleSource() {
-			TupleSource ts = null;
-			
+		return new ProxyTupleSource() {
 			@Override
-			public List<?> nextTuple() throws TeiidComponentException,
-					TeiidProcessingException {
-				if (ts == null) {
-					TempTable tt = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
-					if (context.getDataObjects() != null) {
-						Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
-						if (id != null) {
-							context.accessedDataObject(group.getMetadataID());
-						}
+			protected TupleSource createTupleSource()
+					throws TeiidComponentException, TeiidProcessingException {
+				TempTable tt = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
+				if (context.getDataObjects() != null) {
+					Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
+					if (id != null) {
+						context.accessedDataObject(group.getMetadataID());
 					}
-					ts = tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 				}
-				return ts.nextTuple();
-			}
-			
-			@Override
-			public void closeSource() {
-				if (ts != null) {
-					ts.closeSource();
-				}
+				return tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());
 			}
 		};
 	}
 
-	/**
-	 * we use this for two types of refreshes, full asynch is just fire and forget.
-	 * non-asynch is used to create a temp session to pretend that we're using an imported vdb so that we don't modify the
-	 * current session.
-	 */
-	private void loadViaRefresh(final CommandContext context, final String tableName, VDBMetaData vdb, MatTableInfo info, final boolean asynch) throws TeiidProcessingException, TeiidComponentException {
-		ResultsFuture<ResultsMessage> result = null;
-		synchronized (info) {
-			info.setAsynchLoad();
-			SessionMetadata session = createTemporarySession(context.getUserName(), "asynch-mat-view-load", vdb); //$NON-NLS-1$
-			session.setSubject(context.getSubject());
-			session.setSecurityDomain(context.getSession().getSecurityDomain());
-			session.setSecurityContext(context.getSession().getSecurityContext());
-			DQPWorkContext workContext = new DQPWorkContext();
-			workContext.setAdmin(true);
-			DQPWorkContext current = context.getDQPWorkContext();
-			workContext.setSession(session);
-			workContext.setPolicies(current.getAllowedDataPolicies());
-			workContext.setSecurityHelper(current.getSecurityHelper());
-			final String viewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
-			try {
-				result = workContext.runInContext(new Callable<ResultsFuture<ResultsMessage>>() {
-					@Override
-					public ResultsFuture<ResultsMessage> call() {
-						return executor.execute(REFRESH_SQL, Arrays.asList(viewName, Boolean.FALSE), asynch);
-					}
-				});
-			} catch (Throwable e) {
-				throw new TeiidRuntimeException(e);
+	private void loadViaRefresh(final CommandContext context, final String tableName, VDBMetaData vdb, MatTableInfo info) throws TeiidProcessingException, TeiidComponentException {
+		info.setAsynchLoad();
+		DQPWorkContext workContext = createWorkContext(context, vdb);
+		final String viewName = tableName.substring(RelationalPlanner.MAT_PREFIX.length());
+		workContext.runInContext(new Runnable() {
+			@Override
+			public void run() {
+				executor.execute(REFRESH_SQL, Arrays.asList(viewName, Boolean.FALSE));
 			}
-		}
-		if (!asynch) {
-			ResultsMessage message;
-			try {
-				message = result.get();
-			} catch (Exception e) {
-				throw new TeiidRuntimeException(e);
-			}
-			if (message.getException() != null) {
-				if (message.getException() instanceof TeiidProcessingException) {
-					throw (TeiidProcessingException)message.getException();
-				}
-				if (message.getException() instanceof TeiidComponentException) {
-					throw (TeiidComponentException)message.getException();
-				}
-				throw new TeiidRuntimeException(message.getException());
-			}
-			if (Integer.valueOf(-1).equals(message.getResultsList().get(0).get(0))) {
-				throw new AssertionError("failed to load via refresh"); //$NON-NLS-1$
-			}
-		}
+		});
 	}
 
-	private int loadGlobalTable(CommandContext context,
-			GroupSymbol group, final String tableName, GlobalTableStore globalStore)
+	private DQPWorkContext createWorkContext(final CommandContext context,
+			VDBMetaData vdb) {
+		SessionMetadata session = createTemporarySession(context.getUserName(), "asynch-mat-view-load", vdb); //$NON-NLS-1$
+		session.setSubject(context.getSubject());
+		session.setSecurityDomain(context.getSession().getSecurityDomain());
+		session.setSecurityContext(context.getSession().getSecurityContext());
+		DQPWorkContext workContext = new DQPWorkContext();
+		workContext.setAdmin(true);
+		DQPWorkContext current = context.getDQPWorkContext();
+		workContext.setSession(session);
+		workContext.setPolicies(current.getAllowedDataPolicies());
+		workContext.setSecurityHelper(current.getSecurityHelper());
+		return workContext;
+	}
+
+	private TupleSource loadGlobalTable(final CommandContext context,
+			final GroupSymbol group, final String tableName, final GlobalTableStore globalStore)
 			throws TeiidComponentException, TeiidProcessingException {
 		LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30013, tableName));
-		QueryMetadataInterface metadata = context.getMetadata();
-		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
-		TempTable table = globalStore.createMatTable(tableName, group);
+		final QueryMetadataInterface metadata = context.getMetadata();
+		final List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata); 
+		final TempTable table = globalStore.createMatTable(tableName, group);
 		table.setUpdatable(false);
-		int rowCount = -1;
-		try {
-			String fullName = metadata.getFullName(group.getMetadataID());
-			String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
-			QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
-			qp.setNonBlocking(true);
-			qp.getContext().setDataObjects(null);
-			TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
+		return new ProxyTupleSource() {
+			TupleSource insertTupleSource;
+			boolean success;
+			QueryProcessor qp;
+			boolean closed;
+		
+			@Override
+			protected TupleSource createTupleSource() throws TeiidComponentException,
+					TeiidProcessingException {
+				int rowCount = -1;
+				try {
+					if (insertTupleSource == null) {
+						String fullName = metadata.getFullName(group.getMetadataID());
+						String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
+						qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
+						qp.getContext().setDataObjects(null);
+						insertTupleSource = new BatchCollector.BatchProducerTupleSource(qp);
+					}
+					table.insert(insertTupleSource, allColumns, false, null);
+					table.getTree().compact();
+					rowCount = table.getRowCount();
+					//TODO: could pre-process indexes to remove overlap
+					for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {
+						List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, index);
+						table.addIndex(columns, false);
+					}
+					for (Object key : metadata.getUniqueKeysInGroup(group.getMetadataID())) {
+						List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, key);
+						table.addIndex(columns, true);
+					}
+					CacheHint hint = table.getCacheHint();
+					if (hint != null && table.getPkLength() > 0) {
+						table.setUpdatable(hint.isUpdatable(false));
+					}
+					globalStore.loaded(tableName, table);
+					success = true;
+					LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30014, tableName, rowCount));
+					return CollectionTupleSource.createUpdateCountTupleSource(rowCount);
+				} catch (BlockedException e) {
+					throw e;
+				} catch (Exception e) {
+					LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
+					closeSource();
+					rethrow(e);
+					throw new AssertionError();
+				}
+			}
 			
-			table.insert(ts, allColumns, false, null);
-			table.getTree().compact();
-			rowCount = table.getRowCount();
-			//TODO: could pre-process indexes to remove overlap
-			for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {
-				List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, index);
-				table.addIndex(columns, false);
+			@Override
+			public void closeSource() {
+				if (closed) {
+					return;
+				}
+				closed = true;
+				if (!success) {
+					globalStore.failedLoad(tableName);
+					table.remove();
+				}
+				if (qp != null) {
+					qp.closeProcessing();
+				}
+				super.closeSource();
 			}
-			for (Object key : metadata.getUniqueKeysInGroup(group.getMetadataID())) {
-				List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, key);
-				table.addIndex(columns, true);
-			}
-			CacheHint hint = table.getCacheHint();
-			if (hint != null && table.getPkLength() > 0) {
-				table.setUpdatable(hint.isUpdatable(false));
-			}
-		} catch (TeiidComponentException e) {
-			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
-			throw e;
-		} catch (TeiidProcessingException e) {
-			LogManager.logError(LogConstants.CTX_MATVIEWS, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30015, tableName));
-			throw e;
-		} finally {
-			if (rowCount == -1) {
-				globalStore.failedLoad(tableName);
-			} else {
-				globalStore.loaded(tableName, table);
-				LogManager.logInfo(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30014, tableName, rowCount));
-			}
-		}
-		return rowCount;
+		};
 	}
 
 	public Object lookupCodeValue(CommandContext context, String codeTableName,
@@ -638,5 +709,20 @@ public class TempTableDataManager implements ProcessorDataManager {
 	    newSession.setVdb(vdb);
 	    newSession.setEmbedded(true);
 		return newSession;
+	}
+	
+	private static void rethrow(Throwable e)
+			throws TeiidComponentException,
+			TeiidProcessingException {
+		if (e instanceof TeiidComponentException) {
+			throw (TeiidComponentException)e;
+		}
+		if (e instanceof TeiidProcessingException) {
+			throw (TeiidProcessingException)e;
+		}
+		if (e instanceof RuntimeException) {
+			throw (RuntimeException)e;
+		}
+		throw new TeiidRuntimeException(e);
 	}
 }

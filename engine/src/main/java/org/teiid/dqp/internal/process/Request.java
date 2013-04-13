@@ -54,7 +54,6 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
-import org.teiid.query.eval.SecurityFunctionEvaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempCapabilitiesFinder;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -93,7 +92,7 @@ import org.teiid.query.validator.ValidatorReport;
 /**
  * Server side representation of the RequestMessage.  Knows how to process itself.
  */
-public class Request implements SecurityFunctionEvaluator {
+public class Request {
     
 	// init state
     protected RequestMessage requestMsg;
@@ -210,8 +209,6 @@ public class Request implements SecurityFunctionEvaluator {
         // cleanup of all resources in the group on connection shutdown
         String groupName = workContext.getSessionId();
 
-        RequestID reqID = workContext.getRequestID(this.requestMsg.getExecutionId());
-        
         this.context =
             new CommandContext(
                 groupName,
@@ -223,7 +220,7 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setProcessorBatchSize(bufferManager.getProcessorBatchSize());
         this.context.setGlobalTableStore(this.globalTables);
         context.setExecutor(this.executor);
-        context.setSecurityFunctionEvaluator(this);
+        context.setAuthoriziationValidator(authorizationValidator);
         context.setTempTableStore(tempTableStore);
         context.setQueryProcessorFactory(new QueryProcessorFactoryImpl(this.bufferManager, this.processorDataManager, this.capabilitiesFinder, idGenerator, metadata));
         context.setMetadata(this.metadata);
@@ -241,18 +238,6 @@ public class Request implements SecurityFunctionEvaluator {
         this.context.setDQPWorkContext(this.workContext);
         this.context.setTransactionService(this.transactionService);
         this.context.setVDBClassLoader(workContext.getVDB().getAttachment(ClassLoader.class));
-    }
-    
-    @Override
-    public boolean hasRole(String roleType, String roleName)
-    		throws TeiidComponentException {
-        if (!DATA_ROLE.equalsIgnoreCase(roleType)) {
-            return false;
-        }
-        if (this.authorizationValidator == null) {
-        	return true;
-        }
-        return authorizationValidator.hasRole(roleName, context);
     }
     
     public void setUserRequestConcurrency(int userRequestConcurrency) {
