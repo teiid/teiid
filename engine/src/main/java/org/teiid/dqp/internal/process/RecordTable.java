@@ -184,28 +184,33 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 				}
 			};
 		}
-		if (ii.getLower() != null) {
-			if (ii.getUpper() != null) {
-				map = map.subMap((String) ii.getLower().get(0), true, (String) ii.getUpper().get(0), true);
-			} else {
-				map = map.tailMap((String) ii.getLower().get(0), true);
-			}
-		} else if (ii.getUpper() != null) {
-			map = map.headMap((String) ii.getUpper().get(0), true);
-		}
-		final Iterator<?> iter = map.values().iterator();
-		return new SimpleIterator<T>() {
-			@Override
-			public T next() throws TeiidProcessingException, TeiidComponentException {
-				while (iter.hasNext()) {
-					T s = extractRecord(iter.next());
-					if (isValid(s, vdb, rowBuffer, crit)) {
-						return s;
-					}
+		try {
+			if (ii.getLower() != null) {
+				if (ii.getUpper() != null) {
+					map = map.subMap((String) ii.getLower().get(0), true, (String) ii.getUpper().get(0), true);
+				} else {
+					map = map.tailMap((String) ii.getLower().get(0), true);
 				}
-				return null;
+			} else if (ii.getUpper() != null) {
+				map = map.headMap((String) ii.getUpper().get(0), true);
 			}
-		};
+			final Iterator<?> iter = map.values().iterator();
+			return new SimpleIterator<T>() {
+				@Override
+				public T next() throws TeiidProcessingException, TeiidComponentException {
+					while (iter.hasNext()) {
+						T s = extractRecord(iter.next());
+						if (isValid(s, vdb, rowBuffer, crit)) {
+							return s;
+						}
+					}
+					return null;
+				}
+			};
+		} catch (IllegalArgumentException e) {
+			//this is a map bound issue or lower is greater than upper
+			return emptyIterator();
+		}
 	}
 	
 	protected T extractRecord(Object val) {

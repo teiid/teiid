@@ -326,4 +326,14 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		assertEquals(0, s.executeUpdate("call logMsg('DEBUG', 'org.teiid.foo', 'hello world')"));
 	}
 	
+	@Test public void testPrefixSearches() throws Exception {
+		this.execute("select name from schemas where ucase(name) >= 'BAZ_BAR' and ucase(name) <= 'A'");
+		//should be 0 rows rather than an exception
+		assertRowCount(0); 
+
+		this.execute("select name from schemas where upper(name) like 'ab[_'");
+		//should be 0 rows rather than an exception
+		assertRowCount(0);		
+	}
+	
 }
