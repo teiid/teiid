@@ -27,6 +27,9 @@ import static org.junit.Assert.*;
 import java.io.StringReader;
 import java.util.List;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.events.XMLEvent;
 import javax.xml.transform.stax.StAXSource;
 import javax.xml.transform.stream.StreamSource;
 
@@ -362,7 +365,12 @@ public class TestDataTierManager {
     	
     	source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a/>")));
     	xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
-    	assertEquals("<?xml version=\"1.0\"?><a></a>", xml.getString());
+    	XMLInputFactory in = XMLType.getXmlInputFactory();
+    	XMLStreamReader reader = in.createXMLStreamReader(new StringReader(xml.getString()));
+    	assertEquals(XMLEvent.START_DOCUMENT, reader.getEventType());
+    	assertEquals(XMLEvent.START_ELEMENT, reader.next());
+    	assertEquals("a", reader.getLocalName());
+    	assertEquals(XMLEvent.END_ELEMENT, reader.next());
     	
     	byte[] bytes = str.getBytes(Streamable.ENCODING);
 		source = new InputStreamFactory.BlobInputStreamFactory(BlobType.createBlob(bytes));

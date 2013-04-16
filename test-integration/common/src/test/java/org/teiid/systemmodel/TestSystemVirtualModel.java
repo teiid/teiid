@@ -126,7 +126,7 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	}
 
 	@Test public void testVDBResources() throws IOException, SQLException {
-		execute("select * from vdbresources",new Object[] {}); //$NON-NLS-1$
+		execute("select * from vdbresources order by resourcePath",new Object[] {}); //$NON-NLS-1$
 		TestMMDatabaseMetaData.compareResultSet(this.internalResultSet);
 	}
 
