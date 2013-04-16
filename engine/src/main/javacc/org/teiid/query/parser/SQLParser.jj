@@ -1165,7 +1165,7 @@ LoopStatement loopStatement(ParseInfo info) :
 /*
 name=if statement
 description=A procedure loop statement that executes over the given cursor.
-example={code:sql}LOOP ON (SELECT * FROM tbl) AS x BEGIN ... END{code}
+example={code:sql}IF (boolVal) BEGIN variables.x = 1 END ELSE BEGIN variables.x = 2 END{code}
 */
 IfStatement ifStatement(ParseInfo info) :
 {
