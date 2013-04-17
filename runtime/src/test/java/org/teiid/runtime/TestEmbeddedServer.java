@@ -25,6 +25,8 @@ package org.teiid.runtime;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -34,6 +36,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.transaction.HeuristicMixedException;
 import javax.transaction.HeuristicRollbackException;
@@ -287,6 +291,23 @@ public class TestEmbeddedServer {
 		
 		assertNotNull(es.getSchemaDdl("empty", "SYS"));
 		assertNull(es.getSchemaDdl("empty", "xxx"));
+	}
+	
+	@Test public void testDeployZip() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		
+		File f = UnitTestUtil.getTestScratchFile("some.vdb");
+        ZipOutputStream out = new ZipOutputStream(new FileOutputStream(f));
+        out.putNextEntry(new ZipEntry("v1.ddl")); 
+        out.write("CREATE VIEW helloworld as SELECT 'HELLO WORLD';".getBytes("UTF-8"));
+        out.putNextEntry(new ZipEntry("META-INF/vdb.xml"));
+        out.write("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL-FILE\">/v1.ddl</metadata></model></vdb>".getBytes("UTF-8"));
+        out.close();
+		
+		es.deployVDBZip(f.toURI().toURL());
+		ResultSet rs = es.getDriver().connect("jdbc:teiid:test", null).createStatement().executeQuery("select * from helloworld");
+		rs.next();
+		assertEquals("HELLO WORLD", rs.getString(1));
 	}
 	
 	@Test public void testXMLDeploy() throws Exception {

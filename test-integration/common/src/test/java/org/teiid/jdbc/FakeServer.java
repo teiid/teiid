@@ -22,6 +22,7 @@
 package org.teiid.jdbc;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -29,12 +30,14 @@ import java.util.Map;
 
 import javax.resource.spi.XATerminator;
 import javax.transaction.TransactionManager;
+import javax.xml.stream.XMLStreamException;
 
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.common.queue.FakeWorkManager;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.SimpleMock;
@@ -52,6 +55,7 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
+import org.teiid.metadata.VDBResource;
 import org.teiid.metadata.index.VDBMetadataFactory;
 import org.teiid.metadata.index.VDBMetadataFactory.IndexVDB;
 import org.teiid.query.metadata.VDBResources.Resource;
@@ -70,6 +74,7 @@ public class FakeServer extends EmbeddedServer {
 		public MetadataRepository<?, ?> metadataRepo;
 		public List<VDBImportMetadata> vdbImports;
 		public LinkedHashMap<String, Resource> vdbResources;
+		public boolean useVdbXml;
 
 		public DeployVDBParameter(Map<String, Collection<FunctionMethod>> udfs,
 				MetadataRepository<?, ?> metadataRepo) {
@@ -160,26 +165,36 @@ public class FakeServer extends EmbeddedServer {
 	}
 
 	public void deployVDB(String vdbName, MetadataStore metadata, DeployVDBParameter parameterObject) {
-		VDBMetaData vdbMetaData = new VDBMetaData();
-        vdbMetaData.setName(vdbName);
-        vdbMetaData.setStatus(VDB.Status.ACTIVE);
-        
-        for (Schema schema : metadata.getSchemas().values()) {
-        	ModelMetaData model = addModel(vdbMetaData, schema);
-        	if (parameterObject.metadataRepo != null) {
-        		model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
-        		//fakeserver does not load through the repository framework, so call load after the fact here.
-        		MetadataFactory mf = createMetadataFactory(vdbMetaData, model, parameterObject.vdbResources);
-        		mf.setSchema(schema);
-        		try {
-					parameterObject.metadataRepo.loadMetadata(mf, null, null);
-				} catch (TranslatorException e) {
-					throw new TeiidRuntimeException(e);
-				}
-        	}
-        }
-                        
+		VDBMetaData vdbMetaData = null;
         try {
+			if (parameterObject.vdbResources != null && parameterObject.useVdbXml) {
+				VDBResource resource = parameterObject.vdbResources.get("/META-INF/vdb.xml");
+				if (resource !=null) {
+					vdbMetaData = VDBMetadataParser.unmarshell(resource.openStream());
+				}
+			}
+			if (vdbMetaData == null) {
+				vdbMetaData = new VDBMetaData();
+		        vdbMetaData.setName(vdbName);
+		        
+		        for (Schema schema : metadata.getSchemas().values()) {
+		        	ModelMetaData model = addModel(vdbMetaData, schema);
+		        	if (parameterObject.metadataRepo != null) {
+		        		model.addAttchment(MetadataRepository.class, parameterObject.metadataRepo);
+		        		//fakeserver does not load through the repository framework, so call load after the fact here.
+		        		MetadataFactory mf = createMetadataFactory(vdbMetaData, model, parameterObject.vdbResources);
+		        		mf.setSchema(schema);
+		        		try {
+							parameterObject.metadataRepo.loadMetadata(mf, null, null);
+						} catch (TranslatorException e) {
+							throw new TeiidRuntimeException(e);
+						}
+		        	}
+		        }
+			} else {
+				cmr.createConnectorManagers(vdbMetaData, this);
+			}
+                        
         	UDFMetaData udfMetaData = null;
         	if (parameterObject.udfs != null) {
         		udfMetaData = new UDFMetaData();
@@ -194,18 +209,24 @@ public class FakeServer extends EmbeddedServer {
 				}
         	}
         	
+        	vdbMetaData.setStatus(VDB.Status.ACTIVE);
 			this.repo.addVDB(vdbMetaData, metadata, parameterObject.vdbResources, udfMetaData, cmr);
 			this.repo.finishDeployment(vdbMetaData.getName(), vdbMetaData.getVersion());
 			this.repo.getLiveVDB(vdbMetaData.getName(), vdbMetaData.getVersion()).setStatus(VDB.Status.ACTIVE);
 		} catch (VirtualDatabaseException e) {
 			throw new RuntimeException(e);
+		} catch (ConnectorManagerException e) {
+			throw new RuntimeException(e);
+		} catch (XMLStreamException e) {
+			throw new RuntimeException(e);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 	
-	@Override
 	public void deployVDB(VDBMetaData vdb) throws ConnectorManagerException,
 			VirtualDatabaseException, TranslatorException {
-		super.deployVDB(vdb);
+		super.deployVDB(vdb, null);
 	}
 	
 	public void removeVDB(String vdbName) {

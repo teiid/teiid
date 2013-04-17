@@ -23,10 +23,13 @@
 package org.teiid.runtime;
 
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.transaction.TransactionManager;
 import javax.xml.stream.XMLStreamException;
 
+import org.jboss.vfs.VirtualFile;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -88,6 +92,7 @@ import org.teiid.net.ServerConnection;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.sql.lang.Command;
@@ -477,12 +482,12 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		vdb.setXmlDeployment(true);
 		vdb.setName(name);
 		vdb.setModels(Arrays.asList(models));
-		deployVDB(vdb);
+		deployVDB(vdb, null);
 	}
 	
 	/**
 	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
-	 * @param is which will be closed by this deployment
+	 * @param is, which will be closed by this deployment
 	 * @throws XMLStreamException 
 	 * @throws TranslatorException 
 	 * @throws ConnectorManagerException 
@@ -490,10 +495,29 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 */
 	public void deployVDB(InputStream is) throws XMLStreamException, VirtualDatabaseException, ConnectorManagerException, TranslatorException {
 		VDBMetaData metadata = VDBMetadataParser.unmarshell(is);
-		deployVDB(metadata);
+		deployVDB(metadata, null);
 	}
 	
-	protected void deployVDB(VDBMetaData vdb) 
+	/**
+	 * Deploy a vdb zip file.  The name and version will be derived from the xml.
+	 * @param url
+	 * @throws XMLStreamException 
+	 * @throws TranslatorException 
+	 * @throws ConnectorManagerException 
+	 * @throws VirtualDatabaseException 
+	 * @throws URISyntaxException 
+	 * @throws IOException 
+	 */
+	public void deployVDBZip(URL url) throws XMLStreamException, VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
+		VirtualFile root = PureZipFileSystem.mount(url);
+		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+		InputStream is = vdbMetadata.openStream();
+		VDBMetaData metadata = VDBMetadataParser.unmarshell(is);
+		VDBResources resources = new VDBResources(root, metadata);
+		deployVDB(metadata, resources);
+	}
+	
+	protected void deployVDB(VDBMetaData vdb, VDBResources resources) 
 			throws ConnectorManagerException, VirtualDatabaseException, TranslatorException {
 		checkStarted();
 		if (!vdb.getOverrideTranslators().isEmpty()) {
@@ -506,7 +530,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.assignMetadataRepositories(vdb, null);
 		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, VDBResources.Resource>(), udfMetaData, cmr);
 		try {
-			this.loadMetadata(vdb, cmr, metadataStore);
+			this.loadMetadata(vdb, cmr, metadataStore, resources);
 		} catch (VDBValidationError e) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.valueOf(e.getCode()), e.getMessage());
 		}
@@ -519,8 +543,8 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected void loadMetadata(VDBMetaData vdb, ModelMetaData model,
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
-			AtomicInteger loadCount) throws TranslatorException {
-		MetadataFactory factory = createMetadataFactory(vdb, model, Collections.EMPTY_MAP);
+			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException {
+		MetadataFactory factory = createMetadataFactory(vdb, model, vdbResources==null?Collections.EMPTY_MAP:vdbResources.getEntriesPlusVisibilities());
 		
 		ExecutionFactory ef = null;
 		Object cf = null;

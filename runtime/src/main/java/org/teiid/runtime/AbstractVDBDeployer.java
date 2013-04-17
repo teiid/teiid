@@ -54,6 +54,7 @@ import org.teiid.query.metadata.DDLFileMetadataRepository;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
+import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.translator.TranslatorException;
 
@@ -133,7 +134,7 @@ public abstract class AbstractVDBDeployer {
     }
     
 	protected void loadMetadata(VDBMetaData vdb, ConnectorManagerRepository cmr,
-			MetadataStore store) throws TranslatorException {
+			MetadataStore store, VDBResources vdbResources) throws TranslatorException {
 		// load metadata from the models
 		AtomicInteger loadCount = new AtomicInteger();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
@@ -148,7 +149,7 @@ public abstract class AbstractVDBDeployer {
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
 			MetadataRepository metadataRepository = model.getAttachment(MetadataRepository.class);
 			if (model.getModelType() == Model.Type.PHYSICAL || model.getModelType() == Model.Type.VIRTUAL) {
-				loadMetadata(vdb, model, cmr, metadataRepository, store, loadCount);
+				loadMetadata(vdb, model, cmr, metadataRepository, store, loadCount, vdbResources);
 				LogManager.logTrace(LogConstants.CTX_RUNTIME, "Model ", model.getName(), "in VDB ", vdb.getName(), " was being loaded from its repository"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			}
 			else {
@@ -162,7 +163,7 @@ public abstract class AbstractVDBDeployer {
 	protected abstract void loadMetadata(VDBMetaData vdb, ModelMetaData model,
 			ConnectorManagerRepository cmr,
 			MetadataRepository metadataRepository, MetadataStore store,
-			AtomicInteger loadCount) throws TranslatorException;
+			AtomicInteger loadCount, VDBResources vdbResources) throws TranslatorException;
 	
 	protected void metadataLoaded(final VDBMetaData vdb,
 			final ModelMetaData model,

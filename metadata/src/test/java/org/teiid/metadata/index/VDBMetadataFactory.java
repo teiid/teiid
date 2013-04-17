@@ -25,6 +25,7 @@ package org.teiid.metadata.index;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
@@ -33,8 +34,6 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.jboss.vfs.TempFileProvider;
-import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
@@ -46,6 +45,7 @@ import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
@@ -97,13 +97,12 @@ public class VDBMetadataFactory {
     }
 
 	public static IndexVDB loadMetadata(String vdbName, URL url) throws IOException, MalformedURLException {
-		String fileName = String.valueOf(vdbName + "-" + url.toExternalForm().hashCode());
-		VirtualFile root = VFS.getChild(fileName);
-    	if (!root.exists()) {
-    		VFS.mountZip(url.openStream(), fileName, root, TempFileProvider.create("vdbs", executor));
-    		// once done this mount should be closed, since this class is only used testing
-    		// it is hard to event when the test is done, otherwise we need to elevate the VFS to top
-    	}
+		VirtualFile root;
+		try {
+			root = PureZipFileSystem.mount(url);
+		} catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
     	IndexVDB result = new IndexVDB();
     	result.resources = new VDBResources(root, null);
     	IndexMetadataRepository store =  new IndexMetadataRepository();

@@ -197,7 +197,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		
 		this.vdb.removeAttachment(UDFMetaData.class);
 		try {
-			loadMetadata(this.vdb, cmr, store);
+			loadMetadata(this.vdb, cmr, store, this.vdbResources);
 		} catch (TranslatorException e) {
 			throw new StartException(e);
 		}
@@ -349,8 +349,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		}
 	}
 
+	@Override
 	@SuppressWarnings({"rawtypes","unchecked"})
-    protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount) {
+    protected void loadMetadata(final VDBMetaData vdb, final ModelMetaData model, final ConnectorManagerRepository cmr, final MetadataRepository metadataRepo, final MetadataStore vdbMetadataStore, final AtomicInteger loadCount, final VDBResources vdbResources) {
 
     	String msg = IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50029,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date()));
     	model.setMetadataStatus(Model.MetadataStatus.LOADING);
