@@ -27,6 +27,9 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
 
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+
 public class AutoCleanupUtil {
 	
 	public interface Removable {
@@ -76,7 +79,11 @@ public class AutoCleanupUtil {
 			if (ref == null) {
 				break;
 			}
-			ref.cleanup();
+			try {
+				ref.cleanup();
+			} catch (Throwable e) {
+				LogManager.logWarning(LogConstants.CTX_DQP, e, "Error cleaning up."); //$NON-NLS-1$
+			}
 			REFERENCES.remove(ref);
 		}
 	}
