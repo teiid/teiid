@@ -74,9 +74,17 @@ public class RelationalNodeStatistics {
         this.batchStartTime = System.currentTimeMillis();
     }
     
+    void setBatchStartTime(long batchStartTime) {
+		this.batchStartTime = batchStartTime;
+	}
+    
     public void stopBatchTimer() {
         this.batchEndTime = System.currentTimeMillis();
     }
+    
+    void setBatchEndTime(long batchEndTime) {
+		this.batchEndTime = batchEndTime;
+	}
     
     public void collectCumulativeNodeStats(TupleBatch batch, int stopType) {
         this.nodeNextBatchCalls++;
@@ -95,23 +103,16 @@ public class RelationalNodeStatistics {
         }
     }
     
-    public void collectNodeStats(RelationalNode[] relationalNodes, String className) {
+    public void collectNodeStats(RelationalNode[] relationalNodes) {
         // set nodeEndTime to the time gathered at the end of the last batch
         this.nodeEndTime = this.batchEndTime;
         this.nodeCumulativeProcessingTime = this.nodeEndTime - this.nodeStartTime;
-        if(relationalNodes[0] != null) {
-            long maxUnionChildCumulativeProcessingTime = 0;
-            for (int i = 0; i < relationalNodes.length; i++) {
-                if(relationalNodes[i] != null) {
-                    maxUnionChildCumulativeProcessingTime = Math.max(maxUnionChildCumulativeProcessingTime, relationalNodes[i].getNodeStatistics().getNodeCumulativeProcessingTime());
-                    this.nodeProcessingTime = this.nodeCumulativeProcessingTime - relationalNodes[i].getNodeStatistics().getNodeCumulativeProcessingTime();                      
-                }
-            }
-            if(className.equals("UnionAllNode")){ //$NON-NLS-1$
-                this.nodeProcessingTime = this.nodeCumulativeProcessingTime - maxUnionChildCumulativeProcessingTime;
-            }
-        }else {
-            this.nodeProcessingTime = this.nodeCumulativeProcessingTime;
+        this.nodeProcessingTime = this.nodeCumulativeProcessingTime;
+        for (int i = 0; i < relationalNodes.length; i++) {
+        	if (relationalNodes[i] == null) {
+        		break;
+        	}
+            this.nodeProcessingTime -= relationalNodes[i].getNodeStatistics().getNodeCumulativeProcessingTime();                      
         }
     }
     

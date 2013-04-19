@@ -44,7 +44,6 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.processor.ProcessorDataManager;
-import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.util.CommandContext;
@@ -283,7 +282,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                         this.getProcessingState().nodeStatistics.stopBatchTimer();
                         this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(batch, RelationalNodeStatistics.BATCHCOMPLETE_STOP);
                         if (batch.getTerminationFlag()) {
-                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren(), this.getClassName());
+                            this.getProcessingState().nodeStatistics.collectNodeStats(this.getChildren());
                             //this.nodeStatistics.dumpProperties(this.getClassName());
                         }
                     }
@@ -304,19 +303,13 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                 // stop timer for this batch (BlockedException)
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
                 this.getProcessingState().nodeStatistics.collectCumulativeNodeStats(null, RelationalNodeStatistics.BLOCKEDEXCEPTION_STOP);
+                recordStats = false;
             }
             throw e;
-        } catch (QueryProcessor.ExpiredTimeSliceException e) {
-        	if(recordStats && this.getProcessingState().context.getCollectNodeStatistics()) {
-                this.getProcessingState().nodeStatistics.stopBatchTimer();
-            }
-            throw e;
-        } catch (TeiidComponentException e) {
-            // stop timer for this batch (MetaMatrixComponentException)
+        } finally {
             if(recordStats &&  this.getProcessingState().context.getCollectNodeStatistics()) {
                 this.getProcessingState().nodeStatistics.stopBatchTimer();
             }
-            throw e;
         }
     }
 
