@@ -6700,7 +6700,18 @@ public class TestOptimizer {
 		
 		getPlan(helpGetCommand("select * from x", metadata, null), metadata, getGenericFinder(), null, false, null);		
 	}
-    
+	
+	@Test(expected=QueryPlannerException.class) public void testInvalidSource() throws Exception {
+		String sql = "select * from pm1.g1"; //$NON-NLS-1$
+		QueryMetadataInterface md = RealMetadataFactory.example1Cached();
+		QueryOptimizer.optimizePlan(helpGetCommand(sql, md, null), md, null,  new DefaultCapabilitiesFinder() {
+        	@Override
+        	public boolean isValid(String modelName) {
+        		return false;
+        	}
+        }, null, new CommandContext());
+	}
+	
 	public static final boolean DEBUG = false;
 
 }

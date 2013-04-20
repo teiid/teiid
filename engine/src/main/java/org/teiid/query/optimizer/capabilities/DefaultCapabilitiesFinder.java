@@ -46,5 +46,10 @@ public class DefaultCapabilitiesFinder implements CapabilitiesFinder {
     public SourceCapabilities findCapabilities(String modelName) throws TeiidComponentException {
         return capabilities;
     }
+    
+    @Override
+    public boolean isValid(String fullName) {
+    	return true;
+    }
 
 }

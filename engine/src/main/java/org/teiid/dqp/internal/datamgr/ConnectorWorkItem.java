@@ -100,7 +100,11 @@ public class ConnectorWorkItem implements ConnectorWork {
 		this.securityContext.setTransactional(requestMsg.isTransactional());
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
         factory.setConvertIn(!this.connector.supportsInCriteria());
-        factory.setSupportsConcat2(manager.getCapabilities().supportsFunction(SourceSystemFunctions.CONCAT2));
+        try {
+			factory.setSupportsConcat2(manager.getCapabilities().supportsFunction(SourceSystemFunctions.CONCAT2));
+		} catch (TranslatorException e) {
+			throw new TeiidComponentException(e);
+		}
         translatedCommand = factory.translate(message.getCommand());
     }
     

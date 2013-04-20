@@ -151,8 +151,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
     public String getDatabaseVersion() {
+    	if (this.version == null) {
+    		return "";
+    	}
     	return this.version;
-    }    
+    }
     
     public void setDatabaseVersion(String version) {
     	this.version = version;
@@ -197,6 +200,28 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	@Override
 	public boolean isSourceRequired() {
 		return true;
+	}
+	
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return isSourceRequired() && this.version == null && usesDatabaseVersion();
+	}
+	
+	protected boolean usesDatabaseVersion() {
+		return false;
+	}
+	
+	@Override
+	public void initCapabilities(Connection connection)
+			throws TranslatorException {
+		try {
+			DatabaseMetaData metadata = connection.getMetaData();
+			String fullVersion = metadata.getDatabaseProductVersion();
+			setDatabaseVersion(fullVersion);
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Setting the database version to", fullVersion); //$NON-NLS-1$
+		} catch (SQLException e) {
+			throw new TranslatorException(e);
+		}
 	}
 
     @Override

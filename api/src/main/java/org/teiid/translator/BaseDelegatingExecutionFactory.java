@@ -470,4 +470,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsOnlyCorrelatedSubqueries() {
 		return delegate.supportsOnlyCorrelatedSubqueries();
 	}
+	@Override
+	public boolean isSourceRequiredForCapabilities() {
+		return delegate.isSourceRequiredForCapabilities();
+	}
+	@Override
+	public void initCapabilities(C connection) throws TranslatorException {
+		delegate.initCapabilities(connection);
+	}
 }

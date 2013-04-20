@@ -32,6 +32,7 @@
   <li>TEIID-2449 Added the ability to deploy non-Designer based vdb zip artifacts with the ability to place DDL outside of the VDB.xml via the DDL-FILE metadata repository.
   <li>TEIID-2326 Materialized views from imported vdbs will be reused rather than recreated in each importing vdb.
   <li>TEIID-2444 The deployment platform for Teiid has been changed to EAP 6.1.Alpha1
+  <li>TEIID-2344 The JDBC translator database version property in most circumstances will not need to be set manually - see the compatiblity note below.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -42,6 +43,7 @@
   <li>TEIID-2267 The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.
   <li>TEIID-1979 The resource adaptors are now deployed through modules, and have shorter names as identifiers. Connection Factories created with previous versions must be re-configured.
   <li>TEIID-2326 By default imported vdb internal materialized views will shared with the importing vdb.
+  <li>TEIID-2344 non-available JDBC sources in partial results mode or source with connection factories that require an ExecutionContext to obtain a connection will require manual setting of the database version metadata property.  The affected sources are: db2, derby, oracle, postgresql, sqlserver, sybase, teiid 
 </ul>
 
 <h4>from 8.2</h4>

@@ -65,5 +65,13 @@ public class TempCapabilitiesFinder implements CapabilitiesFinder {
     	}
 		return delegate.findCapabilities(modelName);
 	}
+	
+	@Override
+	public boolean isValid(String modelName) {
+		if (TempMetadataAdapter.TEMP_MODEL.getID().equals(modelName)) {
+			return true;
+		}
+		return delegate.isValid(modelName);
+	}
 
 }

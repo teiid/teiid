@@ -177,4 +177,9 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		this.dB2ForI = dB2ForI;
 	}
 	
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
+	
 }

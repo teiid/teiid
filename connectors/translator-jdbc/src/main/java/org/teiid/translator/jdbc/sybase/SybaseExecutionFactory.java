@@ -67,7 +67,6 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	protected boolean jtdsDriver;
 	
 	public SybaseExecutionFactory() {
-		setDatabaseVersion(TWELVE_5);
 		setSupportsFullOuterJoins(false);
 		setMaxInCriteriaSize(250);
 		setMaxDependentInPredicates(8);
@@ -393,6 +392,11 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 			return;
 		}
 		super.setFetchSize(command, context, statement, fetchSize);
+	}
+	
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
 	}
     
 }

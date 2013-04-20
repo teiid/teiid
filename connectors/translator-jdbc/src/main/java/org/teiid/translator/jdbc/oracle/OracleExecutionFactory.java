@@ -104,7 +104,6 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	private boolean oracleSuppliedDriver = true;
 	
 	public OracleExecutionFactory() {
-		setDatabaseVersion(NINE_0);
 	}
     
     public void start() throws TranslatorException {
@@ -817,5 +816,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsCommonTableExpressions() {
     	return getDatabaseVersion().compareTo(NINE_2) >= 0;
     }
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
     
 }

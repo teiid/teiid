@@ -316,6 +316,13 @@ public class PlanToProcessConverter {
                     AccessNode aNode = null;
                     Command command = (Command) node.getProperty(NodeConstants.Info.ATOMIC_REQUEST);
                     Object modelID = node.getProperty(NodeConstants.Info.MODEL_ID);
+                    if (modelID != null && !capFinder.isValid(metadata.getFullName(modelID))) {
+                    	//TODO: we ideally want to handle the partial resutls case here differently
+                    	//      by adding a null node / and a source warning
+                    	//      for now it's just as easy to say that the user needs to take steps to
+                    	//      return static capabilities
+                    	throw new QueryPlannerException(QueryPlugin.Event.TEIID30498, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30498, metadata.getFullName(modelID)));
+                    }
                     EvaluatableVisitor ev = null;
                     if(node.hasBooleanProperty(NodeConstants.Info.IS_DEPENDENT_SET)) {
                         if (command instanceof StoredProcedure) {

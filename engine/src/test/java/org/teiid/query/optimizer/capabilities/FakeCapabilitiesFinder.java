@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.teiid.core.TeiidComponentException;
-import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 
 
 /**
@@ -55,6 +53,11 @@ public class FakeCapabilitiesFinder implements CapabilitiesFinder {
     
     public String toString() {
         return caps.toString();
+    }
+    
+    @Override
+    public boolean isValid(String fullName) {
+    	return true;
     }
 
 }

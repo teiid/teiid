@@ -61,7 +61,6 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	
 	//TEIID-31 remove mod modifier for SQL Server 2008
 	public SQLServerExecutionFactory() {
-		setDatabaseVersion(V_2005);
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(2);
 	}
@@ -315,5 +314,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     		}
     	};
     }
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
     
 }

@@ -559,4 +559,9 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     	return true;
     }
     
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
+    
 }

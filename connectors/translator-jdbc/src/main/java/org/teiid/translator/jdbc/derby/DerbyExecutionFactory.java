@@ -46,7 +46,6 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	
 	public DerbyExecutionFactory() {
 		setSupportsFullOuterJoins(false); //Derby supports only left and right outer joins.
-		setDatabaseVersion(TEN_1);
 	}
 	
 	@Override
@@ -175,5 +174,10 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
     public boolean supportsRowLimit() {
     	return this.getDatabaseVersion().compareTo(TEN_5) >= 0;
     }
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
     
 }

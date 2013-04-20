@@ -239,6 +239,24 @@ public class ExecutionFactory<F, C> {
 		return sourceRequiredForMetadata;
 	}
 	
+	/**
+	 * If true, the {@link #initCapabilities(Object)} method will be consulted prior
+	 * to deteremining the capabilites
+	 * @return
+	 */
+	public boolean isSourceRequiredForCapabilities() {
+		return false;
+	}
+	
+	/**
+	 * Invoked if {@link #isSourceRequiredForCapabilities()} returns true
+	 * @param connection
+	 * @throws TranslatorException
+	 */
+	public void initCapabilities(C connection) throws TranslatorException {
+		
+	}
+	
 	public void setSourceRequiredForMetadata(boolean sourceRequiredForMetadata) {
 		this.sourceRequiredForMetadata = sourceRequiredForMetadata;
 	}

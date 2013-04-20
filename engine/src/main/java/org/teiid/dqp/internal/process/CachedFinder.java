@@ -23,28 +23,32 @@
 package org.teiid.dqp.internal.process;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.translator.SourceSystemFunctions;
-import org.teiid.translator.TranslatorException;
 
 
 /**
  */
 public class CachedFinder implements CapabilitiesFinder {
 
+	static BasicSourceCapabilities INVALID_CAPS = new BasicSourceCapabilities();
 	private static BasicSourceCapabilities SYSTEM_CAPS = new BasicSourceCapabilities();
 	static {
 		SYSTEM_CAPS.setCapabilitySupport(Capability.CRITERIA_IN, true);
@@ -85,30 +89,27 @@ public class CachedFinder implements CapabilitiesFinder {
         if(caps != null) {
             return caps;
         }
-        TranslatorException exception = null;
         ModelMetaData model = vdb.getModel(modelName);
-        for (String sourceName:model.getSourceNames()) {
+        List<String> sourceNames = model.getSourceNames();
+        if (sourceNames.isEmpty()) {
+        	throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30499, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30499, modelName));
+        }
+        for (String sourceName:sourceNames) {
         	//TOOD: in multi-source mode it may be necessary to compute minimal capabilities across the sources
+        	ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
+    		if (mgr == null) {
+    			throw new TeiidComponentException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, sourceName, modelName, sourceName));
+    		}
         	try {
-        		ConnectorManager mgr = this.connectorRepo.getConnectorManager(sourceName);
-        		if (mgr == null) {
-        			 throw new TranslatorException(QueryPlugin.Event.TEIID30497, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30497, sourceName, modelName, sourceName));
-        		}
         		caps = mgr.getCapabilities();
         		break;
-            } catch(TranslatorException e) {
-            	if (exception == null) {
-            		exception = e;
-            	}
-            }        	
+            } catch(TeiidException e) {
+            	LogManager.logDetail(LogConstants.CTX_DQP, e, "Could not obtain capabilities for" + sourceName); //$NON-NLS-1$
+            }
         }
 
-        if (exception != null) {
-        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30498, exception);
-        }
-        
         if (caps == null) {
-        	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30499, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30499, modelName));
+        	caps = INVALID_CAPS;
         }
         
         userCache.put(modelName, caps);
@@ -117,6 +118,10 @@ public class CachedFinder implements CapabilitiesFinder {
     
     public void addCapabilities(String connBinding, SourceCapabilities sourceCaps) {
     	userCache.put(connBinding, sourceCaps);
+    }
+    
+    public boolean isValid(String modelName) {
+    	return userCache.get(modelName) != INVALID_CAPS;
     }
         
 }

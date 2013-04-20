@@ -47,7 +47,6 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final String EIGHT_3 = "8.3"; //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
-		setDatabaseVersion(SEVEN_0);
 	}
     
 	@Override
@@ -268,5 +267,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsOrderByNullOrdering() {
     	return true;
     }
+    
+	@Override
+	protected boolean usesDatabaseVersion() {
+		return true;
+	}
     
 }

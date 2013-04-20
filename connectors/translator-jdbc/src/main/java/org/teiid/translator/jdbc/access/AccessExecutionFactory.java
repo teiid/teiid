@@ -44,7 +44,6 @@ public class AccessExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	public AccessExecutionFactory() {
 		setSupportsOrderBy(false);
-		setDatabaseVersion("2003"); //$NON-NLS-1$
 		setMaxInCriteriaSize(JDBCExecutionFactory.DEFAULT_MAX_IN_CRITERIA);
 		setMaxDependentInPredicates(10); //sql length length is 64k
 	}

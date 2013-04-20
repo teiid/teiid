@@ -32,11 +32,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.teiid.language.Comparison;
+import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Function;
 import org.teiid.language.LanguageObject;
 import org.teiid.language.Literal;
 import org.teiid.language.Not;
-import org.teiid.language.Comparison.Operator;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
@@ -60,7 +60,6 @@ public class ModeShapeExecutionFactory extends JDBCExecutionFactory {
 	private static final String JCR_ISCHILDNODE = "JCR_ISCHILDNODE";//$NON-NLS-1$
 	
 	public ModeShapeExecutionFactory() {
-		setDatabaseVersion("2.0"); //$NON-NLS-1$
 		setUseBindVariables(false);
 	}
 	

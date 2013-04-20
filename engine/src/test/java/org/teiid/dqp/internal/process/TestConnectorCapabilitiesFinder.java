@@ -73,8 +73,36 @@ public class TestConnectorCapabilitiesFinder {
         // Test
         SourceCapabilities actual = finder.findCapabilities(modelName);
         assertEquals("Did not get expected capabilities", true, actual.supportsFunction(functionName)); //$NON-NLS-1$
+        assertTrue(finder.isValid(modelName)); 
     }
+    
+    @Test public void testFindRequiresSource() throws Exception {
+        String modelName = "model"; //$NON-NLS-1$
+        String functionName = "fakeFunction"; //$NON-NLS-1$
+        
+        ArrayList<String> bindings = new ArrayList<String>();
+        bindings.add(modelName);
+        
+        VDBMetaData vdb = Mockito.mock(VDBMetaData.class); 
+        ModelMetaData model = Mockito.mock(ModelMetaData.class); 
+        Mockito.stub(vdb.getModel(modelName)).toReturn(model);
+        Mockito.stub(model.getSourceNames()).toReturn(bindings);
+        
+        BasicSourceCapabilities basicSourceCapabilities = new BasicSourceCapabilities();
+        basicSourceCapabilities.setFunctionSupport(functionName, true);
 
+        ConnectorManagerRepository repo = Mockito.mock(ConnectorManagerRepository.class);
+        ConnectorManager cm = Mockito.mock(ConnectorManager.class);
+        Mockito.stub(cm.getCapabilities()).toThrow(new TranslatorException());
+        Mockito.stub(repo.getConnectorManager(Mockito.anyString())).toReturn(cm);
+        
+        CachedFinder finder = new CachedFinder(repo, vdb);
+        
+        // Test
+        SourceCapabilities actual = finder.findCapabilities(modelName);
+        assertEquals(CachedFinder.INVALID_CAPS, actual); //$NON-NLS-1$
+        assertFalse(finder.isValid(modelName)); 
+    }
     
     @Test public void testPushdownFunctionSupport() throws Exception {
     	ExecutionFactory<Object, Object> ef  = new ExecutionFactory<Object, Object>(){

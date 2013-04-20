@@ -62,7 +62,7 @@ public class ConnectorManager  {
     // known requests
     private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
 	
-	private SourceCapabilities cachedCapabilities;
+	private volatile SourceCapabilities cachedCapabilities;
 	
 	private volatile boolean stopped;
 	private ExecutionFactory<Object, Object> executionFactory;
@@ -102,16 +102,37 @@ public class ConnectorManager  {
     	return getExecutionFactory().getPushDownFunctions();
     }
     
-    public SourceCapabilities getCapabilities() throws TeiidComponentException {
+    public SourceCapabilities getCapabilities() throws TranslatorException, TeiidComponentException {
     	if (cachedCapabilities != null) {
     		return cachedCapabilities;
     	}
-
 		checkStatus();
 		ExecutionFactory<Object, Object> translator = getExecutionFactory();
-		BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, id);
-		cachedCapabilities = resultCaps;
-		return resultCaps;
+		synchronized (this) {
+			if (translator.isSourceRequiredForCapabilities()) {
+				Object connection = null;
+				Object connectionFactory = null;
+				try {
+					connectionFactory = getConnectionFactory();
+				
+					if (connectionFactory != null) {
+						connection = translator.getConnection(connectionFactory, null);
+					}
+					if (connection == null) {
+			    		throw new TranslatorException(QueryPlugin.Event.TEIID31108, QueryPlugin.Util.getString("datasource_not_found", getConnectionName())); //$NON-NLS-1$);
+			    	}
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Initializing the capabilities for", translatorName); //$NON-NLS-1$
+					executionFactory.initCapabilities(connection);
+				} finally {
+					if (connection != null) {
+						translator.closeConnection(connection, connectionFactory);
+					}
+				}
+			}
+			BasicSourceCapabilities resultCaps = CapabilitiesConverter.convertCapabilities(translator, id);
+			cachedCapabilities = resultCaps;
+		}
+		return cachedCapabilities;
     }
     
     public ConnectorWork registerRequest(AtomicRequestMessage message) throws TeiidComponentException {
