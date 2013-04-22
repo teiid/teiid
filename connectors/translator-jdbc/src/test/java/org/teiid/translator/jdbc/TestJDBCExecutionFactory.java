@@ -21,10 +21,13 @@
  */
 package org.teiid.translator.jdbc;
 
-import org.junit.Test;
 import static org.junit.Assert.*;
+
 import java.util.Calendar;
 
+import org.junit.Test;
+
+@SuppressWarnings("nls")
 public class TestJDBCExecutionFactory {
 
 	@Test public void testDatabaseCalender() throws Exception {
@@ -51,5 +54,16 @@ public class TestJDBCExecutionFactory {
 		t2.join();
 		
 		assertNotSame(cals[0], cals[1]);
+	}
+	
+	@Test public void testVersion() {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		jef.setDatabaseVersion("Some db 1.2.3 (some build)");
+		assertEquals("1.2.3", jef.getDatabaseVersion().toString());
+		assertEquals(new Version(new Integer[] {1, 2, 3}), jef.getVersion());
+		
+		Version version = Version.getVersion("10.0");
+		assertTrue(version.compareTo(Version.getVersion("9.1")) > 0);
+		assertTrue(version.compareTo(Version.getVersion("10.0.1")) < 0);
 	}
 }

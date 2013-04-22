@@ -59,7 +59,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
 	public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
-
+	
 	// Because the retrieveValue() method will be hit for every value of 
     // every JDBC result set returned, we do lots of weird special stuff here 
     // to improve the performance (most importantly to remove big if/else checks
@@ -126,11 +126,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private String databaseTimeZone;
 	private boolean trimStrings;
 	private boolean useCommentsInSourceQuery;
-	private String version;
+	private Version version;
 	private int maxInsertBatchSize = 2048;
 	private DatabaseCalender databaseCalender;
 	private boolean supportsGeneratedKeys;
-
+	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
 	public JDBCExecutionFactory() {
@@ -151,14 +151,30 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
     @TranslatorProperty(display="Database Version", description= "Database Version")
     public String getDatabaseVersion() {
-    	if (this.version == null) {
-    		return "";
-    	}
-    	return this.version;
+    	return this.version.toString();
     }
     
+    /**
+     * Sets the database version.  See also {@link #getVersion()}
+     * @param version
+     */
     public void setDatabaseVersion(String version) {
-    	this.version = version;
+    	this.version = Version.getVersion(version);
+    }
+    
+    public void setDatabaseVersion(Version version) {
+		this.version = version;
+    }
+    
+    /**
+     * Get the database version as a comparable object
+     * @return
+     */
+    protected Version getVersion() {
+    	if (version == null) {
+    		return Version.DEFAULT_VERSION;
+    	}
+    	return this.version;
     }
     
 	@TranslatorProperty(display="Use Bind Variables", description="Use prepared statements and bind variables",advanced=true)

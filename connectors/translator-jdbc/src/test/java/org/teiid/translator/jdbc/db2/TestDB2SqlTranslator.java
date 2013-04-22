@@ -285,7 +285,7 @@ public class TestDB2SqlTranslator {
     	db2.setdB2ForI(true);
     	assertFalse(db2.supportsFunctionsInGroupBy());
     	assertFalse(db2.supportsElementaryOlapOperations());
-    	db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1);    	
+    	db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1.toString());    	
     	assertTrue(db2.supportsElementaryOlapOperations());
     }
 

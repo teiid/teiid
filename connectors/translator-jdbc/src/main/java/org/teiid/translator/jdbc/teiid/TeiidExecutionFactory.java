@@ -30,6 +30,7 @@ import java.util.List;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.Version;
 
 /** 
  * @since 4.3
@@ -37,14 +38,14 @@ import org.teiid.translator.jdbc.JDBCExecutionFactory;
 @Translator(name="teiid", description="A translator for Teiid 7.0 or later")
 public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	
-	public static final String SEVEN_0 = "7.0"; //$NON-NLS-1$
-	public static final String SEVEN_1 = "7.1"; //$NON-NLS-1$
-	public static final String SEVEN_2 = "7.2"; //$NON-NLS-1$
-	public static final String SEVEN_3 = "7.3"; //$NON-NLS-1$
-	public static final String SEVEN_4 = "7.4"; //$NON-NLS-1$
-	public static final String SEVEN_5 = "7.5"; //$NON-NLS-1$
-	public static final String SEVEN_6 = "7.6"; //$NON-NLS-1$
-	public static final String EIGHT_3 = "8.3"; //$NON-NLS-1$
+	public static final Version SEVEN_0 = Version.getVersion("7.0"); //$NON-NLS-1$
+	public static final Version SEVEN_1 = Version.getVersion("7.1"); //$NON-NLS-1$
+	public static final Version SEVEN_2 = Version.getVersion("7.2"); //$NON-NLS-1$
+	public static final Version SEVEN_3 = Version.getVersion("7.3"); //$NON-NLS-1$
+	public static final Version SEVEN_4 = Version.getVersion("7.4"); //$NON-NLS-1$
+	public static final Version SEVEN_5 = Version.getVersion("7.5"); //$NON-NLS-1$
+	public static final Version SEVEN_6 = Version.getVersion("7.6"); //$NON-NLS-1$
+	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -144,21 +145,21 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("NULLIF"); //$NON-NLS-1$
         supportedFunctions.add("COALESCE"); //$NON-NLS-1$
         
-        if (getDatabaseVersion().compareTo(SEVEN_3) >= 0) {
+        if (getVersion().compareTo(SEVEN_3) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.UNESCAPE);
         }
         
-        if (getDatabaseVersion().compareTo(SEVEN_4) >= 0) {
+        if (getVersion().compareTo(SEVEN_4) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.UUID);
         	supportedFunctions.add(SourceSystemFunctions.ARRAY_GET);
         	supportedFunctions.add(SourceSystemFunctions.ARRAY_LENGTH);
         }
         
-        if (getDatabaseVersion().compareTo(SEVEN_5) >= 0) {
+        if (getVersion().compareTo(SEVEN_5) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.TRIM);
         }
         
-        if (getDatabaseVersion().compareTo(EIGHT_3) >= 0) {
+        if (getVersion().compareTo(EIGHT_3) >= 0) {
         	supportedFunctions.add(SourceSystemFunctions.ENDSWITH);
         }
         
@@ -194,7 +195,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return getDatabaseVersion().compareTo(SEVEN_1) >= 0;
+    	return getVersion().compareTo(SEVEN_1) >= 0;
     }
     
     @Override
@@ -209,42 +210,42 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsCommonTableExpressions() {
-    	return getDatabaseVersion().compareTo(SEVEN_2) >= 0;
+    	return getVersion().compareTo(SEVEN_2) >= 0;
     }
     
     @Override
     public boolean supportsAdvancedOlapOperations() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsElementaryOlapOperations() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsArrayAgg() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsLikeRegex() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsSimilarTo() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
     public boolean supportsWindowDistinctAggregates() {
-    	return getDatabaseVersion().compareTo(SEVEN_6) >= 0;
+    	return getVersion().compareTo(SEVEN_6) >= 0;
     }
     
     @Override
     public boolean supportsWindowOrderByWithAggregates() {
-    	return getDatabaseVersion().compareTo(SEVEN_5) >= 0;
+    	return getVersion().compareTo(SEVEN_5) >= 0;
     }
     
     @Override
@@ -255,7 +256,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     
     @Override
     public boolean supportsGeneratedKeys() {
-    	return getDatabaseVersion().compareTo(EIGHT_3) >= 0;
+    	return getVersion().compareTo(EIGHT_3) >= 0;
     }
     
     @Override

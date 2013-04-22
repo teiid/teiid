@@ -52,16 +52,17 @@ import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.ParseFormatFunctionModifier;
+import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.oracle.ConcatFunctionModifier;
 
 
 @Translator(name="sybase", description="A translator for Sybase Database")
 public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 
-	public static final String TWELVE_5_3 = "12.5.3"; //$NON-NLS-1$
-	public static final String TWELVE_5 = "12.5"; //$NON-NLS-1$
-	public static final String FIFTEEN_0_2 = "15.0.2"; //$NON-NLS-1$
-	public static final String FIFTEEN_5 = "15.5"; //$NON-NLS-1$
+	public static final Version TWELVE_5_3 = Version.getVersion("12.5.3"); //$NON-NLS-1$
+	public static final Version TWELVE_5 = Version.getVersion("12.5"); //$NON-NLS-1$
+	public static final Version FIFTEEN_0_2 = Version.getVersion("15.0.2"); //$NON-NLS-1$
+	public static final Version FIFTEEN_5 = Version.getVersion("15.5"); //$NON-NLS-1$
 	
 	protected Map<String, Integer> formatMap = new HashMap<String, Integer>();
 	protected boolean jtdsDriver;
@@ -341,7 +342,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
-    	return getDatabaseVersion().compareTo(FIFTEEN_0_2) >= 0;
+    	return getVersion().compareTo(FIFTEEN_0_2) >= 0;
     }
     
     public boolean nullPlusNonNullIsNull() {
@@ -369,7 +370,7 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 	
 	@Override
 	public boolean supportsRowLimit() {
-		return (getDatabaseVersion().startsWith("12") && getDatabaseVersion().compareTo(TWELVE_5_3) >= 0) || getDatabaseVersion().compareTo(FIFTEEN_0_2) >=0; //$NON-NLS-1$
+		return (getVersion().getMajorVersion() == 12 && getVersion().compareTo(TWELVE_5_3) >= 0) || getVersion().compareTo(FIFTEEN_0_2) >=0; //$NON-NLS-1$
 	}
 
 	@TranslatorProperty(display="JTDS Driver", description="True if the driver is the JTDS driver",advanced=true)
