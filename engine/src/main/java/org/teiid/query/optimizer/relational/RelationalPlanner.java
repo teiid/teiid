@@ -84,6 +84,7 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
@@ -112,6 +113,13 @@ public class RelationalPlanner {
 	private PlanHints hints = new PlanHints();
 	private Option option;
 	private SourceHint sourceHint;
+	
+	private static final Comparator<GroupSymbol> nonCorrelatedComparator = new Comparator<GroupSymbol>() {
+		@Override
+		public int compare(GroupSymbol arg0, GroupSymbol arg1) {
+			return arg0.getNonCorrelationName().compareTo(arg1.getNonCorrelationName());
+		}
+	};
 	
 	private static class PlanningStackEntry {
 		Command command;
@@ -167,16 +175,14 @@ public class RelationalPlanner {
 		PlanToProcessConverter planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
 		
 		//plan with
-        List<WithQueryCommand> withList = null;
-        Object modelID = null;
-		boolean supportsWithPushdown = true;
-		List<WithQueryCommand> pushDownWith = null;
+		List<WithQueryCommand> withList = null;
+        Map<String, WithQueryCommand> pushdownWith = null;
+        Set<GroupSymbol> withGroups = null;
 		if (command instanceof QueryCommand) {
 			QueryCommand queryCommand = (QueryCommand)command;
-			final HashSet<String> names = new HashSet<String>();
-			if (queryCommand.getWith() != null) {
-	        	withList = queryCommand.getWith();
-	        	for (WithQueryCommand with : queryCommand.getWith()) {
+			withList = queryCommand.getWith();
+			if (withList != null) {
+	        	for (WithQueryCommand with : withList) {
 	        		QueryCommand subCommand = with.getCommand();
 	                RelationalPlan procPlan = (RelationalPlan)QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 	                RelationalNode root = procPlan.getRootNode();
@@ -186,30 +192,30 @@ public class RelationalPlanner {
 	                }
 	                subCommand.setProcessorPlan(procPlan);
 	                AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
-	                if (aNode != null && supportsWithPushdown) {
-	                	modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode);
-	            	}
+	                if (aNode == null) {
+	                	continue;
+	                }
+                	Object modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode);
                 	QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
 	                if (modelID == null || withCommand == null) {
-	                	supportsWithPushdown = false;
-	                } else {
-	                	if (pushDownWith == null) {
-	                		pushDownWith = new ArrayList<WithQueryCommand>();
-	                	}
-	                	WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
-	                	pushDownWith.add(wqc);
+	                	continue;
 	                }
-		        	names.add(with.getGroupSymbol().getName());
+	        		if (!CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder)) {
+	        			continue;
+	        		}
+                	WithQueryCommand wqc = new WithQueryCommand(with.getGroupSymbol(), with.getColumns(), withCommand);
+                	with.getGroupSymbol().setModelMetadataId(modelID);
+                	if (pushdownWith == null) {
+                		pushdownWith = new LinkedHashMap<String, WithQueryCommand>();
+                		withGroups = new TreeSet<GroupSymbol>(nonCorrelatedComparator);
+                	}
+                	pushdownWith.put(with.getGroupSymbol().getName(), wqc);
 				}
-	        	if (modelID != null && supportsWithPushdown) {
-	        		supportsWithPushdown = CapabilitiesUtil.supports(Capability.COMMON_TABLE_EXPRESSIONS, modelID, metadata, capFinder);
+	        	if (pushdownWith != null) {
+	        		addModelIds(command, pushdownWith);
 	        	}
-				if (supportsWithPushdown) {
-					addModelIds(command, modelID, names);
-				}
 	        }
 		}
-				
         PlanNode plan;
 		try {
 			plan = generatePlan(command, true);
@@ -222,7 +228,7 @@ public class RelationalPlanner {
 		} 
 
         // Connect ProcessorPlan to SubqueryContainer (if any) of SELECT or PROJECT nodes
-		connectSubqueryContainers(plan); //TODO: merge with node creation
+		connectSubqueryContainers(plan, pushdownWith, withGroups); //TODO: merge with node creation
         
         // Set top column information on top node
         List<Expression> topCols = Util.deepClone(command.getProjectedSymbols(), Expression.class);
@@ -234,26 +240,58 @@ public class RelationalPlanner {
         plan = executeRules(rules, plan);
 
         RelationalPlan result = planToProcessConverter.convert(plan);
-        if (withList != null && supportsWithPushdown) {
-            AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(result);
-        	if (aNode != null) { 
-        		QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
-				if (queryCommand == null || CriteriaCapabilityValidatorVisitor.validateCommandPushdown(modelID, metadata, capFinder, aNode) == null) {
-					supportsWithPushdown = false;
-				} else {
-					//TODO: do this prior to alias generation, or rerun alias generation here
-					queryCommand.setWith(pushDownWith);
-				}
-        	} else {
-        		supportsWithPushdown = false;
-        	}
+        boolean fullPushdown = false;
+        if (pushdownWith != null) {
+        	AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(result);
+         	if (aNode != null) { 
+         		QueryCommand queryCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
+         		if (queryCommand != null) {
+         			fullPushdown = true;
+         		}
+         	}
+     		//distribute the appropriate clauses to the pushdowns
+     		assignWithClause(result.getRootNode(), pushdownWith, withGroups);
         }
-        if (!supportsWithPushdown) {
+        if (!fullPushdown) {
+        	//generally any with item associated with a pushdown will not be needed as we're converting to a source query
         	result.setWith(withList);
         }
         result.setOutputElements(topCols);
         result.setSourceHint(sourceHint);
         return result;
+    }
+    
+    private static void assignWithClause(RelationalNode node, Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groups) {
+        if(node instanceof AccessNode) {
+            AccessNode accessNode = (AccessNode) node;
+            Command command = accessNode.getCommand();
+            if (command instanceof QueryCommand) {
+            	groups.clear();
+            	GroupCollectorVisitor.getGroupsIgnoreInlineViews(command, groups);
+            	List<WithQueryCommand> with = new ArrayList<WithQueryCommand>();
+            	for (GroupSymbol groupSymbol : groups) {
+            		WithQueryCommand clause = pushdownWith.get(groupSymbol.getNonCorrelationName());
+            		if (clause != null) {
+            			with.add(clause.clone());
+            		}
+				}
+            	if (!with.isEmpty()) {
+            		QueryCommand query = (QueryCommand)command;
+            		if (query.getWith() != null) {
+            			//we need to accumulate as a with clause could have been used at a lower scope
+            			query.getWith().addAll(with);
+            		} else {
+            			query.setWith(with);
+            		}
+            	}
+            }
+        } 
+        
+        // Recurse through children
+        RelationalNode[] children = node.getChildren();
+        for(int i=0; i<node.getChildCount(); i++) {
+        	assignWithClause(children[i], pushdownWith, groups);
+        }
     }
 
     /**
@@ -262,14 +300,14 @@ public class RelationalPlanner {
      * @param modelID
      * @param names
      */
-	private void addModelIds(Command command, final Object modelID,
-			final HashSet<String> names) {
+	private void addModelIds(Command command, final Map<String, WithQueryCommand> with) {
 		PreOrPostOrderNavigator.doVisit(command, new LanguageVisitor() {
 			@Override
 			public void visit(UnaryFromClause obj) {
 				GroupSymbol group = obj.getGroup();
-				if (names.contains(group.getNonCorrelationName())) {
-					group.setModelMetadataId(modelID);
+				WithQueryCommand wqc = with.get(group.getNonCorrelationName());
+				if (wqc != null) {
+					group.setModelMetadataId(wqc.getGroupSymbol().getModelMetadataId());
 				}
 			}
 		}, PreOrPostOrderNavigator.POST_ORDER, true);  
@@ -286,7 +324,7 @@ public class RelationalPlanner {
     	this.context = context;
 	}
 
-    private void connectSubqueryContainers(PlanNode plan) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
+    private void connectSubqueryContainers(PlanNode plan, Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groups) throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
         Set<GroupSymbol> groupSymbols = getGroupSymbols(plan);
 
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP)) {
@@ -320,6 +358,20 @@ public class RelationalPlanner {
                 	}
                 }
                 ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+                if (procPlan instanceof RelationalPlan && pushdownWith != null) {
+                	Map<String, WithQueryCommand> parentPushdownWith = pushdownWith;
+                	if (subCommand instanceof QueryCommand) {
+                		QueryCommand query = (QueryCommand)subCommand;
+                		List<WithQueryCommand> with = query.getWith();
+                		if (with != null && !with.isEmpty()) {
+                			parentPushdownWith = new HashMap<String, WithQueryCommand>(parentPushdownWith);
+                			for (WithQueryCommand withQueryCommand : with) {
+                				parentPushdownWith.remove(withQueryCommand.getGroupSymbol().getNonCorrelationName());
+							}
+                		}
+                	}
+                	assignWithClause(((RelationalPlan) procPlan).getRootNode(), parentPushdownWith, groups);
+                }
                 container.getCommand().setProcessorPlan(procPlan);
                 setCorrelatedReferences(container, correlatedReferences);
             }

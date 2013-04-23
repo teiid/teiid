@@ -101,6 +101,75 @@ public class TestWithClauseProcessing {
 	    helpProcess(plan, dataManager, expected);
 	}
 	
+	/**
+	 * This tests both an intervening parent plan construct (count) and a reference to a parent with in a subquery
+	 */
+	@Test public void testWithPushdownNotFullyPushed() throws TeiidException {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+       
+	    String sql = "with a as (select x, y, z from (select e1 as x, e2 as y, e3 as z from pm1.g1) v), b as (select e4 from pm1.g3) SELECT count(a.x), max(a.y) from a, a z group by z.x having max(a.y) < (with b as (select e1 from pm1.g1) select a.y from a, b where a.x = z.x)"; //$NON-NLS-1$
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    List<?>[] expected = new List[] { 
+		        Arrays.asList("a", 1, "a"),
+		    };    
+
+	    dataManager.addData("WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1", expected);
+	    dataManager.addData("WITH b (e1) AS (SELECT g_0.e1 FROM g1 AS g_0), a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM g1 AS g_0) SELECT g_0.y FROM a AS g_0, b AS g_1 WHERE g_0.x = 'a'", 
+	    		new List[] {Arrays.asList(2)});
+	    
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y, z) AS (SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0) SELECT g_1.x, g_0.y, g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    helpProcess(plan, dataManager, new List[] { 
+		        Arrays.asList(1, 1),
+		    });
+	}
+	
+	/**
+	 * Tests source affinity
+	 */
+	@Test public void testWithPushdownNotFullyPushed1() throws TeiidException {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_COUNT, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+       
+	    String sql = "with a as (select e1 from pm1.g1), b as (select e1 from pm2.g2), c as (select count(*) as x from pm1.g1) SELECT a.e1, (select max(x) from c), pm1.g1.e2 from pm1.g1, a, b"; //$NON-NLS-1$
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+
+	    dataManager.addData("WITH a (e1) AS (SELECT g_0.e1 FROM g1 AS g_0) SELECT g_0.e1 FROM a AS g_0",  new List[] { 
+		        Arrays.asList("a"),
+		    });
+	    dataManager.addData("WITH b (e1) AS (SELECT g_0.e1 FROM g2 AS g_0) SELECT 1 FROM b AS g_0",  new List[] { 
+		        Arrays.asList("b"),
+		    });
+	    dataManager.addData("SELECT g_0.e2 FROM g1 AS g_0", new List[] { 
+		        Arrays.asList(1), Arrays.asList(2)
+		    });
+	    dataManager.addData("SELECT 1 FROM g1 AS g_0", new List[] { 
+		        Arrays.asList(1), Arrays.asList(1), Arrays.asList(1)
+		    });
+	    
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {
+	    	"SELECT g_0.e2 FROM pm1.g1 AS g_0", 
+	    	"WITH b (e1) AS (SELECT g_0.e1 FROM pm2.g2 AS g_0) SELECT 1 FROM b AS g_0", 
+	    	"WITH a (e1) AS (SELECT g_0.e1 FROM pm1.g1 AS g_0) SELECT g_0.e1 FROM a AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    helpProcess(plan, dataManager,  new List[] { 
+		        Arrays.asList("a", 3, 1),
+		        Arrays.asList("a", 3, 2),
+		    });
+	}
+
 	@Test public void testWithPushdownWithConstants() throws TeiidException {
 		 FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
