@@ -73,6 +73,7 @@ import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.processor.QueryProcessor.ExpiredTimeSliceException;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.SPParameter;
@@ -323,15 +324,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
         		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- processor blocked"); //$NON-NLS-1$ //$NON-NLS-2$
         	}
-        	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION) {
+        	if (e == BlockedException.BLOCKED_ON_MEMORY_EXCEPTION || e instanceof ExpiredTimeSliceException) {
         		//requeue
         		this.moreWork();
         	}
-        } catch (QueryProcessor.ExpiredTimeSliceException e) {
-        	if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-        		LogManager.logDetail(LogConstants.CTX_DQP, "Request Thread", requestID, "- time slice expired"); //$NON-NLS-1$ //$NON-NLS-2$
-        	}
-            this.moreWork();
         } catch (Throwable e) {
         	handleThrowable(e);
         } finally {

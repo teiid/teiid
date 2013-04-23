@@ -33,7 +33,6 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.logging.LogConstants;
@@ -48,7 +47,7 @@ import org.teiid.query.util.CommandContext;
  */
 public class QueryProcessor implements BatchProducer {
 
-	public static class ExpiredTimeSliceException extends TeiidRuntimeException {
+	public static class ExpiredTimeSliceException extends BlockedException {
 		private static final long serialVersionUID = 4585044674826578060L;
 	}
 	
