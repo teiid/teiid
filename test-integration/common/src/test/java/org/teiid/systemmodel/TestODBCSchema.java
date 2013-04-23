@@ -2,11 +2,15 @@ package org.teiid.systemmodel;
 
 import static org.junit.Assert.*;
 
+import java.util.ArrayList;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
@@ -102,6 +106,32 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 			execute("select count(distinct oid), count(*) from "+table);
 			internalResultSet.next();
 			assertEquals(internalResultSet.getInt(2), internalResultSet.getInt(1));
+		}
+	}
+	
+	@Test public void testPGTableConflicts() throws Exception {
+		execute("select name FROM tables where schemaname='pg_catalog'"); //$NON-NLS-1$
+		ArrayList<String> names = new ArrayList<String>();
+		while (internalResultSet.next()) {
+			names.add(internalResultSet.getString(1));
+		}
+		System.out.println(names);
+		ModelMetaData mmd = new ModelMetaData();
+		mmd.setName("x");
+		mmd.setModelType(Type.VIRTUAL);
+		mmd.setSchemaSourceType("ddl");
+		StringBuffer ddl = new StringBuffer();
+		for (String name : names) {
+			ddl.append("create view "+name+" as select 1;\n");
+		}
+		mmd.setSchemaText(ddl.toString());
+		server.deployVDB("x", mmd);
+		
+		this.internalConnection.close();
+		this.internalConnection = server.createConnection("jdbc:teiid:x"); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		for (String name : names) {
+			execute("select * from pg_catalog." + name);
 		}
 	}
 }
