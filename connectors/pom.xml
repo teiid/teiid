@@ -6,7 +6,6 @@
     <version>8.4.0.Beta3-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.jboss.teiid</groupId>
   <artifactId>connectors</artifactId>
   <packaging>pom</packaging>
   <name>Connectors</name>
@@ -98,11 +97,11 @@
     <module>translator-file</module>
     <module>translator-salesforce</module>
     <module>connector-file</module>
-        <module>connector-google</module>
+    <module>connector-google</module>
     <module>connector-salesforce</module>
     <module>connector-ldap</module>
     <module>salesforce-api</module>
-        <module>google-api</module>
+    <module>google-api</module>
     <module>connector-ws</module>
     <module>sandbox</module>
     <module>translator-ws</module>
@@ -112,5 +111,8 @@
     <module>translator-object</module>
     <module>connector-infinispan</module>
     <module>translator-odata</module>
+    <module>mongodb-api</module>
+    <module>connector-mongodb</module>
+    <module>translator-mongodb</module>
   </modules>
 </project>
