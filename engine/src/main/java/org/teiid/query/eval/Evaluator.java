@@ -861,17 +861,19 @@ public class Evaluator {
 		}
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30336, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30336));
 	}
+	
+	private static TextLine.ValueExtractor<NameValuePair<Object>> defaultExtractor = new TextLine.ValueExtractor<NameValuePair<Object>>() {
+		public Object getValue(NameValuePair<Object> t) {
+			return t.value;
+		}
+	};
 
 	private Object evaluateTextLine(List<?> tuple, TextLine function) throws ExpressionEvaluationException, BlockedException, TeiidComponentException, FunctionExecutionException {
 		List<DerivedColumn> args = function.getExpressions();
 		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true);
 		
 		try {
-			return TextLine.evaluate(Arrays.asList(nameValuePairs), new TextLine.ValueExtractor<NameValuePair<Object>>() {
-				public Object getValue(NameValuePair<Object> t) {
-					return t.value;
-				}
-			}, function);
+			return TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function);
 		} catch (TransformationException e) {
 			 throw new ExpressionEvaluationException(e);
 		}

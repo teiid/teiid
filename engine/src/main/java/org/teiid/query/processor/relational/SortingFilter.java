@@ -105,7 +105,6 @@ public class SortingFilter extends AggregateFunction {
 			throws TeiidComponentException, TeiidProcessingException {
         if(collectionBuffer == null) {
             collectionBuffer = mgr.createTupleBuffer(elements, groupName, TupleSourceType.PROCESSOR);
-            collectionBuffer.setForwardOnly(true);
         }
         List<Object> row = new ArrayList<Object>(argIndexes.length);
         //TODO remove overlap

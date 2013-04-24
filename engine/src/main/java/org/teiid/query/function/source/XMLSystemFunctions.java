@@ -586,7 +586,6 @@ public class XMLSystemFunctions {
 	public static class XmlConcat {
 		private XMLOutputFactory factory;
 		private XMLEventWriter eventWriter;
-		private XMLEventFactory eventFactory;
 		private Writer writer;
 		private FileStoreInputStreamFactory fsisf;
 		private FileStore fs;
@@ -603,7 +602,6 @@ public class XMLSystemFunctions {
 				fs.remove();
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30437, e);
 			}
-			eventFactory = threadLocalEventtFactory.get();
 		}
 		
 		public void addValue(Object object) throws TeiidProcessingException {
@@ -615,7 +613,7 @@ public class XMLSystemFunctions {
 				type = Type.CONTENT;
 			}
 			try {
-				convertValue(writer, eventWriter, eventFactory, object);
+				convertValue(writer, eventWriter, threadLocalEventtFactory.get(), object);
 			} catch (IOException e) {
 				fs.remove();
 				 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);

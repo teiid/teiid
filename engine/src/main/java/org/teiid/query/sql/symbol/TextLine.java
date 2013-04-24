@@ -150,7 +150,7 @@ public class TextLine implements Expression {
 	public static <T> List<Object> evaluate(final List<T> values, ValueExtractor<T> valueExtractor, TextLine textLine) throws TransformationException {
 		Character delimeter = textLine.getDelimiter();
 		if (delimeter == null) {
-			delimeter = new Character(',');
+			delimeter = Character.valueOf(',');
 		}
 		Character quote = textLine.getQuote();
 		String quoteStr = null;		
