@@ -51,7 +51,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class TestJoinNode {
     private static final int NO_CRITERIA = 0;
     private static final int EQUAL_CRITERIA = 1;
@@ -697,6 +697,77 @@ public class TestJoinNode {
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.SORT);
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, batchSize, 1);
+	}
+	
+	@Test public void testMergeJoinOptimizationLeftOuter() throws Exception {
+		this.joinType = JoinType.JOIN_LEFT_OUTER;
+        int rows = 12;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 45);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = createTuples2();
+        expected = new List[] {
+           Arrays.asList(new Object[] { 0, null }),
+           Arrays.asList(new Object[] {17, null }),
+           Arrays.asList(new Object[] {34, null }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] {23, null }),
+           Arrays.asList(new Object[] {40, null }),
+           Arrays.asList(new Object[] {12, null }),
+           Arrays.asList(new Object[] {29, null }),
+           Arrays.asList(new Object[] { 1, 1 }),  
+           Arrays.asList(new Object[] {18, null }),
+           Arrays.asList(new Object[] {35, null }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+        };
+        
+        System.out.println(Arrays.toString(this.leftTuples));
+        helpCreateJoin();
+        EnhancedSortMergeJoinStrategy esmjs = new EnhancedSortMergeJoinStrategy(SortOption.NOT_SORTED, SortOption.SORT);
+        this.joinStrategy = esmjs;
+        this.join.setJoinStrategy(joinStrategy);
+        
+        helpTestJoinDirect(expected, 10, 1);
+	}
+	
+	@Test public void testMergeJoinOptimizationLeftOuterEmpty() throws Exception {
+		this.joinType = JoinType.JOIN_LEFT_OUTER;
+        int rows = 12;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 45);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = new List[0];
+        expected = new List[] {
+           Arrays.asList(new Object[] { 0, null }),
+           Arrays.asList(new Object[] {17, null }),
+           Arrays.asList(new Object[] {34, null }),
+           Arrays.asList(new Object[] { 6, null }),
+           Arrays.asList(new Object[] {23, null }),
+           Arrays.asList(new Object[] {40, null }),
+           Arrays.asList(new Object[] {12, null }),
+           Arrays.asList(new Object[] {29, null }),
+           Arrays.asList(new Object[] { 1, null }),  
+           Arrays.asList(new Object[] {18, null }),
+           Arrays.asList(new Object[] {35, null }),
+           Arrays.asList(new Object[] { 7, null }),
+        };
+        
+        System.out.println(Arrays.toString(this.leftTuples));
+        helpCreateJoin();
+        EnhancedSortMergeJoinStrategy esmjs = new EnhancedSortMergeJoinStrategy(SortOption.NOT_SORTED, SortOption.SORT);
+        this.joinStrategy = esmjs;
+        this.join.setJoinStrategy(joinStrategy);
+        
+        helpTestJoinDirect(expected, 10, 1);
 	}
     
     @Test public void testMergeJoinOptimizationMultiBatch() throws Exception {

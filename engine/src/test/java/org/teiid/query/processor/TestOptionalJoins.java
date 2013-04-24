@@ -26,10 +26,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
-import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-
+@SuppressWarnings("rawtypes")
 public class TestOptionalJoins {
     
     @Test public void testOptionalJoinNode1() { 
@@ -134,10 +133,10 @@ public class TestOptionalJoins {
     
     @Test public void testOptionalJoinNode5() { 
         // Create query 
-        String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN /* optional */ pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
+        String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN /* optional */ pm1.g3 on pm1.g1.e1 = pm1.g3.e1 order by e1"; //$NON-NLS-1$
         
         // Create expected results
-        List[] expected = new List[] { 
+        List<?>[] expected = new List<?>[] { 
             Arrays.asList(new Object[] { null }), 
             Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
@@ -165,7 +164,7 @@ public class TestOptionalJoins {
     
     @Test public void testOptionalJoinNode6() { 
         // Create query 
-        String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN pm1.g3 on pm1.g1.e1 = pm1.g3.e1"; //$NON-NLS-1$
+        String sql = "SELECT pm1.g1.e1 FROM (pm1.g1 LEFT OUTER JOIN /* optional */ pm1.g2 on pm1.g1.e1 = pm1.g2.e1) LEFT OUTER JOIN pm1.g3 on pm1.g1.e1 = pm1.g3.e1 order by e1"; //$NON-NLS-1$
         
         // Create expected results
         List[] expected = new List[] { 
