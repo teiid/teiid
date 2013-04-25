@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
@@ -46,10 +47,14 @@ import org.teiid.query.util.CommandContext;
 @SuppressWarnings("nls")
 public class TestRowBasedSecurity {
 
-	static CommandContext context = createContext();
+	CommandContext context;
+	
+	@Before public void setup() {
+		context = createContext();
+	}
 
 	private static CommandContext createContext() {
-		context = createCommandContext();
+		CommandContext context = createCommandContext();
 		DQPWorkContext workContext = new DQPWorkContext();
 		HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
 		DataPolicyMetadata policy = new DataPolicyMetadata();
@@ -60,9 +65,19 @@ public class TestRowBasedSecurity {
 		PermissionMetaData pmd1 = new PermissionMetaData();
 		pmd1.setResourceName("pm1.g2");
 		pmd1.setCondition("foo = bar");
-
-		policy.addPermission(pmd, pmd1);
+		
+		PermissionMetaData pmd2 = new PermissionMetaData();
+		pmd2.setResourceName("pm1.g4");
+		pmd2.setCondition("e1 = max(e2)");
+		
+		PermissionMetaData pmd3 = new PermissionMetaData();
+		pmd3.setResourceName("pm1.g3");
+		pmd3.setAllowDelete(true);
+		
+		policy.addPermission(pmd, pmd1, pmd2, pmd3);
+		policy.setName("some-role");
 		policies.put("some-role", policy);
+		
 		workContext.setPolicies(policies);
 		context.setDQPWorkContext(workContext);
 		return context;
@@ -169,5 +184,33 @@ public class TestRowBasedSecurity {
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 
+	@Test(expected=QueryMetadataException.class) public void testBadFilter1() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		ProcessorPlan plan = helpGetPlan(helpParse("select * from pm1.g4"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[0]; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
 	
+	/**
+	 * Here the other role makes the g1 rows visible again
+	 */
+	@Test public void testMultipleRoles() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		ProcessorPlan plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		helpProcess(plan, context, dataManager, new List<?>[0]);
+		
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd3 = new PermissionMetaData();
+		pmd3.setResourceName("pm1.g1");
+		pmd3.setCondition("true");
+		policy1.addPermission(pmd3);
+		policy1.setName("some-other-role");
+		context.getAllowedDataPolicies().put("some-other-role", policy1);
+		
+		plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(1), Arrays.asList(2)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+
 }
