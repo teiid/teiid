@@ -1,3 +1,25 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * See the COPYRIGHT.txt file distributed with this work for information
+ * regarding copyright ownership.  Some portions may be licensed
+ * to Red Hat, Inc. under one or more contributor license agreements.
+ * 
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ * 
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+ * 02110-1301 USA.
+ */
+
 package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
@@ -17,6 +39,7 @@ import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
@@ -43,6 +66,10 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.util.CommandContext;
+import org.teiid.query.validator.ValidationVisitor;
+import org.teiid.query.validator.Validator;
+import org.teiid.query.validator.ValidatorFailure;
+import org.teiid.query.validator.ValidatorReport;
 
 public class RowBasedSecurityHelper {
 	
@@ -51,15 +78,16 @@ public class RowBasedSecurityHelper {
 	public static Criteria getRowBasedFilters(QueryMetadataInterface metadata,
 			final GroupSymbol group, CommandContext cc)
 			throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
-		ArrayList<Criteria> crits = new ArrayList<Criteria>(2);
 		Map<String, DataPolicy> policies = cc.getAllowedDataPolicies();
 		if (policies == null || policies.isEmpty()) {
 			return null;
 		}
-		Criteria filter = (Criteria)metadata.getFromMetadataCache(group.getMetadataID(), FILTER_KEY);
-		if (filter == null) {
-			for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
-				DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
+		ArrayList<Criteria> crits = null;
+		for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
+			DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
+			String key = FILTER_KEY + dpm.getName();
+			Criteria filter = (Criteria)metadata.getFromMetadataCache(group.getMetadataID(), key);
+			if (filter == null) {
 				Object metadataID = group.getMetadataID();
 				String fullName = metadata.getFullName(metadataID);
 				PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
@@ -67,35 +95,46 @@ public class RowBasedSecurityHelper {
 					continue;
 				}
 				String filterString = pmd.getCondition();
+				if (filterString == null) {
+					continue;
+				}
 				try {
-					Criteria c = QueryParser.getQueryParser().parseCriteria(filterString);
+					filter = QueryParser.getQueryParser().parseCriteria(filterString);
 					GroupSymbol gs = group;
 					if (group.getDefinition() != null) {
 						gs = new GroupSymbol(fullName);
 						gs.setMetadataID(metadataID);
 					}
-					ResolverVisitor.resolveLanguageObject(c, Arrays.asList(gs), metadata);
-					crits.add(c);
-				} catch (QueryProcessingException e) {
+					ResolverVisitor.resolveLanguageObject(filter, Arrays.asList(gs), metadata);
+                    ValidatorReport report = Validator.validate(filter, metadata, new ValidationVisitor());
+			        if (report.hasItems()) {
+			        	ValidatorFailure firstFailure = report.getItems().iterator().next();
+			        	throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName) + " " + firstFailure); //$NON-NLS-1$
+				    }
+					metadata.addToMetadataCache(group.getMetadataID(), key, filter);
+				} catch (QueryMetadataException e) {
+					throw e;
+				} catch (TeiidException e) {
 					throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName));
 				}
-			}
-			if (crits.isEmpty()) {
-				metadata.addToMetadataCache(group.getMetadataID(), FILTER_KEY, QueryRewriter.TRUE_CRITERIA);
-				return null;
-			}
-			if (crits.size() == 1) {
-				filter = crits.get(0);
 			} else {
-				filter = new CompoundCriteria(CompoundCriteria.AND, crits);
+				filter = (Criteria) filter.clone();
 			}
-			metadata.addToMetadataCache(group.getMetadataID(), FILTER_KEY, filter);
-		} else if (filter.equals(QueryRewriter.TRUE_CRITERIA)) {
-			//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic
-			cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);  
+			if (crits == null) {
+				crits = new ArrayList<Criteria>(2);
+			}
+			crits.add(filter);
+		}
+		if (crits == null || crits.isEmpty()) {
 			return null;
 		}
-		filter = (Criteria)filter.clone();
+		Criteria result = null;
+		if (crits.size() == 1) {
+			result = crits.get(0);
+		} else {
+			result = new CompoundCriteria(CompoundCriteria.OR, crits);
+		}
+		
 		if (group.getDefinition() != null) {
 			ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
 				@Override
@@ -110,12 +149,12 @@ public class RowBasedSecurityHelper {
 					return element;
 				}
 			};
-	        PreOrPostOrderNavigator.doVisit(filter, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
+	        PreOrPostOrderNavigator.doVisit(result, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
 		}
 		//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic 
 		cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);  
-		QueryRewriter.rewriteCriteria(filter, cc, metadata);
-		return filter;
+		QueryRewriter.rewriteCriteria(result, cc, metadata);
+		return result;
 	}
 
 	public static Command checkUpdateRowBasedFilters(ProcedureContainer container, Command procedure, RelationalPlanner planner)
