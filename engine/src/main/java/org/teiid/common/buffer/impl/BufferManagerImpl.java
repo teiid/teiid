@@ -55,6 +55,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
 import org.teiid.core.types.Streamable;
 import org.teiid.dqp.internal.process.DQPConfiguration;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -737,6 +738,14 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				}
 			}
 			if (result == 0) {
+				if (context != null) {
+			    	RequestWorkItem workItem = context.getWorkItem();
+			    	if (workItem != null) {
+			    		//if we have a workitem (non-test scenario) then before 
+			    		//throwing blocked on memory to indicate there's more work
+			    		workItem.moreWork();
+			    	}
+				}
 				throw BlockedException.BLOCKED_ON_MEMORY_EXCEPTION;
 			}
 		}

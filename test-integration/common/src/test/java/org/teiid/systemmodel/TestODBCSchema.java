@@ -115,7 +115,6 @@ public class TestODBCSchema extends AbstractMMQueryTestCase {
 		while (internalResultSet.next()) {
 			names.add(internalResultSet.getString(1));
 		}
-		System.out.println(names);
 		ModelMetaData mmd = new ModelMetaData();
 		mmd.setName("x");
 		mmd.setModelType(Type.VIRTUAL);

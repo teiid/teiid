@@ -34,6 +34,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -185,6 +186,12 @@ public class QueryProcessor implements BatchProducer {
 			closeProcessing();
 		} 
 	    if (result == null) {
+	    	RequestWorkItem workItem = this.getContext().getWorkItem();
+	    	if (workItem != null) {
+	    		//if we have a workitem (non-test scenario) then before 
+	    		//throwing exprired time slice we need to indicate there's more work
+	    		workItem.moreWork();
+	    	}
 	    	throw EXPIRED_TIME_SLICE;
 	    }
 		return result;
