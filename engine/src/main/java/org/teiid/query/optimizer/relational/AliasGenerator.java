@@ -377,9 +377,9 @@ public class AliasGenerator extends PreOrderNavigator {
                         
             if (needsAlias) {
                 element = new AliasSymbol(Symbol.getShortName(element), expr);
-            } else if (expr instanceof ElementSymbol) {
+            } else {
             	element = expr;
-            	if (visitor.namingContext.aliasColumns) {
+            	if (expr instanceof ElementSymbol && visitor.namingContext.aliasColumns) {
             		((ElementSymbol)expr).setDisplayMode(DisplayMode.SHORT_OUTPUT_NAME);
             	}
             }

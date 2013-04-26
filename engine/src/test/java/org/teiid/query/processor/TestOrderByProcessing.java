@@ -30,6 +30,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -219,6 +220,19 @@ public class TestOrderByProcessing {
         FakeDataManager fdm = new FakeDataManager();
         sampleData1(fdm);
         helpProcess(plan, fdm, new List[] {Arrays.asList("c")});
+    }
+    
+	@Test public void testOrderByAggWithoutSelectExpression() throws Exception { 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        TestOptimizer.helpPlan("select sum (e2) as \"sum\" from pm1.g1 group by e1 order by \"sum\"", metadata, new String[] {"SELECT SUM(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY SUM(g_0.e2)"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
     }
 
 }
