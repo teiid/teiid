@@ -323,6 +323,15 @@ public class TestEmbeddedServer {
 		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model><translator name=\"foo\" type=\"h2\"></translator></vdb>".getBytes()));
 	}
 	
+	/**
+	 * Ensures schema validation is performed
+	 * @throws Exception
+	 */
+	@Test(expected=VirtualDatabaseException.class) public void testXMLDeployFails1() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\"><source/></model><translator name=\"foo\" type=\"h2\"></translator></vdb>".getBytes()));
+	}
+	
 	@Test(expected=VirtualDatabaseException.class) public void testDeploymentError() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		ec.setUseDisk(false);

@@ -23,6 +23,7 @@
 package org.teiid.runtime;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
@@ -54,6 +55,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.deployers.CompositeGlobalTableStore;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.UDFMetaData;
@@ -110,6 +112,7 @@ import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
 import org.teiid.vdb.runtime.VDBKey;
+import org.xml.sax.SAXException;
 
 /**
  * A simplified server environment for embedded use.
@@ -482,37 +485,60 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		vdb.setXmlDeployment(true);
 		vdb.setName(name);
 		vdb.setModels(Arrays.asList(models));
+		//TODO: the api should be hardened to prevent the creation of invalid metadata
+		//missing source/translator names will cause issues
 		deployVDB(vdb, null);
 	}
 	
 	/**
 	 * Deploy a vdb.xml file.  The name and version will be derived from the xml.
 	 * @param is, which will be closed by this deployment
-	 * @throws XMLStreamException 
 	 * @throws TranslatorException 
 	 * @throws ConnectorManagerException 
 	 * @throws VirtualDatabaseException 
+	 * @throws IOException 
 	 */
-	public void deployVDB(InputStream is) throws XMLStreamException, VirtualDatabaseException, ConnectorManagerException, TranslatorException {
-		VDBMetaData metadata = VDBMetadataParser.unmarshell(is);
+	public void deployVDB(InputStream is) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException {
+		byte[] bytes = ObjectConverterUtil.convertToByteArray(is);
+		try {
+			//TODO: find a way to do this off of the stream
+			VDBMetadataParser.validate(new ByteArrayInputStream(bytes));
+		} catch (SAXException e) {
+			throw new VirtualDatabaseException(e);
+		}
+		VDBMetaData metadata;
+		try {
+			metadata = VDBMetadataParser.unmarshell(new ByteArrayInputStream(bytes));
+		} catch (XMLStreamException e) {
+			throw new VirtualDatabaseException(e);
+		}
 		deployVDB(metadata, null);
 	}
 	
 	/**
 	 * Deploy a vdb zip file.  The name and version will be derived from the xml.
 	 * @param url
-	 * @throws XMLStreamException 
 	 * @throws TranslatorException 
 	 * @throws ConnectorManagerException 
 	 * @throws VirtualDatabaseException 
 	 * @throws URISyntaxException 
 	 * @throws IOException 
 	 */
-	public void deployVDBZip(URL url) throws XMLStreamException, VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
+	public void deployVDBZip(URL url) throws VirtualDatabaseException, ConnectorManagerException, TranslatorException, IOException, URISyntaxException {
 		VirtualFile root = PureZipFileSystem.mount(url);
 		VirtualFile vdbMetadata = root.getChild("/META-INF/vdb.xml"); //$NON-NLS-1$
+		try {
+			VDBMetadataParser.validate(vdbMetadata.openStream());
+		} catch (SAXException e) {
+			throw new VirtualDatabaseException(e);
+		}
 		InputStream is = vdbMetadata.openStream();
-		VDBMetaData metadata = VDBMetadataParser.unmarshell(is);
+		VDBMetaData metadata;
+		try {
+			metadata = VDBMetadataParser.unmarshell(is);
+		} catch (XMLStreamException e) {
+			throw new VirtualDatabaseException(e);
+		}
 		VDBResources resources = new VDBResources(root, metadata);
 		deployVDB(metadata, resources);
 	}
