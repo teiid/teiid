@@ -22,6 +22,8 @@
 
 package org.teiid.jboss;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.jboss.logging.Logger;
 import org.jboss.logging.Logger.Level;
 import org.jboss.logging.MDC;
@@ -29,6 +31,8 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.logging.MessageLevel;
 
 public class JBossLogger implements org.teiid.logging.Logger {
+	
+	private ConcurrentHashMap<String, Logger> loggers = new ConcurrentHashMap<String, Logger>();
 
 	@Override
 	public boolean isEnabled(String context, int level) {
@@ -116,7 +120,12 @@ public class JBossLogger implements org.teiid.logging.Logger {
      * @return
      */
 	private Logger getLogger(String context) {
-		return Logger.getLogger(context);
+		Logger logger = loggers.get(context);
+		if (logger == null) {
+			logger = Logger.getLogger(context);
+			loggers.put(context, logger);
+		}
+		return logger;
 	}  
 					
 	@Override
