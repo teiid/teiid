@@ -69,7 +69,7 @@ public class TestJoinNode {
     
     protected JoinNode join;
     protected JoinStrategy joinStrategy;
-    private RelationalNode leftNode;
+    private BlockingFakeRelationalNode leftNode;
     private RelationalNode rightNode;
     
     private FakeDataManager dataMgr;
@@ -626,7 +626,7 @@ public class TestJoinNode {
         ElementSymbol es5 = new ElementSymbol("e5"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
-        leftNode = new FakeRelationalNode(1, leftTuples);
+        leftNode = new BlockingFakeRelationalNode(1, leftTuples);
         leftNode.setElements(Arrays.asList(es1, es2));
         
         rightNode = new FakeRelationalNode(2, rightTuples);
@@ -848,6 +848,52 @@ public class TestJoinNode {
         this.joinStrategy = new EnhancedSortMergeJoinStrategy(SortOption.SORT, SortOption.ALREADY_SORTED);
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, 40, 1);
+    }
+    
+    @Test public void testMergeJoinPrefetchAlreadySorted() throws Exception {
+        this.joinType = JoinType.JOIN_INNER;
+        int rows = 50;
+        List[] data = new List[rows];
+        for(int i=0; i<rows; i++) { 
+            data[i] = new ArrayList();
+            Integer value = new Integer((i*17) % 47);
+            data[i].add(value);
+        }
+        this.leftTuples = data;
+        this.rightTuples = new List[] {
+            Arrays.asList(1),  
+            Arrays.asList(2),
+            Arrays.asList(4),
+            Arrays.asList(6),
+            Arrays.asList(7),
+            Arrays.asList(8),
+        };
+        expected = new List[] {
+           Arrays.asList(new Object[] { 1, 1 }),
+           Arrays.asList(new Object[] { 2, 2 }),
+    	   Arrays.asList(new Object[] { 4, 4 }),
+           Arrays.asList(new Object[] { 6, 6 }),
+           Arrays.asList(new Object[] { 7, 7 }),
+           Arrays.asList(new Object[] { 8, 8 }),
+        };
+        helpCreateJoin();               
+        this.joinStrategy = new MergeJoinStrategy(SortOption.SORT, SortOption.ALREADY_SORTED, false);
+        FakeRelationalNode newNode = new FakeRelationalNode(2, rightTuples) {
+        	@Override
+        	public TupleBatch nextBatchDirect() throws BlockedException,
+        			TeiidComponentException, TeiidProcessingException {
+        		TupleBatch tb = super.nextBatchDirect();
+        		if (tb.getTerminationFlag()) {
+        			assertFalse(leftNode.isClosed());
+        		}
+        		return tb;
+        	}
+        };
+        newNode.setElements(rightNode.getElements());
+        rightNode = newNode;
+        
+        this.join.setJoinStrategy(joinStrategy);
+        helpTestJoinDirect(expected, 5, 1);
     }
 
     @Test public void testRepeatedMerge() throws Exception {

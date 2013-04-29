@@ -198,6 +198,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     		if (!isDependent()) {
     			this.joinStrategy.openRight();
                 this.joinStrategy.loadRight();
+                this.joinStrategy.rightSource.prefetch(true);
     		}
     		throw e;
     	}
