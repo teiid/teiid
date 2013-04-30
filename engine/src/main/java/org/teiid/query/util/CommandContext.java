@@ -38,6 +38,7 @@ import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
@@ -156,6 +157,8 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    private long reservedBuffers;
 
 		private AuthorizationValidator authorizationValidator;
+		
+		private Map<String, TupleSource> lookups;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -719,6 +722,12 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 				}
 				this.globalState.commandListeners.clear();
 			}
+			if (this.globalState.lookups != null) {
+				for (TupleSource ts : this.globalState.lookups.values()) {
+					ts.closeSource();
+				}
+				this.globalState.lookups = null;
+			}
 		}
 	}
 
@@ -914,6 +923,20 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public AuthorizationValidator getAuthorizationValidator() {
 		return this.globalState.authorizationValidator;
+	}
+
+	public TupleSource getCodeLookup(String matTableName) {
+		if (this.globalState.lookups != null) {
+			return this.globalState.lookups.remove(matTableName);
+		}
+		return null;
+	}
+
+	public void putCodeLookup(String matTableName, TupleSource ts) {
+		if (this.globalState.lookups == null) {
+			this.globalState.lookups = new HashMap<String, TupleSource>();
+		}
+		this.globalState.lookups.put(matTableName, ts);
 	}
 	
 }

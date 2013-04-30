@@ -52,27 +52,6 @@ import org.teiid.query.util.CommandContext;
  */
 class RelationalPlanExecutor implements PlanExecutor {
     
-    private final class TempLoadTupleSource implements TupleSource {
-		@Override
-		public List<?> nextTuple() throws TeiidComponentException,
-				TeiidProcessingException {
-			try {
-				List<?> tuple = tupleSource.nextTuple();
-				if (tuple == null) {
-					doneLoading = true;
-				}
-				return tuple;
-			} catch (BlockedException e) {
-				return null;
-			}
-		}
-
-		@Override
-		public void closeSource() {
-			tupleSource.closeSource();
-		}
-	}
-
 	QueryProcessor internalProcessor;
 
     // information about the result set.
@@ -127,11 +106,10 @@ class RelationalPlanExecutor implements PlanExecutor {
 	        	LogManager.logDetail(LogConstants.CTX_XML_PLAN, "Loading result set temp table", tempTable); //$NON-NLS-1$
 
 	        	Insert insert = this.resultInfo.getTempInsert();
-	        	insert.setTupleSource(new TempLoadTupleSource());
-	        	this.dataManager.registerRequest(this.internalProcessor.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
-	        	if (!doneLoading) {
-	        		throw BlockedException.block(resultInfo.getResultSetName(), "Blocking on result set load"); //$NON-NLS-1$
-	        	}
+	        	insert.setTupleSource(this.tupleSource);
+	        	TupleSource result = this.dataManager.registerRequest(this.internalProcessor.getContext(), insert, TempMetadataAdapter.TEMP_MODEL.getName(), new RegisterRequestParameter());
+	        	result.nextTuple();
+	        	doneLoading = true;
         		internalProcessor.closeProcessing();
 				AlterTempTable att = new AlterTempTable(tempTable);
 				//mark the temp table as non-updatable

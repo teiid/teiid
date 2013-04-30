@@ -1986,7 +1986,7 @@ public class TestXMLProcessor {
      
     public static FakeDataManager exampleDataManager(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
-    
+        dataMgr.setBlockOnce();
         try { 
             dataMgr.registerTuples(
                 metadata,
@@ -2083,7 +2083,7 @@ public class TestXMLProcessor {
     
     public static FakeDataManager exampleDataManagerNested(QueryMetadataInterface metadata) {
         FakeDataManager dataMgr = new FakeDataManager();
-    
+        dataMgr.setBlockOnce();
         try { 
             dataMgr.registerTuples(
                 metadata,

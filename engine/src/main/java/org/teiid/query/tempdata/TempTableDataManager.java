@@ -162,16 +162,20 @@ public class TempTableDataManager implements ProcessorDataManager {
 
 		TempTableStore tempTableStore = context.getTempTableStore();
         if(tempTableStore != null) {
-            TupleSource result = registerRequest(context, modelName, command);
-            if (result != null) {
-            	return result;
-            }
+        	try {
+        		TupleSource result = registerRequest(context, modelName, command);
+                if (result != null) {
+                	return result;
+                }
+        	} catch (BlockedException e) {
+        		throw new AssertionError("blocked is not expected"); //$NON-NLS-1$
+        	}
         }
         return this.processorDataManager.registerRequest(context, command, modelName, parameterObject);
 	}
 	        
-    TupleSource registerRequest(CommandContext context, String modelName, Command command) throws TeiidComponentException, TeiidProcessingException {
-    	TempTableStore contextStore = context.getTempTableStore();
+    TupleSource registerRequest(final CommandContext context, String modelName, final Command command) throws TeiidComponentException, TeiidProcessingException {
+    	final TempTableStore contextStore = context.getTempTableStore();
         if (command instanceof Query) {
             Query query = (Query)command;
             if (modelName != null && !modelName.equals(TempMetadataAdapter.TEMP_MODEL.getID())) {
@@ -193,40 +197,48 @@ public class TempTableDataManager implements ProcessorDataManager {
         		return null; //it's not a stored procedure we want to handle
         	}
         	
-        	GroupSymbol group = ((ProcedureContainer)command).getGroup();
+        	final GroupSymbol group = ((ProcedureContainer)command).getGroup();
         	if (!modelName.equals(TempMetadataAdapter.TEMP_MODEL.getID()) || !group.isTempGroupSymbol()) {
         		return null;
         	}
-        	final String groupKey = group.getNonCorrelationName();
-            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true, true, context);
-        	if (command instanceof Insert) {
-        		Insert insert = (Insert)command;
-        		TupleSource ts = insert.getTupleSource();
-        		if (ts == null) {
-        			Evaluator eval = new Evaluator(Collections.emptyMap(), this, context);
-        			List<Object> values = new ArrayList<Object>(insert.getValues().size());
-        			for (Expression expr : (List<Expression>)insert.getValues()) {
-        				values.add(eval.evaluate(expr, null));
-					}
-        			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
-        		}
-        		return table.insert(ts, insert.getVariables(), true, context);
-        	}
-        	if (command instanceof Update) {
-        		final Update update = (Update)command;
-        		final Criteria crit = update.getCriteria();
-        		return table.update(crit, update.getChangeList());
-        	}
-        	if (command instanceof Delete) {
-        		final Delete delete = (Delete)command;
-        		final Criteria crit = delete.getCriteria();
-        		if (crit == null) {
-        			//TODO: we'll add a real truncate later
-        			int rows = table.truncate(false);
-                    return CollectionTupleSource.createUpdateCountTupleSource(rows);
-        		}
-        		return table.delete(crit);
-        	}
+        	return new ProxyTupleSource() {
+				
+				@Override
+				protected TupleSource createTupleSource() throws TeiidComponentException,
+						TeiidProcessingException {
+		        	final String groupKey = group.getNonCorrelationName();
+		            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true, true, context);
+		        	if (command instanceof Insert) {
+		        		Insert insert = (Insert)command;
+		        		TupleSource ts = insert.getTupleSource();
+		        		if (ts == null) {
+		        			Evaluator eval = new Evaluator(Collections.emptyMap(), TempTableDataManager.this, context);
+		        			List<Object> values = new ArrayList<Object>(insert.getValues().size());
+		        			for (Expression expr : (List<Expression>)insert.getValues()) {
+		        				values.add(eval.evaluate(expr, null));
+							}
+		        			ts = new CollectionTupleSource(Arrays.asList(values).iterator());
+		        		}
+		        		return table.insert(ts, insert.getVariables(), true, context);
+		        	}
+		        	if (command instanceof Update) {
+		        		final Update update = (Update)command;
+		        		final Criteria crit = update.getCriteria();
+		        		return table.update(crit, update.getChangeList());
+		        	}
+		        	if (command instanceof Delete) {
+		        		final Delete delete = (Delete)command;
+		        		final Criteria crit = delete.getCriteria();
+		        		if (crit == null) {
+		        			//TODO: we'll add a real truncate later
+		        			int rows = table.truncate(false);
+		                    return CollectionTupleSource.createUpdateCountTupleSource(rows);
+		        		}
+		        		return table.delete(crit);
+		        	}
+		        	throw new AssertionError("unknown command " + command); //$NON-NLS-1$
+				}
+			};
         }
     	if (command instanceof Create) {
     		Create create = (Create)command;
@@ -660,28 +672,37 @@ public class TempTableDataManager implements ProcessorDataManager {
 		codeTableName = codeTableName.toUpperCase();
 		keyElementName = keyElementName.toUpperCase();
 		returnElementName = returnElementName.toUpperCase();
-    	String matTableName = CODE_PREFIX + codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName; 
-    	QueryMetadataInterface metadata = context.getMetadata();
-
-    	TempMetadataID id = context.getGlobalTableStore().getCodeTableMetadataId(codeTableName,
-				returnElementName, keyElementName, matTableName);
+    	String matTableName = CODE_PREFIX + codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName;
     	
-    	ElementSymbol keyElement = new ElementSymbol(keyElementName, new GroupSymbol(matTableName));
-    	ElementSymbol returnElement = new ElementSymbol(returnElementName, new GroupSymbol(matTableName));
-    	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
-    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
-    	
-    	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
-    	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
-    	
-    	TupleSource ts = registerQuery(context, context.getTempTableStore(), query);
-    	List<?> row = ts.nextTuple();
-    	Object result = null;
-    	if (row != null) {
-    		result = row.get(0);
+    	TupleSource ts = context.getCodeLookup(matTableName);
+    	if (ts == null) {
+	    	QueryMetadataInterface metadata = context.getMetadata();
+	
+	    	TempMetadataID id = context.getGlobalTableStore().getCodeTableMetadataId(codeTableName,
+					returnElementName, keyElementName, matTableName);
+	    	
+	    	ElementSymbol keyElement = new ElementSymbol(keyElementName, new GroupSymbol(matTableName));
+	    	ElementSymbol returnElement = new ElementSymbol(returnElementName, new GroupSymbol(matTableName));
+	    	keyElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + keyElementName))));
+	    	returnElement.setType(DataTypeManager.getDataTypeClass(metadata.getElementType(metadata.getElementID(codeTableName + ElementSymbol.SEPARATOR + returnElementName))));
+	    	
+	    	Query query = RelationalPlanner.createMatViewQuery(id, matTableName, Arrays.asList(returnElement), true);
+	    	query.setCriteria(new CompareCriteria(keyElement, CompareCriteria.EQ, new Constant(keyValue)));
+	    	
+	    	ts = registerQuery(context, context.getTempTableStore(), query);
     	}
-    	ts.closeSource();
-    	return result;
+    	try {
+	    	List<?> row = ts.nextTuple();
+	    	Object result = null;
+	    	if (row != null) {
+	    		result = row.get(0);
+	    	}
+	    	ts.closeSource();
+	    	return result;
+    	} catch (BlockedException e) {
+    		context.putCodeLookup(matTableName, ts);
+    		throw e;
+    	}
     }
 
 	@Override
