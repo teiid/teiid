@@ -30,9 +30,9 @@ import java.util.TreeMap;
 
 import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
+import org.teiid.core.CorePlugin;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.ReflectionHelper;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -73,11 +73,11 @@ public class TranslatorUtil {
 		}
 	}	
 	
-	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data, ClassLoader classLoader) throws TeiidException {
+	public static ExecutionFactory buildExecutionFactory(VDBTranslatorMetaData data) throws TeiidException {
 		ExecutionFactory executionFactory;
 		try {
-			String executionClass = data.getPropertyValue(VDBTranslatorMetaData.EXECUTION_FACTORY_CLASS);
-			Object o = ReflectionHelper.create(executionClass, null, classLoader);
+			Class<?> executionClass = data.getExecutionFactoryClass();
+			Object o = executionClass.newInstance();
 			if(!(o instanceof ExecutionFactory)) {
 				 throw new TeiidException(RuntimePlugin.Event.TEIID40024, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40024, executionClass));
 			}
@@ -86,9 +86,11 @@ public class TranslatorUtil {
 			executionFactory.start();
 			return executionFactory;
 		} catch (InvocationTargetException e) {
-			 throw new TeiidException(RuntimePlugin.Event.TEIID40025, e);
+			throw new TeiidException(RuntimePlugin.Event.TEIID40025, e);
 		} catch (IllegalAccessException e) {
-			 throw new TeiidException(RuntimePlugin.Event.TEIID40026, e);
+			throw new TeiidException(RuntimePlugin.Event.TEIID40026, e);
+		} catch (InstantiationException e) {
+			throw new TeiidException(CorePlugin.Event.TEIID10036, e);
 		}
 	}
 	

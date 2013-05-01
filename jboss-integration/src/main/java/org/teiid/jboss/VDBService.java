@@ -319,13 +319,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		try {
 			ExecutionFactory<Object, Object> ef = map.get(translator);
 			if ( ef == null) {
-				
-		        ClassLoader classloader = translator.getAttachment(ClassLoader.class);
-		        if (classloader == null) {
-		        	classloader = Thread.currentThread().getContextClassLoader();
-		        }
-				
-				ef = TranslatorUtil.buildExecutionFactory(translator, classloader);
+				ef = TranslatorUtil.buildExecutionFactory(translator);
 				if (ef instanceof DelegatingExecutionFactory) {
 					DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
 					String delegateName = delegator.getDelegateName();

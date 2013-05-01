@@ -38,7 +38,7 @@ public class TestTranslatorUtil {
 		
 		tm.addProperty("MyProperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator.class);
-		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
 		
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
@@ -48,10 +48,11 @@ public class TestTranslatorUtil {
 		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
 		VDBTranslatorMetaData parent = new VDBTranslatorMetaData();
 		parent.addProperty("myProperty", "default");
+		parent.setExecutionFactoryClass(MyTranslator.class);
 		tm.setParent(parent);
 		tm.addProperty("MyProperty", "correctly-assigned");
-		tm.setExecutionFactoryClass(MyTranslator.class);
-		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
+		
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
 		
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
@@ -61,7 +62,7 @@ public class TestTranslatorUtil {
 		
 		tm.addProperty("myproperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator.class);
-		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm);
 		
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
@@ -71,7 +72,7 @@ public class TestTranslatorUtil {
 		
 		tm.addProperty("someproperty", "correctly-assigned");
 		tm.setExecutionFactoryClass(MyTranslator1.class);
-		MyTranslator1 my = (MyTranslator1)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
+		MyTranslator1 my = (MyTranslator1)TranslatorUtil.buildExecutionFactory(tm);
 		
 		assertNull(my.getMyProperty());
 		assertEquals("correctly-assigned", my.getSomeProperty());

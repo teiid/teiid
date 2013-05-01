@@ -55,6 +55,9 @@ public class VDBTranslatorMetaData extends AdminObjectImpl implements Translator
 	}
 
 	public Class<?> getExecutionFactoryClass() {
+		if (this.executionClass == null && this.parent != null) {
+			return this.parent.getExecutionFactoryClass();
+		}
 		return this.executionClass;
 	}	
 	
