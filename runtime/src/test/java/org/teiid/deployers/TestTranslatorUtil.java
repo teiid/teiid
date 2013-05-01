@@ -43,6 +43,19 @@ public class TestTranslatorUtil {
 		assertEquals("correctly-assigned", my.getMyProperty());
 	}
 	
+	@Test
+	public void testBuildExecutionFactoryWithDefaults() throws Exception {
+		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
+		VDBTranslatorMetaData parent = new VDBTranslatorMetaData();
+		parent.addProperty("myProperty", "default");
+		tm.setParent(parent);
+		tm.addProperty("MyProperty", "correctly-assigned");
+		tm.setExecutionFactoryClass(MyTranslator.class);
+		MyTranslator my = (MyTranslator)TranslatorUtil.buildExecutionFactory(tm, this.getClass().getClassLoader());
+		
+		assertEquals("correctly-assigned", my.getMyProperty());
+	}
+	
 	@Test public void testBuildExecutionFactoryCaseInsensitive() throws Exception {
 		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
 		

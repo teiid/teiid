@@ -30,7 +30,6 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -132,13 +131,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			VDBTranslatorMetaData parent = getTranslatorRepository().getTranslatorMetaData(type);
 			data.setModuleName(parent.getModuleName());
 			data.addAttchment(ClassLoader.class, parent.getAttachment(ClassLoader.class));
-			
-			Set<String> keys = parent.getProperties().stringPropertyNames();
-			for (String key:keys) {
-				if (data.getPropertyValue(key) == null && parent.getPropertyValue(key) != null) {
-					data.addProperty(key, parent.getPropertyValue(key));
-				}
-			}
+			data.setParent(parent);
 			repo.addTranslatorMetadata(data.getName(), data);
 		}
 

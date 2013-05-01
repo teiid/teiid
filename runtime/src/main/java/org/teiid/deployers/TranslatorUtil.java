@@ -26,7 +26,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.TreeMap;
 
 import org.teiid.adminapi.Translator;
@@ -56,25 +55,6 @@ public class TranslatorUtil {
 		return props;
 	}
 
-	public static Properties getTranslatorPropertiesAsProperties(Class<?> attachmentClass) {
-		Properties props = new Properties();
-		try {
-			Object instance = attachmentClass.newInstance();
-			Map<Method, TranslatorProperty> tps = TranslatorUtil.getTranslatorProperties(attachmentClass);
-			for (Method m:tps.keySet()) {
-				Object defaultValue = getDefaultValue(instance, m, tps.get(m));
-				if (defaultValue != null) {
-					props.setProperty(getPropertyName(m), defaultValue.toString());
-				}
-			}
-		} catch (InstantiationException e) {
-			// ignore
-		} catch (IllegalAccessException e) {
-			// ignore
-		}
-		return props;
-	}
-	
 	private static void buildTranslatorProperties(Class<?> attachmentClass, Map<Method, TranslatorProperty> props){
 		Class<?>[] baseInterfaces = attachmentClass.getInterfaces();
 		for (Class<?> clazz:baseInterfaces) {
@@ -112,10 +92,19 @@ public class TranslatorUtil {
 		}
 	}
 	
-	private static void injectProperties(ExecutionFactory ef, final Translator data) throws InvocationTargetException, IllegalAccessException, TeiidException{
+	private static void injectProperties(ExecutionFactory ef, final VDBTranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
 		Map p = data.getProperties();
 		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		VDBTranslatorMetaData parent = data.getParent();
+		while (parent != null) {
+			for (Map.Entry<Object, Object> entry : parent.getProperties().entrySet()) {
+				if (!caseInsensitiveProps.containsKey(entry.getKey()) && entry.getValue() != null) {
+					caseInsensitiveProps.put((String)entry.getKey(), (String)entry.getValue());
+				}
+			}
+			parent = parent.getParent();
+		}
 		caseInsensitiveProps.putAll(p);
 		caseInsensitiveProps.remove(DEPLOYMENT_NAME);
 		for (Method method:props.keySet()) {
@@ -202,10 +191,21 @@ public class TranslatorUtil {
 		metadata.setExecutionFactoryClass(factory.getClass());
 		metadata.setModuleName(moduleName);
 		
-		Properties props = getTranslatorPropertiesAsProperties(factory.getClass());
-		for (String key:props.stringPropertyNames()) {
-			metadata.addProperty(key, props.getProperty(key));
+		try {
+			Object instance = factory.getClass().newInstance();
+			Map<Method, TranslatorProperty> tps = TranslatorUtil.getTranslatorProperties(factory.getClass());
+			for (Method m:tps.keySet()) {
+				Object defaultValue = getDefaultValue(instance, m, tps.get(m));
+				if (defaultValue != null) {
+					metadata.addProperty(getPropertyName(m), defaultValue.toString());
+				}
+			}
+		} catch (InstantiationException e) {
+			// ignore
+		} catch (IllegalAccessException e) {
+			// ignore
 		}
+		
 		return metadata;
 	}
 	
