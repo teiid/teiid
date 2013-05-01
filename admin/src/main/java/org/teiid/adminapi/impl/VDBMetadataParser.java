@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -46,7 +45,6 @@ import javax.xml.validation.Validator;
 
 import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
-import org.teiid.adminapi.Translator;
 import org.teiid.adminapi.VDBImport;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
@@ -429,7 +427,7 @@ public class VDBMetadataParser {
 		if (vdb.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, vdb.getDescription());
 		}
-		writeProperties(writer, vdb.getProperties());
+		writeProperties(writer, vdb.getPropertiesMap());
 
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
 			writer.writeStartElement(Element.IMPORT_VDB.getLocalName());
@@ -449,7 +447,7 @@ public class VDBMetadataParser {
 		}
 		
 		// override translators
-		for(Translator translator:vdb.getOverrideTranslators()) {
+		for(VDBTranslatorMetaData translator:vdb.getOverrideTranslatorsMap().values()) {
 			writeTranslator(writer, translator);
 		}
 		
@@ -466,7 +464,7 @@ public class VDBMetadataParser {
 			if (em.getDescription() != null) {
 				writeElement(writer, Element.DESCRIPTION, em.getDescription());
 			}
-			writeProperties(writer, em.getProperties());			
+			writeProperties(writer, em.getPropertiesMap());			
 			writer.writeEndElement();
 		}
 		
@@ -524,14 +522,14 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 
-	private static void writeTranslator(final XMLStreamWriter writer, Translator translator)  throws XMLStreamException  {
+	private static void writeTranslator(final XMLStreamWriter writer, VDBTranslatorMetaData translator)  throws XMLStreamException  {
 		writer.writeStartElement(Element.TRANSLATOR.getLocalName());
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), translator.getName());
 		writeAttribute(writer, Element.TYPE.getLocalName(), translator.getType());
 		writeAttribute(writer, Element.DESCRIPTION.getLocalName(), translator.getDescription());
 		
-		writeProperties(writer, translator.getProperties());
+		writeProperties(writer, translator.getPropertiesMap());
 		
 		writer.writeEndElement();
 	}
@@ -547,7 +545,7 @@ public class VDBMetadataParser {
 		if (model.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, model.getDescription());
 		}
-		writeProperties(writer, model.getProperties());
+		writeProperties(writer, model.getPropertiesMap());
 		
 		// source mappings
 		for (SourceMappingMetadata source:model.getSourceMappings()) {
@@ -576,15 +574,16 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 	
-	private static void writeProperties(final XMLStreamWriter writer, Properties props)  throws XMLStreamException  {
-		Enumeration<?> keys = props.propertyNames();
-		while (keys.hasMoreElements()) {
-	        writer.writeStartElement(Element.PROPERTY.getLocalName());
-			String key = (String)keys.nextElement();
-			String value = props.getProperty(key);
-			writeAttribute(writer, Element.NAME.getLocalName(), key);
-			writeAttribute(writer, Element.VALUE.getLocalName(), value);
-			writer.writeEndElement();
+	private static void writeProperties(final XMLStreamWriter writer, Map<String, String> props)  throws XMLStreamException  {
+		synchronized (props) {
+			for (Map.Entry<String, String> prop : props.entrySet()) {
+		        writer.writeStartElement(Element.PROPERTY.getLocalName());
+				String key = prop.getKey();
+				String value = prop.getValue();
+				writeAttribute(writer, Element.NAME.getLocalName(), key);
+				writeAttribute(writer, Element.VALUE.getLocalName(), value);
+				writer.writeEndElement();
+			}
 		}
 	}
 	

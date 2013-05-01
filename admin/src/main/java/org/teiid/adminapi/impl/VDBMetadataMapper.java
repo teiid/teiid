@@ -23,7 +23,6 @@ package org.teiid.adminapi.impl;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.jboss.as.controller.AttributeDefinition;
 import org.jboss.as.controller.ObjectListAttributeDefinition;
@@ -76,13 +75,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		node.get(XML_DEPLOYMENT).set(vdb.isXmlDeployment());
 		
 		//PROPERTIES
-		Properties properties = vdb.getProperties();
-		if (properties!= null && !properties.isEmpty()) {
-			ModelNode propsNode = node.get(PROPERTIES);
-			for (String key:properties.stringPropertyNames()) {
-				propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
-			}
-		}
+		addProperties(node, vdb);
 		
 		// IMPORT-VDBS
 		List<VDBImportMetadata> imports = vdb.getVDBImports();
@@ -299,6 +292,18 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			};
 	}	
 	
+	private static void addProperties(ModelNode node, AdminObjectImpl object) {
+		Map<String, String> properties = object.getPropertiesMap();
+		if (properties!= null && !properties.isEmpty()) {
+			synchronized (properties) {
+				ModelNode propsNode = node.get(PROPERTIES); 
+				for (Map.Entry<String, String> entry : properties.entrySet()) {
+					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(entry.getKey(), entry.getValue(), new ModelNode()));
+				}
+			}
+		}
+	}
+	
 	/**
 	 * model metadata mapper
 	 */
@@ -333,13 +338,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				node.get(MODELPATH).set(model.getPath());
 			}
 
-			Properties properties = model.getProperties();
-			if (properties!= null && !properties.isEmpty()) {
-				ModelNode propsNode = node.get(PROPERTIES); 
-				for (String key:properties.stringPropertyNames()) {
-					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
-				}
-			}
+			addProperties(node, model);
 			
 			List<SourceMappingMetadata> sources = model.getSourceMappings();
 			if (sources != null && !sources.isEmpty()) {
@@ -693,13 +692,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 				node.get(MODULE_NAME).set(translator.getModuleName());
 			}
 
-			Properties properties = translator.getProperties();
-			if (properties!= null && !properties.isEmpty()) {
-				ModelNode propsNode = node.get(PROPERTIES); 
-				for (String key:properties.stringPropertyNames()) {
-					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
-				}
-			}
+			addProperties(node, translator);
 			wrapDomain(translator, node);
 			return node;
 		}
@@ -831,13 +824,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			
 			//PROPERTIES
-			Properties properties = obj.getProperties();
-			if (properties!= null && !properties.isEmpty()) {
-				ModelNode propsNode = node.get(PROPERTIES);
-				for (String key:properties.stringPropertyNames()) {
-					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(key, properties.getProperty(key), new ModelNode()));
-				}
-			}
+			addProperties(node, obj);
 			return node;
 		}
 		

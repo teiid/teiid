@@ -94,18 +94,22 @@ public class TranslatorUtil {
 	
 	private static void injectProperties(ExecutionFactory ef, final VDBTranslatorMetaData data) throws InvocationTargetException, IllegalAccessException, TeiidException{
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
-		Map p = data.getProperties();
+		Map p = data.getPropertiesMap();
 		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 		VDBTranslatorMetaData parent = data.getParent();
 		while (parent != null) {
-			for (Map.Entry<Object, Object> entry : parent.getProperties().entrySet()) {
-				if (!caseInsensitiveProps.containsKey(entry.getKey()) && entry.getValue() != null) {
-					caseInsensitiveProps.put((String)entry.getKey(), (String)entry.getValue());
+			synchronized (parent.getPropertiesMap()) {
+				for (Map.Entry<String, String> entry : parent.getPropertiesMap().entrySet()) {
+					if (!caseInsensitiveProps.containsKey(entry.getKey()) && entry.getValue() != null) {
+						caseInsensitiveProps.put(entry.getKey(), entry.getValue());
+					}
 				}
 			}
 			parent = parent.getParent();
 		}
-		caseInsensitiveProps.putAll(p);
+		synchronized (p) {
+			caseInsensitiveProps.putAll(p);
+		}
 		caseInsensitiveProps.remove(DEPLOYMENT_NAME);
 		for (Method method:props.keySet()) {
 			TranslatorProperty tp = props.get(method);

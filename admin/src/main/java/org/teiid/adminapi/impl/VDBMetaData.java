@@ -125,6 +125,10 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		return new ArrayList<Translator>(this.translators.values());
 	}
 	
+	public LinkedHashMap<String, VDBTranslatorMetaData> getOverrideTranslatorsMap() {
+		return this.translators;
+	}
+	
 	public void setOverrideTranslators(List<Translator> translators) {
 		for (Translator t: translators) {
 			this.translators.put(t.getName(), (VDBTranslatorMetaData)t);
@@ -273,9 +277,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		try {
 			VDBMetaData clone = (VDBMetaData) super.clone();
 			clone.models = new LinkedHashMap<String, ModelMetaData>(this.models);
-			if (this.attachments != null) {
-				clone.attachments = null;
-				clone.getAttachments().putAll(this.getAttachments());
+			synchronized (this.attachments) {
+				clone.attachments = Collections.synchronizedMap(new LinkedHashMap<Class<?>, Object>(attachments));
 			}
 			return clone;
 		} catch (CloneNotSupportedException e) {

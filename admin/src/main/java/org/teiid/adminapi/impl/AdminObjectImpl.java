@@ -22,7 +22,9 @@
 package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -37,8 +39,8 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	private String serverName;
 	private String hostName;
 		
-	private Map<String, String> properties = new HashMap<String, String>(2);
-	protected transient Map<Class<?>, Object> attachments;
+	private Map<String, String> properties = Collections.synchronizedMap(new LinkedHashMap<String, String>(2));
+	protected transient Map<Class<?>, Object> attachments = Collections.synchronizedMap(new HashMap<Class<?>, Object>(2));
 		
 	@Override
 	public String getName() {
@@ -85,13 +87,15 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	public void setProperties(Properties props) {
 		this.properties.clear();
 		if (props != null && !props.isEmpty()) {
-			synchronized (properties) {
-				for (String key:props.stringPropertyNames()) {
-					addProperty(key, props.getProperty(key));
-				}
+			for (String key:props.stringPropertyNames()) {
+				addProperty(key, props.getProperty(key));
 			}
 		}
 	}	
+	
+	public Map<String, String> getPropertiesMap() {
+		return this.properties;
+	}
 	
 	@Override
 	public String getPropertyValue(String key) {
@@ -113,24 +117,10 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
     * @throws UnsupportedOperationException when not supported by the implementation
     */	
 	public <T> T addAttchment(Class<T> type, T attachment) {
-		synchronized (properties) {
-	      if (type == null)
-	          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-	      if (this.attachments == null) {
-	    	  this.attachments = new HashMap<Class<?>, Object>();
-	      }
-	      Object result = this.attachments.put(type, attachment);
-	      return type.cast(result);
-		}
-	}
-	
-	public Map<Class<?>, Object> getAttachments() {
-		synchronized (properties) {
-			if (this.attachments == null) {
-				this.attachments = new HashMap<Class<?>, Object>();
-			}
-			return attachments;
-		}
+		if (type == null)
+      		throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+  		Object result = this.attachments.put(type, attachment);
+  		return type.cast(result);
 	}
 	
    /**
@@ -142,15 +132,10 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
     * @throws IllegalArgumentException for a null name or type
     */	
 	public <T> T removeAttachment(Class<T> type) {
-		synchronized (properties) {
-			if (type == null)
-				throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-			if (this.attachments == null) {
-				return null;
-			}
-			Object result = this.attachments.remove(type);
-			return type.cast(result);
-		}
+		if (type == null)
+			throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+		Object result = this.attachments.remove(type);
+		return type.cast(result);
 	}
 	
    /**
@@ -162,15 +147,10 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
     * @throws IllegalArgumentException for a null name or type
     */
    public <T> T getAttachment(Class<T> type) {
-	   synchronized (properties) {
-	      if (type == null)
-	          throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
-	      if (this.attachments == null) {
-	    	  return null;
-	      }
-	      Object result = this.attachments.get(type);
-	      return type.cast(result);      
-	   }
+	   if (type == null)
+		   throw new IllegalArgumentException("Null type"); //$NON-NLS-1$
+	   Object result = this.attachments.get(type);
+	   return type.cast(result);      
    }	
    
 	   	   
