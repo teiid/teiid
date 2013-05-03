@@ -179,10 +179,23 @@ public class TestWithClauseProcessing {
        
 	    String sql = "with a (x, y) as (select 1, 2 from pm1.g1) SELECT a.x from a, a z"; //$NON-NLS-1$
 	    
-	    FakeDataManager dataManager = new FakeDataManager();
-	    sampleData1(dataManager);
-	    
 	    TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y) AS (SELECT 1, 2 FROM pm1.g1 AS g_0) SELECT g_0.x FROM a AS g_0, a AS g_1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testWithOrderBy() throws TeiidException {
+		FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_SELFJOIN, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+      
+	    String sql = "with a (x, y) as (select 1, 2 from pm1.g1) SELECT a.x from a, a z order by x"; //$NON-NLS-1$
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+	    dataManager.addData("WITH a (x, y) AS (SELECT 1, 2 FROM g1 AS g_0) SELECT g_0.x AS c_0 FROM a AS g_0, a AS g_1 ORDER BY c_0", new List[0]);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, new String[] {"WITH a (x, y) AS (SELECT 1, 2 FROM pm1.g1 AS g_0) SELECT g_0.x AS c_0 FROM a AS g_0, a AS g_1 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    
+	    helpProcess(plan, dataManager,  new List[0]);
 	}
 	
 	@Test public void testWithJoinPlanning() throws TeiidException {
@@ -190,18 +203,12 @@ public class TestWithClauseProcessing {
 		RealMetadataFactory.setCardinality("pm1.g2", 100000, metadata);
 	    String sql = "with a (x) as (select e1 from pm1.g1) SELECT a.x from pm1.g2, a where (pm1.g2.e1 = a.x)"; //$NON-NLS-1$
 	    
-	    FakeDataManager dataManager = new FakeDataManager();
-	    sampleData1(dataManager);
-	    
 	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a ORDER BY a.x"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testWithJoinPlanning1() throws TeiidException {
 		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
 	    String sql = "with a (x) as (select e1 from pm1.g1) SELECT a.x from pm1.g2, a where (pm1.g2.e1 = a.x)"; //$NON-NLS-1$
-	    
-	    FakeDataManager dataManager = new FakeDataManager();
-	    sampleData1(dataManager);
 	    
 	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a ORDER BY a.x"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
