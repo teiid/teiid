@@ -49,15 +49,7 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
-import org.teiid.query.sql.lang.BatchedUpdateCommand;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.CompoundCriteria;
-import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.FilteredCommand;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.ProcedureContainer;
-import org.teiid.query.sql.lang.SetClause;
-import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -73,8 +65,6 @@ import org.teiid.query.validator.ValidatorReport;
 
 public class RowBasedSecurityHelper {
 	
-    private static final String FILTER_KEY = "filter"; //$NON-NLS-1$
-	
 	public static Criteria getRowBasedFilters(QueryMetadataInterface metadata,
 			final GroupSymbol group, CommandContext cc)
 			throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
@@ -82,22 +72,22 @@ public class RowBasedSecurityHelper {
 		if (policies == null || policies.isEmpty()) {
 			return null;
 		}
+		boolean user = false;
 		ArrayList<Criteria> crits = null;
+		Object metadataID = group.getMetadataID();
+		String fullName = metadata.getFullName(metadataID);
 		for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
 			DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
-			String key = FILTER_KEY + dpm.getName();
-			Criteria filter = (Criteria)metadata.getFromMetadataCache(group.getMetadataID(), key);
+			PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
+			if (pmd == null) {
+				continue;
+			}
+			String filterString = pmd.getCondition();
+			if (filterString == null) {
+				continue;
+			}
+			Criteria filter = (Criteria)pmd.getResolvedCondition();
 			if (filter == null) {
-				Object metadataID = group.getMetadataID();
-				String fullName = metadata.getFullName(metadataID);
-				PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
-				if (pmd == null) {
-					continue;
-				}
-				String filterString = pmd.getCondition();
-				if (filterString == null) {
-					continue;
-				}
 				try {
 					filter = QueryParser.getQueryParser().parseCriteria(filterString);
 					GroupSymbol gs = group;
@@ -111,7 +101,7 @@ public class RowBasedSecurityHelper {
 			        	ValidatorFailure firstFailure = report.getItems().iterator().next();
 			        	throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName) + " " + firstFailure); //$NON-NLS-1$
 				    }
-					metadata.addToMetadataCache(group.getMetadataID(), key, filter);
+					pmd.setResolvedCondition(filter.clone());
 				} catch (QueryMetadataException e) {
 					throw e;
 				} catch (TeiidException e) {
@@ -119,6 +109,9 @@ public class RowBasedSecurityHelper {
 				}
 			} else {
 				filter = (Criteria) filter.clone();
+			}
+			if (!dpm.isAnyAuthenticated()) {
+				user = true;
 			}
 			if (crits == null) {
 				crits = new ArrayList<Criteria>(2);
@@ -151,15 +144,20 @@ public class RowBasedSecurityHelper {
 			};
 	        PreOrPostOrderNavigator.doVisit(result, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
 		}
-		//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic 
-		cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);  
-		QueryRewriter.rewriteCriteria(result, cc, metadata);
+		//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic
+		if (user) {
+			cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);
+		}
+		result = QueryRewriter.rewriteCriteria(result, cc, metadata);
 		return result;
 	}
 
 	public static Command checkUpdateRowBasedFilters(ProcedureContainer container, Command procedure, RelationalPlanner planner)
 			throws QueryMetadataException, TeiidComponentException,
 			TeiidProcessingException, QueryResolverException {
+		if (container instanceof StoredProcedure) {
+			return procedure;
+		}
 		Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context);
 		if (filter == null) {
 			return procedure;

@@ -127,6 +127,15 @@
 									             <xs:element name="allow-execute" type="xs:boolean" minOccurs="0"/>
 									             <xs:element name="allow-alter" type="xs:boolean" minOccurs="0"/>	
 									             <xs:element name="condition" type="xs:string" minOccurs="0"/>
+									             <xs:element name="mask" minOccurs="0">
+									             	<xs:complexType>
+									             		<xs:simpleContent>
+      														<xs:extension base="xs:string">
+        														<xs:attribute name="order" type="xs:string"/>
+        													</xs:extension>
+    													</xs:simpleContent>
+    												</xs:complexType>
+									             </xs:element>
 											</xs:sequence>
 											<xs:element name="allow-language" type="xs:boolean" minOccurs="0"/>
 							             </xs:choice>

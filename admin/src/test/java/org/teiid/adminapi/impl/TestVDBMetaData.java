@@ -117,7 +117,7 @@ public class TestVDBMetaData {
 		assertTrue(role.getMappedRoleNames().contains("ROLE2")); //$NON-NLS-1$
 		
 		List<DataPolicy.DataPermission> permissions = role.getPermissions();
-		assertEquals(3, permissions.size());
+		assertEquals(4, permissions.size());
 		
 		boolean lang = false;
 		for (DataPolicy.DataPermission p: permissions) {
@@ -130,12 +130,16 @@ public class TestVDBMetaData {
 			if (p.getResourceName().equalsIgnoreCase("myTable.T1")) { //$NON-NLS-1$
 				assertTrue(p.getAllowRead());
 				assertNull(p.getAllowDelete());
+				continue;
 			}
-			else {
-				assertFalse(p.getAllowRead());
-				assertTrue(p.getAllowDelete());
-				assertEquals("col1 = user()", p.getCondition());
+			if (p.getResourceName().equalsIgnoreCase("myTable.T2.col1")) { //$NON-NLS-1$
+				assertEquals("col2", p.getMask());
+				assertEquals(1, p.getOrder());
+				continue;
 			}
+			assertFalse(p.getAllowRead());
+			assertTrue(p.getAllowDelete());
+			assertEquals("col1 = user()", p.getCondition());
 		}
 		assertTrue(lang);
 	}
@@ -205,6 +209,12 @@ public class TestVDBMetaData {
 		perm3.setResourceName("javascript"); //$NON-NLS-1$
 		perm3.setAllowLanguage(true);
 		roleOne.addPermission(perm3);
+		
+		PermissionMetaData perm4 = new PermissionMetaData();
+		perm4.setResourceName("myTable.T2.col1"); //$NON-NLS-1$
+		perm4.setMask("col2");
+		perm4.setOrder(1);
+		roleOne.addPermission(perm4);
 		
 		roleOne.setMappedRoleNames(Arrays.asList("ROLE1", "ROLE2")); //$NON-NLS-1$ //$NON-NLS-2$
 		

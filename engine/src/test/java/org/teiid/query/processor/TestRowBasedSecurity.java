@@ -74,7 +74,11 @@ public class TestRowBasedSecurity {
 		pmd3.setResourceName("pm1.g3");
 		pmd3.setAllowDelete(true);
 		
-		policy.addPermission(pmd, pmd1, pmd2, pmd3);
+		PermissionMetaData pmd4 = new PermissionMetaData();
+		pmd4.setResourceName("pm1.sp1");
+		pmd4.setCondition("e1 = 'a'");
+		
+		policy.addPermission(pmd, pmd1, pmd2, pmd3, pmd4);
 		policy.setName("some-role");
 		policies.put("some-role", policy);
 		
@@ -88,6 +92,37 @@ public class TestRowBasedSecurity {
 		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
 		ProcessorPlan plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
 		List<?>[] expectedResults = new List<?>[0]; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	/**
+	 * Same as above, but ensures it's still in effect under a proceudre
+	 */
+	@Test public void testTransitiveFilter() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		dataManager.addData("exec pm1.sq1()", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		ProcessorPlan plan = helpGetPlan(helpParse("exec pm1.sq1()"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[0]; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+
+	/**
+	 * restricted to e1 = a
+	 */
+	@Test public void testProcedureFilter() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("EXEC pm1.sp1()", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		ProcessorPlan plan = helpGetPlan(helpParse("exec pm1.sp1()"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList("a", 1)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	@Test public void testProcedureRelationalFilter() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("EXEC pm1.sp1()", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		ProcessorPlan plan = helpGetPlan(helpParse("select * from pm1.sp1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList("a", 1)}; 
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	
@@ -207,7 +242,9 @@ public class TestRowBasedSecurity {
 		policy1.addPermission(pmd3);
 		policy1.setName("some-other-role");
 		context.getAllowedDataPolicies().put("some-other-role", policy1);
-		
+
+		dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList(1), Arrays.asList(2)});
 		plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
 		List<?>[] expectedResults = new List<?>[] {Arrays.asList(1), Arrays.asList(2)}; 
 		helpProcess(plan, context, dataManager, expectedResults);

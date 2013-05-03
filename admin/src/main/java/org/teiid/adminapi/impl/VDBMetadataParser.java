@@ -230,6 +230,12 @@ public class VDBMetadataParser {
 			case CONDITION:
 				permission.setCondition(reader.getElementText());
 				break;
+			case MASK:
+				if (reader.getAttributeCount() > 0) {
+					permission.setOrder(Integer.valueOf(reader.getAttributeValue(0)));
+				}
+				permission.setMask(reader.getElementText());
+				break;
              default: 
             	 throw new XMLStreamException(AdminPlugin.Util.gs("unexpected_element7",reader.getName(), 
             			 Element.RESOURCE_NAME.getLocalName(),
@@ -238,7 +244,7 @@ public class VDBMetadataParser {
             			 Element.ALLOW_DELETE.getLocalName(),
             			 Element.ALLOW_EXECUTE.getLocalName(),
             			 Element.ALLOW_READ.getLocalName(),
-            			 Element.ALLOW_UPADTE.getLocalName(), Element.ALLOW_LANGUAGE.getLocalName(), Element.CONDITION.getLocalName()), reader.getLocation()); 
+            			 Element.ALLOW_UPADTE.getLocalName(), Element.ALLOW_LANGUAGE.getLocalName(), Element.CONDITION.getLocalName(), Element.MASK.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -380,6 +386,8 @@ public class VDBMetadataParser {
 	    ALLOW_ALTER("allow-alter"),
 	    ALLOW_LANGUAGE("allow-language"),
 	    CONDITION("condition"),
+	    MASK("mask"),
+	    ORDER("order"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
 	    ENTRY("entry"),
 	    METADATA("metadata");
@@ -511,6 +519,13 @@ public class VDBMetadataParser {
 			if (permission.getCondition() != null) {
 				writeElement(writer, Element.CONDITION, permission.getCondition());
 			}
+			if (permission.getMask() != null) {
+				if (permission.getOrder() != 0) {
+					writeElement(writer, Element.MASK, permission.getMask(), new String[] {Element.ORDER.getLocalName(), String.valueOf(permission.getOrder())});
+				} else {
+					writeElement(writer, Element.MASK, permission.getMask());
+				}
+			}
 			writer.writeEndElement();			
 		}
 		
@@ -594,8 +609,11 @@ public class VDBMetadataParser {
 		}
 	}
 
-	private static void writeElement(final XMLStreamWriter writer, final Element element, String value) throws XMLStreamException {
+	private static void writeElement(final XMLStreamWriter writer, final Element element, String value, String[] ... attributes) throws XMLStreamException {
         writer.writeStartElement(element.getLocalName());
+        for (String[] attribute : attributes) {
+        	writeAttribute(writer, attribute[0], attribute[1]);
+        }
         writer.writeCharacters(value);
         writer.writeEndElement();
     }     

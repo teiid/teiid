@@ -130,5 +130,16 @@ public interface DataPolicy {
 		 * The condition string
 		 */
 		String getCondition();
+		
+		/**
+		 * The column mask string
+		 */
+		String getMask();
+
+		/**
+		 * The column mask order
+		 */
+		int getOrder();
+		
 	}
 }

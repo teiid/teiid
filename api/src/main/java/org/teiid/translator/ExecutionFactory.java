@@ -566,7 +566,7 @@ public class ExecutionFactory<F, C> {
     }
     
 	/**
-	 * Returns whether the database supports explicit join ordering.
+	 * Returns whether the database supports explicit null ordering.
 	 * @since 7.1
 	 * @return true if nulls first/last can be specified
 	 */

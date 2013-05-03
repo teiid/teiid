@@ -22,6 +22,7 @@
 package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
+import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -29,7 +30,9 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.teiid.adminapi.AdminPlugin;
 import org.teiid.adminapi.DataPolicy;
+import org.teiid.core.TeiidRuntimeException;
 
 
 public class DataPolicyMetadata implements DataPolicy, Serializable {
@@ -104,6 +107,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 					permission.setCondition("(" + permission.getCondition() + ") OR (" + previous.getCondition() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
 			}
+			if (previous.getMask() != null) {
+				if (permission.getMask() != null) {
+					throw new TeiidRuntimeException(AdminPlugin.Event.TEIID70053, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70053, this.getName(), permission.getResourceName()));
+				}
+				permission.setMask(previous.getMask());
+				permission.setOrder(previous.getOrder());
+			}
 		}
 	}
 	
@@ -144,6 +154,10 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         // XML based fields
         private String resourceName;
         private String condition;
+        private volatile SoftReference<Object> resolvedCondition;
+        private String mask;
+        private volatile SoftReference<Object> resolvedMask;
+        private int order;
         protected byte bits;
         protected byte bitsSet;
         
@@ -239,6 +253,12 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	if (Boolean.TRUE.equals(getAllowLanguage())) {
         		sb.append("L");//$NON-NLS-1$
         	}
+        	if (condition != null) {
+        		sb.append(" condition ").append(condition); //$NON-NLS-1$
+        	}
+        	if (mask != null) {
+        		sb.append(" mask ").append(mask); //$NON-NLS-1$
+        	}
         	return sb.toString();
         }
         
@@ -307,6 +327,46 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		
 		public void setCondition(String filter) {
 			this.condition = filter;
+		}
+		
+		@Override
+		public String getMask() {
+			return mask;
+		}
+		
+		public void setMask(String mask) {
+			this.mask = mask;
+		}
+		
+		@Override
+		public int getOrder() {
+			return order;
+		}
+		
+		public void setOrder(int order) {
+			this.order = order;
+		}
+		
+		public Object getResolvedCondition() {
+			if (resolvedCondition != null) {
+				return resolvedCondition.get();
+			}
+			return null;
+		}
+		
+		public void setResolvedCondition(Object resolvedCondition) {
+			this.resolvedCondition = new SoftReference<Object>(resolvedCondition);
+		}
+		
+		public Object getResolvedMask() {
+			if (resolvedMask != null) {
+				return resolvedMask.get();
+			}
+			return null;
+		}
+		
+		public void setResolvedMask(Object resolvedMask) {
+			this.resolvedMask = new SoftReference<Object>(resolvedMask);
 		}
 	}
 

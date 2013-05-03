@@ -1815,6 +1815,10 @@ public class RealMetadataFactory {
      */
     public static ColumnSet<Procedure> createResultSet(String name, String[] colNames, String[] colTypes) {
     	ColumnSet<Procedure> rs = new ColumnSet<Procedure>();
+    	int index = name.indexOf('.');
+    	if (index > 0) {
+    		name = name.substring(index + 1);
+    	}
     	rs.setName(name);
         for(Column column : createElements(rs, colNames, colTypes)) {
         	column.setParent(rs);

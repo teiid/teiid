@@ -527,6 +527,7 @@ public class RelationalPlanner {
         	//do initial filtering to make merging and optional join logic easier
             rules.push(new RuleAssignOutputElements(false));
         }
+        rules.push(RuleConstants.APPLY_COLUMN_MASKS);
         rules.push(RuleConstants.PLACE_ACCESS);
         return rules;
     }
@@ -786,7 +787,7 @@ public class RelationalPlanner {
 
         Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, storedProc.getGroup(), this.context);
         if (filter != null) {
-        	//TODO: this is not exactly proper, there should be an inline view, with the filter above.
+        	//TODO: this is not exactly propper, there should be an inline view, with the filter above.
         	// prehaps we shouldn't even allow this case yet.
         	PlanNode critNode = createSelectNode(filter, false);
         	sourceNode.addAsParent(critNode);
@@ -964,10 +965,13 @@ public class RelationalPlanner {
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true, true);
             }
             parent.addLastChild(node);
-            Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, this.context);
-            if (filter != null) {
-            	PlanNode critNode = createSelectNode(filter, false);
-            	node.addAsParent(critNode);
+            if (!group.isProcedure()) {
+	            //logically filters are applied below masking
+	            Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, this.context);
+	            if (filter != null) {
+	            	PlanNode critNode = createSelectNode(filter, false);
+	            	node.addAsParent(critNode);
+	            }
             }
         } else if(clause instanceof JoinPredicate) {
             JoinPredicate jp = (JoinPredicate) clause;

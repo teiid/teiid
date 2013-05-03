@@ -35,6 +35,10 @@
             <condition>col1 = user()</condition>
         </permission>
         <permission>
+            <resource-name>myTable.T2.col1</resource-name>
+            <mask order="1">col2</mask>
+        </permission>
+        <permission>
             <resource-name>javascript</resource-name>
             <allow-language>true</allow-language>
         </permission>

@@ -1005,6 +1005,8 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 		private static final String ALLOW_ALTER = "allow-alter"; //$NON-NLS-1$
 		private static final String ALLOW_LANGUAGE = "allow-language"; //$NON-NLS-1$
 		private static final String CONDITION = "condition"; //$NON-NLS-1$
+		private static final String MASK = "mask"; //$NON-NLS-1$
+		private static final String ORDER = "order"; //$NON-NLS-1$
 		
 		public static PermissionMetaDataMapper INSTANCE = new PermissionMetaDataMapper();
 		
@@ -1038,6 +1040,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			if(permission.getCondition() != null) {
 				node.get(CONDITION).set(permission.getCondition());
+			}
+			if(permission.getMask() != null) {
+				node.get(MASK).set(permission.getMask());
+			}
+			if(permission.getOrder() != 0) {
+				node.get(ORDER).set(permission.getOrder());
 			}
 			return node;
 		}
@@ -1075,6 +1083,12 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 			}
 			if (node.has(CONDITION)) {
 				permission.setCondition(node.get(CONDITION).asString());
+			}
+			if (node.has(MASK)) {
+				permission.setMask(node.get(MASK).asString());
+			}
+			if (node.has(ORDER)) {
+				permission.setOrder(node.get(ORDER).asInt());
 			}
 			return permission;
 		}
