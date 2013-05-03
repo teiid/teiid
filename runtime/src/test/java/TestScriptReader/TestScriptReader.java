@@ -45,6 +45,20 @@ public class TestScriptReader {
 		assertEquals("select a LIKE_REGEX b, a NOT LIKE c from foo", result);
 	}
 	
+	@Test public void testRewrite2() throws Exception {
+		ScriptReader sr = new ScriptReader("select a~");
+		sr.setRewrite(true);
+		String result = sr.readStatement();
+		assertEquals("select a LIKE_REGEX ", result);
+	}
+	
+	@Test public void testRewrite3() throws Exception {
+		ScriptReader sr = new ScriptReader("select a::b");
+		sr.setRewrite(true);
+		String result = sr.readStatement();
+		assertEquals("select a", result);
+	}
+	
 	@Test public void testDelimited() throws Exception {
 		ScriptReader sr = new ScriptReader("set foo 'bar'; set foo1 'bar1'");
 		String result = sr.readStatement();

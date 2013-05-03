@@ -184,7 +184,9 @@ public class ScriptReader {
                             c = read();
                             if (c < 0 || !Character.isLetterOrDigit(c)) {
                             	builder.setLength(start-1);
-                            	builder.append((char)c);
+                            	if (c != -1) {
+                            		builder.append((char)c);
+                            	}
                             	break;
                             }
                         }
@@ -220,7 +222,9 @@ public class ScriptReader {
             		} else {
             			builder.append(" LIKE_REGEX "); //$NON-NLS-1$
             		}
-            		builder.append((char)c);
+            		if (c != -1) {
+                		builder.append((char)c);
+                	}
             	}
             	c = read();
             	break;

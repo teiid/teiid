@@ -415,9 +415,14 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	 */
 	@Test public void test_table_with_underscore() throws Exception {
 		DatabaseMetaData metadata = conn.getMetaData();
-		System.out.println(metadata.getSearchStringEscape());
 		ResultSet rs = metadata.getTables(null, null, "pg_index", null);
 		assertTrue(rs.next());
+	}
+	
+	@Test public void test_pg_cast() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select '2011-01-01'::date");
+		rs.next();
 	}
 	
 	/**
