@@ -22,15 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -61,12 +53,14 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.navigator.DeepPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.AliasSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -384,6 +378,29 @@ public final class RuleCollapseSource implements OptimizerRule {
                     GroupSymbol symbol = node.getGroups().iterator().next();
                     SubqueryFromClause sfc = new SubqueryFromClause(symbol, newQuery);
                     query.getFrom().addClause(sfc);
+                    //ensure that the column names are consistent
+                    Query q = newQuery.getProjectedQuery();
+                    List<Expression> expressions = q.getSelect().getSymbols();
+                    List<Expression> outputCols = (List<Expression>) node.getProperty(NodeConstants.Info.OUTPUT_COLS);
+                    Map<Expression, String> corrected = null;
+                    for (int i = 0; i < outputCols.size(); i++) {
+                    	Expression ex = expressions.get(i);
+                    	Expression expected = outputCols.get(i);
+                    	String name = Symbol.getShortName(expected);
+                    	if (!name.equals(Symbol.getShortName(ex))) {
+                    		expressions.set(i, new AliasSymbol(name, SymbolMap.getExpression(ex)));
+                    		corrected = new HashMap<Expression, String>();
+                    		corrected.put(ex, name);
+                    	}
+                    }
+                    if (corrected != null && newQuery.getOrderBy() != null) {
+                    	for (OrderByItem item : newQuery.getOrderBy().getOrderByItems()) {
+                    		String name = corrected.get(item.getSymbol());
+                    		if (name != null) {
+                    			item.setSymbol(new AliasSymbol(name, SymbolMap.getExpression(item.getSymbol())));
+                    		}
+                    	}
+                    }
                     return;
                 } 
                 query.getFrom().addGroup(node.getGroups().iterator().next());

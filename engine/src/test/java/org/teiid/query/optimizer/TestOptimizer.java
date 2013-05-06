@@ -6712,6 +6712,15 @@ public class TestOptimizer {
         }, null, new CommandContext());
 	}
 	
+	@Test public void testUnaliased() throws Exception {
+		String sql = "SELECT x.count + 1 FROM agg x"; //$NON-NLS-1$
+
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smalla (intkey integer); create view agg (count integer) as select intkey from smalla order by intkey limit 1", "x", "y");
+		BasicSourceCapabilities bsc = TestAggregatePushdown.getAggregateCapabilities();
+		bsc.setFunctionSupport("+", true);
+		TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT (v_0.c_0 + 1) FROM (SELECT g_0.intkey AS c_0 FROM y.smalla AS g_0 ORDER BY c_0 LIMIT 1) AS v_0"}, new DefaultCapabilitiesFinder(bsc), ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
 	public static final boolean DEBUG = false;
 
 }

@@ -46,6 +46,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
@@ -720,5 +721,12 @@ public class TestAggregateProcessing {
     	helpProcess(plan, dataManager, expected);
     }
 
+	@Test public void testUnaliasedViewAgg() throws Exception {
+		String sql = "SELECT MIN(x.count) FROM agg x"; //$NON-NLS-1$
 
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smalla (intkey integer); create view agg (count integer) as select count(*) from smalla", "x", "y");
+		
+		TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT MIN(v_0.c_0) FROM (SELECT COUNT(*) AS c_0 FROM y.smalla AS g_0) AS v_0"}, TestAggregatePushdown.getAggregatesFinder(), ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
 }
