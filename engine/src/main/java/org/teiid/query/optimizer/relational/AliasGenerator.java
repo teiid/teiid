@@ -355,7 +355,11 @@ public class AliasGenerator extends PreOrderNavigator {
             OrderByItem item = obj.getOrderByItems().get(i);
             Expression element = item.getSymbol();
             visitNode(element);
+            
+            Expression expr = SymbolMap.getExpression(element);
+            
             if (item.isUnrelated()) {
+                item.setSymbol(expr);
             	continue;
             }
             String name = null;
@@ -369,7 +373,6 @@ public class AliasGenerator extends PreOrderNavigator {
             if (name == null) {
 	            continue;
             }
-            Expression expr = SymbolMap.getExpression(element);
                         
             if (expr instanceof ElementSymbol) {
             	needsAlias &= needsAlias(name, (ElementSymbol)expr);

@@ -32,6 +32,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -39,7 +40,7 @@ import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 
-@SuppressWarnings({"nls", "unchecked"})
+@SuppressWarnings({"nls", "unchecked", "rawtypes"})
 public class TestOrderByProcessing {
 
 	@Test public void testOrderByDescAll() {
@@ -234,5 +235,19 @@ public class TestOrderByProcessing {
         
         TestOptimizer.helpPlan("select sum (e2) as \"sum\" from pm1.g1 group by e1 order by \"sum\"", metadata, new String[] {"SELECT SUM(g_0.e2) FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY SUM(g_0.e2)"}, capFinder, ComparisonMode.EXACT_COMMAND_STRING);
     }
+	
+	@Test public void testNestedLimit() throws Exception {
+		String sql = "SELECT count(*) FROM (select intkey, stringkey as x from BQT1.SmallA ORDER BY x limit 10) x where intkey = 1"; //$NON-NLS-1$
+
+		QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), metadata, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()));
+
+		List[] expected = new List[] { Arrays.asList(1), 
+		};
+
+		HardcodedDataManager manager = new HardcodedDataManager(metadata);
+		manager.addData("SELECT g_0.IntKey AS c_0 FROM SmallA AS g_0 ORDER BY g_0.StringKey", new List[] {Arrays.asList(1)});
+		helpProcess(plan, manager, expected);
+	}
 
 }
