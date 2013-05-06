@@ -915,7 +915,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				block = blockStore.writeToStorageBlock(info, is);
 			}
 		} catch (IOException e) {
-			LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30016, oid, info.gid));
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30016, oid, info.gid));
+			} else {
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30016, oid, info.gid) + " " + e.getMessage()); //$NON-NLS-1$
+			}
 		} finally {
 			//ensure post conditions
 			synchronized (info) {
