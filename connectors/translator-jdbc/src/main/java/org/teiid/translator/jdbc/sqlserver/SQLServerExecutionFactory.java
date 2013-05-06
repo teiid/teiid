@@ -351,5 +351,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
+	
+	@Override
+	public boolean useStreamsForLobs() {
+		return true;
+	}
     
 }

@@ -24,6 +24,7 @@
  */
 package org.teiid.translator.jdbc.sybase;
 
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -36,11 +37,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.core.util.StringUtil;
 import org.teiid.language.Command;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
 import org.teiid.language.SQLConstants;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -393,6 +397,19 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
 			return;
 		}
 		super.setFetchSize(command, context, statement, fetchSize);
+	}
+	
+	@Override
+	public void initCapabilities(Connection connection)
+			throws TranslatorException {
+		super.initCapabilities(connection);
+		if (!jtdsDriver) {
+			try {
+				jtdsDriver = StringUtil.indexOfIgnoreCase(connection.getMetaData().getDriverName(), "jtds") != -1; //$NON-NLS-1$
+			} catch (SQLException e) {
+				LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, "Could not automatically determine if the jtds driver is in use"); //$NON-NLS-1$
+			}
+		}
 	}
 	
 	@Override
