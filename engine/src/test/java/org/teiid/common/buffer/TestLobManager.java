@@ -33,13 +33,13 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
-import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.ReaderInputStream;
@@ -50,7 +50,7 @@ public class TestLobManager {
 	@Test
 	public void testLobPeristence() throws Exception{
 		
-		BufferManagerImpl buffMgr = BufferManagerFactory.createBufferManager();
+		BufferManager buffMgr = BufferManagerFactory.getStandaloneBufferManager();
 		FileStore fs = buffMgr.createFileStore("temp");
 		
 		ClobType clob = new ClobType(new ClobImpl(new InputStreamFactory() {
@@ -103,6 +103,28 @@ public class TestLobManager {
 		
 		assertEquals(0, lobManager.getLobCount());
 		
+	}
+	
+	@Test public void testInlining() throws Exception{
+		
+		BufferManager buffMgr = BufferManagerFactory.getStandaloneBufferManager();
+		FileStore fs = buffMgr.createFileStore("temp");
+		
+		ClobType clob = new ClobType(new ClobImpl(new InputStreamFactory() {
+			@Override
+			public InputStream getInputStream() throws IOException {
+				return new ReaderInputStream(new StringReader("small"),  Charset.forName(Streamable.ENCODING)); 
+			}
+			
+		}, 5));
+		
+		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
+		
+		LobManager lobManager = new LobManager(new int[] {0}, fs);
+		
+		lobManager.updateReferences(Arrays.asList(clob), ReferenceMode.CREATE);
+		
+		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
 	}
 	
 }

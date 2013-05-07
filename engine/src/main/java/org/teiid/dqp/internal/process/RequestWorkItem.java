@@ -619,12 +619,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				if (cid != null) {
 					super.flushBatchDirect(batch, add);
 				}
-				if (batch.getTerminationFlag()) {
-					done();
-				}
 				synchronized (lobStreams) {
 					if (resultsBuffer.isLobs()) {
 						super.flushBatchDirect(batch, false);
+					}
+					if (batch.getTerminationFlag()) {
+						done();
 					}
 					add = sendResultsIfNeeded(batch);
 					if (cid != null) {

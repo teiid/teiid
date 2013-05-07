@@ -38,15 +38,7 @@ import java.util.Map;
 import javax.sql.rowset.serial.SerialBlob;
 
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.types.BlobImpl;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobImpl;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.SQLXMLImpl;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.XMLType;
+import org.teiid.core.types.*;
 import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.SQLXMLInputStreamFactory;
@@ -123,6 +115,10 @@ public class LobManager {
 						&& (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY
 						|| lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes))) {
 					lob.setReferenceStreamId(null);
+					//since this is untracked at this point, we must detach if possible
+					if (inlineLobs && InputStreamFactory.getStorageMode(lob) == StorageMode.OTHER) {
+						persistLob(lob, null, null, true, maxMemoryBytes);
+					}
 					continue;
 				}
 			} catch (SQLException e) {

@@ -173,7 +173,8 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
 					convertToRuntimeType[i] = false;
 				} else {
-					if (isLob[i] && !cwi.copyLobs() && !cwi.areLobsUsableAfterClose() && DataTypeManager.isLOB(value.getClass())) {
+					if (!explicitClose && isLob[i] && !cwi.copyLobs() && !cwi.areLobsUsableAfterClose() && DataTypeManager.isLOB(result.getClass()) 
+							&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
 						explicitClose = true;
 					}				
 					row.set(i, result);

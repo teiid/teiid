@@ -148,7 +148,7 @@ public class TestDataTierManager {
         dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
 	}
     
-    @Test public void testCopyLobs() throws Exception {
+    @Test public void testLobs() throws Exception {
     	connectorManager.copyLobs = true;
     	DataTierTupleSource info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
     	for (int i = 0; i < 10;) {
@@ -157,6 +157,7 @@ public class TestDataTierManager {
 	    		ClobType clob = (ClobType)tuple.get(0);
 	    		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
 	    		i++;
+	    		assertFalse(info.isExplicitClose());
 	    	} catch (BlockedException e) {
 	    		Thread.sleep(50);
 	    	}
@@ -169,6 +170,7 @@ public class TestDataTierManager {
 	    		ClobType clob = (ClobType)tuple.get(0);
 	    		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
 	    		i++;
+	    		assertTrue(info.isExplicitClose());
 	    	} catch (BlockedException e) {
 	    		Thread.sleep(50);
 	    	}
