@@ -122,5 +122,9 @@ public class PreparedPlan implements Cachable {
 	public boolean restore(TupleBufferCache bufferManager) {
 		return true; //no remotable actions
 	}
+	
+	public boolean validate() {
+		return this.accessInfo.validate(false, 0);
+	}
 		
 }

@@ -69,15 +69,25 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 
 	@Override
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException {
-		PreparedPlan pp = commandContext.getPlan(query);
-        CommandContext copy = commandContext.clone();
-        if (recursionGroup != null) {
-        	copy.pushCall(recursionGroup);
-        }
+		CommandContext copy = commandContext.clone();
         QueryMetadataInterface metadata = commandContext.getMetadata();
         if (metadata == null) {
         	metadata = defaultMetadata;
         }
+        PreparedPlan pp = getPreparedPlan(query, recursionGroup, copy, metadata);
+		copy.pushVariableContext(new VariableContext());
+		PreparedStatementRequest.resolveParameterValues(pp.getReferences(), Arrays.asList(params), copy, metadata);
+        return new QueryProcessor(pp.getPlan().clone(), copy, bufferMgr, dataMgr);
+	}
+
+	@Override
+	public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+			CommandContext commandContext, QueryMetadataInterface metadata) throws 
+			TeiidComponentException, TeiidProcessingException {
+		if (recursionGroup != null) {
+			commandContext.pushCall(recursionGroup);
+        }
+        PreparedPlan pp = commandContext.getPlan(query);
 		if (pp == null) {
 			ParseInfo parseInfo = new ParseInfo();
 			Command newCommand = QueryParser.getQueryParser().parseCommand(query, parseInfo);
@@ -87,23 +97,22 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	        
 	        AbstractValidationVisitor visitor = new ValidationVisitor();
 	        Request.validateWithVisitor(visitor, metadata, newCommand);
-	        Determinism determinismLevel = copy.resetDeterminismLevel();
+	        Determinism determinismLevel = commandContext.resetDeterminismLevel();
 	        try {
-		        newCommand = QueryRewriter.rewrite(newCommand, metadata, copy);
+		        newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
 		        AnalysisRecord record = new AnalysisRecord(false, false);
-		        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, copy);
+		        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, commandContext);
 		        pp = new PreparedPlan();
-		        pp.setPlan(plan, copy);
+		        pp.setPlan(plan, commandContext);
 		        pp.setReferences(references);
 		        pp.setAnalysisRecord(record);
 		        pp.setCommand(newCommand);
-		        commandContext.putPlan(query, pp, copy.getDeterminismLevel());
+		        commandContext.putPlan(query, pp, commandContext.getDeterminismLevel());
 	        } finally {
-	        	copy.setDeterminismLevel(determinismLevel);
+	        	commandContext.setDeterminismLevel(determinismLevel);
 	        }
 		}
-		copy.pushVariableContext(new VariableContext());
-		PreparedStatementRequest.resolveParameterValues(pp.getReferences(), Arrays.asList(params), copy, metadata);
-        return new QueryProcessor(pp.getPlan().clone(), copy, bufferMgr, dataMgr);
+		return pp;
 	}
+	
 }

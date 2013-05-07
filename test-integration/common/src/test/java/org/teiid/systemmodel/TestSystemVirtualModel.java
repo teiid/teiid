@@ -38,16 +38,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
-import org.teiid.jdbc.AsynchPositioningException;
-import org.teiid.jdbc.ContinuousStatementCallback;
 import org.teiid.jdbc.FakeServer;
-import org.teiid.jdbc.RequestOptions;
-import org.teiid.jdbc.StatementCallback;
-import org.teiid.jdbc.TeiidResultSet;
-import org.teiid.jdbc.TeiidStatement;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
 
 
@@ -160,135 +153,6 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 	
 	@Test(expected=SQLException.class) public void testLogMsg1() throws Exception {
 		execute("call logMsg(level=>'foo', context=>'org.teiid.foo', msg=>'hello world')"); //$NON-NLS-1$
-	}
-	
-	@Test public void testAsynch() throws Exception {
-		Statement stmt = this.internalConnection.createStatement();
-		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.columns a, sys.tables b", new StatementCallback() {
-			int rowCount;
-			@Override
-			public void onRow(Statement s, ResultSet rs) {
-				rowCount++;
-				try {
-					if (!rs.isLast()) {
-						assertTrue(rs.unwrap(TeiidResultSet.class).available() > 0);
-					}
-				} catch (AsynchPositioningException e) {
-					try {
-						assertEquals(0, rs.unwrap(TeiidResultSet.class).available());
-					} catch (SQLException e1) {
-						result.getResultsReceiver().exceptionOccurred(e1);
-					}
-				} catch (SQLException e) {
-					result.getResultsReceiver().exceptionOccurred(e);
-				}
-			}
-			
-			@Override
-			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
-			
-			@Override
-			public void onComplete(Statement s) {
-				result.getResultsReceiver().receiveResults(rowCount);
-			}
-		}, new RequestOptions());
-		assertEquals(8288, result.get().intValue());
-	}
-	
-	@Test public void testAsynchContinuousEmpty() throws Exception {
-		Statement stmt = this.internalConnection.createStatement();
-		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.Schemas where 1 = 0", new ContinuousStatementCallback() {
-			
-			int execCount;
-			@Override
-			public void onRow(Statement s, ResultSet rs) throws SQLException {
-				fail();
-			}
-			
-			@Override
-			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
-			
-			@Override
-			public void onComplete(Statement s) {
-				result.getResultsReceiver().receiveResults(execCount);
-			}
-			
-			@Override
-			public void beforeNextExecution(Statement s) throws SQLException {
-				execCount++;
-				assertEquals(-1, s.getResultSet().unwrap(TeiidResultSet.class).available());
-				if (execCount == 1024) {
-					s.close();
-				}
-			}
-		}, new RequestOptions().continuous(true));
-		assertEquals(1024, result.get().intValue());
-	}
-	
-	@Test public void testAsynchContinuousNonEmpty() throws Exception {
-		Statement stmt = this.internalConnection.createStatement();
-		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select 1", new ContinuousStatementCallback() {
-			
-			int execCount;
-			@Override
-			public void onRow(Statement s, ResultSet rs) throws SQLException {
-				assertEquals(0, rs.unwrap(TeiidResultSet.class).available());
-				s.close();
-			}
-			
-			@Override
-			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
-			
-			@Override
-			public void onComplete(Statement s) {
-				result.getResultsReceiver().receiveResults(execCount);
-			}
-			
-			@Override
-			public void beforeNextExecution(Statement s) throws SQLException {
-				execCount++;
-			}
-		}, new RequestOptions().continuous(true));
-		assertEquals(0, result.get().intValue());
-	}
-	
-	@Test public void testAsynchContinuous() throws Exception {
-		Statement stmt = this.internalConnection.createStatement();
-		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
-		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select xmlelement(name x) from SYS.Schemas", new StatementCallback() {
-			int rowCount;
-			@Override
-			public void onRow(Statement s, ResultSet rs) throws SQLException {
-				rowCount++;
-				if (rowCount == 1024) {
-					s.close();
-				}
-			}
-			
-			@Override
-			public void onException(Statement s, Exception e) {
-				result.getResultsReceiver().exceptionOccurred(e);
-			}
-			
-			@Override
-			public void onComplete(Statement s) {
-				result.getResultsReceiver().receiveResults(rowCount);
-			}
-		}, new RequestOptions().continuous(true));
-		assertEquals(1024, result.get().intValue());
 	}
 	
 	@Test public void testCallableParametersByName() throws Exception {

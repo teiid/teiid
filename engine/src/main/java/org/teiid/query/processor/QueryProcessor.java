@@ -34,12 +34,14 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.util.CommandContext;
 
@@ -56,6 +58,9 @@ public class QueryProcessor implements BatchProducer {
 	
 	public interface ProcessorFactory {
 		QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException;
+		PreparedPlan getPreparedPlan(String query, String recursionGroup,
+				CommandContext commandContext, QueryMetadataInterface metadata)
+				throws TeiidProcessingException, TeiidComponentException;
 	}
 	
     private CommandContext context;
@@ -71,6 +76,8 @@ public class QueryProcessor implements BatchProducer {
     private boolean processorClosed;
     
     private boolean continuous;
+    private String query; //used only in continuous mode
+    private PreparedPlan plan;
     private int rowOffset = 1;
     
     /**
@@ -198,14 +205,27 @@ public class QueryProcessor implements BatchProducer {
 	}
 
 	public void init() throws TeiidComponentException, TeiidProcessingException {
-		// initialize if necessary
-		if(!initialized) {
-			reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
-			this.processPlan.initialize(context, dataMgr, bufferMgr);
-			initialized = true;
-		}
-		
 		if (!open) {
+			if (continuous && context.getReuseCount() > 0) {
+				//validate the plan prior to the next run
+	    		//ideally we would reuse the prepared plan from initial planning in the case of a prepared statement
+	    		if (this.plan != null && !this.plan.validate()) {
+					this.plan = null;
+	    		}
+	    		if (this.plan == null) {
+	    			this.plan = context.getQueryProcessorFactory().getPreparedPlan(query, null, context, context.getMetadata());
+	    			this.processPlan = this.plan.getPlan().clone();
+	    			this.processPlan.initialize(context, dataMgr, bufferMgr);
+	    		}
+			}
+    		
+			// initialize if necessary
+			if(!initialized) {
+				reserved = this.bufferMgr.reserveBuffers(this.bufferMgr.getSchemaSize(this.getOutputElements()), BufferReserveMode.FORCE);
+				this.processPlan.initialize(context, dataMgr, bufferMgr);
+				initialized = true;
+			}
+		
 			// Open the top node for reading
 			processPlan.open();
 			open = true;
@@ -297,9 +317,10 @@ public class QueryProcessor implements BatchProducer {
 		return bufferMgr;
 	}
 	
-	public void setContinuous(boolean continuous) {
+	public void setContinuous(boolean continuous, String sql) {
 		this.continuous = continuous;
 		if (this.continuous) {
+			this.query = sql;
 			this.context.setContinuous();
 		}
 	}
