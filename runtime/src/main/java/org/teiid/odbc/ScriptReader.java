@@ -22,7 +22,9 @@ public class ScriptReader {
     private boolean insideRemark;
     private boolean blockRemark;
     private boolean rewrite;
-
+    private int expressionStart=-1;
+    private int expressionEnd=-1;
+    
     /**
      * Create a new SQL script reader from the given reader
      *
@@ -94,15 +96,17 @@ public class ScriptReader {
             }
             case '\'':
             	//TODO: in rewrite mode could handle the E' logic here rather than in the parser
+            	//however the parser now uses E' with like to detect pg specific handling
+            	if (expressionEnd != builder.length() - 1) {
+            		expressionStart = builder.length() - 1;
+            	}
                 while (true) {
                     c = read();
-                    if (c < 0) {
-                        break;
-                    }
-                    if (c == '\'') {
+                    if (c < 0 || c == '\'') {
                         break;
                     }
                 }
+                expressionEnd = builder.length();
                 c = read();
                 break;
             case '"':
@@ -183,7 +187,12 @@ public class ScriptReader {
                         while (true) {
                             c = read();
                             if (c < 0 || !Character.isLetterOrDigit(c)) {
+                            	String type = builder.substring(start+1, builder.length() - (c<0?0:1));
                             	builder.setLength(start-1);
+                            	if (expressionStart != -1 && expressionEnd == start -1) {
+                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$
+                                	builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
+                            	}
                             	if (c != -1) {
                             		builder.append((char)c);
                             	}

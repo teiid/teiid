@@ -32,10 +32,17 @@ import org.teiid.odbc.ScriptReader;
 public class TestScriptReader {
 
 	@Test public void testRewrite() throws Exception {
-		ScriptReader sr = new ScriptReader("select a::b from foo");
+		ScriptReader sr = new ScriptReader("select 'a'::b from foo");
 		sr.setRewrite(true);
 		String result = sr.readStatement();
-		assertEquals("select a from foo", result);
+		assertEquals("select cast('a' AS b) from foo", result);
+	}
+	
+	@Test public void testRewriteComplexLiteral() throws Exception {
+		ScriptReader sr = new ScriptReader("select 'a''c'::b");
+		sr.setRewrite(true);
+		String result = sr.readStatement();
+		assertEquals("select cast('a''c' AS b)", result);
 	}
 	
 	@Test public void testRewrite1() throws Exception {
