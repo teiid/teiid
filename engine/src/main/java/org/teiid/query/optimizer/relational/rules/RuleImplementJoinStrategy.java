@@ -100,22 +100,6 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             if (!JoinStrategyType.MERGE.equals(stype)) {
             	continue;
             } 
-            
-            /**
-             * Don't push sorts for unbalanced inner joins, we prefer to use a processing time cost based decision 
-             */
-            boolean pushLeft = true;
-            boolean pushRight = true;
-            if (joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER && context != null) {
-            	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
-            	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
-            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost != NewCalculateCostUtil.UNKNOWN_VALUE 
-            			&& (leftCost > context.getProcessorBatchSize() || rightCost > context.getProcessorBatchSize())) {
-            		//we use a larger constant here to ensure that we don't unwisely prevent pushdown
-            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 8;
-            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 8 || joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null;
-            	}
-            }
 
             List<Expression> leftExpressions = (List<Expression>) joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
             List<Expression> rightExpressions = (List<Expression>) joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
@@ -133,6 +117,23 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
             	key = NewCalculateCostUtil.getKeyUsed(leftExpressions, null, metadata, null);
             	right = false;
             }
+            JoinType joinType = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
+            /**
+             * Don't push sorts for unbalanced inner joins, we prefer to use a processing time cost based decision 
+             */
+            boolean pushLeft = true;
+            boolean pushRight = true;
+            if ((joinType == JoinType.JOIN_INNER || joinType == JoinType.JOIN_LEFT_OUTER) && context != null) {
+            	float leftCost = NewCalculateCostUtil.computeCostForTree(joinNode.getFirstChild(), metadata);
+            	float rightCost = NewCalculateCostUtil.computeCostForTree(joinNode.getLastChild(), metadata);
+            	if (leftCost != NewCalculateCostUtil.UNKNOWN_VALUE && rightCost != NewCalculateCostUtil.UNKNOWN_VALUE 
+            			&& (leftCost > context.getProcessorBatchSize() || rightCost > context.getProcessorBatchSize())) {
+            		//we use a larger constant here to ensure that we don't unwisely prevent pushdown
+            		pushLeft = leftCost < context.getProcessorBatchSize() || leftCost / rightCost < 8 || (key != null && !right);
+            		pushRight = rightCost < context.getProcessorBatchSize() || rightCost / leftCost < 8 || joinType == JoinType.JOIN_LEFT_OUTER || (key != null && right);
+            	}
+            }
+
             if (key != null && joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) == null) {
             	//redo the join predicates based upon the key alone
             	List<Object> keyCols = metadata.getElementIDsInKey(key);
@@ -182,8 +183,14 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 
 			boolean pushedLeft = insertSort(joinNode.getFirstChild(), leftExpressions, joinNode, metadata, capabilitiesFinder, pushLeft);	
 			
+			//TODO: this check could be performed, as it implies we're using enhanced and can back out of the sort
+			//      but this not valid in all circumstances
+			//if (!pushedLeft && joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null && joinType == JoinType.JOIN_INNER) {
+				//pushRight = true; //this sort will not be used if more than one source command is generated
+			//}
+			
 	        if (origExpressionCount == 1 
-	        		&& joinNode.getProperty(NodeConstants.Info.JOIN_TYPE) == JoinType.JOIN_INNER 
+	        		&& joinType == JoinType.JOIN_INNER 
 	        		&& joinNode.getProperty(NodeConstants.Info.DEPENDENT_VALUE_SOURCE) != null
 	        		&& !joinNode.hasCollectionProperty(Info.NON_EQUI_JOIN_CRITERIA)) {
 	        	Collection<Expression> output = (Collection<Expression>) joinNode.getProperty(NodeConstants.Info.OUTPUT_COLS);
@@ -195,7 +202,6 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 			}
 
 			boolean pushedRight = insertSort(joinNode.getLastChild(), rightExpressions, joinNode, metadata, capabilitiesFinder, pushRight);
-			JoinType joinType = (JoinType) joinNode.getProperty(NodeConstants.Info.JOIN_TYPE);
         	if ((!pushedRight || !pushedLeft) && (joinType == JoinType.JOIN_INNER || (joinType == JoinType.JOIN_LEFT_OUTER && !pushedLeft))) {
         		joinNode.setProperty(NodeConstants.Info.JOIN_STRATEGY, JoinStrategyType.ENHANCED_SORT);
         	}
