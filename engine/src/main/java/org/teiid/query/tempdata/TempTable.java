@@ -68,6 +68,7 @@ import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.SetClauseList;
 import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ExpressionSymbol;
@@ -612,9 +613,26 @@ public class TempTable implements Cloneable, SearchableTable {
 	}
 	
 	@Override
-	public boolean matchesPkColumn(int pkIndex, Expression ex) {
+	public Object matchesPkColumn(int pkIndex, Expression ex) {
 		if (rowId != null) {
 			return false;
+		}
+		if (ex instanceof Array) {
+			Array array = (Array)ex;
+			List<Expression> exprs = array.getExpressions();
+			int toIndex = Math.min(this.getPkLength(), exprs.size());
+			int[] indexes = new int[toIndex];
+			for (int i = pkIndex; i < toIndex; i++) {
+				int index = exprs.indexOf(this.columns.get(i));
+				indexes[i] = index;
+				if (index == -1) {
+					if (i == pkIndex) {
+						return false;
+					}
+					break;
+				}
+			}
+			return indexes;
 		}
 		return columns.get(pkIndex).equals(ex);
 	}

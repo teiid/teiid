@@ -149,7 +149,7 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 	}
 	
 	@Override
-	public boolean matchesPkColumn(int pkIndex, Expression ex) {
+	public Boolean matchesPkColumn(int pkIndex, Expression ex) {
 		if (ex instanceof Function) {
 			Function f = (Function)ex;
 			ex = f.getArg(0);
