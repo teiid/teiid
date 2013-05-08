@@ -463,4 +463,21 @@ public class TestPreparedStatement {
 		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
     }
     
+    @Test public void testInsertWithSimpleSelect() throws Exception {
+    	String preparedSql = "insert into pm1.g1 (e1, e2) select ?, ?"; //$NON-NLS-1$
+        
+        List[] expected = new List[] { 
+            Arrays.asList(1),
+        };    
+    
+		List values = Arrays.asList("a", "1"); //$NON-NLS-1$
+		
+		QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+        dataManager.addData("INSERT INTO g1 (e1, e2) VALUES ('a', 1)", new List[] {Arrays.asList(1)});
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        
+		helpTestProcessing(preparedSql, values, expected, dataManager, new DefaultCapabilitiesFinder(caps), metadata, null, false, false, false, RealMetadataFactory.example1VDB());
+    }
+    
 }
