@@ -64,6 +64,16 @@ public class TestColumMasking {
 		policy.addPermission(pmd, pmd1);
 		policy.setName("some-role");
 		policies.put("some-role", policy);
+
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd11 = new PermissionMetaData();
+		pmd11.setResourceName("pm1.sp1.rs3.e1");
+		pmd11.setOrder(1); //ensure that pmd above still applies
+		pmd11.setMask("null");
+
+		policy1.addPermission(pmd, pmd1);
+		policy1.setName("other-role");
+		policies.put("other-role", policy);
 		
 		workContext.setPolicies(policies);
 		context.setDQPWorkContext(workContext);
