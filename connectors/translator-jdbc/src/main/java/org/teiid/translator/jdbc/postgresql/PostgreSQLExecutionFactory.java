@@ -563,5 +563,10 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
+	
+	@Override
+	public boolean supportsStringAgg() {
+		return true;
+	}
     
 }

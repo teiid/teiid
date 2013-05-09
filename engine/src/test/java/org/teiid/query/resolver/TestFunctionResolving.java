@@ -157,4 +157,14 @@ public class TestFunctionResolving {
     	assertEquals(DataTypeManager.DefaultDataClasses.CLOB, xs.getType());
     }
     
+    @Test(expected=QueryResolverException.class) public void testStringAggWrongTypes() throws Exception {
+    	String sql = "string_agg(pm1.g1.e1, pm1.g1.e2)"; //$NON-NLS-1$
+    	getExpression(sql);
+    }
+    
+    @Test(expected=QueryResolverException.class) public void testStringAggWrongArgs() throws Exception {
+    	String sql = "string_agg(pm1.g1.e1)"; //$NON-NLS-1$
+    	getExpression(sql);
+    }
+    
 }

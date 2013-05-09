@@ -1081,6 +1081,7 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	case ARRAY_AGG:
     	case JSONARRAY_AGG:
     	case XMLAGG:
+    	case STRING_AGG:
     		if (windowFunction.getWindowSpecification().getOrderBy() != null) {
     			handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.window_order_by", windowFunction), windowFunction); //$NON-NLS-1$
             }

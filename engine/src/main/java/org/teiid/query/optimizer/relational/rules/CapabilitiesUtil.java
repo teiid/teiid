@@ -188,6 +188,11 @@ public class CapabilitiesUtil {
                 return false;
             }
             break;
+        case STRING_AGG:
+        	if(! caps.supportsCapability(Capability.QUERY_AGGREGATES_STRING)) {
+                return false;
+            }
+            break;
         case RANK:
         case DENSE_RANK:
         case ROW_NUMBER:

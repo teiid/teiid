@@ -41,6 +41,7 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	private FileStoreOutputStream fsos;
 	private String encoding;
 	private PhantomReference<Object> cleanup;
+	private Writer writer;
 
 	public FileStoreInputStreamFactory(FileStore lobBuffer, String encoding) {
 		this.encoding = encoding;
@@ -83,7 +84,10 @@ public final class FileStoreInputStreamFactory extends InputStreamFactory {
 	 * @return
 	 */
 	public Writer getWriter() {
-		return new OutputStreamWriter(getOuputStream(), Charset.forName(encoding));
+		if (writer == null) {
+			writer = new OutputStreamWriter(getOuputStream(), Charset.forName(encoding));
+		}
+		return writer;
 	}
 	
 	/**

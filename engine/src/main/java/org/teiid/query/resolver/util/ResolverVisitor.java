@@ -53,7 +53,6 @@ import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
 import org.teiid.query.sql.proc.ExceptionExpression;
 import org.teiid.query.sql.symbol.*;
-import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.symbol.ElementSymbol.DisplayMode;
 
 
@@ -455,10 +454,63 @@ public class ResolverVisitor extends LanguageVisitor {
 				handleException(e);
 			}
     	}
-    	if (obj.getAggregateFunction() == Type.USER_DEFINED) {
+    	switch (obj.getAggregateFunction()) {
+    	case USER_DEFINED:
     		visit((Function)obj);
+    		break;
+    	case STRING_AGG:
+    		try {
+	    		if (obj.getArgs().length != 2) {
+	    			throw new QueryResolverException(QueryPlugin.Event.TEIID31140, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31140, obj));
+	    		}
+	    		if (obj.getType() == null) {
+					Expression arg = obj.getArg(0);
+					Expression arg1 = obj.getArg(1);
+					Class<?> type = null;
+					if (isBinary(arg)) {
+						setDesiredType(arg1, DataTypeManager.DefaultDataClasses.BLOB, obj);
+						if (isBinary(arg1)) {
+							type = DataTypeManager.DefaultDataClasses.BLOB;
+						}
+					} else if (isCharacter(arg)) {
+						setDesiredType(arg1, DataTypeManager.DefaultDataClasses.CLOB, obj);
+						if (isCharacter(arg1)) {
+							type = DataTypeManager.DefaultDataClasses.CLOB;
+						}
+					} else if (arg.getType() == null) {
+						if (isBinary(arg1)) {
+							setDesiredType(arg, DataTypeManager.DefaultDataClasses.BLOB, obj);
+							if (isBinary(arg)) {
+								type = DataTypeManager.DefaultDataClasses.BLOB;
+							}
+						} else if (isCharacter(arg1)) {
+							setDesiredType(arg, DataTypeManager.DefaultDataClasses.CLOB, obj);
+							if (isCharacter(arg)) {
+								type = DataTypeManager.DefaultDataClasses.CLOB;
+							}
+						}
+					}
+					if (type == null) {
+						throw new QueryResolverException(QueryPlugin.Event.TEIID31141, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31141, obj));
+					}
+	    			obj.setType(type);
+	    		}
+    		} catch (QueryResolverException e) {
+				handleException(e);
+			}
+    		break;
     	}
     }
+
+	private boolean isCharacter(Expression arg) {
+		return arg.getType() == DataTypeManager.DefaultDataClasses.STRING
+				|| arg.getType() == DataTypeManager.DefaultDataClasses.CLOB;
+	}
+
+	private boolean isBinary(Expression arg) {
+		return arg.getType() == DataTypeManager.DefaultDataClasses.VARBINARY
+				|| arg.getType() == DataTypeManager.DefaultDataClasses.BLOB;
+	}
 
     public TeiidComponentException getComponentException() {
         return this.componentException;

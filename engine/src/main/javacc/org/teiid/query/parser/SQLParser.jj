@@ -4158,7 +4158,7 @@ Expression function(ParseInfo info) :
 		if(funcName == null) { 
 			funcName = funcToken.image;
 		}
-		if (distinct != null || orderBy != null || condition != null) {
+		if (distinct != null || orderBy != null || condition != null || "string_agg".equalsIgnoreCase(funcName)) {
 			AggregateSymbol as = new AggregateSymbol(funcName, distinct!=null?distinct:false, (Expression[])args.toArray(new Expression[args.size()]), orderBy);
 			as.setCondition(condition);
 			return as;

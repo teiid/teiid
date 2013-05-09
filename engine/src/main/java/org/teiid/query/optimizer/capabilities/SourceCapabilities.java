@@ -333,7 +333,8 @@ public interface SourceCapabilities {
         ONLY_FORMAT_LITERALS,
         CRITERIA_ON_SUBQUERY,
         ARRAY_TYPE, 
-        QUERY_SUBQUERIES_ONLY_CORRELATED;
+        QUERY_SUBQUERIES_ONLY_CORRELATED, 
+        QUERY_AGGREGATES_STRING;
         
         private final String toString;
         

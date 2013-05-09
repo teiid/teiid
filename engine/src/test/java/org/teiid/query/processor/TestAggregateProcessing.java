@@ -36,6 +36,7 @@ import org.teiid.UserDefinedAggregate;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.types.ArrayImpl;
+import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.AggregateAttributes;
 import org.teiid.metadata.FunctionMethod;
@@ -727,6 +728,40 @@ public class TestAggregateProcessing {
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table smalla (intkey integer); create view agg (count integer) as select count(*) from smalla", "x", "y");
 		
 		TestOptimizer.helpPlan(sql, metadata, new String[] {"SELECT MIN(v_0.c_0) FROM (SELECT COUNT(*) AS c_0 FROM y.smalla AS g_0) AS v_0"}, TestAggregatePushdown.getAggregatesFinder(), ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testStringAgg() throws Exception {
+		// Create query
+		String sql = "SELECT string_agg(e1, ',') from pm1.g1 group by e3"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList("a,b,a"),
+				Arrays.asList("a,c"),
+		};
+
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+		
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	@Test public void testStringAggBinary() throws Exception {
+		// Create query
+		String sql = "SELECT cast(string_agg(to_bytes(e1, 'UTF-8'), X'AB') as varbinary) from pm1.g1 group by e3"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(new BinaryType(new byte[] {(byte)0x61, (byte)0xAB, (byte)0x62, (byte)0xAB, (byte)0x61})),
+				Arrays.asList(new BinaryType(new byte[] {(byte)0x61, (byte)0xAB, (byte)0x63})),
+		};
+
+		FakeDataManager dataManager = new FakeDataManager();
+		sampleData1(dataManager);
+		
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached(), TestAggregatePushdown.getAggregatesFinder());
+		helpProcess(plan, dataManager, expected);
 	}
 	
 }

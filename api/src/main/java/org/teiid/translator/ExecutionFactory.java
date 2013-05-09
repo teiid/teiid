@@ -661,6 +661,14 @@ public class ExecutionFactory<F, C> {
     public boolean supportsAggregatesEnhancedNumeric() {
     	return false;
     }
+    
+    /**
+     * @return true if string_agg is supported
+     * @since 8.4
+     */
+    public boolean supportsStringAgg() {
+    	return false;
+    }
 
     /** 
      * Support indicates connector can accept scalar subqueries in the SELECT, WHERE, and

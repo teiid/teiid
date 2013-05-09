@@ -478,4 +478,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public void initCapabilities(C connection) throws TranslatorException {
 		delegate.initCapabilities(connection);
 	}
+	@Override
+	public boolean supportsStringAgg() {
+		return delegate.supportsStringAgg();
+	}
 }

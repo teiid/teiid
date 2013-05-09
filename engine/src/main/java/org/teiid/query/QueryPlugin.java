@@ -551,6 +551,8 @@ public class QueryPlugin { // extends Plugin {
     	TEIID31136, 
     	TEIID31137, 
     	TEIID31138,
-    	TEIID31139,
+    	TEIID31139, 
+    	TEIID31140,
+    	TEIID31141,
 	}
 }

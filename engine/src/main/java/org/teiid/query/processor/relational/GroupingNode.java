@@ -41,6 +41,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.aggregate.*;
@@ -246,6 +247,9 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 			break;
 		case TEXTAGG:
 			result = new TextAgg((TextLine)args[0]);
+			break;
+		case STRING_AGG:
+			result = new StringAgg(aggSymbol.getType() == DataTypeManager.DefaultDataClasses.BLOB);
 			break;     
 		case USER_DEFINED:
 			result = new UserDefined(aggSymbol.getFunctionDescriptor());
