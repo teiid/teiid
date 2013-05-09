@@ -213,6 +213,11 @@ public class TestAsynch {
 							Statement st = internalConnection.createStatement();
 							st.execute("alter view v.test as select 2");
 							st.close();
+							try {
+								Thread.sleep(100); //we only track down to millisecond resolution
+							} catch (InterruptedException e) {
+								result.getResultsReceiver().exceptionOccurred(e);
+							}
 						}
 					} else {
 						assertEquals(2, rs.getInt(1)); //new value
