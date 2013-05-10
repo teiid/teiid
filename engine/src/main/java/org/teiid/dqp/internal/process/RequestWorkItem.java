@@ -850,6 +850,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		}
 		cancelCancelTask();
         receiver.receiveResults(response);
+        if (requestMsg.getRequestOptions().isContinuous() && this.resultsReceiver == null) {
+        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
+        }
         return result;
 	}
 
