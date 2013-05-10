@@ -26,14 +26,14 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-  <li>TEIID-2429 Improved sort performance for large data sets especially under heavy load.
-  <li>TEIID-2423 TEIID-2470 Added xml and zip deployment options for Teiid Embedded.
-  <li>TEIID-1092 Added the teiid_session_set and teiid_session_get methods to maintain session variables.
-  <li>TEIID-2449 Added the ability to deploy non-Designer based vdb zip artifacts with the ability to place DDL outside of the VDB.xml via the DDL-FILE metadata repository.
-  <li>TEIID-2326 Materialized views from imported vdbs will be reused rather than recreated in each importing vdb.
-  <li>TEIID-2444 The deployment platform for Teiid has been changed to EAP 6.1.Alpha1
-  <li>TEIID-2344 The JDBC translator database version property in most circumstances will not need to be set manually - see the compatiblity note below.
-  <li>TEIID-2453 Added the string_agg aggregate function for concatinating binary and character strings.
+<li>TEIID-2444 <b>EAP Platform</b> - the deployment platform for Teiid has been changed to EAP 6.1.Alpha1 </li>
+<li>TEIID-2429 <b>Improved sort performance</b> - improved sorts for large data sets especially under heavy load. </li>
+<li>TEIID-2449 <b>VDB Zips</b> - added the ability to deploy non-Designer based vdb zip artifacts with the ability to place DDL outside of the VDB.xml via the DDL-FILE metadata repository. </li>
+<li>TEIID-2423 TEIID-2470 <b>Additional Embedded deployments</b> - xml and zip vdb deployment options are available for Teiid Embedded. </li>
+<li>TEIID-1092 <b>Session Variables</b> - added the teiid_session_set and teiid_session_get methods to maintain session variables. </li>
+<li>TEIID-2326 <b>Shared Mat Views</b> - materialized views from imported vdbs will be reused rather than recreated in each importing vdb.  </li>
+<li>TEIID-2344 <b>Automatic DB Version Detection</b> - the JDBC translator database version property in most circumstances will not need to be set manually - see the compatibility note below.
+<li>TEIID-2453 <b>STRING_AGG</b> Added the string_agg aggregate function for concatenating binary and character strings.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -48,8 +48,9 @@
   <li>TEIID-2477 Most of the JDBC translator static String version constants were replaced by org.teiid.translator.jdbc.Version constants.  Use the .toString() method to obtain a version string if needed.
 </ul>
 
-<h4>from 8.2</h4>
+<h4>from 8.3</h4>
 <ul>
+   <li>TEIID-2444 The deployment platform for Teiid has been changed to EAP 6.1.Alpha1, older or non-EAP deployments are not supported.
    <li>TEIID-2429 Sorts over data sets over a single batch are not guaranteed to be sorted in a stable manor to improve performance.  The sort will still be correct with respect to the sort keys.   
 </ul>
    
