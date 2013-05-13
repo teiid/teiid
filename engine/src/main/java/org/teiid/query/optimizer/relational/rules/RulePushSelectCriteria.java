@@ -60,8 +60,8 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.WindowFunction;
+import org.teiid.query.sql.symbol.WindowSpecification;
 import org.teiid.query.sql.util.SymbolMap;
-import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -778,21 +778,35 @@ public final class RulePushSelectCriteria implements OptimizerRule {
         if(projectNode.getChildCount() == 0) {
             return null;
         }
-        List<WindowFunction> windowFunctions = null;
+        
+        Criteria crit = (Criteria) critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
+        Collection<ElementSymbol> cols = ElementCollectorVisitor.getElements(crit, true);
+        
         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
-        	windowFunctions = new LinkedList<WindowFunction>();
+        	//we can push iff the predicate is against partitioning columns in all projected window functions
+        	Set<WindowFunction> windowFunctions = RuleAssignOutputElements.getWindowFunctions((List<Expression>) projectNode.getProperty(Info.PROJECT_COLS));
+        	for (WindowFunction windowFunction : windowFunctions) {
+				WindowSpecification spec = windowFunction.getWindowSpecification();
+				if (spec.getOrderBy() != null || spec.getPartition() == null) {
+					return null;
+				}
+				for (ElementSymbol col : cols) {
+					if (!spec.getPartition().contains(symbolMap.getMappedExpression(col))) {
+						return null;
+					}
+				}
+			}
         }
 
-        Criteria crit = (Criteria) critNode.getProperty(NodeConstants.Info.SELECT_CRITERIA);
 
-        Boolean conversionResult = checkConversion(symbolMap, ElementCollectorVisitor.getElements(crit, true), windowFunctions);
+        Boolean conversionResult = checkConversion(symbolMap, cols);
         
         if (conversionResult == Boolean.FALSE) {
         	return null; //not convertable
         }
         
         if (!critNode.getSubqueryContainers().isEmpty() 
-        		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements(), windowFunctions) != null) {
+        		&& checkConversion(symbolMap, critNode.getCorrelatedReferenceElements()) != null) {
     		return null; //not convertable, or has an aggregate for a correlated reference
         }
         
@@ -815,7 +829,7 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 	}
 
 	private Boolean checkConversion(SymbolMap symbolMap,
-			Collection<ElementSymbol> elements, List<WindowFunction> windowFunctions) {
+			Collection<ElementSymbol> elements) {
 		Boolean result = null;
         
         for (ElementSymbol element : elements) {
@@ -834,12 +848,6 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                 result = Boolean.TRUE;
             }
             
-            if (windowFunctions != null) {
-            	AggregateSymbolCollectorVisitor.getAggregates(converted, null, null, null, windowFunctions, null);
-            	if (!windowFunctions.isEmpty()) {
-            		return false;
-            	}
-            }
         }
 		return result;
 	}
