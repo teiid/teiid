@@ -2441,16 +2441,20 @@ public class QueryRewriter {
             
             // Check the when to see if this CASE can be rewritten due to an always true/false when
             Criteria rewrittenWhen = rewriteCriteria(expr.getWhenCriteria(i));
-            if(rewrittenWhen == TRUE_CRITERIA) {
-                // WHEN is always true, so just return the THEN
-                return rewriteExpressionDirect(expr.getThenExpression(i));
-            }
             if (rewrittenWhen == FALSE_CRITERIA || rewrittenWhen == UNKNOWN_CRITERIA) {
             	continue;
             }
             
             whens.add(rewrittenWhen);
             thens.add(rewriteExpressionDirect(expr.getThenExpression(i)));
+            
+            if(rewrittenWhen == TRUE_CRITERIA) {
+            	if (i == 0) {
+	                // WHEN is always true, so just return the THEN
+	                return rewriteExpressionDirect(expr.getThenExpression(i));
+            	}
+            	break;
+            }
         }
 
         if (expr.getElseExpression() != null) {
