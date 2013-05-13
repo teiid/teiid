@@ -34,12 +34,13 @@ import org.junit.Test;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestColumMasking {
 
 	CommandContext context;
@@ -65,16 +66,6 @@ public class TestColumMasking {
 		policy.setName("some-role");
 		policies.put("some-role", policy);
 
-		DataPolicyMetadata policy1 = new DataPolicyMetadata();
-		PermissionMetaData pmd11 = new PermissionMetaData();
-		pmd11.setResourceName("pm1.sp1.rs3.e1");
-		pmd11.setOrder(1); //ensure that pmd above still applies
-		pmd11.setMask("null");
-
-		policy1.addPermission(pmd, pmd1);
-		policy1.setName("other-role");
-		policies.put("other-role", policy);
-		
 		workContext.setPolicies(policies);
 		context.setDQPWorkContext(workContext);
 		return context;
@@ -88,7 +79,43 @@ public class TestColumMasking {
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	
+	@Test public void testProcedureMask1() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd11 = new PermissionMetaData();
+		pmd11.setResourceName("pm1.sp1.rs3.e1");
+		pmd11.setOrder(1); //takes presedence
+		pmd11.setMask("null");
+
+		policy1.addPermission(pmd11);
+		policy1.setName("other-role");
+		context.getAllowedDataPolicies().put("other-role", policy1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("EXEC pm1.sp1()", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		ProcessorPlan plan = helpGetPlan(helpParse("exec pm1.sp1()"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(null, 1), Arrays.asList(null, 2)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
 	@Test public void testTableMask() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		ProcessorPlan plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Collections.singletonList(null), Arrays.asList(2)};
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	@Test(expected=QueryMetadataException.class) public void testInvalidTableMask() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd11 = new PermissionMetaData();
+		pmd11.setResourceName("pm1.g1.e2");
+		pmd11.setOrder(1); //takes presedence
+		pmd11.setMask("'a'");
+
+		policy1.addPermission(pmd11);
+		policy1.setName("other-role");
+		context.getAllowedDataPolicies().put("other-role", policy1);
+		
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
 		ProcessorPlan plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
@@ -101,6 +128,25 @@ public class TestColumMasking {
 		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
 		ProcessorPlan plan = helpGetPlan(helpParse("select g2.e2 from pm1.g1 as g2"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
 		List<?>[] expectedResults = new List<?>[] {Collections.singletonList(null), Arrays.asList(2)};
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	@Test public void testConditionalMask() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd11 = new PermissionMetaData();
+		pmd11.setResourceName("pm1.g1.e2");
+		pmd11.setOrder(1); //takes presedence
+		pmd11.setCondition("e1 = 'c'");
+		pmd11.setMask("0");
+
+		policy1.addPermission(pmd11);
+		policy1.setName("other-role");
+		context.getAllowedDataPolicies().put("other-role", policy1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2), Arrays.asList("c", 0)});
+		ProcessorPlan plan = helpGetPlan(helpParse("select g2.e2 from pm1.g1 as g2"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Collections.singletonList(null), Arrays.asList(2), Arrays.asList(0)};
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 

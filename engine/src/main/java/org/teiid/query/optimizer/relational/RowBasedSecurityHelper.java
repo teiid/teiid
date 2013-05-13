@@ -86,30 +86,8 @@ public class RowBasedSecurityHelper {
 			if (filterString == null) {
 				continue;
 			}
-			Criteria filter = (Criteria)pmd.getResolvedCondition();
-			if (filter == null) {
-				try {
-					filter = QueryParser.getQueryParser().parseCriteria(filterString);
-					GroupSymbol gs = group;
-					if (group.getDefinition() != null) {
-						gs = new GroupSymbol(fullName);
-						gs.setMetadataID(metadataID);
-					}
-					ResolverVisitor.resolveLanguageObject(filter, Arrays.asList(gs), metadata);
-                    ValidatorReport report = Validator.validate(filter, metadata, new ValidationVisitor());
-			        if (report.hasItems()) {
-			        	ValidatorFailure firstFailure = report.getItems().iterator().next();
-			        	throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName) + " " + firstFailure); //$NON-NLS-1$
-				    }
-					pmd.setResolvedCondition(filter.clone());
-				} catch (QueryMetadataException e) {
-					throw e;
-				} catch (TeiidException e) {
-					throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName));
-				}
-			} else {
-				filter = (Criteria) filter.clone();
-			}
+			Criteria filter = resolveCondition(metadata, group, fullName,
+					entry, pmd, filterString);
 			if (!dpm.isAnyAuthenticated()) {
 				user = true;
 			}
@@ -150,6 +128,36 @@ public class RowBasedSecurityHelper {
 		}
 		result = QueryRewriter.rewriteCriteria(result, cc, metadata);
 		return result;
+	}
+
+	static Criteria resolveCondition(QueryMetadataInterface metadata,
+			final GroupSymbol group, String fullName, Map.Entry<String, DataPolicy> entry,
+			PermissionMetaData pmd, String filterString) throws QueryMetadataException {
+		Criteria filter = (Criteria)pmd.getResolvedCondition();
+		if (filter == null) {
+			try {
+				filter = QueryParser.getQueryParser().parseCriteria(filterString);
+				GroupSymbol gs = group;
+				if (group.getDefinition() != null) {
+					gs = new GroupSymbol(fullName);
+					gs.setMetadataID(group.getMetadataID());
+				}
+				ResolverVisitor.resolveLanguageObject(filter, Arrays.asList(gs), metadata);
+		        ValidatorReport report = Validator.validate(filter, metadata, new ValidationVisitor());
+		        if (report.hasItems()) {
+		        	ValidatorFailure firstFailure = report.getItems().iterator().next();
+		        	throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName) + " " + firstFailure); //$NON-NLS-1$
+			    }
+				pmd.setResolvedCondition(filter.clone());
+			} catch (QueryMetadataException e) {
+				throw e;
+			} catch (TeiidException e) {
+				throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, entry.getKey(), fullName));
+			}
+		} else {
+			filter = (Criteria) filter.clone();
+		}
+		return filter;
 	}
 
 	public static Command checkUpdateRowBasedFilters(ProcedureContainer container, Command procedure, RelationalPlanner planner)

@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -34,16 +35,20 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
@@ -52,12 +57,31 @@ import org.teiid.query.validator.ValidatorFailure;
 import org.teiid.query.validator.ValidatorReport;
 
 public class ColumnMaskingHelper {
+	
+	private static class WhenThen implements Comparable<WhenThen> {
+		int order;
+		Criteria when;
+		Expression then;
+		
+		public WhenThen(int order, Criteria when, Expression then) {
+			this.order = order;
+			this.when = when;
+			this.then = then;
+		}
+
+		@Override
+		public int compareTo(WhenThen arg0) {
+			return arg0.order - order; //highest first
+		}
+	}
 
 	private static Expression maskColumn(ElementSymbol col, GroupSymbol unaliased, QueryMetadataInterface metadata, ExpressionMappingVisitor emv, Map<String, DataPolicy> policies, CommandContext cc) throws TeiidComponentException, TeiidProcessingException {
 		Object metadataID = col.getMetadataID();
 		String fullName = metadata.getFullName(metadataID);
-		PermissionMetaData effective = null;
-		DataPolicyMetadata effectivePolicy = null;
+		final GroupSymbol group = col.getGroupSymbol();
+		String elementType = metadata.getElementType(col.getMetadataID());
+		Class<?> expectedType = DataTypeManager.getDataTypeClass(elementType);
+		List<WhenThen> cases = null;
 		for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
 			DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
 			PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
@@ -68,42 +92,60 @@ public class ColumnMaskingHelper {
 			if (maskString == null) {
 				continue;
 			}
-			if (effective == null || pmd.getOrder() < effective.getOrder()) {
-				effective = pmd;
-				effectivePolicy = dpm;
+			Criteria condition = null;
+			if (pmd.getCondition() != null) {
+				condition = RowBasedSecurityHelper.resolveCondition(metadata, group, metadata.getFullName(group.getMetadataID()), entry, pmd, pmd.getCondition());
+			} else {
+				condition = QueryRewriter.TRUE_CRITERIA;
 			}
+			Expression mask = (Expression)pmd.getResolvedMask();
+			if (mask == null) {
+				try {
+					mask = QueryParser.getQueryParser().parseExpression(pmd.getMask());
+					ResolverVisitor.resolveLanguageObject(mask, Arrays.asList(unaliased), metadata);
+					ValidatorReport report = Validator.validate(mask, metadata, new ValidationVisitor());
+			        if (report.hasItems()) {
+			        	ValidatorFailure firstFailure = report.getItems().iterator().next();
+			        	throw new QueryMetadataException(QueryPlugin.Event.TEIID31139, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31139, dpm.getName(), fullName) + " " + firstFailure); //$NON-NLS-1$
+				    }
+					if (mask.getType() != expectedType) {
+						mask = ResolverUtil.convertExpression(mask, elementType, metadata);
+					}
+			        pmd.setResolvedMask(mask.clone());
+					if (!dpm.isAnyAuthenticated()) {
+						//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic
+						//TODO: this condition may not even be used
+						cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);
+					}
+				} catch (QueryMetadataException e) {
+					throw e;
+				} catch (TeiidException e) {
+					throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, dpm.getName(), fullName));
+				}
+			} else {
+				mask = (Expression) mask.clone();
+			}
+			if (group.getDefinition() != null) {
+		        PreOrPostOrderNavigator.doVisit(mask, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
+			}
+			if (cases == null) {
+				cases = new ArrayList<ColumnMaskingHelper.WhenThen>();
+			}
+			cases.add(new WhenThen(pmd.getOrder(), condition, mask));
 		}
-		if (effective == null) {
+		if (cases == null) {
 			return col;
 		}
-		final GroupSymbol group = col.getGroupSymbol();
-		Expression mask = (Expression)effective.getResolvedMask();
-		if (mask == null) {
-			try {
-				mask = QueryParser.getQueryParser().parseExpression(effective.getMask());
-				ResolverVisitor.resolveLanguageObject(mask, Arrays.asList(unaliased), metadata);
-                ValidatorReport report = Validator.validate(mask, metadata, new ValidationVisitor());
-		        if (report.hasItems()) {
-		        	ValidatorFailure firstFailure = report.getItems().iterator().next();
-		        	throw new QueryMetadataException(QueryPlugin.Event.TEIID31139, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31139, effectivePolicy.getName(), fullName) + " " + firstFailure); //$NON-NLS-1$
-			    }
-				effective.setResolvedMask(mask.clone());
-			} catch (QueryMetadataException e) {
-				throw e;
-			} catch (TeiidException e) {
-				throw new QueryMetadataException(QueryPlugin.Event.TEIID31129, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31129, effectivePolicy.getName(), fullName));
-			}
-		} else {
-			mask = (Expression) mask.clone();
+		Collections.sort(cases);
+		List<Criteria> whens = new ArrayList<Criteria>();
+		List<Expression> thens = new ArrayList<Expression>();
+		for (WhenThen whenThen : cases) {
+			whens.add(whenThen.when);
+			thens.add(whenThen.then);
 		}
-		if (group.getDefinition() != null) {
-	        PreOrPostOrderNavigator.doVisit(mask, emv, PreOrPostOrderNavigator.PRE_ORDER, true);
-		}
-		if (!effectivePolicy.isAnyAuthenticated()) {
-			//we treat this as user deterministic since the data roles won't change.  this may change if the logic becomes dynamic 
-			cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);
-		}
-		mask = QueryRewriter.rewriteExpression(mask, cc, metadata);
+		SearchedCaseExpression sce = new SearchedCaseExpression(whens, thens);
+		sce.setType(expectedType);
+		Expression mask = QueryRewriter.rewriteExpression(sce, cc, metadata);
 		return mask;
 	}
 
