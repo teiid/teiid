@@ -26,8 +26,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.SocketException;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
 import org.teiid.core.crypto.DhKeyGenerator;
@@ -90,7 +92,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     }
 
 	public void exceptionOccurred(Throwable t) {
-		LogManager.log(t instanceof IOException?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		LogManager.log((t instanceof IOException && ExceptionUtil.getExceptionOfType(t, SocketException.class) != null)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
 	}
 
 	public void onConnection() throws CommunicationException {

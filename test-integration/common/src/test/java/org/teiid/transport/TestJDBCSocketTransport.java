@@ -135,6 +135,15 @@ public class TestJDBCSocketTransport {
 		assertEquals("hello", new String(bytes));
 	}
 	
+	@Test public void testLargeVarbinaryPrepared() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select cast(? as varbinary)");
+		s.setBytes(1, new byte[1 << 16]);
+		assertTrue(s.execute());
+		s.getResultSet().next();
+		byte[] bytes = s.getResultSet().getBytes(1);
+		assertArrayEquals(new byte[1 << 16], bytes);
+	}
+	
 	@Test public void testXmlTableScrollable() throws Exception {
 		Statement s = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 		assertTrue(s.execute("select * from xmltable('/root/row' passing (select xmlelement(name \"root\", xmlagg(xmlelement(name \"row\", xmlforest(t.name)) order by t.name)) from (select t.* from tables as t, columns as t1 limit 7000) as t) columns \"Name\" string) as x"));

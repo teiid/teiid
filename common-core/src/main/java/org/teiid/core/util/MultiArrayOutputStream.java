@@ -42,6 +42,7 @@ public class MultiArrayOutputStream extends OutputStream {
 	}
 	
 	public void reset(int newIndex) {
+		Assertion.assertTrue(newIndex < bufs[0].length);
 		while (bufferIndex > 0) {
 			bufs[bufferIndex--] = null;
 		}
@@ -56,11 +57,11 @@ public class MultiArrayOutputStream extends OutputStream {
         	buf = bufs[++bufferIndex] = new byte[buf.length << 1];
         	buf[0] = (byte)b;
         	index = 1;
-        	count++;
         } else {
         	buf[index] = (byte)b;
-        	count = index = newIndex;
+        	index = newIndex;
         }
+		count++;
 	}
 	
 	@Override
@@ -78,13 +79,13 @@ public class MultiArrayOutputStream extends OutputStream {
         	if (diff > 0) {
         		to += diff;
         	}
-        	buf = bufs[++bufferIndex] = Arrays.copyOfRange(b, off + copyLen, to);
+        	bufs[++bufferIndex] = Arrays.copyOfRange(b, off + copyLen, to);
         	index = nextIndex;
-        	count += len;
         } else {
         	System.arraycopy(b, off, buf, index, len);
-        	count = index = newIndex;
+        	index = newIndex;
         }
+		count += len;
 	}
 	
 	public void writeTo(DataOutput out) throws IOException {

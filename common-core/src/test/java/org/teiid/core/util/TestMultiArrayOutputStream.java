@@ -40,4 +40,21 @@ public class TestMultiArrayOutputStream {
 		assertEquals(1, maos.getIndex());
 	}
 	
+	@Test public void testCount() throws IOException {
+		MultiArrayOutputStream maos = new MultiArrayOutputStream(2);
+		for (int i = 0; i < 4; i++) {
+			maos.write(i);
+		}
+		assertEquals(4, maos.getCount());
+		assertEquals(2, maos.getIndex());
+		
+		maos = new MultiArrayOutputStream(2);
+		for (int i = 0; i < 4; i++) {
+			int len = 3;
+			maos.write(new byte[len]);
+		}
+		assertEquals(12, maos.getCount());
+		assertEquals(6, maos.getIndex());
+	}
+	
 }

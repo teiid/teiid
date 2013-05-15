@@ -26,10 +26,12 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.util.ReflectionHelper;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.logging.LogConstants;
@@ -91,7 +93,7 @@ public class ODBCClientInstance implements ChannelListener{
 
 	@Override
 	public void exceptionOccurred(Throwable t) {
-		LogManager.log(t instanceof IOException?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_ODBC, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		LogManager.log((t instanceof IOException && ExceptionUtil.getExceptionOfType(t, SocketException.class) != null)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_ODBC, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
 		server.terminate();
 	}
 	
