@@ -95,6 +95,9 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	//results requested
 	private ResultsFuture<ResultsMessage> asynchResults;
     boolean asynch;
+    
+    private ResultsFuture<ResultsMessage> prefetch;
+    private boolean usePrefetch;
 
 	/**
 	 * Constructor.
@@ -114,7 +117,6 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		// server latency-related timestamp
         this.requestID = statement.getCurrentRequestID();
         this.cursorType = statement.getResultSetType();
-        this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
         this.serverTimeZone = statement.getServerTimeZone();
 		if (metadata == null) {
 			MetadataProvider provider = new DeferredMetadataProvider(resultsMsg.getColumnNames(),
@@ -135,6 +137,8 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		if (logger.isLoggable(Level.FINER)) {
 			logger.finer("Creating ResultSet requestID: " + requestID + " beginRow: " + resultsMsg.getFirstRow() + " resultsColumns: " + resultColumns + " parameters: " + parameters); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
+		this.usePrefetch = cursorType == ResultSet.TYPE_FORWARD_ONLY && !statement.useCallingThread();
+		this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
 	}
 	
 	public void setMaxFieldSize(int maxFieldSize) {
@@ -354,6 +358,17 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     public Batch requestBatch(int beginRow) throws SQLException{
     	checkClosed();
         try {
+        	if (prefetch != null) {
+    			//TODO: this is not efficient if the user is skipping around the results
+    			//but the server logic at this point basically requires us
+    			//to read what we have requested before requesting more (no queuing)
+    			ResultsMessage result = getResults(prefetch);
+    			prefetch = null;
+    			Batch nextBatch = processBatch(result);
+    			if (result.getFirstRow() == beginRow) {
+    				return nextBatch;
+    			}
+        	}
         	ResultsFuture<ResultsMessage> results = submitRequestBatch(beginRow);
         	if (asynch && !results.isDone()) {
         		synchronized (this) {
@@ -416,8 +431,14 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 		return currentResultMsg;
 	}
 
-	private Batch getCurrentBatch(ResultsMessage currentResultMsg) {
+	private Batch getCurrentBatch(ResultsMessage currentResultMsg) throws TeiidSQLException {
 		this.updatedPlanDescription = currentResultMsg.getPlanDescription();
+		if (usePrefetch && !asynch 
+				&& prefetch == null && currentResultMsg.getLastRow() != currentResultMsg.getFinalRow()) {
+			//fetch before processing the results
+			prefetch = submitRequestBatch(currentResultMsg.getLastRow() + 1);
+		}
+		currentResultMsg.processResults();
 		Batch result = new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow());
 		result.setLastRow(currentResultMsg.getFinalRow());
 		return result;
@@ -1690,6 +1711,10 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	public <T> T getObject(String columnLabel, Class<T> type)
 			throws SQLException {
 		return DataTypeTransformer.transform(getObject(columnLabel), type);
+	}
+	
+	ResultsFuture<ResultsMessage> getPrefetch() {
+		return prefetch;
 	}
 
 }

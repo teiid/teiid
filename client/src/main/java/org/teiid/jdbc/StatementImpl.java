@@ -612,8 +612,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setRowLimit(this.maxRows);
         reqMsg.setTransactionIsolation(this.driverConnection.getTransactionIsolation());
-        String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
-        reqMsg.setSync(synch && (useCallingThread == null || Boolean.valueOf(useCallingThread)));
+        reqMsg.setSync(synch && useCallingThread());
         // Get connection properties and set them onto request message
         copyPropertiesToRequest(reqMsg);
 
@@ -641,6 +640,14 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
 		}
     	return pendingResult;
     }
+	
+	boolean useCallingThread() throws SQLException {
+		if (this.getConnection().getServerConnection() == null || !this.getConnection().getServerConnection().isLocal()) {
+			return false;
+		}
+		String useCallingThread = getExecutionProperty(EmbeddedProfile.USE_CALLING_THREAD);
+		return (useCallingThread == null || Boolean.valueOf(useCallingThread));
+	}
 
 	public static ResultsFuture<Boolean> booleanFuture(boolean isTrue) {
 		ResultsFuture<Boolean> rs = new ResultsFuture<Boolean>();

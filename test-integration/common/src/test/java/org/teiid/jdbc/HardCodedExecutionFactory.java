@@ -48,7 +48,7 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 			final QueryExpression command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, Object connection)
 			throws TranslatorException {
-		List<? extends List<?>> list = dataMap.get(command.toString());
+		List<? extends List<?>> list = getData(command);
 		if (list == null) {
 			throw new RuntimeException(command.toString());
 		}
@@ -78,6 +78,10 @@ public class HardCodedExecutionFactory extends ExecutionFactory<Object, Object> 
 				return null;
 			}
 		};
+	}
+
+	protected List<? extends List<?>> getData(final QueryExpression command) {
+		return dataMap.get(command.toString());
 	}
 	
 	@Override

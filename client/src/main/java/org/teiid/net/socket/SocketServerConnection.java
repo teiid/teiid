@@ -376,4 +376,9 @@ public class SocketServerConnection implements ServerConnection {
 	public boolean supportsContinuous() {
 		return false;
 	}
+	
+	@Override
+	public boolean isLocal() {
+		return false;
+	}
 }

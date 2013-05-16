@@ -87,7 +87,6 @@ public class TestSystemPerformance extends AbstractQueryTest {
 		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
 		setConnection(c);
 		DatabaseMetaData metadata = c.getMetaData();
-		System.out.println("starting");
 		for (int i = 0; i < TABLES; i++) {
 			internalResultSet = metadata.getColumns(null, "test", "x" + i, null);
 			assertRowCount(COLS);

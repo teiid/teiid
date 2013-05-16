@@ -201,4 +201,9 @@ public class LocalServerConnection implements ServerConnection {
 	public DQPWorkContext getWorkContext() {
 		return workContext;
 	}
+	
+	@Override
+	public boolean isLocal() {
+		return true;
+	}
 }

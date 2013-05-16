@@ -34,6 +34,7 @@
 <li>TEIID-2326 <b>Shared Mat Views</b> - materialized views from imported vdbs will be reused rather than recreated in each importing vdb.  </li>
 <li>TEIID-2344 <b>Automatic DB Version Detection</b> - the JDBC translator database version property in most circumstances will not need to be set manually - see the compatibility note below.
 <li>TEIID-2453 <b>STRING_AGG</b> Added the string_agg aggregate function for concatenating binary and character strings.
+<li>TEIID-2504 <b>Improved socket results processing</b> large results processing over a socket transport have been significantly improved for forward only results.  Scrollable results will have only a marginal improvement.
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

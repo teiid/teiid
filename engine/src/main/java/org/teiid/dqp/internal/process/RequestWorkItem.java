@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
+import org.teiid.client.ResizingArrayList;
 import org.teiid.client.ResultsMessage;
 import org.teiid.client.lob.LobChunk;
 import org.teiid.client.metadata.ParameterInfo;
@@ -86,7 +87,8 @@ import org.teiid.query.util.GeneratedKeysImpl;
 public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunnable {
 	
 	//TODO: this could be configurable
-	private static final int OUTPUT_BUFFER_MAX_BATCHES = 20;
+	private static final int OUTPUT_BUFFER_MAX_BATCHES = 8;
+	private static final int CLIENT_FETCH_MAX_BATCHES = 3;
 	
 	public static final class MoreWorkTask implements Runnable {
 
@@ -202,6 +204,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     private Future<Void> moreWorkTask;
 
 	private boolean explicitSourceClose;
+	private int schemaSize;
     
     public RequestWorkItem(DQPCore dqpCore, RequestMessage requestMsg, Request request, ResultsReceiver<ResultsMessage> receiver, RequestID requestID, DQPWorkContext workContext) {
         this.requestMsg = requestMsg;
@@ -770,18 +773,45 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					LogManager.logDetail(LogConstants.CTX_DQP, "[RequestWorkItem.sendResultsIfNeeded] requestID:", requestID, "resultsID:", this.resultsBuffer, "done:", doneProducingBatches );   //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 				}
 		
-				//TODO: support fetching more than 1 batch
 				boolean fromBuffer = false;
+	    		int count = this.end - this.begin + 1;
 	    		if (batch == null || !(batch.containsRow(this.begin) || (batch.getTerminationFlag() && batch.getEndRow() <= this.begin))) {
 		    		if (savedBatch != null && savedBatch.containsRow(this.begin)) {
 		    			batch = savedBatch;
 		    		} else {
 		    			batch = resultsBuffer.getBatch(begin);
+		    			//fetch more than 1 batch from the buffer
+		    			boolean first = true;
+		    			int rowSize = resultsBuffer.getRowSizeEstimate();
+		    			int batches = CLIENT_FETCH_MAX_BATCHES;
+		    			if (rowSize > 0) {
+		    				int totalSize = rowSize * resultsBuffer.getBatchSize();
+		    				if (schemaSize == 0) {
+		    					schemaSize = this.dqpCore.getBufferManager().getSchemaSize(this.originalCommand.getProjectedSymbols());
+		    				}
+		    				int multiplier = schemaSize/totalSize;
+		    				if (multiplier > 1) {
+		    					batches *= multiplier;
+		    				}
+		    			}
+		    			for (int i = 1; i < batches && batch.getRowCount() + resultsBuffer.getBatchSize() <= count && !batch.getTerminationFlag(); i++) {
+		    				TupleBatch next = resultsBuffer.getBatch(batch.getEndRow() + 1);
+		    				if (next.getRowCount() == 0) {
+		    					break;
+		    				}
+		    				if (first) {
+		    					first = false;
+		    					TupleBatch old = batch;
+		    					batch = new TupleBatch(batch.getBeginRow(), new ResizingArrayList<List<?>>(batch.getTuples()));
+		    					batch.setTermination(old.getTermination());
+		    				}
+		    				batch.getTuples().addAll(next.getTuples());
+		    				batch.setTermination(next.getTermination());
+		    			}
 		    		}
 		    		savedBatch = null;
 		    		fromBuffer = true;
 		    	}
-	    		int count = this.end - this.begin + 1;
 	    		if (batch.getRowCount() > count) {
 	    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
 	    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
@@ -831,6 +861,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 	        }
 	        // set final row
 	        response.setFinalRow(finalRowCount);
+	        if (response.getLastRow() == finalRowCount) {
+	        	response.setDelayDeserialization(false);
+	        }
 	
 	        setWarnings(response);
 	        
@@ -879,6 +912,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
         }
         ResultsMessage result = new ResultsMessage(batch, columnNames, dataTypes);
         result.setClientSerializationVersion(this.dqpWorkContext.getClientVersion().getClientSerializationVersion());
+        result.setDelayDeserialization(this.requestMsg.isDelaySerialization() && this.originalCommand.returnsResultSet());
         setAnalysisRecords(result);
         return result;
     }
