@@ -625,6 +625,17 @@ public class RulePushAggregates implements
 			List<? extends Expression> virtualElements,
 			PlanNode child, QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {
+		List<ElementSymbol> projectedSymbols = defineNewGroup(group,
+				virtualElements, metadata);
+    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
+				(List<Expression>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
+		return symbolMap;
+	}
+
+	static List<ElementSymbol> defineNewGroup(GroupSymbol group,
+			List<? extends Expression> virtualElements,
+			QueryMetadataInterface metadata) throws TeiidComponentException,
+			QueryMetadataException {
 		TempMetadataStore store = new TempMetadataStore();
         TempMetadataAdapter tma = new TempMetadataAdapter(metadata, store);
         try {
@@ -633,9 +644,7 @@ public class RulePushAggregates implements
 			 throw new TeiidComponentException(QueryPlugin.Event.TEIID30265, e);
 		}
     	List<ElementSymbol> projectedSymbols = ResolverUtil.resolveElementsInGroup(group, metadata);
-    	SymbolMap symbolMap = SymbolMap.createSymbolMap(projectedSymbols, 
-				(List<Expression>)NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT).getProperty(NodeConstants.Info.PROJECT_COLS));
-		return symbolMap;
+		return projectedSymbols;
 	}
 
     /**

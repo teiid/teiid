@@ -228,6 +228,9 @@ public class VDBMetadataParser {
 				permission.setAllowUpdate(Boolean.parseBoolean(reader.getElementText()));
 				break;				
 			case CONDITION:
+				if (reader.getAttributeCount() > 0) {
+					permission.setConstraint(Boolean.valueOf(reader.getAttributeValue(0)));
+				}
 				permission.setCondition(reader.getElementText());
 				break;
 			case MASK:
@@ -244,7 +247,8 @@ public class VDBMetadataParser {
             			 Element.ALLOW_DELETE.getLocalName(),
             			 Element.ALLOW_EXECUTE.getLocalName(),
             			 Element.ALLOW_READ.getLocalName(),
-            			 Element.ALLOW_UPADTE.getLocalName(), Element.ALLOW_LANGUAGE.getLocalName(), Element.CONDITION.getLocalName(), Element.MASK.getLocalName()), reader.getLocation()); 
+            			 Element.ALLOW_UPADTE.getLocalName(), Element.ALLOW_LANGUAGE.getLocalName(), Element.CONSTRAINT.getLocalName(), 
+            			 Element.CONDITION.getLocalName(), Element.MASK.getLocalName()), reader.getLocation()); 
             }
         }		
 	}	
@@ -388,6 +392,7 @@ public class VDBMetadataParser {
 	    CONDITION("condition"),
 	    MASK("mask"),
 	    ORDER("order"),
+	    CONSTRAINT("constraint"),
 	    MAPPED_ROLE_NAME("mapped-role-name"),
 	    ENTRY("entry"),
 	    METADATA("metadata");
@@ -517,10 +522,14 @@ public class VDBMetadataParser {
 				writeElement(writer, Element.ALLOW_LANGUAGE, permission.getAllowLanguage().toString());
 			}
 			if (permission.getCondition() != null) {
-				writeElement(writer, Element.CONDITION, permission.getCondition());
+				if (permission.getConstraint() != null) {
+					writeElement(writer, Element.CONDITION, permission.getCondition(), new String[] {Element.CONSTRAINT.getLocalName(), String.valueOf(permission.getCondition())});
+				} else {
+					writeElement(writer, Element.CONDITION, permission.getCondition());
+				}
 			}
 			if (permission.getMask() != null) {
-				if (permission.getOrder() != 0) {
+				if (permission.getOrder() != null) {
 					writeElement(writer, Element.MASK, permission.getMask(), new String[] {Element.ORDER.getLocalName(), String.valueOf(permission.getOrder())});
 				} else {
 					writeElement(writer, Element.MASK, permission.getMask());

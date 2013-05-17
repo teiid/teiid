@@ -139,7 +139,12 @@ public interface DataPolicy {
 		/**
 		 * The column mask order
 		 */
-		int getOrder();
+		Integer getOrder();
+		
+		/**
+		 * If the condition acts as a constraint.
+		 */
+		Boolean getConstraint();
 		
 	}
 }

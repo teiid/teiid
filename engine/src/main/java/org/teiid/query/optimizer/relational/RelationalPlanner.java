@@ -55,6 +55,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
 import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
+import org.teiid.query.optimizer.relational.rules.RuleApplySecurity;
 import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
 import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
 import org.teiid.query.optimizer.relational.rules.RuleConstants;
@@ -329,55 +330,79 @@ public class RelationalPlanner {
 
         for (PlanNode node : NodeEditor.findAllNodes(plan, NodeConstants.Types.PROJECT | NodeConstants.Types.SELECT | NodeConstants.Types.JOIN | NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP)) {
             List<SubqueryContainer<?>> subqueryContainers = node.getSubqueryContainers();
-            if (subqueryContainers.isEmpty()){
-            	continue;
-            }
-            Set<GroupSymbol> localGroupSymbols = groupSymbols;
-            if (node.getType() == NodeConstants.Types.JOIN) {
-            	localGroupSymbols = getGroupSymbols(node);
-            }
-            for (SubqueryContainer<?> container : subqueryContainers) {
-                //a clone is needed here because the command could get modified during planning
-                Command subCommand = (Command)container.getCommand().clone(); 
-                ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
-                CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
-                if (node.getType() != NodeConstants.Types.JOIN && node.getType() != NodeConstants.Types.GROUP) {
-                	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
-                	if (grouping != null && !correlatedReferences.isEmpty()) {
-                		SymbolMap map = (SymbolMap) grouping.getProperty(Info.SYMBOL_MAP);
-                		Map<Expression, ElementSymbol> reverseMap = new HashMap<Expression, ElementSymbol>();
-                		for (Map.Entry<ElementSymbol, Expression> entry : map.asMap().entrySet()) {
+            planSubqueries(pushdownWith, groups, groupSymbols, node, subqueryContainers, false);
+            node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
+        }
+    }
+
+	public void planSubqueries(
+			Map<String, WithQueryCommand> pushdownWith,
+			Set<GroupSymbol> groups, Set<GroupSymbol> groupSymbols,
+			PlanNode node, List<SubqueryContainer<?>> subqueryContainers, boolean isStackEntry)
+			throws QueryMetadataException, TeiidComponentException,
+			QueryPlannerException {
+        if (subqueryContainers.isEmpty()){
+        	return;
+        }
+		Set<GroupSymbol> localGroupSymbols = groupSymbols;
+		if (node != null && node.getType() == NodeConstants.Types.JOIN) {
+			localGroupSymbols = getGroupSymbols(node);
+		}
+		for (SubqueryContainer<?> container : subqueryContainers) {
+			if (container.getCommand().getProcessorPlan() != null) {
+				continue;
+			}
+		    //a clone is needed here because the command could get modified during planning
+		    Command subCommand = (Command)container.getCommand().clone(); 
+			Set<PlanningStackEntry> entries = null;
+			PlanningStackEntry stackEntry = null;
+			if (isStackEntry) {
+				entries = planningStack.get();
+				stackEntry = createPlanningStackEntry(groupSymbols.iterator().next(), subCommand, false, entries);
+			}
+			try {
+			    ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
+			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
+			    if (node != null && node.getType() != NodeConstants.Types.JOIN && node.getType() != NodeConstants.Types.GROUP) {
+			    	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
+			    	if (grouping != null && !correlatedReferences.isEmpty()) {
+			    		SymbolMap map = (SymbolMap) grouping.getProperty(Info.SYMBOL_MAP);
+			    		Map<Expression, ElementSymbol> reverseMap = new HashMap<Expression, ElementSymbol>();
+			    		for (Map.Entry<ElementSymbol, Expression> entry : map.asMap().entrySet()) {
 							reverseMap.put(entry.getValue(), entry.getKey());
 						}
-                		for (Reference reference : correlatedReferences) {
+			    		for (Reference reference : correlatedReferences) {
 							ElementSymbol correlatedGroupingCol = reverseMap.get(reference.getExpression());
 							if (correlatedGroupingCol != null) {
 								reference.setExpression(correlatedGroupingCol);
 							}
 						}
-                	}
-                }
-                ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
-                if (procPlan instanceof RelationalPlan && pushdownWith != null) {
-                	Map<String, WithQueryCommand> parentPushdownWith = pushdownWith;
-                	if (subCommand instanceof QueryCommand) {
-                		QueryCommand query = (QueryCommand)subCommand;
-                		List<WithQueryCommand> with = query.getWith();
-                		if (with != null && !with.isEmpty()) {
-                			parentPushdownWith = new HashMap<String, WithQueryCommand>(parentPushdownWith);
-                			for (WithQueryCommand withQueryCommand : with) {
-                				parentPushdownWith.remove(withQueryCommand.getGroupSymbol().getNonCorrelationName());
+			    	}
+			    }
+			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+			    if (procPlan instanceof RelationalPlan && pushdownWith != null) {
+			    	Map<String, WithQueryCommand> parentPushdownWith = pushdownWith;
+			    	if (subCommand instanceof QueryCommand) {
+			    		QueryCommand query = (QueryCommand)subCommand;
+			    		List<WithQueryCommand> with = query.getWith();
+			    		if (with != null && !with.isEmpty()) {
+			    			parentPushdownWith = new HashMap<String, WithQueryCommand>(parentPushdownWith);
+			    			for (WithQueryCommand withQueryCommand : with) {
+			    				parentPushdownWith.remove(withQueryCommand.getGroupSymbol().getNonCorrelationName());
 							}
-                		}
-                	}
-                	assignWithClause(((RelationalPlan) procPlan).getRootNode(), parentPushdownWith, groups);
-                }
-                container.getCommand().setProcessorPlan(procPlan);
-                setCorrelatedReferences(container, correlatedReferences);
-            }
-            node.addGroups(GroupsUsedByElementsVisitor.getGroups(node.getCorrelatedReferenceElements()));
-        }
-    }
+			    		}
+			    	}
+			    	assignWithClause(((RelationalPlan) procPlan).getRootNode(), parentPushdownWith, groups);
+			    }
+			    container.getCommand().setProcessorPlan(procPlan);
+			    setCorrelatedReferences(container, correlatedReferences);
+			} finally {
+				if (entries != null) {
+					entries.remove(stackEntry);
+				}
+			}
+		}
+	}
 
 	private void setCorrelatedReferences(SubqueryContainer<?> container,
 			List<Reference> correlatedReferences) {
@@ -457,7 +482,7 @@ public class RelationalPlanner {
 
     public RuleStack buildRules() {
         RuleStack rules = new RuleStack();
-
+        rules.setPlanner(this);
         rules.push(RuleConstants.COLLAPSE_SOURCE);
         
         rules.push(RuleConstants.PLAN_SORTS);
@@ -523,11 +548,13 @@ public class RelationalPlanner {
         if (hints.hasJoin && hints.hasOptionalJoin) {
             rules.push(RuleConstants.REMOVE_OPTIONAL_JOINS);
         }
-        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin)) {
+        if (hints.hasRowBasedSecurity) {
+        	rules.push(new RuleApplySecurity());
+        }
+        if (hints.hasVirtualGroups || (hints.hasJoin && hints.hasOptionalJoin) || hints.hasRowBasedSecurity) {
         	//do initial filtering to make merging and optional join logic easier
             rules.push(new RuleAssignOutputElements(false));
         }
-        rules.push(RuleConstants.APPLY_COLUMN_MASKS);
         rules.push(RuleConstants.PLACE_ACCESS);
         return rules;
     }
@@ -687,7 +714,16 @@ public class RelationalPlanner {
 				((CreateProcedureCommand)c).setProjectedSymbols(container.getProjectedSymbols());
 			}
 		}
-		c = RowBasedSecurityHelper.checkUpdateRowBasedFilters(container, c, this);
+		boolean checkRowBasedSecurity = true;
+		if (!container.getGroup().isProcedure() && !metadata.isVirtualGroup(metadataId)) {
+			Set<PlanningStackEntry> entries = planningStack.get();
+			if (entries.contains(new PlanningStackEntry(container, container.getGroup()))) {
+				checkRowBasedSecurity = false;
+			}
+		}
+		if (checkRowBasedSecurity) {
+			c = RowBasedSecurityHelper.checkUpdateRowBasedFilters(container, c, this);
+		}
 		if (c != null) {
 			if (c instanceof TriggerAction) {
 				TriggerAction ta = (TriggerAction)c;
@@ -767,11 +803,7 @@ public class RelationalPlanner {
 
     PlanNode createStoredProcedurePlan(StoredProcedure storedProc) throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         // Create top project node - define output columns for stored query / procedure
-        PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
-
-        // Set output columns
-        List cols = storedProc.getProjectedSymbols();
-        projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, cols);
+    	PlanNode projectNode = attachProject(null, storedProc.getProjectedSymbols());
 
         // Define source of data for stored query / procedure
         PlanNode sourceNode = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
@@ -779,19 +811,16 @@ public class RelationalPlanner {
     	addNestedProcedure(sourceNode, storedProc, storedProc.getProcedureID());
         
         hints.hasRelationalProc |= storedProc.isProcedureRelational();
+        
+        if (!hints.hasRowBasedSecurity && RowBasedSecurityHelper.applyRowSecurity(metadata, storedProc.getGroup(), context)) {
+        	hints.hasRowBasedSecurity = true;
+        }
 
         // Set group on source node
         sourceNode.addGroup(storedProc.getGroup());
 
         attachLast(projectNode, sourceNode);
 
-        Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, storedProc.getGroup(), this.context);
-        if (filter != null) {
-        	//TODO: this is not exactly propper, there should be an inline view, with the filter above.
-        	// prehaps we shouldn't even allow this case yet.
-        	PlanNode critNode = createSelectNode(filter, false);
-        	sourceNode.addAsParent(critNode);
-        }
         return projectNode;
     }
 
@@ -877,7 +906,7 @@ public class RelationalPlanner {
         }
 
 		// Attach project on top
-		plan = attachProject(plan, query.getSelect());
+		plan = attachProject(plan, query.getSelect().getProjectedSymbols());
 		if (query.getOrderBy() != null) {
 			AggregateSymbolCollectorVisitor.getAggregates(query.getOrderBy(), null, null, null, windowFunctions, null);
 		}
@@ -933,6 +962,9 @@ public class RelationalPlanner {
             if (metadata.isVirtualGroup(group.getMetadataID())) {
             	hints.hasVirtualGroups = true;
             }
+            if (!hints.hasRowBasedSecurity && RowBasedSecurityHelper.applyRowSecurity(metadata, group, context)) {
+            	hints.hasRowBasedSecurity = true;
+            }
             if (metadata.getFunctionBasedExpressions(group.getMetadataID()) != null) {
             	hints.hasFunctionBasedColumns = true;
             }
@@ -965,14 +997,6 @@ public class RelationalPlanner {
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true, true);
             }
             parent.addLastChild(node);
-            if (!group.isProcedure()) {
-	            //logically filters are applied below masking
-	            Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(metadata, group, this.context);
-	            if (filter != null) {
-	            	PlanNode critNode = createSelectNode(filter, false);
-	            	node.addAsParent(critNode);
-	            }
-            }
         } else if(clause instanceof JoinPredicate) {
             JoinPredicate jp = (JoinPredicate) clause;
 
@@ -1104,14 +1128,7 @@ public class RelationalPlanner {
 		PlanningStackEntry entry = null;
 		if (isStackEntry) {
 			entries = planningStack.get();
-			entry = new PlanningStackEntry(nestedCommand, group);
-			if (!entries.add(entry)) {
-				if (toPlan.getType() == Command.TYPE_UPDATE_PROCEDURE && !metadata.isVirtualGroup(group.getMetadataID())) {
-					//must be a compensating update/delete
-					throw new QueryPlannerException(QueryPlugin.Event.TEIID30254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30254, nestedCommand));
-				}
-				throw new QueryPlannerException(QueryPlugin.Event.TEIID31124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31124, nestedCommand.getClass().getSimpleName(), group.getNonCorrelationName(), planningStack));
-			}
+			entry = createPlanningStackEntry(group, nestedCommand, toPlan.getType() == Command.TYPE_UPDATE_PROCEDURE, entries);
 		}
 		try {
 			node.setProperty(NodeConstants.Info.NESTED_COMMAND, nestedCommand);
@@ -1164,6 +1181,22 @@ public class RelationalPlanner {
 				entries.remove(entry);
 			}
 		}
+	}
+
+	public PlanningStackEntry createPlanningStackEntry(GroupSymbol group,
+			Command nestedCommand, boolean isUpdateProcedure,
+			Set<PlanningStackEntry> entries) throws TeiidComponentException,
+			QueryMetadataException, QueryPlannerException {
+		PlanningStackEntry entry;
+		entry = new PlanningStackEntry(nestedCommand, group);
+		if (!entries.add(entry)) {
+			if (isUpdateProcedure && !metadata.isVirtualGroup(group.getMetadataID())) {
+				//must be a compensating update/delete
+				throw new QueryPlannerException(QueryPlugin.Event.TEIID30254, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30254, nestedCommand));
+			}
+			throw new QueryPlannerException(QueryPlugin.Event.TEIID31124, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31124, nestedCommand.getClass().getSimpleName(), group.getNonCorrelationName(), entries));
+		}
+		return entry;
 	}
 
 	/**
@@ -1339,14 +1372,19 @@ public class RelationalPlanner {
 		return dupNode;
 	}
 
-	private static PlanNode attachProject(PlanNode plan, Select select) {
+	private static PlanNode attachProject(PlanNode plan, List<? extends Expression> select) {
+		PlanNode projectNode = createProjectNode(select);
+
+		attachLast(projectNode, plan);
+		return projectNode;
+	}
+
+	public static PlanNode createProjectNode(List<? extends Expression> select) {
 		PlanNode projectNode = NodeFactory.getNewNode(NodeConstants.Types.PROJECT);
-		projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, select.getProjectedSymbols());
+		projectNode.setProperty(NodeConstants.Info.PROJECT_COLS, select);
 
 		// Set groups
 		projectNode.addGroups(GroupsUsedByElementsVisitor.getGroups(select));
-
-		attachLast(projectNode, plan);
 		return projectNode;
 	}
 

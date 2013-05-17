@@ -25,9 +25,12 @@ package org.teiid.query.optimizer.relational;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
@@ -37,6 +40,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryResolverException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
@@ -46,17 +50,23 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.Validator;
@@ -65,8 +75,24 @@ import org.teiid.query.validator.ValidatorReport;
 
 public class RowBasedSecurityHelper {
 	
+	public static boolean applyRowSecurity(QueryMetadataInterface metadata,
+			final GroupSymbol group, CommandContext cc) throws QueryMetadataException, TeiidComponentException {
+		Map<String, DataPolicy> policies = cc.getAllowedDataPolicies();
+		if (policies == null || policies.isEmpty()) {
+			return false;
+		}
+		String fullName = metadata.getFullName(group.getMetadataID());
+		for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
+			DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
+			if (dpm.hasRowSecurity(fullName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public static Criteria getRowBasedFilters(QueryMetadataInterface metadata,
-			final GroupSymbol group, CommandContext cc)
+			final GroupSymbol group, CommandContext cc, boolean constraintsOnly)
 			throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
 		Map<String, DataPolicy> policies = cc.getAllowedDataPolicies();
 		if (policies == null || policies.isEmpty()) {
@@ -84,6 +110,9 @@ public class RowBasedSecurityHelper {
 			}
 			String filterString = pmd.getCondition();
 			if (filterString == null) {
+				continue;
+			}
+			if (constraintsOnly && Boolean.FALSE.equals(pmd.getConstraint())) {
 				continue;
 			}
 			Criteria filter = resolveCondition(metadata, group, fullName,
@@ -126,8 +155,11 @@ public class RowBasedSecurityHelper {
 		if (user) {
 			cc.setDeterminismLevel(Determinism.USER_DETERMINISTIC);
 		}
-		result = QueryRewriter.rewriteCriteria(result, cc, metadata);
-		return result;
+		Expression ex = QueryRewriter.rewriteExpression(result, cc, metadata, true);
+		if (ex instanceof Criteria) {
+			return (Criteria)ex;
+		}
+		return QueryRewriter.rewriteCriteria(new ExpressionCriteria(ex), cc, metadata);
 	}
 
 	static Criteria resolveCondition(QueryMetadataInterface metadata,
@@ -142,7 +174,12 @@ public class RowBasedSecurityHelper {
 					gs = new GroupSymbol(fullName);
 					gs.setMetadataID(group.getMetadataID());
 				}
-				ResolverVisitor.resolveLanguageObject(filter, Arrays.asList(gs), metadata);
+				Collection<GroupSymbol> groups = Arrays.asList(gs);
+				for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(filter)) {
+		        	container.getCommand().pushNewResolvingContext(groups);
+		            QueryResolver.resolveCommand(container.getCommand(), metadata, false);
+		        }
+				ResolverVisitor.resolveLanguageObject(filter, groups, metadata);
 		        ValidatorReport report = Validator.validate(filter, metadata, new ValidationVisitor());
 		        if (report.hasItems()) {
 		        	ValidatorFailure firstFailure = report.getItems().iterator().next();
@@ -166,26 +203,34 @@ public class RowBasedSecurityHelper {
 		if (container instanceof StoredProcedure) {
 			return procedure;
 		}
-		Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context);
+		Criteria filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context, false);
 		if (filter == null) {
 			return procedure;
 		}
-
+		addFilter(container, planner, filter);
     	//we won't enforce on the update side through a virtual
-    	if (procedure != null) {
-        	addFilter(container, planner, filter); 
+		if (procedure != null) {
     		return procedure;
     	}
-    	
+		filter = RowBasedSecurityHelper.getRowBasedFilters(planner.metadata, container.getGroup(), planner.context, true);
+    	if (filter == null) {
+    		return procedure;
+    	}
 		//TODO: alter the compensation logic in RelationalPlanner to produce an row-by-row check for insert/update
     	//check constraints
 		Map<ElementSymbol, Expression> values = null;
 		boolean compensate = false;
 		if (container instanceof Update) {
+			Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(filter, true);
 			//check the change set against the filter
 			values = new HashMap<ElementSymbol, Expression>();
 			Update update = (Update)container;
+			boolean constraintApplicable = false;
 			for (SetClause clause : update.getChangeList().getClauses()) {
+				if (!elems.contains(clause.getSymbol())) {
+					continue;
+				}
+				constraintApplicable = true;
 				//TODO: do this is a single eval pass
 				if (EvaluatableVisitor.isFullyEvaluatable(clause.getValue(), true)) {
 					values.put(clause.getSymbol(), clause.getValue());
@@ -193,6 +238,11 @@ public class RowBasedSecurityHelper {
 					compensate = true;
 				}
 			}
+			if (!constraintApplicable) {
+				return procedure;
+			}
+			//TOOD: decompose the where clause to see if there are any more static
+			//values that can be plugged in
 		} else if (container instanceof Insert) {
 			Insert insert = (Insert)container;
 
@@ -215,6 +265,7 @@ public class RowBasedSecurityHelper {
     				}
 				}
 			} else {
+				validateAndPlanSubqueries(filter, container.getGroup(), planner);
 				insert.setConstraint(filter);
 			}
 		}
@@ -227,26 +278,55 @@ public class RowBasedSecurityHelper {
 				if (filter == QueryRewriter.FALSE_CRITERIA || filter == QueryRewriter.UNKNOWN_CRITERIA) {
 					throw new TeiidProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, container));
 				} 
-				
 				if (container instanceof Update) {
-					if (compensate) {
-						addFilter(container, planner, filter);
-						try {
-							planner.validateRowProcessing(container);
-						} catch (QueryPlannerException e) {
-							throw new TeiidProcessingException(QueryPlugin.Event.TEIID31131, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31131, container));
+					Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(filter, true);
+					Update update = (Update)container;
+					if (!Collections.disjoint(elems, update.getChangeList().getClauseMap().keySet())) {
+						validateAndPlanSubqueries(filter, container.getGroup(), planner);
+						update.setConstraint(filter);
+						if (compensate) {
+							try {
+								planner.validateRowProcessing(container);
+							} catch (QueryPlannerException e) {
+								throw new TeiidProcessingException(QueryPlugin.Event.TEIID31131, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31131, container));
+							}
+							return QueryRewriter.createUpdateProcedure((Update)container, planner.metadata, planner.context);
 						}
-						return QueryRewriter.createUpdateProcedure((Update)container, planner.metadata, planner.context); 
 					}
-					((Update)container).setConstraint(filter);
 				} else if (container instanceof Insert) {
+					validateAndPlanSubqueries(filter, container.getGroup(), planner);
 					((Insert)container).setConstraint(filter);
 				}
 			} 
-		} else {
-			addFilter(container, planner, filter);
 		}
 		return procedure;
+	}
+	
+	/**
+	 * because of the way constraints are enforced, we cannot allow correlated references
+	 * the issues are:
+	 *   - the insert may be partially specified and relevant default values may not be known
+	 *   - to know the full update row, we have to use row processing
+	 * @param object
+	 * @param gs
+	 * @param planner 
+	 * @throws QueryValidatorException 
+	 * @throws TeiidComponentException 
+	 * @throws QueryMetadataException 
+	 * @throws QueryPlannerException 
+	 */
+	private static void validateAndPlanSubqueries(LanguageObject object, GroupSymbol gs, RelationalPlanner planner) throws QueryValidatorException, QueryPlannerException, QueryMetadataException, TeiidComponentException {
+		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(object);
+		if (subqueries.isEmpty()) {
+			return;
+		}
+		Set<GroupSymbol> groups = Collections.singleton(gs);
+		planner.planSubqueries(null, null, groups, null, subqueries, true);
+		List<Reference> refs = new LinkedList<Reference>();
+		CorrelatedReferenceCollectorVisitor.collectReferences(object, groups, refs);
+		if (!refs.isEmpty()) {
+			throw new QueryValidatorException(QueryPlugin.Event.TEIID31142, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31142, object, gs));
+		}
 	}
 
 	private static void addFilter(ProcedureContainer container,
@@ -307,9 +387,6 @@ public class RowBasedSecurityHelper {
 		if (constraint == null) {
 			return;
 		}
-		if (!EvaluatableVisitor.isFullyEvaluatable(constraint, false)) {
-			throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, atomicCommand));
-		}
 		if (rows != -1) {
 			Map<ElementSymbol, Expression> currentValues = new HashMap<ElementSymbol, Expression>();
 			for (int i = 0; i < rows; i++) {
@@ -333,12 +410,16 @@ public class RowBasedSecurityHelper {
 	private static void evaluateConstraint(Command atomicCommand,
 			Evaluator eval, Criteria constraint,
 			Map<ElementSymbol, Expression> values)
-			throws ExpressionEvaluationException, BlockedException,
+			throws BlockedException,
 			TeiidComponentException, QueryProcessingException {
 		Criteria clone = (Criteria) constraint.clone();
 		ExpressionMappingVisitor.mapExpressions(clone, values);
-		if (!eval.evaluate(clone, null)) {
-			throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, atomicCommand));
+		try {
+			if (!eval.evaluate(clone, null)) {
+				throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, atomicCommand));
+			}
+		} catch (ExpressionEvaluationException e) {
+			throw new QueryProcessingException(QueryPlugin.Event.TEIID31130, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31130, atomicCommand));
 		}
 	}
 

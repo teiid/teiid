@@ -331,12 +331,16 @@ public class RuleDecomposeJoin implements OptimizerRule {
 		return newUnion;
 	}
 
-	static PlanNode createSource(GroupSymbol group, PlanNode unionNode, SymbolMap symbolMap) {
+	static PlanNode createSource(GroupSymbol group, PlanNode child, SymbolMap symbolMap) {
+		return createSource(group, child, symbolMap.getKeys());
+	}
+	
+	static PlanNode createSource(GroupSymbol group, PlanNode child, List<ElementSymbol> newProject) {
 		PlanNode branchSource = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
 		branchSource.addGroup(group);
-		PlanNode projectNode = NodeEditor.findNodePreOrder(unionNode, NodeConstants.Types.PROJECT);
-		branchSource.setProperty(Info.SYMBOL_MAP, SymbolMap.createSymbolMap(symbolMap.getKeys(), (List<? extends Expression>)projectNode.getProperty(Info.PROJECT_COLS)));
-		unionNode.addAsParent(branchSource);
+		PlanNode projectNode = NodeEditor.findNodePreOrder(child, NodeConstants.Types.PROJECT);
+		branchSource.setProperty(Info.SYMBOL_MAP, SymbolMap.createSymbolMap(newProject, (List<? extends Expression>)projectNode.getProperty(Info.PROJECT_COLS)));
+		child.addAsParent(branchSource);
 		return branchSource;
 	}
 

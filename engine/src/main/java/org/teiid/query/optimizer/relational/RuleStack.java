@@ -26,6 +26,7 @@ import java.util.LinkedList;
 
 public class RuleStack {
 
+	private RelationalPlanner planner;
     private LinkedList<OptimizerRule> rules = new LinkedList<OptimizerRule>();
     
     public void push(OptimizerRule rule) { 
@@ -63,5 +64,13 @@ public class RuleStack {
     public boolean contains(OptimizerRule rule) {
         return rules.contains(rule);
     }
+    
+    public void setPlanner(RelationalPlanner planner) {
+		this.planner = planner;
+	}
+    
+    public RelationalPlanner getPlanner() {
+		return planner;
+	}
     
 }

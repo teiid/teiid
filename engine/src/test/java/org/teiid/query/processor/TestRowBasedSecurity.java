@@ -36,6 +36,7 @@ import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.api.exception.query.QueryProcessingException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -44,10 +45,11 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unchecked"})
 public class TestRowBasedSecurity {
 
 	CommandContext context;
+	private static PermissionMetaData pmd;
 	
 	@Before public void setup() {
 		context = createContext();
@@ -58,7 +60,7 @@ public class TestRowBasedSecurity {
 		DQPWorkContext workContext = new DQPWorkContext();
 		HashMap<String, DataPolicy> policies = new HashMap<String, DataPolicy>();
 		DataPolicyMetadata policy = new DataPolicyMetadata();
-		PermissionMetaData pmd = new PermissionMetaData();
+		pmd = new PermissionMetaData();
 		pmd.setResourceName("pm1.g1");
 		pmd.setCondition("e1 = user()");
 
@@ -93,6 +95,21 @@ public class TestRowBasedSecurity {
 		ProcessorPlan plan = helpGetPlan(helpParse("select e2 from pm1.g1"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(), context);
 		List<?>[] expectedResults = new List<?>[0]; 
 		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	/**
+	 * Note that we create an inline view to keep the proper position of the filter
+	 */
+	@Test public void testSelectFilterOuterJoin() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		dataManager.addData("SELECT pm1.g3.e1 FROM pm1.g3", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
+		BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+		caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER_FULL, true);
+		caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+		ProcessorPlan plan = helpGetPlan(helpParse("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1 full outer join pm1.g3 on (pm1.g1.e1=pm1.g3.e1)"), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
+		TestOptimizer.checkAtomicQueries(new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'user') AS v_0 FULL OUTER JOIN pm1.g3 AS g_1 ON v_0.c_0 = g_1.e1"}, plan);
 	}
 	
 	/**
@@ -136,13 +153,62 @@ public class TestRowBasedSecurity {
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	
+	@Test public void testInsertDisabledConstraint() throws Exception {
+		pmd.setConstraint(false);
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("INSERT INTO pm1.g1 (e1) VALUES ('a')", new List<?>[] {Arrays.asList(1)}); 
+		ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e1) values ('a')"), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(1)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
 	/**
 	 * invalid insert value
 	 */
 	@Test(expected=QueryPlannerException.class) public void testInsertConstraint() throws Exception {
 		HardcodedDataManager dataManager = new HardcodedDataManager();
 		ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e1) values ('a')"), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), context);
+		helpProcess(plan, context, dataManager, null);
+	}
+	
+	/**
+	 * Assumes the null value for e1, which results in a violation
+	 */
+	@Test(expected=QueryPlannerException.class) public void testInsertConstraint1() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e2) values (1)"), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), context);
+		helpProcess(plan, context, dataManager, null);
+	}
+	
+	@Test(expected=TeiidProcessingException.class) public void testInsertConstraintCorrelatedSubquery() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd3 = new PermissionMetaData();
+		pmd3.setResourceName("pm1.g1");
+		pmd3.setCondition("e1 = (select min(e1) from pm1.g3 where pm1.g1.e2 = e2)");
+		policy1.addPermission(pmd3);
+		policy1.setName("some-other-role");
+		context.getAllowedDataPolicies().put("some-other-role", policy1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e1, e2) values ('a', 1)"), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), context);
 		List<?>[] expectedResults = new List<?>[] {Arrays.asList(0)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	@Test public void testInsertConstraintSubquery() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd3 = new PermissionMetaData();
+		pmd3.setResourceName("pm1.g1");
+		pmd3.setCondition("e1 = (select min(e1) from pm1.g3)");
+		policy1.addPermission(pmd3);
+		policy1.setName("some-other-role");
+		context.getAllowedDataPolicies().put("some-other-role", policy1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT g_0.e1 FROM pm1.g3 AS g_0", new List<?>[] {Arrays.asList("a"), Arrays.asList("b")});
+		dataManager.addData("INSERT INTO pm1.g1 (e1, e2) VALUES ('a', 1)", new List<?>[] {Arrays.asList(1)});
+		ProcessorPlan plan = helpGetPlan(helpParse("insert into pm1.g1 (e1, e2) values ('a', 1)"), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(1)}; 
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	
@@ -208,6 +274,38 @@ public class TestRowBasedSecurity {
 		dataManager.addData("SELECT g_0.e3, g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e1 = 'user') AND (g_0.e2 = 5)", new List<?>[] {Arrays.asList(Boolean.TRUE, "user")});
 		ProcessorPlan plan = helpGetPlan(helpParse("update pm1.g1 set e1 = e3 || 'r' where e2 = 5"), RealMetadataFactory.example4(), TestOptimizer.getGenericFinder(), context);
 		List<?>[] expectedResults = new List<?>[] {Arrays.asList(0)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	/**
+	 * Ensures that the filter still gets applied to the insert
+	 */
+	@Test public void testUpdateFilter3() throws Exception {
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("UPDATE pm1.g1 SET e2 = 1 WHERE (e2 = 5) AND (e1 = 'user')", new List<?>[] {Arrays.asList(1)});
+		ProcessorPlan plan = helpGetPlan(helpParse("update pm1.g1 set e2 = 1 where e2 = 5"), RealMetadataFactory.example4(), TestOptimizer.getGenericFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(1)}; 
+		helpProcess(plan, context, dataManager, expectedResults);
+	}
+	
+	/**
+	 * Tests an outside column in the constraint
+	 */
+	@Test public void testUpdateFilter4() throws Exception {
+		DataPolicyMetadata policy1 = new DataPolicyMetadata();
+		PermissionMetaData pmd3 = new PermissionMetaData();
+		pmd3.setResourceName("pm1.g1");
+		pmd3.setCondition("e2 = 1 and e3");
+		policy1.addPermission(pmd3);
+		policy1.setName("some-role");
+		context.getAllowedDataPolicies().put("some-role", policy1);
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT g_0.e4, g_0.e3, g_0.e1 FROM pm1.g1 AS g_0 WHERE (g_0.e3 = TRUE) AND (g_0.e2 = 1) AND (g_0.e1 IN ('a', 'b'))", new List<?>[] {Arrays.asList(Double.valueOf(1), Boolean.TRUE, "a"), Arrays.asList(Double.valueOf(1), Boolean.TRUE, "b")});
+		dataManager.addData("UPDATE pm1.g1 SET e2 = 1 WHERE pm1.g1.e1 = 'a'", new List<?>[] {Arrays.asList(1)});
+		dataManager.addData("UPDATE pm1.g1 SET e2 = 1 WHERE pm1.g1.e1 = 'b'", new List<?>[] {Arrays.asList(1)});
+		ProcessorPlan plan = helpGetPlan(helpParse("update pm1.g1 set e2 = case when e4 = 1 then 1 else 2 end where e1 in ('a', 'b')"), RealMetadataFactory.example4(), TestOptimizer.getGenericFinder(), context);
+		List<?>[] expectedResults = new List<?>[] {Arrays.asList(2)}; 
 		helpProcess(plan, context, dataManager, expectedResults);
 	}
 	

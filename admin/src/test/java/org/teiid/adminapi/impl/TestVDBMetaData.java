@@ -134,12 +134,13 @@ public class TestVDBMetaData {
 			}
 			if (p.getResourceName().equalsIgnoreCase("myTable.T2.col1")) { //$NON-NLS-1$
 				assertEquals("col2", p.getMask());
-				assertEquals(1, p.getOrder());
+				assertEquals(1, p.getOrder().intValue());
 				continue;
 			}
 			assertFalse(p.getAllowRead());
 			assertTrue(p.getAllowDelete());
 			assertEquals("col1 = user()", p.getCondition());
+			assertFalse(p.getConstraint());
 		}
 		assertTrue(lang);
 	}
@@ -203,6 +204,7 @@ public class TestVDBMetaData {
 		perm2.setAllowRead(false);
 		perm2.setAllowDelete(true);
 		perm2.setCondition("col1 = user()");
+		perm2.setConstraint(false);
 		roleOne.addPermission(perm2);
 		
 		PermissionMetaData perm3 = new PermissionMetaData();

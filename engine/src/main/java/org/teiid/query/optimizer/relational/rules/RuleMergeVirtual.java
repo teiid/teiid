@@ -40,10 +40,10 @@ import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
@@ -162,7 +162,7 @@ public final class RuleMergeVirtual implements
 
         PlanNode parentJoin = NodeEditor.findParent(frame, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
 
-        if (!checkJoinCriteria(frame, virtualGroup, parentJoin)) {
+        if (!checkJoinCriteria(frame.getFirstChild(), virtualGroup, parentJoin)) {
             return root;
         }
         
@@ -335,7 +335,14 @@ public final class RuleMergeVirtual implements
             groups.addAll(sourceNode.getGroups());
         }
 
-        boolean checkForNullDependent = false;
+        return checkProjectedSymbols(virtualGroup, parentJoin, metadata,
+				selectSymbols, groups);
+    }
+
+	static boolean checkProjectedSymbols(GroupSymbol virtualGroup,
+			PlanNode parentJoin, QueryMetadataInterface metadata,
+			List<? extends Expression> selectSymbols, Set<GroupSymbol> groups) {
+		boolean checkForNullDependent = false;
         // check to see if there are projected literal on the inner side of an outer join that needs to be preserved
         if (parentJoin != null) {
             PlanNode joinToTest = parentJoin;
@@ -369,18 +376,18 @@ public final class RuleMergeVirtual implements
         }
 
         return true;
-    }
+	}
 
     /**
      * check to see if criteria is used in a full outer join or has no groups and is on the inner side of an outer join. if this
      * is the case then the layers cannot be merged, since merging would possibly force the criteria to change it's position (into
      * the on clause or above the join).
      */
-    private static boolean checkJoinCriteria(PlanNode frame,
+    static boolean checkJoinCriteria(PlanNode frameRoot,
                                              GroupSymbol virtualGroup,
                                              PlanNode parentJoin) {
         if (parentJoin != null) {
-            List<PlanNode> selectNodes = NodeEditor.findAllNodes(frame.getFirstChild(),
+            List<PlanNode> selectNodes = NodeEditor.findAllNodes(frameRoot,
                                                                  NodeConstants.Types.SELECT,
                                                                  NodeConstants.Types.SOURCE);
             Set<GroupSymbol> groups = new HashSet<GroupSymbol>();

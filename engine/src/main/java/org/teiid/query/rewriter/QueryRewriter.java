@@ -78,6 +78,7 @@ import org.teiid.query.sql.symbol.AggregateSymbol.Type;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
+import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
 import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
@@ -1931,7 +1932,13 @@ public class QueryRewriter {
 	}
 	
 	public static Expression rewriteExpression(Expression expression, CommandContext context, QueryMetadataInterface metadata) throws TeiidComponentException, TeiidProcessingException{
-		return new QueryRewriter(metadata, context).rewriteExpressionDirect(expression);
+		return rewriteExpression(expression, context, metadata, false);
+	}
+
+	public static Expression rewriteExpression(Expression expression, CommandContext context, QueryMetadataInterface metadata, boolean rewriteSubcommands) throws TeiidComponentException, TeiidProcessingException{
+		QueryRewriter rewriter = new QueryRewriter(metadata, context);
+		rewriter.rewriteSubcommands = rewriteSubcommands;
+		return rewriter.rewriteExpressionDirect(expression);
 	}
 
     private Expression rewriteExpressionDirect(Expression expression) throws TeiidComponentException, TeiidProcessingException{
@@ -2765,7 +2772,7 @@ public class QueryRewriter {
 		GroupSymbol group = mapping.getGroup();
 		String correlationName = mapping.getCorrelatedName().getName();
 		
-		return createUpdateProcedure(update, query, group, correlationName, setClauseList, varGroup);
+		return createUpdateProcedure(update, query, group, correlationName, setClauseList, varGroup, null);
 	}
 
 	private ArrayList<Expression> mapChangeList(SetClauseList setClauses,
@@ -2775,8 +2782,7 @@ public class QueryRewriter {
 		for (SetClause clause : setClauses.getClauses()) {
 			Expression ex = clause.getValue();
 			if (!EvaluatableVisitor.willBecomeConstant(ex)) {
-				selectSymbols.add(new AliasSymbol("s_" +i, ex)); //$NON-NLS-1$
-				ex = new ElementSymbol("s_" +i, varGroup.clone()); //$NON-NLS-1$
+				ex = mapExpression(varGroup, selectSymbols, i, ex);
 				clause.setValue(ex);
 			}
 			if (symbolMap != null) {
@@ -2787,11 +2793,20 @@ public class QueryRewriter {
 		return selectSymbols;
 	}
 
+	private static Expression mapExpression(GroupSymbol varGroup,
+			ArrayList<Expression> selectSymbols, int i, Expression ex) {
+		String name = "s_" +i; //$NON-NLS-1$
+		selectSymbols.add(new AliasSymbol(name, ex)); 
+		ex = new ElementSymbol(name, varGroup.clone());
+		return ex;
+	}
+
 	private Command createUpdateProcedure(Update update, Query query,
-			GroupSymbol group, String correlationName, SetClauseList setClauseList, GroupSymbol varGroup)
+			GroupSymbol group, String correlationName, SetClauseList setClauseList, GroupSymbol varGroup, Criteria constraint)
 			throws TeiidComponentException, QueryMetadataException,
 			QueryResolverException, TeiidProcessingException {
 		Update newUpdate = new Update();
+		newUpdate.setConstraint(constraint);
 		newUpdate.setChangeList(setClauseList);
 		newUpdate.setGroup(group.clone());
 		List<Criteria> pkCriteria = createPkCriteria(group, correlationName, query, varGroup);
@@ -2925,8 +2940,28 @@ public class QueryRewriter {
 		SetClauseList setClauseList = (SetClauseList) update.getChangeList().clone();
 		GroupSymbol varGroup = getVarGroup(update);
 		ArrayList<Expression> selectSymbols = rewriter.mapChangeList(setClauseList, null, varGroup);
+		Criteria constraint = null;
+		if (update.getConstraint() != null) {
+			constraint = update.getConstraint();
+			Map<ElementSymbol, Expression> map = null;
+			Collection<ElementSymbol> elems = ElementCollectorVisitor.getElements(update.getConstraint(), true);
+			Set<ElementSymbol> existing = setClauseList.getClauseMap().keySet();
+			for (ElementSymbol es : elems) {
+				if (existing.contains(es)) {
+					continue;
+				}
+				if (map == null) {
+					map = new HashMap<ElementSymbol, Expression>();
+				}
+				map.put(es, mapExpression(varGroup, selectSymbols, selectSymbols.size(), es));
+			}
+			if (map != null) {
+				constraint = (Criteria)constraint.clone();
+				ExpressionMappingVisitor.mapExpressions(constraint, map);
+			}
+		}
 		Query query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(update.getGroup()))), crit, null, null);
-		return rewriter.createUpdateProcedure(update, query, update.getGroup(), update.getGroup().getName(), setClauseList, varGroup);
+		return rewriter.createUpdateProcedure(update, query, update.getGroup(), update.getGroup().getName(), setClauseList, varGroup, constraint);
 	}
 
 	private Command createDeleteProcedure(Delete delete, Query query,

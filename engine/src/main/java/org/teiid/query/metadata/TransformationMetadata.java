@@ -252,6 +252,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     public String getFullName(final Object metadataID) throws TeiidComponentException, QueryMetadataException {
         ArgCheck.isInstanceOf(AbstractMetadataRecord.class, metadataID);
         AbstractMetadataRecord metadataRecord = (AbstractMetadataRecord) metadataID;
+        if (metadataRecord instanceof Column) {
+        	Column c = (Column)metadataRecord;
+        	if (c.getParent() != null && c.getParent().getParent() instanceof Procedure) {
+        		return c.getParent().getParent().getFullName() + '.' + c.getName();
+        	}
+        }
         return metadataRecord.getFullName();
     }
     

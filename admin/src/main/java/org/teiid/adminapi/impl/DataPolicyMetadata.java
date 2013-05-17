@@ -27,7 +27,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.teiid.adminapi.AdminPlugin;
@@ -47,6 +49,8 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     protected Map<String, PermissionMetaData> languagePermissions = new HashMap<String, PermissionMetaData>(2);
     
     protected List<String> mappedRoleNames = new CopyOnWriteArrayList<String>();
+    
+    private Set<String> hasRowPermissions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 
 	@Override
     public String getName() {
@@ -77,6 +81,10 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		return permissions;
 	}
 	
+	public boolean hasRowSecurity(String resourceName) {
+		return hasRowPermissions.contains(resourceName);
+	}
+	
 	public void setPermissions(List<DataPermission> permissions) {
 		this.permissions.clear();
 		for (DataPermission permission:permissions) {
@@ -97,14 +105,27 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		} else {
 			previous = permissions.put(permission.getResourceName().toLowerCase(), permission);
 		}
+		if (permission.getCondition() != null) {
+			this.hasRowPermissions.add(permission.getResourceName());
+		}
+		if (permission.getMask() != null) {
+			String resourceName = permission.getResourceName();
+			int lastSegment = permission.getResourceName().lastIndexOf('.');
+			if (lastSegment > 0) {
+				resourceName = resourceName.substring(0, lastSegment);
+			}
+			this.hasRowPermissions.add(resourceName);
+		}
+		
 		if (previous != null) {
 			permission.bits |= previous.bits;
 			permission.bitsSet |= previous.bitsSet;
 			if (previous.getCondition() != null) {
 				if (permission.getCondition() == null) {
 					permission.setCondition(previous.getCondition());
+					permission.setConstraint(previous.getConstraint());
 				} else {
-					permission.setCondition("(" + permission.getCondition() + ") OR (" + previous.getCondition() + ")"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					throw new TeiidRuntimeException(AdminPlugin.Event.TEIID70053, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70053, this.getName(), permission.getResourceName()));
 				}
 			}
 			if (previous.getMask() != null) {
@@ -148,18 +169,24 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		return null;
 	}
 	
+	private static class RowSecurityState {
+		private String condition;
+        private volatile SoftReference<Object> resolvedCondition;
+        private String mask;
+        private volatile SoftReference<Object> resolvedMask;
+        private Integer order;
+        private Boolean constraint;
+	}
+	
 	public static class PermissionMetaData implements DataPermission, Serializable {
 		private static final long serialVersionUID = 7034744531663164277L;
         
         // XML based fields
         private String resourceName;
-        private String condition;
-        private volatile SoftReference<Object> resolvedCondition;
-        private String mask;
-        private volatile SoftReference<Object> resolvedMask;
-        private int order;
         protected byte bits;
         protected byte bitsSet;
+        
+        private RowSecurityState rowSecurityState;
         
         @Override
         public String getResourceName() {
@@ -253,11 +280,13 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
         	if (Boolean.TRUE.equals(getAllowLanguage())) {
         		sb.append("L");//$NON-NLS-1$
         	}
-        	if (condition != null) {
-        		sb.append(" condition ").append(condition); //$NON-NLS-1$
-        	}
-        	if (mask != null) {
-        		sb.append(" mask ").append(mask); //$NON-NLS-1$
+        	if (rowSecurityState != null) {
+            	if (rowSecurityState.condition != null) {
+            		sb.append(" condition ").append(rowSecurityState.condition); //$NON-NLS-1$
+            	}
+            	if (rowSecurityState.mask != null) {
+            		sb.append(" mask ").append(rowSecurityState.mask); //$NON-NLS-1$
+            	}
         	}
         	return sb.toString();
         }
@@ -322,51 +351,96 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		
 		@Override
 		public String getCondition() {
-			return condition;
+			if (rowSecurityState == null) {
+				return null;
+			}
+			return rowSecurityState.condition;
 		}
 		
 		public void setCondition(String filter) {
-			this.condition = filter;
+			if (rowSecurityState == null) {
+				rowSecurityState = new RowSecurityState();
+			}
+			this.rowSecurityState.condition = filter;
 		}
 		
 		@Override
 		public String getMask() {
-			return mask;
+			if (rowSecurityState == null) {
+				return null;
+			}
+			return rowSecurityState.mask;
 		}
 		
 		public void setMask(String mask) {
-			this.mask = mask;
+			if (rowSecurityState == null) {
+				rowSecurityState = new RowSecurityState();
+			}
+			this.rowSecurityState.mask = mask;
 		}
 		
 		@Override
-		public int getOrder() {
-			return order;
+		public Integer getOrder() {
+			if (rowSecurityState == null) {
+				return 0;
+			}
+			return rowSecurityState.order;
 		}
 		
 		public void setOrder(int order) {
-			this.order = order;
+			if (rowSecurityState == null) {
+				rowSecurityState = new RowSecurityState();
+			}
+			this.rowSecurityState.order = order;
 		}
 		
 		public Object getResolvedCondition() {
-			if (resolvedCondition != null) {
-				return resolvedCondition.get();
+			if (rowSecurityState == null) {
+				return null;
+			}
+			if (rowSecurityState.resolvedCondition != null) {
+				return rowSecurityState.resolvedCondition.get();
 			}
 			return null;
 		}
 		
 		public void setResolvedCondition(Object resolvedCondition) {
-			this.resolvedCondition = new SoftReference<Object>(resolvedCondition);
+			if (rowSecurityState == null) {
+				rowSecurityState = new RowSecurityState();
+			}
+			this.rowSecurityState.resolvedCondition = new SoftReference<Object>(resolvedCondition);
 		}
 		
 		public Object getResolvedMask() {
-			if (resolvedMask != null) {
-				return resolvedMask.get();
+			if (rowSecurityState == null) {
+				return null;
+			}
+			if (rowSecurityState.resolvedMask != null) {
+				return rowSecurityState.resolvedMask.get();
 			}
 			return null;
 		}
 		
 		public void setResolvedMask(Object resolvedMask) {
-			this.resolvedMask = new SoftReference<Object>(resolvedMask);
+			if (rowSecurityState == null) {
+				rowSecurityState = new RowSecurityState();
+			}
+			this.rowSecurityState.resolvedMask = new SoftReference<Object>(resolvedMask);
+		}
+
+		@Override
+		public Boolean getConstraint() {
+			if (rowSecurityState == null) {
+				return null;
+			}
+			return rowSecurityState.constraint;
+		}
+		
+		public void setConstraint(Boolean constraint) {
+			if (rowSecurityState == null) {
+				this.rowSecurityState = new RowSecurityState();
+			}
+			this.rowSecurityState.constraint = constraint;
 		}
 	}
 

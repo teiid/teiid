@@ -24,6 +24,7 @@ package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -40,16 +41,19 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.SearchedCaseExpression;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.query.validator.Validator;
@@ -63,8 +67,8 @@ public class ColumnMaskingHelper {
 		Criteria when;
 		Expression then;
 		
-		public WhenThen(int order, Criteria when, Expression then) {
-			this.order = order;
+		public WhenThen(Integer order, Criteria when, Expression then) {
+			this.order = (order == null?0:order);
 			this.when = when;
 			this.then = then;
 		}
@@ -82,6 +86,7 @@ public class ColumnMaskingHelper {
 		String elementType = metadata.getElementType(col.getMetadataID());
 		Class<?> expectedType = DataTypeManager.getDataTypeClass(elementType);
 		List<WhenThen> cases = null;
+		Collection<GroupSymbol> groups = Arrays.asList(unaliased);
 		for (Map.Entry<String, DataPolicy> entry : policies.entrySet()) {
 			DataPolicyMetadata dpm = (DataPolicyMetadata)entry.getValue();
 			PermissionMetaData pmd = dpm.getPermissionMap().get(fullName);
@@ -102,7 +107,11 @@ public class ColumnMaskingHelper {
 			if (mask == null) {
 				try {
 					mask = QueryParser.getQueryParser().parseExpression(pmd.getMask());
-					ResolverVisitor.resolveLanguageObject(mask, Arrays.asList(unaliased), metadata);
+					for (SubqueryContainer container : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(mask)) {
+			        	container.getCommand().pushNewResolvingContext(groups);
+			            QueryResolver.resolveCommand(container.getCommand(), metadata, false);
+			        }
+					ResolverVisitor.resolveLanguageObject(mask, groups, metadata);
 					ValidatorReport report = Validator.validate(mask, metadata, new ValidationVisitor());
 			        if (report.hasItems()) {
 			        	ValidatorFailure firstFailure = report.getItems().iterator().next();
@@ -145,7 +154,7 @@ public class ColumnMaskingHelper {
 		}
 		SearchedCaseExpression sce = new SearchedCaseExpression(whens, thens);
 		sce.setType(expectedType);
-		Expression mask = QueryRewriter.rewriteExpression(sce, cc, metadata);
+		Expression mask = QueryRewriter.rewriteExpression(sce, cc, metadata, true);
 		return mask;
 	}
 
