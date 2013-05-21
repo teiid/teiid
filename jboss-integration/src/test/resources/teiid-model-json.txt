@@ -32,7 +32,7 @@
     "resultset-cache-max-staleness" : 90,
     "resultset-cache-name" : "cache",
     "thread-count-for-source-concurrency" : 2,
-    "time-slice-in-millseconds" : 2,
+    "time-slice-in-milliseconds" : 2,
     "translator" : {
         "jdbc-simple" : {"module" : "org.jboss.teiid.translator.jdbc"},
         "jdbc-ansi" : {"module" : "org.jboss.teiid.translator.jdbc"}

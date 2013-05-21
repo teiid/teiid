@@ -133,7 +133,7 @@
                 </xs:annotation>
             </xs:element>
             
-            <xs:element name="time-slice-in-millseconds" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
+            <xs:element name="time-slice-in-milliseconds" type="xs:int" minOccurs="0" maxOccurs="1" default="2000">
                 <xs:annotation>
                     <xs:documentation>Query processor time slice, in milliseconds. (default 2000)</xs:documentation>
                 </xs:annotation>

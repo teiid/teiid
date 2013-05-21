@@ -37,7 +37,9 @@ enum Element {
 	MAX_THREADS_ELEMENT("max-threads", "max-threads"),
 	MAX_ACTIVE_PLANS_ELEMENT("max-active-plans", "max-active-plans"),
 	USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT("thread-count-for-source-concurrency", "thread-count-for-source-concurrency"),
-	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds"),
+	TIME_SLICE_IN_MILLI_ELEMENT("time-slice-in-milliseconds", "time-slice-in-milliseconds"),
+	@Deprecated
+	TIME_SLICE_IN_MILL_ELEMENT("time-slice-in-millseconds", "time-slice-in-millseconds"),
 	MAX_ROWS_FETCH_SIZE_ELEMENT("max-row-fetch-size", "max-row-fetch-size"),
 	LOB_CHUNK_SIZE_IN_KB_ELEMENT("lob-chunk-size-in-kb", "lob-chunk-size-in-kb"),
 	QUERY_THRESHOLD_IN_SECS_ELEMENT("query-threshold-in-seconds", "query-threshold-in-seconds"),

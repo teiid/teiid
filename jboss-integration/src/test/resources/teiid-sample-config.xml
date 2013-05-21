@@ -9,7 +9,7 @@
     <max-threads>2</max-threads>
     <max-active-plans>2</max-active-plans>
     <thread-count-for-source-concurrency>2</thread-count-for-source-concurrency>
-    <time-slice-in-millseconds>2</time-slice-in-millseconds>
+    <time-slice-in-milliseconds>2</time-slice-in-milliseconds>
     <max-row-fetch-size>2</max-row-fetch-size>
     <lob-chunk-size-in-kb>2</lob-chunk-size-in-kb>
     <query-threshold-in-seconds>2</query-threshold-in-seconds>

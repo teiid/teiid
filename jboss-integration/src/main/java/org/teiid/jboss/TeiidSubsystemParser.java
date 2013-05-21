@@ -21,11 +21,8 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.parsing.ParseUtils.requireNoAttributes;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.parsing.ParseUtils.*;
 import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.ArrayList;
@@ -258,7 +255,9 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				case WORKMANAGER:    					
     					bootServices.get(reader.getLocalName()).set(reader.getElementText());
     					break;
-    					
+    				case TIME_SLICE_IN_MILL_ELEMENT:
+    					bootServices.get(Element.TIME_SLICE_IN_MILLI_ELEMENT.getLocalName()).set(Integer.parseInt(reader.getElementText()));
+    					break;
     				case MAX_THREADS_ELEMENT:
     				case MAX_ACTIVE_PLANS_ELEMENT:
     				case USER_REQUEST_SOURCE_CONCURRENCY_ELEMENT:

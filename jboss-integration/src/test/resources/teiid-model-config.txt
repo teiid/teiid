@@ -28,7 +28,7 @@
         "required" => false,
         "default" => 0
     },
-    "time-slice-in-millseconds" => {
+    "time-slice-in-milliseconds" => {
         "type" => INT,
         "description" => "Query processor time slice, in milliseconds. (default 2000)",
         "required" => false,
