@@ -267,6 +267,15 @@
                 <resource-adapter id="webservice">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
                 </resource-adapter>
+               <resource-adapter id="mongodb">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
+                    <connection-definitions>
+                        <connection-definition class-name="org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory" jndi-name="java:/mongodbDS" enabled="true" use-java-context="true" pool-name="mongodbDS">
+                            <config-property name="RemoteServerList">localhost:27017</config-property>
+                            <config-property name="Database">test</config-property>
+                        </connection-definition>
+                    </connection-definitions>
+                </resource-adapter>
             </resource-adapters>        
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
@@ -351,7 +360,7 @@
             <translator name="infinispan-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="odata" module="org.jboss.teiid.translator.odata"/>
-            
+            <translator name="mongodb" module="org.jboss.teiid.translator.mongodb"/>
             
         </subsystem>        
         <subsystem xmlns="urn:jboss:domain:threads:1.1">

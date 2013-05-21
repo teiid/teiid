@@ -1,0 +1,4 @@
+/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS:add(jndi-name=java:/mongodbDS, class-name=org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory, enabled=true, use-java-context=true)
+/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=RemoteServerList:add(value=localhost:27017)
+/subsystem=resource-adapters/resource-adapter=mongodb/connection-definitions=mongodbDS/config-properties=Database:add(value=test)
+/subsystem=resource-adapters/resource-adapter=mongodb:activate

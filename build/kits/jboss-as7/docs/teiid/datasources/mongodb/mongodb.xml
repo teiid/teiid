@@ -1,0 +1,27 @@
+<!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
+<subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
+    <resource-adapters>
+        <resource-adapter id="webservice">
+            <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
+            <transaction-support>NoTransaction</transaction-support>
+            <connection-definitions>
+                <connection-definition class-name="org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory" 
+                        jndi-name="java:/mongoDS" 
+                        enabled="true" 
+                        use-java-context="true" 
+                        pool-name="teiid-mongodb-ds">
+                        
+                      <!-- MongoDB server list (host:port[;host:port...]) -->
+                      <config-property name="RemoteServerList">localhost:27017</config-property>
+                      <!-- Database Name in the MongoDB -->
+                      <config-property name="Database">test</config-property>
+                        <!-- 
+                            Uncomment these properties to supply user name and password
+                        <config-property name="Username">user</config-property>
+                        <config-property name="Password">user</config-property>
+                        -->  
+                </connection-definition>
+            </connection-definitions>
+        </resource-adapter>
+    </resource-adapters>
+</subsystem>

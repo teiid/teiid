@@ -274,6 +274,31 @@
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
+
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-mongodb:rar</include>
+        </includes>
+
+        <binaries>   
+          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
+          <includeDependencies>true</includeDependencies>
+          <unpack>true</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/mongodb/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
     
     <moduleSet>
         <includeSubModules>true</includeSubModules>
@@ -471,6 +496,31 @@
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
+
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:mongodb-api</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/mongodb/api/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
+
     <moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
@@ -653,6 +703,31 @@
               <fileMode>0644</fileMode>
           </binaries>
       </moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-mongodb</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/mongodb/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+      
+    </moduleSet>
+      
     <!-- Include the JOPR plugin     
     <moduleSet>
         <includeSubModules>true</includeSubModules>
