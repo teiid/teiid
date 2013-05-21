@@ -92,6 +92,8 @@
             <include>org.jboss.teiid.connectors:translator-object</include>
             <include>org.jboss.teiid.connectors:translator-google</include>
             <include>org.jboss.teiid.connectors:google-api</include>
+            <include>org.jboss.teiid.connectors:mongodb</include>
+            <include>org.jboss.teiid.connectors:mongodb-api</include>
         </includes>
 
         <binaries>        
@@ -121,6 +123,7 @@
             <include>org.jboss.teiid.connectors:connector-ws</include>
             <include>org.jboss.teiid.connectors:connector-infinispan</include>
             <include>org.jboss.teiid.connectors:connector-google</include>
+            <include>org.jboss.teiid.connectors:connector-mongodb</include>
         </includes>
 
         <binaries>        

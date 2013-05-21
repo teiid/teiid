@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<connector version="1.5">
+
+   <vendor-name>Red Hat Middleware LLC</vendor-name>
+   <eis-type>Teiid Text Connector</eis-type>
+   <resourceadapter-version>1.0</resourceadapter-version>
+   <license>
+      <description>
+ JBoss, Home of Professional Open Source.
+ Copyright 2006, Red Hat Middleware LLC, and individual contributors
+ as indicated by the @author tags. See the copyright.txt file in the
+ distribution for a full listing of individual contributors.
+
+ This is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as
+ published by the Free Software Foundation; either version 2.1 of
+ the License, or (at your option) any later version.
+
+ This software is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public
+ License along with this software; if not, write to the Free
+ Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ 02110-1301 USA, or see the FSF site: http://www.fsf.org.
+      </description>
+      <license-required>true</license-required>
+   </license>
+   <resourceadapter>
+      <resourceadapter-class>org.teiid.resource.adapter.mongodb.MongoDBResourceAdapter</resourceadapter-class>
+
+      <outbound-resourceadapter>
+         <connection-definition>
+            <managedconnectionfactory-class>org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory</managedconnectionfactory-class>
+
+            <config-property>
+               <description>{$display:"Server List", $description:"Server List (host:port[;host:port...]) to connect to", $required:"true"}</description>
+               <config-property-name>RemoteServerList</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+            
+            <config-property>
+               <description>{$display:"User Name", $description:"MongoDB Account User Name", $required:"false"}</description>
+               <config-property-name>Username</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>
+            
+            <config-property>
+               <description>{$display:"Password",$description:"MongoDB Account Password",$required:"false",$masked:"true"}</description> 
+               <config-property-name>Password</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property> 
+            
+            <config-property>
+               <description>{$display:"Database",$description:"MongoDB Database Name",$required:"true"}</description> 
+               <config-property-name>Database</config-property-name>
+               <config-property-type>java.lang.String</config-property-type>
+            </config-property>             
+            
+            <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connection-interface>javax.resource.cci.Connection</connection-interface>
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>
+
+         </connection-definition>
+         
+         <transaction-support>NoTransaction</transaction-support>
+        
+        <authentication-mechanism>
+            <authentication-mechanism-type>BasicPassword</authentication-mechanism-type>
+            <credential-interface>javax.resource.spi.security.PasswordCredential</credential-interface>
+        </authentication-mechanism>
+        <reauthentication-support>false</reauthentication-support>
+      </outbound-resourceadapter>
+   </resourceadapter>
+</connector>
