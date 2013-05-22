@@ -224,27 +224,6 @@ public class CompositeVDB {
 	}
 	
 	private MetadataStore getMetadataStore() {
-		List<Schema> schemas = this.store.getSchemaList();
-		schemas.clear();
-		
-		//the order of the models is important for resolving ddl
-		//TODO we might consider not using the intermediate MetadataStore
-		for (ModelMetaData model : this.vdb.getModelMetaDatas().values()) {
-			Schema s = this.store.getSchema(model.getName());
-			if (s != null) {
-				schemas.add(s);
-			} else {
-				this.store.getSchemas().remove(model.getName());
-			}
-		}
-		if (this.children != null && !this.children.isEmpty()) {
-			for (CompositeVDB child:this.children.values()) {
-				MetadataStore childStore = child.getMetadataStore();
-				if ( childStore != null) {
-					this.store.merge(childStore);
-				}
-			}		
-		}
 		return this.store;
 	}
 		
@@ -259,6 +238,26 @@ public class CompositeVDB {
 		this.metadataloadFinished = true;
 		
 		MetadataStore mergedStore = getMetadataStore();
+		//the order of the models is important for resolving ddl
+		//TODO we might consider not using the intermediate MetadataStore
+		List<Schema> schemas = mergedStore.getSchemaList();
+		schemas.clear();
+		for (ModelMetaData model : this.vdb.getModelMetaDatas().values()) {
+			Schema s = mergedStore.getSchema(model.getName());
+			if (s != null) {
+				schemas.add(s);
+			} else {
+				mergedStore.getSchemas().remove(model.getName());
+			}
+		}
+		if (this.children != null && !this.children.isEmpty()) {
+			for (CompositeVDB child:this.children.values()) {
+				MetadataStore childStore = child.getMetadataStore();
+				if ( childStore != null) {
+					mergedStore.merge(childStore);
+				}
+			}		
+		}
 		
 		TransformationMetadata metadata = buildTransformationMetaData(mergedVDB, getVisibilityMap(), mergedStore, getUDF(), systemFunctions, this.additionalStores);
 		QueryMetadataInterface qmi = metadata;

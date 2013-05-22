@@ -318,6 +318,19 @@ public class TestEmbeddedServer {
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
 	
+	@Test public void testXMLDeployWithVDBImport() throws Exception {
+		es.start(new EmbeddedConfiguration());
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model></vdb>".getBytes()));
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"importer\" version=\"1\"><import-vdb name=\"test\" version=\"1\"/></vdb>".getBytes()));
+		ResultSet rs =es.getDriver().connect("jdbc:teiid:importer", null).createStatement().executeQuery("select * from helloworld");
+		rs.next();
+		assertEquals("HELLO WORLD", rs.getString(1));
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"importer1\" version=\"1\"><import-vdb name=\"importer\" version=\"1\"/></vdb>".getBytes()));
+		rs =es.getDriver().connect("jdbc:teiid:importer1", null).createStatement().executeQuery("select * from helloworld");
+		rs.next();
+		assertEquals("HELLO WORLD", rs.getString(1));
+	}
+	
 	@Test(expected=VirtualDatabaseException.class) public void testXMLDeployFails() throws Exception {
 		es.start(new EmbeddedConfiguration());
 		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model><translator name=\"foo\" type=\"h2\"></translator></vdb>".getBytes()));

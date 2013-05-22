@@ -681,6 +681,29 @@ public class MetadataFactory implements Serializable {
 	}
 	
 	/**
+	 * Add a permission for the current {@link Schema} which will typically act as a default for all child objects.
+	 * @param role
+	 * @param allowAlter
+	 * @param allowCreate
+	 * @param allowRead
+	 * @param allowUpdate
+	 * @param allowDelete
+	 * @param allowExecute
+	 */
+	public void addSchemaPermission(String role, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
+			Boolean allowDelete, Boolean allowExecute) {
+		PermissionMetaData pmd = new PermissionMetaData();
+		pmd.setResourceName(this.schema.getFullName());
+		pmd.setAllowAlter(allowAlter);
+		pmd.setAllowCreate(allowCreate);
+		pmd.setAllowDelete(allowDelete);
+		pmd.setAllowExecute(allowExecute);
+		pmd.setAllowRead(allowRead);
+		pmd.setAllowUpdate(allowUpdate);
+		addPermission(pmd, role);
+	}
+	
+	/**
 	 * Add a permission for a {@link Column}
 	 * @param role
 	 * @param resource
