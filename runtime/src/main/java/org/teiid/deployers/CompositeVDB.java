@@ -224,27 +224,28 @@ public class CompositeVDB {
 	}
 	
 	private MetadataStore getMetadataStore() {
-		MetadataStore mergedStore = new MetadataStore();
-		if (this.store != null) {
-			//the order of the models is important for resolving ddl
-			//TODO we might consider not using the intermediate MetadataStore
-			for (ModelMetaData model : this.vdb.getModelMetaDatas().values()) {
-				Schema s = this.store.getSchemas().get(model.getName());
-				if (s != null) {
-					mergedStore.addSchema(s);					
-				}
+		List<Schema> schemas = this.store.getSchemaList();
+		schemas.clear();
+		
+		//the order of the models is important for resolving ddl
+		//TODO we might consider not using the intermediate MetadataStore
+		for (ModelMetaData model : this.vdb.getModelMetaDatas().values()) {
+			Schema s = this.store.getSchema(model.getName());
+			if (s != null) {
+				schemas.add(s);
+			} else {
+				this.store.getSchemas().remove(model.getName());
 			}
-			mergedStore.addDataTypes(store.getDatatypes().values());
 		}
 		if (this.children != null && !this.children.isEmpty()) {
 			for (CompositeVDB child:this.children.values()) {
 				MetadataStore childStore = child.getMetadataStore();
 				if ( childStore != null) {
-					mergedStore.merge(childStore);
+					this.store.merge(childStore);
 				}
 			}		
 		}
-		return mergedStore;
+		return this.store;
 	}
 		
 	VDBMetaData getOriginalVDB() {

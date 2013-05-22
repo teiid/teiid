@@ -228,8 +228,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		return this.dataPolicies.put(policy.getName(), policy);
 	}
 	
-	public DataPolicyMetadata getDataPolicy(String policyName) {
-		return this.dataPolicies.get(policyName);
+	public LinkedHashMap<String, DataPolicyMetadata> getDataPolicyMap() {
+		return this.dataPolicies;
 	}
 	
 	public VDBTranslatorMetaData getTranslator(String name) {

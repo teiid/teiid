@@ -359,6 +359,9 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		
 		public void setCondition(String filter) {
 			if (rowSecurityState == null) {
+				if (filter == null) {
+					return;
+				}
 				rowSecurityState = new RowSecurityState();
 			}
 			this.rowSecurityState.condition = filter;
@@ -374,6 +377,9 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		
 		public void setMask(String mask) {
 			if (rowSecurityState == null) {
+				if (mask == null) {
+					return;
+				}
 				rowSecurityState = new RowSecurityState();
 			}
 			this.rowSecurityState.mask = mask;
@@ -382,13 +388,16 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		@Override
 		public Integer getOrder() {
 			if (rowSecurityState == null) {
-				return 0;
+				return null;
 			}
 			return rowSecurityState.order;
 		}
 		
-		public void setOrder(int order) {
+		public void setOrder(Integer order) {
 			if (rowSecurityState == null) {
+				if (order == null) {
+					return;
+				}
 				rowSecurityState = new RowSecurityState();
 			}
 			this.rowSecurityState.order = order;
@@ -438,6 +447,9 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
 		
 		public void setConstraint(Boolean constraint) {
 			if (rowSecurityState == null) {
+				if (constraint == null) {
+					return;
+				}
 				this.rowSecurityState = new RowSecurityState();
 			}
 			this.rowSecurityState.constraint = constraint;
@@ -460,5 +472,20 @@ public class DataPolicyMetadata implements DataPolicy, Serializable {
     public void setAnyAuthenticated(boolean anyAuthenticated) {
 		this.anyAuthenticated = anyAuthenticated;
 	}
+    
+    public DataPolicyMetadata clone() {
+    	DataPolicyMetadata clone = new DataPolicyMetadata();
+    	clone.allowCreateTemporaryTables = this.allowCreateTemporaryTables;
+    	clone.anyAuthenticated = this.anyAuthenticated;
+    	clone.description = this.description;
+    	clone.hasRowPermissions = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+    	clone.hasRowPermissions.addAll(this.hasRowPermissions);
+    	clone.languagePermissions = new HashMap<String, DataPolicyMetadata.PermissionMetaData>(this.languagePermissions);
+    	clone.mappedRoleNames = this.mappedRoleNames; //direct reference to preserve updates
+    	clone.name = this.name;
+    	clone.permissions = new TreeMap<String, PermissionMetaData>(String.CASE_INSENSITIVE_ORDER);
+    	clone.permissions.putAll(this.permissions);
+    	return clone;
+    }
     
 }

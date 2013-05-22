@@ -36,11 +36,13 @@ import java.util.TreeMap;
 
 import org.teiid.CommandContext;
 import org.teiid.adminapi.Model;
+import org.teiid.adminapi.impl.DataPolicyMetadata.PermissionMetaData;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.FunctionMethod.PushDown;
+import org.teiid.metadata.MetadataStore.Grant;
 import org.teiid.metadata.ProcedureParameter.Type;
 import org.teiid.translator.TypeFacility;
 
@@ -52,6 +54,7 @@ import org.teiid.translator.TypeFacility;
  * TODO: add support for unique constraints
  */
 public class MetadataFactory implements Serializable {
+	
 	private static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
 	private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
 	private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
@@ -73,6 +76,7 @@ public class MetadataFactory implements Serializable {
 	private transient Parser parser;
 	private transient ModelMetaData model;
 	private transient Map<String, ? extends VDBResource> vdbResources;
+	private List<Grant> grants;
 	
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -514,6 +518,7 @@ public class MetadataFactory implements Serializable {
 	public void mergeInto (MetadataStore store) {
 		store.addSchema(this.schema);
 		store.addDataTypes(this.builtinDataTypes.values());
+		store.addGrants(this.grants);
 	}
 	
 	public MetadataStore asMetadataStore() {
@@ -646,4 +651,70 @@ public class MetadataFactory implements Serializable {
 	public void setVdbResources(Map<String, ? extends VDBResource> vdbResources) {
 		this.vdbResources = vdbResources;
 	}
+	
+	/**
+	 * Add a permission for a {@link Table} or {@link Procedure}
+	 * @param role
+	 * @param resource
+	 * @param allowAlter
+	 * @param allowCreate
+	 * @param allowRead
+	 * @param allowUpdate
+	 * @param allowDelete
+	 * @param allowExecute
+	 * @param condition
+	 * @param constraint
+	 */
+	public void addPermission(String role, AbstractMetadataRecord resource, Boolean allowAlter, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
+			Boolean allowDelete, Boolean allowExecute, String condition, Boolean constraint) {
+		PermissionMetaData pmd = new PermissionMetaData();
+		pmd.setResourceName(resource.getFullName());
+		pmd.setAllowAlter(allowAlter);
+		pmd.setAllowCreate(allowCreate);
+		pmd.setAllowDelete(allowDelete);
+		pmd.setAllowExecute(allowExecute);
+		pmd.setAllowRead(allowRead);
+		pmd.setAllowUpdate(allowUpdate);
+		pmd.setCondition(condition);
+		pmd.setConstraint(constraint);
+		addPermission(pmd, role);
+	}
+	
+	/**
+	 * Add a permission for a {@link Column}
+	 * @param role
+	 * @param resource
+	 * @param allowCreate
+	 * @param allowRead
+	 * @param allowUpdate
+	 * @param condition
+	 * @param mask
+	 * @param order
+	 */
+	public void addColumnPermission(String role, Column resource, Boolean allowCreate, Boolean allowRead, Boolean allowUpdate,
+			String condition, String mask, Integer order) {
+		PermissionMetaData pmd = new PermissionMetaData();
+	    String resourceName = null;
+    	if (resource.getParent() != null && resource.getParent().getParent() instanceof Procedure) {
+    		resourceName = resource.getParent().getParent().getFullName() + '.' + resource.getName();
+    	} else {
+    		resourceName = resource.getFullName();
+    	}
+		pmd.setResourceName(resourceName);
+		pmd.setAllowCreate(allowCreate);
+		pmd.setAllowRead(allowRead);
+		pmd.setAllowUpdate(allowUpdate);
+		pmd.setCondition(condition);
+		pmd.setMask(mask);
+		pmd.setOrder(order);
+		addPermission(pmd, role);
+	}
+	
+	private void addPermission(PermissionMetaData pmd, String role) {
+		if (this.grants == null) {
+			this.grants = new ArrayList<Grant>();
+		}
+		this.grants.add(new Grant(role, pmd));
+	}
+
 }

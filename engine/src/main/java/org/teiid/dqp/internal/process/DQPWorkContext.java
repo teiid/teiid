@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.process;
 import java.io.Serializable;
 import java.security.Principal;
 import java.security.acl.Group;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -47,6 +48,7 @@ import org.teiid.dqp.message.RequestID;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.query.metadata.SystemMetadata;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.security.SecurityHelper;
 
 
@@ -279,7 +281,15 @@ public class DQPWorkContext implements Serializable {
 	    	Set<String> userRoles = getUserRoles();
 	    	
 	    	// get data roles from the VDB
-	    	for (DataPolicy policy : getVDB().getDataPolicies()) {
+	    	VDBMetaData vdb = getVDB();
+	    	TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+	    	Collection<? extends DataPolicy> allPolicies = null;
+	    	if (metadata == null) {
+	    		allPolicies = vdb.getDataPolicies(); 
+	    	} else {
+	    		allPolicies = metadata.getPolicies().values();
+	    	}
+	    	for (DataPolicy policy : allPolicies) {
 	        	if (matchesPrincipal(userRoles, policy)) {
 	        		this.policies.put(policy.getName(), policy);
 	        	}

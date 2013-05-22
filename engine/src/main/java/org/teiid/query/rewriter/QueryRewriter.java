@@ -2443,7 +2443,7 @@ public class QueryRewriter {
         int whenCount = expr.getWhenCount();
         ArrayList<Criteria> whens = new ArrayList<Criteria>(whenCount);
         ArrayList<Expression> thens = new ArrayList<Expression>(whenCount);
-
+        boolean hasTrue = false;
         for (int i = 0; i < whenCount; i++) {
             
             // Check the when to see if this CASE can be rewritten due to an always true/false when
@@ -2460,12 +2460,17 @@ public class QueryRewriter {
 	                // WHEN is always true, so just return the THEN
 	                return rewriteExpressionDirect(expr.getThenExpression(i));
             	}
+            	hasTrue = true;
             	break;
             }
         }
 
         if (expr.getElseExpression() != null) {
-        	expr.setElseExpression(rewriteExpressionDirect(expr.getElseExpression()));
+        	if (!hasTrue) {
+        		expr.setElseExpression(rewriteExpressionDirect(expr.getElseExpression()));
+        	} else {
+        		expr.setElseExpression(null);
+        	}
         }
         
         Expression elseExpr = expr.getElseExpression();

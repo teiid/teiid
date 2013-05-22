@@ -33,6 +33,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
+import org.teiid.adminapi.impl.DataPolicyMetadata;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
@@ -136,6 +137,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Map<String, ScriptEngineFactory> scriptEngineFactories = Collections.synchronizedMap(new HashMap<String, ScriptEngineFactory>());
     private Set<String> importedModels;
     private Set<String> allowedLanguages;
+    private Map<String, DataPolicyMetadata> policies = new TreeMap<String, DataPolicyMetadata>(String.CASE_INSENSITIVE_ORDER);
     
     /*
      * TODO: move caching to jboss cache structure
@@ -158,6 +160,11 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     		if (this.allowedLanguages == null) {
     			this.allowedLanguages = Collections.emptySet();
     		}
+    		for (DataPolicyMetadata policy : vdbMetadata.getDataPolicyMap().values()) {
+    			policy = policy.clone();
+    			policies.put(policy.getName(), policy);
+    		}
+    		store.processGrants(policies);
     	} else {
     		this.importedModels = Collections.emptySet();
     	}
@@ -1154,6 +1161,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 			throw new QueryMetadataException(QueryPlugin.Event.TEIID30352, modelName+TransformationMetadata.NOT_EXISTS_MESSAGE);
 		}
 		return s;
+	}
+	
+	public Map<String, DataPolicyMetadata> getPolicies() {
+		return policies;
 	}
 	
 }

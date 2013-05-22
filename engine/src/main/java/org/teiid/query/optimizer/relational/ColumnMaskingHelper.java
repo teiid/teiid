@@ -153,6 +153,7 @@ public class ColumnMaskingHelper {
 			thens.add(whenThen.then);
 		}
 		SearchedCaseExpression sce = new SearchedCaseExpression(whens, thens);
+		sce.setElseExpression(col);
 		sce.setType(expectedType);
 		Expression mask = QueryRewriter.rewriteExpression(sce, cc, metadata, true);
 		return mask;

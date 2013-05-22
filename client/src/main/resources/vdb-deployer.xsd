@@ -114,7 +114,7 @@
 					<xs:complexType>
 						<xs:sequence>
 							<xs:element name="description" type="xs:string" minOccurs="0"/>
-                            <xs:element name="permission" minOccurs="1" maxOccurs="unbounded">
+                            <xs:element name="permission" minOccurs="0" maxOccurs="unbounded">
                                 <xs:complexType>
                                     <xs:sequence>                            
 							             <xs:element name="resource-name" type="xs:string"/>

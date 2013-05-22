@@ -109,7 +109,7 @@ public class TestVDBMetaData {
 		
 		assertTrue(roles.size() == 1);
 		
-		DataPolicyMetadata role = vdb.getDataPolicy("roleOne"); //$NON-NLS-1$
+		DataPolicyMetadata role = vdb.getDataPolicyMap().get("roleOne"); //$NON-NLS-1$
 		assertTrue(role.isAllowCreateTemporaryTables());
 		assertEquals("roleOne described", role.getDescription()); //$NON-NLS-1$
 		assertNotNull(role.getMappedRoleNames());

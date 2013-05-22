@@ -975,7 +975,7 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteCaseExpr1a() {
-        helpTestRewriteCriteria("case when pm1.g1.e1 = 'a' then 3 when 0=0 then 1 when 1=1 then 4 else 2 end = 1", "CASE WHEN pm1.g1.e1 = 'a' THEN 3 WHEN 1 = 1 THEN 1 ELSE 2 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("case when pm1.g1.e1 = 'a' then 3 when 0=0 then 1 when 1=1 then 4 else 2 end = 1", "CASE WHEN pm1.g1.e1 = 'a' THEN 3 WHEN 1 = 1 THEN 1 END = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
 
     // First WHEN always false, so rewrite as ELSE expression

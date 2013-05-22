@@ -182,7 +182,7 @@ public abstract class RuntimeVDB {
 	
 	private DataPolicyMetadata getPolicy(String policyName)
 			throws AdminProcessingException {
-		DataPolicyMetadata policy = vdb.getDataPolicy(policyName);
+		DataPolicyMetadata policy = vdb.getDataPolicyMap().get(policyName);
 		
 		if (policy == null) {
 			 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40092, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40092, policyName, vdb.getName(), vdb.getVersion()));
