@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -63,19 +63,19 @@ import org.teiid.adminapi.impl.VDBTranslatorMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 
 
-/** 
+/**
  * Singleton factory for class for creating Admin connections to the Teiid
  */
 @SuppressWarnings("nls")
 public class AdminFactory {
-	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());	
+	private static final Logger LOGGER = Logger.getLogger(AdminFactory.class.getName());
 	private static AdminFactory INSTANCE = new AdminFactory();
-	
+
 	public static AdminFactory getInstance() {
 		return INSTANCE;
 	}
     /**
-     * Creates a ServerAdmin with the specified connection properties. 
+     * Creates a ServerAdmin with the specified connection properties.
      * @param userName
      * @param password
      * @param serverURL
@@ -98,23 +98,23 @@ public class AdminFactory {
 
             List<String> nodeTypes = Util.getNodeTypes(newClient, new DefaultOperationRequestAddress());
             if (!nodeTypes.isEmpty()) {
-                boolean domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$ 
-                LOGGER.info("Connected to " //$NON-NLS-1$ 
+                boolean domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
+                LOGGER.info("Connected to " //$NON-NLS-1$
                         + (domainMode ? "domain controller at " : "standalone controller at ") //$NON-NLS-1$ //$NON-NLS-2$
-                        + host + ":" + port); //$NON-NLS-1$ 
+                        + host + ":" + port); //$NON-NLS-1$
                 return new AdminImpl(newClient);
-            } 
+            }
             LOGGER.info(AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70051, host, port)); //$NON-NLS-1$ //$NON-NLS-2$
         } catch (UnknownHostException e) {
         	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70000, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70000, host, e.getLocalizedMessage()));
         }
         return null;
     }
-    
+
     public Admin createAdmin(ModelControllerClient connection) {
     	return new AdminImpl(connection);
     }
-    
+
     private class AuthenticationCallbackHandler implements CallbackHandler {
         private boolean realmShown = false;
         private String userName = null;
@@ -124,7 +124,7 @@ public class AdminFactory {
         	this.userName = user;
         	this.password = password;
         }
-        
+
         public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
             // Special case for anonymous authentication to avoid prompting user for their name.
             if (callbacks.length == 1 && callbacks[0] instanceof NameCallback) {
@@ -137,25 +137,25 @@ public class AdminFactory {
                     RealmCallback rcb = (RealmCallback) current;
                     String defaultText = rcb.getDefaultText();
                     rcb.setText(defaultText); // For now just use the realm suggested.
-                    if (realmShown == false) {
-                        realmShown = true;
+                    if (this.realmShown == false) {
+                        this.realmShown = true;
                     }
                 } else if (current instanceof RealmChoiceCallback) {
                     throw new UnsupportedCallbackException(current, "Realm choice not currently supported."); //$NON-NLS-1$
                 } else if (current instanceof NameCallback) {
                     NameCallback ncb = (NameCallback) current;
-                    ncb.setName(userName);
+                    ncb.setName(this.userName);
                 } else if (current instanceof PasswordCallback) {
                     PasswordCallback pcb = (PasswordCallback) current;
-                    pcb.setPassword(password);
+                    pcb.setPassword(this.password);
                 } else {
                     throw new UnsupportedCallbackException(current);
                 }
             }
         }
 
-    }    
-    
+    }
+
 	private class ResultCallback {
 		@SuppressWarnings("unused")
 		void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
@@ -163,29 +163,29 @@ public class AdminFactory {
 		void onFailure(String msg) throws AdminProcessingException {
 			throw new AdminProcessingException(AdminPlugin.Event.TEIID70006, msg);
 		}
-	}    
-    
+	}
+
     public class AdminImpl implements Admin{
     	private static final String CLASS_NAME = "class-name";
 		private static final String JAVA_CONTEXT = "java:/";
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
     	private String profileName;
-    	
+
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
             List<String> nodeTypes = Util.getNodeTypes(connection, new DefaultOperationRequestAddress());
             if (!nodeTypes.isEmpty()) {
-                domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
-            }     		
+                this.domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
+            }
     	}
-    	
+
 		@Override
 		public void clearCache(String cacheType) throws AdminException {
 			cliCall("clear-cache",
 					new String[] { "subsystem", "teiid" },
 					new String[] { "cache-type", cacheType},
-					new ResultCallback());	        
+					new ResultCallback());
 		}
 
 		@Override
@@ -200,27 +200,27 @@ public class AdminFactory {
 		public void close() {
 			if (this.connection != null) {
 		        try {
-		        	connection.close();
+		        	this.connection.close();
 		        } catch (Throwable t) {
 		        	//ignore
-		        }				
+		        }
 		        this.connection = null;
 				this.domainMode = false;
 			}
 		}
-		
+
 		private void createConnectionFactory(String deploymentName,	String rarName, Properties properties)	throws AdminException {
 
 			if (!getInstalledResourceAdaptorNames().contains(rarName)) {
 				///subsystem=resource-adapters/resource-adapter=fileDS:add
 				addResourceAdapter(rarName);
 			}
-			
+
 			BuildPropertyDefinitions bpd = new BuildPropertyDefinitions();
 			buildResourceAdpaterProperties(rarName, bpd);
 			ArrayList<PropertyDefinition> jcaSpecific = bpd.getPropertyDefinitions();
-			
-			///subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS:add(jndi-name=java\:\/fooDS)       
+
+			///subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS:add(jndi-name=java\:\/fooDS)
 	        ArrayList<String> parameters = new ArrayList<String>();
 	        parameters.add("jndi-name");
 	        parameters.add(addJavaContext(deploymentName));
@@ -228,22 +228,22 @@ public class AdminFactory {
 	        parameters.add("true");
             if (properties.getProperty(CLASS_NAME) != null) {
     	        parameters.add(CLASS_NAME);
-    	        parameters.add(properties.getProperty(CLASS_NAME));            	
-            }	 
-            
+    	        parameters.add(properties.getProperty(CLASS_NAME));
+            }
+
             // add jca specific proeprties
             for (PropertyDefinition pd:jcaSpecific) {
                 if (properties.getProperty(pd.getName()) != null) {
         	        parameters.add(pd.getName());
-        	        parameters.add(properties.getProperty(pd.getName()));            	
+        	        parameters.add(properties.getProperty(pd.getName()));
                 }
             }
-            	
+
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
 					"resource-adapter", rarName,
-					"connection-definitions", deploymentName }, 
+					"connection-definitions", deploymentName },
 					parameters.toArray(new String[parameters.size()]), new ResultCallback());
-	        
+
 	        // add all the config properties
             Enumeration keys = properties.propertyNames();
             while (keys.hasMoreElements()) {
@@ -262,26 +262,26 @@ public class AdminFactory {
             		addConfigProperty(rarName, deploymentName, key, properties.getProperty(key));
             	}
             }
-            
-            // activate 
+
+            // activate
             activateConnectionFactory(rarName);
 		}
-		
+
 
 		// /subsystem=resource-adapters/resource-adapter=fileDS/connection-definitions=fileDS/config-properties=ParentDirectory2:add(value=/home/rareddy/testing)
 		private void addConfigProperty(String rarName, String deploymentName, String key, String value) throws AdminProcessingException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
-					"resource-adapter", rarName, 
+					"resource-adapter", rarName,
 					"connection-definitions", deploymentName,
 					"config-properties", key},
-					new String[] {"value", value}, new ResultCallback());	        
+					new String[] {"value", value}, new ResultCallback());
 		}
-		
+
 		// /subsystem=resource-adapters/resource-adapter=fileDS:activate
 		private void activateConnectionFactory(String rarName) throws AdminProcessingException {
 			cliCall("activate", new String[] { "subsystem", "resource-adapters",
 					"resource-adapter", rarName },
-					null, new ResultCallback());	        
+					null, new ResultCallback());
 		}
 
 		private void addProfileNode(DefaultOperationRequestBuilder builder) throws AdminProcessingException {
@@ -297,10 +297,10 @@ public class AdminFactory {
 		private void addResourceAdapter(String rarName) throws AdminProcessingException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
 					"resource-adapter", rarName },
-					new String[] { "archive", rarName, "transaction-support","NoTransaction" }, 
+					new String[] { "archive", rarName, "transaction-support","NoTransaction" },
 					new ResultCallback());
 		}
-		
+
 		class AbstractMetadatMapper implements MetadataMapper<String>{
 			@Override
 			public ModelNode wrap(String obj, ModelNode node) {
@@ -314,8 +314,8 @@ public class AdminFactory {
 			public ModelNode describe(ModelNode node) {
 				return null;
 			}
-		}		
-		
+		}
+
 		public Set<String> getInstalledJDBCDrivers() throws AdminProcessingException {
 			HashSet<String> driverList = new HashSet<String>();
 			driverList.addAll(getChildNodeNames("datasources", "jdbc-driver"));
@@ -339,7 +339,7 @@ public class AdminFactory {
 		            }
 		        } catch (Exception e) {
 		        	throw new AdminProcessingException(AdminPlugin.Event.TEIID70052, e);
-		        }	
+		        }
 			}
 			else {
 				// TODO: AS7 needs to provide better way to query the deployed JDBC drivers
@@ -348,11 +348,11 @@ public class AdminFactory {
 	            	if (!deployment.contains("translator") && deployment.endsWith(".jar")) {
 	            		driverList.add(deployment);
 	            	}
-	            }				
+	            }
 			}
 	        return driverList;
-		}		
-		
+		}
+
 		public String getProfileName() throws AdminProcessingException {
 			if (!this.domainMode) {
 				return null;
@@ -361,35 +361,35 @@ public class AdminFactory {
 				this.profileName = getChildNodeNames(null, "profile").get(0);
 			}
 			return this.profileName;
-		}		
-		
+		}
+
 		@Override
 		public void createDataSource(String deploymentName,	String templateName, Properties properties)	throws AdminException {
 			deploymentName = removeJavaContext(deploymentName);
-			
+
 			Collection<String> dsNames = getDataSourceNames();
 			if (dsNames.contains(deploymentName)) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70003, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70003, deploymentName));
 			}
-			
+
 			Set<String> resourceAdapters = getResourceAdapterNames();
         	if (resourceAdapters.contains(templateName)) {
 	            createConnectionFactory(deploymentName, templateName, properties);
 	            return;
         	}
-			
+
         	Set<String> drivers = getInstalledJDBCDrivers();
         	if (!drivers.contains(templateName)) {
         		 throw new AdminProcessingException(AdminPlugin.Event.TEIID70004, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70004, templateName));
         	}
-        	
+
         	// build properties
-        	Collection<PropertyDefinition> dsProperties = getTemplatePropertyDefinitions(templateName); 
+        	Collection<PropertyDefinition> dsProperties = getTemplatePropertyDefinitions(templateName);
         	ArrayList<String> parameters = new ArrayList<String>();
             if (properties != null) {
             	parameters.add("connection-url");
-            	parameters.add(properties.getProperty("connection-url")); 
-            	
+            	parameters.add(properties.getProperty("connection-url"));
+
 	            for (PropertyDefinition prop : dsProperties) {
 	            	if (prop.getName().equals("connection-properties")) {
 	            		continue;
@@ -397,27 +397,27 @@ public class AdminFactory {
 	            	String value = properties.getProperty(prop.getName());
 	            	if (value != null) {
 	                	parameters.add(prop.getName());
-	                	parameters.add(value); 	            		
+	                	parameters.add(value);
 	            	}
-	            }		            
+	            }
             }
             else {
             	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70005, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70005));
-            }        	
+            }
 
         	parameters.add("jndi-name");
         	parameters.add(addJavaContext(deploymentName));
         	parameters.add("driver-name");
-        	parameters.add(templateName);        	
+        	parameters.add(templateName);
         	parameters.add("pool-name");
-        	parameters.add(deploymentName);             
+        	parameters.add(deploymentName);
 
         	// add data source
 			cliCall("add", new String[] { "subsystem", "datasources","data-source", deploymentName },
 					parameters.toArray(new String[parameters.size()]),
 					new ResultCallback());
 
-	        // add connection properties that are specific to driver 
+	        // add connection properties that are specific to driver
             String cp = properties.getProperty("connection-properties");
             if (cp != null) {
             	StringTokenizer st = new StringTokenizer(cp, ",");
@@ -430,18 +430,18 @@ public class AdminFactory {
             }
 
 	        // issue the "enable" operation
-			cliCall("enable", new String[] { "subsystem", "datasources","data-source", deploymentName }, 
+			cliCall("enable", new String[] { "subsystem", "datasources","data-source", deploymentName },
 					null, new ResultCallback());
 		}
-		
+
 		// /subsystem=datasources/data-source=DS/connection-properties=foo:add(value=/home/rareddy/testing)
 		private void addConnectionProperty(String deploymentName, String key, String value) throws AdminProcessingException {
 			cliCall("add", new String[] { "subsystem", "datasources",
 					"data-source", deploymentName,
-					"connection-properties", key }, 
+					"connection-properties", key },
 					new String[] {"value", value }, new ResultCallback());
 		}
-		
+
 		private void execute(final ModelNode request) throws AdminProcessingException {
 			try {
 	            ModelNode outcome = this.connection.execute(request);
@@ -452,48 +452,48 @@ public class AdminFactory {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70007, e);
 	        }
 		}
-		
+
 		@Override
 		public Properties getDataSource(String deployedName) throws AdminException {
 			deployedName = removeJavaContext(deployedName);
-			
+
 			Collection<String> dsNames = getDataSourceNames();
 			if (!dsNames.contains(deployedName)) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
-			
+
 			Properties dsProperties = new Properties();
-			
+
 			// check regular data-source
-			cliCall("read-resource", 
+			cliCall("read-resource",
 					new String[] { "subsystem", "datasources", "data-source", deployedName}, null,
 					new DataSourceProperties(dsProperties));
-			
+
 			// check xa connections
 			if (dsProperties.isEmpty()) {
-				cliCall("read-resource", 
-						new String[] {"subsystem", "datasources", "xa-data-source", deployedName}, null, 
+				cliCall("read-resource",
+						new String[] {"subsystem", "datasources", "xa-data-source", deployedName}, null,
 						new DataSourceProperties(dsProperties));
 			}
-			
+
 			// check connection factories
 			if (dsProperties.isEmpty()) {
 				Map<String, String> raDSMap = getConnectionFactoryNames();
 				// deployed rar name, may be it is == deployedName or if server restarts it will be rar name or rar->[1..n] name
 				String rarName = raDSMap.get(deployedName);
 				if (rarName != null) {
-					cliCall("read-resource", 
-							new String[] { "subsystem", "resource-adapters", "resource-adapter", rarName, "connection-definitions", deployedName}, 
+					cliCall("read-resource",
+							new String[] { "subsystem", "resource-adapters", "resource-adapter", rarName, "connection-definitions", deployedName},
 							null, new ConnectionFactoryProperties(dsProperties, rarName, deployedName, null));
-				} 
+				}
 			}
 			return dsProperties;
 		}
-		
+
 		private class DataSourceProperties extends ResultCallback {
 			private Properties dsProperties;
 			DataSourceProperties(Properties props){
-				dsProperties = props;
+				this.dsProperties = props;
 			}
 			@Override
 			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
@@ -504,7 +504,7 @@ public class AdminFactory {
         				ModelType type = p.getValue().getType();
         				if (p.getValue().isDefined() && !type.equals(ModelType.LIST) && !type.equals(ModelType.OBJECT)) {
         					if (!excludeProperty(p.getName()) || p.getName().equals("driver-name")) {
-        						dsProperties.setProperty(p.getName(), p.getValue().asString());
+        						this.dsProperties.setProperty(p.getName(), p.getValue().asString());
         					}
         				}
         			}
@@ -513,21 +513,21 @@ public class AdminFactory {
 			@Override
 			public void onFailure(String msg) throws AdminProcessingException {
 			}
-		}		
-		
+		}
+
 		private class ConnectionFactoryProperties extends ResultCallback {
 			private Properties dsProperties;
 			private String deployedName;
 			private String rarName;
 			private String configName;
-			
+
 			ConnectionFactoryProperties(Properties props, String rarName, String deployedName, String configName){
 				this.dsProperties = props;
 				this.rarName = rarName;
 				this.deployedName = deployedName;
 				this.configName = configName;
 			}
-			
+
 			@Override
 			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
 	    		List<ModelNode> props = outcome.get("result").asList();
@@ -540,11 +540,11 @@ public class AdminFactory {
     					continue;
     				}
 					if (p.getName().equals("archive")) {
-						dsProperties.setProperty("driver-name", p.getValue().asString());
+						this.dsProperties.setProperty("driver-name", p.getValue().asString());
 					}
 					if (p.getName().equals("value")) {
-						dsProperties.setProperty(this.configName, p.getValue().asString());
-					}		        						
+						this.dsProperties.setProperty(this.configName, p.getValue().asString());
+					}
 					else if (p.getName().equals("config-properties")) {
 						List<ModelNode> configs = p.getValue().asList();
 						for (ModelNode config:configs) {
@@ -553,15 +553,15 @@ public class AdminFactory {
 								//getConnectionFactoryProperties(rarName, dsProps, subsystem[0], subsystem[1], subsystem[2], subsystem[3], );
 								cliCall("read-resource",
 										new String[] {"subsystem","resource-adapters",
-												"resource-adapter",rarName,
-												"connection-definitions",deployedName,
-												"config-properties",p1.getName()}, null, 
+												"resource-adapter",this.rarName,
+												"connection-definitions",this.deployedName,
+												"config-properties",p1.getName()}, null,
 												new ConnectionFactoryProperties(this.dsProperties, this.rarName, this.deployedName, p1.getName()));
 							}
 						}
 					}
 					else {
-						dsProperties.setProperty(p.getName(), p.getValue().asString());
+						this.dsProperties.setProperty(p.getName(), p.getValue().asString());
 					}
         		}
 			}
@@ -570,23 +570,23 @@ public class AdminFactory {
 			public void onFailure(String msg) throws AdminProcessingException {
 			}
 		}
-		
+
 		@Override
 		public void deleteDataSource(String deployedName) throws AdminException {
 			deployedName = removeJavaContext(deployedName);
-			
+
 			Collection<String> dsNames = getDataSourceNames();
 			if (!dsNames.contains(deployedName)) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
 			}
-			
+
 			boolean deleted = deleteDS(deployedName,"datasources", "data-source");
-			
+
 			// check xa connections
 			if (!deleted) {
 				deleted = deleteDS(deployedName,"datasources", "xa-data-source");
 			}
-			
+
 			// check connection factories
 			if (!deleted) {
 				Map<String, String> raDSMap = getConnectionFactoryNames();
@@ -599,7 +599,7 @@ public class AdminFactory {
 							new ResultCallback());
 				}
 			}
-			
+
 			dsNames = getDataSourceNames();
 			if (dsNames.contains(deployedName)) {
 				throw new AdminProcessingException(AdminPlugin.Event.TEIID70008, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70008, deployedName));
@@ -612,29 +612,29 @@ public class AdminFactory {
 			}
 			return deployedName;
 		}
-		
+
 		private String addJavaContext(String deployedName) {
 			if (!deployedName.startsWith(JAVA_CONTEXT)) {
 				deployedName = JAVA_CONTEXT+deployedName;
 			}
 			return deployedName;
-		}		
+		}
 
 		private boolean deleteDS(String deployedName, String... subsystem) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
-	        
+
 	        try {
 	        	addProfileNode(builder);
-	        	
+
 	            builder.addNode("subsystem", subsystem[0]); //$NON-NLS-1$ //$NON-NLS-2$
 	            builder.addNode(subsystem[1], deployedName);
-	            builder.setOperationName("remove"); 
+	            builder.setOperationName("remove");
 	            request = builder.buildRequest();
 	        } catch (OperationFormatException e) {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        }
-			
+
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
@@ -649,24 +649,24 @@ public class AdminFactory {
 		@Override
 		public void undeploy(String deployedName) throws AdminException {
 			ModelNode request;
-			try {			
+			try {
 				request = buildUndeployRequest(deployedName, false);
 	        } catch (OperationFormatException e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70010, e);
 	        }
 			execute(request);
 		}
-		
+
 		public void undeploy(String deployedName, boolean force) throws AdminException {
 			ModelNode request;
-			try {			
+			try {
 				request = buildUndeployRequest(deployedName, force);
 	        } catch (OperationFormatException e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70010, e);
 	        }
 			execute(request);
-		}		
-		
+		}
+
 	    public ModelNode buildUndeployRequest(String name, boolean force) throws OperationFormatException {
 	        ModelNode composite = new ModelNode();
 	        composite.get("operation").set("composite");
@@ -699,7 +699,7 @@ public class AdminFactory {
             builder.setOperationName("remove");
             builder.addNode("deployment", name);
             steps.add(builder.buildRequest());
-            
+
 	        return composite;
 	    }
 
@@ -708,11 +708,11 @@ public class AdminFactory {
 			ModelNode request = buildDeployVDBRequest(deployName, vdb, true);
 			execute(request);
 		}
-		
+
 		public void deploy(String deployName, InputStream vdb, boolean persist)	throws AdminException {
 			ModelNode request = buildDeployVDBRequest(deployName, vdb, persist);
 			execute(request);
-		}		
+		}
 
 		private ModelNode buildDeployVDBRequest(String fileName, InputStream vdb, boolean persist) throws AdminProcessingException {
             try {
@@ -724,15 +724,15 @@ public class AdminFactory {
 	                builder.addProperty("name", fileName);
 	                byte[] bytes = ObjectConverterUtil.convertToByteArray(vdb);
 	                builder.getModelNode().get("content").get(0).get("bytes").set(bytes);
-	                return builder.buildRequest();                
+	                return builder.buildRequest();
 				}
-				
+
 				//add
 		        ModelNode composite = new ModelNode();
 		        composite.get("operation").set("composite");
 		        composite.get("address").setEmptyList();
-		        ModelNode steps = composite.get("steps");			
-				
+		        ModelNode steps = composite.get("steps");
+
 				DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	            builder.setOperationName("add");
 	            builder.addNode("deployment", fileName);
@@ -743,10 +743,10 @@ public class AdminFactory {
 				ModelNode request = builder.buildRequest();
 	            if (!persist) {
 	            	request.get("persistent").set(false); // prevents writing this deployment out to standalone.xml
-	            }		
+	            }
 	            request.get("enabled").set(true);
 				steps.add(request);
-            
+
 	            // deploy
 	            if (this.domainMode) {
 	            	List<String> serverGroups = Util.getServerGroups(this.connection);
@@ -763,16 +763,16 @@ public class AdminFactory {
 					request = builder.buildRequest();
 		            if (!persist) {
 		            	request.get("persistent").set(false); // prevents writing this deployment out to standalone.xml
-		            }	        
+		            }
 		            request.get("enabled").set(true);
 	                steps.add(request);
-	            }     
+	            }
 	            return composite;
 			} catch (OperationFormatException e) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70011, e);
 			} catch (IOException e) {
 				 throw new AdminProcessingException(AdminPlugin.Event.TEIID70011, e);
-			}      
+			}
 		}
 
 		@Override
@@ -787,19 +787,19 @@ public class AdminFactory {
 	            	if (outcome.hasDefined("result")) {
 	            		ModelNode result = outcome.get("result");
 	            		return Arrays.asList(VDBMetadataMapper.CacheStatisticsMetadataMapper.INSTANCE.unwrap(result));
-	            	}	     
+	            	}
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
 	        }
 	        return null;
 		}
-		
+
 		@Override
 		public Collection<? extends EngineStatistics> getEngineStats() throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "engine-statistics");//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
-	            ModelNode outcome = this.connection.execute(request);	            
+	            ModelNode outcome = this.connection.execute(request);
 	            if (Util.isSuccess(outcome)) {
 	            	if (this.domainMode) {
 	            		return getDomainAwareList(outcome, VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE);
@@ -807,13 +807,13 @@ public class AdminFactory {
 	            	if (outcome.hasDefined("result")) {
 	            		ModelNode result = outcome.get("result");
 	            		return Arrays.asList(VDBMetadataMapper.EngineStatisticsMetadataMapper.INSTANCE.unwrap(result));
-	            	}	     
-	            }	            
+	            	}
+	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70013, e);
 	        }
 	        return null;
-		}		
+		}
 
 		@Override
 		public Collection<String> getCacheTypes() throws AdminException {
@@ -843,10 +843,10 @@ public class AdminFactory {
 	        } catch (IOException e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70015, e);
 	        }
-	        return Collections.emptyList();	
-			
+	        return Collections.emptyList();
+
 		}
-		
+
 		/**
 		 * /subsystem=datasources:read-children-names(child-type=data-source)
 		 * /subsystem=resource-adapters/resource-adapter={rar-file}:read-resource
@@ -858,7 +858,7 @@ public class AdminFactory {
 			datasourceNames.addAll(getChildNodeNames("datasources", "data-source"));
 			datasourceNames.addAll(getChildNodeNames("datasources", "xa-data-source"));
 			datasourceNames.addAll(getConnectionFactoryNames().keySet());
-			
+
 			Set<String> dsNames = new HashSet<String>();
 			for (String s:datasourceNames) {
 				if (s.startsWith(JAVA_CONTEXT)) {
@@ -868,7 +868,7 @@ public class AdminFactory {
 					dsNames.add(s);
 				}
 			}
-	        return dsNames;	
+	        return dsNames;
 		}
 
 		private Map<String, String> getConnectionFactoryNames() throws AdminException {
@@ -879,7 +879,7 @@ public class AdminFactory {
 			}
 			return datasourceNames;
 		}
-		
+
 		private void getRAConnections(final HashMap<String, String> datasourceNames, final String rarName) throws AdminProcessingException {
 			cliCall("read-resource", new String[] {"subsystem", "resource-adapters", "resource-adapter", rarName}, null, new ResultCallback() {
 				@Override
@@ -892,7 +892,7 @@ public class AdminFactory {
 		        				datasourceNames.put(it.next(), rarName);
 		        			}
 		        		}
-		        	}				
+		        	}
 		        }
 				@Override
 				public void onFailure(String msg) throws AdminProcessingException {
@@ -900,7 +900,7 @@ public class AdminFactory {
 				}
 			});
 		}
-		
+
 		/**
 		 * This will get all deployed RAR names
 		 * /subsystem=resource-adapters:read-children-names(child-type=resource-adapter)
@@ -910,7 +910,7 @@ public class AdminFactory {
 		private Set<String> getInstalledResourceAdaptorNames() throws AdminProcessingException {
 			Set<String> templates = new HashSet<String>();
 			templates.addAll(getChildNodeNames("resource-adapters", "resource-adapter"));
-	        return templates;					
+	        return templates;
 		}
 
 		// :read-children-names(child-type=deployment)
@@ -930,7 +930,7 @@ public class AdminFactory {
             }
 			return templates;
 		}
-		
+
 		public List<String> getDeployments(){
 			return Util.getDeployments(this.connection);
 		}
@@ -942,7 +942,7 @@ public class AdminFactory {
 			templates.addAll(getResourceAdapterNames());
 			return templates;
 		}
-		
+
 		@Override
 		public Collection<? extends WorkerPoolStatistics> getWorkerPoolStats() throws AdminProcessingException {
 			final ModelNode request = buildRequest("teiid", "workerpool-statistics");//$NON-NLS-1$
@@ -956,16 +956,16 @@ public class AdminFactory {
 		            	if (outcome.hasDefined("result")) {
 		            		ModelNode result = outcome.get("result");
 		            		return Arrays.asList(VDBMetadataMapper.WorkerPoolStatisticsMetadataMapper.INSTANCE.unwrap(result));
-		            	}		            
-		            }	
+		            	}
+		            }
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70020, e);
 		        }
 			}
 	        return null;
-		}		
+		}
 
-		
+
 		@Override
 		public void cancelRequest(String sessionId, long executionId) throws AdminProcessingException {
 			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId, "execution-id", String.valueOf(executionId));//$NON-NLS-1$
@@ -979,9 +979,9 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70022, e);
-	        }		
+	        }
 		}
-		
+
 		@Override
 		public Collection<? extends Request> getRequests() throws AdminException {
 			final ModelNode request = buildRequest("teiid", "list-requests");//$NON-NLS-1$
@@ -991,7 +991,7 @@ public class AdminFactory {
 		            if (Util.isSuccess(outcome)) {
 		                return getDomainAwareList(outcome, RequestMetadataMapper.INSTANCE);
 		            }
-		            
+
 		        } catch (Exception e) {
 		        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70023, e);
 		        }
@@ -1035,20 +1035,20 @@ public class AdminFactory {
 		 * /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar/connection-definitions=foo:read-resource-description
 		 */
 		private void buildResourceAdpaterProperties(String rarName, BuildPropertyDefinitions builder) throws AdminProcessingException {
-			cliCall("read-resource-description", new String[] { "subsystem","resource-adapters", 
+			cliCall("read-resource-description", new String[] { "subsystem","resource-adapters",
 					"resource-adapter", rarName,
 					"connection-definitions", "any" }, null, builder);
 		}
-		
+
 		/**
 		 * pattern on CLI
 		 * /subsystem=datasources/data-source=foo:read-resource-description
 		 */
-		@Override		
+		@Override
 		public Collection<PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException {
 
 			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
-			
+
 			// RAR properties
 			Set<String> resourceAdapters = getResourceAdapterNames();
         	if (resourceAdapters.contains(templateName)) {
@@ -1059,7 +1059,7 @@ public class AdminFactory {
 
         	// get JDBC properties
     		cliCall("read-resource-description", new String[] {"subsystem", "datasources", "data-source", templateName}, null, builder);
-        	
+
 	        // add driver specific properties
 	        PropertyDefinitionMetadata cp = new PropertyDefinitionMetadata();
 	        cp.setName("connection-properties");
@@ -1071,10 +1071,10 @@ public class AdminFactory {
 	        props.add(cp);
 	        return props;
 		}
-		
+
 		private class BuildPropertyDefinitions extends ResultCallback{
 			private ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();
-			
+
 			@Override
 			public void onSuccess(ModelNode outcome, ModelNode result) throws AdminProcessingException {
 				if (result.getType().equals(ModelType.LIST)) {
@@ -1089,34 +1089,34 @@ public class AdminFactory {
 			public void onFailure(String msg) throws AdminProcessingException {
 				throw new AdminProcessingException(AdminPlugin.Event.TEIID70026, msg);
 			}
-			
+
 			ArrayList<PropertyDefinition> getPropertyDefinitions() {
 				return this.propDefinitions;
 			}
-		
+
 			private void buildPropertyDefinitions(List<ModelNode> propsNodes) {
 	        	for (ModelNode node:propsNodes) {
 	        		PropertyDefinitionMetadata def = new PropertyDefinitionMetadata();
 	        		Set<String> keys = node.keys();
-	        		
+
 	        		String name = keys.iterator().next();
 	        		if (excludeProperty(name)) {
 	        			continue;
 	        		}
 	        		def.setName(name);
 	        		node = node.get(name);
-	
+
 	        		if (node.hasDefined("display")) {
 	        			def.setDisplayName(node.get("display").asString());
 	        		}
 	        		else {
 	        			def.setDisplayName(name);
 	        		}
-	        		
+
 	        		if (node.hasDefined("description")) {
 	        			def.setDescription(node.get("description").asString());
 	        		}
-	        		
+
 	        		if (node.hasDefined("allowed")) {
 	        			List<ModelNode> allowed = node.get("allowed").asList();
 	        			ArrayList<String> list = new ArrayList<String>();
@@ -1124,17 +1124,17 @@ public class AdminFactory {
 	        				list.add(m.asString());
 	        			}
 	        			def.setAllowedValues(list);
-	        		}        		
-	        		
+	        		}
+
 	        		if (node.hasDefined("required")) {
 	        			def.setRequired(node.get("required").asBoolean());
 	        		}
-	        		
+
 	        		if (node.hasDefined("read-only")) {
 	        			String access = node.get("read-only").asString();
 	        			def.setModifiable(!Boolean.parseBoolean(access));
 	        		}
-	        		
+
 	        		if (node.hasDefined("access-type")) {
 	        			String access = node.get("access-type").asString();
 	        			if ("read-write".equals(access)) {
@@ -1143,22 +1143,22 @@ public class AdminFactory {
 	        			else {
 	        				def.setModifiable(false);
 	        			}
-	        		}       
-	        		
+	        		}
+
 	        		if (node.hasDefined("advanced")) {
 	        			String access = node.get("advanced").asString();
 	        			def.setAdvanced(Boolean.parseBoolean(access));
-	        		}        		
-	        		
+	        		}
+
 	        		if (node.hasDefined("masked")) {
 	        			String access = node.get("masked").asString();
 	        			def.setAdvanced(Boolean.parseBoolean(access));
-	        		} 
-	        		
+	        		}
+
 	        		if (node.hasDefined("restart-required")) {
 	        			def.setRequiresRestart(RestartType.NONE);
 	        		}
-	
+
 	        		String type = node.get("type").asString();
 	        		if (ModelType.STRING.name().equals(type)) {
 	        			def.setPropertyTypeClassName(String.class.getName());
@@ -1168,17 +1168,17 @@ public class AdminFactory {
 	        		}
 	        		else if (ModelType.LONG.name().equals(type)) {
 	        			def.setPropertyTypeClassName(Long.class.getName());
-	        		}        		
+	        		}
 	        		else if (ModelType.BOOLEAN.name().equals(type)) {
 	        			def.setPropertyTypeClassName(Boolean.class.getName());
 	        		}
 	        		else if (ModelType.BIG_INTEGER.name().equals(type)) {
 	        			def.setPropertyTypeClassName(BigInteger.class.getName());
-	        		}        		
+	        		}
 	        		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
 	        			def.setPropertyTypeClassName(BigDecimal.class.getName());
-	        		}     
-	        		
+	        		}
+
 	        		if (node.hasDefined("default")) {
 	            		if (ModelType.STRING.name().equals(type)) {
 	            			def.setDefaultValue(node.get("default").asString());
@@ -1188,16 +1188,16 @@ public class AdminFactory {
 	            		}
 	            		else if (ModelType.LONG.name().equals(type)) {
 	            			def.setDefaultValue(node.get("default").asLong());
-	            		}        		
+	            		}
 	            		else if (ModelType.BOOLEAN.name().equals(type)) {
 	            			def.setDefaultValue(node.get("default").asBoolean());
 	            		}
 	            		else if (ModelType.BIG_INTEGER.name().equals(type)) {
 	            			def.setDefaultValue(node.get("default").asBigInteger());
-	            		}        		
+	            		}
 	            		else if (ModelType.BIG_DECIMAL.name().equals(type)) {
 	            			def.setDefaultValue(node.get("default").asBigDecimal());
-	            		}          			
+	            		}
 	        		}
 	        		this.propDefinitions.add(def);
 	        	}
@@ -1205,8 +1205,8 @@ public class AdminFactory {
 		}
 
 		private boolean excludeProperty(String name) {
-			String[] names = { "jndi-name", 
-					"pool-name", 
+			String[] names = { "jndi-name",
+					"pool-name",
 					"driver-name",
 					"reauth-plugin-class-name", "enabled",
 					"valid-connection-checker-class-name",
@@ -1247,7 +1247,7 @@ public class AdminFactory {
 			}
 	        return Collections.emptyList();
 		}
-		
+
 		@Override
 		public void terminateSession(String sessionId) throws AdminException {
 			final ModelNode request = buildRequest("teiid", "terminate-session", "session", sessionId);//$NON-NLS-1$
@@ -1261,7 +1261,7 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70030, e);
-	        }			
+	        }
 		}
 
 		@Override
@@ -1277,8 +1277,8 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70032, e);
-	        }			
-		}		
+	        }
+		}
 
 		@Override
 		public Translator getTranslator(String deployedName) throws AdminException {
@@ -1300,12 +1300,12 @@ public class AdminFactory {
 		            		ModelNode result = outcome.get("result");
 		            		return VDBMetadataMapper.VDBTranslatorMetaDataMapper.INSTANCE.unwrap(result);
 	            		}
-	            	}	            	
+	            	}
 	            }
-	            
+
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70033, e);
-	        }			
+	        }
 			return null;
 		}
 
@@ -1328,10 +1328,10 @@ public class AdminFactory {
 	        final ModelNode request;
 	        try {
 	        	if (subsystem != null) {
-		        	addProfileNode(builder);	        		        	
+		        	addProfileNode(builder);
 		            builder.addNode("subsystem", subsystem); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
-	            builder.setOperationName(operationName); 
+	            builder.setOperationName(operationName);
 	            request = builder.buildRequest();
 	            if (params != null && params.length % 2 == 0) {
 	            	for (int i = 0; i < params.length; i+=2) {
@@ -1343,7 +1343,7 @@ public class AdminFactory {
 	        }
 			return request;
 		}
-				
+
 		private void cliCall(String operationName, String[] address, String[] params, ResultCallback callback) throws AdminProcessingException {
 			DefaultOperationRequestBuilder builder = new DefaultOperationRequestBuilder();
 	        final ModelNode request;
@@ -1355,7 +1355,7 @@ public class AdminFactory {
 	        	for (int i = 0; i < address.length; i+=2) {
 		            builder.addNode(address[i], address[i+1]); //$NON-NLS-1$ //$NON-NLS-2$
 	        	}
-	            builder.setOperationName(operationName); 
+	            builder.setOperationName(operationName);
 	            request = builder.buildRequest();
 	            if (params != null && params.length % 2 == 0) {
 	            	for (int i = 0; i < params.length; i+=2) {
@@ -1377,13 +1377,13 @@ public class AdminFactory {
 	            throw new IllegalStateException("Failed to build operation", e); //$NON-NLS-1$
 	        } catch (IOException e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70007, e);
-	        }	        
+	        }
 		}
-		
+
 		private <T> List<T> getDomainAwareList(ModelNode operationResult,  MetadataMapper<T> mapper) {
 	    	if (this.domainMode) {
 	    		List<T> returnList = new ArrayList<T>();
-	    		
+
 	    		ModelNode serverGroups = operationResult.get("server-groups");
 	    		Set<String> serverGroupNames = serverGroups.keys();
 	    		for (String serverGroupName:serverGroupNames) {
@@ -1405,32 +1405,34 @@ public class AdminFactory {
 	    				        	}
 	    				        	returnList.add(anObj);
 	    				        }
-	    						
+
 	    					}
 	    				}
 	    			}
 	    		}
 	    		return returnList;
-	    	}			
+	    	}
 	    	return getList(operationResult, mapper);
 		}
-		
+
 	    private <T> List<T> getList(ModelNode operationResult,  MetadataMapper<T> mapper) {
-	        if(!operationResult.hasDefined("result")) //$NON-NLS-1$
-	            return Collections.emptyList();
+	        if(!operationResult.hasDefined("result")) {
+				return Collections.emptyList();
+			}
 
 	        List<ModelNode> nodeList = operationResult.get("result").asList(); //$NON-NLS-1$
-	        if(nodeList.isEmpty())
-	            return Collections.emptyList();
+	        if(nodeList.isEmpty()) {
+				return Collections.emptyList();
+			}
 
 	        List<T> list = new ArrayList<T>(nodeList.size());
 	        for(ModelNode node : nodeList) {
         		list.add(mapper.unwrap(node));
 	        }
 	        return list;
-	    }		
-	    
-  
+	    }
+
+
 
 		@Override
 		public VDB getVDB(String vdbName, int vdbVersion) throws AdminException {
@@ -1451,12 +1453,12 @@ public class AdminFactory {
 		            	if (outcome.hasDefined("result")) {
 		            		ModelNode result = outcome.get("result");
 		            		return VDBMetadataMapper.INSTANCE.unwrap(result);
-		            	}	     
+		            	}
 	            	}
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70035, e);
-	        }			
+	        }
 			return null;
 		}
 
@@ -1477,7 +1479,7 @@ public class AdminFactory {
 
 		@Override
 		public void addDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "add-data-role", 
+	        final ModelNode request = buildRequest("teiid", "add-data-role",
 	        		"vdb-name", vdbName,
 	        		"vdb-version", String.valueOf(vdbVersion),
 	        		"data-role", dataRole,
@@ -1490,11 +1492,11 @@ public class AdminFactory {
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70040, e);
 	        }
-		}		
-		
+		}
+
 		@Override
 		public void removeDataRoleMapping(String vdbName, int vdbVersion, String dataRole, String mappedRoleName) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "remove-data-role", 
+	        final ModelNode request = buildRequest("teiid", "remove-data-role",
 	        		"vdb-name", vdbName,
 	        		"vdb-version", String.valueOf(vdbVersion),
 	        		"data-role", dataRole,
@@ -1506,21 +1508,21 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70042, e);
-	        }		
+	        }
 		}
 
 		@Override
 		public void setAnyAuthenticatedForDataRole(String vdbName, int vdbVersion, String dataRole, boolean anyAuthenticated) throws AdminException {
-	        ModelNode request = buildRequest("teiid", "add-anyauthenticated-role", 
+	        ModelNode request = buildRequest("teiid", "add-anyauthenticated-role",
 	        		"vdb-name", vdbName,
 	        		"vdb-version", String.valueOf(vdbVersion),
 	        		"data-role", dataRole); //$NON-NLS-1$ //$NON-NLS-2$
-	        
+
 	        if (!anyAuthenticated) {
-	        	request = buildRequest("teiid", "remove-anyauthenticated-role", 
+	        	request = buildRequest("teiid", "remove-anyauthenticated-role",
 		        		"vdb-name", vdbName,
 		        		"vdb-version", String.valueOf(vdbVersion),
-		        		"data-role", dataRole); //$NON-NLS-1$ //$NON-NLS-2$	        	
+		        		"data-role", dataRole); //$NON-NLS-1$ //$NON-NLS-2$
 	        }
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
@@ -1529,12 +1531,12 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70044, e);
-	        }			
+	        }
 		}
 
 		@Override
 		public void changeVDBConnectionType(String vdbName, int vdbVersion, ConnectionType type) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "change-vdb-connection-type", 
+	        final ModelNode request = buildRequest("teiid", "change-vdb-connection-type",
 	        		"vdb-name", vdbName,
 	        		"vdb-version", String.valueOf(vdbVersion),
 	        		"connection-type", type.name());//$NON-NLS-1$ //$NON-NLS-2$
@@ -1545,13 +1547,13 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
-	        }				
-		}		
-		
+	        }
+		}
+
 		@Override
 		public void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName,
 				String dsName) throws AdminException {
-	        final ModelNode request = buildRequest("teiid", "assign-datasource", 
+	        final ModelNode request = buildRequest("teiid", "assign-datasource",
 	        		"vdb-name", vdbName,
 	        		"vdb-version", String.valueOf(vdbVersion),
 	        		"model-name", modelName,
@@ -1565,9 +1567,9 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70048, e);
-	        }				
+	        }
 		}
-		
+
 	    @Override
 	    public void markDataSourceAvailable(String jndiName) throws AdminException {
 	        final ModelNode request = buildRequest("teiid", "mark-datasource-available","ds-name", jndiName);//$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
@@ -1578,14 +1580,14 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70050, e);
-	        }	    	
+	        }
 	    }
 
 		@Override
 		public void restartVDB(String vdbName, int vdbVersion, String... models) throws AdminException {
 			ModelNode request = null;
 			String modelNames = null;
-			
+
 			if (models != null && models.length > 0) {
 				StringBuilder sb = new StringBuilder();
 				for (int i = 0; i < models.length-1; i++) {
@@ -1594,19 +1596,19 @@ public class AdminFactory {
 				sb.append(models[models.length-1]);
 				modelNames = sb.toString();
 			}
-	        
+
 			if (modelNames != null) {
-				request = buildRequest("teiid", "restart-vdb", 
+				request = buildRequest("teiid", "restart-vdb",
 		        		"vdb-name", vdbName,
 		        		"vdb-version", String.valueOf(vdbVersion),
 		        		"model-names", modelNames);//$NON-NLS-1$ //$NON-NLS-2$
 			}
 			else {
-				request = buildRequest("teiid", "restart-vdb", 
+				request = buildRequest("teiid", "restart-vdb",
 		        		"vdb-name", vdbName,
-		        		"vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$ 			
+		        		"vdb-version", String.valueOf(vdbVersion));//$NON-NLS-1$
 			}
-	        
+
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
@@ -1614,7 +1616,7 @@ public class AdminFactory {
 	            }
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70046, e);
-	        }		        
+	        }
 		}
 
 		@Override
@@ -1622,7 +1624,7 @@ public class AdminFactory {
 				String modelName, EnumSet<SchemaObjectType> allowedTypes,
 				String typeNamePattern) throws AdminException {
 			ModelNode request = null;
-			
+
 			ArrayList<String> params = new ArrayList<String>();
 			params.add("vdb-name");
 			params.add(vdbName);
@@ -1630,7 +1632,7 @@ public class AdminFactory {
 			params.add(String.valueOf(vdbVersion));
 			params.add("model-name");
 			params.add(modelName);
-			
+
 			if (allowedTypes != null) {
 				params.add("entity-type");
 				StringBuilder sb = new StringBuilder();
@@ -1642,14 +1644,14 @@ public class AdminFactory {
 				}
 				params.add(sb.toString());
 			}
-			
+
 			if (typeNamePattern != null) {
 				params.add("entity-pattern");
 				params.add(typeNamePattern);
 			}
-			
+
 			request = buildRequest("teiid", "get-schema", params.toArray(new String[params.size()]));//$NON-NLS-1$ //$NON-NLS-2$
-			
+
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {
@@ -1676,6 +1678,15 @@ public class AdminFactory {
 	        } catch (Exception e) {
 	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70022, e);
 	        }
-		}		
+		}
+
+		@Override
+		public void restart() {
+			try {
+				cliCall("reload", new String[] {}, new String[] {}, new ResultCallback());
+			} catch (AdminProcessingException e) {
+				//ignore
+			}
+		}
     }
 }
