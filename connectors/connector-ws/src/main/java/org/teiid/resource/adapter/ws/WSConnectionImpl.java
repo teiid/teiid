@@ -22,12 +22,19 @@
 
 package org.teiid.resource.adapter.ws;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +42,13 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.activation.DataSource;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
 import javax.xml.namespace.QName;
@@ -55,7 +69,6 @@ import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.DispatchImpl;
-import org.apache.cxf.service.model.MessagePartInfo;
 import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
@@ -117,15 +130,99 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		HashMap<String, Object> responseContext = new HashMap<String, Object>();
 
 		private String endpoint;
+		private String trustStore;
+		private String trustStorePassword;
 
-		public BinaryDispatch(String endpoint) {
+		public BinaryDispatch(String endpoint, String trustStore, String trustStorePassword) {
 			this.endpoint = endpoint;
+			this.trustStore = trustStore;
+			this.trustStorePassword = trustStorePassword;
 		}
+
+	    class TeiidHostnameVerifier implements HostnameVerifier {
+	        public boolean verify(String arg0, SSLSession arg1) {
+	            return true;
+	        }
+	    }
+
+	    class TeiidTrustManager implements X509TrustManager {
+	    	X509TrustManager x509TrustManager;
+
+	    	public TeiidTrustManager() {
+    			try {
+    				TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509"); //$NON-NLS-1$
+		    		if (BinaryDispatch.this.trustStore != null) {
+						KeyStore ks = KeyStore.getInstance("JKS"); //$NON-NLS-1$
+						ks.load(new FileInputStream(BinaryDispatch.this.trustStore),BinaryDispatch.this.trustStorePassword.toCharArray());
+						tmf.init(ks);
+		    		}
+		    		else {
+		    			// this is default certificates in java/lib/security
+		    			tmf.init((KeyStore)null);
+		    		}
+					TrustManager tms[] = tmf.getTrustManagers();
+					for (int i = 0; i < tms.length; i++) {
+						if (tms[i] instanceof X509TrustManager) {
+							this.x509TrustManager = (X509TrustManager) tms[i];
+							return;
+						}
+					}
+				} catch (NoSuchAlgorithmException e) { // ignore exceptions, same as default
+				} catch (KeyStoreException e) {
+				} catch (CertificateException e) {
+				} catch (FileNotFoundException e) {
+				} catch (IOException e) {
+				}
+	    	}
+
+	        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+	        	if (this.x509TrustManager == null) {
+	        		return new java.security.cert.X509Certificate[0];
+	        	}
+	        	return this.x509TrustManager.getAcceptedIssuers();
+	        }
+
+	        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException{
+	            if (this.x509TrustManager != null) {
+	            	this.x509TrustManager.checkClientTrusted(certs, authType);
+	            }
+	            else {
+		        	   throw new java.security.cert.CertificateException(WSManagedConnectionFactory.UTIL.getString("no_cert")); //$NON-NLS-1$
+	            }
+	        }
+
+	        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException{
+	           if (this.x509TrustManager != null) {
+					this.x509TrustManager.checkServerTrusted(certs, authType);
+	           }
+	           else {
+	        	   throw new java.security.cert.CertificateException(WSManagedConnectionFactory.UTIL.getString("no_cert")); //$NON-NLS-1$
+	           }
+	        }
+	    }
 
 		@Override
 		public DataSource invoke(DataSource msg) {
 			try {
 				final URL url = new URL(this.endpoint);
+
+				if (url.getProtocol().equals("https")) { //$NON-NLS-1$
+					try {
+						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "https connection is use; make sure you have configured the truststore for it to work correctly"); //$NON-NLS-1$
+						TrustManager[] trustAllCerts = new TrustManager[] { new TeiidTrustManager() };
+
+						SSLContext sc = SSLContext.getInstance("SSL"); //$NON-NLS-1$
+						sc.init(null, trustAllCerts, new java.security.SecureRandom());
+
+						HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+						HttpsURLConnection.setDefaultHostnameVerifier(new TeiidHostnameVerifier());
+					} catch (KeyManagementException e) {
+						throw new WebServiceException(e);
+					} catch (NoSuchAlgorithmException e) {
+						throw new WebServiceException(e);
+					}
+				}
+
 				final HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
 				httpConn.setRequestMethod((String) this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD));
 				Map<String, List<String>> header = (Map<String, List<String>>)this.requestContext.get(MessageContext.HTTP_REQUEST_HEADERS);
@@ -200,6 +297,9 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				String headerValue = httpConn.getHeaderField(i);
 
 				if ((headerName == null) && (headerValue == null)) {
+					if (i == 0) {
+						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Failed the HTTP call, no-response code"); //$NON-NLS-1$
+					}
 					break;
 				}
 
@@ -229,7 +329,6 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			}
 		}
 		Dispatch<T> dispatch = this.wsdlService.createDispatch(this.mcf.getPortQName(), type, mode);
-		MessagePartInfo.DEFAULT_TYPE.set(type);
 		setDispatchProperties(dispatch);
 		return dispatch;
 	}
@@ -279,7 +378,7 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		}
 		Dispatch<T> dispatch = null;
 		if (HTTPBinding.HTTP_BINDING.equals(binding) && (type == DataSource.class)) {
-			dispatch = (Dispatch<T>) new BinaryDispatch(endpoint);
+			dispatch = (Dispatch<T>) new BinaryDispatch(endpoint, this.mcf.getTrustStore(), this.mcf.getTrustStorePassword());
 		} else {
 			//TODO: cache service/port/dispatch instances?
 			Bus bus = BusFactory.getThreadDefaultBus();
@@ -368,7 +467,6 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 	@Override
 	public void close() throws ResourceException {
-		MessagePartInfo.DEFAULT_TYPE.remove();
 	}
 
 	@Override
