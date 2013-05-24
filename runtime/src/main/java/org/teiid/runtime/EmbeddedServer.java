@@ -575,21 +575,35 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		ExecutionFactory ef = null;
 		Object cf = null;
 		
-		try {
-			ConnectorManager cm = getConnectorManager(model, cmr);
-			if (cm != null) {
-				ef = cm.getExecutionFactory();
-				cf = cm.getConnectionFactory();
+		TranslatorException te = null;
+		for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+			if (te != null) {
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, te, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+				te = null;
 			}
-		} catch (TranslatorException e) {
-			//cf not available
-		}
+			try {
+				if (cm != null) {
+					ef = cm.getExecutionFactory();
+					cf = cm.getConnectionFactory();
+				}
+			} catch (TranslatorException e) {
+				LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+			}
 		
-		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
-			LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_RUNTIME, MessageLevel.TRACE)) {
+				LogManager.logTrace(LogConstants.CTX_RUNTIME, "CREATE SCHEMA", factory.getSchema().getName(), ";\n", DDLStringVisitor.getDDLString(factory.getSchema(), null, null)); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			
+			try {
+				metadataRepository.loadMetadata(factory, ef, cf);
+				break;
+			} catch (TranslatorException e) {
+				te = e;
+			}
 		}
-		
-		metadataRepository.loadMetadata(factory, ef, cf);		
+		if (te != null) {
+			throw te;
+		}
 		metadataLoaded(vdb, model, store, loadCount, factory, true);
 	}
 	

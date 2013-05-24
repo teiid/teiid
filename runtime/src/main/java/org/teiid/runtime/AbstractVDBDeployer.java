@@ -24,6 +24,8 @@ package org.teiid.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -123,14 +125,17 @@ public abstract class AbstractVDBDeployer {
 		return new ChainingMetadataRepository(repos);
 	}
 	
-    protected ConnectorManager getConnectorManager(final ModelMetaData model, final ConnectorManagerRepository cmr) {
+    protected List<ConnectorManager> getConnectorManagers(final ModelMetaData model, final ConnectorManagerRepository cmr) {
     	if (model.isSource()) {
-	    	List<SourceMappingMetadata> mappings = model.getSourceMappings();
+        	Collection<SourceMappingMetadata> mappings = model.getSources().values();
+    		List<ConnectorManager> result = new ArrayList<ConnectorManager>(mappings.size());
 			for (SourceMappingMetadata mapping:mappings) {
-				return cmr.getConnectorManager(mapping.getName());
+				result.add(cmr.getConnectorManager(mapping.getName()));
 			}
+			return result;
     	}
-		return null;
+    	//return a single null to give us something to loop over
+		return Collections.singletonList(null);
     }
     
 	protected void loadMetadata(VDBMetaData vdb, ConnectorManagerRepository cmr,

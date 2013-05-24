@@ -372,21 +372,28 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 					ExecutionFactory ef = null;
 					Object cf = null;
 					
-					try {
-						ConnectorManager cm = getConnectorManager(model, cmr);
-						if (cm != null) {
-							ef = cm.getExecutionFactory();
-							cf = cm.getConnectionFactory();
+					for (ConnectorManager cm : getConnectorManagers(model, cmr)) {
+						if (ex != null) {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, ex, "Failed to get metadata, trying next source."); //$NON-NLS-1$
+							ex = null;
+							te = null;
 						}
-					} catch (TranslatorException e) {
-						LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
-						te = e;
-					}
-					try {
-						metadataRepo.loadMetadata(factory, ef, cf);		
-						LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
-					} catch (Exception e) {
-						ex = e;
+						try {
+							if (cm != null) {
+								ef = cm.getExecutionFactory();
+								cf = cm.getConnectionFactory();
+							}
+						} catch (TranslatorException e) {
+							LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Failed to get a connection factory for metadata load."); //$NON-NLS-1$
+							te = e;
+						}
+						try {
+							metadataRepo.loadMetadata(factory, ef, cf);		
+							LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50030,vdb.getName(), vdb.getVersion(), model.getName(), SimpleDateFormat.getInstance().format(new Date())));
+							break;
+						} catch (Exception e) {
+							ex = e;
+						}
 					}
 				}
 		    					

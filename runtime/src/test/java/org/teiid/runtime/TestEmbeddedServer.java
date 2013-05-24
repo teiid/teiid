@@ -535,6 +535,41 @@ public class TestEmbeddedServer {
 		assertEquals("y", metadata.getColumnName(2));
 	}
 	
+	/**
+	 * Check that we'll consult each source
+	 * @throws Exception
+	 */
+	@Test public void testMultiSourceMetadataMissingSource() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.addTranslator("t", new ExecutionFactory<Object, Object>() {
+			@Override
+			public Object getConnection(Object factory) throws TranslatorException {
+				return factory;
+			}
+			@Override
+			public void closeConnection(Object connection, Object factory) {
+			}
+			@Override
+			public void getMetadata(MetadataFactory metadataFactory, Object conn)
+					throws TranslatorException {
+				assertNotNull(conn);
+				Table t = metadataFactory.addTable("x");
+				metadataFactory.addColumn("a", "string", t);
+			}
+		});
+		es.addConnectionFactory("b", new Object());
+		ModelMetaData mmd1 = new ModelMetaData();
+		mmd1.setName("b");
+		mmd1.setSupportsMultiSourceBindings(true);
+		mmd1.addSourceMapping("x", "t", "a"); //a is missing
+		mmd1.addSourceMapping("y", "t", "b");
+		
+		es.deployVDB("vdb", mmd1);		
+	}
+	
 	@Test public void testDynamicUpdate() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
 		MockTransactionManager tm = new MockTransactionManager();
