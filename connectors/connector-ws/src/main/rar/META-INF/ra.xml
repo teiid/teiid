@@ -111,7 +111,7 @@
             </config-property>
             
             <config-property>
-                <description>{$display:"trustStore",$description:"Trust Store certificate path for https call",$advanced:"true"}</description>
+                <description>{$display:"trustStore",$description:"Trust Store path for https calls",$advanced:"true"}</description>
                 <config-property-name>TrustStore</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>      
