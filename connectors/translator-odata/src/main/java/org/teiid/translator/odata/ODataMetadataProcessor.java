@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -28,7 +28,12 @@ import org.odata4j.edm.*;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Procedure;
+import org.teiid.metadata.ProcedureParameter;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
 public class ODataMetadataProcessor {
@@ -38,51 +43,51 @@ public class ODataMetadataProcessor {
 	public static final String JOIN_COLUMN = "JoinColumn"; //$NON-NLS-1$
 	public static final String ENTITY_TYPE = "EntityType"; //$NON-NLS-1$
 	public static final String ENTITY_ALIAS = "EntityAlias"; //$NON-NLS-1$
-	
+
 	private String entityContainer;
 	private String schemaNamespace;
-	
+
 	public void getMetadata(MetadataFactory mf, EdmDataServices eds) throws TranslatorException {
-		
+
 		for (EdmSchema schema:eds.getSchemas()) {
-			
+
 			if (this.schemaNamespace != null && !this.schemaNamespace.equalsIgnoreCase(schema.getNamespace())) {
 				continue;
 			}
-			
+
 			for (EdmEntityContainer container:schema.getEntityContainers()) {
 				if ((this.entityContainer != null && this.entityContainer.equalsIgnoreCase(container.getName()))
 						|| container.isDefault()) {
-					
+
 					// add entity sets as tables
 					for (EdmEntitySet entitySet:container.getEntitySets()) {
 						addEntitySetAsTable(mf, entitySet.getName(), entitySet.getType());
 					}
-					
+
 					// build relations ships among tables
 					for (EdmEntitySet entitySet:container.getEntitySets()) {
 						addNavigationRelations(mf, entitySet.getName(), entitySet.getType());
 					}
-					
+
 					// add procedures
 					for (EdmFunctionImport function:container.getFunctionImports()) {
 						addFunctionImportAsProcedure(mf, function);
 					}
 				}
 			}
-		}		
+		}
 	}
-	
+
 
 	Table addEntitySetAsTable(MetadataFactory mf, String name, EdmEntityType entity) throws TranslatorException {
 		Table table = mf.addTable(name);
 		table.setProperty(ENTITY_TYPE, entity.getFullyQualifiedTypeName());
 		table.setSupportsUpdate(true);
-		
+
 		// add columns
 		for (EdmProperty ep:entity.getProperties().toList()) {
 			if (ep.getType().isSimple()) {
-				addPropertyAsColumn(mf, table, ep); 
+				addPropertyAsColumn(mf, table, ep);
 			}
 			else {
 				// this is complex type, i.e treat them as embeddable in the same table add all columns.
@@ -99,26 +104,26 @@ public class ODataMetadataProcessor {
 					else {
 						throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17002, name, ep.getName()));
 					}
-				}				
+				}
 			}
 		}
-		
+
 		// add PK
 		mf.addPrimaryKey("PK", entity.getKeys(), table); //$NON-NLS-1$
 		return table;
 	}
-	
+
 	void addNavigationRelations(MetadataFactory mf, String tableName, EdmEntityType fromEntity) throws TranslatorException {
 		Table fromTable = mf.getSchema().getTable(tableName);
-		
+
 		for(EdmNavigationProperty nav:fromEntity.getNavigationProperties()) {
 			EdmAssociation association = nav.getRelationship();
-			
+
 			EdmAssociationEnd fromEnd = nav.getFromRole();
 			EdmAssociationEnd toEnd = nav.getToRole();
-			
+
 			EdmEntityType toEntity = toEnd.getType();
-			
+
 			// no support for self-joins
 			if (same(fromEntity, toEntity)) {
 				continue;
@@ -132,38 +137,38 @@ public class ODataMetadataProcessor {
 				toTable = getEntityTable(mf, toEntity);
 				toTable.setProperty(ENTITY_ALIAS, nav.getName());
 			}
-			
+
 			if (isMultiplicityMany(fromEnd) && isMultiplicityMany(toEnd)) {
 				if (mf.getSchema().getTable(association.getName()) == null) {
 					Table linkTable = mf.addTable(association.getName());
 					linkTable.setProperty(ENTITY_TYPE, "LinkTable"); //$NON-NLS-1$
 					linkTable.setProperty(LINK_TABLES, fromTable.getName()+","+toTable.getName()); //$NON-NLS-1$
-					
+
 					//left table
 					List<String> leftNames = null;
 					if (association.getRefConstraint() != null) {
 						leftNames = association.getRefConstraint().getPrincipalReferences();
 					}
 					leftNames = addLinkTableColumns(mf, fromTable, leftNames, linkTable);
-					
+
 					//right table
 					List<String> rightNames = null;
 					if (association.getRefConstraint() != null) {
 						rightNames = association.getRefConstraint().getDependentReferences();
 					}
-					rightNames = addLinkTableColumns(mf, toTable, rightNames, linkTable);	
-					
+					rightNames = addLinkTableColumns(mf, toTable, rightNames, linkTable);
+
 					ArrayList<String> allKeys = new ArrayList<String>();
 					for(Column c:linkTable.getColumns()) {
 						allKeys.add(c.getName());
 					}
 					mf.addPrimaryKey("PK", allKeys, linkTable); //$NON-NLS-1$
-					
+
 					// add fks for both left and right table
 					mf.addForiegnKey(fromTable.getName() + "_FK", leftNames, fromTable.getName(), linkTable); //$NON-NLS-1$
 					mf.addForiegnKey(toTable.getName() + "_FK", rightNames, toTable.getName(), linkTable); // //$NON-NLS-1$
 				}
-				
+
 			} else if (isMultiplicityOne(fromEnd)) {
 				addRelation(mf, fromTable, toTable, association, fromEnd.getRole());
 			}
@@ -195,15 +200,15 @@ public class ODataMetadataProcessor {
 		}
 		return columnNames;
 	}
-	
+
 	private boolean isMultiplicityOne(EdmAssociationEnd end) {
 		return end.getMultiplicity().equals(EdmMultiplicity.ONE) || end.getMultiplicity().equals(EdmMultiplicity.ZERO_TO_ONE);
 	}
-	
+
 	private boolean isMultiplicityMany(EdmAssociationEnd end) {
 		return end.getMultiplicity().equals(EdmMultiplicity.MANY);
-	}	
-	
+	}
+
 	private Table getEntityTable(MetadataFactory mf, EdmEntityType toEntity) throws TranslatorException {
 		for (Table t:mf.getSchema().getTables().values()) {
 			if (t.getProperty(ENTITY_TYPE, false).equals(toEntity.getFullyQualifiedTypeName())){
@@ -222,7 +227,7 @@ public class ODataMetadataProcessor {
 		EdmReferentialConstraint refConstaint = association.getRefConstraint();
 		if (refConstaint != null) {
 			List<String> fromKeys = null;
-			List<String> toKeys = null;			
+			List<String> toKeys = null;
 			if (refConstaint.getPrincipalRole().equals(primaryRole)) {
 				fromKeys = refConstaint.getPrincipalReferences();
 				toKeys = refConstaint.getDependentReferences();
@@ -235,7 +240,7 @@ public class ODataMetadataProcessor {
 				mf.addForiegnKey(association.getName(), toKeys, fromKeys, fromTable.getName(), toTable);
 			}
 			else {
-				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));				
+				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));
 			}
 		}
 		else {
@@ -244,17 +249,17 @@ public class ODataMetadataProcessor {
 			for (Column column :fromTable.getPrimaryKey().getColumns()) {
 				fromKeys.add(column.getName());
 			}
-			
+
 			if (hasColumns(fromKeys, toTable)) {
 				// create a FK on the columns added
 				mf.addForiegnKey(association.getName(), fromKeys, fromTable.getName(), toTable);
 			}
 			else {
-				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));				
+				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17015, association.getName(), toTable.getName(), fromTable.getName()));
 			}
 		}
 	}
-	
+
 	private boolean hasColumns(List<String> columnNames, Table table) {
 		for (String columnName:columnNames) {
 			if (table.getColumnByName(columnName) == null) {
@@ -263,7 +268,7 @@ public class ODataMetadataProcessor {
 		}
 		return true;
 	}
-	
+
 	private boolean keyMatches(List<String> names, KeyRecord record) {
 		if (names.size() != record.getColumns().size()) {
 			return false;
@@ -275,16 +280,16 @@ public class ODataMetadataProcessor {
 		}
 		return true;
 	}
-	
+
 	private boolean matchesWithPkOrUnique(List<String> names, Table table) {
 		if (keyMatches(names, table.getPrimaryKey())) {
 			return true;
 		}
-		
+
 		for (KeyRecord record:table.getUniqueKeys()) {
 			if (keyMatches(names, record)) {
 				return true;
-			}			
+			}
 		}
 		return false;
 	}
@@ -292,7 +297,7 @@ public class ODataMetadataProcessor {
 	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep) {
 		return addPropertyAsColumn(mf, table, ep, null);
 	}
-	
+
 	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep, String prefix) {
 		String columnName = ep.getName();
 		if (prefix != null) {
@@ -308,13 +313,14 @@ public class ODataMetadataProcessor {
 		}
 		c.setUpdatable(true);
 		return c;
-	}	
+	}
 
-	
+
 	void addFunctionImportAsProcedure(MetadataFactory mf, EdmFunctionImport function) throws TranslatorException {
 		Procedure procedure = mf.addProcedure(function.getName());
+		procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
 		procedure.setProperty(HTTP_METHOD, function.getHttpMethod());
-		
+
 		// add parameters
 		for (EdmFunctionParameter fp:function.getParameters()) {
 			ProcedureParameter.Type type = ProcedureParameter.Type.In;
@@ -326,31 +332,44 @@ public class ODataMetadataProcessor {
 			}
 			mf.addProcedureParameter(fp.getName(), ODataTypeManager.teiidType(fp.getType().getFullyQualifiedTypeName()), type, procedure);
 		}
-		
+
 		// add return type
 		EdmType returnType = function.getReturnType();
 		if (returnType.isSimple()) {
 			mf.addProcedureParameter("return", ODataTypeManager.teiidType(((EdmSimpleType)returnType).getFullyQualifiedTypeName()), ProcedureParameter.Type.ReturnValue, procedure); //$NON-NLS-1$
 		}
+		else if (returnType instanceof EdmComplexType) {
+			addProcedureTableReturn(mf, procedure, returnType, null);
+		}
+		else if (returnType instanceof EdmEntityType) {
+			addProcedureTableReturn(mf, procedure, returnType, function.getEntitySet().getName());
+		}
 		else if (returnType instanceof EdmCollectionType) {
-			procedure.setProperty(ENTITY_TYPE, function.getEntitySet().getName());
 			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType(), function.getEntitySet().getName());
 		}
 		else {
 			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, function.getName(), returnType.getFullyQualifiedTypeName()));
 		}
 	}
-	
+
 	private void addProcedureTableReturn(MetadataFactory mf, Procedure procedure, EdmType type, String enitySetName) throws TranslatorException {
+		// if the procedure is returns and entity or collection of entities, instead of complex type
+		// this needs to set to correct entity.
+		if (enitySetName != null) {
+			procedure.setProperty(ENTITY_TYPE, enitySetName);
+		}
 		if (type.isSimple()) {
 			mf.addProcedureResultSetColumn("return", ODataTypeManager.teiidType(((EdmSimpleType)type).getFullyQualifiedTypeName()), procedure); //$NON-NLS-1$
 		}
 		else if (type instanceof EdmComplexType) {
 			EdmComplexType complexType = (EdmComplexType)type;
-			// read from table beacause we already normalized the embedded types etc.
-			Table table = mf.getSchema().getTable(complexType.getName());
-			for (Column column:table.getColumns()) {
-				mf.addProcedureResultSetColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), procedure);
+			for (EdmProperty ep:complexType.getProperties()) {
+				if (ep.getType().isSimple()) {
+					mf.addProcedureResultSetColumn(ep.getName(), ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), procedure);
+				}
+				else {
+					addProcedureTableReturn(mf, procedure, ep.getType(), enitySetName);
+				}
 			}
 		}
 		else if (type instanceof EdmEntityType) {
@@ -363,7 +382,7 @@ public class ODataMetadataProcessor {
 			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, procedure.getName(), type.getFullyQualifiedTypeName()));
 		}
 	}
-	
+
 	public void setEntityContainer(String entityContainer) {
 		this.entityContainer = entityContainer;
 	}
@@ -371,7 +390,7 @@ public class ODataMetadataProcessor {
 	public void setSchemaNamespace(String namespace) {
 		this.schemaNamespace = namespace;
 	}
-	
+
 	List<String> getColumnNames(List<Column> columns){
 		ArrayList<String> names = new ArrayList<String>();
 		for (Column c:columns) {
