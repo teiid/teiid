@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -41,7 +41,6 @@ import org.odata4j.format.Settings;
 import org.teiid.language.Call;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
@@ -53,25 +52,25 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	private ODataProcedureVisitor visitor;
 	private Class<?>[] expectedColumnTypes;
 	private String[] columnNames;
-	private String[] embeddedColumnNames;	
+	private String[] embeddedColumnNames;
 	private Object returnValue;
 	private ODataEntitiesResponse response;
-	
+
 	public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection, EdmDataServices edsMetadata) throws TranslatorException {
 		super(translator, executionContext, metadata, connection, edsMetadata);
-		
+
 		this.visitor = new ODataProcedureVisitor(translator, metadata);
 		this.visitor.visitNode(command);
-		
+
 		if (this.visitor.hasCollectionReturn()) {
-			Table table = this.metadata.getTable(this.visitor.getTableName());
-			int colCount = table.getColumns().size();
+			List<Column> columns = command.getMetadataObject().getResultSet().getColumns();
+			int colCount = columns.size();
 			this.expectedColumnTypes = new Class[colCount];
 			this.columnNames = new String[colCount];
-			this.embeddedColumnNames = new String[colCount];	
-			
+			this.embeddedColumnNames = new String[colCount];
+
 			for (int i = 0; i < colCount; i++) {
-				Column column = table.getColumns().get(i);
+				Column column = columns.get(i);
 	    		this.columnNames[i] = column.getName();
 	    		this.embeddedColumnNames[i] = null;
 	    		this.expectedColumnTypes[i] = column.getJavaType();
@@ -83,7 +82,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	    				this.columnNames[i] = entityType;
 	    				this.embeddedColumnNames[i] = column.getNameInSource();
 	    			}
-	    		}				
+	    		}
 			}
 		}
 	}
@@ -92,7 +91,14 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	public void execute() throws TranslatorException {
 		String URI = this.visitor.buildURL();
 		if (this.visitor.hasCollectionReturn()) {
-			this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(), null, Status.OK, Status.NO_CONTENT);
+			// entity type return
+			if (this.edsMetadata.findEdmEntitySet(this.visitor.getEntityName()) != null) {
+				this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(), null, Status.OK, Status.NO_CONTENT);
+			}
+			else {
+				// complex return
+				this.response = executeWithComplexReturn(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(), null, Status.OK, Status.NO_CONTENT);
+			}
 			if (this.response != null && this.response.hasError()) {
 				throw this.response.getError();
 			}
@@ -103,9 +109,9 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 				if (execution.getResponseCode() != Status.OK.getStatusCode()) {
 					throw buildError(execution);
 				}
-				
+
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-				ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));				
+				ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
 
 				// if the procedure is not void
 				if (this.visitor.getReturnType() != null) {
@@ -114,7 +120,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 					            null, // entitykey
 					            true, // isResponse
 					            ODataTypeManager.odataType(this.visitor.getReturnType())));
-					
+
 					OSimpleObject object = (OSimpleObject)parser.parse(new InputStreamReader(blob.getBinaryStream()));
 					this.returnValue = this.translator.retrieveValue(object.getValue(), this.visitor.getReturnTypeClass());
 				}
@@ -132,11 +138,11 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 		}
 		return null;
 	}
-	
+
 	@Override
 	public List<?> getOutputParameterValues() throws TranslatorException {
 		return Arrays.asList(this.returnValue);
-	}	
+	}
 
 	@Override
 	public void close() {
