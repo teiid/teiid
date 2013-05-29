@@ -74,6 +74,25 @@ public class AdminFactory {
 	public static AdminFactory getInstance() {
 		return INSTANCE;
 	}
+
+    /**
+     * Creates a ServerAdmin with the specified connection properties.
+     * @param userName
+     * @param password
+     * @param serverURL
+     * @param applicationName
+     * @param profileName - Name of the domain mode profile
+     * @return
+     * @throws AdminException
+     */
+    public Admin createAdmin(String host, int port, String userName, char[] password, String profileName) throws AdminException {
+    	AdminImpl admin = (AdminImpl)createAdmin(host, port, userName, password);
+    	if (admin != null) {
+    		admin.setProfileName(profileName);
+    	}
+    	return admin;
+    }
+
     /**
      * Creates a ServerAdmin with the specified connection properties.
      * @param userName
@@ -113,6 +132,18 @@ public class AdminFactory {
 
     public Admin createAdmin(ModelControllerClient connection) {
     	return new AdminImpl(connection);
+    }
+
+    /**
+     * Name of the domain mode profile.
+     * @param connection
+     * @param profileName
+     * @return
+     */
+    public Admin createAdmin(ModelControllerClient connection, String profileName) {
+    	AdminImpl admin = new AdminImpl(connection);
+    	admin.setProfileName(profileName);
+    	return admin;
     }
 
     private class AuthenticationCallbackHandler implements CallbackHandler {
@@ -170,7 +201,7 @@ public class AdminFactory {
 		private static final String JAVA_CONTEXT = "java:/";
 		private ModelControllerClient connection;
     	private boolean domainMode = false;
-    	private String profileName;
+    	private String profileName = "ha";
 
     	public AdminImpl (ModelControllerClient connection) {
     		this.connection = connection;
@@ -179,6 +210,10 @@ public class AdminFactory {
                 this.domainMode = nodeTypes.contains("server-group"); //$NON-NLS-1$
             }
     	}
+
+		public void setProfileName(String name) {
+			this.profileName = name;
+		}
 
 		@Override
 		public void clearCache(String cacheType) throws AdminException {
@@ -1388,26 +1423,30 @@ public class AdminFactory {
 	    		Set<String> serverGroupNames = serverGroups.keys();
 	    		for (String serverGroupName:serverGroupNames) {
 	    			ModelNode serverGroup = serverGroups.get(serverGroupName);
-	    			Set<String> serverNames = serverGroup.keys();
-	    			for (String serverName:serverNames) {
-	    				ModelNode server = serverGroup.get(serverName);
-	    				String hostName = server.get("host").asString();
-	    				if (server.get("response", "outcome").asString().equals(Util.SUCCESS)) {
-	    					ModelNode result = server.get("response", "result");
-	    					if (result.isDefined()) {
-	    				        List<ModelNode> nodeList = result.asList(); //$NON-NLS-1$
-	    				        for(ModelNode node : nodeList) {
-	    				        	T anObj = mapper.unwrap(node);
-	    				        	if (anObj instanceof DomainAware) {
-	    				        		((AdminObjectImpl)anObj).setServerGroup(serverGroupName);
-	    				        		((AdminObjectImpl)anObj).setServerName(serverName);
-	    				        		((AdminObjectImpl)anObj).setHostName(hostName);
-	    				        	}
-	    				        	returnList.add(anObj);
-	    				        }
+	    			ModelNode hostGroups = serverGroup.get("host");
+	    			Set<String> hostKeys = hostGroups.keys();
+	    			for(String hostName:hostKeys) {
+	    				ModelNode hostGroup = hostGroups.get(hostName);
+	    	  			Set<String> serverNames = hostGroup.keys();
+		    			for (String serverName:serverNames) {
+		    				ModelNode server = hostGroup.get(serverName);
+		    				if (server.get("response", "outcome").asString().equals(Util.SUCCESS)) {
+		    					ModelNode result = server.get("response", "result");
+		    					if (result.isDefined()) {
+		    				        List<ModelNode> nodeList = result.asList(); //$NON-NLS-1$
+		    				        for(ModelNode node : nodeList) {
+		    				        	T anObj = mapper.unwrap(node);
+		    				        	if (anObj instanceof DomainAware) {
+		    				        		((AdminObjectImpl)anObj).setServerGroup(serverGroupName);
+		    				        		((AdminObjectImpl)anObj).setServerName(serverName);
+		    				        		((AdminObjectImpl)anObj).setHostName(hostName);
+		    				        	}
+		    				        	returnList.add(anObj);
+		    				        }
 
-	    					}
-	    				}
+		    					}
+		    				}
+		    			}
 	    			}
 	    		}
 	    		return returnList;
