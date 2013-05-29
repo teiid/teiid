@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.tempdata.TempTableStore;
 
@@ -37,6 +38,7 @@ import org.teiid.query.tempdata.TempTableStore;
 class ClientState {
 	List<RequestID> requests;
 	TempTableStore sessionTables;
+	volatile SessionMetadata session;
 	
 	public ClientState(TempTableStore tableStoreImpl) {
 		this.sessionTables = tableStoreImpl;

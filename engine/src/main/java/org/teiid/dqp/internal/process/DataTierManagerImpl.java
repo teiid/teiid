@@ -242,11 +242,18 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				if (table.getMaterializedTable() == null) {
 					GlobalTableStore globalStore = cc.getGlobalTableStore();
 					matTableName = RelationalPlanner.MAT_PREFIX+table.getFullName().toUpperCase();
+					TempMetadataID id = globalStore.getGlobalTempTableMetadataId(matTableName);
+					if (id != null && id.getCacheHint() != null && id.getCacheHint().getScope() != null && Scope.VDB.compareTo(id.getCacheHint().getScope()) > 0) {
+						//consult the session store instead
+						globalStore = cc.getSessionScopedStore(false);
+						if (globalStore == null) {
+							globalStore = cc.getGlobalTableStore();
+						}
+					}
 					MatTableInfo info = globalStore.getMatTableInfo(matTableName);
 					valid = info.isValid();
 					state = info.getState().name();
 					updated = info.getUpdateTime()==-1?null:new Timestamp(info.getUpdateTime());
-					TempMetadataID id = globalStore.getGlobalTempTableMetadataId(matTableName);
 					if (id != null) {
 						cardinaltity = id.getCardinality();
 					}

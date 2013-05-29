@@ -29,7 +29,6 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.QueryOptimizer;
@@ -70,6 +69,8 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	@Override
 	public QueryProcessor createQueryProcessor(String query, String recursionGroup, CommandContext commandContext, Object... params) throws TeiidProcessingException, TeiidComponentException {
 		CommandContext copy = commandContext.clone();
+		copy.resetDeterminismLevel(true);
+		copy.setDataObjects(null);
         QueryMetadataInterface metadata = commandContext.getMetadata();
         if (metadata == null) {
         	metadata = defaultMetadata;
@@ -97,20 +98,15 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 	        
 	        AbstractValidationVisitor visitor = new ValidationVisitor();
 	        Request.validateWithVisitor(visitor, metadata, newCommand);
-	        Determinism determinismLevel = commandContext.resetDeterminismLevel();
-	        try {
-		        newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
-		        AnalysisRecord record = new AnalysisRecord(false, false);
-		        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, commandContext);
-		        pp = new PreparedPlan();
-		        pp.setPlan(plan, commandContext);
-		        pp.setReferences(references);
-		        pp.setAnalysisRecord(record);
-		        pp.setCommand(newCommand);
-		        commandContext.putPlan(query, pp, commandContext.getDeterminismLevel());
-	        } finally {
-	        	commandContext.setDeterminismLevel(determinismLevel);
-	        }
+	        newCommand = QueryRewriter.rewrite(newCommand, metadata, commandContext);
+	        AnalysisRecord record = new AnalysisRecord(false, false);
+	        ProcessorPlan plan = QueryOptimizer.optimizePlan(newCommand, metadata, idGenerator, finder, record, commandContext);
+	        pp = new PreparedPlan();
+	        pp.setPlan(plan, commandContext);
+	        pp.setReferences(references);
+	        pp.setAnalysisRecord(record);
+	        pp.setCommand(newCommand);
+	        commandContext.putPlan(query, pp, commandContext.getDeterminismLevel());
 		}
 		return pp;
 	}

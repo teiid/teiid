@@ -43,6 +43,7 @@ import javax.sql.rowset.serial.SerialClob;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -55,7 +56,6 @@ import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Base64;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.TimestampWithTimezone;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.sql.symbol.Expression;
@@ -1443,7 +1443,7 @@ public class TestFunctionLibrary {
 	
 	@Test public void testSessionVariables() throws Exception {
         CommandContext c = new CommandContext();
-        c.setDQPWorkContext(new DQPWorkContext());
+        c.setSession(new SessionMetadata());
         Object result = helpInvokeMethod("teiid_session_set", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING, DataTypeManager.DefaultDataClasses.OBJECT}, new Object[] {"key", "value"}, c);
         assertNull(result);
         result = helpInvokeMethod("teiid_session_get", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] {"key"}, c);

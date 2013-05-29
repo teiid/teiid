@@ -137,7 +137,6 @@ public class DQPWorkContext implements Serializable {
     private Version clientVersion = Version.SEVEN_4;
     private boolean admin;
     private MetadataFactory metadataFactory;
-	private Map<String, Object> sessionVariables = Collections.synchronizedMap(new HashMap<String, Object>(2));
     
     public DQPWorkContext() {
 	}
@@ -310,12 +309,11 @@ public class DQPWorkContext implements Serializable {
 	}    
 
 	private Set<String> getUserRoles() {
-		Set<String> roles = new HashSet<String>();
-		
 		if (getSubject() == null) {
 			return Collections.emptySet();
 		}
 		
+		Set<String> roles = new HashSet<String>();
 		Set<Principal> principals = getSubject().getPrincipals();
 		for(Principal p: principals) {
 			// this JBoss specific, but no code level dependencies
@@ -353,8 +351,4 @@ public class DQPWorkContext implements Serializable {
 		return this.metadataFactory;
 	}
 	
-	public Map<String, Object> getSessionVariables() {
-		return sessionVariables;
-	}
-
 }

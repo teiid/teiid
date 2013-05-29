@@ -44,6 +44,7 @@ import org.teiid.adminapi.Request.ProcessingState;
 import org.teiid.adminapi.Request.ThreadState;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.RequestMetadata;
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.adminapi.impl.TransactionMetadata;
 import org.teiid.adminapi.impl.WorkerPoolStatisticsMetadata;
 import org.teiid.client.DQP;
@@ -79,9 +80,11 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.processor.QueryProcessor;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.query.tempdata.TempTableStore.TransactionMode;
+import org.teiid.query.util.CommandContext;
 import org.teiid.query.util.Options;
 
 /**
@@ -243,6 +246,9 @@ public class DQPCore implements DQP {
 	    	request = new Request();
 	    }
 	    ClientState state = this.getClientState(workContext.getSessionId(), true);
+	    if (state.session == null) {
+	    	state.session = workContext.getSession();
+	    }
 	    request.initialize(requestMsg, bufferManager,
 				dataTierMgr, transactionService, state.sessionTables,
 				workContext, this.prepPlanCache);
@@ -441,6 +447,17 @@ public class DQPCore implements DQP {
 	            } catch (TeiidComponentException err) {
 	                LogManager.logWarning(LogConstants.CTX_DQP, err, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30026,reqId));
 				}
+	        }
+	        SessionMetadata session = state.session;
+	        if (session != null) {
+	        	GlobalTableStoreImpl store = CommandContext.removeSessionScopedStore(session);
+	        	if (store != null) {
+	        		try {
+						store.getTempTableStore().removeTempTables();
+					} catch (TeiidComponentException e) {
+		                LogManager.logDetail(LogConstants.CTX_DQP, e, "Error removing session scoped temp tables"); //$NON-NLS-1$
+					}
+	        	}
 	        }
         }
         

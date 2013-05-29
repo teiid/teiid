@@ -82,6 +82,7 @@ import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
+import org.teiid.translator.CacheDirective.Scope;
 
 /**
  * This proxy ProcessorDataManager is used to handle temporary tables.
@@ -308,11 +309,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			param.setExpression(new Reference(i++));
 		}
 		final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(cloneProc.toString(), fullName.toUpperCase(), context, vals.toArray());
-		qp.getContext().setDataObjects(null);
 		final BatchCollector bc = qp.createBatchCollector();
 		
 		return new ProxyTupleSource() {
-			Determinism determinismLevelOrig = context.resetDeterminismLevel();
 			boolean success = false;
 			
 			@Override
@@ -321,21 +320,19 @@ public class TempTableDataManager implements ProcessorDataManager {
 				TupleBuffer tb = bc.collectTuples();
 				CachedResults cr = new CachedResults();
 				cr.setResults(tb, qp.getProcessorPlan());
-				//there is a chance that this level is not correct as other stuff may have been processed along with this plan
-				Determinism determinismLevel = context.getDeterminismLevel();
+				Determinism determinismLevel = qp.getContext().getDeterminismLevel();
 				if (hint != null && hint.getDeterminism() != null) {
 					LogManager.logTrace(LogConstants.CTX_DQP, new Object[] { "Cache hint modified the query determinism from ",determinismLevel, " to ", hint.getDeterminism() }); //$NON-NLS-1$ //$NON-NLS-2$
 					determinismLevel = hint.getDeterminism();
 				}
 				cache.put(cid, determinismLevel, cr, hint != null?hint.getTtl():null);
-				context.setDeterminismLevel(determinismLevelOrig);
+				context.setDeterminismLevel(determinismLevel);
 				success = true;
 				return tb.createIndexedTupleSource();
 			}
 			
 			@Override
 			public void closeSource() {
-				context.setDeterminismLevel(determinismLevelOrig);
 				super.closeSource();
 				qp.closeProcessing();
 				if (!success && bc.getTupleBuffer() != null) {
@@ -351,10 +348,10 @@ public class TempTableDataManager implements ProcessorDataManager {
 			QueryValidatorException, TeiidProcessingException,
 			ExpressionEvaluationException {
 		final QueryMetadataInterface metadata = context.getMetadata();
-		final GlobalTableStore globalStore = context.getGlobalTableStore();
 		if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEW)) {
 			Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
-			Object matTableId = globalStore.getGlobalTempTableMetadataId(groupID);
+			TempMetadataID matTableId = context.getGlobalTableStore().getGlobalTempTableMetadataId(groupID);
+			final GlobalTableStore globalStore = getGlobalStore(context, matTableId);
 			String matViewName = metadata.getFullName(groupID);
 			String matTableName = metadata.getFullName(matTableId);
 			LogManager.logDetail(LogConstants.CTX_MATVIEWS, "processing refreshmatview for", matViewName); //$NON-NLS-1$
@@ -368,6 +365,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 			return loadGlobalTable(context, matTable, matTableName, globalStore);
 		} else if (StringUtil.endsWithIgnoreCase(proc.getProcedureCallableName(), REFRESHMATVIEWROW)) {
 			final Object groupID = validateMatView(metadata, (String)((Constant)proc.getParameter(2).getExpression()).getValue());
+			TempMetadataID matTableId = context.getGlobalTableStore().getGlobalTempTableMetadataId(groupID);
+			final GlobalTableStore globalStore = getGlobalStore(context, matTableId);
 			Object pk = metadata.getPrimaryKey(groupID);
 			String matViewName = metadata.getFullName(groupID);
 			if (pk == null) {
@@ -394,7 +393,6 @@ public class TempTableDataManager implements ProcessorDataManager {
 			String queryString = Reserved.SELECT + " * " + Reserved.FROM + ' ' + matViewName + ' ' + Reserved.WHERE + ' ' + //$NON-NLS-1$
 				metadata.getFullName(id) + " = ?" + ' ' + Reserved.OPTION + ' ' + Reserved.NOCACHE; //$NON-NLS-1$
 			final QueryProcessor qp = context.getQueryProcessorFactory().createQueryProcessor(queryString, matViewName.toUpperCase(), context, value);
-			qp.getContext().setDataObjects(null);
 			final TupleSource ts = new BatchCollector.BatchProducerTupleSource(qp);
 			return new ProxyTupleSource() {
 
@@ -449,7 +447,8 @@ public class TempTableDataManager implements ProcessorDataManager {
 		}
 		final String tableName = group.getNonCorrelationName();
 		if (group.isGlobalTable()) {
-			final GlobalTableStore globalStore = context.getGlobalTableStore();
+			TempMetadataID matTableId = (TempMetadataID)group.getMetadataID();
+			final GlobalTableStore globalStore = getGlobalStore(context, matTableId);
 			final MatTableInfo info = globalStore.getMatTableInfo(tableName);
 			return new ProxyTupleSource() {
 				Future<Void> moreWork = null;
@@ -563,6 +562,14 @@ public class TempTableDataManager implements ProcessorDataManager {
 		};
 	}
 
+	private GlobalTableStore getGlobalStore(final CommandContext context, TempMetadataID matTableId) {
+		GlobalTableStore globalStore = context.getGlobalTableStore();
+		if (matTableId.getCacheHint() == null || matTableId.getCacheHint().getScope() == null || Scope.VDB.compareTo(matTableId.getCacheHint().getScope()) <= 0) {
+			return globalStore;
+		}
+		return context.getSessionScopedStore(true);
+	}
+
 	private void loadViaRefresh(final CommandContext context, final String tableName, VDBMetaData vdb, MatTableInfo info) throws TeiidProcessingException, TeiidComponentException {
 		info.setAsynchLoad();
 		DQPWorkContext workContext = createWorkContext(context, vdb);
@@ -613,12 +620,13 @@ public class TempTableDataManager implements ProcessorDataManager {
 						String fullName = metadata.getFullName(group.getMetadataID());
 						String transformation = metadata.getVirtualPlan(group.getMetadataID()).getQuery();
 						qp = context.getQueryProcessorFactory().createQueryProcessor(transformation, fullName, context);
-						qp.getContext().setDataObjects(null);
 						insertTupleSource = new BatchCollector.BatchProducerTupleSource(qp);
 					}
 					table.insert(insertTupleSource, allColumns, false, null);
 					table.getTree().compact();
 					rowCount = table.getRowCount();
+					Determinism determinism = qp.getContext().getDeterminismLevel();
+					context.setDeterminismLevel(determinism);
 					//TODO: could pre-process indexes to remove overlap
 					for (Object index : metadata.getIndexesInGroup(group.getMetadataID())) {
 						List<ElementSymbol> columns = GlobalTableStoreImpl.resolveIndex(metadata, allColumns, index);
@@ -631,6 +639,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 					CacheHint hint = table.getCacheHint();
 					if (hint != null && table.getPkLength() > 0) {
 						table.setUpdatable(hint.isUpdatable(false));
+					}
+					if (determinism.compareTo(Determinism.VDB_DETERMINISTIC) < 0 && (hint == null || hint.getScope() == null || Scope.VDB.compareTo(hint.getScope()) <= 0)) {
+						LogManager.logInfo(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31143, determinism, tableName)); //$NON-NLS-1$
 					}
 					globalStore.loaded(tableName, table);
 					success = true;

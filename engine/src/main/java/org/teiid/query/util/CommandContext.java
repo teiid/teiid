@@ -67,6 +67,7 @@ import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
 import org.teiid.query.tempdata.GlobalTableStore;
+import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableStore;
 import org.teiid.translator.ReusableExecution;
 
@@ -116,8 +117,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	    
 	    private QueryProcessor.ProcessorFactory queryProcessorFactory;
 	        
-	    private Determinism determinismLevel = Determinism.DETERMINISTIC;
-	    
 	    private Set<String> groups;
 	    private Map<String, String> aliasMapping;
 	    
@@ -171,6 +170,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     private HashSet<Object> dataObjects = this.globalState.dataObjects;
     private TupleSourceCache tupleSourceCache;
     private VDBState vdbState = new VDBState();
+    private Determinism[] determinismLevel = new Determinism[] {Determinism.DETERMINISTIC};
 
     /**
      * Construct a new context.
@@ -205,18 +205,26 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     }
     
     public Determinism getDeterminismLevel() {
-		return globalState.determinismLevel;
+		return determinismLevel[0];
 	}
     
-    public Determinism resetDeterminismLevel() {
-    	Determinism result = globalState.determinismLevel;
-    	globalState.determinismLevel = Determinism.DETERMINISTIC;
+    public Determinism resetDeterminismLevel(boolean detach) {
+    	Determinism result = determinismLevel[0];
+    	if (detach) {
+    		determinismLevel = new Determinism[1];
+    	}
+    	determinismLevel[0] = Determinism.DETERMINISTIC;
     	return result;
+    	
+    }
+    
+    public Determinism resetDeterminismLevel() {
+    	return resetDeterminismLevel(false);
     }
     
     public void setDeterminismLevel(Determinism level) {
-    	if (globalState.determinismLevel == null || level.compareTo(globalState.determinismLevel) < 0) {
-    		globalState.determinismLevel = level;
+    	if (determinismLevel[0] == null || level.compareTo(determinismLevel[0]) < 0) {
+    		determinismLevel[0] = level;
     	}
     }
     
@@ -245,6 +253,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
     	clone.setNonBlocking(this.nonBlocking);
     	clone.tupleSourceCache = this.tupleSourceCache;
     	clone.vdbState = this.vdbState;
+    	clone.determinismLevel = this.determinismLevel; 
     	return clone;
     }
     
@@ -913,12 +922,12 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 	@Override
 	public Object setSessionVariable(String key, Object value) {
-		return this.vdbState.dqpWorkContext.getSessionVariables().put(key, value);
+		return this.vdbState.session.getSessionVariables().put(key, value);
 	}
 
 	@Override
 	public Object getSessionVariable(String key) {
-		return this.vdbState.dqpWorkContext.getSessionVariables().get(key);
+		return this.vdbState.session.getSessionVariables().get(key);
 	}
 	
 	public AuthorizationValidator getAuthorizationValidator() {
@@ -937,6 +946,24 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 			this.globalState.lookups = new HashMap<String, TupleSource>();
 		}
 		this.globalState.lookups.put(matTableName, ts);
+	}
+	
+	
+	public GlobalTableStoreImpl getSessionScopedStore(boolean create) {
+		GlobalTableStoreImpl impl = getSession().getAttachment(GlobalTableStoreImpl.class);
+		if (!create) {
+			return impl;
+		} 
+		impl = getSession().getAttachment(GlobalTableStoreImpl.class);
+		if (impl == null) {
+			impl = new GlobalTableStoreImpl(getBufferManager(), null, getMetadata());
+			getSession().addAttchment(GlobalTableStoreImpl.class, impl);
+		}
+		return impl;
+	}
+	
+	public static GlobalTableStoreImpl removeSessionScopedStore(SessionMetadata session) {
+		return session.removeAttachment(GlobalTableStoreImpl.class);
 	}
 	
 }

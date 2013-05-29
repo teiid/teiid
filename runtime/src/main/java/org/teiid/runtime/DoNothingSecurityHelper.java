@@ -32,7 +32,7 @@ import org.teiid.security.SecurityHelper;
  * A {@link SecurityHelper} that does nothing and always assumes that thread
  * has the proper security context.
  */
-public final class DoNothingSecurityHelper implements SecurityHelper {
+public class DoNothingSecurityHelper implements SecurityHelper {
 	@Override
 	public boolean sameSubject(String securityDomain, Object context,
 			Subject subject) {

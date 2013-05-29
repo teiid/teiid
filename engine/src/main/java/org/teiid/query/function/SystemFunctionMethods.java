@@ -24,8 +24,8 @@ package org.teiid.query.function;
 
 import java.util.Map;
 
+import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.FunctionExecutionException;
-import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
@@ -42,8 +42,8 @@ public class SystemFunctionMethods {
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.COMMAND_DETERMINISTIC)
 	public static Object teiid_session_set(CommandContext context, String key, Object value) throws FunctionExecutionException {
-		DQPWorkContext workContext = context.getDQPWorkContext();
-		Map<String, Object> variables = workContext.getSessionVariables();
+		SessionMetadata session = context.getSession();
+		Map<String, Object> variables = session.getSessionVariables();
 		if (variables.size() > MAX_VARIABLES && !variables.containsKey(key)) {
 			throw new FunctionExecutionException(QueryPlugin.Event.TEIID31136, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31136, MAX_VARIABLES));
 		}
