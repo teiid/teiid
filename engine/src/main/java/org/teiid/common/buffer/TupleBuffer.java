@@ -32,7 +32,6 @@ import org.teiid.client.ResizingArrayList;
 import org.teiid.common.buffer.LobManager.ReferenceMode;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.util.Assertion;
@@ -44,6 +43,10 @@ import org.teiid.query.sql.symbol.Expression;
 
 
 public class TupleBuffer {
+	
+	public interface RowSource {
+		void finalRow() throws TeiidComponentException, TeiidProcessingException;
+	}
 	
 	public final class TupleBufferTupleSource extends
 			AbstractTupleSource {
@@ -64,13 +67,7 @@ public class TupleBuffer {
 				throw BlockedException.blockWithTrace("Blocking on non-final TupleBuffer", tupleSourceID, "size", getRowCount()); //$NON-NLS-1$ //$NON-NLS-2$
 			}
 			synchronized (rowSourceLock) {
-				while (!isFinal && available() < 1) {
-					try {
-						rowSourceLock.wait();
-					} catch (InterruptedException e) {
-						throw new TeiidRuntimeException(e);
-					}
-				}
+				rowSourceLock.finalRow();
 				return getCurrentTuple();
 			}
 		}
@@ -147,7 +144,7 @@ public class TupleBuffer {
 
 	private LobManager lobManager;
 	private String uuid;
-	private Object rowSourceLock;
+	private RowSource rowSourceLock;
 	
 	public TupleBuffer(BatchManager manager, String id, List<? extends Expression> schema, LobManager lobManager, int batchSize) {
 		this.manager = manager;
@@ -157,7 +154,7 @@ public class TupleBuffer {
 		this.batchSize = batchSize;		
 	}
 	
-	public void setRowSourceLock(Object rowSourceLock) {
+	public void setRowSourceLock(RowSource rowSourceLock) {
 		this.rowSourceLock = rowSourceLock;
 	}
 	

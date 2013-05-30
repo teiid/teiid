@@ -71,7 +71,7 @@ import org.teiid.query.xquery.saxon.XQueryEvaluator;
  * When streaming the results will be fully built and stored in a buffer
  * before being returned
  */
-public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor {
+public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor, TupleBuffer.RowSource {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
 	
@@ -254,6 +254,21 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			result = XQueryEvaluator.evaluateXQuery(this.table.getXQueryExpression(), contextItem, parameters, null, this.getContext());
 		} catch (TeiidRuntimeException e) {
 			unwrapException(e);
+		}
+	}
+	
+	@Override
+	public synchronized void finalRow() throws TeiidComponentException,
+			TeiidProcessingException {
+		while (state == State.BUILDING) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				throw new TeiidRuntimeException(e);
+			}
+		}
+		if (this.asynchException != null) {
+			unwrapException(this.asynchException);
 		}
 	}
 

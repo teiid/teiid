@@ -33,6 +33,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
 import org.junit.AfterClass;
@@ -442,7 +443,7 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
-    @Test public void testXmlTableStreamingTiming() throws Exception {
+    @Test public void testXmlTableStreamingTiming() throws Throwable {
     	String sql = "select xmlserialize(x.object_value as string), y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>')) as x, (select 1 as x) as y"; //$NON-NLS-1$
         
         final List<?>[] expected = new List<?>[] {
@@ -450,7 +451,23 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<b xmlns=\"\" x=\"2\"/>", 1)
         };    
     
-        final CommandContext cc = createCommandContext();
+        executeStreaming(sql, expected);
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testXmlTableStreamingTimingWithError() throws Throwable {
+    	String sql = "select x.x, y.x from xmltable('/a/b' passing xmlparse(document '<a><b x=''1''/><b x=''2''/></a>') columns x integer path '1 div (@x - 1)') as x, (select 1 as x) as y"; //$NON-NLS-1$
+        
+        final List<?>[] expected = new List<?>[] {
+        		Arrays.asList(1, 1),
+        		Arrays.asList(2, 1)
+        };    
+    
+        executeStreaming(sql, expected);
+    }
+
+	private void executeStreaming(String sql, final List<?>[] expected)
+			throws Throwable {
+		final CommandContext cc = createCommandContext();
         final ResultsFuture<Runnable> r = new ResultsFuture<Runnable>();
         Executor ex = new Executor() {
         	
@@ -476,8 +493,15 @@ public class TestSQLXMLProcessing {
 		t.start();
 		Runnable runnable = r.get();
 		runnable.run();
-		result.get();
-    }
+		try {
+			result.get();
+		} catch (ExecutionException e) {
+			if (e.getCause() != null) {
+				throw e.getCause();
+			}
+			throw e;
+		}
+	}
     
     @Test public void testXmlNameEscaping() throws Exception {
     	String sql = "select xmlforest(\"xml\") from (select 1 as \"xml\") x"; //$NON-NLS-1$
