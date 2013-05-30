@@ -122,6 +122,11 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
 			} catch (ClassNotFoundException e1) {
 				 throw new CommunicationException(JDBCPlugin.Event.TEIID20010, e1, e1.getMessage());
 			} catch (SocketTimeoutException e) {
+				if (i == 0 && !this.info.isSsl()) {
+					//write a dummy initialization value - if the server is actually ssl, this can cause the server side handshake to fail, otherwise it's ignored
+					//TODO: could always do this initialization in the non-ssl case and not wait for a timeout
+		    		this.socketChannel.write(null);
+		    	}
 				if (i == HANDSHAKE_RETRIES - 1) {
 					throw e;
 				}
