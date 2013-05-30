@@ -210,8 +210,8 @@ public class FakeDataManager implements ProcessorDataManager {
 		    List<List<Integer>> filteredTuples = new ArrayList<List<Integer>>();
 			for ( int c = 0; c < updateCommands.size(); c++ ) {
 				Command cmd = updateCommands.get(c);
-				if (cmd instanceof TranslatableProcedureContainer) {
-					TranslatableProcedureContainer update = (TranslatableProcedureContainer)cmd;
+				if (cmd instanceof FilteredCommand) {
+					FilteredCommand update = (FilteredCommand)cmd;
 					if ( update.getCriteria() != null ) {
 					    // Build lookupMap from BOTH all the elements and the projected symbols - both may be needed here
 			            Map<Object, Integer> lookupMap = new HashMap<Object, Integer>();

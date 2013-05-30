@@ -751,45 +751,68 @@ public class RelationalPlanner {
 			//skip the rewrite here, we'll do that in the optimizer
 			//so that we know what the determinism level is.
 			addNestedCommand(sourceNode, container.getGroup(), container, c, false, true);
-		} else if ((!container.getGroup().isTempTable() || metadata.getModelID(container.getGroup().getMetadataID()) != TempMetadataAdapter.TEMP_MODEL) //we hope for the best, and do a specific validation for subqueries below
-				&& container instanceof TranslatableProcedureContainer //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
-				&& !CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
-			//do a workaround of row-by-row processing for update/delete
-			validateRowProcessing(container);
-			
-			//treat this as an update procedure
-			if (container instanceof Update) {
-				c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
-			} else {
-				c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
-			}
-			addNestedCommand(sourceNode, container.getGroup(), container, c, false, true);
-			return false;
 		}
-		
+
+		List<SubqueryContainer<?>> subqueries = ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container);
+
+		if (c == null
+				/* we cheat with the temp table capabilities a little - it actual supports any non-pushdown required function and non-correlated subquery
+				 * we do a specific validation for subqueries below, and otherwise skip the CriteriaCapabilityValidatorVisitor
+				 */
+				&& (!container.getGroup().isTempTable() || metadata.getModelID(container.getGroup().getMetadataID()) != TempMetadataAdapter.TEMP_MODEL) 
+				&& container instanceof FilteredCommand) { //we force the evaluation of procedure params - TODO: inserts are fine except for nonpushdown functions on columns
+			//for non-temp source queries, we must pre-plan subqueries to know if they can be pushed down
+			planSubqueries(container, c, subqueries, true);
+			
+			if (!CriteriaCapabilityValidatorVisitor.canPushLanguageObject(container, metadata.getModelID(container.getGroup().getMetadataID()), metadata, capFinder, analysisRecord)) {
+				//do a workaround of row-by-row processing for update/delete
+				validateRowProcessing(container);
+				
+				//treat this as an update procedure
+				if (container instanceof Update) {
+					c = QueryRewriter.createUpdateProcedure((Update)container, metadata, context);
+				} else {
+					c = QueryRewriter.createDeleteProcedure((Delete)container, metadata, context);
+				}
+				addNestedCommand(sourceNode, container.getGroup(), container, c, false, true);
+				return false;
+			}
+		}
 		//plan any subqueries in criteria/parameters/values
-		for (SubqueryContainer<?> subqueryContainer : ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(container)) {
-			if (c == null && container.getGroup().isTempTable()) {
+		planSubqueries(container, c, subqueries, false);
+		return false;
+	}
+
+	private void planSubqueries(ProcedureContainer container, Command c, List<SubqueryContainer<?>> subqueries, boolean initial)
+			throws QueryPlannerException, QueryMetadataException,
+			TeiidComponentException {
+		
+		boolean isSourceTemp = c == null && container.getGroup().isTempTable() && metadata.getModelID(container.getGroup().getMetadataID()) == TempMetadataAdapter.TEMP_MODEL;
+		
+		for (SubqueryContainer<?> subqueryContainer : subqueries) {
+			if (isSourceTemp) {
 				if (subqueryContainer.getCommand().getCorrelatedReferences() == null) {
 					if (subqueryContainer instanceof ScalarSubquery) {
 						((ScalarSubquery) subqueryContainer).setShouldEvaluate(true);
 					} else if (subqueryContainer instanceof ExistsCriteria) {
 						((ExistsCriteria) subqueryContainer).setShouldEvaluate(true);
 					} else {
-						 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
+						throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
 					}
 				} else {
-					 throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
+					throw new QueryPlannerException(QueryPlugin.Event.TEIID30253, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30253, container));
 				}
     		}
-			ProcessorPlan plan = QueryOptimizer.optimizePlan(subqueryContainer.getCommand(), metadata, null, capFinder, analysisRecord, context);
-    		subqueryContainer.getCommand().setProcessorPlan(plan);
+			if (subqueryContainer.getCommand().getProcessorPlan() == null) {
+				Command subCommand = initial?(Command) subqueryContainer.getCommand().clone():subqueryContainer.getCommand();
+				ProcessorPlan plan = QueryOptimizer.optimizePlan(subCommand, metadata, null, capFinder, analysisRecord, context);
+	    		subqueryContainer.getCommand().setProcessorPlan(plan);
+			}
     		
-    		if (c == null) {
+    		if (c == null && !initial) {
 				RuleCollapseSource.prepareSubquery(subqueryContainer);
 			}
 		}
-		return false;
 	}
 
 	void validateRowProcessing(ProcedureContainer container)

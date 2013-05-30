@@ -1149,5 +1149,16 @@ public class TestSubqueryPushdown {
         assertEquals("SELECT 'Y' FROM BQT1.MediumA AS g_0", hcdm.getCommandHistory().get(0).toString());
         assertEquals("SELECT 1 FROM BQT1.SmallA AS g_0", hcdm.getCommandHistory().get(1).toString());
     }
+    
+    /**
+     * Detect if a subquery should prevent pushdown
+     */
+    @Test public void testDeleteSubquery() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+    	bsc.setCapabilitySupport(Capability.CRITERIA_IN_SUBQUERY, true);
+        TestOptimizer.helpPlan("delete FROM bqt1.smalla where intkey in (select cast(stringkey as integer) from bqt1.smallb)", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      null, false); //$NON-NLS-1$
+    }
 
 }

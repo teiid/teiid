@@ -37,7 +37,7 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  * Represents a SQL Update statement of the form:
  * "UPDATE <group> SET <element> = <expression>, ... [WHERE <criteria>]".
  */
-public class Update extends TranslatableProcedureContainer implements FilteredCommand {
+public class Update extends ProcedureContainer implements FilteredCommand {
 
     /** Identifies the group to be updated. */
     private GroupSymbol group;

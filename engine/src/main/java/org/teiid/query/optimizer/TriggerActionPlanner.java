@@ -124,7 +124,7 @@ public final class TriggerActionPlanner {
 			}
 		}
 		ArrayList<Expression> selectSymbols = new ArrayList<Expression>(LanguageObject.Util.deepClone(allSymbols, ElementSymbol.class));
-		QueryCommand query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(ta.getView()))), ((TranslatableProcedureContainer)userCommand).getCriteria(), null, null);
+		QueryCommand query = new Query(new Select(selectSymbols), new From(Arrays.asList(new UnaryFromClause(ta.getView()))), ((FilteredCommand)userCommand).getCriteria(), null, null);
 		return query;
 	}
         
