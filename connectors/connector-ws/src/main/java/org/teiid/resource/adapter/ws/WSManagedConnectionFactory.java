@@ -68,8 +68,6 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private Bus bus;
 	private QName portQName;
 	private QName serviceQName;
-	private String trustStore;
-	private String trustStorePassword;
 
 	static final String DEFAULT_NAMESPACE_URI = "http://teiid.org"; //$NON-NLS-1$
 
@@ -277,21 +275,4 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		}
 		return true;
 	}
-
-	public String getTrustStore() {
-		return this.trustStore;
-	}
-
-	public void setTrustStore(String trustStore) {
-		this.trustStore = trustStore;
-	}
-
-	public String getTrustStorePassword() {
-		return this.trustStorePassword;
-	}
-
-	public void setTrustStorePassword(String trustStorePassword) {
-		this.trustStorePassword = trustStorePassword;
-	}
-
 }
