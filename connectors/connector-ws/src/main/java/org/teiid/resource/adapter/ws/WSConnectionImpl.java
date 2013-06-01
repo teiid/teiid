@@ -22,19 +22,12 @@
 
 package org.teiid.resource.adapter.ws;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -42,15 +35,9 @@ import java.util.Map;
 import java.util.concurrent.Future;
 
 import javax.activation.DataSource;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
-import javax.net.ssl.X509TrustManager;
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.xml.namespace.QName;
 import javax.xml.ws.AsyncHandler;
 import javax.xml.ws.Binding;
@@ -68,13 +55,13 @@ import org.apache.cxf.BusFactory;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
+import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.jaxws.DispatchImpl;
 import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.Base64;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -92,11 +79,13 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 	private static final class HttpDataSource implements DataSource {
 		private final URL url;
-		private final HttpURLConnection httpConn;
+		private InputStream content;
+		private String contentType;
 
-		private HttpDataSource(URL url, HttpURLConnection httpConn) {
+		private HttpDataSource(URL url, InputStream entity, String contentType) {
 			this.url = url;
-			this.httpConn = httpConn;
+			this.content = entity;
+			this.contentType = contentType;
 		}
 
 		@Override
@@ -111,158 +100,75 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			return this.httpConn.getInputStream();
+			return this.content;
 		}
 
 		@Override
 		public String getContentType() {
-			return this.httpConn.getContentType();
+			return this.contentType;
 		}
 	}
 
-	/**
-	 * Workaround dispatch, since neither JBossNative nor CXF 2.2.2 implement
-	 * this functionality.
-	 */
-	private static final class BinaryDispatch implements Dispatch<DataSource> {
+	private static final class HttpDispatch implements Dispatch<DataSource> {
 
-		HashMap<String, Object> requestContext = new HashMap<String, Object>();
-		HashMap<String, Object> responseContext = new HashMap<String, Object>();
-
+		private HashMap<String, Object> requestContext = new HashMap<String, Object>();
+		private HashMap<String, Object> responseContext = new HashMap<String, Object>();
+		private WebClient client;
 		private String endpoint;
-		private String trustStore;
-		private String trustStorePassword;
 
-		public BinaryDispatch(String endpoint, String trustStore, String trustStorePassword) {
+		public HttpDispatch(String endpoint) {
 			this.endpoint = endpoint;
-			this.trustStore = trustStore;
-			this.trustStorePassword = trustStorePassword;
+			this.client = WebClient.create(this.endpoint);
 		}
-
-	    class TeiidHostnameVerifier implements HostnameVerifier {
-	        public boolean verify(String arg0, SSLSession arg1) {
-	            return true;
-	        }
-	    }
-
-	    class TeiidTrustManager implements X509TrustManager {
-	    	X509TrustManager x509TrustManager;
-
-	    	public TeiidTrustManager() {
-    			try {
-    				TrustManagerFactory tmf = TrustManagerFactory.getInstance("SunX509"); //$NON-NLS-1$
-		    		if (BinaryDispatch.this.trustStore != null) {
-						KeyStore ks = KeyStore.getInstance("JKS"); //$NON-NLS-1$
-						ks.load(new FileInputStream(BinaryDispatch.this.trustStore),BinaryDispatch.this.trustStorePassword.toCharArray());
-						tmf.init(ks);
-		    		}
-		    		else {
-		    			// this is default certificates in java/lib/security
-		    			tmf.init((KeyStore)null);
-		    		}
-					TrustManager tms[] = tmf.getTrustManagers();
-					for (int i = 0; i < tms.length; i++) {
-						if (tms[i] instanceof X509TrustManager) {
-							this.x509TrustManager = (X509TrustManager) tms[i];
-							return;
-						}
-					}
-				} catch (NoSuchAlgorithmException e) { // ignore exceptions, same as default
-				} catch (KeyStoreException e) {
-				} catch (CertificateException e) {
-				} catch (FileNotFoundException e) {
-				} catch (IOException e) {
-				}
-	    	}
-
-	        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-	        	if (this.x509TrustManager == null) {
-	        		return new java.security.cert.X509Certificate[0];
-	        	}
-	        	return this.x509TrustManager.getAcceptedIssuers();
-	        }
-
-	        public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException{
-	            if (this.x509TrustManager != null) {
-	            	this.x509TrustManager.checkClientTrusted(certs, authType);
-	            }
-	            else {
-		        	   throw new java.security.cert.CertificateException(WSManagedConnectionFactory.UTIL.getString("no_cert")); //$NON-NLS-1$
-	            }
-	        }
-
-	        public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) throws java.security.cert.CertificateException{
-	           if (this.x509TrustManager != null) {
-					this.x509TrustManager.checkServerTrusted(certs, authType);
-	           }
-	           else {
-	        	   throw new java.security.cert.CertificateException(WSManagedConnectionFactory.UTIL.getString("no_cert")); //$NON-NLS-1$
-	           }
-	        }
-	    }
 
 		@Override
 		public DataSource invoke(DataSource msg) {
 			try {
 				final URL url = new URL(this.endpoint);
 
-				if (url.getProtocol().equals("https")) { //$NON-NLS-1$
-					try {
-						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "https connection is use; make sure you have configured the truststore for it to work correctly"); //$NON-NLS-1$
-						TrustManager[] trustAllCerts = new TrustManager[] { new TeiidTrustManager() };
-
-						SSLContext sc = SSLContext.getInstance("SSL"); //$NON-NLS-1$
-						sc.init(null, trustAllCerts, new java.security.SecureRandom());
-
-						HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-						HttpsURLConnection.setDefaultHostnameVerifier(new TeiidHostnameVerifier());
-					} catch (KeyManagementException e) {
-						throw new WebServiceException(e);
-					} catch (NoSuchAlgorithmException e) {
-						throw new WebServiceException(e);
-					}
-				}
-
-				final HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
-				httpConn.setRequestMethod((String) this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD));
 				Map<String, List<String>> header = (Map<String, List<String>>)this.requestContext.get(MessageContext.HTTP_REQUEST_HEADERS);
 				for (Map.Entry<String, List<String>> entry : header.entrySet()) {
 					String value = StringUtil.join(entry.getValue(), ","); //$NON-NLS-1$
-					httpConn.setRequestProperty(entry.getKey(), value);
+					this.client.header(entry.getKey(), value);
 				}
 				String username = (String) this.requestContext.get(Dispatch.USERNAME_PROPERTY);
 				String password = (String) this.requestContext.get(Dispatch.PASSWORD_PROPERTY);
 
 				if (username != null) {
-					httpConn.setRequestProperty("Authorization", "Basic " + Base64.encodeBytes((username + ':' + password).getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
+					this.client.header("Authorization", "Basic " + Base64.encodeBytes((username + ':' + password).getBytes())); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 
+				InputStream payload = null;
 				if (msg != null) {
-					httpConn.setDoOutput(true);
-					OutputStream os = httpConn.getOutputStream();
-					InputStream is = msg.getInputStream();
-					ObjectConverterUtil.write(os, is, -1);
+					payload = msg.getInputStream();
 				}
-				readResponseHeaders(httpConn);
-				return new HttpDataSource(url, httpConn);
+				javax.ws.rs.core.Response response = this.client.invoke((String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD), payload);
+				readResponseHeaders(response);
+
+				ArrayList contentTypes = (ArrayList)this.responseContext.get("content-type"); //$NON-NLS-1$
+				return new HttpDataSource(url, (InputStream)response.getEntity(), (String)contentTypes.get(0));
 			} catch (IOException e) {
 				throw new WebServiceException(e);
 			}
 		}
 
-		@Override
-		public Response<DataSource> invokeAsync(DataSource msg) {
-			throw new UnsupportedOperationException();
+		private void readResponseHeaders(javax.ws.rs.core.Response response) {
+			MultivaluedMap<String,Object> headers = response.getMetadata();
+			for (String key:headers.keySet()) {
+				this.responseContext.put(key, headers.get(key));
+			}
+			this.responseContext.put("status-code", response.getStatus()); //$NON-NLS-1$
+			this.responseContext.put("status-message", javax.ws.rs.core.Response.status(response.getStatus()).build().getEntity()); //$NON-NLS-1$
 		}
 
 		@Override
-		public Future<?> invokeAsync(DataSource msg, AsyncHandler<DataSource> handler) {
-			throw new UnsupportedOperationException();
+		public Map<String, Object> getRequestContext() {
+			return this.requestContext;
 		}
 
 		@Override
-		public void invokeOneWay(DataSource msg) {
-			throw new UnsupportedOperationException();
+		public Map<String, Object> getResponseContext() {
+			return this.responseContext;
 		}
 
 		@Override
@@ -276,37 +182,27 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		}
 
 		@Override
-		public <T extends EndpointReference> T getEndpointReference(
-				Class<T> clazz) {
+		public <T extends EndpointReference> T getEndpointReference(Class<T> clazz) {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public Map<String, Object> getRequestContext() {
-			return this.requestContext;
+		public Response<DataSource> invokeAsync(DataSource msg) {
+			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public Map<String, Object> getResponseContext() {
-			return this.responseContext;
+		public Future<?> invokeAsync(DataSource msg,AsyncHandler<DataSource> handler) {
+			throw new UnsupportedOperationException();
 		}
 
-		private void readResponseHeaders(HttpURLConnection httpConn) {
-			for (int i = 0;; i++) {
-				String headerName = httpConn.getHeaderFieldKey(i);
-				String headerValue = httpConn.getHeaderField(i);
-
-				if ((headerName == null) && (headerValue == null)) {
-					if (i == 0) {
-						LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Failed the HTTP call, no-response code"); //$NON-NLS-1$
-					}
-					break;
-				}
-
-				this.responseContext.put(headerName, headerValue);
-			}
+		@Override
+		public void invokeOneWay(DataSource msg) {
+			throw new UnsupportedOperationException();
 		}
 	}
+
+
 
 	private WSManagedConnectionFactory mcf;
 	private Service wsdlService;
@@ -378,7 +274,13 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 		}
 		Dispatch<T> dispatch = null;
 		if (HTTPBinding.HTTP_BINDING.equals(binding) && (type == DataSource.class)) {
-			dispatch = (Dispatch<T>) new BinaryDispatch(endpoint, this.mcf.getTrustStore(), this.mcf.getTrustStorePassword());
+			Bus bus = BusFactory.getThreadDefaultBus();
+			BusFactory.setThreadDefaultBus(this.mcf.getBus());
+			try {
+				dispatch = (Dispatch<T>) new HttpDispatch(endpoint);
+			} finally {
+				BusFactory.setThreadDefaultBus(bus);
+			}
 		} else {
 			//TODO: cache service/port/dispatch instances?
 			Bus bus = BusFactory.getThreadDefaultBus();
