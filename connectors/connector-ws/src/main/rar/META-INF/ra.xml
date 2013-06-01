@@ -109,18 +109,6 @@
                 <config-property-name>Wsdl</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
-            
-            <config-property>
-                <description>{$display:"trustStore",$description:"Trust Store path for https calls",$advanced:"true"}</description>
-                <config-property-name>TrustStore</config-property-name>
-                <config-property-type>java.lang.String</config-property-type>
-            </config-property>      
-            
-            <config-property>
-                <description>{$display:"Trust Store Password",$description:"Password value HTTPS trust store",$advanced:"true",$masked:"true"}</description>
-                <config-property-name>TrustStorePassword</config-property-name>
-                <config-property-type>java.lang.String</config-property-type>
-            </config-property>                  
                          
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>

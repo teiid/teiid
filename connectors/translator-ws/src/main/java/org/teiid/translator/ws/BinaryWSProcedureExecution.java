@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import javax.activation.DataSource;
 import javax.xml.ws.Dispatch;
@@ -56,24 +55,24 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
 /**
- * http handler 
+ * http handler
  */
 public class BinaryWSProcedureExecution implements ProcedureExecution {
-	
+
 	private static final class StreamingBlob extends BlobImpl {
 		InputStream is;
-		
+
 		public StreamingBlob(InputStream is) {
 			this.is = is;
 		}
-		
+
 		@Override
 		public InputStream getBinaryStream() throws SQLException {
-			if (is == null) {
+			if (this.is == null) {
 				throw new SQLException("Already Freed."); //$NON-NLS-1$
 			}
-			InputStream result = is;
-			is = null;
+			InputStream result = this.is;
+			this.is = null;
 			return result;
 		}
 	}
@@ -90,8 +89,8 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     String responseMessage;
     private boolean useResponseContext;
     private boolean alwaysAllowPayloads;
-    
-	/** 
+
+	/**
      * @param env
      */
     public BinaryWSProcedureExecution(Call procedure, RuntimeMetadata metadata, ExecutionContext context, WSExecutionFactory executionFactory, WSConnection conn) {
@@ -101,38 +100,38 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
         this.conn = conn;
         this.executionFactory = executionFactory;
     }
-    
+
     public void setUseResponseContext(boolean useResponseContext) {
 		this.useResponseContext = useResponseContext;
 	}
-    
+
     public void setAlwaysAllowPayloads(boolean alwaysAllowPayloads) {
 		this.alwaysAllowPayloads = alwaysAllowPayloads;
 	}
-    
+
     public void execute() throws TranslatorException {
         List<Argument> arguments = this.procedure.getArguments();
-        
+
         String method = (String)arguments.get(0).getArgumentValue().getValue();
         Object payload = arguments.get(1).getArgumentValue().getValue();
         String endpoint = (String)arguments.get(2).getArgumentValue().getValue();
     	try {
-	        Dispatch<DataSource> dispatch = conn.createDispatch(HTTPBinding.HTTP_BINDING, endpoint, DataSource.class, Mode.MESSAGE); 
-	
+	        Dispatch<DataSource> dispatch = this.conn.createDispatch(HTTPBinding.HTTP_BINDING, endpoint, DataSource.class, Mode.MESSAGE);
+
 			if (method == null) {
 				method = "POST"; //$NON-NLS-1$
 			}
-			
+
 			dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_METHOD, method);
 			if (!this.alwaysAllowPayloads && payload != null && !"POST".equalsIgnoreCase(method)) { //$NON-NLS-1$
 				throw new WebServiceException(WSExecutionFactory.UTIL.getString("http_usage_error")); //$NON-NLS-1$
 			}
-			
+
 	        Map<String, List<String>> httpHeaders = (Map<String, List<String>>)dispatch.getRequestContext().get(MessageContext.HTTP_REQUEST_HEADERS);
 	        for (String key:this.customHeaders.keySet()) {
 	        	httpHeaders.put(key, this.customHeaders.get(key));
 	        }
-	        dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);			
+	        dispatch.getRequestContext().put(MessageContext.HTTP_REQUEST_HEADERS, httpHeaders);
 
 			DataSource ds = null;
 			if (payload instanceof String) {
@@ -144,67 +143,60 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			} else if (payload instanceof Blob) {
 				ds = new InputStreamFactory.BlobInputStreamFactory((Blob)payload);
 			}
-			
+
 			this.returnValue = dispatch.invoke(ds);
-			if (useResponseContext) {
+			if (this.useResponseContext) {
 				this.responseContext = dispatch.getResponseContext();
-				buildResposeCode((String)this.responseContext.get(null));
+				buildResposeCode();
 			}
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
-		} 
+		}
     }
 
-    private void buildResposeCode(String object) {
-    	StringTokenizer st = new StringTokenizer(object, " ");//$NON-NLS-1$
-    	st.nextToken(); // http
-    	this.responseCode = Integer.parseInt(st.nextToken());
-    	StringBuilder sb = new StringBuilder();
-    	while (st.hasMoreTokens()) {
-    		sb.append(st.nextToken());
-    		sb.append(" "); //$NON-NLS-1$
-    	}
-    	this.responseMessage = sb.toString();
+    private void buildResposeCode() {
+    	this.responseCode = (Integer)this.responseContext.get("status-code"); //$NON-NLS-1$
+    	this.responseMessage = (String)this.responseContext.get("status-message");//$NON-NLS-1$
 	}
 
 	@Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
     	return null;
-    }  
-    
+    }
+
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
-    	Object result = returnValue;
-		if (returnValue != null && procedure.getArguments().size() >= 4 && Boolean.TRUE.equals(procedure.getArguments().get(3).getArgumentValue().getValue())) {
+    	Object result = this.returnValue;
+		if (this.returnValue != null && this.procedure.getArguments().size() >= 4 && Boolean.TRUE.equals(this.procedure.getArguments().get(3).getArgumentValue().getValue())) {
 			try {
-				result = new BlobType(new StreamingBlob(returnValue.getInputStream()));
+				result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
 			} catch (IOException e) {
 				throw new TranslatorException(e);
 			}
 		}
-        return Arrays.asList(result, returnValue.getContentType());
-    }    
-    
+        return Arrays.asList(result, this.returnValue.getContentType());
+    }
+
     public void close() {
-    	
+
     }
 
     public void cancel() throws TranslatorException {
         // no-op
-    }    
-    
+    }
+
     public void addHeader(String name, List<String> value) {
     	this.customHeaders.put(name, value);
     }
-    
+
     public Object getResponseHeader(String name){
     	return this.responseContext.get(name);
     }
-    
+
     public int getResponseCode() {
     	return this.responseCode;
     }
-    
+
     public String getResponseMessage() {
     	return this.responseMessage;
     }
