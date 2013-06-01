@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -34,6 +34,7 @@ import org.odata4j.edm.EdmEntityContainer;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmFunctionImport;
 import org.odata4j.edm.EdmSchema;
+import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.NotImplementedException;
 import org.odata4j.producer.*;
 import org.odata4j.producer.edm.MetadataProducer;
@@ -47,11 +48,11 @@ import org.teiid.query.sql.lang.Update;
 
 public class TeiidProducer implements ODataProducer {
 	private Client client;
-	
+
 	public TeiidProducer(Client client) {
-		this.client = client; 
+		this.client = client;
 	}
-	
+
 	@Override
 	public <TExtension extends OExtension<ODataProducer>> TExtension findExtension(Class<TExtension> clazz) {
 		return null;
@@ -101,12 +102,16 @@ public class TeiidProducer implements ODataProducer {
 			public String getSkipToken() {
 				return entities.nextToken();
 			}
-		};		
-	}	
+		};
+	}
 
 	private EdmEntitySet getEntitySet(String entitySetName) {
 		EdmDataServices eds = getMetadata();
-		return eds.getEdmEntitySet(entitySetName);
+		EdmEntitySet entity =  eds.findEdmEntitySet(entitySetName);
+		if (entity == null) {
+			throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16011, entitySetName));
+		}
+		return entity;
 	}
 
 	@Override
@@ -117,7 +122,7 @@ public class TeiidProducer implements ODataProducer {
 		List<SQLParam> parameters = visitor.getParameters();
 		return this.client.executeCount(query, parameters);
 	}
-	
+
 	@Override
 	public EntityResponse getEntity(ODataContext context, String entitySetName, OEntityKey entityKey, EntityQueryInfo queryInfo) {
 		getEntitySet(entitySetName); // validate entity
@@ -150,10 +155,10 @@ public class TeiidProducer implements ODataProducer {
 	@Override
 	public EntityResponse createEntity(ODataContext context, String entitySetName, OEntity entity) {
 		EdmEntitySet entitySet = getEntitySet(entitySetName);
-		
+
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Insert query = visitor.insert(entitySet, entity);
-				
+
 		List<SQLParam> parameters = visitor.getParameters();
 		int updateCount =  this.client.executeUpdate(query, parameters);
 		if (updateCount  == 1) {
@@ -174,10 +179,10 @@ public class TeiidProducer implements ODataProducer {
 	@Override
 	public void deleteEntity(ODataContext context, String entitySetName, OEntityKey entityKey) {
 		EdmEntitySet entitySet = getEntitySet(entitySetName);
-		
+
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Delete query = visitor.delete(entitySet, entityKey);
-				
+
 		List<SQLParam> parameters = visitor.getParameters();
 		int deleteCount =  this.client.executeUpdate(query, parameters);
 		if (deleteCount > 0) {
@@ -198,15 +203,15 @@ public class TeiidProducer implements ODataProducer {
 		int updateCount = update(entitySetName, entity);
 		if (updateCount > 0) {
 			LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_ODATA, null, "updated entity = ", entitySetName, " with key=", entity.getEntityKey().asSingleValue()); //$NON-NLS-1$ //$NON-NLS-2$
-		}		
+		}
 	}
 
 	private int update(String entitySetName, OEntity entity) {
 		EdmEntitySet entitySet = getEntitySet(entitySetName);
-		
+
 		ODataSQLBuilder visitor = new ODataSQLBuilder(this.client.getMetadataStore(), true);
 		Update query = visitor.update(entitySet, entity);
-				
+
 		List<SQLParam> parameters = visitor.getParameters();
 		return this.client.executeUpdate(query, parameters);
 	}
@@ -247,7 +252,7 @@ public class TeiidProducer implements ODataProducer {
 	public BaseResponse callFunction(ODataContext context,
 			EdmFunctionImport function, Map<String, OFunctionParameter> params,
 			QueryInfo queryInfo) {
-		
+
 		EdmEntityContainer eec = findEntityContainer(function);
 		StringBuilder sql = new StringBuilder();
 		// fully qualify the procedure name
@@ -269,21 +274,21 @@ public class TeiidProducer implements ODataProducer {
 		sql.append("}"); //$NON-NLS-1$
 		return this.client.executeCall(sql.toString(), params, function.getReturnType());
 	}
-	
 
-	
+
+
 	EdmEntityContainer findEntityContainer(EdmFunctionImport function) {
 		EdmDataServices eds = getMetadata();
 		for (EdmSchema schema : eds.getSchemas()) {
 			for (EdmEntityContainer eec:schema.getEntityContainers()) {
 				for (EdmFunctionImport func:eec.getFunctionImports()) {
-					if (func == function) {	
+					if (func == function) {
 						return eec;
 					}
 				}
 			}
 		}
-		return null;		
+		return null;
 	}
 }
-	
+
