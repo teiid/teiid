@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -83,7 +83,7 @@ import org.teiid.transport.LocalServerConnection;
 public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
-	
+
 	private MetadataStore metadataStore;
 	private String vdbName;
 	private int vdbVersion;
@@ -91,7 +91,9 @@ public class LocalClient implements Client {
 	private long cacheTime;
 	private String transportName;
 	private String connectionString;
-	
+	private EdmDataServices edmMetaData;
+	private long lastLookup = -1L;
+
 	public LocalClient(String vdbName, int vdbVersion, Properties props) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
@@ -104,7 +106,7 @@ public class LocalClient implements Client {
 		sb.append(EmbeddedProfile.TRANSPORT_NAME).append("=").append(this.transportName).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
 		this.connectionString = sb.toString();
 	}
-	
+
 	@Override
 	public String getVDBName() {
 		return this.vdbName;
@@ -114,12 +116,12 @@ public class LocalClient implements Client {
 	public int getVDBVersion() {
 		return this.vdbVersion;
 	}
-	
-	
+
+
 	private ConnectionImpl getConnection() throws SQLException {
-		return TeiidDriver.getInstance().connect(connectionString, null);
-	}	
-	
+		return TeiidDriver.getInstance().connect(this.connectionString, null);
+	}
+
 	@Override
 	public BaseResponse executeCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType) {
 		ConnectionImpl connection = null;
@@ -127,19 +129,19 @@ public class LocalClient implements Client {
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
 			connection = getConnection();
 			final CallableStatementImpl stmt = connection.prepareCall(sql);
-			
+
 			int i = 1;
 			if (returnType != null && returnType.isSimple()) {
 				stmt.registerOutParameter(i++, JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(returnType.getFullyQualifiedTypeName())));
 			}
-			
+
 			if (!parameters.isEmpty()) {
 				for (String key:parameters.keySet()) {
 					OFunctionParameter param = parameters.get(key);
 					stmt.setObject(i++, ((OSimpleObject)param.getValue()).getValue());
 				}
 			}
-			
+
 			boolean results = stmt.execute();
 			if (results) {
 				final ResultSet rs = stmt.getResultSet();
@@ -158,16 +160,16 @@ public class LocalClient implements Client {
                 String collectionName = returnType.getFullyQualifiedTypeName();
                 collectionName = collectionName.replace("(", "_"); //$NON-NLS-1$ //$NON-NLS-2$
                 collectionName = collectionName.replace(")", "_"); //$NON-NLS-1$ //$NON-NLS-2$
-				return Responses.collection(resultRows.build(), null, null, null, collectionName);				
+				return Responses.collection(resultRows.build(), null, null, null, collectionName);
 			}
-			
+
             if (returnType != null && returnType.isSimple()) {
             	Object result = stmt.getObject(1);
             	if (result == null) {
             		result = org.odata4j.expression.Expression.null_();
             	}
             	return Responses.simple((EdmSimpleType)returnType, "return", result); //$NON-NLS-1$
-            }			
+            }
 			return Responses.simple(EdmSimpleType.INT32, 1);
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
@@ -179,11 +181,13 @@ public class LocalClient implements Client {
 				}
 			}
 		}
-	}	
+	}
 
 	@Override
 	public MetadataStore getMetadataStore() {
-		if (this.metadataStore == null) {
+		MetadataStore store = null;
+		long currentTime = System.currentTimeMillis();
+		if (this.metadataStore == null || this.lastLookup == -1 || currentTime-this.lastLookup > this.cacheTime) {
 			try {
 				InitialContext ic = new InitialContext();
 				ClientServiceRegistry csr = (ClientServiceRegistry)ic.lookup(LocalServerConnection.jndiNameForRuntime(this.transportName));
@@ -192,17 +196,24 @@ public class LocalClient implements Client {
 				if (vdb == null) {
 					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16001, this.vdbName, this.vdbVersion));
 				}
-				this.metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
+				store = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 			} catch (NamingException e) {
 				 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
 			} catch (ComponentNotFoundException e) {
 				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
 			}
 		}
+
+		// this is check if the vdb has reloaded between calls. Hopefully the above look up is not expensive and by doing
+		// object id match we can figure out there has been change in vdb load
+		if (this.metadataStore == null || this.metadataStore != store) {
+			this.metadataStore = store;
+			this.edmMetaData = null;
+		}
 		return this.metadataStore;
 	}
 
-	
+
 	@Override
 	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount) {
 		Connection connection = null;
@@ -213,11 +224,11 @@ public class LocalClient implements Client {
 				hint.setScope(CacheDirective.Scope.USER);
 				query.setCacheHint(hint);
 			}
-			
+
 			String sql = query.toString();
-					
+
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
-			
+
 			connection = getConnection();
 			final PreparedStatement stmt = connection.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 			if (parameters!= null && !parameters.isEmpty()) {
@@ -225,7 +236,7 @@ public class LocalClient implements Client {
 					stmt.setObject(i+1, parameters.get(i).value, parameters.get(i).sqlType);
 				}
 			}
-			
+
 			final ResultSet rs = stmt.executeQuery();
             int skipSize = 0;
             if (skipToken != null) {
@@ -243,7 +254,7 @@ public class LocalClient implements Client {
 			}
 		}
 	}
-	
+
 	@Override
 	public CountResponse executeCount(Query query, List<SQLParam> parameters) {
 		ConnectionImpl connection = null;
@@ -273,8 +284,8 @@ public class LocalClient implements Client {
 			} catch (SQLException e) {
 			}
 		}
-	}	
-	
+	}
+
 	@Override
 	public int executeUpdate(Command query, List<SQLParam> parameters) {
 		ConnectionImpl connection = null;
@@ -305,6 +316,9 @@ public class LocalClient implements Client {
 
 	@Override
 	public EdmDataServices getMetadata() {
-		return ODataEntitySchemaBuilder.buildMetadata(getMetadataStore());
+		if (this.edmMetaData == null) {
+			this.edmMetaData = ODataEntitySchemaBuilder.buildMetadata(getMetadataStore());
+		}
+		return this.edmMetaData;
 	}
 }
