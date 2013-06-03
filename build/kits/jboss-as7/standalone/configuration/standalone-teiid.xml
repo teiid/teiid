@@ -269,12 +269,6 @@
                 </resource-adapter>
                <resource-adapter id="mongodb">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
-                    <connection-definitions>
-                        <connection-definition class-name="org.teiid.resource.adapter.mongodb.MongoDBManagedConnectionFactory" jndi-name="java:/mongodbDS" enabled="true" use-java-context="true" pool-name="mongodbDS">
-                            <config-property name="RemoteServerList">localhost:27017</config-property>
-                            <config-property name="Database">test</config-property>
-                        </connection-definition>
-                    </connection-definitions>
                 </resource-adapter>
             </resource-adapters>        
         </subsystem>
