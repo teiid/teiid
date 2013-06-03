@@ -365,9 +365,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     			ResultsMessage result = getResults(prefetch);
     			prefetch = null;
     			Batch nextBatch = processBatch(result);
-    			if (result.getFirstRow() == beginRow) {
-    				return nextBatch;
-    			}
+				return nextBatch;
         	}
         	ResultsFuture<ResultsMessage> results = submitRequestBatch(beginRow);
         	if (asynch && !results.isDone()) {

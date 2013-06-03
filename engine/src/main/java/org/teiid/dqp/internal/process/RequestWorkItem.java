@@ -813,7 +813,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		    		fromBuffer = true;
 		    	}
 	    		if (batch.getRowCount() > count) {
-	    			int beginRow = Math.min(this.begin, batch.getEndRow() - count + 1);
+	    			int beginRow = isForwardOnly()?begin:Math.min(this.begin, batch.getEndRow() - count + 1);
 	    			int endRow = Math.min(beginRow + count - 1, batch.getEndRow());
 	    			boolean last = false;
 	    			if (endRow == batch.getEndRow()) {

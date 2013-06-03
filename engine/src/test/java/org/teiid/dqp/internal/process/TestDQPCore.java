@@ -420,8 +420,8 @@ public class TestDQPCore {
         message = core.processCursorRequest(reqMsg.getExecutionId(), 11, 5);
         rm = message.get(500000, TimeUnit.MILLISECONDS);
         assertNull(rm.getException());
-        assertEquals(5, rm.getResultsList().size());
-        assertEquals(7, rm.getFirstRow());
+        assertEquals(1, rm.getResultsList().size());
+        assertEquals(11, rm.getFirstRow());
         assertEquals(11, rm.getFinalRow());
     }
     
