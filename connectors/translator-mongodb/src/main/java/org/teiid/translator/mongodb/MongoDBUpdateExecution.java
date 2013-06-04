@@ -63,7 +63,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 		super(executionContext, metadata, connection);
 		this.command = command;
 
-		this.visitor = new MongoDBUpdateVisitor(executionFactory, metadata);
+		this.visitor = new MongoDBUpdateVisitor(executionFactory, metadata, this.mongoDB);
 		this.visitor.visitNode(command);
 
 		if (!this.visitor.exceptions.isEmpty()) {
@@ -260,7 +260,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
         GeneratedKeys generatedKeys = this.executionContext.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
         List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
         for (int i = 0; i < columnDataTypes.length; i++) {
-            Object value = this.executionFactory.retrieveValue(result.getField(columnNames[i]), columnDataTypes[i]);
+            Object value = this.executionFactory.retrieveValue(result.getField(columnNames[i]), columnDataTypes[i], this.mongoDB, columnNames[i]);
             vals.add(value);
         }
         generatedKeys.addKey(vals);

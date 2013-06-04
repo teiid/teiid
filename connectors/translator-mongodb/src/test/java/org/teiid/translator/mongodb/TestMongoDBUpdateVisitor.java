@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -39,6 +40,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBObject;
 
 @SuppressWarnings("nls")
@@ -60,7 +62,7 @@ public class TestMongoDBUpdateVisitor {
 
     private void helpExecute(String query, String collection, String expected, String match, String pushKey, String pullKeys) throws Exception {
     	Command cmd = this.utility.parseCommand(query);
-    	MongoDBUpdateVisitor visitor = new MongoDBUpdateVisitor(this.translator, this.utility.createRuntimeMetadata());
+    	MongoDBUpdateVisitor visitor = new MongoDBUpdateVisitor(this.translator, this.utility.createRuntimeMetadata(), Mockito.mock(DB.class));
     	visitor.visitNode(cmd);
     	if (!visitor.exceptions.isEmpty()) {
     		throw visitor.exceptions.get(0);
