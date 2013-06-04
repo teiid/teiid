@@ -23,19 +23,15 @@ package org.teiid.translator.hive;
 
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.Command;
 import org.teiid.language.Function;
 import org.teiid.language.Limit;
-import org.teiid.metadata.MetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -45,6 +41,7 @@ import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 import org.teiid.translator.jdbc.ModFunctionModifier;
 import org.teiid.translator.jdbc.SQLConversionVisitor;
 
@@ -319,15 +316,9 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         return supportedFunctions;
     }    
     
-	@Override
-	public void getMetadata(MetadataFactory metadataFactory, Connection conn) throws TranslatorException {
-		try {
-			HiveMetadataProcessor metadataProcessor = new HiveMetadataProcessor();
-			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-			metadataProcessor.getConnectorMetadata(conn, metadataFactory);
-		} catch (SQLException e) {
-			throw new TranslatorException(e);
-		}
-	}    
+    @Override
+    protected JDBCMetdataProcessor createMetadataProcessor() {
+    	return new HiveMetadataProcessor();
+    }
     
 }
