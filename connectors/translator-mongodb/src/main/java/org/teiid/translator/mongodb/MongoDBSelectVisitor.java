@@ -524,7 +524,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	@Override
 	public void visit(Literal obj) {
 		try {
-			this.onGoingExpression.push(this.executionFactory.convertToMongoType(obj.getValue()));
+			this.onGoingExpression.push(this.executionFactory.convertToMongoType(obj.getValue(), null, null));
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}

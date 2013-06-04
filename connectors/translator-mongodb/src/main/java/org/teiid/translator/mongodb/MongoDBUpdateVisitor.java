@@ -43,9 +43,11 @@ import com.mongodb.DBObject;
 public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	protected LinkedHashMap<String, Object> columnValues = new LinkedHashMap<String, Object>();
+	private DB mongoDB;
 
-	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata) {
+	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata, DB mongoDB) {
 		super(executionFactory, metadata);
+		this.mongoDB = mongoDB;
 	}
 
 	@Override
@@ -71,7 +73,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	private void resolveExpressionValue(String colName, Expression expr) throws TranslatorException {
 		Object value = null;
 		if (expr instanceof Literal) {
-			value = this.executionFactory.convertToMongoType(((Literal) expr).getValue());
+			value = this.executionFactory.convertToMongoType(((Literal) expr).getValue(), this.mongoDB, colName);
 		}
 		else {
 			this.exceptions.add(new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18001)));
