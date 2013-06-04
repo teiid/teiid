@@ -21,19 +21,27 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 import javax.resource.cci.ConnectionFactory;
 
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.ClobImpl;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.language.Argument;
 import org.teiid.language.Call;
 import org.teiid.language.Command;
@@ -52,7 +60,11 @@ import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
+import com.mongodb.DB;
 import com.mongodb.DBRef;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
+import com.mongodb.gridfs.GridFSInputFile;
 
 @Translator(name="mongodb", description="MongoDB Translator, reads and writes the data to MongoDB")
 public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory, MongoDBConnection> {
@@ -268,7 +280,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	 * @param expectedClass
 	 * @return
 	 */
-	public Object retrieveValue(Object value, Class<?> expectedClass) {
+	public Object retrieveValue(Object value, Class<?> expectedClass, DB mongoDB, String fqn) {
 		if (value == null) {
 			return null;
 		}
@@ -298,6 +310,45 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		else if (value instanceof String && expectedClass.equals(Character.class)) {
 			return new Character(((String)value).charAt(0));
 		}
+		else if (value instanceof String && expectedClass.equals(Blob.class)) {
+			GridFS gfs = new GridFS(mongoDB, fqn);
+			final GridFSDBFile resource = gfs.findOne((String)value);
+			if (resource == null) {
+				return null;
+			}
+			return new BlobImpl(new InputStreamFactory() {
+				@Override
+				public InputStream getInputStream() throws IOException {
+					return resource.getInputStream();
+				}
+			});
+		}
+		else if (value instanceof String && expectedClass.equals(Clob.class)) {
+			GridFS gfs = new GridFS(mongoDB, fqn);
+			final GridFSDBFile resource = gfs.findOne((String)value);
+			if (resource == null) {
+				return null;
+			}
+			return new ClobImpl(new InputStreamFactory() {
+				@Override
+				public InputStream getInputStream() throws IOException {
+					return resource.getInputStream();
+				}
+			}, -1);
+		}
+		else if (value instanceof String && expectedClass.equals(SQLXML.class)) {
+			GridFS gfs = new GridFS(mongoDB, fqn);
+			final GridFSDBFile resource = gfs.findOne((String)value);
+			if (resource == null) {
+				return null;
+			}
+			return new SQLXMLImpl(new InputStreamFactory() {
+				@Override
+				public InputStream getInputStream() throws IOException {
+					return resource.getInputStream();
+				}
+			});
+		}
 		return value;
 	}
 
@@ -307,41 +358,57 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	 * @param value
 	 * @return
 	 */
-	public Object convertToMongoType(Object value) throws TranslatorException {
+	public Object convertToMongoType(Object value, DB mongoDB, String fqn) throws TranslatorException {
 		if (value == null) {
 			return null;
 		}
 
-		if (value instanceof BigDecimal) {
-			return ((BigDecimal)value).toPlainString();
+		try {
+			if (value instanceof BigDecimal) {
+				return ((BigDecimal)value).toPlainString();
+			}
+			else if (value instanceof BigInteger) {
+				return ((BigInteger)value).toString();
+			}
+			else if (value instanceof Character) {
+				return ((Character)value).toString();
+			}
+			else if (value instanceof java.sql.Date) {
+				return new java.util.Date(((java.sql.Date)value).getTime());
+			}
+			else if (value instanceof java.sql.Time) {
+				return new java.util.Date(((java.sql.Time)value).getTime());
+			}
+			else if (value instanceof java.sql.Timestamp) {
+				return new java.util.Date(((java.sql.Timestamp)value).getTime());
+			}
+			else if (value instanceof Blob) {
+				String uuid = UUID.randomUUID().toString();
+				GridFS gfs = new GridFS(mongoDB, fqn);
+				GridFSInputFile gfsFile = gfs.createFile(((Blob)value).getBinaryStream());
+				gfsFile.setFilename(uuid);
+				gfsFile.save();
+				return uuid;
+			}
+			else if (value instanceof Clob) {
+				String uuid = UUID.randomUUID().toString();
+				GridFS gfs = new GridFS(mongoDB, fqn);
+				GridFSInputFile gfsFile = gfs.createFile(((Clob)value).getAsciiStream());
+				gfsFile.setFilename(uuid);
+				gfsFile.save();
+				return uuid;
+			}
+			else if (value instanceof SQLXML) {
+				String uuid = UUID.randomUUID().toString();
+				GridFS gfs = new GridFS(mongoDB, fqn);
+				GridFSInputFile gfsFile = gfs.createFile(((SQLXML)value).getBinaryStream());
+				gfsFile.setFilename(uuid);
+				gfsFile.save();
+				return uuid;
+			}
+			return value;
+		} catch (SQLException e) {
+			throw new TranslatorException(e);
 		}
-		else if (value instanceof BigInteger) {
-			return ((BigInteger)value).toString();
-		}
-		else if (value instanceof Character) {
-			return ((Character)value).toString();
-		}
-		else if (value instanceof java.sql.Date) {
-			return new java.util.Date(((java.sql.Date)value).getTime());
-		}
-		else if (value instanceof java.sql.Time) {
-			return new java.util.Date(((java.sql.Time)value).getTime());
-		}
-		else if (value instanceof java.sql.Timestamp) {
-			return new java.util.Date(((java.sql.Timestamp)value).getTime());
-		}
-		else if (value instanceof Blob) {
-			//TODO:
-			throw new TranslatorException();
-		}
-		else if (value instanceof Clob) {
-			//TODO:
-			throw new TranslatorException();
-		}
-		else if (value instanceof SQLXML) {
-			//TODO:
-			throw new TranslatorException();
-		}
-		return value;
 	}
 }
