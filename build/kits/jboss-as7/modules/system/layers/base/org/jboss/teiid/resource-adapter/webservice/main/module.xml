@@ -37,7 +37,7 @@
                 <include path="META-INF/cxf" />
             </exports>
         </module>
-        <module name="org.springframework.spring" export="true">
+        <module name="org.springframework.spring" optional="true" export="true">
             <imports>
                 <include path="META-INF" />
             </imports>
