@@ -25,6 +25,7 @@ import static org.junit.Assert.*;
 
 import java.util.Map;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.object.ObjectConnection;
@@ -33,7 +34,7 @@ import org.teiid.translator.object.ObjectConnection;
 public class TestInfinispanConfigFileLocalCache {
     
     private static InfinispanManagedConnectionFactory factory = null;
-		
+    
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
  		
@@ -42,11 +43,12 @@ public class TestInfinispanConfigFileLocalCache {
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
 		factory.setCacheTypeMap(RemoteInfinispanTestHelper.CACHE_NAME + ":" + "java.lang.Long;longValue");
 		
-		// initialize container and cache
-		factory.createCacheContainer();
-		factory.getCache(RemoteInfinispanTestHelper.CACHE_NAME).put("1", new Long(12345678));
-
 	}
+	
+    @AfterClass
+    public static void closeConnection() throws Exception {
+        RemoteInfinispanTestHelper.releaseServer();
+    }
 	
     @Test
     public void testConnection() throws Exception {

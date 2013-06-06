@@ -97,12 +97,24 @@ public class RemoteInfinispanTestHelper {
     public static synchronized void releaseServer() {
         --count;
         if (count <= 0) {
+            
+            try {
+            	if (CACHEMANAGER != null) {
+            		CACHEMANAGER.stop();
+            	}
+            } finally {
+            	CACHEMANAGER = null;
+            }
+            
             try {
                 // System.out.println("Stopping HotRot Server at " + hostAddress() + ":" + hostPort());
-                server.stop();
+                if (server != null) {
+                	server.stop();
+                }
             } finally {
                 server = null;
             }
+
         }
     }
 }
