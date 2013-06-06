@@ -760,7 +760,6 @@ public class TestJoinNode {
            Arrays.asList(new Object[] { 7, null }),
         };
         
-        System.out.println(Arrays.toString(this.leftTuples));
         helpCreateJoin();
         EnhancedSortMergeJoinStrategy esmjs = new EnhancedSortMergeJoinStrategy(SortOption.NOT_SORTED, SortOption.SORT);
         this.joinStrategy = esmjs;
