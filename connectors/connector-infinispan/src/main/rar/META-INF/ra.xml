@@ -74,9 +74,9 @@
                                
             
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
-            <connectionfactory-impl-class>org.teiid.resource.adapter.custom.spi.WrappedConnectionFactory</connectionfactory-impl-class>
+            <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>
-            <connection-impl-class>org.teiid.resource.adapter.custom.spi.WrappedConnection</connection-impl-class>          
+            <connection-impl-class>org.teiid.resource.spi.WrappedConnection</connection-impl-class>          
 
          </connection-definition>
          
