@@ -193,6 +193,7 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
 		MEMORY_BUFFER_SPACE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 		MEMORY_BUFFER_OFFHEAP_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 		MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE.marshallAsAttribute(node, false, writer);
+		ENCRYPT_FILES_ATTRIBUTE.marshallAsAttribute(node, false, writer);
 	}
 
 	private void writeResultsetCacheConfiguration(XMLExtendedStreamWriter writer, ModelNode node) throws XMLStreamException {
@@ -605,7 +606,10 @@ class TeiidSubsystemParser implements XMLStreamConstants, XMLElementReader<List<
     				break;
     			case MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE:
     				node.get(element.getModelName()).set(Integer.parseInt(attrValue));
-    				break;    				
+    				break;
+    			case ENCRYPT_FILES_ATTRIBUTE:
+    				node.get(element.getModelName()).set(Boolean.parseBoolean(attrValue));
+    				break;
     			default:
     				throw ParseUtils.unexpectedAttribute(reader, i);    			
     			}

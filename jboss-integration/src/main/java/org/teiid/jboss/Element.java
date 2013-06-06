@@ -67,6 +67,7 @@ enum Element {
 	MEMORY_BUFFER_OFFHEAP_ATTRIBUTE("memory-buffer-off-heap", "buffer-service-memory-buffer-off-heap"),
 	MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE("max-storage-object-size", "buffer-service-max-storage-object-size"),
 	INLINE_LOBS("inline-lobs", "buffer-service-inline-lobs"),
+	ENCRYPT_FILES_ATTRIBUTE("encrypt-files", "buffer-service-encrypt-files"),
 	
 	//prepared-plan-cache-config
 	PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache"),

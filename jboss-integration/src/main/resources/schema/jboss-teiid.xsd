@@ -54,7 +54,7 @@
                             <xs:documentation>Use disk for buffer management</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>
-                  <xs:attribute name="inline-lobs" type="xs:boolean">
+                    <xs:attribute name="inline-lobs" type="xs:boolean">
                         <xs:annotation>
                             <xs:documentation>Set to true to allow inlining of memory based and small lobs into results.</xs:documentation>
                         </xs:annotation>
@@ -107,6 +107,11 @@
                     <xs:attribute name="max-storage-object-size" type="xs:int">
                         <xs:annotation>
                             <xs:documentation>The maximum size of a buffer managed object (typically a table page or a results batch) in bytes (default 8388608 or 8MB). Setting this value too high will reduce the effectiveness of the memory buffer.</xs:documentation>
+                        </xs:annotation>
+                    </xs:attribute>
+                    <xs:attribute name="encrypt-files" type="xs:boolean">
+                        <xs:annotation>
+                            <xs:documentation>Set to true to encrypt temporary data files with 128-bit AES.</xs:documentation>
                         </xs:annotation>
                     </xs:attribute>                                                                     
                 </xs:complexType>

@@ -26,18 +26,7 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-<li>TEIID-2444 <b>EAP Platform</b> - the deployment platform for Teiid has been changed to EAP 6.1.Alpha1 </li>
-<li>TEIID-2429 <b>Improved sort performance</b> - improved sorts for large data sets especially under heavy load. </li>
-<li>TEIID-2449 <b>VDB Zips</b> - added the ability to deploy non-Designer based vdb zip artifacts with the ability to place DDL outside of the VDB.xml via the DDL-FILE metadata repository. </li>
-<li>TEIID-2423 TEIID-2470 <b>Additional Embedded deployments</b> - xml and zip vdb deployment options are available for Teiid Embedded. </li>
-<li>TEIID-1092 <b>Session Variables</b> - added the teiid_session_set and teiid_session_get methods to maintain session variables. </li>
-<li>TEIID-2326 <b>Shared Mat Views</b> - materialized views from imported vdbs will be reused rather than recreated in each importing vdb.  </li>
-<li>TEIID-2344 <b>Automatic DB Version Detection</b> - the JDBC translator database version property in most circumstances will not need to be set manually - see the compatibility note below.
-<li>TEIID-2453 <b>STRING_AGG</b> Added the string_agg aggregate function for concatenating binary and character strings.
-<li>TEIID-2504 <b>Improved socket results processing</b> large results processing over a socket transport have been significantly improved for forward only results.  Scrollable results will have only a marginal improvement.
-<li>TEIID-2427 TEIID-2311 <b>Column Masking</b> added column masking and refined row-based security.  Also allow for permissions to be granted via the MetadataFactory methods addPermission and addColumnPermisison to enable
-adding roles via a MetadataRepository.
-<li>TEIID-2507 <b>Session scoped mat views</b> - mat views can now be scoped to sessions via the cache hint, rather than to just the global scope.
+<li>TEIID-2528 <b>Encrypted Buffer Files</b> - the buffer manager now supports an option to encrypt Teiid temp data files using 128-bit AES.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>

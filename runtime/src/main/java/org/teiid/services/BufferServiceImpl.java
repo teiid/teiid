@@ -27,9 +27,11 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.StorageManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.common.buffer.impl.BufferFrontedFileStoreCache;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.common.buffer.impl.EncryptedStorageManager;
 import org.teiid.common.buffer.impl.FileStorageManager;
 import org.teiid.common.buffer.impl.MemoryStorageManager;
 import org.teiid.common.buffer.impl.SplittableStorageManager;
@@ -56,6 +58,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
     private BufferManagerImpl bufferMgr;
 	private File bufferDir;
 	private boolean useDisk = true;
+	private boolean encryptFiles = false;
 	private int processorBatchSize = BufferManager.DEFAULT_PROCESSOR_BATCH_SIZE;
     private int maxOpenFiles = FileStorageManager.DEFAULT_MAX_OPEN_FILES;
     private long maxFileSize = SplittableStorageManager.DEFAULT_MAX_FILESIZE; // 2GB
@@ -105,6 +108,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
                 fsm.setMaxBufferSpace(maxBufferSpace*MB);
                 SplittableStorageManager ssm = new SplittableStorageManager(fsm);
                 ssm.setMaxFileSize(maxFileSize);
+                StorageManager sm = ssm;
+                if (encryptFiles) {
+                	sm = new EncryptedStorageManager(ssm);
+                }
                 fsc = new BufferFrontedFileStoreCache();
                 fsc.setBufferManager(this.bufferMgr);
                 fsc.setMaxStorageObjectSize(maxStorageObjectSize);
@@ -122,7 +129,7 @@ public class BufferServiceImpl implements BufferService, Serializable {
             		//adjust the value
             		this.bufferMgr.setMaxReserveKB(this.bufferMgr.getMaxReserveKB() - (int)Math.min(this.bufferMgr.getMaxReserveKB(), (fsc.getMemoryBufferSpace()>>10)));
                 }
-                fsc.setStorageManager(ssm);
+                fsc.setStorageManager(sm);
                 fsc.initialize();
                 this.bufferMgr.setCache(fsc);
                 this.workingMaxReserveKb = this.bufferMgr.getMaxReserveKB();
@@ -295,5 +302,13 @@ public class BufferServiceImpl implements BufferService, Serializable {
 
     public boolean isMemoryBufferOffHeap() {
 		return memoryBufferOffHeap;
-	}       
+	}    
+    
+    public boolean isEncryptFiles() {
+		return encryptFiles;
+	}
+    
+    public void setEncryptFiles(boolean encryptFiles) {
+		this.encryptFiles = encryptFiles;
+	}
 }

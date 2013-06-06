@@ -63,7 +63,7 @@ public class SymmetricCryptor extends BasicCryptor {
         return new SymmetricCryptor(key);
     }
 
-	private static SecretKey generateKey() throws CryptoException {
+	public static SecretKey generateKey() throws CryptoException {
 		try {
             synchronized(SymmetricCryptor.class) {
                 if (keyGen == null) {

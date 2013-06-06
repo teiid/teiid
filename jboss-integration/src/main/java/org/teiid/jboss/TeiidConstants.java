@@ -70,6 +70,7 @@ public class TeiidConstants {
 	public static TeiidAttribute MEMORY_BUFFER_OFFHEAP_ATTRIBUTE = new TeiidAttribute(Element.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE, new ModelNode(false), ModelType.BOOLEAN, true, false, MeasurementUnit.NONE);
 	public static TeiidAttribute MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE = new TeiidAttribute(Element.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE, new ModelNode(8388608), ModelType.INT, true, false, MeasurementUnit.NONE);
 	public static TeiidAttribute INLINE_LOBS = new TeiidAttribute(Element.INLINE_LOBS, new ModelNode(true), ModelType.BOOLEAN, true, false, MeasurementUnit.NONE);
+	public static TeiidAttribute ENCRYPT_FILES_ATTRIBUTE = new TeiidAttribute(Element.ENCRYPT_FILES_ATTRIBUTE, new ModelNode(false), ModelType.BOOLEAN, true, false, MeasurementUnit.NONE);
 	
 	// prepared-plan-cache-config
 	// PREPAREDPLAN_CACHE_ELEMENT("preparedplan-cache",true, false, MeasurementUnit.NONE);

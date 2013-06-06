@@ -22,14 +22,8 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -97,7 +91,6 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.services.InternalEventDistributorFactory;
-import static org.teiid.jboss.TeiidConstants.*;
 
 class TeiidAdd extends AbstractAddStepHandler {
 	
@@ -493,7 +486,9 @@ class TeiidAdd extends AbstractAddStepHandler {
     	if (INLINE_LOBS.isDefined(node, context)) {
     		bufferManger.setInlineLobs(INLINE_LOBS.asBoolean(node, context));
     	}     	
-    	
+    	if (ENCRYPT_FILES_ATTRIBUTE.isDefined(node, context)) {
+    		bufferManger.setEncryptFiles(ENCRYPT_FILES_ATTRIBUTE.asBoolean(node, context));
+    	}
     	return bufferManger;
     }	
     
