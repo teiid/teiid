@@ -185,13 +185,17 @@ public class RelationalPlanner {
 			if (withList != null) {
 	        	for (WithQueryCommand with : withList) {
 	        		QueryCommand subCommand = with.getCommand();
-	                RelationalPlan procPlan = (RelationalPlan)QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	                ProcessorPlan plan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	                subCommand.setProcessorPlan(plan);
+	                if (!(plan instanceof RelationalPlan)) {
+	                	continue;
+	                }
+	                RelationalPlan procPlan = (RelationalPlan) plan;
 	                RelationalNode root = procPlan.getRootNode();
 	                Number planCardinality = root.getEstimateNodeCardinality();
 	                if (planCardinality != null) {
 	                	((TempMetadataID)with.getGroupSymbol().getMetadataID()).setCardinality(planCardinality.intValue());
 	                }
-	                subCommand.setProcessorPlan(procPlan);
 	                AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(procPlan);
 	                if (aNode == null) {
 	                	continue;

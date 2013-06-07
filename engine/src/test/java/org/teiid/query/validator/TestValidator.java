@@ -1809,5 +1809,11 @@ public class TestValidator {
         
         helpValidate(sql, new String[]{"JSONOBJECT(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
     }
+    
+    @Test public void testWithValidation() {
+        String sql = "with a as (select jsonObject(to_bytes('hello', 'us-ascii')) as x) select a.x from a"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[]{"JSONOBJECT(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
 	
 }

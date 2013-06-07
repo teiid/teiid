@@ -34,6 +34,7 @@ import org.teiid.query.sql.lang.SetQuery;
 import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.lang.SubqueryFromClause;
 import org.teiid.query.sql.lang.SubquerySetCriteria;
+import org.teiid.query.sql.lang.WithQueryCommand;
 import org.teiid.query.sql.navigator.PreOrderNavigator;
 import org.teiid.query.sql.proc.CommandStatement;
 import org.teiid.query.sql.proc.LoopStatement;
@@ -114,6 +115,11 @@ public class CommandCollectorVisitor extends LanguageVisitor {
     
     public void visit(BatchedUpdateCommand obj) {
         this.commands.addAll(obj.getUpdateCommands());
+    }
+    
+    @Override
+    public void visit(WithQueryCommand obj) {
+    	this.commands.add(obj.getCommand());
     }
     
     /**
