@@ -129,6 +129,7 @@ class TeiidAdd extends AbstractAddStepHandler {
 		TeiidConstants.MEMORY_BUFFER_SPACE_ATTRIBUTE,
 		TeiidConstants.MEMORY_BUFFER_OFFHEAP_ATTRIBUTE,
 		TeiidConstants.MAX_STORAGE_OBJECT_SIZE_ATTRIBUTE,
+		TeiidConstants.ENCRYPT_FILES_ATTRIBUTE,
 		
 		// prepared plan cache
 		TeiidConstants.PPC_NAME_ATTRIBUTE,

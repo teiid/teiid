@@ -12,6 +12,7 @@
     "buffer-service-memory-buffer-space" : -2,
     "buffer-service-memory-buffer-off-heap" : true,
     "buffer-service-max-storage-object-size" : 2,
+    "buffer-service-encrypt-files" : true,
     "buffer-service-inline-lobs" : false,
     "detect-change-events" : false,
     "exception-on-max-source-rows" : false,
