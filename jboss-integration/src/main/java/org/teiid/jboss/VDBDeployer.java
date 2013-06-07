@@ -256,12 +256,6 @@ class VDBDeployer implements DeploymentUnitProcessor {
 		Set<String> dataSources = new HashSet<String>();
 		for (ModelMetaData model:deployment.getModelMetaDatas().values()) {
 			for (String sourceName:model.getSourceNames()) {
-				String translatorName = model.getSourceTranslatorName(sourceName);
-				if (deployment.isOverideTranslator(translatorName)) {
-					VDBTranslatorMetaData translator = deployment.getTranslator(translatorName);
-					translatorName = translator.getType();
-				}
-
 				// Need to make the data source service as dependency; otherwise dynamic vdbs will not work correctly.
 				String dsName = model.getSourceConnectionJndiName(sourceName);
 				if (dsName == null) {

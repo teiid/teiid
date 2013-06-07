@@ -11082,6 +11082,14 @@ public class TestXMLProcessor {
         
     }    
     
+    @Test public void testWithXml() throws Exception {
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
+        FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);
+        
+        helpTestProcess("with a as (select * from xmltest.playersDoc where context(manager, owner.@ownerid) = '1009') select * from a", CARDS_MANAGER, metadata, dataMgr);         //$NON-NLS-1$
+    }  
+    
     @Test public void testBaseballPlayersPseudoGroup() throws Exception {
         QueryMetadataInterface metadata = RealMetadataFactory.exampleCase3225();
         FakeDataManager dataMgr = exampleDataManagerCase3225(metadata);

@@ -36,6 +36,8 @@ import org.teiid.translator.jdbc.JDBCMetdataProcessor;
 
 public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 
+	private boolean trimColumnNames;
+
 	@Override
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)	throws SQLException {
 		List<String> tables = getTables(conn);
@@ -91,7 +93,10 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 		Statement stmt = conn.createStatement();
 		ResultSet rs =  stmt.executeQuery("DESCRIBE "+tableName); //$NON-NLS-1$
 		while (rs.next()){
-			String name = rs.getString(1); 
+			String name = rs.getString(1);
+			if (trimColumnNames) {
+				name = name.trim();
+			}
 			String type = rs.getString(2); 
 			String runtimeType = getRuntimeType(type);
 			
@@ -100,5 +105,9 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 			column.setUpdatable(true);
 		}
 		rs.close();
-	}	
+	}
+	
+	public void setTrimColumNames(boolean trimColumnNames) {
+		this.trimColumnNames = trimColumnNames;
+	}
 }

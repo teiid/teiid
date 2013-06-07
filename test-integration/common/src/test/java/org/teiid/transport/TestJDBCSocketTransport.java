@@ -24,10 +24,12 @@ package org.teiid.transport;
 
 import static org.junit.Assert.*;
 
+import java.io.NotSerializableException;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
 
@@ -228,6 +230,21 @@ public class TestJDBCSocketTransport {
 		} finally {
 			server.setConnectorManagerRepository(cmr);
 		}
+	}
+	
+	@Test public void testProtocolException() throws Exception {
+		Statement s = conn.createStatement();
+		try {
+			s.execute("select * from objecttable('teiid_context' columns teiid_row object 'teiid_row') as x");
+			fail();
+		} catch (SQLException e) {
+			assertTrue(e.getCause() instanceof NotSerializableException);
+		}
+		//make sure the connection is still alive
+		s.execute("select 1");
+		ResultSet rs = s.getResultSet();
+		rs.next();
+		assertEquals(1, rs.getInt(1));
 	}
 	
 }

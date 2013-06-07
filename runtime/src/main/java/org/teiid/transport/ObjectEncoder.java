@@ -62,6 +62,21 @@ import org.teiid.netty.handler.codec.serialization.ObjectDecoderInputStream;
  */
 @ChannelPipelineCoverage("all")
 public class ObjectEncoder implements ChannelDownstreamHandler {
+	
+	public static class FailedWriteException extends Exception {
+		private static final long serialVersionUID = -998903582526732966L;
+		private Object object;
+		
+		FailedWriteException(Object object, Throwable t) {
+			super(t);
+			this.object = object;
+		}
+		
+		public Object getObject() {
+			return object;
+		}
+	}
+	
     private static final byte[] LENGTH_PLACEHOLDER = new byte[4];
 	private static final int CHUNK_SIZE = (1 << 16) - 1;
 
@@ -112,11 +127,14 @@ public class ObjectEncoder implements ChannelDownstreamHandler {
                     estimatedLength, ctx.getChannel().getConfig().getBufferFactory()));
         bout.write(LENGTH_PLACEHOLDER);
         final CompactObjectOutputStream oout = new CompactObjectOutputStream(bout);
-        oout.writeObject(e.getMessage());
-        ExternalizeUtil.writeCollection(oout, oout.getReferences());
-        oout.flush();
-        oout.close();
-
+        try {
+	        oout.writeObject(e.getMessage());
+	        ExternalizeUtil.writeCollection(oout, oout.getReferences());
+	        oout.flush();
+	        oout.close();
+        } catch (Throwable t) {
+        	throw new FailedWriteException(e.getMessage(), t);
+        }
         ChannelBuffer encoded = bout.buffer();
         encoded.setInt(0, encoded.writerIndex() - 4);
         write(ctx, e.getFuture(), encoded, e.getRemoteAddress());

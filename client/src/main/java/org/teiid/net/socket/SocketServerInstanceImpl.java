@@ -221,10 +221,19 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         if (packet instanceof Message) {
         	Message messagePacket = (Message)packet;
         	Serializable messageKey = messagePacket.getMessageKey();
+        	ExceptionHolder holder = null;
+        	if (messageKey instanceof ExceptionHolder) {
+        		holder = (ExceptionHolder)messageKey;
+        		messageKey = (Serializable) messagePacket.getContents();
+        	} 
             log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$ 
             ResultsReceiver<Object> listener = asynchronousListeners.remove(messageKey);
             if (listener != null) {
-                listener.receiveResults(messagePacket.getContents());
+            	if (holder != null) {
+            		listener.exceptionOccurred(holder.getException());
+            	} else {
+            		listener.receiveResults(messagePacket.getContents());
+            	}
             }
         } else {
         	//TODO: could ping back
