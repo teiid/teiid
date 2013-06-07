@@ -111,7 +111,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	}
 
 	@Override
-	protected synchronized DQPCore getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
+	protected DQPCore getService(OperationContext context, PathAddress pathAddress, ModelNode operation) throws OperationFailedException {
         ServiceController<?> repo = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.ENGINE);
         if (repo != null) {
         	return  DQPCore.class.cast(repo.getValue());
