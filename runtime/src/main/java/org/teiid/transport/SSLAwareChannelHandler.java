@@ -37,17 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.net.ssl.SSLEngine;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.DefaultChannelPipeline;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.*;
 import org.jboss.netty.channel.ChannelHandler.Sharable;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
@@ -197,8 +187,9 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		ChannelListener listener = this.listeners.get(e.getChannel());
 		if (listener != null) {
 			listener.exceptionOccurred(e.getCause());
+		} else {
+			e.getChannel().close();
 		}
-		e.getChannel().close();
 	}
 
 	@Override

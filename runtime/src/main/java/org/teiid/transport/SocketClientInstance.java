@@ -30,6 +30,7 @@ import java.net.SocketException;
 import java.nio.channels.ClosedChannelException;
 
 import org.teiid.client.security.ILogon;
+import org.teiid.client.util.ExceptionHolder;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.core.crypto.CryptoException;
 import org.teiid.core.crypto.Cryptor;
@@ -45,6 +46,7 @@ import org.teiid.net.socket.Handshake;
 import org.teiid.net.socket.Message;
 import org.teiid.net.socket.ObjectChannel;
 import org.teiid.runtime.RuntimePlugin;
+import org.teiid.transport.ObjectEncoder.FailedWriteException;
 
 
 /**
@@ -93,7 +95,23 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
     }
 
 	public void exceptionOccurred(Throwable t) {
+		//Object encoding may fail, so send a specific type of message to indicate there was a problem
+		if (objectSocket.isOpen() && workContext.getClientVersion().compareTo(Version.EIGHT_4) >= 0 && t instanceof FailedWriteException) {
+			FailedWriteException fwe = (FailedWriteException)t;
+			if (fwe.getObject() instanceof Message) {
+				Message m = (Message)fwe.getObject();
+				if (!(m.getMessageKey() instanceof ExceptionHolder)) {
+					Message exception = new Message();
+					exception.setContents(m.getMessageKey());
+					exception.setMessageKey(new ExceptionHolder(fwe.getCause()));
+					objectSocket.write(exception);
+					LogManager.log(isDetailLevel(t)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, aborting operation"); //$NON-NLS-1$
+					return;
+				}
+			}
+		}
 		LogManager.log(isDetailLevel(t)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		objectSocket.close();
 	}
 
 	static boolean isDetailLevel(Throwable t) {
