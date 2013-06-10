@@ -29,8 +29,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 import javax.xml.stream.XMLStreamException;
 
@@ -51,11 +49,9 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
 
 
-@SuppressWarnings("nls")
 public class VDBMetadataFactory {
 	
 	public static LRUCache<URL, TransformationMetadata> VDB_CACHE = new LRUCache<URL, TransformationMetadata>(10);
-	private static ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
 	
 	public static class IndexVDB {
 		public MetadataStore store;
