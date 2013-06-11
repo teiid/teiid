@@ -25,6 +25,7 @@ package org.teiid.dqp.internal.datamgr;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -34,6 +35,7 @@ import org.teiid.adminapi.Session;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.core.util.HashCodeUtil;
+import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.query.util.CommandContext;
@@ -59,8 +61,8 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private List<Exception> warnings = new LinkedList<Exception>();
 	private Session session;
 	private boolean dataAvailable;
-	private String generalHint;
-	private String hint;
+	private Collection<String> generalHint;
+	private Collection<String> hint;
 	private CommandContext commandContext;
 	private CacheDirective cacheDirective;
 	
@@ -225,19 +227,29 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	@Override
 	public String getGeneralHint() {
-		return generalHint;
+		return StringUtil.join(generalHint, " ");
 	}
 	
 	@Override
 	public String getSourceHint() {
+		return StringUtil.join(hint, " ");
+	}
+	
+	@Override
+	public Collection<String> getGeneralHints() {
+		return generalHint;
+	}
+	
+	@Override
+	public Collection<String> getSourceHints() {
 		return hint;
 	}
 	
-	public void setGeneralHint(String generalHint) {
+	public void setGeneralHints(Collection<String> generalHint) {
 		this.generalHint = generalHint;
 	}
 	
-	public void setHint(String hint) {
+	public void setHints(Collection<String> hint) {
 		this.hint = hint;
 	}
 
@@ -274,4 +286,5 @@ public class ExecutionContextImpl implements ExecutionContext {
 	public void setCacheDirective(CacheDirective directive) {
 		this.cacheDirective = directive;
 	}
+
 }

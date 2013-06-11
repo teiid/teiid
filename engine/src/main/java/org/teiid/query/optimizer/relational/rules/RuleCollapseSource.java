@@ -95,6 +95,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 QueryCommand queryCommand = createQuery(context, capFinder, accessNode, commandRoot);
             	addDistinct(metadata, capFinder, accessNode, queryCommand);
                 command = queryCommand;
+                queryCommand.setSourceHint((SourceHint) accessNode.getProperty(Info.SOURCE_HINT));
                 if (intoGroup != null) {
                 	Insert insertCommand = (Insert)commandRoot.getParent().getProperty(NodeConstants.Info.VIRTUAL_COMMAND);
                 	if (insertCommand == null) {

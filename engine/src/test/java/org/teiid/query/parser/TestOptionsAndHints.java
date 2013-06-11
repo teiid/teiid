@@ -1059,34 +1059,45 @@ public class TestOptionsAndHints {
     
     @Test public void testNoUnnest() throws QueryParserException {
         String sql = "SELECT a FROM /*+ no_unnest */ (SELECT a FROM db.g WHERE a2 = 5) x"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM /*+ NO_UNNEST */ (SELECT a FROM db.g WHERE a2 = 5) AS x", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM /*+ NO_UNNEST */ (SELECT a FROM db.g WHERE a2 = 5) AS x", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
     }
     
     @Test public void testNonStrictLimit() throws QueryParserException {
         String sql = "SELECT a FROM x /*+ non_strict */ limit 1"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
         
         sql = "SELECT a FROM x /*+ non_strict */ offset 1 row"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM x /*+ NON_STRICT */ OFFSET 1 ROWS", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ OFFSET 1 ROWS", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
 
         sql = "SELECT a FROM x /*+ non_strict */ fetch first 1 rows only"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM x /*+ NON_STRICT */ LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
     }
     
     @Test public void testNestedComments() throws QueryParserException {
         String sql = "/*+ /*nested*/ */ SELECT a FROM x limit 1"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
     }
     
     @Test public void testSourceHint() throws QueryParserException {
         String sql = "SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1"; //$NON-NLS-1$
-        assertEquals("SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        assertEquals("SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());         //$NON-NLS-1$
         
         sql = "(SELECT /*+ sh:'foo' oracle:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
-        assertEquals("(SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString()); 
+        assertEquals("(SELECT /*+sh:'foo' oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString()); 
         
         sql = "(SELECT /*+ sh keep aliases:'foo' oracle keep aliases:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
-        assertEquals("(SELECT /*+sh KEEP ALIASES:'foo' oracle KEEP ALIASES:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());
+        assertEquals("(SELECT /*+sh KEEP ALIASES:'foo' oracle KEEP ALIASES:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+        
+        sql = "(SELECT /*+ sh keep aliases oracle:'leading' */ a FROM x limit 1) union all select 1"; //$NON-NLS-1$
+        assertEquals("(SELECT /*+sh KEEP ALIASES oracle:'leading' */ a FROM x LIMIT 1) UNION ALL SELECT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
     }
+    
+	@Test public void testNestedSourceHint() throws QueryParserException {
+		String sql = "WITH x as (SELECT /*+ sh:'x' */ 1) SELECT /*+ sh:'foo' bar:'leading' */ e1 from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
+        assertEquals("WITH x AS (SELECT /*+sh:'x' */ 1) SELECT /*+sh:'foo' bar:'leading' */ e1 FROM pm1.g1 ORDER BY e1 LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
+        
+        sql = "create virtual procedure begin loop on (select /*+ sh:'y' */ 1) as x begin end end"; //$NON-NLS-1$
+        assertEquals("CREATE VIRTUAL PROCEDURE\nBEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseDesignerCommand(sql).toString());
+	}
 
 }

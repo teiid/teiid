@@ -88,13 +88,13 @@ public class TestOracleTranslator {
 	
 	@Test public void testSourceHint() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
+		impl.setHints(Arrays.asList("hello world"));
 		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world */ g_0.PART_NAME FROM PARTS g_0", true);
 	}
 	
 	@Test public void testSourceHint1() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
+		impl.setHints(Arrays.asList("hello world"));
 		helpTestVisitor(getTestVDB(), "select part_name from parts union select part_id from parts", impl, null, "SELECT /*+ hello world */ g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION SELECT g_0.PART_ID AS c_0 FROM PARTS g_0", true);
 	}
 	

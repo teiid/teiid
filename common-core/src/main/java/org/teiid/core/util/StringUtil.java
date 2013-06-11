@@ -119,32 +119,19 @@ public final class StringUtil {
 	 * @param delimiter Delimiter to put between string pieces
 	 * @return One merged string
 	 */
-	public static String join(List<String> strings, String delimiter) {
+	public static String join(Collection<String> strings, String delimiter) {
 		if(strings == null || delimiter == null) {
 			return null;
 		}
 
 		StringBuffer str = new StringBuffer();
 
-		// This is the standard problem of not putting a delimiter after the last
-		// string piece but still handling the special cases.  A typical way is to check every
-		// iteration if it is the last one and skip the delimiter - this is avoided by
-		// looping up to the last one, then appending just the last one.  
-
-		// First we loop through all but the last one (if there are at least 2) and
-		// put the piece and a delimiter after it.  An iterator is used to walk the list.
-		int most = strings.size()-1;
-		if(strings.size() > 1) {
-			Iterator<String> iter = strings.iterator();
-			for(int i=0; i<most; i++) {            
-				str.append(iter.next());
+		Iterator<String> iter = strings.iterator();
+		while (iter.hasNext()) {            
+			str.append(iter.next());
+			if (iter.hasNext()) {
 				str.append(delimiter);
 			}
-		}
-
-		// If there is at least one element, put the last one on with no delimiter after.
-		if(strings.size() > 0) {
-			str.append(strings.get(most));
 		}
 		
 		return str.toString();

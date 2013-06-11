@@ -52,6 +52,7 @@ import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -201,6 +202,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             		if (node == accessNode) {
             			continue;
             		}
+                    combineSourceHints(accessNode, node);
         			NodeEditor.removeChildNode(parentNode, node);
             	}
             	accessNode.getGroups().clear();
@@ -321,6 +323,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
             }                      
         }        
     }
+
+	private static void combineSourceHints(PlanNode accessNode,
+			PlanNode parentNode) {
+		accessNode.setProperty(Info.SOURCE_HINT, SourceHint.combine((SourceHint)parentNode.getProperty(Info.SOURCE_HINT), (SourceHint)accessNode.getProperty(Info.SOURCE_HINT)));
+	}
 
     static boolean canRaiseOverGroupBy(PlanNode groupNode,
                                          PlanNode accessNode,
@@ -507,6 +514,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
     
     static PlanNode performRaise(PlanNode rootNode, PlanNode accessNode, PlanNode parentNode) {
     	accessNode.removeProperty(NodeConstants.Info.EST_CARDINALITY);
+    	combineSourceHints(accessNode, parentNode);
         NodeEditor.removeChildNode(parentNode, accessNode);
         parentNode.addAsParent(accessNode);
         PlanNode grandparentNode = accessNode.getParent();
@@ -843,6 +851,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
         RulePlaceAccess.copyDependentHints(leftAccess, newAccess);
         RulePlaceAccess.copyDependentHints(rightAccess, newAccess);
         RulePlaceAccess.copyDependentHints(joinNode, newAccess);
+        combineSourceHints(newAccess, leftAccess);
+        combineSourceHints(newAccess, rightAccess);
+        
         if (leftAccess.hasBooleanProperty(Info.IS_MULTI_SOURCE) || rightAccess.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
         	newAccess.setProperty(Info.IS_MULTI_SOURCE, Boolean.TRUE);
         }

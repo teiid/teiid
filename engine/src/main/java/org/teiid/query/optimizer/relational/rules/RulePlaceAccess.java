@@ -48,6 +48,7 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Create;
 import org.teiid.query.sql.lang.Drop;
 import org.teiid.query.sql.lang.Insert;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
@@ -129,7 +130,10 @@ public final class RulePlaceAccess implements
             accessNode.addGroups(sourceNode.getGroups());
 
             copyDependentHints(sourceNode, accessNode);
-
+            SourceHint sourceHint = (SourceHint)sourceNode.removeProperty(Info.SOURCE_HINT);
+            //TODO: trim the hint to only the sources possible under this model (typically 1, but could be more in
+            //multi-source
+            accessNode.setProperty(Info.SOURCE_HINT, sourceHint);
             Object hint = sourceNode.removeProperty(NodeConstants.Info.IS_OPTIONAL);
             if (hint != null) {
                 accessNode.setProperty(NodeConstants.Info.IS_OPTIONAL, hint);

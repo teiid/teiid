@@ -46,6 +46,7 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
+import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.*;
@@ -87,8 +88,11 @@ public class ConnectorWorkItem implements ConnectorWork {
                 Integer.toString(requestID.getNodeID()),
                 Integer.toString(requestID.getExecutionId())
                 );
-        this.securityContext.setGeneralHint(message.getGeneralHint());
-        this.securityContext.setHint(message.getHint());
+        SourceHint hint = message.getCommand().getSourceHint();
+        if (hint != null) {
+	        this.securityContext.setGeneralHints(hint.getGeneralHints());
+	        this.securityContext.setHints(hint.getSpecificHint(message.getConnectorName()).getHints());
+        }
         this.securityContext.setBatchSize(this.requestMsg.getFetchSize());
         this.securityContext.setSession(requestMsg.getWorkContext().getSession());
         
