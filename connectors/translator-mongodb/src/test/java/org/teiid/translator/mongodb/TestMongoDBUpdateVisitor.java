@@ -68,7 +68,7 @@ public class TestMongoDBUpdateVisitor {
     		throw visitor.exceptions.get(0);
     	}
 
-    	assertEquals(collection, visitor.collectionName);
+    	assertEquals(collection, visitor.collectionTable.getName());
 
     	if (cmd instanceof Insert) {
     		assertEquals("wrong insert", expected, visitor.getInsert(null, this.docs).toString());
@@ -96,7 +96,7 @@ public class TestMongoDBUpdateVisitor {
 	@Test
 	public void testInsert() throws Exception {
 		helpExecute("insert into users (id, user_id, age, status) values (1, 'johndoe', 34, 'A')", "users",
-				"{ \"user_id\" : { \"$ref\" : \"Customers\" , \"$id\" : \"johndoe\"} , \"id\" : 1 , \"age\" : 34 , \"status\" : \"A\"}",
+				"{ \"user_id\" : { \"$ref\" : \"Customers\" , \"$id\" : \"johndoe\"} , \"age\" : 34 , \"status\" : \"A\" , \"_id\" : 1}",
 				null, null, null);
 	}
 
@@ -108,7 +108,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into Products (ProductID, ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) " +
 				"values (1, 'hammer', 34, 24, 12, 12.50, 3, 4, 2, 1)",
 				"Products",
-				"{ \"CategoryID\" : { \"$ref\" : \"Categories\" , \"$id\" : 24} , \"SupplierID\" : { \"$ref\" : \"Suppliers\" , \"$id\" : 34} , \"_id\" : 1 , \"ProductName\" : \"hammer\" , \"QuantityPerUnit\" : \"12\" , \"UnitPrice\" : 12.5 , \"UnitsInStock\" : 3 , \"UnitsOnOrder\" : 4 , \"ReorderLevel\" : 2 , \"Discontinued\" : 1 , \"Categories\" : { \"categoryK\" : \"categoryV\"} , \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\"}}",
+				"{ \"CategoryID\" : { \"$ref\" : \"Categories\" , \"$id\" : 24} , \"SupplierID\" : { \"$ref\" : \"Suppliers\" , \"$id\" : 34} , \"ProductName\" : \"hammer\" , \"QuantityPerUnit\" : \"12\" , \"UnitPrice\" : 12.5 , \"UnitsInStock\" : 3 , \"UnitsOnOrder\" : 4 , \"ReorderLevel\" : 2 , \"Discontinued\" : 1 , \"_id\" : 1 , \"Categories\" : { \"categoryK\" : \"categoryV\"} , \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\"}}",
 				null, null,
 				"[ParentTable:Products id:24 EmbeddedTable:Categories, ParentTable:Products id:34 EmbeddedTable:Suppliers]");
 	}
@@ -119,7 +119,7 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into OrderDetails (odID, OrderID, ProductID, UnitPrice, Quantity, Discount) " +
 				"values (1, 2, 3, 1.50, 12, 1.0)",
 				"Orders",
-				"{ \"OrderID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2} , \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3} , \"_id\" : 1 , \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0}",
+				"{ \"odID\" : 1 , \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"OrderID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2} , \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3}}}",
 				null,
 				"ParentTable:Orders id:2 EmbeddedTable:OrderDetails", null);
 	}
@@ -172,7 +172,7 @@ public class TestMongoDBUpdateVisitor {
 	public void testUpdateEmbedddedInReferenceUpdateWhere() throws Exception {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4 WHERE ProductID = 3",
 				"Orders",
-				"{ \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4}}", "{ \"OrderDetails.ProductID.$id\" : 3}",
+				"{ \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4}}", "{ \"OrderDetails._id.ProductID.$id\" : 3}",
 				"ParentTable:Orders id:null EmbeddedTable:OrderDetails",
 				null);
 	}
@@ -206,5 +206,23 @@ public class TestMongoDBUpdateVisitor {
 				"{ \"_id\" : 1}",
 				null,
 				"");
+	}
+
+	@Test
+	public void testCompositeKeyInsert() throws Exception {
+		helpExecute("insert into G1 (e1, e2, e3) values (1,2,3)", "G1",
+				"{ \"e3\" : 3 , \"_id\" : { \"e1\" : 1 , \"e2\" : 2}}",
+				null, null, null);
+	}
+
+	@Test
+	public void testCompositeKeyUpdate() throws Exception {
+		helpExecute("update G1 set e2 = 48",  "G1", "{ \"_id.e2\" : 48}", null, null, null);
+	}
+
+	@Test
+	public void testCompositeKeyDeleteWithWhere() throws Exception {
+		helpExecute("delete from G1 WHERE e1 > 50", "G1", null,
+				"{ \"_id.e1\" : { \"$gt\" : 50}}", null, null);
 	}
 }

@@ -60,7 +60,7 @@ public class TestMongoDBSelectVisitor {
     		throw visitor.exceptions.get(0);
     	}
 
-    	assertEquals(collection, visitor.collectionName);
+    	assertEquals(collection, visitor.collectionTable.getName());
     	if (project != null) {
     		assertEquals("project wrong", project, visitor.project.toString());
     	}
@@ -402,5 +402,13 @@ public class TestMongoDBSelectVisitor {
 		helpExecute(query, "users",
 				"{ \"_m0\" : \"$age\"}",
 				"{ \"user_id.$id\" : \"bob\"}");
+    }
+
+    @Test
+    public void testSelectStarCompositeKey() throws Exception {
+    	String query = "SELECT * from G1 where e1 = 50";
+		helpExecute(query, "G1",
+				"{ \"_m0\" : \"$_id.e1\" , \"_m1\" : \"$_id.e2\" , \"_m2\" : \"$e3\"}",
+				"{ \"_id.e1\" : 50}");
     }
 }

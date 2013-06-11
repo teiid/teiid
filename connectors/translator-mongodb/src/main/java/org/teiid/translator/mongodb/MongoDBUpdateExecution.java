@@ -81,7 +81,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 	@Override
 	public void execute() throws TranslatorException {
-		DBCollection collection = getCollection(this.visitor.collectionName);
+		DBCollection collection = getCollection(this.visitor.collectionTable.getName());
 
 		WriteResult result = null;
 		if (this.command instanceof Insert) {
@@ -157,7 +157,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 							DBCollection parent = getCollection(ref.getParentTable());
 							AggregationOutput referenceOutput = parent.aggregate(new BasicDBObject("$match", new BasicDBObject(ref.getColumnName()+".$id", row.get("_id")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 							if (referenceOutput.results().iterator().hasNext()) {
-								throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18010, this.visitor.collectionName, ref.getParentTable()));
+								throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18010, this.visitor.collectionTable.getName(), ref.getParentTable()));
 							}
 						}
 					}
@@ -206,10 +206,10 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 			collection = this.mongoDB.createCollection(name, null);
 
 			// since this is the first time creating the tables; create the indexes on the collection
-			Table table = this.visitor.collectionTable.getMetadataObject();
-			if (table.getPrimaryKey() != null) {
-				createIndex(collection, table.getPrimaryKey(), true);
-			}
+			Table table = this.visitor.collectionTable;
+//			if (table.getPrimaryKey() != null) {
+//				createIndex(collection, table.getPrimaryKey(), true);
+//			}
 
 			// index on foreign keys
 			for (ForeignKey record:table.getForeignKeys()) {
@@ -247,7 +247,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 
 	private void addAutoGeneretedKeys(WriteResult result) {
-		Table table = this.visitor.collectionTable.getMetadataObject();
+		Table table = this.visitor.collectionTable;
 
 		int cols = table.getPrimaryKey().getColumns().size();
 		Class<?>[] columnDataTypes = new Class<?>[cols];

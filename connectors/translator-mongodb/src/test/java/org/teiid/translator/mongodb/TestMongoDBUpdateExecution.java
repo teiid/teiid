@@ -130,9 +130,11 @@ public class TestMongoDBUpdateExecution {
 		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, match);
 
 		BasicDBObject details = new BasicDBObject();
-		details.append("OrderID", new DBRef(null,"Orders", 14));
-		details.append("ProductID", new DBRef(null,"Products", 15));
-		details.append("_id", 12);
+		BasicDBObject pk = new BasicDBObject();
+		pk.append("OrderID", new DBRef(null,"Orders", 14));
+		pk.append("ProductID", new DBRef(null,"Products", 15));
+		details.append("_id", pk);
+		details.append("odID", 12);
 		details.append("UnitPrice", 34.50);
 		details.append("Quantity", 10);
 		details.append("Discount", 12);
@@ -225,7 +227,7 @@ public class TestMongoDBUpdateExecution {
 
 		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection, Mockito.times(1)).update(
-				new BasicDBObject("OrderDetails.ProductID.$id", 14), new BasicDBObject("$set", new BasicDBObject("OrderDetails.$.UnitPrice", 12.5)),
+				new BasicDBObject("OrderDetails._id.ProductID.$id", 14), new BasicDBObject("$set", new BasicDBObject("OrderDetails.$.UnitPrice", 12.5)),
 				false, true, WriteConcern.ACKNOWLEDGED);
 	}
 }
