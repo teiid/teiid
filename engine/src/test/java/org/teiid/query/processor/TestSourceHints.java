@@ -53,13 +53,23 @@ public class TestSourceHints {
         helpProcess(plan, manager("foo", "leading"), expected);
 	}
 	
+	@Test public void testWithHint() {
+		String sql = "WITH x as (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
+				"SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1, x where g1.e1 = x.e1 order by g1.e1 limit 1"; //$NON-NLS-1$
+		
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        
+        List<?>[] expected = new List[] {};
+        helpProcess(plan, manager("foo x", "leading", "foo", "leading"), expected);
+	}
+	
 	@Test public void testKeepAliases() throws Exception {
 		String sql = "SELECT /*+ sh KEEP ALIASES bar:'leading(g)' */ e1 from pm1.g1 g order by e1 limit 1"; //$NON-NLS-1$
 		CommandContext cc = TestProcessor.createCommandContext();
 		cc.setDQPWorkContext(new DQPWorkContext());
 		cc.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
 		ProcessorPlan plan = TestOptimizer.getPlan(TestOptimizer.helpGetCommand(sql, RealMetadataFactory.example1Cached(), null), RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder(), null, true, cc);
-		TestOptimizer.checkAtomicQueries(new String[] {"SELECT g.e1 AS c_0 FROM pm1.g1 AS g ORDER BY c_0"}, plan);
+		TestOptimizer.checkAtomicQueries(new String[] {"SELECT /*+sh KEEP ALIASES bar:'leading(g)' */ g.e1 AS c_0 FROM pm1.g1 AS g ORDER BY c_0"}, plan);
         
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager(null, "leading(g)"), expected);
@@ -79,7 +89,7 @@ public class TestSourceHints {
         TransformationMetadata metadata = RealMetadataFactory.createTransformationMetadata(metadataStore, "metadata");
         
         //top level applies
-        HardcodedDataManager manager = manager("foo", "leading");
+        HardcodedDataManager manager = manager("foo x", "leading");
 		
 		String sql = "SELECT /*+ sh:'foo' bar:'leading' */ c from t1 order by c limit 1"; //$NON-NLS-1$
 		ProcessorPlan plan = helpGetPlan(sql, metadata);
@@ -93,26 +103,26 @@ public class TestSourceHints {
 		plan = helpGetPlan(sql, metadata);
         helpProcess(plan, manager, expected);
         
-        //use no hints
-        manager = manager(null, null);
 		sql = "SELECT c from t1 union all select c from t1"; //$NON-NLS-1$
 		plan = helpGetPlan(sql, metadata);
         helpProcess(plan, manager, expected);
 	}
 
-	private HardcodedDataManager manager(final String general, final String hint) {
+	private HardcodedDataManager manager(final String ... hints) {
 		HardcodedDataManager manager = new HardcodedDataManager() {
+			int i = 0;
 			@Override
 			public TupleSource registerRequest(CommandContext context,
 					Command command, String modelName,
 					RegisterRequestParameter parameterObject)
 					throws TeiidComponentException {
-				if (general == null && hint == null) {
-					assertNull(context.getSourceHint());
+				if (hints[i*2] == null && hints[i*2+1] == null) {
+					assertNull(command.getSourceHint());
 				} else {
-					assertEquals(general, context.getSourceHint().getGeneralHint()); //$NON-NLS-1$
-					assertEquals(hint, context.getSourceHint().getSourceHint("bar")); //$NON-NLS-1$
+					assertEquals(hints[i*2], command.getSourceHint().getGeneralHint()); //$NON-NLS-1$
+					assertEquals(hints[i*2+1], command.getSourceHint().getSourceHint("bar")); //$NON-NLS-1$
 				}
+				i = ++i%(hints.length/2);
 				return CollectionTupleSource.createNullTupleSource();
 			}
 		};

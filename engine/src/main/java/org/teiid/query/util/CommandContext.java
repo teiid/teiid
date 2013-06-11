@@ -63,7 +63,6 @@ import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.QueryProcessor;
-import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.util.VariableContext;
@@ -160,7 +159,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		
 		private TransactionContext transactionContext;
 		private TransactionService transactionService;
-		private SourceHint sourceHint;
 		private Executor executor = ExecutorUtils.getDirectExecutor();
 		Map<Object, List<ReusableExecution<?>>> reusableExecutions;
 	    Set<CommandListener> commandListeners = null;
@@ -677,14 +675,6 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public void setTransactionService(TransactionService transactionService) {
 		globalState.transactionService = transactionService;
-	}
-	
-	public SourceHint getSourceHint() {
-		return this.globalState.sourceHint;
-	}
-	
-	public void setSourceHint(SourceHint hint) {
-		this.globalState.sourceHint = hint;
 	}
 	
 	public Executor getExecutor() {

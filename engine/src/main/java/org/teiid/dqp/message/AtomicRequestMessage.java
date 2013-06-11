@@ -83,8 +83,6 @@ public class AtomicRequestMessage {
     private boolean serial;
     
     private DQPWorkContext workContext;
-    private String generalHint;
-    private String hint;
     private CommandContext commandContext;
     private BufferManager bufferManager;
     
@@ -203,22 +201,6 @@ public class AtomicRequestMessage {
 
 	public DQPWorkContext getWorkContext() {
 		return workContext;
-	}
-	
-	public String getGeneralHint() {
-		return generalHint;
-	}
-	
-	public void setGeneralHint(String generalHint) {
-		this.generalHint = generalHint;
-	}
-	
-	public String getHint() {
-		return hint;
-	}
-	
-	public void setHint(String hint) {
-		this.hint = hint;
 	}
 	
 	public CommandContext getCommandContext() {

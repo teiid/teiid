@@ -160,7 +160,7 @@ public class RelationalPlanner {
 		}
 	};
 	
-    public ProcessorPlan optimize(
+    public RelationalPlan optimize(
         Command command)
         throws
             QueryPlannerException,
@@ -172,6 +172,9 @@ public class RelationalPlanner {
             analysisRecord.println("\n----------------------------------------------------------------------------"); //$NON-NLS-1$
             analysisRecord.println("GENERATE CANONICAL: \n" + command); //$NON-NLS-1$
 		}   
+		
+		SourceHint previous = this.sourceHint;
+		this.sourceHint = SourceHint.combine(previous, command.getSourceHint());
 		
 		PlanToProcessConverter planToProcessConverter = new PlanToProcessConverter(metadata, idGenerator, analysisRecord, capFinder, context);
 		
@@ -185,11 +188,13 @@ public class RelationalPlanner {
 			if (withList != null) {
 	        	for (WithQueryCommand with : withList) {
 	        		QueryCommand subCommand = with.getCommand();
-	                ProcessorPlan plan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	        		if (subCommand instanceof Query && ((Query)subCommand).getIsXML()) {
+	        			ProcessorPlan plan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
+	        			subCommand.setProcessorPlan(plan);
+	        			continue;
+	        		}
+	                RelationalPlan plan = optimize(subCommand);
 	                subCommand.setProcessorPlan(plan);
-	                if (!(plan instanceof RelationalPlan)) {
-	                	continue;
-	                }
 	                RelationalPlan procPlan = (RelationalPlan) plan;
 	                RelationalNode root = procPlan.getRootNode();
 	                Number planCardinality = root.getEstimateNodeCardinality();
@@ -223,7 +228,7 @@ public class RelationalPlanner {
 		}
         PlanNode plan;
 		try {
-			plan = generatePlan(command, true);
+			plan = generatePlan(command);
 		} catch (TeiidProcessingException e) {
 			 throw new QueryPlannerException(e);
 		}
@@ -240,7 +245,6 @@ public class RelationalPlanner {
 
         // Build rule set based on hints
         RuleStack rules = buildRules();
-        context.setSourceHint(sourceHint);
         // Run rule-based optimizer
         plan = executeRules(rules, plan);
 
@@ -262,7 +266,7 @@ public class RelationalPlanner {
         	result.setWith(withList);
         }
         result.setOutputElements(topCols);
-        result.setSourceHint(sourceHint);
+        this.sourceHint = previous;
         return result;
     }
     
@@ -589,10 +593,7 @@ public class RelationalPlanner {
         return plan;
     }
 	
-	public PlanNode generatePlan(Command cmd, boolean useSourceHint) throws TeiidComponentException, TeiidProcessingException {
-    	if (useSourceHint && cmd.getSourceHint() != null && sourceHint == null) {
-			sourceHint = cmd.getSourceHint();
-    	}
+	public PlanNode generatePlan(Command cmd) throws TeiidComponentException, TeiidProcessingException {
 		//cascade the option clause nocache
 		Option savedOption = option;
 		option = cmd.getOption();
@@ -673,7 +674,7 @@ public class RelationalPlanner {
         if(!usingTriggerAction && command instanceof Insert){
         	Insert insert = (Insert)command;
         	if (insert.getQueryExpression() != null) {
-	            PlanNode plan = generatePlan(insert.getQueryExpression(), true);
+	            PlanNode plan = generatePlan(insert.getQueryExpression());
 	            attachLast(sourceNode, plan);
 	            mergeTempMetadata(insert.getQueryExpression(), insert);
 	            projectNode.setProperty(NodeConstants.Info.INTO_GROUP, insert.getGroup());
@@ -864,12 +865,8 @@ public class RelationalPlanner {
         } else {
             hints.hasSetQuery = true;
             SetQuery query = (SetQuery)command;
-            boolean hasSourceHint = sourceHint != null;
             PlanNode leftPlan = createQueryPlan( query.getLeftQuery());
             PlanNode rightPlan = createQueryPlan( query.getRightQuery());
-            if (!hasSourceHint) {
-            	sourceHint = null;
-            }
             node = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
             node.setProperty(NodeConstants.Info.SET_OPERATION, query.getOperation());
             node.setProperty(NodeConstants.Info.USE_ALL, query.isAll());
@@ -1022,10 +1019,14 @@ public class RelationalPlanner {
             	if (info != null && info.getPartitionInfo() != null && !info.getPartitionInfo().isEmpty()) {
             		node.setProperty(NodeConstants.Info.PARTITION_INFO, info.getPartitionInfo());
             	}
-            	if (parent.getType() != NodeConstants.Types.JOIN && nestedCommand.getSourceHint() != null && sourceHint == null) {
-        			sourceHint = nestedCommand.getSourceHint();
+            	SourceHint previous = this.sourceHint;
+            	if (nestedCommand.getSourceHint() != null) {
+            		this.sourceHint = SourceHint.combine(previous, nestedCommand.getSourceHint());
             	}
             	addNestedCommand(node, group, nestedCommand, nestedCommand, true, true);
+            	this.sourceHint = previous;
+            } else if (this.sourceHint != null) {
+            	node.setProperty(Info.SOURCE_HINT, this.sourceHint);
             }
             parent.addLastChild(node);
         } else if(clause instanceof JoinPredicate) {
@@ -1170,7 +1171,7 @@ public class RelationalPlanner {
 	
 			if (merge) {
 				mergeTempMetadata(nestedCommand, parentCommand);
-			    PlanNode childRoot = generatePlan(nestedCommand, false);
+			    PlanNode childRoot = generatePlan(nestedCommand);
 			    node.addFirstChild(childRoot);
 				List<Expression> projectCols = nestedCommand.getProjectedSymbols();
 				SymbolMap map = SymbolMap.createSymbolMap(group, projectCols, metadata);

@@ -87,7 +87,6 @@ import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
@@ -648,11 +647,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		aqr.setCommandContext(context);
 		if (parameterObject.fetchSize > 0) {
 			aqr.setFetchSize(2*parameterObject.fetchSize);
-		}
-		SourceHint sh = context.getSourceHint();
-		if (sh != null) {
-			aqr.setGeneralHint(sh.getGeneralHint());
-			aqr.setHint(sh.getSourceHint(aqr.getConnectorName()));
 		}
 		if (parameterObject.limit > 0) {
 			aqr.setFetchSize(Math.min(parameterObject.limit, aqr.getFetchSize()));

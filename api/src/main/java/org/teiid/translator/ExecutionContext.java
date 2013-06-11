@@ -24,6 +24,7 @@ package org.teiid.translator;
 
 import java.io.Serializable;
 import java.sql.Statement;
+import java.util.Collection;
 
 import javax.security.auth.Subject;
 
@@ -123,17 +124,29 @@ public interface ExecutionContext {
     Serializable getExecutionPayload();
     
     /**
-     * Get the general hint passed to all executions under the user query.
+     * Get the collection of general hints as a space concatinated string.
      * @return the general hint or null if none was specified
      */
     String getGeneralHint();
    
     /**
-     * Get the hint designated for this source.
+     * Get the collection of hints designated for this source as a space concatinated string.
      * @return the source hint or null if none was specified
      */
     String getSourceHint();
-        
+    
+    /**
+     * Get the general hints.
+     * @return the general hint or null if none was specified
+     */
+    Collection<String> getGeneralHints();
+   
+    /**
+     * Get the hints designated for this source.
+     * @return the source hint or null if none was specified
+     */
+    Collection<String> getSourceHints();
+    
     /**
      * Get the identifier for the connection through which 
      * the command is being executed. This represents the original user

@@ -233,7 +233,17 @@ public class SQLParserUtil {
 	private static Pattern SOURCE_HINT = Pattern.compile("\\s*sh(\\s+KEEP ALIASES)?\\s*(?::((?:'[^']*')+))?\\s*", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	private static Pattern SOURCE_HINT_ARG = Pattern.compile("\\s*([^: ]+)(\\s+KEEP ALIASES)?\\s*:((?:'[^']*')+)", Pattern.CASE_INSENSITIVE | Pattern.DOTALL); //$NON-NLS-1$
 	
-	SourceHint getSourceHint(Token t) {
+	SourceHint getSourceHint(SQLParser parser) {
+		int index = 1; 
+		//scan for the first keyword
+	    Token t = null;
+	    do {
+	    	t = parser.getToken(index++);
+	    } while (t != null && t.kind == SQLParserConstants.LPAREN);
+	    t = parser.getToken(index);
+	    if (t == null) {
+	    	return null;
+	    }
 		String comment = getComment(t);
 		Matcher matcher = SOURCE_HINT.matcher(comment);
 		if (!matcher.find()) {
@@ -254,6 +264,16 @@ public class SQLParserUtil {
 			sourceHint.setSourceHint(matcher.group(1), normalizeStringLiteral(matcher.group(3)), matcher.group(2) != null);
 		}
 		return sourceHint;
+	}
+	
+	void setSourceHint(SourceHint sourceHint, Command command) {
+	    if (sourceHint != null) {
+	        if (command instanceof SetQuery) {
+	        	((SetQuery)command).getProjectedQuery().setSourceHint(sourceHint);
+	        } else {
+	    		command.setSourceHint(sourceHint);
+	    	}
+	    }
 	}
 	
 	boolean isNonStrictHint(Token t) {

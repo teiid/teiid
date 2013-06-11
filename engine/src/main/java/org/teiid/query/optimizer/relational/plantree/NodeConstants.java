@@ -158,6 +158,8 @@ public final class NodeConstants {
         ACCESS_PATTERN_USED, // List <Object element ID>
         REQUIRED_ACCESS_PATTERN_GROUPS, 
         
-        CONSTRAINT
+        CONSTRAINT,
+        
+        SOURCE_HINT,
     }
 }

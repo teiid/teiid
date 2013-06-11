@@ -787,20 +787,11 @@ Command userCommand(ParseInfo info) :
 	SourceHint sourceHint = null;
 }
 {
-    {int index = 1; 
-     Token t = null;
-     do  
-       t = getToken(index++);
-     while (t != null && t.kind == LPAREN);
-     t = getToken(index);
-     if (t != null) 
-      sourceHint = getSourceHint(t); 
-    }
 	(command = queryExpression(info) |
 	command = storedProcedure(info, 1) |
-	command = insert(info) |
-	command = update(info) |
-	command = delete(info) |
+	{ sourceHint = getSourceHint(this); } command = insert(info) |
+	{ sourceHint = getSourceHint(this); } command = update(info) |
+	{ sourceHint = getSourceHint(this); } command = delete(info) |
 	command = dropTable(info) |
 	LOOKAHEAD(2) command = createTempTable(info) |
 	LOOKAHEAD(2) command = createForeignTempTable(info) |
@@ -808,13 +799,7 @@ Command userCommand(ParseInfo info) :
 	command = createTrigger(info)
 	)
 	{
-	    if (sourceHint != null) {
-	        if (command instanceof SetQuery) {
-	        	((SetQuery)command).getProjectedQuery().setSourceHint(sourceHint);
-	        } else {
-	    		command.setSourceHint(sourceHint);
-	    	}
-	    }
+		setSourceHint(sourceHint, command);
 		return command;
 	}
 }
@@ -1567,8 +1552,10 @@ StoredProcedure storedProcedure(ParseInfo info, int startIndex) :
 	Option option = null;
 	List<Expression> values = null;
 	StoredProcedure storedProcedure = new StoredProcedure();
+	SourceHint sourceHint = null;
 }
 {
+	{ sourceHint = getSourceHint(this); }
 	(
 		(<EXEC> | <EXECUTE> | <CALL>)
 		procName = id(null)
@@ -1594,6 +1581,7 @@ StoredProcedure storedProcedure(ParseInfo info, int startIndex) :
 	 }
 	]
 	{
+		storedProcedure.setSourceHint(sourceHint);
 		return storedProcedure;
 	}
 }
@@ -1797,6 +1785,7 @@ QueryCommand queryExpression(ParseInfo info) :
 	QueryCommand query = null;
 	List<WithQueryCommand> withList = null;
 	WithQueryCommand withQueryCommand = null;
+	SourceHint sourceHint = null;
 }
 {
 	[<WITH> withQueryCommand = withListElement(info)
@@ -1811,9 +1800,11 @@ QueryCommand queryExpression(ParseInfo info) :
 	    }
 	  )*
 	]
+	{ sourceHint = getSourceHint(this); }
 	query = queryExpressionBody(info)
 	{
 		query.setWith(withList);
+		setSourceHint(sourceHint, query);
 		return query;
 	}
 }

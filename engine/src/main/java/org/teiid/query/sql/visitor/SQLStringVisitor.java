@@ -807,6 +807,8 @@ public class SQLStringVisitor extends LanguageVisitor {
 			}
         	if (sh.getGeneralHint() != null) {
         		appendSourceHintValue(sh.getGeneralHint());
+        	} else {
+        		append(SPACE);
         	}
         	if (sh.getSpecificHints() != null) {
         		for (Map.Entry<String, SpecificHint> entry : sh.getSpecificHints().entrySet()) {

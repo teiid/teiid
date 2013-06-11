@@ -372,7 +372,7 @@ public class PlanToProcessConverter {
 	                        boolean aliasColumns = modelID != null && (CapabilitiesUtil.supports(Capability.QUERY_SELECT_EXPRESSION, modelID, metadata, capFinder)
 	                        		|| CapabilitiesUtil.supports(Capability.QUERY_FROM_INLINE_VIEWS, modelID, metadata, capFinder));
 	                        AliasGenerator visitor = new AliasGenerator(aliasGroups, !aliasColumns);
-	                        SourceHint sh = context.getSourceHint();
+	                        SourceHint sh = command.getSourceHint();
                         	if (sh != null && aliasGroups) {
                         		VDBMetaData vdb = context.getDQPWorkContext().getVDB();
                             	ModelMetaData model = vdb.getModel(aNode.getModelName());
