@@ -70,19 +70,21 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 		LogManager.logInfo(LogConstants.CTX_CONNECTOR, this.command);
 
-		DBCollection collection = this.mongoDB.getCollection(this.visitor.collectionName);
+		DBCollection collection = this.mongoDB.getCollection(this.visitor.collectionTable.getName());
 		if (collection != null) {
 			// TODO: check to see how to pass the hint
 			ArrayList<DBObject> ops = new ArrayList<DBObject>();
 			if (this.visitor.projectBeforeMatch) {
 				buildAggregate(ops, "$project", this.visitor.project); //$NON-NLS-1$
 			}
-			buildAggregate(ops, "$match", this.visitor.match); //$NON-NLS-1$
+
 			if (!this.visitor.unwindTables.isEmpty()) {
 				for (String name:this.visitor.unwindTables) {
 					buildAggregate(ops, "$unwind", "$"+name); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
+			buildAggregate(ops, "$match", this.visitor.match); //$NON-NLS-1$
+
 			buildAggregate(ops, "$group", this.visitor.group); //$NON-NLS-1$
 			buildAggregate(ops, "$match", this.visitor.having); //$NON-NLS-1$
 
@@ -100,7 +102,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 	private void buildAggregate(List<DBObject> query, String type, Object object) {
 		if (object != null) {
-			LogManager.logInfo(LogConstants.CTX_CONNECTOR, type+":"+object.toString()); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, type+":"+object.toString()); //$NON-NLS-1$
 			query.add(new BasicDBObject(type, object));
 		}
 	}

@@ -21,30 +21,27 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.ResourceBundle;
+import java.util.HashMap;
 
-import org.teiid.core.BundleUtil;
+import com.mongodb.BasicDBObject;
 
+public class IDRef {
+	HashMap<String, Object> pk = new HashMap<String, Object>();
 
-public class MongoDBPlugin {
+	public void addColumn(String key, Object value) {
+		this.pk.put(key, value);
+	}
 
-    public static final String PLUGIN_ID = "org.teiid.translator.mongodb" ; //$NON-NLS-1$
-
-    private static final String BUNDLE_NAME = PLUGIN_ID + ".i18n"; //$NON-NLS-1$
-    public static final BundleUtil Util = new BundleUtil(PLUGIN_ID,BUNDLE_NAME,ResourceBundle.getBundle(BUNDLE_NAME));
-
-    public static enum Event implements BundleUtil.Event{
-    	TEIID18001,
-    	TEIID18002,
-    	TEIID18003,
-    	TEIID18004,
-    	TEIID18005,
-    	TEIID18006,
-    	TEIID18007,
-    	TEIID18008,
-    	TEIID18009,
-    	TEIID18010,
-    	TEIID18011,
-    	TEIID18012
-    }
+	public Object getValue() {
+		if (this.pk.size() == 1) {
+			for (String key:this.pk.keySet()) {
+				return this.pk.get(key);
+			}
+		}
+		BasicDBObject value = new BasicDBObject();
+		for (String key:this.pk.keySet()) {
+			value.append(key, this.pk.get(key));
+		}
+		return value;
+	}
 }
