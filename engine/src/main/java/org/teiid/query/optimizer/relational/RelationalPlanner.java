@@ -282,6 +282,7 @@ public class RelationalPlanner {
             		WithQueryCommand clause = pushdownWith.get(groupSymbol.getNonCorrelationName());
             		if (clause != null) {
             			with.add(clause.clone());
+            			command.setSourceHint(SourceHint.combine(command.getSourceHint(), clause.getCommand().getSourceHint()));
             		}
 				}
             	if (!with.isEmpty()) {
@@ -865,12 +866,14 @@ public class RelationalPlanner {
         } else {
             hints.hasSetQuery = true;
             SetQuery query = (SetQuery)command;
+            SourceHint previous = this.sourceHint;
+            this.sourceHint = SourceHint.combine(previous, query.getProjectedQuery().getSourceHint());
             PlanNode leftPlan = createQueryPlan( query.getLeftQuery());
             PlanNode rightPlan = createQueryPlan( query.getRightQuery());
             node = NodeFactory.getNewNode(NodeConstants.Types.SET_OP);
             node.setProperty(NodeConstants.Info.SET_OPERATION, query.getOperation());
             node.setProperty(NodeConstants.Info.USE_ALL, query.isAll());
-            
+            this.sourceHint = previous;
             attachLast(node, leftPlan);
             attachLast(node, rightPlan);
         }
@@ -1068,8 +1071,13 @@ public class RelationalPlanner {
             if (sfc.isNoUnnest()) {
             	node.setProperty(Info.NO_UNNEST, Boolean.TRUE);
             }
+            SourceHint previous = this.sourceHint;
+        	if (nestedCommand.getSourceHint() != null) {
+        		this.sourceHint = SourceHint.combine(previous, nestedCommand.getSourceHint());
+        	}
             node.addGroup(group);
             addNestedCommand(node, group, nestedCommand, nestedCommand, true, false);
+        	this.sourceHint = previous;
 			if (nestedCommand instanceof SetQuery) {
 				Map<ElementSymbol, List<Set<Constant>>> partitionInfo = PartitionAnalyzer.extractPartionInfo((SetQuery)nestedCommand, ResolverUtil.resolveElementsInGroup(group, metadata));
 				if (!partitionInfo.isEmpty()) {

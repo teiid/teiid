@@ -100,14 +100,14 @@ public class TestOracleTranslator {
 	
 	@Test public void testSourceHint2() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
+		impl.setHints(Arrays.asList("hello world"));
 		helpTestVisitor(getTestVDB(), "with x (y) as (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
 	}
 	
 	@Test public void testSourceHint3() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
-		impl.setGeneralHint("other");
+		impl.setHints(Arrays.asList("hello world"));
+		impl.setGeneralHints(Arrays.asList("other"));
 		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world other */ g_0.PART_NAME FROM PARTS g_0", true);
 	}
 	

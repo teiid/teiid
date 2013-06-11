@@ -30,6 +30,7 @@ import java.util.List;
 import org.junit.Test;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
@@ -37,6 +38,9 @@ import org.teiid.metadata.Table;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -61,6 +65,36 @@ public class TestSourceHints {
         
         List<?>[] expected = new List[] {};
         helpProcess(plan, manager("foo x", "leading", "foo", "leading"), expected);
+	}
+	
+	@Test public void testWithHintPushdown() throws TeiidException {
+		String sql = "WITH x as (SELECT /*+ sh:'x' */ e1 from pm1.g2) " +
+				"SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1, x where g1.e1 = x.e1 order by g1.e1 limit 1"; //$NON-NLS-1$
+		
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.COMMON_TABLE_EXPRESSIONS, true);
+		CommandContext context = new CommandContext();
+		context.setDQPWorkContext(new DQPWorkContext());
+		context.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
+        
+        List<?>[] expected = new List[] {};
+        helpProcess(plan, manager("foo x", "leading"), expected);
+	}
+	
+	@Test public void testUnionHintPushdown() throws TeiidException {
+		String sql = "SELECT /*+ sh:'foo' bar:'leading' */ g1.e1 from pm1.g1 " +
+				"UNION ALL SELECT * from (SELECT /*+ sh:'x' bar:'z' */ g1.e1 from pm1.g1) as x"; //$NON-NLS-1$
+		
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_UNION, true);
+		CommandContext context = new CommandContext();
+		context.setDQPWorkContext(new DQPWorkContext());
+		context.getDQPWorkContext().getSession().setVdb(RealMetadataFactory.example1VDB());
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(caps), context);
+        
+        List<?>[] expected = new List[] {};
+        helpProcess(plan, manager("foo x", "leading z"), expected);
 	}
 	
 	@Test public void testKeepAliases() throws Exception {
