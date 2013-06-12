@@ -140,29 +140,29 @@ public class TestMongoDBQueryExecution {
 		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
-	    result.append( "_m0","$OrderDetails._id");
-	    result.append( "_m1","$OrderDetails.OrderID");
-	    result.append( "_m2","$OrderDetails.ProductID");
+	    result.append( "_m0","$OrderDetails.odID");
+	    result.append( "_m1","$OrderDetails._id.OrderID");
+	    result.append( "_m2","$OrderDetails._id.ProductID");
 	    result.append( "_m3","$OrderDetails.UnitPrice");
 	    result.append( "_m4","$OrderDetails.Quantity");
 	    result.append( "_m5","$OrderDetails.Discount");
 
 
 		Mockito.verify(dbCollection).aggregate(
-				new BasicDBObject("$match", new BasicDBObject("OrderDetails.OrderID.$id", 10248)),
 						new BasicDBObject("$unwind","$OrderDetails"),
+						new BasicDBObject("$match", new BasicDBObject("OrderDetails._id.OrderID.$id", 10248)),
 						new BasicDBObject("$project", result));
 	}
 
 	@Test
-	public void testTwoTableInnerJoin() throws Exception {
+	public void testTwoTableInnerJoinEmbedIn() throws Exception {
 		String query = "SELECT o.CustomerID, od.ProductID FROM Orders o JOIN OrderDetails od ON o.OrderID=od.OrderID";
 
 		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 1);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CustomerID");
-	    result.append( "_m1","$OrderDetails.ProductID");
+	    result.append( "_m1","$OrderDetails._id.ProductID");
 
 		Mockito.verify(dbCollection).aggregate(
 						//new BasicDBObject("$match",new BasicDBObject("_id", "OrderDetails.OrderID")),
@@ -171,24 +171,55 @@ public class TestMongoDBQueryExecution {
 	}
 
 	@Test
-	public void testThreeTableInnerJoin() throws Exception {
-		String query = "SELECT o.CustomerID, od.ProductID, s.CompanyName FROM Orders o JOIN OrderDetails od ON o.OrderID=od.OrderID JOIN Shippers s ON o.ShipVia = s.ShipperID";
+	public void testTwoTableInnerJoinEmbeddable() throws Exception {
+		String query = "select p.ProductName, c.CategoryName from Products p join Categories c on p.CategoryID = c.CategoryID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 0);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$ProductName");
+	    result.append( "_m1","$Categories.CategoryName");
+
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$project", result));
+	}
+
+	@Test
+	public void testTwoTableInnerJoinEmbeddableWithWhere() throws Exception {
+		String query = "select p.ProductName, c.CategoryName from Products p " +
+				"JOIN Categories c on p.CategoryID = c.CategoryID " +
+				"WHERE p.CategoryID = 1 AND c.CategoryID = 1";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 1);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$ProductName");
+	    result.append( "_m1","$Categories.CategoryName");
+
+	    DBObject p1 = QueryBuilder.start("CategoryID.$id").is(1).get();
+	    DBObject p2 =  QueryBuilder.start("Categories._id").is(1).get();
+
+	    DBObject match = QueryBuilder.start().and(p1, p2).get();
+		Mockito.verify(dbCollection).aggregate(
+						new BasicDBObject("$match", match),
+						new BasicDBObject("$project", result));
+	}
+
+	@Test
+	public void testThreeTableInnerJoin() throws Exception {
+		String query = "SELECT o.CustomerID, od.ProductID, s.CompanyName " +
+				"FROM Orders o JOIN OrderDetails od ON o.OrderID=od.OrderID " +
+				"JOIN Shippers s ON o.ShipVia = s.ShipperID";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 1);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CustomerID");
-	    result.append( "_m1","$OrderDetails.ProductID");
+	    result.append( "_m1","$OrderDetails._id.ProductID");
 	    result.append( "_m2","$Shippers.CompanyName");
 
-	    //BasicDBList matchList = new BasicDBList();
-	    //matchList.add(new BasicDBObject("ShipVia.$id", "Shippers._id"));
-	    //matchList.add(new BasicDBObject("_id", "OrderDetails.OrderID"));
-
 	    Mockito.verify(dbCollection).aggregate(
-						//new BasicDBObject("$match",new BasicDBObject("$and", matchList)),
 						new BasicDBObject("$unwind","$OrderDetails"),
-						new BasicDBObject("$unwind","$Shippers"),
 						new BasicDBObject("$project", result));
 	}
 
@@ -202,16 +233,12 @@ public class TestMongoDBQueryExecution {
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CustomerID");
-	    result.append( "_m1","$OrderDetails.ProductID");
+	    result.append( "_m1","$OrderDetails._id.ProductID");
 
-	   // BasicDBList matchList = new BasicDBList();
-	    //matchList.add(new BasicDBObject("ShipVia.$id", "Shippers._id"));
-	   // matchList.add(new BasicDBObject("_id", "OrderDetails.OrderID"));
-
-	    DBObject match = QueryBuilder.start("OrderDetails.OrderID").notEquals(null).get();
+	    DBObject match = QueryBuilder.start("OrderDetails._id.OrderID.$id").notEquals(null).get();
 	    Mockito.verify(dbCollection).aggregate(
-						new BasicDBObject("$match",match),
 						new BasicDBObject("$unwind","$OrderDetails"),
+						new BasicDBObject("$match",match),
 						new BasicDBObject("$project", result));
 	}
 }

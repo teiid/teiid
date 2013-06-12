@@ -24,6 +24,10 @@ package org.teiid.translator.ws;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
+import java.util.List;
 import java.util.Properties;
 
 import javax.activation.DataSource;
@@ -34,6 +38,7 @@ import javax.xml.ws.Service;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.CommandBuilder;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.RuntimeMetadataImpl;
 import org.teiid.language.Call;
 import org.teiid.metadata.MetadataFactory;
@@ -53,6 +58,7 @@ public class TestWSTranslator {
 		ef.getMetadata(mf, null);
 		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
 		assertEquals(6, p.getParameters().size());
+		p.getParameters().remove(4);
 		p = mf.getSchema().getProcedure("invoke");
 		assertEquals(6, p.getParameters().size());
 		p.getParameters().remove(5);
@@ -65,7 +71,7 @@ public class TestWSTranslator {
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		CommandBuilder cb = new CommandBuilder(tm);
 		
-		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, true)");
+		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null)");
 		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		pe.execute();
 		pe.getOutputParameterValues();
@@ -78,6 +84,39 @@ public class TestWSTranslator {
 		WSProcedureExecution wpe = new WSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
 		wpe.execute();
 		wpe.getOutputParameterValues();
+	}
+	
+	@Test public void testStreaming() throws Exception {
+		WSExecutionFactory ef = new WSExecutionFactory();
+    	MetadataFactory mf = new MetadataFactory("vdb", 1, "x", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
+		ef.getMetadata(mf, null);
+		Procedure p = mf.getSchema().getProcedure(WSExecutionFactory.INVOKE_HTTP);
+		assertEquals(6, p.getParameters().size());
+		
+		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
+		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
+		WSConnection mockConnection = Mockito.mock(WSConnection.class);
+		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
+		DataSource mock = Mockito.mock(DataSource.class);
+		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
+		Mockito.stub(mock.getInputStream()).toReturn(baos);
+		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(mock);
+		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
+		CommandBuilder cb = new CommandBuilder(tm);
+		
+		Call call = (Call)cb.getCommand("call invokeHttp('GET', null, null, true)");
+		BinaryWSProcedureExecution pe = new BinaryWSProcedureExecution(call, rm, Mockito.mock(ExecutionContext.class), ef, mockConnection);
+		pe.execute();
+		List<?> result = pe.getOutputParameterValues();
+		
+		Blob b = (Blob) result.get(0);
+		assertEquals(100, ObjectConverterUtil.convertToByteArray(b.getBinaryStream()).length);
+		try {
+			ObjectConverterUtil.convertToByteArray(b.getBinaryStream());
+			fail();
+		} catch (SQLException e) {
+			//should only be able to read once
+		}
 	}
 	
 }

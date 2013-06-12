@@ -64,6 +64,7 @@ public class MetadataFactory implements Serializable {
 	
 	private String vdbName;
 	private int vdbVersion;
+	private Map<String, Datatype> enterpriseTypes;
 	private Map<String, Datatype> dataTypes;
 	private Map<String, Datatype> builtinDataTypes;
 	private boolean autoCorrectColumnNames = true;
@@ -210,6 +211,11 @@ public class MetadataFactory implements Serializable {
 			BaseColumn column) {
 		Datatype datatype = dataTypes.get(type);
 		if (datatype == null) {
+			//TODO: potentially we want to check the enterprise types, but at 
+			//this point we're keying them by name, not runtime name (which 
+			// is an awkward difference to start with)
+			//so the runtime type names are considered fixed and a type system
+			//generalization would be needed to support injecting new runtime types
 			 throw new MetadataException(DataPlugin.Event.TEIID60009, DataPlugin.Util.gs(DataPlugin.Event.TEIID60009, type));
 		}
 		column.setDatatype(datatype, true);
@@ -517,7 +523,10 @@ public class MetadataFactory implements Serializable {
 	
 	public void mergeInto (MetadataStore store) {
 		store.addSchema(this.schema);
-		store.addDataTypes(this.builtinDataTypes.values());
+		store.addDataTypes(this.builtinDataTypes.values()); //TODO: this is redundant
+		if (this.enterpriseTypes != null) {
+			store.addDataTypes(this.enterpriseTypes.values());
+		}
 		store.addGrants(this.grants);
 	}
 	
@@ -575,18 +584,61 @@ public class MetadataFactory implements Serializable {
 				continue;
 			}
 			Datatype dt = this.builtinDataTypes.get(c.getDatatype().getName());
+			if (dt == null && this.enterpriseTypes != null) {
+				dt = enterpriseTypes.get(c.getDatatype().getName());
+			}
 			if (dt != null) {
 				c.setDatatype(dt);
 			} else {
 				//must be an enterprise type
 				//if it's used in a single schema, we're ok, but when used in multiple there's an issue
-				addDatatype(dt);
+				//since the same record will exist as multiple instances
+				//
+				//old serialized forms do not have tracking for enterprise types, ensure that the 
+				//type is added so that it will show up in the vdb metadata
+				addEnterpriseDatatype(c.getDatatype());
 			}
 		}
 	}
 	
+	/**
+	 * Add an enterprise type (typically a Designer defined type extension) - typically not called
+	 * @deprecated see addEnterpriseType
+	 * @param datatype
+	 */
 	public void addDatatype(Datatype datatype) {
-		this.builtinDataTypes.put(datatype.getName(), datatype);
+		addEnterpriseDatatype(datatype);
+	}
+	
+	/**
+	 * Add an enterprise type (typically a Designer defined type extension)- typically not called
+	 * @param datatype
+	 */
+	public void addEnterpriseDatatype(Datatype datatype) {
+		//we have to hold these separately, as the built-in/runtime types should be considered
+		//unmodifiable.
+		//
+		//however we still have an issue in that designer treats these as vdb scoped, while
+		//we're treating them as schema scoped.  any refinement of the type system
+		//should correct this.
+		//
+		//TODO: should throw an exception if there is a conflict with a built-in type
+		if (this.enterpriseTypes == null) {
+			this.enterpriseTypes = new TreeMap<String, Datatype>(String.CASE_INSENSITIVE_ORDER);
+		}
+		this.enterpriseTypes.put(datatype.getName(), datatype);
+	}
+	
+	/**
+	 * Get an enterprise type (typically a Designer defined type extension) by name.
+	 * @param name
+	 * @return
+	 */
+	public Datatype getEnterpriseDatatype(String name) {
+		if (enterpriseTypes == null) {
+			return null;
+		}
+		return enterpriseTypes.get(name);
 	}
 
 	public String getVdbName() {

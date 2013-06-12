@@ -33,6 +33,7 @@ import org.teiid.language.Literal;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
 
@@ -136,15 +137,33 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	}
 
 	public BasicDBObject getInsert(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
+		IDRef pk = null;
 		BasicDBObject insert = new BasicDBObject();
 		for (String key:this.columnValues.keySet()) {
 			Object obj = this.columnValues.get(key);
+
+			Table targetTable = this.collectionTable;
+			if (this.pushKey != null) {
+				targetTable = this.metadata.getTable(targetTable.getParent().getName(), this.pushKey.getEmbeddedTable());
+			}
+
 			if (obj instanceof MutableDBRef) {
-				insert.append(key, ((MutableDBRef)obj).getDBRef(db, true));
+				obj =  ((MutableDBRef)obj).getDBRef(db, true);
+			}
+
+			if (isPartOfPrimaryKey(targetTable, key)) {
+				if (pk == null) {
+					pk = new IDRef();
+				}
+				pk.addColumn(key, obj);
 			}
 			else {
 				insert.append(key, obj);
 			}
+		}
+
+		if (pk != null) {
+			insert.append("_id", pk.getValue()); //$NON-NLS-1$
 		}
 
 		if (this.pullKeys != null) {
@@ -201,7 +220,20 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 					update.append(embeddedDocumentName+".$."+key, obj); //$NON-NLS-1$
 				}
 				else {
-					update.append(((embeddedDocumentName == null)?key:embeddedDocumentName+"."+key), obj); //$NON-NLS-1$
+					if (embeddedDocumentName != null) {
+						update.append(embeddedDocumentName+"."+key, obj); //$NON-NLS-1$
+					}
+					else if (isPartOfPrimaryKey(this.collectionTable, key)) {
+						if (hasCompositePrimaryKey(this.collectionTable)) {
+							update.append("_id."+key, obj);//$NON-NLS-1$
+						}
+						else {
+							update.append("_id", obj); //$NON-NLS-1$
+						}
+					}
+					else {
+						update.append(key, obj);
+					}
 				}
 			}
 		}

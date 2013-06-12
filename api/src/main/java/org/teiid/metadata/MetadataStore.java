@@ -90,7 +90,9 @@ public class MetadataStore implements Serializable {
 	}
 	
 	public void addDatatype(Datatype datatype) {
-		this.datatypes.put(datatype.getName(), datatype);
+		if (!this.datatypes.containsKey(datatype.getName())) {
+			this.datatypes.put(datatype.getName(), datatype);
+		}
 	}
 		
 	public NavigableMap<String, Datatype> getDatatypes() {

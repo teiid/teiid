@@ -42,7 +42,6 @@ import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
-import org.teiid.query.metadata.VDBResources.Resource;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 
@@ -168,7 +167,11 @@ public class TestTransformationMetadata {
 		
 		Table t = mf.addTable("y"); //$NON-NLS-1$
 		mf.addColumn("test", "string", t);
-		
+		Datatype unknown = new Datatype();
+		unknown.setName("unknown");
+		mf.addEnterpriseDatatype(unknown);
+		Column col = mf.addColumn("arg", "string", t);
+		col.setDatatype(unknown);
 		MetadataFactory mf1 = UnitTestUtil.helpSerialize(mf);
 		
 		Column column = mf1.getSchema().getTable("y").getColumns().get(0);
@@ -179,6 +182,7 @@ public class TestTransformationMetadata {
 		mf1.correctDatatypes(mf.getDataTypes(), mf.getBuiltinDataTypes());
 		
 		assertSame(mf.getBuiltinDataTypes().get(dt.getName()), column.getDatatype());
+		assertNotNull(mf1.getEnterpriseDatatype("unknown"));
 	}
 	
 }
