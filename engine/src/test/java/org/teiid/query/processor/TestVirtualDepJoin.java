@@ -228,8 +228,8 @@ public class TestVirtualDepJoin {
         ProcessorPlan plan = TestProcessor.helpGetPlan(command, metadata, finder, context); 
          
         // Check plan contents
-        int selectCount = !setPushdown ? 3 : 0;
-        int accessCount = setPushdown ? 1 : 4;
+        int selectCount = !setPushdown ? 2 : 0;
+        int accessCount = setPushdown ? 2 : 4;
         int depAccessCount = 4 - accessCount;
         TestOptimizer.checkNodeTypes(plan, new int[] {
             accessCount,      // Access

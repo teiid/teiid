@@ -292,7 +292,10 @@ public class NewCalculateCostUtil {
 		if (projectNode != null) {
 			result = getNDVEstimate(node.getParent(), metadata, cost, (List)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS), false);
 			if (result == UNKNOWN_VALUE) {
-				return cost;
+				if (cost == UNKNOWN_VALUE) {
+					return UNKNOWN_VALUE;
+				}
+				return cost/2;
 			}
 		}
 		return result;
@@ -1359,6 +1362,29 @@ public class NewCalculateCostUtil {
 			return cardinality;
 		}
 		float ndv = getStat(Stat.NDV, elems, indNode, cardinality, metadata);
+		//special handling if cardinality has been set, but not ndv
+		if (ndv == UNKNOWN_VALUE && useCardinalityIfUnknown) {
+			Set<GroupSymbol> groups = GroupsUsedByElementsVisitor.getGroups(elems);
+			PlanNode source = FrameUtil.findOriginatingNode(indNode, groups);
+			if (source != null) {
+				ndv = getStat(Stat.NDV, elems, source, cardinality, metadata);
+				if (ndv == UNKNOWN_VALUE) {
+					ndv = source.getCardinality();
+					if (ndv != UNKNOWN_VALUE && !usesKey(source, elems, metadata)) {
+						ndv/=2; //guess that it's non-unique
+					}
+				}
+				if (ndv != UNKNOWN_VALUE) {
+					while (source != indNode) {
+						source = source.getParent();
+						float parentCardinality = source.getCardinality();
+						if (parentCardinality != UNKNOWN_VALUE && parentCardinality < ndv) {
+							ndv = parentCardinality;
+						}
+					}
+				}
+			}
+		}
 		if (ndv == UNKNOWN_VALUE) { 
 			if (cardinality == UNKNOWN_VALUE) {
 				return UNKNOWN_VALUE;

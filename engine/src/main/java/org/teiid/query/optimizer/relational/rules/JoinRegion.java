@@ -22,17 +22,7 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
@@ -42,8 +32,8 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
-import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
+import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
@@ -251,7 +241,8 @@ class JoinRegion {
         HashSet<PlanNode> criteria = new HashSet<PlanNode>(this.criteriaNodes);
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>(this.joinSourceNodes.size());
         boolean hasUnknown = false;
-        for (int i = 0; i < joinOrder.length; i++) {
+        //only calcuate up to the second to last as the last is not an intermediate result
+        for (int i = 0; i < joinOrder.length - 1; i++) {
             Integer source = (Integer)joinOrder[i];
             
             Map.Entry<PlanNode, PlanNode> entry = joinSourceEntries.get(source.intValue());
@@ -295,10 +286,10 @@ class JoinRegion {
                 	sourceCost = (float)cost;
                 	criteria.removeAll(applicableCriteria);
 	            	applicableCriteria = null;
-            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i == 1 && joinSourceRoot.hasBooleanProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
+            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i >= 1 && joinSourceRoot.hasBooleanProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
     	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING, sourceCost));
             		} else {
-    	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 2, sourceCost));
+    	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 8);
             		}
                 }
             } else if (Double.isInfinite(sourceCost) || Double.isNaN(sourceCost)) {
