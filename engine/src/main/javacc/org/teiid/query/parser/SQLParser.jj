@@ -36,6 +36,34 @@ import org.teiid.translator.*;
 @SuppressWarnings({"nls", "unused"})
 public class SQLParser extends SQLParserUtil {
 
+  private void jj_add_error_token ( int kind, int pos) {
+	    if (pos >= 100) return;
+	    if (pos == jj_endpos + 1) {
+	      jj_lasttokens[jj_endpos++] = kind;
+	    } else if (jj_endpos != 0) {
+	      jj_expentry = new int[jj_endpos];
+	      for (int i = 0; i < jj_endpos; i++) {
+	        jj_expentry[i] = jj_lasttokens[i];
+	      }
+	      boolean exists = false;
+	      for (java.util.Iterator e = jj_expentries.iterator(); e.hasNext();) {
+	        int[] oldentry = (int[])(e.next());
+	        if (oldentry.length == jj_expentry.length) {
+	          exists = true;
+	          for (int i = 0; i < jj_expentry.length; i++) {
+	            if (oldentry[i] != jj_expentry[i]) {
+	              exists = false;
+	              break;
+	            }
+	          }
+	          if (exists) break;
+	        }
+	      }
+	      if (!exists) jj_expentries.add(jj_expentry);
+	      if (pos != 0) jj_lasttokens[(jj_endpos = pos) - 1] = kind;
+	    }
+	  }
+
 } // end class
 
 PARSER_END(SQLParser)
@@ -4615,10 +4643,10 @@ void ddlStmt(MetadataFactory factory) :
 }
 {
 	(LOOKAHEAD(3) 	createTable(factory) | 
-	 LOOKAHEAD(4)	createDDLProcedure(factory, new ParseInfo()) |
+	 LOOKAHEAD(4)	createDDLProcedure(factory, ParseInfo.DEFAULT_INSTANCE) |
 	 LOOKAHEAD(2)	createNameSpace(factory) |
 	 LOOKAHEAD(4)	alterStatement(factory) |
-	 LOOKAHEAD(4) 	command=createTrigger(new ParseInfo())
+	 LOOKAHEAD(4) 	command=createTrigger(ParseInfo.DEFAULT_INSTANCE)
 	 {
 	 	createDDLTrigger(factory, (AlterTrigger)command);
 	 }
