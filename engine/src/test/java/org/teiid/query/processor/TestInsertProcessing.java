@@ -463,5 +463,20 @@ public class TestInsertProcessing {
         dataManager.addData("INSERT INTO t1 (x, y) VALUES (2, 'b')", new List<?>[] {Arrays.asList(1)});
         helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(2)});
     }
+    
+    @Test public void testInsertDefaultResolving() throws Exception {
+        String sql = "insert into x (y) values ('1')"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.fromDDL("" +
+        		"create foreign table t (y string, z string) options (updatable true); " +
+        		"create view x (y string, z string default 'a') options (updatable true) as select * from t; " +
+        		"create trigger on x instead of insert as for each row begin insert into t (y, z) values (new.y, new.z); end;", "vdb", "source");
+        Command command = helpParse(sql); 
+
+        ProcessorPlan plan = helpGetPlan(command, tm, TestOptimizer.getGenericFinder()); 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("INSERT INTO t (y, z) VALUES ('1', 'a')", new List<?>[] {Arrays.asList(1)});
+        helpProcess(plan, dataManager, new List<?>[] {Arrays.asList(1)}); 
+    }
 
 }
