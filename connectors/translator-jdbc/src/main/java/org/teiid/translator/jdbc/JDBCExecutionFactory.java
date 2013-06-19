@@ -26,19 +26,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.text.MessageFormat;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.sql.DataSource;
+import javax.sql.rowset.serial.SerialStruct;
 
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.*;
@@ -60,11 +54,6 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public static final int DEFAULT_MAX_IN_CRITERIA = 1000;
 	public static final int DEFAULT_MAX_DEPENDENT_PREDICATES = 50;
 	
-	// Because the retrieveValue() method will be hit for every value of 
-    // every JDBC result set returned, we do lots of weird special stuff here 
-    // to improve the performance (most importantly to remove big if/else checks
-    // of every possible type.  
-    
     private static final Map<Class<?>, Integer> TYPE_CODE_MAP = new HashMap<Class<?>, Integer>();
     
     private static final int INTEGER_CODE = 0;
@@ -94,6 +83,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.CLOB, new Integer(CLOB_CODE));
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BOOLEAN, new Integer(BOOLEAN_CODE));
         TYPE_CODE_MAP.put(TypeFacility.RUNTIME_TYPES.BYTE, new Integer(SHORT_CODE));
+    }
+    
+    public enum StructRetrieval {
+    	OBJECT,
+    	COPY,
+    	ARRAY
     }
 	
     private static final ThreadLocal<MessageFormat> COMMENT = new ThreadLocal<MessageFormat>() {
@@ -130,6 +125,7 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private int maxInsertBatchSize = 2048;
 	private DatabaseCalender databaseCalender;
 	private boolean supportsGeneratedKeys;
+	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -978,7 +974,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
             }
         }
 
-        return results.getObject(columnIndex);
+        Object result = results.getObject(columnIndex);
+        if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+        	return convertObject(result);
+        }
+		return result;
     }
 
     /**
@@ -1067,10 +1067,28 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 
         // otherwise fall through and call getObject() and rely on the normal
 		// translation routines
-		return results.getObject(parameterIndex);
+        Object result = results.getObject(parameterIndex);
+        if (expectedType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+        	return convertObject(result);
+        }
+		return result;
     }
        
-    /**
+    protected Object convertObject(Object object) throws SQLException {
+    	if (object instanceof Struct) {
+    		switch (structRetrieval) {
+    		case OBJECT:
+    			return object;
+    		case ARRAY:
+    			return new ArrayImpl(((Struct)object).getAttributes());
+    		case COPY:
+    			return new SerialStruct((Struct)object, Collections.<String, Class<?>> emptyMap());
+    		}
+    	}
+    	return object;
+	}
+
+	/**
      * Called exactly once for this source.
      * @param connection
      */
@@ -1209,6 +1227,15 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	
 	public boolean supportsGeneratedKeys() {
 		return supportsGeneratedKeys;
+	}
+	
+	@TranslatorProperty(display="Struct retrieval", description="Struct retrieval mode (OBJECT, COPY, ARRAY)",advanced=true)
+	public StructRetrieval getStructRetrieval() {
+		return structRetrieval;
+	}
+	
+	public void setStructRetrieval(StructRetrieval structRetrieval) {
+		this.structRetrieval = structRetrieval;
 	}
 	
 }

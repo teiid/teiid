@@ -346,19 +346,42 @@ public class LanguageBridgeFactory {
     
     org.teiid.language.Comparison translate(DependentSetCriteria criteria) {
         Operator operator = Operator.EQ;
-        Parameter p = new Parameter();
-        p.setType(criteria.getExpression().getType());
+        org.teiid.language.Expression arg = null;
         final TupleBuffer tb = criteria.getDependentValueSource().getTupleBuffer();
-        p.setValueIndex(tb.getSchema().indexOf(criteria.getValueExpression()));
-        p.setDependentValueId(criteria.getContextSymbol());
+        if (criteria.getValueExpression() instanceof Array) {
+        	Array array = (Array)criteria.getValueExpression();
+        	List<org.teiid.language.Expression> params = new ArrayList<org.teiid.language.Expression>();
+        	Class<?> baseType = null;
+        	for (Expression ex : array.getExpressions()) {
+    			if (baseType == null) {
+    				baseType = ex.getType();
+    			} else if (!baseType.equals(ex.getType())) {
+					baseType = DataTypeManager.DefaultDataClasses.OBJECT;
+				}
+    			params.add(createParameter(criteria, tb, ex));
+        	}
+        	arg = new org.teiid.language.Array(baseType, params);
+        } else {
+        	Expression ex = criteria.getValueExpression();
+        	arg = createParameter(criteria, tb, ex);
+        }
         if (this.dependentSets == null) {
         	this.dependentSets = new HashMap<String, List<? extends List<?>>>();
         }
     	this.dependentSets.put(criteria.getContextSymbol(), new TupleBufferList(tb));
         Comparison result = new org.teiid.language.Comparison(translate(criteria.getExpression()),
-                                        p, operator);
+                                        arg, operator);
         return result;
     }
+
+	private Parameter createParameter(DependentSetCriteria criteria,
+			final TupleBuffer tb, Expression ex) {
+		Parameter p = new Parameter();
+		p.setType(ex.getType());
+		p.setValueIndex(tb.getSchema().indexOf(ex));
+		p.setDependentValueId(criteria.getContextSymbol());
+		return p;
+	}
     
     org.teiid.language.Comparison translate(CompareCriteria criteria) {
         Operator operator = Operator.EQ;
@@ -599,7 +622,7 @@ public class LanguageBridgeFactory {
     		// and expand binding options in the translators
 
     		//we currently support the notion of a mixed type array, since we consider object a common base type
-    		//that will not work for all sources, so instead of treating this a single array (as commented out below),
+    		//that will not work for all sources, so instead of treating this as a single array (as commented out below),
     		//we just turn it into an array of parameters
     		//Literal result = new Literal(av.getValues(), org.teiid.language.Array.class);
     		//result.setBindEligible(constant.isBindEligible());

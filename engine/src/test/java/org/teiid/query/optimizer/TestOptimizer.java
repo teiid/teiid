@@ -2967,7 +2967,7 @@ public class TestOptimizer {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500, metadata);
-        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm2.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3006,7 +3006,7 @@ public class TestOptimizer {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500, metadata);
-        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm2.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,
@@ -3046,7 +3046,7 @@ public class TestOptimizer {
 
         QueryMetadataInterface metadata = RealMetadataFactory.example1();
         RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 500, metadata);
-        RealMetadataFactory.setCardinality("pm1.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
+        RealMetadataFactory.setCardinality("pm2.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1000, metadata);
     
         ProcessorPlan plan = helpPlan(sql, metadata,  
             null, capFinder,

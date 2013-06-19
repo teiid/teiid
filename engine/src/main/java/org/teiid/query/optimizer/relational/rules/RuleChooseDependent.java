@@ -111,10 +111,23 @@ public final class RuleChooseDependent implements OptimizerRule {
             	float sourceCost = NewCalculateCostUtil.computeCostForTree(sourceNode, metadata);
             	float siblingCost = NewCalculateCostUtil.computeCostForTree(siblingNode, metadata);
             	
-                if (bothCandidates && sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
-                		&& sourceCost <= siblingCost) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceCost <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
+                List leftExpressions = (List)joinNode.getProperty(NodeConstants.Info.LEFT_EXPRESSIONS);
+                List rightExpressions = (List)joinNode.getProperty(NodeConstants.Info.RIGHT_EXPRESSIONS);
+                
+                float sourceNdv = NewCalculateCostUtil.getNDVEstimate(joinNode.getFirstChild(), metadata, sourceCost, leftExpressions, true);
+                float siblingNdv = NewCalculateCostUtil.getNDVEstimate(joinNode.getLastChild(), metadata, siblingCost, rightExpressions, true);
+                
+                if (sourceCost != NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv == NewCalculateCostUtil.UNKNOWN_VALUE) {
+                	sourceNdv = sourceCost;
+                }
+                if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && siblingNdv == NewCalculateCostUtil.UNKNOWN_VALUE) {
+                	siblingNdv = siblingCost;
+                }
+
+                if (bothCandidates && sourceNdv != NewCalculateCostUtil.UNKNOWN_VALUE && ((sourceCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY 
+                		&& sourceCost <= siblingCost) || (siblingCost == NewCalculateCostUtil.UNKNOWN_VALUE && sourceNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
                     pushCriteria |= markDependent(siblingNode, joinNode, metadata, null, sourceCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null);
-                } else if (siblingCost != NewCalculateCostUtil.UNKNOWN_VALUE && (siblingCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingCost <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
+                } else if (siblingNdv != NewCalculateCostUtil.UNKNOWN_VALUE && (siblingCost <= RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY || (sourceCost == NewCalculateCostUtil.UNKNOWN_VALUE && siblingNdv <= UNKNOWN_INDEPENDENT_CARDINALITY))) {
                     pushCriteria |= markDependent(sourceNode, joinNode, metadata, null, siblingCost > RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY?true:null);
                 }
             }

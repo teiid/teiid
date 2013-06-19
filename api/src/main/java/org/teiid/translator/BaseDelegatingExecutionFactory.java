@@ -85,31 +85,24 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 		delegate.closeConnection(connection, factory);
 	}
 	@Override
-	public Execution createExecution(Command command,
-			ExecutionContext executionContext, RuntimeMetadata metadata,
-			C connection) throws TranslatorException {
-		return delegate.createExecution(command, executionContext, metadata,
-				connection);
-	}
-	@Override
 	public ProcedureExecution createProcedureExecution(Call command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			C connection) throws TranslatorException {
-		return delegate.createProcedureExecution(command, executionContext,
+		return (ProcedureExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			C connection) throws TranslatorException {
-		return delegate.createResultSetExecution(command, executionContext,
+		return (ResultSetExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
 	@Override
 	public UpdateExecution createUpdateExecution(Command command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			C connection) throws TranslatorException {
-		return delegate.createUpdateExecution(command, executionContext,
+		return (UpdateExecution) delegate.createExecution(command, executionContext,
 				metadata, connection);
 	}
 	public C getConnection(F factory, ExecutionContext executionContext) throws TranslatorException {

@@ -23,9 +23,16 @@ package org.teiid.translator.jdbc;
 
 import static org.junit.Assert.*;
 
+import java.sql.Array;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Struct;
 import java.util.Calendar;
 
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.translator.TypeFacility;
+import org.teiid.translator.jdbc.JDBCExecutionFactory.StructRetrieval;
 
 @SuppressWarnings("nls")
 public class TestJDBCExecutionFactory {
@@ -65,5 +72,14 @@ public class TestJDBCExecutionFactory {
 		Version version = Version.getVersion("10.0");
 		assertTrue(version.compareTo(Version.getVersion("9.1")) > 0);
 		assertTrue(version.compareTo(Version.getVersion("10.0.1")) < 0);
+	}
+	
+	@Test public void testStructRetrival() throws SQLException {
+		JDBCExecutionFactory jef = new JDBCExecutionFactory();
+		jef.setStructRetrieval(StructRetrieval.ARRAY);
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Struct s = Mockito.mock(Struct.class);
+		Mockito.stub(rs.getObject(1)).toReturn(s);
+		assertTrue(jef.retrieveValue(rs, 1, TypeFacility.RUNTIME_TYPES.OBJECT) instanceof Array);
 	}
 }

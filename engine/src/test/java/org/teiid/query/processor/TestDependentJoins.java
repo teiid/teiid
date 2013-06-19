@@ -32,6 +32,9 @@ import org.junit.Test;
 import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.language.Array;
+import org.teiid.language.Comparison;
+import org.teiid.language.Parameter;
 import org.teiid.language.Select;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -49,7 +52,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.ExecutionFactory.NullOrder;
 
-@SuppressWarnings({"unchecked", "nls"})
+@SuppressWarnings({"rawtypes", "unchecked", "nls"})
 public class TestDependentJoins {
     
     /** 
@@ -1077,7 +1080,7 @@ public class TestDependentJoins {
         HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
         dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
         if (supportsArrayType) {
-        	dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE (g_0.e1, g_0.e2) = ? ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        	dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE (g_0.e1, g_0.e2) = (?, ?) ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
         } else {
         	dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e1 = ? AND g_0.e2 = ? ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
         }
@@ -1096,6 +1099,12 @@ public class TestDependentJoins {
         assertEquals(1, s.getDependentValues().size());
         List<? extends List<?>> vals = s.getDependentValues().values().iterator().next();
         assertEquals(1, vals.size());
+        if (supportsArrayType) {
+        	Comparison comp = (Comparison) s.getWhere();
+        	Parameter p = (Parameter)((Array)comp.getRightExpression()).getExpressions().get(0);
+        	assertEquals(0, p.getValueIndex());
+        	assertNotNull(s.getDependentValues().get(p.getDependentValueId()));
+        }
 	}
 	
     @Test public void testIndependentDupRemoval() { 
