@@ -1099,5 +1099,10 @@ public class TestOptionsAndHints {
         sql = "create virtual procedure begin loop on (select /*+ sh:'y' */ 1) as x begin end end"; //$NON-NLS-1$
         assertEquals("CREATE VIRTUAL PROCEDURE\nBEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseDesignerCommand(sql).toString());
 	}
+	
+    @Test public void testMakedepOptions() throws QueryParserException {
+        String sql = "Select a From db.g1 JOIN db.g2 MAKEDEP(min:100 max:300) ON a = b"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g1 INNER JOIN /*+ MAKEDEP(MIN:100 MAX:300) */ db.g2 ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+    }
 
 }

@@ -40,12 +40,14 @@ import org.teiid.query.optimizer.relational.OptimizerRule;
 import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
+import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.optimizer.relational.rules.NewCalculateCostUtil.DependentCostAnalysis;
 import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.DependentSetCriteria.AttributeComparison;
 import org.teiid.query.sql.lang.JoinType;
+import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -252,11 +254,13 @@ public final class RuleChooseDependent implements OptimizerRule {
         } 
         
         // Check for hints, which over-rule heuristics
-        if(sourceNode1.hasBooleanProperty(NodeConstants.Info.MAKE_DEP)) {
+        if(sourceNode1.hasProperty(NodeConstants.Info.MAKE_DEP)) {
         	sourceNode1.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
+        	rootNode1.setProperty(Info.MAKE_DEP, sourceNode1.getProperty(Info.MAKE_DEP));
             return rootNode1;
-        } else if(sourceNode2 != null && sourceNode2.hasBooleanProperty(NodeConstants.Info.MAKE_DEP)) {
+        } else if(sourceNode2 != null && sourceNode2.hasProperty(NodeConstants.Info.MAKE_DEP)) {
         	sourceNode2.recordDebugAnnotation("MAKE_DEP hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
+        	rootNode2.setProperty(Info.MAKE_DEP, sourceNode2.getProperty(Info.MAKE_DEP));
             return rootNode2;
         } else if (sourceNode1.hasBooleanProperty(NodeConstants.Info.MAKE_IND) && sourceNode2 != null) {
         	sourceNode2.recordDebugAnnotation("MAKE_IND hint detected", null, "marking as dependent side of join", analysisRecord, null); //$NON-NLS-1$ //$NON-NLS-2$
@@ -309,7 +313,7 @@ public final class RuleChooseDependent implements OptimizerRule {
         	}
         }
 
-        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, indNode, metadata, dca, bound);
+        PlanNode crit = getDependentCriteriaNode(id, independentExpressions, dependentExpressions, indNode, metadata, dca, bound, (MakeDep)sourceNode.getProperty(Info.MAKE_DEP));
         
         sourceNode.addAsParent(crit);
               
@@ -322,13 +326,14 @@ public final class RuleChooseDependent implements OptimizerRule {
     /** 
      * @param independentExpressions
      * @param dependentExpressions
+     * @param makeDep 
      * @return
      * @throws TeiidComponentException 
      * @throws QueryMetadataException 
      * @since 4.3
      */
     private PlanNode getDependentCriteriaNode(String id, List<Expression> independentExpressions,
-                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, Boolean bound) throws QueryMetadataException, TeiidComponentException {
+                                           List<Expression> dependentExpressions, PlanNode indNode, QueryMetadataInterface metadata, DependentCostAnalysis dca, Boolean bound, MakeDep makeDep) throws QueryMetadataException, TeiidComponentException {
         
         Float cardinality = null;
         
@@ -364,8 +369,12 @@ public final class RuleChooseDependent implements OptimizerRule {
             expressions.add(comp);
         }
 
-        return createDependentSetNode(id, expressions);
-
+        PlanNode result = createDependentSetNode(id, expressions);
+        if (makeDep != null) {
+        	DependentSetCriteria dsc = (DependentSetCriteria)result.getProperty(Info.SELECT_CRITERIA);
+        	dsc.setMakeDepOptions(makeDep);
+        }
+        return result;
     }
 
 	static PlanNode createDependentSetNode(String id, List<DependentSetCriteria.AttributeComparison> expressions) {

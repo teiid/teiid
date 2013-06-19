@@ -27,12 +27,12 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
 <li>TEIID-2528 <b>Encrypted Buffer Files</b> - the buffer manager now supports an option to encrypt Teiid temp data files using 128-bit AES.</li>
+<li>TEIID-2249 TEIID-2559 <b>Dependent Join Enhancements</b> - greater control over full depdendent join pushdown has been added including make dep hint options max and min to control the extent of depdendent join pushdown.</li>
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
 <ul>
   <li>Support for named parameter syntax using param=value has been deprecated, since it is ambiguous with a comparison predicate boolean value expression.  param<b>=></b>value should be used instead.  
-  <li>Support for using the FROM clause post item hints MAKEDEP/MAKENOTDEP has been deprecated.  Use the pre item comment hint syntax instead, e.g. /*+ MAKEDEP */ tbl
   <li>decodeinteger/decodestring have been deprecated.  A CASE expression should be used instead.
   <li>TEIID-2267 The custom appenders for command and audit logging has been changed, now they need to be developed for java.util.logging based Handler.
   <li>TEIID-1979 The resource adaptors are now deployed through modules, and have shorter names as identifiers. Connection Factories created with previous versions must be re-configured.

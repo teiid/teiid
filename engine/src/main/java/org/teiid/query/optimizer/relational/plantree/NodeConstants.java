@@ -122,7 +122,7 @@ public final class NodeConstants {
         SYMBOL_MAP,         // SymbolMap
         PARTITION_INFO,		// Map<ElementSymbol, List<Set<Constant>>> - it will only be consistent in the initial stages of planning
         VIRTUAL_COMMAND,    // Command
-        MAKE_DEP,           // Boolean
+        MAKE_DEP,           // Option.Makedep
         PROCESSOR_PLAN,     // ProcessorPlan for non-relational sub plan
         NESTED_COMMAND,     // Command for nested processor plan
         TABLE_FUNCTION,     // Table Function

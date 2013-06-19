@@ -320,7 +320,7 @@ public class CapabilitiesUtil {
     	return getProperty(Capability.MAX_IN_CRITERIA_SIZE, modelID, metadata, capFinder);
     }
     	
-    private static int getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
+    public static int getProperty(Capability cap, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder) 
     throws QueryMetadataException, TeiidComponentException {
 
         if (metadata.isVirtualModel(modelID)){

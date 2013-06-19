@@ -475,4 +475,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsStringAgg() {
 		return delegate.supportsStringAgg();
 	}
+	@Override
+	public int getDependentJoinMinimum() {
+		return delegate.getDependentJoinMinimum();
+	}
 }

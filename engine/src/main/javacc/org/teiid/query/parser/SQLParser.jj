@@ -2376,6 +2376,7 @@ FromClause tablePrimary(ParseInfo info) :
 {
 	FromClause clause = null;
 	Token lparen = null;
+	Option.MakeDep makedep = null;
 }
 {
 	(	LOOKAHEAD(2) clause = textTable(info)
@@ -2397,12 +2398,35 @@ FromClause tablePrimary(ParseInfo info) :
 		 <RPAREN> 
 		)
 	)
-	[	(<MAKEDEP>  { clause.setMakeDep(true); })
+	[	(<MAKEDEP> makedep = makedepOptions() { clause.setMakeDep(makedep); })
 	 	| (<MAKENOTDEP> {  clause.setMakeNotDep(true); } )
 	]
 	{
 		return clause;
 	}
+}
+
+/*
+name=make dep options
+description=options for the make dep hint
+example={code:sql}(min:10000){code}
+*/
+Option.MakeDep makedepOptions() :
+{
+	Integer min = null;
+	Integer max = null;
+}
+{
+ [<LPAREN>
+	[<MIN><COLON> min = intVal()]
+	[<MAX><COLON> max = intVal()]
+  <RPAREN>]
+ {
+ 	Option.MakeDep result = new Option.MakeDep();
+ 	result.setMin(min);
+ 	result.setMax(max);
+ 	return result;
+ }
 }
 
 /*
@@ -3554,19 +3578,20 @@ Option option(ParseInfo info) :
 	String id = null;
 	Token nocache = null;
 	Option option = new Option();
+	Option.MakeDep makedep = null;
 }
 {
 	<OPTION>
 	(
 		<MAKEDEP>		
-		id=id(null)
+		id=id(null) makedep = makedepOptions()
 		{
-            option.addDependentGroup(id);
+            option.addDependentGroup(id, makedep);
 		}
 		(<COMMA>
-			id=id(null)
+			id=id(null) makedep = makedepOptions()
 			{
-                option.addDependentGroup(id);
+    	        option.addDependentGroup(id, makedep);
 	        }
 		)* |
 		<MAKENOTDEP>		

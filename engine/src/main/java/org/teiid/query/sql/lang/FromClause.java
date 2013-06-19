@@ -24,8 +24,10 @@ package org.teiid.query.sql.lang;
 
 import java.util.Collection;
 
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
+import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.visitor.SQLStringVisitor;
 
@@ -43,7 +45,7 @@ public abstract class FromClause implements LanguageObject {
 	public static final String PRESERVE = "PRESERVE"; //$NON-NLS-1$
 	
     private boolean optional;
-    private boolean makeDep;
+    private MakeDep makeDep;
     private boolean makeNotDep;
     private boolean makeInd;
     private boolean noUnnest;
@@ -88,11 +90,19 @@ public abstract class FromClause implements LanguageObject {
 	}
 
     public boolean isMakeDep() {
-        return this.makeDep;
+        return this.makeDep != null;
     }
+    
+    public MakeDep getMakeDep() {
+		return makeDep;
+	}
 
     public void setMakeDep(boolean makeDep) {
-        this.makeDep = makeDep;
+    	if (makeDep) {
+    		this.makeDep = new MakeDep();
+    	} else {
+    		this.makeDep = null;
+    	}
     }
 
     public boolean isMakeNotDep() {
@@ -101,6 +111,10 @@ public abstract class FromClause implements LanguageObject {
 
     public void setMakeNotDep(boolean makeNotDep) {
         this.makeNotDep = makeNotDep;
+    }
+    
+    public void setMakeDep(MakeDep makedep) {
+    	this.makeDep = makedep;
     }
     
     public boolean isPreserve() {
@@ -112,7 +126,7 @@ public abstract class FromClause implements LanguageObject {
 	}
     
     public boolean hasHint() {
-        return optional || makeDep || makeNotDep || makeInd || noUnnest || preserve;
+        return optional || makeDep != null || makeNotDep || makeInd || noUnnest || preserve;
     }
     
     public boolean equals(Object obj) {
@@ -127,7 +141,7 @@ public abstract class FromClause implements LanguageObject {
         FromClause other = (FromClause)obj;
 
         return other.isOptional() == this.isOptional()
-               && other.isMakeDep() == this.isMakeDep()
+               && EquivalenceUtil.areEqual(this.makeDep, other.makeDep)
                && other.isMakeNotDep() == this.isMakeNotDep()
         	   && other.isMakeInd() == this.isMakeInd()
         	   && other.isNoUnnest() == this.isNoUnnest()

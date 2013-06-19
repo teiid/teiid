@@ -288,7 +288,9 @@ public class DependentCriteriaProcessor {
         		if (crit == QueryRewriter.FALSE_CRITERIA) {
         			return QueryRewriter.FALSE_CRITERIA;
         		}
-        		crits.add(crit);
+        		if (crit != QueryRewriter.TRUE_CRITERIA) {
+            		crits.add(crit);
+        		}
         	}
         }
         

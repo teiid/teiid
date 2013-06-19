@@ -286,7 +286,7 @@ class JoinRegion {
                 	sourceCost = (float)cost;
                 	criteria.removeAll(applicableCriteria);
 	            	applicableCriteria = null;
-            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i >= 1 && joinSourceRoot.hasBooleanProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
+            		if (NewCalculateCostUtil.usesKey(cc, metadata) || (i >= 1 && joinSourceRoot.hasProperty(Info.MAKE_DEP) && !joinSourceRoot.hasBooleanProperty(Info.MAKE_NOT_DEP))) {
     	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * Math.min(NewCalculateCostUtil.UNKNOWN_JOIN_SCALING, sourceCost));
             		} else {
     	            	sourceCost = Math.min(UNKNOWN_TUPLE_EST, sourceCost * NewCalculateCostUtil.UNKNOWN_JOIN_SCALING * 8);

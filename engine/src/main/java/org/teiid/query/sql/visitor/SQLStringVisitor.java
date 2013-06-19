@@ -44,6 +44,7 @@ import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.lang.ExistsCriteria.SubqueryHint;
 import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
+import org.teiid.query.sql.lang.Option.MakeDep;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.TableFunctionReference.ProjectedColumn;
 import org.teiid.query.sql.lang.TextTable.TextColumn;
@@ -477,6 +478,8 @@ public class SQLStringVisitor extends LanguageVisitor {
             }
             if (obj.isMakeDep()) {
                 append(Option.MAKEDEP);
+                MakeDep makedep = obj.getMakeDep();
+                appendMakeDepOptions(makedep);
                 append(SPACE);
             }
             if (obj.isMakeNotDep()) {
@@ -576,9 +579,12 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(" "); //$NON-NLS-1$
 
             Iterator<String> iter = groups.iterator();
+            Iterator<MakeDep> iter1 = obj.getMakeDepOptions().iterator();
 
             while (iter.hasNext()) {
                 outputDisplayName(iter.next());
+                
+                appendMakeDepOptions(iter1.next());
 
                 if (iter.hasNext()) {
                     append(", ");//$NON-NLS-1$
@@ -624,6 +630,35 @@ public class SQLStringVisitor extends LanguageVisitor {
         }
 
     }
+
+	public SQLStringVisitor appendMakeDepOptions(MakeDep makedep) {
+		boolean parens = false;
+		if (makedep.getMin() != null || makedep.getMax() != null) {
+			append(Tokens.LPAREN);
+			parens = true;
+		}
+		boolean space = false;
+		if (makedep.getMin() != null) {
+			append(NonReserved.MIN);
+			append(Tokens.COLON);
+			append(makedep.getMin());
+			space = true;
+		}
+		if (makedep.getMax() != null) {
+			if (space) {
+				append(SPACE);
+			} else {
+				space = true;
+			}
+			append(NonReserved.MAX);
+			append(Tokens.COLON);
+			append(makedep.getMax());
+		}
+		if (parens) {
+			append(Tokens.RPAREN);
+		}
+		return this;
+	}
 
     public void visit( OrderBy obj ) {
         append(ORDER);

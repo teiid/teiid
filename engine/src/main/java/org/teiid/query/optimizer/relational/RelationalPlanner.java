@@ -440,7 +440,7 @@ public class RelationalPlanner {
      * @param groups List of groups (Strings) to be made dependent
      * @param plan The canonical plan
      */
-    private void distributeDependentHints(Collection<String> groups, PlanNode plan, NodeConstants.Info hintProperty)
+    private void distributeDependentHints(Collection<String> groups, PlanNode plan, NodeConstants.Info hintProperty, Collection<? extends Object> vals)
         throws QueryMetadataException, TeiidComponentException {
     
         if(groups == null || groups.isEmpty()) {
@@ -448,19 +448,20 @@ public class RelationalPlanner {
         }
         // Get all source nodes
         List<PlanNode> nodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.SOURCE);
-
+        Iterator<? extends Object> valIter = vals.iterator();
         // Walk through each dependent group hint and
         // attach to the correct source node
         for (String groupName : groups) {
+        	Object val = valIter.next();
             // Walk through nodes and apply hint to all that match group name
-            boolean appliedHint = applyHint(nodes, groupName, hintProperty);
+            boolean appliedHint = applyHint(nodes, groupName, hintProperty, val);
 
             if(! appliedHint) {
                 //check if it is partial group name
                 Collection groupNames = metadata.getGroupsForPartialName(groupName);
                 if(groupNames.size() == 1) {
                     groupName = (String)groupNames.iterator().next();
-                    appliedHint = applyHint(nodes, groupName, hintProperty);
+                    appliedHint = applyHint(nodes, groupName, hintProperty, val);
                 }
                 
                 if(! appliedHint) {
@@ -473,7 +474,7 @@ public class RelationalPlanner {
         }
     }
     
-    private static boolean applyHint(List<PlanNode> nodes, String groupName, NodeConstants.Info hintProperty) {
+    private static boolean applyHint(List<PlanNode> nodes, String groupName, NodeConstants.Info hintProperty, Object value) {
         boolean appliedHint = false;
         for (PlanNode node : nodes) {
             GroupSymbol nodeGroup = node.getGroups().iterator().next();
@@ -482,7 +483,7 @@ public class RelationalPlanner {
             
             if (nodeGroup.getName().equalsIgnoreCase(groupName) 
              || (sDefinition != null && sDefinition.equalsIgnoreCase(groupName)) ) {
-                node.setProperty(hintProperty, Boolean.TRUE);
+                node.setProperty(hintProperty, value);
                 appliedHint = true;
             }
         }
@@ -631,11 +632,11 @@ public class RelationalPlanner {
 		}
         // Distribute make dependent hints as necessary
         if (cmd.getOption() != null) {
-	        if(cmd.getOption().getDependentGroups() != null) {
-	            distributeDependentHints(cmd.getOption().getDependentGroups(), result, NodeConstants.Info.MAKE_DEP);
+	        if(cmd.getOption().getMakeDepOptions() != null) {
+	            distributeDependentHints(cmd.getOption().getDependentGroups(), result, NodeConstants.Info.MAKE_DEP, cmd.getOption().getMakeDepOptions());
 	        }
 	        if (cmd.getOption().getNotDependentGroups() != null) {
-	            distributeDependentHints(cmd.getOption().getNotDependentGroups(), result, NodeConstants.Info.MAKE_NOT_DEP);
+	            distributeDependentHints(cmd.getOption().getNotDependentGroups(), result, NodeConstants.Info.MAKE_NOT_DEP, Collections.nCopies(cmd.getOption().getNotDependentGroups().size(), Boolean.TRUE));
 	        }
         }
         this.option = savedOption;
@@ -1099,8 +1100,8 @@ public class RelationalPlanner {
             hints.hasOptionalJoin = true;
         }
         
-        if (clause.isMakeDep()) {
-            node.setProperty(NodeConstants.Info.MAKE_DEP, Boolean.TRUE);
+        if (clause.getMakeDep() != null) {
+            node.setProperty(NodeConstants.Info.MAKE_DEP, clause.getMakeDep());
         } else if (clause.isMakeNotDep()) {
             node.setProperty(NodeConstants.Info.MAKE_NOT_DEP, Boolean.TRUE);
         }

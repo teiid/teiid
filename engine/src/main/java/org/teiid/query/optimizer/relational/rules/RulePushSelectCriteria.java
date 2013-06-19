@@ -514,7 +514,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		List<DependentSetCriteria> crits = new ArrayList<DependentSetCriteria>(attributes.size());
 		for (int i = 0; i < attributes.size(); i++) {
 			DependentSetCriteria.AttributeComparison comp = attributes.get(i);
-			crits.add(RuleChooseDependent.createDependentSetCriteria(dsc.getContextSymbol(), Arrays.asList(comp)));
+			DependentSetCriteria crit = RuleChooseDependent.createDependentSetCriteria(dsc.getContextSymbol(), Arrays.asList(comp));
+			crit.setMakeDepOptions(dsc.getMakeDepOptions());
+			crits.add(crit);
 		}
 		return crits;
 	}

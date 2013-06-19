@@ -117,6 +117,7 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsNativeQueries;
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
+	private int dependentJoinMinimum;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -1012,6 +1013,8 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
+ 	 * NOTE: The pushed independent tuples will not have been
+	 * converted to a unique set and may contain duplicates.
 	 * @return true if dependent join pushdown is supported
 	 * @since 8.0
 	 */
@@ -1019,6 +1022,13 @@ public class ExecutionFactory<F, C> {
 		return false;
 	}
 	
+	public int getDependentJoinMinimum() {
+		return dependentJoinMinimum;
+	}
+	
+	public void setDependentJoinMinimum(int dependentJoinMinimum) {
+		this.dependentJoinMinimum = dependentJoinMinimum;
+	}
 		
 	public enum Format {
 		NUMBER,
