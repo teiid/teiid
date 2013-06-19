@@ -91,7 +91,7 @@ public class DependentCriteriaProcessor {
                    TeiidComponentException, TeiidProcessingException {
             if (dvs == null) {
                 originalVs = (DependentValueSource)dependentNode.getContext().getVariableContext().getGlobalValue(valueSource);
-                if (!originalVs.isDistinct()) {
+                if (!originalVs.isDistinct() || dependentSetStates.size() != originalVs.getTupleBuffer().getSchema().size()) {
 	            	if (sortUtility == null) {
 	            		List<Expression> sortSymbols = new ArrayList<Expression>(dependentSetStates.size());
 		                for (int i = 0; i < dependentSetStates.size(); i++) {
@@ -104,11 +104,17 @@ public class DependentCriteriaProcessor {
 		                    	sortSymbols.add(dependentSetStates.get(i).valueExpression);
 		                    }
 		                }
-		                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
-		                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
-		            	this.sortUtility.setWorkingBuffer(originalVs.getTupleBuffer());
+		                if (originalVs.isDistinct() && sortSymbols.size() == originalVs.getTupleBuffer().getSchema().size()) {
+		                	dvs = originalVs;
+		                } else {
+			                List<Boolean> sortDirection = Collections.nCopies(sortSymbols.size(), OrderBy.ASC);
+			                this.sortUtility = new SortUtility(null, sortSymbols, sortDirection, Mode.DUP_REMOVE, dependentNode.getBufferManager(), dependentNode.getConnectionID(), originalVs.getTupleBuffer().getSchema());
+			            	this.sortUtility.setWorkingBuffer(originalVs.getTupleBuffer());
+		                }
 	            	}
-	            	dvs = new DependentValueSource(sortUtility.sort());
+	            	if (sortUtility != null) {
+	            		dvs = new DependentValueSource(sortUtility.sort());
+	            	}
                 } else {
                 	dvs = originalVs;
                 }
