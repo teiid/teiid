@@ -411,4 +411,12 @@ public class TestMongoDBSelectVisitor {
 				"{ \"_m0\" : \"$_id.e1\" , \"_m1\" : \"$_id.e2\" , \"_m2\" : \"$e3\"}",
 				"{ \"_id.e1\" : 50}");
     }
+
+    @Test
+    public void testCompositeFKKeyWhere() throws Exception {
+    	String query = "SELECT * from G2 where e2 = 50";
+		helpExecute(query, "G2",
+				"{ \"_m0\" : \"$e1\" , \"_m1\" : \"$e2\" , \"_m2\" : \"$e3\"}",
+				"{ \"e2.$id.e2\" : 50}");
+    }
 }
