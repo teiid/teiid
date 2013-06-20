@@ -44,4 +44,9 @@ public class IDRef {
 		}
 		return value;
 	}
+
+	@Override
+	public String toString() {
+		return getValue().toString();
+	}
 }

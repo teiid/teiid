@@ -21,8 +21,11 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.teiid.language.ColumnReference;
 import org.teiid.language.Delete;
@@ -55,8 +58,6 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	public void visit(Insert obj) {
         append(obj.getTable());
 
-        this.columnValues.putAll(this.foreignKeys);
-
         List<ColumnReference> columns = obj.getColumns();
         List<Expression> values = ((ExpressionValueSource)obj.getValueSource()).getValues();
 
@@ -80,33 +81,38 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			this.exceptions.add(new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18001)));
 		}
 
-		if (this.columnValues.get(colName) != null) {
-			((MutableDBRef) this.columnValues.get(colName)).setId(value);
+		this.columnValues.put(colName, value);
 
-			// parent table selection query.
-			if (this.pushKey != null && this.pushKey.getReferenceColumnName().equals(colName)) {
-				this.pushKey.setId(value);
-			}
+		// if this FK column, populate
+		Iterator<Entry<List<String>, MutableDBRef>> it = this.foreignKeys.entrySet().iterator();
+	    while (it.hasNext()) {
+	        Map.Entry<List<String>, MutableDBRef> pairs = it.next();
+	        List<String> keys = pairs.getKey();
+	        MutableDBRef ref = pairs.getValue();
+	        if (keys.contains(colName)) {
+	        	ref.setId(colName, value);
+	        	this.columnValues.put(colName, ref);
+	        }
+	    }
 
-			// child table selection query
-			if (!this.pullKeys.isEmpty()) {
-				for (MutableDBRef ref:this.pullKeys) {
-					if (ref.getColumnName().equals(colName)) {
-						ref.setId(value);
-					}
+		// parent table selection query.
+		if (this.pushKey != null && this.pushKey.getReferenceColumns().contains(colName)) {
+			this.pushKey.setId(colName, value);
+		}
+
+		// child table selection query
+		if (!this.pullKeys.isEmpty()) {
+			for (MutableDBRef ref:this.pullKeys) {
+				if (ref.getColumns().contains(colName)) {
+					ref.setId(colName, value);
 				}
 			}
-		}
-		else {
-			this.columnValues.put(colName, value);
 		}
 	}
 
 	@Override
 	public void visit(Update obj) {
         append(obj.getTable());
-
-        this.columnValues.putAll(this.foreignKeys);
 
         List<SetClause> changes = obj.getChanges();
         try {
