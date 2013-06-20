@@ -60,6 +60,7 @@ import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBRef;
 import com.mongodb.gridfs.GridFS;
@@ -280,7 +281,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	 * @param expectedClass
 	 * @return
 	 */
-	public Object retrieveValue(Object value, Class<?> expectedClass, DB mongoDB, String fqn) {
+	public Object retrieveValue(Object value, Class<?> expectedClass, DB mongoDB, String fqn, String colName) {
 		if (value == null) {
 			return null;
 		}
@@ -290,7 +291,12 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		}
 
 		if (value instanceof DBRef) {
-			return ((DBRef)value).getId();
+			Object obj = ((DBRef)value).getId();
+			if (obj instanceof BasicDBObject) {
+				BasicDBObject bdb = (BasicDBObject)obj;
+				return bdb.get(colName);
+			}
+			return obj;
 		}
 		else if (value instanceof java.util.Date && expectedClass.equals(java.sql.Date.class)) {
 			return new java.sql.Date(((java.util.Date) value).getTime());

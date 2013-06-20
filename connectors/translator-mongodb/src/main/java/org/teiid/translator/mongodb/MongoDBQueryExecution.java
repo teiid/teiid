@@ -114,7 +114,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			if (result != null) {
 				ArrayList row = new ArrayList();
 				for (int i = 0; i < this.visitor.selectColumns.size();i++) {
-					row.add(this.executionFactory.retrieveValue(result.get(this.visitor.selectColumns.get(i)), this.expectedTypes[i], this.mongoDB, this.visitor.selectColumns.get(i)));
+					row.add(this.executionFactory.retrieveValue(result.get(this.visitor.selectColumns.get(i)), this.expectedTypes[i], this.mongoDB, this.visitor.selectColumns.get(i), this.visitor.selectColumnReferences.get(i)));
 				}
 				return row;
 			}

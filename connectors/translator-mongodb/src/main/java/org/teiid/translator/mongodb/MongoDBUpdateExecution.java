@@ -131,7 +131,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 						if (row != null) {
 							for (MutableDBRef ref:this.visitor.tableCopiedIn) {
 								DBCollection parent = getCollection(ref.getParentTable());
-								WriteResult update = parent.update(new BasicDBObject(ref.getColumnName()+".$id", row.get("_id")), new BasicDBObject("$set",new BasicDBObject(ref.getEmbeddedTable(), row)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+								WriteResult update = parent.update(new BasicDBObject(ref.getRefName()+".$id", row.get("_id")), new BasicDBObject("$set",new BasicDBObject(ref.getEmbeddedTable(), row)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 								if (update.getError() != null) {
 									throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18009));
 								}
@@ -155,7 +155,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 					if (row != null) {
 						for (MutableDBRef ref:this.visitor.tableCopiedIn) {
 							DBCollection parent = getCollection(ref.getParentTable());
-							AggregationOutput referenceOutput = parent.aggregate(new BasicDBObject("$match", new BasicDBObject(ref.getColumnName()+".$id", row.get("_id")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+							AggregationOutput referenceOutput = parent.aggregate(new BasicDBObject("$match", new BasicDBObject(ref.getRefName()+".$id", row.get("_id")))); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 							if (referenceOutput.results().iterator().hasNext()) {
 								throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18010, this.visitor.collectionTable.getName(), ref.getParentTable()));
 							}
@@ -260,7 +260,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
         GeneratedKeys generatedKeys = this.executionContext.getCommandContext().returnGeneratedKeys(columnNames, columnDataTypes);
         List<Object> vals = new ArrayList<Object>(columnDataTypes.length);
         for (int i = 0; i < columnDataTypes.length; i++) {
-            Object value = this.executionFactory.retrieveValue(result.getField(columnNames[i]), columnDataTypes[i], this.mongoDB, columnNames[i]);
+            Object value = this.executionFactory.retrieveValue(result.getField(columnNames[i]), columnDataTypes[i], this.mongoDB, columnNames[i], columnNames[i]);
             vals.add(value);
         }
         generatedKeys.addKey(vals);
