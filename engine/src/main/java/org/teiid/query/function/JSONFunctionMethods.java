@@ -27,10 +27,13 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.sql.SQLException;
+import java.util.Stack;
 
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -44,6 +47,7 @@ import org.teiid.json.simple.ContentHandler;
 import org.teiid.json.simple.JSONParser;
 import org.teiid.json.simple.ParseException;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.util.CommandContext;
@@ -105,22 +109,24 @@ public class JSONFunctionMethods {
 		private Writer writer;
 		private FileStoreInputStreamFactory fsisf;
 		private FileStore fs;
-		private boolean initial = true;
-		private boolean array;
+		private Stack<Integer> position = new Stack<Integer>();
 		
-		public JSONBuilder(BufferManager bm, boolean array) throws TeiidProcessingException {
-			this.array = array;
+		public JSONBuilder(BufferManager bm) {
 			fs = bm.createFileStore("xml"); //$NON-NLS-1$
 			fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
 		    writer = fsisf.getWriter();
-		    try {
+		}
+
+		public void start(boolean array) throws TeiidProcessingException {
+			position.push(0);
+			try {
 		    	if (array) {
 		    		writer.append('[');
 		    	} else {
 		    		writer.append('{');
 		    	}
 			} catch (IOException e) {
-				fs.remove();
+				remove();
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);
 			}
 		}
@@ -131,17 +137,7 @@ public class JSONFunctionMethods {
 		
 		public void addValue(String key, Object object) throws TeiidProcessingException {
 			try {
-				if (initial) {
-					initial = false;
-				} else {
-					writer.append(',');
-				}
-				if (!array) {
-					writer.append('"');
-					JSONParser.escape(key, writer);
-					writer.append('"');
-					writer.append(":"); //$NON-NLS-1$
-				}
+				startValue(key);
 				if (object == null) {
 					writer.append("null"); //$NON-NLS-1$
 				} else if (object instanceof ClobType) {
@@ -170,10 +166,28 @@ public class JSONFunctionMethods {
 					writer.append('"');
 				}
 			} catch (IOException e) {
-				fs.remove();
+				remove();
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);
 			} catch (SQLException e) {
-				fs.remove();
+				remove();
+				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);
+			}
+		}
+
+		public void startValue(String key) throws TeiidProcessingException {
+			try {
+				if (position.peek() != 0) {
+					writer.append(',');
+				}
+				position.add(position.pop() + 1);
+				if (key != null) {
+					writer.append('"');
+					JSONParser.escape(key, writer);
+					writer.append('"');
+					writer.append(":"); //$NON-NLS-1$
+				}
+			} catch (IOException e) {
+				remove();
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30438, e);
 			}
 		}
@@ -184,19 +198,32 @@ public class JSONFunctionMethods {
 		
 		public ClobType close() throws TeiidProcessingException {
 			try {
-				if (array) {
-					writer.append(']');
-				} else {
-					writer.append('}');
-				}
 				writer.close();
 			} catch (IOException e) {
-				fs.remove();
+				remove();
 				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30442, e);
 			}
 	        ClobType result = new ClobType(new ClobImpl(fsisf, -1));
 	        result.setType(Type.JSON);
 	        return result;
+		}
+
+		public void remove() {
+			fs.remove();
+		}
+
+		public void end(boolean array) throws TeiidProcessingException {
+			position.pop();
+			try {
+				if (array) {
+					writer.append(']');
+				} else {
+					writer.append('}');
+				}
+			} catch (IOException e) {
+				remove();
+				throw new TeiidProcessingException(QueryPlugin.Event.TEIID30442, e);
+			}
 		}
 		
 	}
@@ -245,16 +272,11 @@ public class JSONFunctionMethods {
 	}
 	
 	@TeiidFunction(category=FunctionCategoryConstants.JSON)
-	public static ClobType jsonArray(CommandContext context, Object... vals) throws TeiidProcessingException {
+	public static ClobType jsonArray(CommandContext context, Object... vals) throws TeiidProcessingException, BlockedException, TeiidComponentException {
 		if (vals == null) {
 			return null;
 		}
-		BufferManager bm = context.getBufferManager();
-		JSONBuilder array = new JSONBuilder(bm, true);
-		for (Object object : vals) {
-			array.addValue(object);
-		}
-		return array.close();
+		return Evaluator.jsonArray(context, null, vals, null, null, null);
 	}
 
 }

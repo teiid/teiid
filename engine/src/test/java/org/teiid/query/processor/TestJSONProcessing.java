@@ -87,4 +87,30 @@ public class TestJSONProcessing {
         helpProcess(plan, fdm, expected);
 	}
 	
+	@Test public void testJSONObjectWithNestedJson() throws Exception {
+    	String sql = "select jsonObject(jsonObject(e1), e2, jsonarray(e3, 2), 1) from pm1.g1 order by e1 limit 1"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] {
+        		Arrays.asList("{\"expr1\":{\"e1\":null},\"e2\":1,\"expr3\":[false,2],\"expr4\":1}"),
+        };    
+        FakeDataManager fdm = new FakeDataManager();
+        sampleData1(fdm);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        helpProcess(plan, fdm, expected);
+	}
+	
+	@Test public void testJSONObjectWithNestedJson1() throws Exception {
+    	String sql = "select jsonObject(jsonObject(e2, 1, jsonObject((select jsonArray_agg(e2) from pm1.g2 where e1 = pm1.g1.e1), e1))) from pm1.g1 order by e1 nulls last limit 1"; //$NON-NLS-1$
+    	
+        List<?>[] expected = new List[] {
+        		Arrays.asList("{\"expr1\":{\"e2\":0,\"expr2\":1,\"expr3\":{\"expr1\":[0,3,0],\"e1\":\"a\"}}}"),
+        };    
+        FakeDataManager fdm = new FakeDataManager();
+        fdm.setBlockOnce();
+        sampleData1(fdm);
+        ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+        
+      	helpProcess(plan, fdm, expected);
+	}
+	
 }
