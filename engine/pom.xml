@@ -20,9 +20,9 @@
 						<id>process-sources</id>
 						<phase>process-sources</phase>
 						<configuration>
-							<tasks>
+							<target>
 								<replaceregexp file="target/generated-sources/javacc/org/teiid/query/parser/SQLParser.java" byline="true" match="jj_add_error_token\(int " replace="jj_add_error_token_broken\(int " />
-							</tasks>
+							</target>
 						</configuration>
 						<goals>
 							<goal>run</goal>
@@ -33,7 +33,6 @@
 	        <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>javacc-maven-plugin</artifactId>
-                <version>2.6</version>
                 <executions>
                     <execution>
                         <id>javacc</id>
