@@ -104,6 +104,8 @@ public class CorePlugin {
 		TEIID10077,
 		TEIID10078,
 		TEIID10080,
-		TEIID10081,		
+		TEIID10081,
+		TEIID10082,
+		TEIID10083,
 	}
 }
