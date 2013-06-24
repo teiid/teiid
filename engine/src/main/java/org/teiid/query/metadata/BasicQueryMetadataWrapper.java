@@ -425,4 +425,10 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getModelID(modelName);
 	}
 	
+	@Override
+	public String getExtensionProperty(Object metadataID, String key,
+			boolean checkUnqualified) {
+		return actualMetadata.getExtensionProperty(metadataID, key, checkUnqualified);
+	}
+	
 }

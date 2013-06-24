@@ -605,6 +605,10 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
             
     	metadataID = getActualMetadataId(metadataID);
     	
+    	if (metadataID instanceof TempMetadataID) {
+    		return TransformationMetadata.EMPTY_PROPS;
+    	}
+    	
         return actualMetadata.getExtensionProperties(metadataID);
     }
 
@@ -788,6 +792,13 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         	return tid.getOriginalMetadataID();
         }
         return tid;
+    }
+    
+    @Override
+    public String getExtensionProperty(Object metadataID, String key,
+    		boolean checkUnqualified) {
+    	// TODO Auto-generated method stub
+    	return super.getExtensionProperty(metadataID, key, checkUnqualified);
     }
 
 }

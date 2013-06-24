@@ -668,4 +668,7 @@ public interface QueryMetadataInterface {
 	Map<Expression, Integer> getFunctionBasedExpressions(Object metadataID);
 
 	boolean isPseudo(Object elementId);
+
+	String getExtensionProperty(Object metadataID, String key,
+			boolean checkUnqualified);
 }
