@@ -23,11 +23,11 @@
 package org.teiid.query.optimizer;
 
 import org.junit.Test;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
-import org.teiid.query.optimizer.relational.rules.RuleRaiseAccess;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
@@ -125,7 +125,7 @@ public class TestJoinPushdownRestrictions {
         capFinder.addCapabilities("pm4", caps); //$NON-NLS-1$
 
         TransformationMetadata example4 = RealMetadataFactory.example4();
-        example4.getMetadataStore().getSchema("pm4").getTable("g2").getForeignKeys().get(0).setProperty(RuleRaiseAccess.ALLOW_JOIN, Boolean.FALSE.toString());
+        example4.getMetadataStore().getSchema("pm4").getTable("g2").getForeignKeys().get(0).setProperty(ForeignKey.ALLOW_JOIN, Boolean.FALSE.toString());
 		TestOptimizer.helpPlan(sql, example4,  
         		new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g1 AS g_0 ORDER BY c_0, c_1", "SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm4.g2 AS g_0 ORDER BY c_0, c_1"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$   
 	}

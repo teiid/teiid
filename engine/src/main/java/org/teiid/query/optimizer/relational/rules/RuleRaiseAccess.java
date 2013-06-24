@@ -34,7 +34,7 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryPlannerException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.ForeignKey;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
@@ -67,8 +67,6 @@ import org.teiid.translator.ExecutionFactory.SupportedJoinCriteria;
 
 public final class RuleRaiseAccess implements OptimizerRule {
 	
-	public static final String ALLOW_JOIN = AbstractMetadataRecord.RELATIONAL_URI + "allow-join"; //$NON-NLS-1$
-
 	public PlanNode execute(PlanNode plan, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, RuleStack rules, AnalysisRecord analysisRecord, CommandContext context)
 		throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
@@ -810,7 +808,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			throws TeiidComponentException, QueryMetadataException {
 		Collection fks = metadata.getForeignKeysInGroup(leftGroup.getMetadataID());
 		for (Object fk : fks) {
-			String allow = metadata.getExtensionProperty(fk, ALLOW_JOIN, false);
+			String allow = metadata.getExtensionProperty(fk, ForeignKey.ALLOW_JOIN, false);
 			if (allow != null && !Boolean.valueOf(allow)) {
 				continue;
 			}
