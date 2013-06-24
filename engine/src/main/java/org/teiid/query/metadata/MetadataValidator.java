@@ -313,7 +313,7 @@ public class MetadataValidator {
 				}
 			}
 		} catch (TeiidException e) {
-			log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getFullMessage()));
+			log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31080, record.getFullName(), e.getMessage()));
 		}
     }
 

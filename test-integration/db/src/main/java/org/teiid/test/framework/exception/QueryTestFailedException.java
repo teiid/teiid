@@ -6,7 +6,6 @@ package org.teiid.test.framework.exception;
 import java.util.List;
 
 import org.teiid.core.TeiidRuntimeException;
-import org.teiid.core.util.ExceptionUtil;
 
 
 /**
@@ -175,19 +174,6 @@ public class QueryTestFailedException extends Exception {
 	               + (throwable.getMessage() == null ? "" : throwable.getMessage()); //$NON-NLS-1$
 	    }
 
-	    /**
-	     * Get the full error message, including any message(s) from child
-	     * exceptions.  Messages of any exceptions chained to this exception are
-	     * prepended with their "level" in the chain.
-	     *
-	     * @return The full error message
-	     *
-	     * @see #getFormattedMessage
-	     */
-	    public String getFullMessage() {
-	        return ExceptionUtil.getLinkedMessagesVerbose(this);
-	    }
-
 	    /* (non-Javadoc)
 		 * @see java.lang.Throwable#getMessage()
 		 */
@@ -253,7 +239,7 @@ public class QueryTestFailedException extends Exception {
 	     * @return String representation of instance
 	     */
 	    public String toString() {
-	        return getFullMessage();
+	        return this.getMessage();
 	    }
 
 	    // =========================================================================

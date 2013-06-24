@@ -46,7 +46,7 @@ public class TestProcErrors {
     		TestProcedureResolving.createMetadata(ddl);
     		fail();
     	} catch (RuntimeException e) {
-    		assertEquals("TEIID31080 View test.vproc validation error: QueryResolverException-TEIID31120 An exception may only be chained to another exception. e is not valid.", e.getMessage());
+    		assertEquals("TEIID31080 View test.vproc validation error: TEIID31120 An exception may only be chained to another exception. e is not valid.", e.getMessage());
     	}
     }
 

@@ -491,7 +491,7 @@ public class XMLSystemFunctions {
 	}
 	
 	/**
-	 * Basic support for xmlelement.  namespaces are not yet supported.
+	 * Basic support for xmlelement.
 	 * @param context
 	 * @param name
 	 * @param contents

@@ -175,7 +175,7 @@ public class PlanNode {
         }
         Object result = nodeProperties.get(propertyID);
         if (result != null) {
-        	modified = true;
+        	modified = true; //we may modify this object
         }
         return result;
     }

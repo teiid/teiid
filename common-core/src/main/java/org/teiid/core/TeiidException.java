@@ -24,8 +24,6 @@ package org.teiid.core;
 
 import java.sql.SQLException;
 
-import org.teiid.core.util.ExceptionUtil;
-
 
 
 /**
@@ -120,16 +118,4 @@ public class TeiidException extends Exception {
 		return code+" "+message; //$NON-NLS-1$
 	} 
 	
-    /**
-     * Get the full error message, including any message(s) from child
-     * exceptions.
-     *
-     * @return The full error message
-     *
-     * @see #getFormattedMessage
-     */
-    public String getFullMessage() {
-    	return ExceptionUtil.getLinkedMessagesVerbose(this);
-    }
-    
 }
