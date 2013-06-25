@@ -81,6 +81,19 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	public static final String NEAREST_NEIGHBOR_DISTANCE = "sdo_nn_distance"; //$NON-NLS-1$
 	public static final String ORACLE_SDO = "Oracle-SDO"; //$NON-NLS-1$
 
+	private final class DateAwareExtract extends ExtractFunctionModifier {
+		@Override
+		public List<?> translate(Function function) {
+			Expression ex = function.getParameters().get(0);
+			if ((ex instanceof ColumnReference && "date".equalsIgnoreCase(((ColumnReference)ex).getMetadataObject().getNativeType())) //$NON-NLS-1$ 
+					|| (!(ex instanceof ColumnReference) && !(ex instanceof Literal) && !(ex instanceof Function))) {
+				ex = ConvertModifier.createConvertFunction(getLanguageFactory(), function.getParameters().get(0), TypeFacility.RUNTIME_NAMES.TIMESTAMP);
+				function.getParameters().set(0, ex);
+			}
+			return super.translate(function);
+		}
+	}
+
 	/*
 	 * Handling for cursor return values
 	 */
@@ -108,10 +121,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
         registerFunctionModifier(SourceSystemFunctions.LOG, new AliasModifier("ln")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.CEILING, new AliasModifier("ceil")); //$NON-NLS-1$ 
         registerFunctionModifier(SourceSystemFunctions.LOG10, new Log10FunctionModifier(getLanguageFactory())); 
-        registerFunctionModifier(SourceSystemFunctions.HOUR, new ExtractFunctionModifier());
+        registerFunctionModifier(SourceSystemFunctions.HOUR, new DateAwareExtract());
         registerFunctionModifier(SourceSystemFunctions.YEAR, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.MINUTE, new ExtractFunctionModifier()); 
-        registerFunctionModifier(SourceSystemFunctions.SECOND, new ExtractFunctionModifier()); 
+        registerFunctionModifier(SourceSystemFunctions.MINUTE, new DateAwareExtract()); 
+        registerFunctionModifier(SourceSystemFunctions.SECOND, new DateAwareExtract()); 
         registerFunctionModifier(SourceSystemFunctions.MONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.DAYOFMONTH, new ExtractFunctionModifier()); 
         registerFunctionModifier(SourceSystemFunctions.MONTHNAME, new MonthOrDayNameFunctionModifier(getLanguageFactory(), "Month"));//$NON-NLS-1$ 

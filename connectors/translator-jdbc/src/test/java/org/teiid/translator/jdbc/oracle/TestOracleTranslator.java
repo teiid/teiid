@@ -584,6 +584,24 @@ public class TestOracleTranslator {
                         EMPTY_CONTEXT, null, output);
     }
     
+    @Test public void testDateStuff1() throws Exception {
+        String input = "SELECT hour(datevalue), minute(timestampvalue), second(cast(stringkey as date)) FROM bqt1.SMALLA"; //$NON-NLS-1$
+        String output = "SELECT EXTRACT(HOUR FROM cast(SmallA.DateValue AS timestamp)), EXTRACT(MINUTE FROM SmallA.TimestampValue), EXTRACT(SECOND FROM cast(to_date(SmallA.StringKey, 'YYYY-MM-DD') AS timestamp)) FROM SmallA"; //$NON-NLS-1$
+        
+        helpTestVisitor(RealMetadataFactory.exampleBQTCached(),
+                        input, 
+                        EMPTY_CONTEXT, null, output);
+    }
+    
+    @Test public void testDateStuff2() throws Exception {
+        String input = "SELECT hour(timestampvalue) FROM SmallA"; //$NON-NLS-1$
+        String output = "SELECT EXTRACT(HOUR FROM cast(SmallishA.timestampvalue AS timestamp)) FROM SmallishA"; //$NON-NLS-1$
+        
+        helpTestVisitor(getOracleSpecificMetadata(),
+                        input, 
+                        EMPTY_CONTEXT, null, output);
+    }
+    
     @Test public void testAliasedGroup() throws Exception {
         helpTestVisitor(getTestVDB(),
             "select y.part_name from parts as y", //$NON-NLS-1$
