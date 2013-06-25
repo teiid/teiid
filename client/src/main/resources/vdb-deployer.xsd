@@ -185,10 +185,14 @@
 		</xs:unique>
 	</xs:element>
 	<xs:complexType name="property">
-		<xs:annotation>
-			<xs:documentation> property</xs:documentation>
-		</xs:annotation>
-		<xs:attribute name="name" type="xs:string" use="required"/>
-		<xs:attribute name="value" type="xs:string" use="required"/>
+		<xs:simpleContent>
+			<xs:annotation>
+				<xs:documentation> property</xs:documentation>
+			</xs:annotation>
+			<xs:extension base="xs:string">
+				<xs:attribute name="name" type="xs:string" use="required"/>
+				<xs:attribute name="value" type="xs:string"/>
+			</xs:extension>
+		</xs:simpleContent>
 	</xs:complexType>
 </xs:schema>

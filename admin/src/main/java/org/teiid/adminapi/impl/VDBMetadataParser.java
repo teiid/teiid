@@ -54,6 +54,8 @@ import org.xml.sax.SAXException;
 
 @SuppressWarnings("nls")
 public class VDBMetadataParser {
+	
+	private boolean writePropertyElements;
 
 	public static VDBMetaData unmarshell(InputStream content) throws XMLStreamException {
 		 XMLInputFactory inputFactory=XMLType.getXmlInputFactory();
@@ -152,6 +154,7 @@ public class VDBMetadataParser {
 
 	private static void parseProperty(XMLStreamReader reader, AdminObjectImpl anObj)
 			throws XMLStreamException {
+		boolean text = false;
 		if (reader.getAttributeCount() > 0) {
 			String key = null;
 			String value = null;
@@ -160,14 +163,19 @@ public class VDBMetadataParser {
 				String attrValue = reader.getAttributeValue(i);
 				if (attrName.equals(Element.NAME.getLocalName())) {
 					key = attrValue;
-				}
-				if (attrName.equals(Element.VALUE.getLocalName())) {
+				} else if (attrName.equals(Element.VALUE.getLocalName())) {
 					value = attrValue;
-				}		    			
+				} 
+			}
+			if (value == null) {
+				value = reader.getElementText();
+				text = true;
 			}
 			anObj.addProperty(key, value);
 		}
-		ignoreTillEnd(reader);
+		if (!text) {
+			ignoreTillEnd(reader);
+		}
 	}
 	
 	private static void parseDataRole(XMLStreamReader reader, DataPolicyMetadata policy) throws XMLStreamException {
@@ -430,6 +438,11 @@ public class VDBMetadataParser {
 	}
 
 	public static void marshell(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
+		VDBMetadataParser parser = new VDBMetadataParser();
+		parser.writeVDB(vdb, out);
+	}
+	
+	private void writeVDB(VDBMetaData vdb, OutputStream out) throws XMLStreamException, IOException {
 		XMLStreamWriter writer = XMLOutputFactory.newFactory().createXMLStreamWriter(out);
 		
 		writer.writeStartDocument();
@@ -486,8 +499,8 @@ public class VDBMetadataParser {
 		writer.close();
 		out.close();
 	}
-	
-	private static void writeDataPolicy(XMLStreamWriter writer, DataPolicy dp)  throws XMLStreamException {
+
+	private void writeDataPolicy(XMLStreamWriter writer, DataPolicy dp)  throws XMLStreamException {
 		writer.writeStartElement(Element.DATA_ROLE.getLocalName());
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), dp.getName());
@@ -546,7 +559,7 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 
-	private static void writeTranslator(final XMLStreamWriter writer, VDBTranslatorMetaData translator)  throws XMLStreamException  {
+	private void writeTranslator(final XMLStreamWriter writer, VDBTranslatorMetaData translator)  throws XMLStreamException  {
 		writer.writeStartElement(Element.TRANSLATOR.getLocalName());
 		
 		writeAttribute(writer, Element.NAME.getLocalName(), translator.getName());
@@ -558,7 +571,7 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 
-	private static void writeModel(final XMLStreamWriter writer, ModelMetaData model) throws XMLStreamException {
+	private void writeModel(final XMLStreamWriter writer, ModelMetaData model) throws XMLStreamException {
 		writer.writeStartElement(Element.MODEL.getLocalName());
 		writeAttribute(writer, Element.NAME.getLocalName(), model.getName());
 		writeAttribute(writer, Element.TYPE.getLocalName(), model.getModelType().name());
@@ -598,27 +611,33 @@ public class VDBMetadataParser {
 		writer.writeEndElement();
 	}
 	
-	private static void writeProperties(final XMLStreamWriter writer, Map<String, String> props)  throws XMLStreamException  {
+	private void writeProperties(final XMLStreamWriter writer, Map<String, String> props)  throws XMLStreamException  {
 		synchronized (props) {
 			for (Map.Entry<String, String> prop : props.entrySet()) {
 		        writer.writeStartElement(Element.PROPERTY.getLocalName());
 				String key = prop.getKey();
 				String value = prop.getValue();
 				writeAttribute(writer, Element.NAME.getLocalName(), key);
-				writeAttribute(writer, Element.VALUE.getLocalName(), value);
+				if (value != null) {
+					if (writePropertyElements) {
+						writer.writeCharacters(value);
+					} else {
+						writeAttribute(writer, Element.VALUE.getLocalName(), value);
+					}
+				}
 				writer.writeEndElement();
 			}
 		}
 	}
 	
-    private static void writeAttribute(XMLStreamWriter writer,
+    private void writeAttribute(XMLStreamWriter writer,
 			String localName, String value) throws XMLStreamException {
 		if (value != null) {
 			writer.writeAttribute(localName, value);
 		}
 	}
 
-	private static void writeElement(final XMLStreamWriter writer, final Element element, String value, String[] ... attributes) throws XMLStreamException {
+	private void writeElement(final XMLStreamWriter writer, final Element element, String value, String[] ... attributes) throws XMLStreamException {
         writer.writeStartElement(element.getLocalName());
         for (String[] attribute : attributes) {
         	writeAttribute(writer, attribute[0], attribute[1]);

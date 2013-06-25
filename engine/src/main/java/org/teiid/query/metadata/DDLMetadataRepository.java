@@ -32,8 +32,12 @@ public class DDLMetadataRepository extends MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
-		if (factory.getRawMetadata() != null) {
-			factory.parse(new StringReader(factory.getRawMetadata()));
+		String ddl = factory.getModelProperties().getProperty("ddl");
+		if (ddl == null) {
+			ddl = factory.getRawMetadata();
+		}
+		if (ddl != null) {
+			factory.parse(new StringReader(ddl));
 		}
 	}	
 
