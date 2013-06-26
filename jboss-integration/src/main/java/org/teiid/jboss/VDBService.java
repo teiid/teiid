@@ -289,13 +289,15 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		final IdentityHashMap<Translator, ExecutionFactory<Object, Object>> map = new IdentityHashMap<Translator, ExecutionFactory<Object, Object>>();
 		
 		try {
-			cmr.createConnectorManagers(deployment, new ConnectorManagerRepository.ExecutionFactoryProvider() {
+			ConnectorManagerRepository.ExecutionFactoryProvider provider = new ConnectorManagerRepository.ExecutionFactoryProvider() {
 				
 				@Override
 				public ExecutionFactory<Object, Object> getExecutionFactory(String name) throws ConnectorManagerException {
 					return VDBService.getExecutionFactory(name, repo, getTranslatorRepository(), deployment, map, new HashSet<String>());
 				}
-			});
+			};
+			cmr.setProvider(provider);
+			cmr.createConnectorManagers(deployment, provider);
 		} catch (ConnectorManagerException e) {
 			if (e.getCause() != null) {
 				throw new StartException(IntegrationPlugin.Event.TEIID50035.name()+" "+e.getMessage(), e.getCause()); //$NON-NLS-1$
