@@ -566,4 +566,10 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 		return null;
 	}
 	
+	@Override
+	public String getExtensionProperty(Object metadataID, String key,
+			boolean checkUnqualified) {
+		return null;
+	}
+	
 }

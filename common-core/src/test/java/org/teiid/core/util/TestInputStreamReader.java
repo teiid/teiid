@@ -3,6 +3,7 @@ package org.teiid.core.util;
 import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.Charset;
 
 import org.junit.Test;
@@ -23,6 +24,12 @@ public class TestInputStreamReader {
 			count++;
 		}
 		assertEquals(5, count);
+	}
+	
+	@Test(expected=IOException.class) public void testError() throws Exception {
+		InputStreamReader isr = new InputStreamReader(new ByteArrayInputStream(new byte[] {(byte)80, (byte)-61, (byte)-70, (byte)-61, (byte)-70, (byte)80, (byte)-61, (byte)-70}), Charset.forName("ASCII").newDecoder(), 4);
+		while (isr.read() != -1) {
+		}
 	}
 	
 }

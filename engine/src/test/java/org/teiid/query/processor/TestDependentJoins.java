@@ -1107,6 +1107,35 @@ public class TestDependentJoins {
         }
 	}
 	
+    @Test public void testIndependentDupRemoval1() { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1, pm1.g1.e2, x.e2 FROM pm1.g1, pm2.g2, /*+ makeind */ (select distinct e1, e2 from pm2.g1) x WHERE x.e1=pm1.g1.e1 AND pm2.g2.e2=x.e2"; //$NON-NLS-1$
+        
+        // Create expected results
+        List[] expected = new List[] { 
+            Arrays.asList(new Object[] { "a", 1, 1 }), //$NON-NLS-1$
+            Arrays.asList(new Object[] { "b", 1, 1 }), //$NON-NLS-1$
+        };   
+        
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
+        caps.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+
+        QueryMetadataInterface fakeMetadata = RealMetadataFactory.example1Cached();
+
+        Command command = TestProcessor.helpParse(sql);
+        ProcessorPlan plan = TestProcessor.helpGetPlan(command, fakeMetadata, new DefaultCapabilitiesFinder(caps));
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT DISTINCT g_0.e1, g_0.e2 FROM pm2.g1 AS g_0", new List<?>[] {Arrays.asList("b", 1), Arrays.asList("a", 1)});
+        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'b'", new List<?>[] {Arrays.asList("b", 1)});
+        dataManager.addData("SELECT g_0.e2 FROM pm2.g2 AS g_0 WHERE g_0.e2 = 1", new List<?>[] {Arrays.asList(1)});
+        dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e1 = 'a'", new List<?>[] {Arrays.asList("a", 1)});
+        // Run query
+        TestProcessor.helpProcess(plan, dataManager, expected);
+    }
+	
     @Test public void testIndependentDupRemoval() { 
         // Create query 
         String sql = "SELECT pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 WHERE pm2.g1.e1=pm1.g1.e1 AND pm1.g1.e2<pm2.g1.e2 order by pm1.g1.e1 option makedep pm1.g1"; //$NON-NLS-1$

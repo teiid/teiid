@@ -1,7 +1,7 @@
 <!-- If susbsytem is already defined, only copy the contents under it and edit to suit your needs -->
 <subsystem xmlns="urn:jboss:domain:resource-adapters:1.1">
     <resource-adapters>
-        <resource-adapter id="webservice">
+        <resource-adapter id="mongodb">
             <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
             <transaction-support>NoTransaction</transaction-support>
             <connection-definitions>

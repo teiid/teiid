@@ -238,7 +238,7 @@ public class TestDDLParser {
 	public void testFK() throws Exception {
 		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));\n" +
 				"CREATE FOREIGN TABLE G2( g2e1 integer, g2e2 varchar, " +
-				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2))";
+				"FOREIGN KEY (g2e1, g2e2) REFERENCES G1 (g1e1, g1e2) options (\"teiid_rel:allow-join\" true))";
 		
 		Schema s = helpParse(ddl, "model").getSchema();
 		Map<String, Table> tableMap = s.getTables();	
@@ -249,6 +249,7 @@ public class TestDDLParser {
 		
 		Table table = tableMap.get("G2");
 		ForeignKey fk = table.getForeignKeys().get(0);
+		assertEquals(Boolean.TRUE.toString(), fk.getProperty(ForeignKey.ALLOW_JOIN, false));
 		assertEquals(fk.getColumns(), table.getColumns());
 		assertEquals("G1", fk.getReferenceTableName());
 	}	

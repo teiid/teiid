@@ -22,18 +22,12 @@
 
 package org.teiid.core.types.basic;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
+import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 import org.teiid.core.types.Transform;
 import org.teiid.core.types.TransformationException;
-import org.teiid.core.types.DataTypeManager.DefaultDataClasses;
 
 
 public class StringToBooleanTransform extends Transform {
-
-    private static final Set<String> FALSE = new HashSet<String>(Arrays.asList("0", "false")); //$NON-NLS-1$ //$NON-NLS-2$
 
 	/**
 	 * This method transforms a value of the source type into a value
@@ -44,8 +38,8 @@ public class StringToBooleanTransform extends Transform {
 	 * the transformation fails
 	 */
 	public Object transformDirect(Object value) throws TransformationException {
-		String str = ((String)value).trim().toLowerCase();
-        if (FALSE.contains(str)) {
+		String str = ((String)value).trim();
+        if ("0".equals(str) || "false".equalsIgnoreCase(str)) { //$NON-NLS-1$ //$NON-NLS-2$
             return Boolean.FALSE;
         }
         if ("unknown".equals(str)) { //$NON-NLS-1$

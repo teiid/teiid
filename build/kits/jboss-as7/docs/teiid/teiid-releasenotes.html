@@ -39,7 +39,6 @@
   <li>TEIID-2326 By default imported vdb internal materialized views will shared with the importing vdb.
   <li>TEIID-2344 non-available JDBC sources in partial results mode or source with connection factories that require an ExecutionContext to obtain a connection will require manual setting of the database version metadata property.  The affected sources are: db2, derby, oracle, postgresql, sqlserver, sybase, teiid 
   <li>TEIID-2477 Most of the JDBC translator static String version constants were replaced by org.teiid.translator.jdbc.Version constants.  Use the .toString() method to obtain a version string if needed.
-  <li>TEIID-2329 <b>MongoDB Support</b> - added a mongodb translator/connector with a wide feature set including pushdown support for lobs, composite keys, and embedded joins.  See the Reference for more.
 </ul>
 
 <h4>from 8.3</h4>
@@ -184,6 +183,11 @@ for how to access the underlying SQLWarning chains.
 <h2><a name="Configuration">Configuration Issues</a></h2>
 
 See the <a href="teiid-docs/teiid_admin_guide.pdf">Admin Guide</a> for more on configuration and installation.
+
+<h4>from 8.4</h4>
+<ul>
+  <li>TEIID-2512 the usage of the metadata element text as the "raw schema text" may not be appropriate in all situations.  The ddl and ddl-file metadata repositories will check for the ddl and ddl-file model properties respectively.
+</ul>
 
 <h4>from 8.3</h4>
 <ul>

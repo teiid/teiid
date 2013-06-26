@@ -112,6 +112,9 @@ public class TeiidException extends Exception {
     
 	public String getMessage() {
 		String message = super.getMessage();
+		if (message == null) {
+			return code;
+		}
 		if (code == null || code.length() == 0 || message.startsWith(code)) {
 			return message;
 		}

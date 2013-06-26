@@ -24,14 +24,15 @@ package org.teiid.query.function;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.sql.Blob;
-import java.sql.Clob;
+import java.nio.charset.CodingErrorAction;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -50,6 +51,8 @@ import java.util.UUID;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.client.util.ExceptionUtil;
+import org.teiid.core.CorePlugin;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -59,11 +62,13 @@ import org.teiid.core.types.InputStreamFactory.BlobInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory.ClobInputStreamFactory;
 import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -1298,26 +1303,65 @@ public final class FunctionMethods {
         return TimestampWithTimezone.createTimestamp(value, context.getServerTimeZone(), cal);
     } 
     
-    public static Clob toChars(BlobType value, String encoding) {
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars", nullOnNull=true)
+    public static ClobType toChars(BlobType value, String encoding) throws SQLException, IOException {
+    	//TODO: defaulting to true as that was the pre 8.4.1 behavior
+    	return toChars(value, encoding, true);
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_chars")
+    public static ClobType toChars(BlobType value, String encoding, boolean wellFormed) throws SQLException, IOException {
     	Charset cs = getCharset(encoding);
 		BlobInputStreamFactory bisf = new BlobInputStreamFactory(value.getReference());
     	ClobImpl clob = new ClobImpl(bisf, -1);
     	clob.setCharset(cs);
+    	if (!wellFormed && !CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) && !CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
+    		//validate that the charcter conversion is possible
+    		//TODO: cache the result in a filestore
+    		Reader r = clob.getCharacterStream();
+    		try {
+	    		while (r.read() != -1) {
+	    			
+	    		}
+    		} catch (IOException e) {
+    			CharacterCodingException cce = ExceptionUtil.getExceptionOfType(e, CharacterCodingException.class);
+    			if (cce != null) {
+    				throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cs.displayName()), cce);
+    			}
+    			throw e;
+    		} finally {
+    			r.close();
+    		}
+    	}
     	return new ClobType(clob);
     }
     
-    public static Blob toBytes(ClobType value, String encoding) throws IOException {
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes", nullOnNull=true)
+    public static BlobType toBytes(ClobType value, String encoding) throws IOException, SQLException {
+    	return toBytes(value, encoding, true);
+    }
+    
+    @TeiidFunction(category=FunctionCategoryConstants.CONVERSION, name="to_bytes")
+    public static BlobType toBytes(ClobType value, String encoding, boolean wellFormed) throws IOException, SQLException {
     	Charset cs = getCharset(encoding);
     	ClobInputStreamFactory cisf = new ClobInputStreamFactory(value.getReference());
     	cisf.setCharset(cs);
-    	if (CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
+    	if (!wellFormed || CharsetUtils.BASE64_NAME.equalsIgnoreCase(encoding) || CharsetUtils.HEX_NAME.equalsIgnoreCase(encoding)) {
     		//validate that the binary conversion is possible
     		//TODO: cache the result in a filestore
-    		InputStream is = cisf.getInputStream();
+    		InputStream is = new ReaderInputStream(value.getCharacterStream(), 
+    				cs.newEncoder().onMalformedInput(CodingErrorAction.REPORT)
+    				.onUnmappableCharacter(CodingErrorAction.REPORT));
     		try {
 	    		while (is.read() != -1) {
 	    			
 	    		}
+    		} catch (IOException e) {
+    			CharacterCodingException cce = ExceptionUtil.getExceptionOfType(e, CharacterCodingException.class);
+    			if (cce != null) {
+    				throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10083, cs.displayName()), cce);
+    			}
+    			throw e;
     		} finally {
     			is.close();
     		}

@@ -67,6 +67,7 @@ public class TestVDBMetaData {
 		assertEquals("vdb description", vdb.getDescription()); //$NON-NLS-1$
 		assertEquals(1, vdb.getVersion());
 		assertEquals("vdb-value", vdb.getPropertyValue("vdb-property")); //$NON-NLS-1$ //$NON-NLS-2$
+		assertEquals("vdb-value2", vdb.getPropertyValue("vdb-property2")); //$NON-NLS-1$ //$NON-NLS-2$
 		
 		assertNotNull(vdb.getModel("model-one")); //$NON-NLS-1$
 		assertNotNull(vdb.getModel("model-two")); //$NON-NLS-1$

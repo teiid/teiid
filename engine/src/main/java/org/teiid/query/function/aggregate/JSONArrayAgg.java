@@ -53,7 +53,8 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
      */
     public void addInputDirect(Object input, List<?> tuple, CommandContext commandContext) throws TeiidComponentException, TeiidProcessingException {
     	if (concat == null) {
-    		concat = new JSONBuilder(commandContext.getBufferManager(), true);
+    		concat = new JSONBuilder(commandContext.getBufferManager());
+    		concat.start(true);
     	}
     	concat.addValue(input);
     }
@@ -68,6 +69,7 @@ public class JSONArrayAgg extends SingleArgumentAggregateFunction {
     		if (concat == null) {
         		return null;
     		}
+    		concat.end(true);
     		result = concat.close();
     		concat = null;
     	}

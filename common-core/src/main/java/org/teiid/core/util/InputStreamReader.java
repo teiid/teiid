@@ -29,10 +29,11 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 
-import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.CorePlugin;
 
 /**
  * Replacement for the standard {@link java.io.InputStreamReader}, 
@@ -47,7 +48,7 @@ public class InputStreamReader extends Reader {
 	private boolean done;
 	
 	public InputStreamReader(InputStream in, CharsetDecoder cd) {
-		this(in, cd, DataTypeManager.MAX_LOB_MEMORY_BYTES);
+		this(in, cd, ReaderInputStream.DEFAULT_BUFFER_SIZE);
 	}
 	
 	public InputStreamReader(InputStream in, CharsetDecoder cd, int bufferSize) {
@@ -81,14 +82,10 @@ public class InputStreamReader extends Reader {
 	    	bb.flip();
 	    	cb.clear();
 			CoderResult cr = cd.decode(bb, cb, read == -1);
-			if (!cr.isUnderflow()) {
-			    cr.throwException();
-			}
+			checkResult(cr);
 	    	if (read == -1) {
 	    		cr = cd.flush(cb);
-	    		if (!cr.isUnderflow()) {
-	    			cr.throwException();
-	    		}
+	    		checkResult(cr);
 	    		done = true;
 	    	}
 	    	if (bb.position() != read + pos) {
@@ -104,6 +101,19 @@ public class InputStreamReader extends Reader {
 		}
 		cb.get(cbuf, off, len);
 		return len;
+	}
+
+	private void checkResult(CoderResult cr) throws IOException {
+		if (!cr.isUnderflow() && cr.isError()) {
+			if (cr.isMalformed() || cr.isUnmappable()) {
+				try {
+					cr.throwException();
+				} catch (CharacterCodingException e) {
+					throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cd.charset().displayName()), e);
+				}
+			}
+		    cr.throwException();
+		}
 	}
 
 }

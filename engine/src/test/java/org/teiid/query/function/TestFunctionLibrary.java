@@ -1391,6 +1391,10 @@ public class TestFunctionLibrary {
 		assertEquals(44, result.length()); //4 bytes / char
 	}
 	
+	@Test public void testToBytes1() throws Exception {
+		helpInvokeMethodFail("to_bytes", new Object[] { new ClobType(new SerialClob("hello\uffffworld".toCharArray())), "ASCII", Boolean.FALSE }); //$NON-NLS-1$
+	}
+	
 	@Test public void testToChars1() throws Exception {
 		Clob result = (Clob)helpInvokeMethod("to_chars", new Class<?>[] {DefaultDataClasses.BLOB, DefaultDataClasses.STRING}, new Object[] { new BlobType(new SerialBlob("hello world".getBytes("ASCII"))), "BASE64" }, null); //$NON-NLS-1$
 		String string = result.getSubString(1, (int)result.length());

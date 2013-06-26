@@ -21,6 +21,11 @@
  */
 package org.teiid.translator.mongodb;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.teiid.translator.TranslatorException;
+
 import com.mongodb.DB;
 import com.mongodb.DBRef;
 
@@ -28,15 +33,27 @@ public class MutableDBRef {
 	enum Assosiation {ONE, MANY};
 
 	private String parentTable;
-	private Object id;
-	private String referenceColumnName;
-	private String columnName;
+	private IDRef id;
+	private List<String> referenceColumns;
+	private List<String> columns;
 
 	private String embeddedTable;
 	private Assosiation assosiation;
+	private String name;
+
+	public String getRefName() {
+		if (this.columns.size() == 1) {
+			return this.columns.get(0);
+		}
+		return this.name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
 
 	public DBRef getDBRef(DB db, boolean push) {
-		return new DBRef(db, push?this.parentTable:this.embeddedTable, this.id);
+		return new DBRef(db, push?this.parentTable:this.embeddedTable, this.id.getValue());
 	}
 
 	public String getParentTable() {
@@ -47,20 +64,29 @@ public class MutableDBRef {
 		this.parentTable = parentTable;
 	}
 
-	public Object getId() {
-		return this.id;
+	public Object getId() throws TranslatorException {
+		if (this.id == null) {
+			return null;
+		}
+		if (this.id.pk.keySet().size() != this.columns.size()) {
+			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18014));
+		}
+		return this.id.getValue();
 	}
 
-	public void setId(Object id) {
-		this.id = id;
+	public void setId(String column, Object value) {
+		if (this.id == null) {
+			this.id = new IDRef();
+		}
+		this.id.addColumn(column, value);
 	}
 
-	public String getReferenceColumnName() {
-		return this.referenceColumnName;
+	public List<String> getReferenceColumns() {
+		return this.referenceColumns;
 	}
 
-	public void setReferenceColumnName(String columnName) {
-		this.referenceColumnName = columnName;
+	public void setReferenceColumns(List<String> columns) {
+		this.referenceColumns = new ArrayList<String>(columns);
 	}
 
 	public String getEmbeddedTable() {
@@ -79,12 +105,12 @@ public class MutableDBRef {
 		this.assosiation = assosiation;
 	}
 
-	public String getColumnName() {
-		return this.columnName;
+	public List<String> getColumns() {
+		return this.columns;
 	}
 
-	public void setColumnName(String columnName) {
-		this.columnName = columnName;
+	public void setColumns(List<String> columns) {
+		this.columns = new ArrayList<String>(columns);
 	}
 
 	@Override

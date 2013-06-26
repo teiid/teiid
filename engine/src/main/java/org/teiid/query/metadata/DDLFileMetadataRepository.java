@@ -39,10 +39,14 @@ public class DDLFileMetadataRepository extends MetadataRepository {
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
-		if (factory.getRawMetadata() != null) {
-			VDBResource resource = factory.getVDBResources().get(factory.getRawMetadata());
+		String ddlFile = factory.getModelProperties().getProperty("ddl-file");
+		if (ddlFile == null) {
+			ddlFile = factory.getRawMetadata();
+		}
+		if (ddlFile != null) {
+			VDBResource resource = factory.getVDBResources().get(ddlFile);
 			if (resource == null) {
-				throw new MetadataException(Event.TEIID31137, QueryPlugin.Util.gs(Event.TEIID31137, factory.getRawMetadata()));
+				throw new MetadataException(Event.TEIID31137, QueryPlugin.Util.gs(Event.TEIID31137, ddlFile));
 			}
 			InputStream is;
 			try {

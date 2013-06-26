@@ -219,7 +219,6 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
     	// VDB Status manager
     	final VDBStatusCheckerExecutorService statusChecker = new VDBStatusCheckerExecutorService();
-    	statusChecker.setTranslatorRepository(translatorRepo);
     	ValueService<VDBStatusChecker> statusService = new ValueService<VDBStatusChecker>(new org.jboss.msc.value.Value<VDBStatusChecker>() {
 			@Override
 			public VDBStatusChecker getValue() throws IllegalStateException, IllegalArgumentException {

@@ -66,6 +66,7 @@ public class ConnectorManagerRepository implements Serializable{
 	
 	private Map<String, ConnectorManager> repo = new ConcurrentHashMap<String, ConnectorManager>();
 	private boolean shared;
+	private ExecutionFactoryProvider provider;
 	
 	public ConnectorManagerRepository() {
 	}
@@ -125,5 +126,13 @@ public class ConnectorManagerRepository implements Serializable{
 	protected ConnectorManager createConnectorManager(String name,
 			String connection) {
 		return new ConnectorManager(name, connection);
+	}
+	
+	public void setProvider(ExecutionFactoryProvider provider) {
+		this.provider = provider;
+	}
+	
+	public ExecutionFactoryProvider getProvider() {
+		return provider;
 	}
 }
