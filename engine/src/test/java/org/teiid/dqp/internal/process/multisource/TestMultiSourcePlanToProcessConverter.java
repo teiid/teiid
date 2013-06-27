@@ -313,7 +313,7 @@ public class TestMultiSourcePlanToProcessConverter {
                             Arrays.asList("y")}); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
         TestOptimizer.checkNodeTypes(plan, new int[] {
-                2,      // Access
+                3,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
                 0,      // DependentProject
@@ -345,7 +345,7 @@ public class TestMultiSourcePlanToProcessConverter {
                             Arrays.asList("y")}); 
         ProcessorPlan plan = helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
         TestOptimizer.checkNodeTypes(plan, new int[] {
-                2,      // Access
+                3,      // Access
                 0,      // DependentAccess
                 0,      // DependentSelect
                 0,      // DependentProject

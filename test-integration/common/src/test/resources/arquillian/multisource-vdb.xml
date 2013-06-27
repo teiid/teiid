@@ -1,0 +1,10 @@
+<vdb name="multisource" version= "1">
+    <model name="MarketData">
+        <property name="multisource">true</property>
+        <source name="text-connector" translator-name="file1" connection-jndi-name="java:/test-file"/>
+    </model>
+    
+    <translator name="file1" type="file">
+         <property name="exceptionIfFileNotFound" value="false"/>
+     </translator>
+</vdb>

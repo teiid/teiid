@@ -24,14 +24,16 @@ package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 
 public class ModelMetaData extends AdminObjectImpl implements Model {
@@ -41,7 +43,7 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
 	private static final String SUPPORTS_MULTI_SOURCE_BINDINGS_KEY = "multisource"; //$NON-NLS-1$
 	private static final long serialVersionUID = 3714234763056162230L;
 		
-	protected LinkedHashMap<String, SourceMappingMetadata> sources = new LinkedHashMap<String, SourceMappingMetadata>();	
+	protected Map<String, SourceMappingMetadata> sources = new CopyOnWriteLinkedHashMap<String, SourceMappingMetadata>();	
 	protected String modelType = Type.PHYSICAL.name();
 	protected String description;	
 	protected String path; 
@@ -132,11 +134,11 @@ public class ModelMetaData extends AdminObjectImpl implements Model {
     	this.visible = value;
     }    
 
-	public List<SourceMappingMetadata> getSourceMappings(){
-		return new ArrayList<SourceMappingMetadata>(this.sources.values());
+	public Collection<SourceMappingMetadata> getSourceMappings(){
+		return this.sources.values();
 	}
 	
-	public LinkedHashMap<String, SourceMappingMetadata> getSources() {
+	public Map<String, SourceMappingMetadata> getSources() {
 		return sources;
 	}
 	

@@ -100,11 +100,9 @@ public class TranslatorUtil {
 		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 		VDBTranslatorMetaData parent = data.getParent();
 		while (parent != null) {
-			synchronized (parent.getPropertiesMap()) {
-				for (Map.Entry<String, String> entry : parent.getPropertiesMap().entrySet()) {
-					if (!caseInsensitiveProps.containsKey(entry.getKey()) && entry.getValue() != null) {
-						caseInsensitiveProps.put(entry.getKey(), entry.getValue());
-					}
+			for (Map.Entry<String, String> entry : parent.getPropertiesMap().entrySet()) {
+				if (!caseInsensitiveProps.containsKey(entry.getKey()) && entry.getValue() != null) {
+					caseInsensitiveProps.put(entry.getKey(), entry.getValue());
 				}
 			}
 			parent = parent.getParent();

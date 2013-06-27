@@ -329,7 +329,7 @@ public class VDBRepository implements Serializable{
 		
 		for (ModelMetaData model:vdb.getModelMetaDatas().values()) {
 	    	if (model.isSource()) {
-		    	List<SourceMappingMetadata> mappings = model.getSourceMappings();
+		    	Collection<SourceMappingMetadata> mappings = model.getSourceMappings();
 				for (SourceMappingMetadata mapping:mappings) {
 					ConnectorManager cm = cmr.getConnectorManager(mapping.getName());
 					if (cm != null) {

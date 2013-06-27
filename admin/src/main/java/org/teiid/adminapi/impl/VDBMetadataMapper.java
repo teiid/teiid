@@ -21,6 +21,7 @@
  */
 package org.teiid.adminapi.impl;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -295,11 +296,9 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 	private static void addProperties(ModelNode node, AdminObjectImpl object) {
 		Map<String, String> properties = object.getPropertiesMap();
 		if (properties!= null && !properties.isEmpty()) {
-			synchronized (properties) {
-				ModelNode propsNode = node.get(PROPERTIES); 
-				for (Map.Entry<String, String> entry : properties.entrySet()) {
-					propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(entry.getKey(), entry.getValue(), new ModelNode()));
-				}
+			ModelNode propsNode = node.get(PROPERTIES); 
+			for (Map.Entry<String, String> entry : properties.entrySet()) {
+				propsNode.add(PropertyMetaDataMapper.INSTANCE.wrap(entry.getKey(), entry.getValue(), new ModelNode()));
 			}
 		}
 	}
@@ -340,7 +339,7 @@ public class VDBMetadataMapper implements MetadataMapper<VDBMetaData> {
 
 			addProperties(node, model);
 			
-			List<SourceMappingMetadata> sources = model.getSourceMappings();
+			Collection<SourceMappingMetadata> sources = model.getSourceMappings();
 			if (sources != null && !sources.isEmpty()) {
 				ModelNode sourceMappingNode = node.get(SOURCE_MAPPINGS);
 				for(SourceMappingMetadata source:sources) {

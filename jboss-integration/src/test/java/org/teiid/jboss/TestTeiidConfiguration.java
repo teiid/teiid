@@ -1,14 +1,7 @@
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.junit.Assert.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileReader;
@@ -181,8 +174,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
         Assert.assertEquals(SUCCESS, result.get(OUTCOME).asString());
         
         List<String> opNames = getList(result);
-        assertEquals(42, opNames.size());
-		String[] ops = { "add","add-anyauthenticated-role","add-data-role","assign-datasource",
+		String[] ops = { "add","add-anyauthenticated-role","add-data-role","add-source","assign-datasource",
 				"cache-statistics","cache-types","cancel-request","change-vdb-connection-type",
 				"clear-cache","engine-statistics","execute-query","get-query-plan","get-schema", "get-translator","get-vdb",
 				"list-long-running-requests","list-requests","list-requests-per-session",
@@ -191,11 +183,9 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 				"read-children-names","read-children-resources","read-children-types",
 				"read-operation-description","read-operation-names","read-rar-description",
 				"read-resource","read-resource-description","remove","remove-anyauthenticated-role",
-				"remove-data-role","restart-vdb","terminate-session","terminate-transaction",
-				"undefine-attribute", "workerpool-statistics","write-attribute"};
-		Assert.assertArrayEquals(ops, opNames.toArray(new String[42]));
-        
-                
+				"remove-data-role","remove-source","restart-vdb","terminate-session","terminate-transaction",
+				"undefine-attribute","update-source","workerpool-statistics","write-attribute"};
+		Assert.assertArrayEquals(ops, opNames.toArray(new String[opNames.size()]));
     }
     
     @Test

@@ -22,9 +22,7 @@
 
 package org.teiid.adminapi;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REMOVE_OPERATION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
-import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
+import static org.jboss.as.controller.client.helpers.ClientConstants.*;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -1599,6 +1597,62 @@ public class AdminFactory {
 	        		"source-name", sourceName,
 	        		"translator-name", translatorName,
 	        		"ds-name", dsName);//$NON-NLS-1$ //$NON-NLS-2$
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70047, Util.getFailureDescription(outcome));
+	            }
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70048, e);
+	        }
+		}
+		
+		@Override
+		public void updateSource(String vdbName, int vdbVersion, String sourceName, String translatorName,
+				String dsName) throws AdminException {
+	        final ModelNode request = buildRequest("teiid", "update-source",
+	        		"vdb-name", vdbName,
+	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"source-name", sourceName,
+	        		"translator-name", translatorName,
+	        		"ds-name", dsName);//$NON-NLS-1$ //$NON-NLS-2$
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70047, Util.getFailureDescription(outcome));
+	            }
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70048, e);
+	        }
+		}
+		
+		@Override
+		public void addSource(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName,
+				String dsName) throws AdminException {
+	        final ModelNode request = buildRequest("teiid", "add-source",
+	        		"vdb-name", vdbName,
+	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"model-name", modelName,
+	        		"source-name", sourceName,
+	        		"translator-name", translatorName,
+	        		"ds-name", dsName);//$NON-NLS-1$ //$NON-NLS-2$
+	        try {
+	            ModelNode outcome = this.connection.execute(request);
+	            if (!Util.isSuccess(outcome)) {
+	            	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70047, Util.getFailureDescription(outcome));
+	            }
+	        } catch (Exception e) {
+	        	 throw new AdminProcessingException(AdminPlugin.Event.TEIID70048, e);
+	        }
+		}
+		
+		@Override
+		public void removeSource(String vdbName, int vdbVersion, String modelName, String sourceName) throws AdminException {
+	        final ModelNode request = buildRequest("teiid", "remove-source",
+	        		"vdb-name", vdbName,
+	        		"vdb-version", String.valueOf(vdbVersion),
+	        		"model-name", modelName,
+	        		"source-name", sourceName);//$NON-NLS-1$ //$NON-NLS-2$
 	        try {
 	            ModelNode outcome = this.connection.execute(request);
 	            if (!Util.isSuccess(outcome)) {

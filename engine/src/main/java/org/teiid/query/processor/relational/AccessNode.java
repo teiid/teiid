@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -33,6 +34,7 @@ import java.util.List;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
@@ -42,13 +44,16 @@ import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.dqp.internal.process.multisource.MultiSourceElementReplacementVisitor;
+import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.RowBasedSecurityHelper;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
@@ -60,6 +65,7 @@ import org.teiid.query.sql.lang.Select;
 import org.teiid.query.sql.lang.StoredProcedure;
 import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.ScalarSubquery;
@@ -78,6 +84,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private String connectorBindingId;
     private Expression connectorBindingExpression;
     private boolean shouldEvaluate = false;
+	private boolean multiSource;
+	private Object modelId;
 
     // Processing state
 	private ArrayList<TupleSource> tupleSources = new ArrayList<TupleSource>();
@@ -91,7 +99,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     
     private Object[] projection;
     private List<Expression> originalSelect;
-	private Object modelId;
+	
+	private List<String> sourceNames;
 	
 	public RegisterRequestParameter.SharedAccessInfo info;
     
@@ -153,6 +162,31 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public void open()
 		throws TeiidComponentException, TeiidProcessingException {
+		
+		/*
+		 * Check to see if we need a multi-source expansion.  If the connectorBindingExpression != null, then 
+		 * the logic below will handle that case
+		 */
+		if (multiSource && connectorBindingExpression == null) {
+			synchronized (this) { //the description can be obtained asynchly, so we need to synchronize
+				VDBMetaData vdb = getContext().getVdb();
+	            ModelMetaData model = vdb.getModel(getModelName());
+	            List<String> sources = model.getSourceNames();
+	            //make sure that we have the right nodes
+				if (this.getChildCount() != 0 && (this.sourceNames == null || !this.sourceNames.equals(sources))) {
+					this.childCount--;
+					this.getChildren()[0] = null;
+				}
+				if (this.getChildCount() == 0) {
+		            sourceNames = sources;
+		            RelationalNode node = multiSourceModify(this, connectorBindingExpression, getContext().getMetadata(), sourceNames);
+		            RelationalPlan.connectExternal(node, getContext(), getDataManager(), getBufferManager());
+		            this.addChild(node);
+				}
+			}
+			this.getChildren()[0].open();
+			return;
+		}
 
         // Copy command and resolve references if necessary
 		if (processingCommand == null) {
@@ -290,6 +324,10 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public TupleBatch nextBatchDirect()
 		throws BlockedException, TeiidComponentException, TeiidProcessingException {
+		
+		if (multiSource && connectorBindingExpression == null) {
+			return this.getChildren()[0].nextBatch();
+		}
         
         while (shouldExecute && (!tupleSources.isEmpty() || hasNextCommand())) {
         	
@@ -467,10 +505,15 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		}
 		target.command = command;
 		target.info = info;
-		target.connectorBindingExpression = this.connectorBindingExpression; 
+		target.connectorBindingExpression = this.connectorBindingExpression;
+		target.multiSource = multiSource;
+		target.sourceNames = sourceNames;
 	}
 
-    public PlanNode getDescriptionProperties() {
+    public synchronized PlanNode getDescriptionProperties() {
+    	if (getChildCount() > 0) {
+    		return this.getChildren()[0].getDescriptionProperties();
+    	}
     	PlanNode props = super.getDescriptionProperties();
         props.addProperty(PROP_SQL, this.command.toString());
         props.addProperty(PROP_MODEL_NAME, this.modelName);
@@ -523,7 +566,99 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		if (Boolean.TRUE.equals(required) || (command instanceof StoredProcedure && ((StoredProcedure)command).getUpdateCount() > 1)) {
 			return true;
 		}
+		if (multiSource && connectorBindingExpression == null && (transactionalReads || RelationalNodeUtil.isUpdate(command))) {
+			return true;
+		}
 		return null;
+	}
+	
+	private static RelationalNode multiSourceModify(AccessNode accessNode, Expression ex, QueryMetadataInterface metadata, List<String> sourceNames) throws TeiidComponentException, TeiidProcessingException {
+        List<AccessNode> accessNodes = new ArrayList<AccessNode>();
+        
+        boolean hasOutParams = RelationalNodeUtil.hasOutputParams(accessNode.getCommand());
+        if (!Constant.NULL_CONSTANT.equals(ex)) {
+            for(String sourceName:sourceNames) {
+                Command command = accessNode.getCommand();
+                // Modify the command to pull the instance column and evaluate the criteria
+            	if (!(command instanceof Insert || command instanceof StoredProcedure)) {
+                	command = (Command)command.clone();
+                	PreOrPostOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName, metadata), PreOrPostOrderNavigator.PRE_ORDER, false);
+            		if (!RelationalNodeUtil.shouldExecute(command, false, true)) {
+            			continue;
+                    }
+            	}
+                
+                // Create a new cloned version of the access node and set it's model name to be the bindingUUID
+                AccessNode instanceNode = (AccessNode) accessNode.clone();
+                instanceNode.setMultiSource(false);
+                instanceNode.setCommand(command);
+                accessNodes.add(instanceNode);
+                
+                if (accessNodes.size() > 1 && command instanceof Insert) {
+                	throw new AssertionError("Multi-source insert must target a single source.  Should have been caught in validation"); //$NON-NLS-1$
+                }
+
+                instanceNode.setConnectorBindingId(sourceName);
+            }
+        }
+        
+        if (hasOutParams && accessNodes.size() != 1) {
+        	throw new QueryProcessingException(QueryPlugin.Event.TEIID30561, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30561, accessNode.getCommand()));
+        }
+        
+        switch(accessNodes.size()) {
+            case 0: 
+            {
+                if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
+                	//should return a 0 update count
+                	ProjectNode pnode = new ProjectNode(accessNode.getID());
+                	pnode.setSelectSymbols(Arrays.asList(new Constant(0)));
+                	return pnode;
+                }
+                // Replace existing access node with a NullNode
+                NullNode nullNode = new NullNode(accessNode.getID());
+                return nullNode;         
+            }
+            case 1: 
+            {
+                // Replace existing access node with new access node (simplified command)
+                return accessNodes.get(0);
+            }
+            default:
+            {
+            	UnionAllNode unionNode = new UnionAllNode(accessNode.getID());
+            	unionNode.setElements(accessNode.getElements());
+                for (AccessNode newNode : accessNodes) {
+                	unionNode.addChild(newNode);
+                }
+            	
+            	RelationalNode parent = unionNode;
+            	
+                // More than 1 access node - replace with a union
+            	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
+            		GroupingNode groupNode = new GroupingNode(accessNode.getID());
+            		AggregateSymbol sumCount = new AggregateSymbol(NonReserved.SUM, false, accessNode.getElements().get(0));          		
+            		groupNode.setElements(Arrays.asList(sumCount));
+            		groupNode.addChild(unionNode);
+            		
+            		ProjectNode projectNode = new ProjectNode(accessNode.getID());
+            		
+            		Expression intSum = ResolverUtil.getConversion(sumCount, DataTypeManager.getDataTypeName(sumCount.getType()), DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
+            		
+            		List<Expression> outputElements = Arrays.asList(intSum);             		
+            		projectNode.setElements(outputElements);
+            		projectNode.setSelectSymbols(outputElements);
+            		projectNode.addChild(groupNode);
+            		
+            		parent = projectNode;
+            	}
+                return parent;
+            }
+        }
+    }
+
+	public void setMultiSource(boolean ex) {
+		this.multiSource = ex;
 	}
 	
 }

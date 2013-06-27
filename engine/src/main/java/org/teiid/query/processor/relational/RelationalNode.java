@@ -87,7 +87,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 
 	/** Child nodes, usually just 1 or 2 */
 	private RelationalNode[] children = new RelationalNode[2];
-	private int childCount;
+	protected int childCount;
 	
 	protected RelationalNode() {
 		

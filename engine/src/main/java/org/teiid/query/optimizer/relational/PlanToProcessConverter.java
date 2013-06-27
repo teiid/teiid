@@ -23,7 +23,6 @@
 package org.teiid.query.optimizer.relational;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -41,10 +40,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.id.IDGenerator;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.Assertion;
-import org.teiid.dqp.internal.process.multisource.MultiSourceElementReplacementVisitor;
-import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -73,8 +69,6 @@ import org.teiid.query.sql.lang.ObjectTable.ObjectColumn;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint.SpecificHint;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
-import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
-import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -401,12 +395,12 @@ public class PlanToProcessConverter {
                     //also it makes more sense to allow the multisource affect to be elevated above just access nodes
                     if (aNode.getModelId() != null && metadata.isMultiSource(aNode.getModelId())) {
                 		VDBMetaData vdb = context.getVdb();
-                        ModelMetaData model = vdb.getModel(aNode.getModelName());
-                        List<String> sources = model.getSourceNames();
                         aNode.setShouldEvaluateExpressions(true); //forces a rewrite
                         aNode.setElements( (List) node.getProperty(NodeConstants.Info.OUTPUT_COLS) );
                     	if (node.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
-                    		processNode = multiSourceModify(aNode, sources);
+                    		Expression ex = rewriteMultiSourceCommand(aNode.getCommand());
+                    		aNode.setConnectorBindingExpression(ex);
+                    		aNode.setMultiSource(true);
                     	} else {
                     		String sourceName = (String)node.getProperty(Info.SOURCE_NAME);
                     		aNode.setConnectorBindingExpression(new Constant(sourceName));
@@ -717,103 +711,6 @@ public class PlanToProcessConverter {
 		}
 	}
 	
-	private RelationalNode multiSourceModify(AccessNode accessNode, List<String> sourceNames) throws TeiidComponentException, TeiidProcessingException {
-        List<AccessNode> accessNodes = new ArrayList<AccessNode>();
-        
-        boolean hasOutParams = false;
-        if (accessNode.getCommand() instanceof StoredProcedure) {
-        	StoredProcedure sp = (StoredProcedure)accessNode.getCommand();
-        	hasOutParams = sp.returnParameters() && sp.getProjectedSymbols().size() > sp.getResultSetColumns().size();
-        }
-        Expression ex = rewriteMultiSourceCommand(accessNode.getCommand());
-        if (!Constant.NULL_CONSTANT.equals(ex)) {
-        	if (ex != null) {
-        		accessNode.setConnectorBindingExpression(ex);
-        		return accessNode;
-        	}
-        		
-            for(String sourceName:sourceNames) {
-                
-                // Modify the command to pull the instance column and evaluate the criteria
-            	Command command = accessNode.getCommand();
-            	if (!(command instanceof Insert || command instanceof StoredProcedure)) {
-                	command = (Command)command.clone();
-                	PreOrPostOrderNavigator.doVisit(command, new MultiSourceElementReplacementVisitor(sourceName, metadata), PreOrPostOrderNavigator.PRE_ORDER, false);
-            		if (!RelationalNodeUtil.shouldExecute(command, false, true)) {
-            			continue;
-                    }
-            	}
-                
-                // Create a new cloned version of the access node and set it's model name to be the bindingUUID
-                AccessNode instanceNode = (AccessNode) accessNode.clone();
-                instanceNode.setElements(accessNode.getElements());
-                instanceNode.setID(getID());
-                instanceNode.setCommand(command);
-                accessNodes.add(instanceNode);
-                
-                if (accessNodes.size() > 1 && command instanceof Insert) {
-                	throw new AssertionError("Multi-source insert must target a single source.  Should have been caught in validation"); //$NON-NLS-1$
-                }
-
-                instanceNode.setConnectorBindingId(sourceName);
-            }
-        }
-        
-        if (hasOutParams && accessNodes.size() != 1) {
-        	throw new QueryPlannerException(QueryPlugin.Event.TEIID30561, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30561, accessNode.getCommand()));
-        }
-        
-        switch(accessNodes.size()) {
-            case 0: 
-            {
-                if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
-                	//should return a 0 update count
-                	ProjectNode pnode = new ProjectNode(getID());
-                	pnode.setSelectSymbols(Arrays.asList(new Constant(0)));
-                	return pnode;
-                }
-                // Replace existing access node with a NullNode
-                NullNode nullNode = new NullNode(getID());
-                return nullNode;         
-            }
-            case 1: 
-            {
-                // Replace existing access node with new access node (simplified command)
-                return accessNodes.get(0);
-            }
-            default:
-            {
-            	UnionAllNode unionNode = new UnionAllNode(getID());
-            	unionNode.setElements(accessNode.getElements());
-                for (AccessNode newNode : accessNodes) {
-                	unionNode.addChild(newNode);
-                }
-            	
-            	RelationalNode parent = unionNode;
-            	
-                // More than 1 access node - replace with a union
-            	if (RelationalNodeUtil.isUpdate(accessNode.getCommand())) {
-            		GroupingNode groupNode = new GroupingNode(getID());
-            		AggregateSymbol sumCount = new AggregateSymbol(NonReserved.SUM, false, accessNode.getElements().get(0));          		
-            		groupNode.setElements(Arrays.asList(sumCount));
-            		groupNode.addChild(unionNode);
-            		
-            		ProjectNode projectNode = new ProjectNode(getID());
-            		
-            		Expression intSum = ResolverUtil.getConversion(sumCount, DataTypeManager.getDataTypeName(sumCount.getType()), DataTypeManager.DefaultDataTypes.INTEGER, false, metadata.getFunctionLibrary());
-            		
-            		List<Expression> outputElements = Arrays.asList(intSum);             		
-            		projectNode.setElements(outputElements);
-            		projectNode.setSelectSymbols(outputElements);
-            		projectNode.addChild(groupNode);
-            		
-            		parent = projectNode;
-            	}
-                return parent;
-            }
-        }
-    }
-
 	private Expression rewriteMultiSourceCommand(Command command) throws TeiidComponentException {
 		Expression result = null;
 		if (command instanceof StoredProcedure) {

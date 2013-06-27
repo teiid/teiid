@@ -35,6 +35,7 @@ import org.teiid.adminapi.VDB;
 import org.teiid.adminapi.impl.ModelMetaData.Message;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 
 public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
@@ -277,9 +278,8 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 		try {
 			VDBMetaData clone = (VDBMetaData) super.clone();
 			clone.models = new LinkedHashMap<String, ModelMetaData>(this.models);
-			synchronized (this.attachments) {
-				clone.attachments = Collections.synchronizedMap(new LinkedHashMap<Class<?>, Object>(attachments));
-			}
+			clone.attachments = new CopyOnWriteLinkedHashMap<Class<?>, Object>();
+			clone.attachments.putAll(attachments);
 			return clone;
 		} catch (CloneNotSupportedException e) {
 			throw new TeiidRuntimeException(e);

@@ -83,6 +83,7 @@ import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.CollectionTupleSource;
 import org.teiid.query.processor.ProcessorDataManager;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.processor.relational.RelationalNodeUtil;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
@@ -660,6 +661,14 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		}
 		ConnectorManagerRepository cmr = workItem.getDqpWorkContext().getVDB().getAttachment(ConnectorManagerRepository.class);
 		ConnectorManager connectorManager = cmr.getConnectorManager(aqr.getConnectorName());
+		if (connectorManager == null) {
+			//can happen if sources are removed
+			if (RelationalNodeUtil.hasOutputParams(command)) {
+				throw new AssertionError("A source is required to execute a procedure returning parameters"); //$NON-NLS-1$
+			}
+			LogManager.logDetail(LogConstants.CTX_DQP, "source", aqr.getConnectorName(), "no longer exists, returning dummy results"); //$NON-NLS-1$ //$NON-NLS-2$
+			return CollectionTupleSource.createNullTupleSource();
+		}
 		ConnectorWork work = connectorManager.registerRequest(aqr);
 		if (!work.isForkable()) {
     		aqr.setSerial(true);

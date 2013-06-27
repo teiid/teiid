@@ -612,21 +612,19 @@ public class VDBMetadataParser {
 	}
 	
 	private void writeProperties(final XMLStreamWriter writer, Map<String, String> props)  throws XMLStreamException  {
-		synchronized (props) {
-			for (Map.Entry<String, String> prop : props.entrySet()) {
-		        writer.writeStartElement(Element.PROPERTY.getLocalName());
-				String key = prop.getKey();
-				String value = prop.getValue();
-				writeAttribute(writer, Element.NAME.getLocalName(), key);
-				if (value != null) {
-					if (writePropertyElements) {
-						writer.writeCharacters(value);
-					} else {
-						writeAttribute(writer, Element.VALUE.getLocalName(), value);
-					}
+		for (Map.Entry<String, String> prop : props.entrySet()) {
+	        writer.writeStartElement(Element.PROPERTY.getLocalName());
+			String key = prop.getKey();
+			String value = prop.getValue();
+			writeAttribute(writer, Element.NAME.getLocalName(), key);
+			if (value != null) {
+				if (writePropertyElements) {
+					writer.writeCharacters(value);
+				} else {
+					writeAttribute(writer, Element.VALUE.getLocalName(), value);
 				}
-				writer.writeEndElement();
 			}
+			writer.writeEndElement();
 		}
 	}
 	

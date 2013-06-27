@@ -22,13 +22,11 @@
 package org.teiid.adminapi.impl;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import org.teiid.adminapi.AdminObject;
+import org.teiid.core.util.CopyOnWriteLinkedHashMap;
 
 public abstract class AdminObjectImpl implements AdminObject, Serializable {
 
@@ -39,8 +37,8 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	private String serverName;
 	private String hostName;
 		
-	private Map<String, String> properties = Collections.synchronizedMap(new LinkedHashMap<String, String>(2));
-	protected transient Map<Class<?>, Object> attachments = Collections.synchronizedMap(new HashMap<Class<?>, Object>(2));
+	private Map<String, String> properties = new CopyOnWriteLinkedHashMap<String, String>();
+	protected transient Map<Class<?>, Object> attachments = new CopyOnWriteLinkedHashMap<Class<?>, Object>();
 		
 	@Override
 	public String getName() {
@@ -78,9 +76,7 @@ public abstract class AdminObjectImpl implements AdminObject, Serializable {
 	@Override
 	public Properties getProperties() {
 		Properties props = new Properties();
-		synchronized (properties) {
-			props.putAll(this.properties);
-		}
+		props.putAll(this.properties);
 		return props;
 	}
 	

@@ -89,7 +89,7 @@ public class RelationalPlan extends ProcessorPlan {
         connectExternal(this.root, context, dataMgr, bufferMgr);	
     }        
 
-	private void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {		
+	static void connectExternal(RelationalNode node, CommandContext context, ProcessorDataManager dataMgr, BufferManager bufferMgr) {		
                                     
         node.initialize(context, bufferMgr, dataMgr);
 

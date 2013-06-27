@@ -21,12 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -1124,6 +1119,21 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 		builder.addParameter(OperationsConstants.VDB_NAME);
 		builder.addParameter(OperationsConstants.VDB_VERSION);
 	}
+	
+	 static void updateServices(OperationContext context, RuntimeVDB vdb,
+				String dsName, ReplaceResult rr) {
+		if (rr.isNew) {
+			VDBDeployer.addDataSourceListener(context.getServiceTarget(), new VDBKey(vdb.getVdb().getName(), vdb.getVdb().getVersion()), dsName);
+		}
+		if (rr.removedDs != null) {
+			final ServiceRegistry registry = context.getServiceRegistry(true);
+		    final ServiceName serviceName = TeiidServiceNames.dsListenerServiceName(vdb.getVdb().getName(), vdb.getVdb().getVersion(), rr.removedDs);
+		    final ServiceController<?> controller = registry.getService(serviceName);
+		    if (controller != null) {
+		    	context.removeService(serviceName);
+		    }
+		}
+	}
 }
 
 class AddDataRole extends VDBOperations {
@@ -1307,11 +1317,72 @@ class RestartVDB extends VDBOperations {
 }
 
 class AssignDataSource extends VDBOperations {
+	
+	boolean modelNameParam;
 
 	public AssignDataSource() {
-		super("assign-datasource"); //$NON-NLS-1$
+		this("assign-datasource", true); //$NON-NLS-1$
+	}
+	
+	protected AssignDataSource(String operation, boolean modelNameParam) {
+		super(operation);
+		this.modelNameParam = modelNameParam;
 	}
 
+	@Override
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
+		if (!operation.hasDefined(OperationsConstants.SOURCE_NAME.getName())) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SOURCE_NAME.getName()+MISSING)));
+		}
+
+		if (!operation.hasDefined(OperationsConstants.TRANSLATOR_NAME.getName())) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.TRANSLATOR_NAME.getName()+MISSING)));
+		}
+
+		if (!operation.hasDefined(OperationsConstants.DS_NAME.getName())) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.DS_NAME.getName()+MISSING)));
+		}
+
+		String sourceName = operation.get(OperationsConstants.SOURCE_NAME.getName()).asString();
+		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
+		String dsName = operation.get(OperationsConstants.DS_NAME.getName()).asString();
+
+		try {
+			synchronized (vdb.getVdb()) {
+				ReplaceResult rr = vdb.updateSource(sourceName, translatorName, dsName);
+				updateServices(context, vdb, dsName, rr);
+			}
+		} catch (AdminProcessingException e) {
+			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
+		}
+	}
+
+	@Override
+	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+		super.describeParameters(builder);
+		if (modelNameParam) {
+			builder.addParameter(OperationsConstants.MODEL_NAME);
+		}
+		builder.addParameter(OperationsConstants.SOURCE_NAME);
+		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);
+		builder.addParameter(OperationsConstants.DS_NAME);
+	}
+}
+
+class UpdateSource extends AssignDataSource {
+	
+	public UpdateSource() {
+		super("update-source", false); //$NON-NLS-1$
+	}
+	
+}
+
+class AddSource extends VDBOperations {
+	
+	public AddSource() {
+		super("add-source"); //$NON-NLS-1$
+	}
+	
 	@Override
 	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
 		if (!operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
@@ -1338,18 +1409,8 @@ class AssignDataSource extends VDBOperations {
 
 		try {
 			synchronized (vdb.getVdb()) {
-				ReplaceResult rr = vdb.assignDatasource(modelName, sourceName, translatorName, dsName);
-				if (rr.isNew) {
-					VDBDeployer.addDataSourceListener(context.getServiceTarget(), new VDBKey(vdb.getVdb().getName(), vdb.getVdb().getVersion()), dsName);
-				}
-				if (rr.removedDs != null) {
-					final ServiceRegistry registry = context.getServiceRegistry(true);
-			        final ServiceName serviceName = TeiidServiceNames.dsListenerServiceName(vdb.getVdb().getName(), vdb.getVdb().getVersion(), rr.removedDs);
-			        final ServiceController<?> controller = registry.getService(serviceName);
-			        if (controller != null) {
-			        	context.removeService(serviceName);
-			        }
-				}
+				ReplaceResult rr = vdb.addSource(modelName, sourceName, translatorName, dsName);
+				updateServices(context, vdb, dsName, rr);
 			}
 		} catch (AdminProcessingException e) {
 			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
@@ -1363,6 +1424,43 @@ class AssignDataSource extends VDBOperations {
 		builder.addParameter(OperationsConstants.SOURCE_NAME);
 		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);
 		builder.addParameter(OperationsConstants.DS_NAME);
+	}
+}
+
+class RemoveSource extends VDBOperations {
+	
+	public RemoveSource() {
+		super("remove-source"); //$NON-NLS-1$
+	}
+	
+	@Override
+	protected void executeOperation(OperationContext context, RuntimeVDB vdb, ModelNode operation) throws OperationFailedException {
+		if (!operation.hasDefined(OperationsConstants.MODEL_NAME.getName())) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.MODEL_NAME.getName()+MISSING)));
+		}
+		
+		if (!operation.hasDefined(OperationsConstants.SOURCE_NAME.getName())) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.SOURCE_NAME.getName()+MISSING)));
+		}
+
+		String modelName = operation.get(OperationsConstants.MODEL_NAME.getName()).asString();
+		String sourceName = operation.get(OperationsConstants.SOURCE_NAME.getName()).asString();
+
+		try {
+			synchronized (vdb.getVdb()) {
+				ReplaceResult rr = vdb.removeSource(modelName, sourceName);
+				updateServices(context, vdb, null, rr);
+			}
+		} catch (AdminProcessingException e) {
+			throw new OperationFailedException(new ModelNode().set(e.getMessage()));
+		}
+	}
+
+	@Override
+	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+		super.describeParameters(builder);
+		builder.addParameter(OperationsConstants.MODEL_NAME);
+		builder.addParameter(OperationsConstants.SOURCE_NAME);
 	}
 }
 

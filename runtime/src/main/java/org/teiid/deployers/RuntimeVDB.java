@@ -124,41 +124,140 @@ public abstract class RuntimeVDB {
 		}
 	}
 	
-	public ReplaceResult assignDatasource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
+	public ReplaceResult updateSource(String sourceName, String translatorName, String dsName) throws AdminProcessingException{
 		synchronized (this.vdb) {
-			ModelMetaData model = this.vdb.getModel(modelName);
-			
-			if (model == null) {
-				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40090, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40090, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+			ConnectorManager cr = cmr.getConnectorManager(sourceName);
+			if(cr == null) {
+				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40091, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40091, sourceName, this.vdb.getName(), this.vdb.getVersion()));
 			}
 			
-			SourceMappingMetadata source = model.getSourceMapping(sourceName);
-			if(source == null) {
-				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40091, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40091, sourceName, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			String previousTranslatorName = cr.getTranslatorName();
+			String previousDsName = cr.getConnectionName();
+			
+			//modify all source elements in all models
+			for (ModelMetaData m : this.vdb.getModelMetaDatas().values()) {
+				SourceMappingMetadata mapping = m.getSourceMapping(sourceName);
+				if (mapping != null) {
+					mapping.setTranslatorName(translatorName);
+					mapping.setConnectionJndiName(dsName);
+				}
 			}
 			
-			String previousTranslatorName = source.getTranslatorName();
-			String previousDsName = source.getConnectionJndiName();
-			
-			source.setTranslatorName(translatorName);
-			source.setConnectionJndiName(dsName);
-			
+			boolean success = false;
 			try {
-				this.listener.dataSourceChanged(modelName, sourceName, translatorName, dsName);
-				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+				this.listener.dataSourceChanged(null, sourceName, translatorName, dsName);
+				
 				ReplaceResult rr = new ReplaceResult();
 				if (dsName != null) {
 					rr.isNew = !dsExists(dsName, cmr);
 				}
-				boolean replaced = getVDBStatusChecker().dataSourceReplaced(vdb.getName(), vdb.getVersion(), modelName, sourceName, translatorName, dsName);
+				boolean replaced = getVDBStatusChecker().dataSourceReplaced(vdb.getName(), vdb.getVersion(), null, sourceName, translatorName, dsName);
 				if (replaced && previousDsName != null && !dsExists(previousDsName, cmr)) {
 					rr.removedDs = previousDsName;
 				}
+				success = true;
 				return rr;
-			} catch(AdminProcessingException e) {
-				source.setTranslatorName(previousTranslatorName);
-				source.setConnectionJndiName(previousDsName);
-				throw e;
+			} finally {
+				if (!success) {
+					for (ModelMetaData m : this.vdb.getModelMetaDatas().values()) {
+						SourceMappingMetadata mapping = m.getSourceMapping(sourceName);
+						if (mapping != null) {
+							mapping.setTranslatorName(previousTranslatorName);
+							mapping.setConnectionJndiName(previousDsName);
+						}
+					}
+				}
+			}			
+		}
+	}
+	
+	public ReplaceResult addSource(String modelName, String sourceName, String translatorName, String dsName) throws AdminProcessingException{
+		synchronized (this.vdb) {
+			ModelMetaData model = this.vdb.getModel(modelName);
+			if (model == null) {
+				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40090, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40090, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			if (!model.isSupportsMultiSourceBindings()) {
+				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40108, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40108, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			SourceMappingMetadata source = model.getSourceMapping(sourceName);
+			if(source != null) {
+				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40107, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40107, sourceName, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			boolean success = false;
+			try {
+				SourceMappingMetadata mapping = new SourceMappingMetadata(sourceName, translatorName, dsName);
+				boolean updated = getVDBStatusChecker().updateSource(vdb.getName(), vdb.getVersion(), mapping, false);
+				
+				model.addSourceMapping(mapping);
+				this.listener.dataSourceChanged(modelName, sourceName, translatorName, dsName);
+				
+				ReplaceResult rr = new ReplaceResult();
+				if (dsName != null && updated) {
+					ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+					rr.isNew = !dsExists(dsName, cmr);
+				}
+				success = true;
+				return rr;
+			} finally {
+				if (!success) {
+					model.getSources().remove(sourceName);
+				}
+			}			
+		}
+	}
+	
+	public ReplaceResult removeSource(String modelName, String sourceName) throws AdminProcessingException{
+		synchronized (this.vdb) {
+			ModelMetaData model = this.vdb.getModel(modelName);
+			if (model == null) {
+				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40090, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40090, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			if (!model.isSupportsMultiSourceBindings()) {
+				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40108, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40108, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			if (model.getSources().size() == 1) {
+				throw new AdminProcessingException(RuntimePlugin.Event.TEIID40109, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40109, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			SourceMappingMetadata source = model.getSources().remove(sourceName);
+			if(source == null) {
+				 throw new AdminProcessingException(RuntimePlugin.Event.TEIID40091, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40091, sourceName, modelName, this.vdb.getName(), this.vdb.getVersion()));
+			}
+			if (model.getSources().size() == 1) {
+				//we default to multi-source with multiple sources, so now we need to explicitly set to true
+				model.setSupportsMultiSourceBindings(true);
+			}
+			String previousDsName = source.getConnectionJndiName();
+			boolean success = false;
+			try {
+				this.listener.dataSourceChanged(modelName, sourceName, null, null);
+				ConnectorManagerRepository cmr = vdb.getAttachment(ConnectorManagerRepository.class);
+				//detect if the ConnectorManager is still used
+				boolean exists = false;
+				for (ModelMetaData m : this.vdb.getModelMetaDatas().values()) {
+					if (m == model) {
+						continue;
+					}
+					if (m.getSourceMapping(sourceName) != null) {
+						exists = true;
+						break;
+					}
+				}
+				if (!exists) {
+					cmr.removeConnectorManager(sourceName);
+				}
+				ReplaceResult rr = new ReplaceResult();
+				if (!dsExists(previousDsName, cmr)) {
+					rr.removedDs = previousDsName;
+				}
+				success = true;
+				return rr;
+			} finally {
+				if (!success) {
+					//TODO: this means that the order has changed
+					model.addSourceMapping(source);
+				}
 			}			
 		}
 	}

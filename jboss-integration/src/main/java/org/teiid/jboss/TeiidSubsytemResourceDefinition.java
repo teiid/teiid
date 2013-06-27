@@ -21,7 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleResourceDefinition;
@@ -53,6 +53,9 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 		new AddAnyAuthenticatedDataRole().register(resourceRegistration);
 		new RestartVDB().register(resourceRegistration);
 		new AssignDataSource().register(resourceRegistration);
+		new UpdateSource().register(resourceRegistration);
+		new RemoveSource().register(resourceRegistration);
+		new AddSource().register(resourceRegistration);
 		new ChangeVDBConnectionType().register(resourceRegistration);
 		new RemoveAnyAuthenticatedDataRole().register(resourceRegistration);
 		new ListRequests().register(resourceRegistration);

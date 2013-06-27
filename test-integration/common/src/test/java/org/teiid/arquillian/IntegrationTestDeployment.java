@@ -195,15 +195,20 @@ public class IntegrationTestDeployment {
 		
 		VDB vdb = admin.getVDB("bqt", 1);
 		Model model = vdb.getModels().get(0);
-		admin.assignToModel("bqt", 1, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
-		assertEquals(ConnectionType.BY_VERSION, vdb.getConnectionType());
+		admin.updateSource("bqt", 1, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
 		try {
-			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
-			conn.close();
-		} catch (Exception e) {
-			fail("must have succeeded in connection");
+			//should not be able to remove from non-multisource
+			admin.removeSource("bqt", 1, model.getName(), "Source");
+			fail();
+		} catch (AdminException e) {
+			
 		}
+		
+		assertEquals(ConnectionType.BY_VERSION, vdb.getConnectionType());
+		
+		Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+		conn.close();
 		
 		admin.changeVDBConnectionType("bqt", 1, ConnectionType.NONE);
 
@@ -215,22 +220,14 @@ public class IntegrationTestDeployment {
 		}
 
 		admin.deploy("bqt2.vdb", new FileInputStream(UnitTestUtil.getTestDataFile("bqt2.vdb")));
-		admin.assignToModel("bqt", 2, model.getName(), "Source", "h2", "java:jboss/datasources/ExampleDS");
+		admin.updateSource("bqt", 2, "Source", "h2", "java:jboss/datasources/ExampleDS");
 		
-		try {
-			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
-			conn.close();
-		} catch (Exception e) {
-			fail("should not have failed to connect");
-		}
+		conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+		conn.close();
 		
 		admin.changeVDBConnectionType("bqt", 2, ConnectionType.ANY);
-		try {
-			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
-			conn.close();
-		} catch (Exception e) {
-			fail("should have connected to the second vdb");
-		}
+		conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
+		conn.close();
 		
 		vdb = admin.getVDB("bqt", 2);
 		model = vdb.getModels().get(0);
@@ -295,12 +292,10 @@ public class IntegrationTestDeployment {
 		try {
 			admin.deploy("loopy.jar", jar.as(ZipExporter.class).exportAsInputStream());
 			deployVdb();
-			VDB vdb = admin.getVDB("bqt", 1);
-			Model model = vdb.getModels().get(0);
 			Translator t = admin.getTranslator("loopy");
 			assertNotNull(t);
 			
-			admin.assignToModel("bqt", 1, model.getName(), "Source", "loopy", "java:jboss/datasources/ExampleDS");
+			admin.updateSource("bqt", 1, "Source", "loopy", "java:jboss/datasources/ExampleDS");
 			Connection conn = TeiidDriver.getInstance().connect("jdbc:teiid:bqt@mm://localhost:31000;user=user;password=user", null);
 			Collection<? extends Session> sessions = admin.getSessions();
 			assertEquals (1, sessions.size());
