@@ -367,22 +367,6 @@ public class RelationalPlanner {
 			try {
 			    ArrayList<Reference> correlatedReferences = new ArrayList<Reference>();
 			    CorrelatedReferenceCollectorVisitor.collectReferences(subCommand, localGroupSymbols, correlatedReferences);
-			    if (node != null && node.getType() != NodeConstants.Types.JOIN && node.getType() != NodeConstants.Types.GROUP) {
-			    	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
-			    	if (grouping != null && !correlatedReferences.isEmpty()) {
-			    		SymbolMap map = (SymbolMap) grouping.getProperty(Info.SYMBOL_MAP);
-			    		Map<Expression, ElementSymbol> reverseMap = new HashMap<Expression, ElementSymbol>();
-			    		for (Map.Entry<ElementSymbol, Expression> entry : map.asMap().entrySet()) {
-							reverseMap.put(entry.getValue(), entry.getKey());
-						}
-			    		for (Reference reference : correlatedReferences) {
-							ElementSymbol correlatedGroupingCol = reverseMap.get(reference.getExpression());
-							if (correlatedGroupingCol != null) {
-								reference.setExpression(correlatedGroupingCol);
-							}
-						}
-			    	}
-			    }
 			    ProcessorPlan procPlan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
 			    if (procPlan instanceof RelationalPlan && pushdownWith != null) {
 			    	Map<String, WithQueryCommand> parentPushdownWith = pushdownWith;
@@ -400,6 +384,23 @@ public class RelationalPlanner {
 			    }
 			    container.getCommand().setProcessorPlan(procPlan);
 			    setCorrelatedReferences(container, correlatedReferences);
+			    //update the correlated references to the appropriate grouping symbols
+			    if (node != null && node.getType() != NodeConstants.Types.JOIN && node.getType() != NodeConstants.Types.GROUP  && !correlatedReferences.isEmpty()) {
+			    	PlanNode grouping = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.JOIN);
+			    	if (grouping != null) {
+			    		SymbolMap map = (SymbolMap) grouping.getProperty(Info.SYMBOL_MAP);
+			    		SymbolMap symbolMap = container.getCommand().getCorrelatedReferences();
+			    		for (Map.Entry<ElementSymbol, Expression> entry : map.asMap().entrySet()) {
+			    			if (!(entry.getValue() instanceof ElementSymbol)) {
+			    				continue; //currently can't be correlated on an aggregate
+			    			}
+			    			ElementSymbol es = (ElementSymbol)entry.getValue();
+			    			if (symbolMap.getMappedExpression(es) != null) {
+			    				symbolMap.addMapping(es, entry.getKey());
+			    			}
+						}
+			    	}
+			    }
 			} finally {
 				if (entries != null) {
 					entries.remove(stackEntry);

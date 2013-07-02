@@ -764,4 +764,27 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 	
+	@Test public void testCorrelatedGroupingColumn() throws Exception {
+		// Create query
+		String sql = "SELECT A.e2, A.e1 FROM pm1.g1 AS A GROUP BY A.e2, A.e1 HAVING A.e1 = (SELECT MAX(B.e1) FROM pm1.g1 AS B WHERE A.e2 = B.e2)"; //$NON-NLS-1$
+
+		// Create expected results
+		List[] expected = new List[] {
+				Arrays.asList(new Object[] { 0, "a" }),
+				Arrays.asList(new Object[] { 1, "c" }),
+				Arrays.asList(new Object[] { 2, "b" }),
+				Arrays.asList(new Object[] { 3, "a" })};
+
+		// Construct data manager with data
+		FakeDataManager dataManager = new FakeDataManager();
+		FakeDataStore.sampleData1(dataManager, RealMetadataFactory.example1Cached());
+
+		// Plan query
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		// Run query
+		helpProcess(plan, dataManager, expected);
+	}
+	
+	
 }
