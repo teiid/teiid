@@ -790,5 +790,22 @@ public class TestDDLParser {
 		assertEquals("p2", proc.getParameters().get(1).getName());
 		assertEquals("y", proc.getParameters().get(1).getProperty("x", false));
 		assertEquals(1, proc.getUpdateCount());
-	}		
+	}	
+	
+	@Test
+	public void testTypeLength() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+				"RETURNS (r1 varchar(10), r2 decimal(11,2), r3 object(1), r4 clob(10000))" +
+				"OPTIONS(RANDOM 'any', UUID 'uuid', NAMEINSOURCE 'nis', ANNOTATION 'desc', UPDATECOUNT '2');";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Procedure proc = s.getProcedure("myProc");
+		assertNotNull(proc);
+	
+		List<Column> cols = proc.getResultSet().getColumns();
+		assertEquals(10, cols.get(0).getLength());
+		assertEquals(11, cols.get(1).getPrecision());
+		assertEquals(1, cols.get(2).getLength());
+		assertEquals(10000, cols.get(3).getLength());
+	}
 }
