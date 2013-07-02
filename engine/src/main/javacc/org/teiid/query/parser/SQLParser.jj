@@ -4475,7 +4475,7 @@ ParsedDataType parseDataType() :
 		typeToken = <DATE> | 
 		typeToken = <TIME> |
 		typeToken = <TIMESTAMP> |
-		typeToken = <OBJECT> |
+		(typeToken = <OBJECT> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <BLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <CLOB> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} )|
 		(typeToken = <VARBINARY> ([<LPAREN>length=intVal()<RPAREN>]) {precision = false;} ) |
