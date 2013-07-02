@@ -479,4 +479,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public int getDependentJoinMinimum() {
 		return delegate.getDependentJoinMinimum();
 	}
+	@Override
+	public boolean supportsFullDependentJoins() {
+		return delegate.supportsFullDependentJoins();
+	}
 }

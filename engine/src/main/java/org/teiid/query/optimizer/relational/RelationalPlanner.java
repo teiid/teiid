@@ -187,6 +187,7 @@ public class RelationalPlanner {
 			withList = queryCommand.getWith();
 			if (withList != null) {
 	        	for (WithQueryCommand with : withList) {
+	        		context.getGroups().add(with.getGroupSymbol().getName());
 	        		QueryCommand subCommand = with.getCommand();
 	        		if (subCommand instanceof Query && ((Query)subCommand).getIsXML()) {
 	        			ProcessorPlan plan = QueryOptimizer.optimizePlan(subCommand, metadata, idGenerator, capFinder, analysisRecord, context);
@@ -273,6 +274,12 @@ public class RelationalPlanner {
     private static void assignWithClause(RelationalNode node, Map<String, WithQueryCommand> pushdownWith, Set<GroupSymbol> groups) {
         if(node instanceof AccessNode) {
             AccessNode accessNode = (AccessNode) node;
+            Map<GroupSymbol, RelationalPlan> subplans = accessNode.getSubPlans();
+            if (subplans != null) {
+            	for (RelationalPlan subplan : subplans.values()) {
+    				assignWithClause(subplan.getRootNode(), pushdownWith, groups);
+            	}
+            }
             Command command = accessNode.getCommand();
             if (command instanceof QueryCommand) {
             	groups.clear();
@@ -569,7 +576,7 @@ public class RelationalPlanner {
         return rules;
     }
 
-    private PlanNode executeRules(RuleStack rules, PlanNode plan)
+    public PlanNode executeRules(RuleStack rules, PlanNode plan)
         throws QueryPlannerException, QueryMetadataException, TeiidComponentException {
 
         boolean debug = analysisRecord.recordDebug();

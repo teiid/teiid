@@ -45,7 +45,6 @@ import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
-import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -73,19 +72,15 @@ public final class RuleRaiseAccess implements OptimizerRule {
 
         boolean afterJoinPlanning = !rules.contains(RuleConstants.PLAN_JOINS);
         
-        // Loop until nothing has been raised - plan is then stable and can be returned
-        boolean raisedNode = true;
-        while(raisedNode) {
-            raisedNode = false;
-
-            for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
-                PlanNode newRoot = raiseAccessNode(plan, accessNode, metadata, capFinder, afterJoinPlanning, analysisRecord, context);
-                if(newRoot != null) {
-                    raisedNode = true;
-                    plan = newRoot;
-                }
-            }            
-        }
+        for (PlanNode accessNode : NodeEditor.findAllNodes(plan, NodeConstants.Types.ACCESS)) {
+        	while (true) {
+	            PlanNode newRoot = raiseAccessNode(plan, accessNode, metadata, capFinder, afterJoinPlanning, analysisRecord, context);
+	            if (newRoot == null) {
+	            	break;
+	            }
+                plan = newRoot;
+        	}
+        }            
         
         return plan;
 	}
@@ -112,7 +107,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {
                 modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning, record, context);
                 if(modelID != null) {
-                    raiseAccessOverJoin(parentNode, modelID, true);                    
+                    raiseAccessOverJoin(parentNode, accessNode, modelID, true);                    
                     return rootNode;
                 }
                 return null;
@@ -833,9 +828,11 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		return false;
 	}
     
-    static PlanNode raiseAccessOverJoin(PlanNode joinNode, Object modelID, boolean insert) {
+    static PlanNode raiseAccessOverJoin(PlanNode joinNode, PlanNode accessNode, Object modelID, boolean insert) {
 		PlanNode leftAccess = joinNode.getFirstChild();
 		PlanNode rightAccess = joinNode.getLastChild();
+		
+		PlanNode other = leftAccess == accessNode?rightAccess:leftAccess;
 
 		// Remove old access nodes - this will automatically add children of access nodes to join node
 		NodeEditor.removeChildNode(joinNode, leftAccess);
@@ -845,38 +842,28 @@ public final class RuleRaiseAccess implements OptimizerRule {
         joinNode.setProperty(NodeConstants.Info.MODEL_ID, modelID);
 
 		// Insert new access node above join node 
-		PlanNode newAccess = NodeFactory.getNewNode(NodeConstants.Types.ACCESS);
-		newAccess.setProperty(NodeConstants.Info.MODEL_ID, modelID);
-		newAccess.addGroups(rightAccess.getGroups());
-		newAccess.addGroups(leftAccess.getGroups());
+        accessNode.addGroups(other.getGroups());
         
         // Combine hints if necessary
-        RulePlaceAccess.copyDependentHints(leftAccess, newAccess);
-        RulePlaceAccess.copyDependentHints(rightAccess, newAccess);
-        RulePlaceAccess.copyDependentHints(joinNode, newAccess);
-        combineSourceHints(newAccess, leftAccess);
-        combineSourceHints(newAccess, rightAccess);
+        RulePlaceAccess.copyDependentHints(other, accessNode);
+        RulePlaceAccess.copyDependentHints(joinNode, other);
+        combineSourceHints(accessNode, other);
         
-        if (leftAccess.hasBooleanProperty(Info.IS_MULTI_SOURCE) || rightAccess.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
-        	newAccess.setProperty(Info.IS_MULTI_SOURCE, Boolean.TRUE);
+        if (other.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
+        	accessNode.setProperty(Info.IS_MULTI_SOURCE, Boolean.TRUE);
         }
-        String sourceName = (String)leftAccess.getProperty(Info.SOURCE_NAME);
+        String sourceName = (String)other.getProperty(Info.SOURCE_NAME);
         if (sourceName != null) {
-        	newAccess.setProperty(Info.SOURCE_NAME, sourceName);
-        } else {
-            sourceName = (String)rightAccess.getProperty(Info.SOURCE_NAME);
-            if (sourceName != null) {
-            	newAccess.setProperty(Info.SOURCE_NAME, sourceName);
-            }
+        	accessNode.setProperty(Info.SOURCE_NAME, sourceName);
         }
         
         if (insert) {
-            joinNode.addAsParent(newAccess);
+            joinNode.addAsParent(accessNode);
         } else {
-            newAccess.addFirstChild(joinNode);
+            accessNode.addFirstChild(joinNode);
         }
         
-        return newAccess;
+        return accessNode;
 	}
 
     /**

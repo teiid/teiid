@@ -290,7 +290,7 @@ public class RulePlanJoins implements OptimizerRule {
                     joinNode.setProperty(NodeConstants.Info.JOIN_TYPE, joinType);
                     joinNode.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
 
-                    PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, entry.getKey(), false);
+                    PlanNode newAccess = RuleRaiseAccess.raiseAccessOverJoin(joinNode, joinNode.getFirstChild(), entry.getKey(), false);
                     for (PlanNode critNode : joinCriteriaNodes) {
                         critNode.removeFromParent();
                         critNode.removeAllChildren();

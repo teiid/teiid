@@ -372,12 +372,12 @@ public final class RuleCollapseSource implements OptimizerRule {
             }
             case NodeConstants.Types.SOURCE:
             {
-            	if (Boolean.TRUE.equals(node.getProperty(NodeConstants.Info.INLINE_VIEW))) {
+            	GroupSymbol symbol = node.getGroups().iterator().next();
+            	if (node.hasBooleanProperty(Info.INLINE_VIEW)) {
                     PlanNode child = node.getFirstChild();
                     QueryCommand newQuery = createQuery(context, capFinder, accessRoot, child);
                     
                     //ensure that the group is consistent
-                    GroupSymbol symbol = node.getGroups().iterator().next();
                     SubqueryFromClause sfc = new SubqueryFromClause(symbol, newQuery);
                     query.getFrom().addClause(sfc);
                     //ensure that the column names are consistent
@@ -404,8 +404,17 @@ public final class RuleCollapseSource implements OptimizerRule {
                     	}
                     }
                     return;
-                } 
-                query.getFrom().addGroup(node.getGroups().iterator().next());
+                }
+            	PlanNode subPlan = (PlanNode) node.getProperty(Info.SUB_PLAN);
+            	if (subPlan != null) {
+            		Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) accessRoot.getProperty(Info.SUB_PLANS);
+            		if (subPlans == null) {
+            			subPlans = new HashMap<GroupSymbol, PlanNode>();
+            			accessRoot.setProperty(Info.SUB_PLANS, subPlans);
+            		}
+            		subPlans.put(symbol, subPlan);
+            	}
+                query.getFrom().addGroup(symbol);
                 break;
             }
     	}

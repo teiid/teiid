@@ -391,8 +391,9 @@ public class PlanToProcessConverter {
 	                    }
                     }
                     aNode.setCommand(command);
-                    //TODO: move multisource handling to a processing concern
-                    //also it makes more sense to allow the multisource affect to be elevated above just access nodes
+                    Map<GroupSymbol, PlanNode> subPlans = (Map<GroupSymbol, PlanNode>) node.getProperty(Info.SUB_PLANS);
+                    
+                    //it makes more sense to allow the multisource affect to be elevated above just access nodes
                     if (aNode.getModelId() != null && metadata.isMultiSource(aNode.getModelId())) {
                 		VDBMetaData vdb = context.getVdb();
                         aNode.setShouldEvaluateExpressions(true); //forces a rewrite
@@ -405,7 +406,7 @@ public class PlanToProcessConverter {
                     		String sourceName = (String)node.getProperty(Info.SOURCE_NAME);
                     		aNode.setConnectorBindingExpression(new Constant(sourceName));
                     	}
-                    } else {
+                    } else if (subPlans == null){
 	                    if (!aNode.isShouldEvaluate()) {
 	                    	aNode.minimizeProject(command);
 	                    }
@@ -414,6 +415,22 @@ public class PlanToProcessConverter {
 	                    	checkForSharedSourceCommand(aNode);
 	                    }
                     }
+    				if (subPlans != null) {
+    					QueryCommand qc = (QueryCommand)command;
+    					if (qc.getWith() == null) {
+    						qc.setWith(new ArrayList<WithQueryCommand>(subPlans.size()));
+    					}
+    					Map<GroupSymbol, RelationalPlan> plans = new HashMap<GroupSymbol, RelationalPlan>();
+    					for (Map.Entry<GroupSymbol, PlanNode> entry : subPlans.entrySet()) {
+    						RelationalPlan subPlan = convert(entry.getValue());
+    						List<ElementSymbol> elems = ResolverUtil.resolveElementsInGroup(entry.getKey(), metadata);
+    						subPlan.setOutputElements(elems);
+    						plans.put(entry.getKey(), subPlan);
+    						WithQueryCommand withQueryCommand = new WithQueryCommand(entry.getKey(), elems, null);
+							qc.getWith().add(withQueryCommand);
+    					}
+    					aNode.setSubPlans(plans);
+    				}
                 }
                 break;
 

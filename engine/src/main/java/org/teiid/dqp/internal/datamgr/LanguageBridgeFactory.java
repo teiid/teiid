@@ -263,7 +263,11 @@ public class LanguageBridgeFactory {
 		        }
 				item.setColumns(translatedElements);
 			}
-			item.setSubquery(translate(withQueryCommand.getCommand()));
+			if (withQueryCommand.getCommand() != null) {
+				item.setSubquery(translate(withQueryCommand.getCommand()));
+			} else {
+				item.setDependentValues(new TupleBufferList(withQueryCommand.getTupleBuffer()));
+			}
 			items.add(item);
 		}
     	result.setItems(items);

@@ -91,7 +91,7 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		}
 	}
 
-	public class SubqueryState {
+	public static class SubqueryState {
 		QueryProcessor processor;
 		BatchCollector collector;
 		ProcessorPlan plan;

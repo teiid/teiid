@@ -28,9 +28,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -41,6 +43,7 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.BufferReserveMode;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -52,22 +55,18 @@ import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.relational.RowBasedSecurityHelper;
 import org.teiid.query.processor.ProcessorDataManager;
+import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.processor.RegisterRequestParameter;
+import org.teiid.query.processor.relational.SubqueryAwareEvaluator.SubqueryState;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.LanguageObject;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.ExistsCriteria;
-import org.teiid.query.sql.lang.Insert;
-import org.teiid.query.sql.lang.OrderByItem;
-import org.teiid.query.sql.lang.Query;
-import org.teiid.query.sql.lang.Select;
-import org.teiid.query.sql.lang.StoredProcedure;
-import org.teiid.query.sql.lang.SubqueryContainer;
+import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -103,6 +102,8 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	private List<String> sourceNames;
 	
 	public RegisterRequestParameter.SharedAccessInfo info;
+	private Map<GroupSymbol, RelationalPlan> subPlans;
+	private Map<GroupSymbol, SubqueryState> evaluatedPlans;
     
     protected AccessNode() {
 		super();
@@ -130,6 +131,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         }
         processingCommand = null;
         shouldExecute = true;
+        this.evaluatedPlans = null;
     }
 
 	public void setCommand(Command command) {
@@ -162,6 +164,30 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public void open()
 		throws TeiidComponentException, TeiidProcessingException {
+		
+		//TODO: support a partitioning concept with multi-source and full dependent join pushdown
+		if (subPlans != null) {
+			if (this.evaluatedPlans == null) {
+				this.evaluatedPlans = new HashMap<GroupSymbol, SubqueryState>();
+				for (Map.Entry<GroupSymbol, RelationalPlan> entry : subPlans.entrySet()) {
+					SubqueryState state = new SubqueryState();
+					state.processor = new QueryProcessor(entry.getValue(), getContext().clone(), getBufferManager(), getDataManager());
+					state.collector = state.processor.createBatchCollector();
+					this.evaluatedPlans.put(entry.getKey(), state);
+				}
+			}
+			BlockedException be = null;
+			for (SubqueryState state : evaluatedPlans.values()) {
+				try {
+					state.collector.collectTuples();
+				} catch (BlockedException e) {
+					be = e;
+				}
+			}
+			if (be != null) {
+				throw be;
+			}
+		}
 		
 		/*
 		 * Check to see if we need a multi-source expansion.  If the connectorBindingExpression != null, then 
@@ -313,6 +339,12 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		//to ensure that the subquery ids remain stable
 		if (nextCommand == null) {
 			nextCommand = (Command) processingCommand.clone(); 
+			if (evaluatedPlans != null) {
+				for (WithQueryCommand with : ((QueryCommand)nextCommand).getWith()) {
+					TupleBuffer tb = evaluatedPlans.get(with.getGroupSymbol()).collector.getTupleBuffer();
+					with.setTupleBuffer(tb);
+				}
+			}
 		}
 		return nextCommand; 
 	}
@@ -466,6 +498,12 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	    	getBufferManager().releaseBuffers(reserved);
 	    	reserved = 0;
 		}
+		if (this.evaluatedPlans != null) {
+			for (SubqueryState state : this.evaluatedPlans.values()) {
+				state.close(true);
+			}
+			this.evaluatedPlans = null;
+		}
 		super.closeDirect();
         closeSources();            
 	}
@@ -508,6 +546,12 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		target.connectorBindingExpression = this.connectorBindingExpression;
 		target.multiSource = multiSource;
 		target.sourceNames = sourceNames;
+		if (this.subPlans != null) {
+			target.subPlans = new HashMap<GroupSymbol, RelationalPlan>();
+			for (Map.Entry<GroupSymbol, RelationalPlan> entry : this.subPlans.entrySet()) {
+				target.subPlans.put(entry.getKey(), entry.getValue().clone());
+			}
+		}
 	}
 
     public synchronized PlanNode getDescriptionProperties() {
@@ -659,6 +703,14 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 
 	public void setMultiSource(boolean ex) {
 		this.multiSource = ex;
+	}
+
+	public void setSubPlans(Map<GroupSymbol, RelationalPlan> plans) {
+		this.subPlans = plans;
+	}
+	
+	public Map<GroupSymbol, RelationalPlan> getSubPlans() {
+		return subPlans;
 	}
 	
 }

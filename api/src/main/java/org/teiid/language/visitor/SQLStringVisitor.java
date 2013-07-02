@@ -930,7 +930,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     	buffer.append(AS);
     	buffer.append(Tokens.SPACE);
 		buffer.append(Tokens.LPAREN);
-		append(obj.getSubquery());
+		if (obj.getSubquery() == null) {
+			buffer.append(UNDEFINED_PARAM);
+		} else {
+			append(obj.getSubquery());
+		}
 		buffer.append(Tokens.RPAREN);
     }
     

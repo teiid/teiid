@@ -73,4 +73,11 @@ public class RuleStack {
 		return planner;
 	}
     
+    public RuleStack clone() {
+    	RuleStack clone = new RuleStack();
+    	clone.rules.addAll(this.rules);
+    	clone.planner = this.planner;
+    	return clone;
+    }
+    
 }

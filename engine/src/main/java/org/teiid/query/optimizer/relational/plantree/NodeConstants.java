@@ -159,7 +159,8 @@ public final class NodeConstants {
         REQUIRED_ACCESS_PATTERN_GROUPS, 
         
         CONSTRAINT,
-        
         SOURCE_HINT,
+        SUB_PLAN,
+        SUB_PLANS,
     }
 }

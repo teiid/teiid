@@ -1219,5 +1219,26 @@ public class TestDependentJoins {
         Select s = (Select)dataManager.getPushdownCommands().get(1);
         assertNull(s.getDependentValues());
 	}
+	
+    @Test public void testFullDepJoin() throws Exception {
+    	BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+    	caps.setCapabilitySupport(Capability.FULL_DEPENDENT_JOIN, true);
+		ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1, pm1.g1.e2, pm2.g1.e2 FROM pm1.g1, pm2.g1 where (pm1.g1.e1 = pm2.g1.e1) option makedep pm1.g1(join)", TestOptimizer.example1(), //$NON-NLS-1$
+            new String[] { "WITH X__1 (e1, e2) AS (<dependent values>) SELECT g_0.e1, g_0.e2, g_1.e2 FROM pm1.g1 AS g_0, X__1 AS g_1 WHERE g_0.e1 = g_1.e1" }, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING ); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+		
+		List<?>[] expected = new List<?>[] { 
+            Arrays.asList(new Object[] { "a", 2, 1 }), //$NON-NLS-1$
+        };  
+		
+		HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
+		dataManager.addData("SELECT g_0.e1, g_0.e2 FROM g1 AS g_0", new List<?>[] {Arrays.asList("a", 1)});
+		dataManager.addData("WITH X__1 (e1, e2) AS (?) SELECT g_0.e1, g_0.e2, g_1.e2 FROM g1 AS g_0, X__1 AS g_1 WHERE g_0.e1 = g_1.e1", new List<?>[] {Arrays.asList("a", 2, 1)});
+		TestProcessor.helpProcess(plan, dataManager, expected);
+		Select select = (Select)dataManager.getPushdownCommands().get(1);
+		List<? extends List<?>> vals = select.getWith().getItems().get(0).getDependentValues();
+		assertEquals(1, vals.size());
+    }
     
 }

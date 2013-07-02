@@ -47,6 +47,7 @@ public class Option implements LanguageObject {
     public static class MakeDep {
     	private Integer min;
     	private Integer max;
+    	private boolean join;
     	
     	@Override
 		public int hashCode() {
@@ -65,7 +66,9 @@ public class Option implements LanguageObject {
 				return false;
 			}
 			MakeDep other = (MakeDep) obj;
-			return EquivalenceUtil.areEqual(getMin(), other.getMin()); 
+			return EquivalenceUtil.areEqual(getMin(), other.getMin())
+					&& EquivalenceUtil.areEqual(max, other.max)
+					&& join == other.join; 
 		}
 
 		public MakeDep(Integer min) {
@@ -95,6 +98,14 @@ public class Option implements LanguageObject {
 
 		public void setMax(Integer max) {
 			this.max = max;
+		}
+		
+		public boolean isJoin() {
+			return join;
+		}
+		
+		public void setJoin(boolean join) {
+			this.join = join;
 		}
     }
     

@@ -1015,13 +1015,26 @@ public class ExecutionFactory<F, C> {
 	/**
  	 * NOTE: The pushed independent tuples will not have been
 	 * converted to a unique set and may contain duplicates.
-	 * @return true if dependent join pushdown is supported
+	 * @return true if dependent join key pushdown is supported
 	 * @since 8.0
 	 */
 	public boolean supportsDependentJoins() {
 		return false;
 	}
 	
+	/**
+	 * @return true if full dependent join pushdown is supported
+	 * @since 8.4
+	 * @return
+	 */
+	public boolean supportsFullDependentJoins() {
+		return false;
+	}
+	
+	/**
+	 * @since 8.4
+	 * @return
+	 */
 	public int getDependentJoinMinimum() {
 		return dependentJoinMinimum;
 	}

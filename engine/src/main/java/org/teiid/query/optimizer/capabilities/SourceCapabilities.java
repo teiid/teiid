@@ -335,7 +335,8 @@ public interface SourceCapabilities {
         CRITERIA_ON_SUBQUERY,
         ARRAY_TYPE, 
         QUERY_SUBQUERIES_ONLY_CORRELATED, 
-        QUERY_AGGREGATES_STRING;
+        QUERY_AGGREGATES_STRING, 
+        FULL_DEPENDENT_JOIN;
         
         private final String toString;
         
