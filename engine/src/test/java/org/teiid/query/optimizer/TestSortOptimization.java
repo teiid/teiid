@@ -237,6 +237,19 @@ public class TestSortOptimization {
                                       new String[] {"SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
     }
     
+    @Test public void testProjectionRaisingWithAccess1() throws Exception { 
+        // Create query 
+        String sql = "select e1, 1 as z from pm1.g1 as x group by e1 order by e1"; //$NON-NLS-1$
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+        RelationalPlan plan = (RelationalPlan)helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(caps), 
+                                      new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0 GROUP BY g_0.e1 ORDER BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        assertTrue(plan.getRootNode() instanceof ProjectNode);
+        
+    }
+    
     @Test public void testProjectionRaisingWithAccessAndLimit() throws Exception { 
         // Create query 
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from pm1.g1 as x order by e1 limit 1"; //$NON-NLS-1$
@@ -301,7 +314,7 @@ public class TestSortOptimization {
         String sql = "select e1, (select e1 from pm2.g1 where e2 = x.e2) as z from (select distinct e1, e2 from pm1.g1) as x group by e1, e2 order by e1"; //$NON-NLS-1$
 
         ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
-                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
+                                      new String[] {"SELECT v_0.c_0, v_0.c_1 FROM (SELECT DISTINCT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1 ORDER BY c_0"}, TestOptimizer.SHOULD_SUCCEED); //$NON-NLS-1$ 
         
         checkNodeTypes(plan, new int[] {
                 1,      // Access
