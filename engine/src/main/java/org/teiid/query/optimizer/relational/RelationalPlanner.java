@@ -32,12 +32,15 @@ import org.teiid.common.buffer.LobManager;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.id.IDGenerator;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.HashCodeUtil;
 import org.teiid.dqp.internal.process.Request;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.Procedure;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
+import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.QueryMetadataInterface;
@@ -85,6 +88,7 @@ import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.CorrelatedReferenceCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
+import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupCollectorVisitor;
 import org.teiid.query.sql.visitor.GroupsUsedByElementsVisitor;
 import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
@@ -986,7 +990,7 @@ public class RelationalPlanner {
      * @throws QueryMetadataException 
      * @throws TeiidProcessingException 
      */
-    void buildTree(FromClause clause, PlanNode parent)
+    void buildTree(FromClause clause, final PlanNode parent)
         throws QueryMetadataException, TeiidComponentException, TeiidProcessingException {
         
         PlanNode node = null;
@@ -1094,6 +1098,57 @@ public class RelationalPlanner {
         } else if (clause instanceof TableFunctionReference) {
         	TableFunctionReference tt = (TableFunctionReference)clause;
             GroupSymbol group = tt.getGroupSymbol();
+            //special handling to convert array table into a mergable construct
+            if (parent.getType() == NodeConstants.Types.JOIN && tt instanceof ArrayTable) {
+            	JoinType jt = (JoinType) parent.getProperty(Info.JOIN_TYPE);
+            	if (jt != JoinType.JOIN_FULL_OUTER && parent.getChildCount() > 0) {
+	            	ArrayTable at = (ArrayTable)tt;
+		        	//rewrite if deterministic and free of subqueries
+		        	if (FunctionCollectorVisitor.isNonDeterministic(at.getArrayValue())
+		        			|| ValueIteratorProviderCollectorVisitor.getValueIteratorProviders(at).isEmpty()) {
+		            	List<ElementSymbol> symbols = at.getProjectedSymbols();
+		        		FunctionLibrary funcLib = this.metadata.getFunctionLibrary();
+		                FunctionDescriptor descriptor = funcLib.findFunction(FunctionLibrary.ARRAY_GET, 
+		                		new Class[] { DataTypeManager.DefaultDataClasses.OBJECT, DataTypeManager.DefaultDataClasses.INTEGER });
+		                Query query = new Query();
+		                Select select = new Select();
+		                query.setSelect(select);
+		            	for (int i = 0; i < symbols.size(); i++) {
+		            		ElementSymbol es = symbols.get(i);
+		            		Function f = new Function(FunctionLibrary.ARRAY_GET, new Expression[] {(Expression) at.getArrayValue().clone(), new Constant(i + 1)});
+		            		f.setType(DataTypeManager.DefaultDataClasses.OBJECT);
+		                    f.setFunctionDescriptor(descriptor);
+		                    Expression ex = f;
+		            		if (es.getType() != DataTypeManager.DefaultDataClasses.OBJECT) {
+		            			ex = ResolverUtil.getConversion(ex, DataTypeManager.DefaultDataTypes.OBJECT, DataTypeManager.getDataTypeName(es.getType()), false, metadata.getFunctionLibrary());
+		            		}
+		            		select.addSymbol(new AliasSymbol(es.getShortName(), ex));
+		            	}
+		            	SubqueryFromClause sfc = new SubqueryFromClause(at.getGroupSymbol(), query);
+		            	sfc.setTable(true);
+		            	buildTree(sfc, parent);
+		            	if (!jt.isOuter()) {
+		            		//insert is null criteria
+		            		IsNullCriteria criteria = new IsNullCriteria((Expression) at.getArrayValue().clone());
+		            		if (sfc.getCommand().getCorrelatedReferences() != null) {
+			            		RuleMergeCriteria.ReferenceReplacementVisitor rrv = new RuleMergeCriteria.ReferenceReplacementVisitor(sfc.getCommand().getCorrelatedReferences());
+			            		PreOrPostOrderNavigator.doVisit(criteria, rrv, PreOrPostOrderNavigator.PRE_ORDER);
+		            		}
+			            	criteria.setNegated(true);
+			            	if (jt == JoinType.JOIN_CROSS) {
+			            		parent.setProperty(NodeConstants.Info.JOIN_TYPE, JoinType.JOIN_INNER);
+			            	}
+			            	List<Criteria> joinCriteria = (List<Criteria>) parent.getProperty(Info.JOIN_CRITERIA); 
+			            	if (joinCriteria == null) {
+			            		joinCriteria = new ArrayList<Criteria>(2);
+			            	}
+			            	joinCriteria.add(criteria);
+			                parent.setProperty(NodeConstants.Info.JOIN_CRITERIA, joinCriteria);
+		            	}
+		            	return;
+		        	}
+            	}
+            }
             node = NodeFactory.getNewNode(NodeConstants.Types.SOURCE);
             node.setProperty(NodeConstants.Info.TABLE_FUNCTION, tt);
             tt.setCorrelatedReferences(getCorrelatedReferences(parent, node, tt));

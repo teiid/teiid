@@ -118,7 +118,7 @@ public class RuleApplySecurity implements OptimizerRule {
 	        			project = NodeEditor.findParent(sourceNode, NodeConstants.Types.PROJECT);
 		        		project.setProperty(NodeConstants.Info.PROJECT_COLS, masked);
 	        		}
-	        		if (windowFunctions.isEmpty() && RuleMergeVirtual.checkProjectedSymbols(group, parentJoin, metadata, masked, Collections.singleton(group))){
+	        		if (windowFunctions.isEmpty() && RuleMergeVirtual.checkProjectedSymbols(group, parentJoin, metadata, masked, Collections.singleton(group), true)){
 		        		if (!group.isProcedure()) {
 		        			//just upwardly project - TODO: we could also handle some subquery simple projection situations here
 		        			FrameUtil.convertFrame(sourceNode.getParent(), group, Collections.singleton(group), mapping, metadata);

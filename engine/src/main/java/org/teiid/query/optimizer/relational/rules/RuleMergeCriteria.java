@@ -76,12 +76,12 @@ public final class RuleMergeCriteria implements OptimizerRule {
 	/**
 	 * Used to replace correlated references
 	 */
-	protected static final class ReferenceReplacementVisitor extends
+	public static final class ReferenceReplacementVisitor extends
 			ExpressionMappingVisitor {
 		private final SymbolMap refs;
 		private boolean replacedAny;
 		
-		ReferenceReplacementVisitor(SymbolMap refs) {
+		public ReferenceReplacementVisitor(SymbolMap refs) {
 			super(null);
 			this.refs = refs;
 		}

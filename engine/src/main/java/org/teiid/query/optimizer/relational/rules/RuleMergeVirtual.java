@@ -24,10 +24,12 @@ package org.teiid.query.optimizer.relational.rules;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.teiid.api.exception.query.QueryMetadataException;
@@ -38,6 +40,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
+import org.teiid.query.optimizer.relational.RelationalPlanner;
 import org.teiid.query.optimizer.relational.RuleStack;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
@@ -45,12 +48,15 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.sql.lang.Criteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
@@ -93,8 +99,10 @@ public final class RuleMergeVirtual implements
             return root;
         }
         
+        List<PlanNode> sources = NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE);
+        
         SymbolMap references = (SymbolMap)frame.getProperty(NodeConstants.Info.CORRELATED_REFERENCES);
-        if (references != null) {
+        if (references != null && !sources.isEmpty()) {
         	return root; //correlated nested table commands should not be merged
         }
 
@@ -142,6 +150,8 @@ public final class RuleMergeVirtual implements
         	}
         }
 
+        PlanNode parentJoin = NodeEditor.findParent(frame, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE | NodeConstants.Types.GROUP);
+
         //try to remove the virtual layer if we are only doing a simple projection in the following cases:
         // 1. if the frame root is something other than a project (SET_OP, SORT, LIMIT, etc.)
         // 2. if the frame has a grouping node
@@ -149,7 +159,7 @@ public final class RuleMergeVirtual implements
         if (projectNode.getType() != NodeConstants.Types.PROJECT
             || NodeEditor.findNodePreOrder(frame.getFirstChild(), NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE
                                                                                              | NodeConstants.Types.JOIN) != null
-            || NodeEditor.findAllNodes(frame.getFirstChild(), NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE).isEmpty()) {
+            || sources.isEmpty()) {
         	
             PlanNode parentSource = NodeEditor.findParent(parentProject, NodeConstants.Types.SOURCE);
             if (beforeDecomposeJoin && parentSource != null && parentSource.hasProperty(Info.PARTITION_INFO) 
@@ -157,31 +167,103 @@ public final class RuleMergeVirtual implements
             	return root; //don't bother to merge until after
             }
 
-            return checkForSimpleProjection(frame, root, parentProject, metadata, capFinder);
+            root = checkForSimpleProjection(frame, root, parentProject, metadata, capFinder);
+            if (frame.getParent() == null || !sources.isEmpty() || projectNode.getType() != NodeConstants.Types.PROJECT || parentJoin == null) {
+            	return root; //only consider no sources when the frame is simple and there is a parent join
+            }
+            if (sources.isEmpty() && parentJoin != null) {
+            	PlanNode parent = frame.getParent();
+            	boolean hasCriteria = false;
+            	while (parent != parentJoin) {
+	            	if (parent.getType() != NodeConstants.Types.SELECT) {
+	        			return root; //sanity check, can only be filters
+	        		}
+	            	if (!parent.hasBooleanProperty(Info.IS_PHANTOM)) {
+	            		hasCriteria = true;
+	            	}
+	            	parent = parent.getParent(); 
+            	}
+            	JoinType jt = (JoinType) parentJoin.getProperty(Info.JOIN_TYPE);
+            	if (jt.isOuter() && (hasCriteria || jt != JoinType.JOIN_LEFT_OUTER || FrameUtil.findJoinSourceNode(parentJoin.getFirstChild()) == frame)) {
+        			return root; //cannot remove if the no source side is an outer side
+            	}
+            }
         }
-
-        PlanNode parentJoin = NodeEditor.findParent(frame, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
 
         if (!checkJoinCriteria(frame.getFirstChild(), virtualGroup, parentJoin)) {
             return root;
         }
         
-        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata)) {
+        //we dont' have to check for null dependent with no source without criteria since there must be a row
+        if (!checkProjectedSymbols(projectNode, virtualGroup, parentJoin, metadata, sources, !sources.isEmpty() || frame.getParent() != parentJoin)) {
+        	//TODO: propogate constants if just inhibited by subquery/non-deterministic expressions
             return root;
         }
 
         // Otherwise merge should work
 
         // Convert parent frame before merge
-        FrameUtil.convertFrame(frame, virtualGroup, FrameUtil.findJoinSourceNode(projectNode).getGroups(), symbolMap.asMap(), metadata);
+        Set<GroupSymbol> groups = Collections.emptySet();
+        if (!sources.isEmpty()) {
+        	groups = FrameUtil.findJoinSourceNode(projectNode).getGroups();
+        } else if (references != null) {
+        	//convert from correlated form to regular references
+        	RuleMergeCriteria.ReferenceReplacementVisitor rrv = new RuleMergeCriteria.ReferenceReplacementVisitor(references);
+        	for (Map.Entry<ElementSymbol, Expression> entry : symbolMap.asUpdatableMap().entrySet()) {
+        		if (entry.getValue() instanceof Reference) {
+        			Expression ex = references.getMappedExpression(((Reference)entry.getValue()).getExpression());
+        			if (ex != null) {
+        				entry.setValue(ex);
+        			}
+        		} else {
+        			PreOrPostOrderNavigator.doVisit(entry.getValue(), rrv, PreOrPostOrderNavigator.PRE_ORDER);
+        		}
+        	}
+        }
+        FrameUtil.convertFrame(frame, virtualGroup, groups, symbolMap.asMap(), metadata);
 
         PlanNode parentBottom = frame.getParent();
         prepareFrame(frame);
 
-        // Remove top 2 nodes (SOURCE, PROJECT) of virtual group - they're no longer needed
-        NodeEditor.removeChildNode(parentBottom, frame);
-        NodeEditor.removeChildNode(parentBottom, projectNode);
-
+        if (sources.isEmpty() && parentJoin != null) {
+        	//special handling for no sources
+        	PlanNode parent = frame;
+        	List<PlanNode> criteriaNodes = new ArrayList<PlanNode>();
+        	while (parent.getParent() != parentJoin) {
+        		parent = parent.getParent();
+        		if (!parent.hasBooleanProperty(Info.IS_PHANTOM)) {
+        			criteriaNodes.add(parent);
+        		}
+        	}
+        	PlanNode parentNode = parentJoin.getParent();
+        	parentJoin.removeChild(parent);
+        	PlanNode other = parentJoin.getFirstChild();
+    		NodeEditor.removeChildNode(parentNode, parentJoin);
+    		JoinType jt = (JoinType) parentJoin.getProperty(Info.JOIN_TYPE);
+    		if (!jt.isOuter()) {
+    			//if we are not an outer join then the join/parent criteria is effectively
+    			//applied to the other side
+	    		List<Criteria> joinCriteria = (List<Criteria>) parentJoin.getProperty(Info.JOIN_CRITERIA);
+	    		if (joinCriteria != null) {
+	    			for (Criteria crit : joinCriteria) {
+	                    PlanNode critNode = RelationalPlanner.createSelectNode(crit, false);
+	                    criteriaNodes.add(critNode);
+	    			}
+	    		}
+	    		if (!criteriaNodes.isEmpty()) {
+	    			for (PlanNode selectNode : criteriaNodes) {
+	    				selectNode.removeAllChildren();
+	    				selectNode.removeFromParent();
+						other.addAsParent(selectNode);
+					}
+	    		}
+    		}
+        } else {
+	        // Remove top 2 nodes (SOURCE, PROJECT) of virtual group - they're no longer needed
+	        NodeEditor.removeChildNode(parentBottom, frame);
+	        NodeEditor.removeChildNode(parentBottom, projectNode);
+        }
+        
         return root;
     }
 
@@ -323,7 +405,7 @@ public final class RuleMergeVirtual implements
     private static boolean checkProjectedSymbols(PlanNode projectNode,
                                                  GroupSymbol virtualGroup,
                                                  PlanNode parentJoin,
-                                                 QueryMetadataInterface metadata) {
+                                                 QueryMetadataInterface metadata, List<PlanNode> sources, boolean checkForNullDependent) {
         if (projectNode.hasBooleanProperty(Info.HAS_WINDOW_FUNCTIONS)) {
         	return false;
         }
@@ -331,34 +413,36 @@ public final class RuleMergeVirtual implements
         List<Expression> selectSymbols = (List<Expression>)projectNode.getProperty(NodeConstants.Info.PROJECT_COLS);
         
         HashSet<GroupSymbol> groups = new HashSet<GroupSymbol>();
-        for (PlanNode sourceNode : NodeEditor.findAllNodes(projectNode, NodeConstants.Types.SOURCE, NodeConstants.Types.SOURCE)) {
+        for (PlanNode sourceNode : sources) {
             groups.addAll(sourceNode.getGroups());
         }
 
         return checkProjectedSymbols(virtualGroup, parentJoin, metadata,
-				selectSymbols, groups);
+				selectSymbols, groups, checkForNullDependent);
     }
 
 	static boolean checkProjectedSymbols(GroupSymbol virtualGroup,
 			PlanNode parentJoin, QueryMetadataInterface metadata,
-			List<? extends Expression> selectSymbols, Set<GroupSymbol> groups) {
-		boolean checkForNullDependent = false;
-        // check to see if there are projected literal on the inner side of an outer join that needs to be preserved
-        if (parentJoin != null) {
-            PlanNode joinToTest = parentJoin;
-            while (joinToTest != null) {
-                JoinType joinType = (JoinType)joinToTest.getProperty(NodeConstants.Info.JOIN_TYPE);
-                if (joinType == JoinType.JOIN_FULL_OUTER) {
-                    checkForNullDependent = true;
-                    break;
-                } else if (joinType == JoinType.JOIN_LEFT_OUTER
-                           && FrameUtil.findJoinSourceNode(joinToTest.getLastChild()).getGroups().contains(virtualGroup)) {
-                    checkForNullDependent = true;
-                    break;
-                }
-                joinToTest = NodeEditor.findParent(joinToTest.getParent(), NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
-            }
-        }
+			List<? extends Expression> selectSymbols, Set<GroupSymbol> groups, boolean checkForNullDependent) {
+		if (checkForNullDependent) {
+			checkForNullDependent = false;
+	        // check to see if there are projected literal on the inner side of an outer join that needs to be preserved
+	        if (parentJoin != null) {
+	            PlanNode joinToTest = parentJoin;
+	            while (joinToTest != null) {
+	                JoinType joinType = (JoinType)joinToTest.getProperty(NodeConstants.Info.JOIN_TYPE);
+	                if (joinType == JoinType.JOIN_FULL_OUTER) {
+	                    checkForNullDependent = true;
+	                    break;
+	                } else if (joinType == JoinType.JOIN_LEFT_OUTER
+	                           && FrameUtil.findJoinSourceNode(joinToTest.getLastChild()).getGroups().contains(virtualGroup)) {
+	                    checkForNullDependent = true;
+	                    break;
+	                }
+	                joinToTest = NodeEditor.findParent(joinToTest.getParent(), NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE);
+	            }
+	        }
+		}
 
         for (int i = 0; i < selectSymbols.size(); i++) {
         	Expression symbol = selectSymbols.get(i);

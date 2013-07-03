@@ -6263,24 +6263,9 @@ public class TestOptimizer {
         String sql = "select a.e1 from (select 1 e1) a, (select e1, 1 as a, x from (select e1, CASE WHEN e1 = 'a' THEN e2 ELSE e3 END as x from pm1.g2) y group by e1, x) b where a.e1 = b.x"; //$NON-NLS-1$
         
         ProcessorPlan plan = helpPlan(sql, metadata, null, capFinder, 
-                                      new String[] {"SELECT v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE convert(g_0.e3, integer) END AS c_0 FROM pm1.g2 AS g_0 GROUP BY g_0.e1, CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE convert(g_0.e3, integer) END) AS v_0 WHERE v_0.c_0 IN (<dependent values>) ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+                                      new String[] {"SELECT 1 FROM (SELECT CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE convert(g_0.e3, integer) END AS c_0 FROM pm1.g2 AS g_0 GROUP BY g_0.e1, CASE WHEN g_0.e1 = 'a' THEN g_0.e2 ELSE convert(g_0.e3, integer) END) AS v_0 WHERE v_0.c_0 = 1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
-        checkNodeTypes(plan, new int[] {
-            0,      // Access
-            1,      // DependentAccess
-            0,      // DependentSelect
-            0,      // DependentProject
-            0,      // DupRemove
-            0,      // Grouping
-            0,      // NestedLoopJoinStrategy
-            1,      // MergeJoinStrategy
-            0,      // Null
-            0,      // PlanExecution
-            2,      // Project
-            0,      // Select
-            0,      // Sort
-            0       // UnionAll
-        }); 
+        checkNodeTypes(plan, FULL_PUSHDOWN); 
     }
     
     @Test public void testCase6325() {
