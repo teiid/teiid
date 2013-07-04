@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.CommandContext;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -63,6 +64,7 @@ public class TestMongoDBUpdateExecution {
 	private DBCollection helpExecute(String query, String[] expectedCollection, DBObject match) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+		Mockito.stub(context.getCommandContext()).toReturn(Mockito.mock(CommandContext.class));
 		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
 		DB db = Mockito.mock(DB.class);
 		DBCollection dbCollection = Mockito.mock(DBCollection.class);
@@ -133,11 +135,12 @@ public class TestMongoDBUpdateExecution {
 		BasicDBObject pk = new BasicDBObject();
 		pk.append("OrderID", new DBRef(null,"Orders", 14));
 		pk.append("ProductID", new DBRef(null,"Products", 15));
-		details.append("_id", pk);
+
 		details.append("odID", 12);
 		details.append("UnitPrice", 34.50);
 		details.append("Quantity", 10);
 		details.append("Discount", 12);
+		details.append("_id", pk);
 
 		details = new BasicDBObject("OrderDetails", details);
 		Mockito.verify(dbCollection, Mockito.never()).insert(details, WriteConcern.ACKNOWLEDGED);
@@ -164,6 +167,7 @@ public class TestMongoDBUpdateExecution {
 	private DBCollection helpUpdate(String query, String[] expectedCollection, DBObject match, ArrayList<DBObject> results) throws TranslatorException {
 		Command cmd = this.utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
+		Mockito.stub(context.getCommandContext()).toReturn(Mockito.mock(CommandContext.class));
 		MongoDBConnection connection = Mockito.mock(MongoDBConnection.class);
 		DB db = Mockito.mock(DB.class);
 		DBCollection dbCollection = Mockito.mock(DBCollection.class);
@@ -186,8 +190,8 @@ public class TestMongoDBUpdateExecution {
 			Mockito.stub(out.results()).toReturn(results);
 
 			for (DBObject obj:results) {
-				match = new BasicDBObject("_id", obj.get("_id"));
-				Mockito.stub(dbCollection.aggregate(new BasicDBObject("$match", match))).toReturn(out);
+				Mockito.stub(dbCollection.aggregate(new BasicDBObject("$match", new BasicDBObject("_id", obj.get("_id"))))).toReturn(out);
+				Mockito.stub(dbCollection.aggregate(new BasicDBObject("$match", new BasicDBObject("_id.$id", obj.get("_id"))))).toReturn(out);
 			}
 		}
 
@@ -229,5 +233,82 @@ public class TestMongoDBUpdateExecution {
 		Mockito.verify(dbCollection, Mockito.times(1)).update(
 				new BasicDBObject("OrderDetails._id.ProductID.$id", 14), new BasicDBObject("$set", new BasicDBObject("OrderDetails.$.UnitPrice", 12.5)),
 				false, true, WriteConcern.ACKNOWLEDGED);
+	}
+
+	@Test
+	public void tesNestedEmbeddingInsert() throws Exception {
+		String query = "insert into T1 (e1, e2, e3) VALUES (1, 2, 3)";
+
+	    BasicDBObject match = new BasicDBObject();
+		match.append("_id", 2);
+
+		DBCollection dbCollection = helpUpdate(query, new String[]{"T1"}, match, null);
+
+	    BasicDBObject row = new BasicDBObject();
+		row.append("e1", new DBRef(null, "T2", 1));
+		row.append("e3", 3);
+		row.append("_id", 2);
+		row.append("T2", match);
+
+		Mockito.verify(dbCollection).insert(row, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection, Mockito.never()).update(match, row, false, true, WriteConcern.ACKNOWLEDGED);
+	}
+
+	@Test
+	public void tesNestedEmbeddingUpdate() throws Exception {
+		String query = "UPDATE T3 SET e2 = 2, e3 = 3 WHERE e1 = 1";
+
+	    BasicDBObject t3_match = new BasicDBObject();
+		t3_match.append("_id", 1);
+
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
+		results.add(new BasicDBObject("_id", 1).append("key", "value"));
+
+		DBCollection dbCollection = helpUpdate(query, new String[]{"T3", "T2", "T1"}, t3_match, results);
+
+	    BasicDBObject t3_row = new BasicDBObject();
+		t3_row.append("e2", 2);
+		t3_row.append("e3", 3);
+
+
+	    BasicDBObject t2_match = new BasicDBObject();
+	    t2_match.append("_id.$id", 1);
+
+	    BasicDBObject t1row = new BasicDBObject("T2", results.get(0));
+	    BasicDBObject t2row = new BasicDBObject("T3", results.get(0));
+
+	    BasicDBObject t1_match = new BasicDBObject();
+	    t1_match.append("e1.$id", 1);
+
+		Mockito.verify(dbCollection, Mockito.never()).insert(t3_row, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(t3_match, new BasicDBObject("$set", t3_row), false, true, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(t2_match, new BasicDBObject("$set", t2row), false, true, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(t1_match, new BasicDBObject("$set", t1row), false, true, WriteConcern.ACKNOWLEDGED);
+	}
+
+	@Test
+	public void tesNestedEmbeddingUpdateInMiddle() throws Exception {
+		String query = "UPDATE T2 SET e2 = 2, e3 = 3 WHERE e1 = 1";
+
+	    BasicDBObject match = new BasicDBObject();
+		match.append("_id.$id", 1);
+
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
+		results.add(new BasicDBObject("_id", 1).append("key", "value"));
+
+		DBCollection dbCollection = helpUpdate(query, new String[]{"T2", "T1"}, match, results);
+
+	    BasicDBObject row = new BasicDBObject();
+		row.append("e2", 2);
+		row.append("e3", 3);
+
+	    BasicDBObject t2_match = new BasicDBObject();
+	    t2_match.append("e1.$id", 1);
+
+	    BasicDBObject t2row = new BasicDBObject("T2", results.get(0));
+
+		Mockito.verify(dbCollection, Mockito.never()).insert(row, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(match, new BasicDBObject("$set", row), false, true, WriteConcern.ACKNOWLEDGED);
+		Mockito.verify(dbCollection).update(t2_match, new BasicDBObject("$set", t2row), false, true, WriteConcern.ACKNOWLEDGED);
 	}
 }

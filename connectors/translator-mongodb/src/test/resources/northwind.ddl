@@ -5,7 +5,7 @@ CREATE FOREIGN TABLE  Categories (
   Picture varchar(40),
   PRIMARY KEY  (CategoryID),
   UNIQUE (CategoryName)
-) OPTIONS(UPDATABLE 'TRUE', EMBEDDABLE 'TRUE');
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE Suppliers (
   SupplierID integer NOT NULL auto_increment,
@@ -21,14 +21,14 @@ CREATE FOREIGN TABLE Suppliers (
   Fax varchar(24),
   HomePage varchar(4000),
   PRIMARY KEY  (SupplierID)
-)OPTIONS(UPDATABLE 'TRUE', EMBEDDABLE 'TRUE');
+)OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE Shippers (
   ShipperID integer NOT NULL auto_increment,
   CompanyName varchar(40),
   Phone varchar(24),
   PRIMARY KEY (ShipperID)
-)OPTIONS(UPDATABLE 'TRUE', EMBEDDABLE 'TRUE');
+)OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE Customers (
   CustomerID varchar(5) NOT NULL default '',
@@ -113,7 +113,7 @@ CREATE FOREIGN TABLE OrderDetails (
   FOREIGN KEY (OrderID) REFERENCES Orders (OrderID),
   FOREIGN KEY (ProductID) REFERENCES Products (ProductID),
   PRIMARY KEY (OrderID,ProductID)
-) OPTIONS (EMBEDIN 'Orders', UPDATABLE 'TRUE');
+) OPTIONS ("teiid_mongo:MERGE" 'Orders', UPDATABLE 'TRUE');
 
 CREATE FOREIGN TABLE users (
     id integer NOT NULL PRIMARY KEY,
@@ -136,3 +136,46 @@ CREATE FOREIGN TABLE G2 (
     e3 integer,
     FOREIGN KEY (e1, e2) REFERENCES G1 (e1, e2)
 ) OPTIONS(UPDATABLE 'TRUE');
+
+CREATE FOREIGN TABLE T1 (
+    e1 integer NOT NULL,
+    e2 integer NOT NULL PRIMARY KEY,
+    e3 integer,
+    FOREIGN KEY (e1) REFERENCES T2 (e1)
+) OPTIONS(UPDATABLE 'TRUE');
+
+CREATE FOREIGN TABLE T2 (
+    e1 integer NOT NULL PRIMARY KEY,
+    e2 integer NOT NULL,
+    e3 integer,
+    FOREIGN KEY (e1) REFERENCES T3 (e1)
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
+
+CREATE FOREIGN TABLE T3 (
+    e1 integer NOT NULL PRIMARY KEY,
+    e2 integer NOT NULL,
+    e3 integer
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
+
+CREATE FOREIGN TABLE address (
+  address_id    INTEGER NOT NULL PRIMARY KEY,
+  address       VARCHAR(50) NOT NULL,
+  city_id       INTEGER NOT NULL,
+  postal_code   VARCHAR(10),
+  phone         VARCHAR(20) NOT NULL,
+  FOREIGN KEY (city_id) REFERENCES city(city_id)
+) OPTIONS (UPDATABLE TRUE);
+
+
+CREATE FOREIGN TABLE city (
+  city_id       INTEGER NOT NULL PRIMARY KEY,
+  city          VARCHAR(50) NOT NULL,
+  country_id    INTEGER NOT NULL,
+  FOREIGN KEY (country_id) REFERENCES country(country_id)
+) OPTIONS (UPDATABLE TRUE, "teiid_mongo:MERGE" 'address');
+
+
+CREATE FOREIGN TABLE country (
+  country_id    INTEGER NOT NULL  PRIMARY KEY,
+  country       VARCHAR(50) NOT NULL
+) OPTIONS (UPDATABLE TRUE, "teiid_mongo:MERGE" 'city');

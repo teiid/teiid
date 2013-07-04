@@ -57,7 +57,7 @@ public class TestMongoDBQueryExecution {
 			params.add(Mockito.any(DBObject.class));
 		}
 
-		Mockito.stub(dbCollection.aggregate(Mockito.any(DBObject.class), params.toArray(new DBObject[params.size()]))).toReturn(output);
+		Mockito.stub(dbCollection.aggregate(params.remove(0), params.toArray(new DBObject[params.size()]))).toReturn(output);
 
 		Mockito.stub(db.collectionExists(Mockito.anyString())).toReturn(true);
 		Mockito.stub(connection.getDatabase()).toReturn(db);
@@ -73,7 +73,7 @@ public class TestMongoDBQueryExecution {
 	public void testSimpleSelectNoAssosiations() throws Exception {
 		String query = "SELECT * FROM Customers";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 0);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 1);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$_id");
@@ -95,7 +95,7 @@ public class TestMongoDBQueryExecution {
 	public void testSimpleWhere() throws Exception {
 		String query = "SELECT CompanyName, ContactTitle FROM Customers WHERE Country='USA'";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Customers"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CompanyName");
@@ -110,7 +110,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectEmbeddable() throws Exception {
 		String query = "SELECT CategoryName FROM Categories";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 0);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Categories"}, 1);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CategoryName");
@@ -123,7 +123,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectEmbedIn() throws Exception {
 		String query = "SELECT UnitPrice FROM OrderDetails";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$OrderDetails.UnitPrice");
@@ -137,7 +137,7 @@ public class TestMongoDBQueryExecution {
 	public void testSelectEmbedInWithWhere() throws Exception {
 		String query = "SELECT * FROM OrderDetails WHERE OrderId = 10248";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$OrderDetails.odID");
@@ -155,26 +155,25 @@ public class TestMongoDBQueryExecution {
 	}
 
 	@Test
-	public void testTwoTableInnerJoinEmbedIn() throws Exception {
+	public void testTwoTableInnerJoinEmbedInAssosiationMany() throws Exception {
 		String query = "SELECT o.CustomerID, od.ProductID FROM Orders o JOIN OrderDetails od ON o.OrderID=od.OrderID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CustomerID");
 	    result.append( "_m1","$OrderDetails._id.ProductID");
 
 		Mockito.verify(dbCollection).aggregate(
-						//new BasicDBObject("$match",new BasicDBObject("_id", "OrderDetails.OrderID")),
 						new BasicDBObject("$unwind","$OrderDetails"),
 						new BasicDBObject("$project", result));
 	}
 
 	@Test
-	public void testTwoTableInnerJoinEmbeddable() throws Exception {
+	public void testTwoTableInnerJoinEmbeddableAssosiationOne() throws Exception {
 		String query = "select p.ProductName, c.CategoryName from Products p join Categories c on p.CategoryID = c.CategoryID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 0);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 1);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -190,7 +189,7 @@ public class TestMongoDBQueryExecution {
 				"JOIN Categories c on p.CategoryID = c.CategoryID " +
 				"WHERE p.CategoryID = 1 AND c.CategoryID = 1";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Products"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$ProductName");
@@ -211,7 +210,7 @@ public class TestMongoDBQueryExecution {
 				"FROM Orders o JOIN OrderDetails od ON o.OrderID=od.OrderID " +
 				"JOIN Shippers s ON o.ShipVia = s.ShipperID";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 1);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CustomerID");
@@ -229,7 +228,7 @@ public class TestMongoDBQueryExecution {
 				"LEFT OUTER JOIN OrderDetails ON Orders.OrderID = OrderDetails.OrderID " +
 				"WHERE OrderDetails.OrderID IS NOT NULL";
 
-		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 2);
+		DBCollection dbCollection = helpExecute(query, new String[]{"Orders"}, 3);
 
 	    BasicDBObject result = new BasicDBObject();
 	    result.append( "_m0","$CustomerID");
@@ -241,4 +240,19 @@ public class TestMongoDBQueryExecution {
 						new BasicDBObject("$match",match),
 						new BasicDBObject("$project", result));
 	}
+
+
+    @Test
+    public void testSelectNestedEmbedding()  throws Exception {
+    	String query = "select T1.e1, T2.e1, T3.e1 from T1 JOIN T2 ON T1.e1=T2.e1 JOIN T3 ON T2.e1 = T3.e1";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"T1", "T2", "T3"}, 1);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$e1");
+	    result.append( "_m1","$T2._id");
+	    result.append( "_m2","$T2.T3._id");
+
+	    Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
+    }
 }

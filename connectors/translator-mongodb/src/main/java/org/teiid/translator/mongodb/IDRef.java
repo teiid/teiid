@@ -25,7 +25,7 @@ import java.util.HashMap;
 
 import com.mongodb.BasicDBObject;
 
-public class IDRef {
+public class IDRef implements Cloneable {
 	HashMap<String, Object> pk = new HashMap<String, Object>();
 
 	public void addColumn(String key, Object value) {
@@ -47,6 +47,17 @@ public class IDRef {
 
 	@Override
 	public String toString() {
-		return getValue().toString();
+		Object obj =  getValue();
+		if (obj != null) {
+			return obj.toString();
+		}
+		return null;
+	}
+
+	@Override
+	public IDRef clone() {
+		IDRef clone = new IDRef();
+		clone.pk.putAll(this.pk);
+		return clone;
 	}
 }
