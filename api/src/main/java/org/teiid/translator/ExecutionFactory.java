@@ -1137,4 +1137,8 @@ public class ExecutionFactory<F, C> {
 	public boolean supportsOnlyCorrelatedSubqueries() {
 		return false;
 	}
+	
+	public boolean supportsSelectWithoutFrom() {
+		return false;
+	}
 }

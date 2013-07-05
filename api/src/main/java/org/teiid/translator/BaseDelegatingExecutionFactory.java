@@ -483,4 +483,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsFullDependentJoins() {
 		return delegate.supportsFullDependentJoins();
 	}
+	@Override
+	public boolean supportsSelectWithoutFrom() {
+		return delegate.supportsSelectWithoutFrom();
+	}
 }

@@ -1048,5 +1048,14 @@ public class TestOracleTranslator {
     	oef.start();
     	assertTrue(oef.supportsCommonTableExpressions());
     }
+    
+	@Test public void testSelectWithoutFrom() throws Exception {
+		String input = "SELECT 1"; //$NON-NLS-1$
+        String output = "SELECT 1 FROM DUAL"; //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = getOracleSpecificMetadata();
+
+        helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
+	}
 
 }

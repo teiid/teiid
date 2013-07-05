@@ -117,6 +117,7 @@ public class CapabilitiesConverter {
         tgtCaps.setCapabilitySupport(Capability.ARRAY_TYPE, srcCaps.supportsArrayType());
         tgtCaps.setCapabilitySupport(Capability.QUERY_SUBQUERIES_ONLY_CORRELATED, srcCaps.supportsOnlyCorrelatedSubqueries());
         tgtCaps.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, srcCaps.supportsStringAgg());
+        tgtCaps.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, srcCaps.supportsSelectWithoutFrom());
         
         List<String> functions = srcCaps.getSupportedFunctions();
         if(functions != null && functions.size() > 0) {

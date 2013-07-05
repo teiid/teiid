@@ -355,9 +355,9 @@ public class PlanToProcessConverter {
                         } catch (QueryMetadataException err) {
                              throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
                         }
-                        ev = EvaluatableVisitor.needsEvaluation(command);
-                        aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     }
+                    ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
+                    aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
                     setRoutingName(aNode, node, command);
                     if (command instanceof QueryCommand) {
 	                    try {

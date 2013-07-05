@@ -60,6 +60,7 @@ import org.teiid.core.types.basic.StringToSQLXMLTransform;
 import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.language.Like.MatchMode;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
@@ -207,6 +208,12 @@ public class Evaluator {
     public Boolean evaluateTVL(Criteria criteria, List<?> tuple)
         throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
     	
+		return internalEvaluateTVL(criteria, tuple);
+	}
+
+	private Boolean internalEvaluateTVL(Criteria criteria, List<?> tuple)
+			throws ExpressionEvaluationException, BlockedException,
+			TeiidComponentException {
 		if(criteria instanceof CompoundCriteria) {
 			return evaluate((CompoundCriteria)criteria, tuple);
 		} else if(criteria instanceof NotCriteria) {
@@ -230,7 +237,7 @@ public class Evaluator {
 		}
 	}
 
-	public Boolean evaluate(CompoundCriteria criteria, List<?> tuple)
+	private Boolean evaluate(CompoundCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		List<Criteria> subCrits = criteria.getCriteria();
@@ -238,7 +245,7 @@ public class Evaluator {
         Boolean result = and?Boolean.TRUE:Boolean.FALSE;
 		for (int i = 0; i < subCrits.size(); i++) {
 			Criteria subCrit = subCrits.get(i);
-			Boolean value = evaluateTVL(subCrit, tuple);
+			Boolean value = internalEvaluateTVL(subCrit, tuple);
             if (value == null) {
 				result = null;
 			} else if (!value.booleanValue()) {
@@ -252,11 +259,11 @@ public class Evaluator {
 		return result;
 	}
 
-	public Boolean evaluate(NotCriteria criteria, List<?> tuple)
+	private Boolean evaluate(NotCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		Criteria subCrit = criteria.getCriteria();
-		Boolean result = evaluateTVL(subCrit, tuple);
+		Boolean result = internalEvaluateTVL(subCrit, tuple);
         if (result == null) {
             return null;
         }
@@ -266,7 +273,7 @@ public class Evaluator {
         return Boolean.TRUE;
 	}
 
-	public Boolean evaluate(CompareCriteria criteria, List<?> tuple)
+	private Boolean evaluate(CompareCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate left expression
@@ -299,7 +306,7 @@ public class Evaluator {
 		return compare(criteria, leftValue, rightValue);
 	}
 
-	public Boolean evaluate(MatchCriteria criteria, List<?> tuple)
+	private Boolean evaluate(MatchCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
         boolean result = false;
@@ -454,7 +461,7 @@ public class Evaluator {
         return Boolean.valueOf(criteria.isNegated());
 	}
 
-	public boolean evaluate(IsNullCriteria criteria, List<?> tuple)
+	private boolean evaluate(IsNullCriteria criteria, List<?> tuple)
 		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 
 		// Evaluate expression
@@ -575,7 +582,7 @@ public class Evaluator {
 		return result;
 	}
 
-    public boolean evaluate(ExistsCriteria criteria, List<?> tuple)
+    private boolean evaluate(ExistsCriteria criteria, List<?> tuple)
         throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
 
         ValueIterator valueIter;
@@ -600,7 +607,7 @@ public class Evaluator {
 	    }
 	}
 	
-	private Object internalEvaluate(Expression expression, List<?> tuple)
+	protected Object internalEvaluate(Expression expression, List<?> tuple)
 	   throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 	
 	   if(expression instanceof DerivedExpression) {
@@ -1007,7 +1014,7 @@ public class Evaluator {
 		}
 	}
 	
-	public Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
+	private Result evaluateXQuery(SaxonXQueryExpression xquery, List<DerivedColumn> cols, List<?> tuple, RowProcessor processor) 
 	throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		HashMap<String, Object> parameters = new HashMap<String, Object>();
 		Object contextItem = evaluateParameters(cols, tuple, parameters);
@@ -1128,7 +1135,7 @@ public class Evaluator {
 	}
 	
 	private Object evaluate(Function function, List<?> tuple)
-		throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
+		throws BlockedException, TeiidComponentException, ExpressionEvaluationException {
 	
 	    // Get function based on resolved function info
 	    FunctionDescriptor fd = function.getFunctionDescriptor();
@@ -1151,7 +1158,13 @@ public class Evaluator {
 	        values[i+start] = internalEvaluate(args[i], tuple);
 	    }            
 	    
-	    fd.checkNotPushdown();	
+	    if (fd.getPushdown() == PushDown.MUST_PUSHDOWN) {
+	    	try {
+				return evaluatePushdown(function, tuple, values);
+			} catch (TeiidProcessingException e) {
+				throw new ExpressionEvaluationException(e);
+			}
+	    }
 	    
 	    // Check for special lookup function
 	    if(function.getName().equalsIgnoreCase(FunctionLibrary.LOOKUP)) {
@@ -1166,7 +1179,7 @@ public class Evaluator {
 	        try {
 				return dataMgr.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, values[3]);
 			} catch (TeiidProcessingException e) {
-				 throw new ExpressionEvaluationException(e);
+				throw new ExpressionEvaluationException(e);
 			}
 	    }
 	    
@@ -1174,6 +1187,11 @@ public class Evaluator {
 		return fd.invokeFunction(values, context, null);
 	}
 	
+	protected Object evaluatePushdown(Function function, List<?> tuple,
+			Object[] values) throws FunctionExecutionException, TeiidComponentException, TeiidProcessingException {
+		throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, function.getFunctionDescriptor().getFullName()));
+	}
+
 	private Object evaluate(ScalarSubquery scalarSubquery, List<?> tuple)
 	    throws ExpressionEvaluationException, BlockedException, TeiidComponentException {
 		

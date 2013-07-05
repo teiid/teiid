@@ -52,5 +52,5 @@ public interface FunctionMetadataSource {
      * @return Class reference  
      * @throws ClassNotFoundException If class could not be found
      */
-    Class getInvocationClass(String className) throws ClassNotFoundException;    
+    Class<?> getInvocationClass(String className) throws ClassNotFoundException;    
 }

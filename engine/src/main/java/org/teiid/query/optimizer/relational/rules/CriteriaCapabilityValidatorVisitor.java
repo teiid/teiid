@@ -234,7 +234,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
         // Check if compares are allowed
         if(! this.caps.supportsCapability(operatorCap)) {
-            markInvalid(obj, "ordered CompareCriteria not supported by source"); //$NON-NLS-1$
+            markInvalid(obj, operatorCap + " CompareCriteria not supported by source"); //$NON-NLS-1$
             return;
         }                       
         if (negated && !this.caps.supportsCapability(Capability.CRITERIA_NOT)) {

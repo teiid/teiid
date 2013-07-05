@@ -236,4 +236,9 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     	}
     	return super.translate(obj, context);
     }
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
 }

@@ -509,6 +509,14 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return new SQLConversionVisitor(this) {
     		
     		@Override
+    		public void visit(Select select) {
+    			if (select.getFrom() == null || select.getFrom().isEmpty()) {
+    				select.setFrom(Arrays.asList((TableReference)new NamedTable(DUAL, null, null)));
+    			}
+    			super.visit(select);
+    		}
+    		
+    		@Override
     		public void visit(Comparison obj) {
     			if (isFixedChar(obj.getLeftExpression())) {
     				if (obj.getRightExpression() instanceof Literal) {
@@ -826,5 +834,10 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
     
 }

@@ -448,5 +448,12 @@ public class TestSQLConversionVisitor {
                         "SELECT PARTS.PART_NAME FROM PARTS WHERE concat(ifnull(PARTS.PART_NAME, ''), 'x') = CASE WHEN PARTS.PART_WEIGHT IS NULL AND PARTS.PART_ID IS NULL THEN NULL ELSE concat(ifnull(PARTS.PART_WEIGHT, ''), ifnull(PARTS.PART_ID, '')) END", //$NON-NLS-1$
                         true); 
     }
+    
+    @Test public void testSelectWithoutFrom() {
+        helpTestVisitor(getTestVDB(),
+                        "select 1", //$NON-NLS-1$
+                        "SELECT 1", //$NON-NLS-1$
+                        true); 
+    }
 
 }

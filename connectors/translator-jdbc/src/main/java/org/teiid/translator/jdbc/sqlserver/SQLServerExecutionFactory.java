@@ -356,5 +356,10 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
 	public boolean useStreamsForLobs() {
 		return true;
 	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
     
 }

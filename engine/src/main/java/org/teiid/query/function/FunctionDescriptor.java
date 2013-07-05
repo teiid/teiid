@@ -58,7 +58,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     private boolean requiresContext;
     private FunctionMethod method;
     private String schema; //TODO: remove me - we need to create a proper schema for udf and system functions
-    private Object metadataID;
     private boolean hasWrappedArgs;
     private boolean calledWithVarArgArrayParam; //TODO: could store this on the function and pass to invoke
     
@@ -180,21 +179,6 @@ public class FunctionDescriptor implements Serializable, Cloneable {
     void setReturnType(Class<?> returnType) {
         this.returnType = returnType;
     }
-
-	public Object getMetadataID() {
-		return this.metadataID;
-	}
-
-	public void setMetadataID(Object metadataID) {
-		this.metadataID = metadataID;
-	}
-	
-	public void checkNotPushdown() throws FunctionExecutionException {
-	    // Check for function we can't evaluate
-	    if(getPushdown() == PushDown.MUST_PUSHDOWN) {
-	         throw new FunctionExecutionException(QueryPlugin.Event.TEIID30341, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30341, getFullName()));
-	    }
-	}
 
 	/**
 	 * Invoke the function described in the function descriptor, using the

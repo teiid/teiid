@@ -70,6 +70,14 @@ public class TestDerbySQLTranslator {
         String output = "SELECT CASE WHEN SmallA.StringNum IS NULL AND SmallA.StringNum IS NULL THEN NULL ELSE {fn concat(coalesce(SmallA.StringNum, ''), coalesce(SmallA.StringNum, ''))} END FROM SmallA";  //$NON-NLS-1$
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
+    }
+    
+    @Test
+    public void testSelectWithNoFrom() throws Exception {
+        String input = "select 1, 2"; //$NON-NLS-1$       
+        String output = "VALUES(1, 2)";  //$NON-NLS-1$
+        
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
     
 }

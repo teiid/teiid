@@ -134,4 +134,9 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
     public NullOrder getDefaultNullOrder() {
     	return NullOrder.UNKNOWN;
     }
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
 }

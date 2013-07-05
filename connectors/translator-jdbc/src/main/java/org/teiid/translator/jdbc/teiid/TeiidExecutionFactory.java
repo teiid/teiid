@@ -273,5 +273,10 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	protected boolean usesDatabaseVersion() {
 		return true;
 	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
     
 }

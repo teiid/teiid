@@ -111,4 +111,9 @@ public class QueryProcessorFactoryImpl implements QueryProcessor.ProcessorFactor
 		return pp;
 	}
 	
+	@Override
+	public CapabilitiesFinder getCapabiltiesFinder() {
+		return finder;
+	}
+	
 }

@@ -374,5 +374,10 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsRowOffset() {
         return true;
-    }    
+    }  
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
 }

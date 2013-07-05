@@ -28,18 +28,25 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.internal.process.PreparedPlan;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.FakeFunctionMetadataSource;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.TestDDLParser;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 import org.teiid.translator.SourceSystemFunctions;
 
 @SuppressWarnings({"nls", "unchecked"})
@@ -76,8 +83,79 @@ public class TestFunctionPushdown {
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 AS c_0, func(g_0.e1) AS c_1 FROM pm1.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1, "a")});
         dataManager.addData("SELECT g_0.e2 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("a")});
+	}
+	
+	@Test public void testSimpleFunctionPushdown() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.fromDDL("create foreign function func (param integer) returns integer; create foreign table g1 (e1 integer)", "x", "y");
+		BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+		bsc.setCapabilitySupport(Capability.SELECT_WITHOUT_FROM, true);
+		bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, false);
+		final DefaultCapabilitiesFinder capFinder = new DefaultCapabilitiesFinder(bsc);
         
-        TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("a")});
+		CommandContext cc = TestProcessor.createCommandContext();
+        cc.setQueryProcessorFactory(new QueryProcessor.ProcessorFactory() {
+			
+			@Override
+			public PreparedPlan getPreparedPlan(String query, String recursionGroup,
+					CommandContext commandContext, QueryMetadataInterface metadata)
+					throws TeiidProcessingException, TeiidComponentException {
+				return null;
+			}
+			
+			@Override
+			public CapabilitiesFinder getCapabiltiesFinder() {
+				return capFinder;
+			}
+			
+			@Override
+			public QueryProcessor createQueryProcessor(String query,
+					String recursionGroup, CommandContext commandContext,
+					Object... params) throws TeiidProcessingException,
+					TeiidComponentException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		});
+        cc.setMetadata(tm);
+		
+		String sql = "select func(1)"; //$NON-NLS-1$
+        
+        ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        HardcodedDataManager dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2)});
+        
+        //ensure that pseudo-correlation works
+        sql = "select func(0) from g1 where func(e1) = 2"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT y.g1.e1 FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        dataManager = new HardcodedDataManager();
+        dataManager.addData("SELECT y.g1.e1 FROM y.g1", new List[] {Arrays.asList(1), Arrays.asList(2)});
+        dataManager.addData("SELECT func(0)", new List[] {Arrays.asList(1)});
+        dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
+        dataManager.addData("SELECT func(2)", new List[] {Arrays.asList(3)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(1)});
+        
+        bsc.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        
+        //ensure that pseudo-correlation works
+        sql = "select case when hasrole('x') then func(0) else 2 end from g1"; //$NON-NLS-1$
+        
+        plan = helpPlan(sql, tm, null, capFinder, 
+                                      new String[] {"SELECT func(0) FROM y.g1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
+        
+        dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT func(0) FROM g1", new List[] {Arrays.asList(1), Arrays.asList(1)});
+        
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(1), Arrays.asList(1)});
 	}
 
 	@Test public void testMustPushdownOverMultipleSourcesWithView() throws Exception {
@@ -97,8 +175,9 @@ public class TestFunctionPushdown {
         HardcodedDataManager dataManager = new HardcodedDataManager();
         dataManager.addData("SELECT g_0.e2 AS c_0 FROM pm2.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1)});
         dataManager.addData("SELECT g_0.e2 AS c_0, func(g_0.e1) AS c_1, g_0.e1 AS c_2 FROM pm1.g1 AS g_0 ORDER BY c_0", new List[] {Arrays.asList(1, "aa", "a"), Arrays.asList(2, "bb", "b")});
-        
-        TestProcessor.helpProcess(plan, dataManager, new List[] {Arrays.asList("aa")});
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList("aa")});
 	}
 	
 	@Test public void testMustPushdownOverMultipleSourcesWithViewDupRemoval() throws Exception {
@@ -160,7 +239,9 @@ public class TestFunctionPushdown {
         //ensure that the source query contains the function schemas
         HardcodedDataManager dm = new HardcodedDataManager(metadata);
         dm.addData("SELECT a.sourcefunc(g_0.Y), b.sourceFunc(g_0.Y) FROM X AS g_0", new List[0]);
-        TestProcessor.helpProcess(plan, dm, new List[0]);
+        CommandContext cc = TestProcessor.createCommandContext();
+        cc.setMetadata(metadata);
+        TestProcessor.helpProcess(plan, cc, dm, new List[0]);
 	}
 	
 	@Test public void testDDLMetadataNameConflict() throws Exception {

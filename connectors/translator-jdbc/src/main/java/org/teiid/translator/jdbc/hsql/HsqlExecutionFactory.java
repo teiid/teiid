@@ -186,4 +186,9 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
+    
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
 }

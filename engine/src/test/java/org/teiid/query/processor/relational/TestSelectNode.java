@@ -162,14 +162,13 @@ public class TestSelectNode {
         	protected Evaluator getEvaluator(Map elementMap) {
         		return new Evaluator(elementMap, getDataManager(), getContext()) {
         			@Override
-        			public Boolean evaluate(CompareCriteria criteria,
-        					List<?> tuple)
+        			public Boolean evaluateTVL(Criteria criteria, List<?> tuple)
         					throws ExpressionEvaluationException,
         					BlockedException, TeiidComponentException {
         				if (i++ == 1) {
                 			throw new QueryProcessor.ExpiredTimeSliceException();
                 		}		
-        				return super.evaluate(criteria, tuple);
+        				return super.evaluateTVL(criteria, tuple);
         			}
         		};
         	}

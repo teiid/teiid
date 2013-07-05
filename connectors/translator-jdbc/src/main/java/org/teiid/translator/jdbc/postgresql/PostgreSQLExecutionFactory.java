@@ -569,5 +569,10 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsStringAgg() {
 		return getVersion().compareTo(NINE_0) >= 0;
 	}
+	
+    @Override
+    public boolean supportsSelectWithoutFrom() {
+    	return true;
+    }
     
 }

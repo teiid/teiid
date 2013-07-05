@@ -42,6 +42,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 import org.teiid.query.util.CommandContext;
 
@@ -61,6 +62,7 @@ public class QueryProcessor implements BatchProducer {
 		PreparedPlan getPreparedPlan(String query, String recursionGroup,
 				CommandContext commandContext, QueryMetadataInterface metadata)
 				throws TeiidProcessingException, TeiidComponentException;
+		CapabilitiesFinder getCapabiltiesFinder();
 	}
 	
     private CommandContext context;
