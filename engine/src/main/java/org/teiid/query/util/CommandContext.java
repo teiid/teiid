@@ -96,6 +96,25 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private DQPWorkContext dqpWorkContext;
 	}
 	
+	private static class LookupKey implements Comparable<LookupKey> {
+		String matTableName;
+		Comparable keyValue;
+		
+		public LookupKey(String matTableName, Object keyValue) {
+			this.matTableName = matTableName;
+			this.keyValue = (Comparable) keyValue;
+		}
+		
+		@Override
+		public int compareTo(LookupKey arg0) {
+			int comp = matTableName.compareTo(arg0.matTableName);
+			if (comp != 0) {
+				return comp;
+			}
+			return keyValue.compareTo(arg0.keyValue);
+		}
+	}
+	
 	private static class GlobalState implements Cloneable {
 	    private WeakReference<RequestWorkItem> processorID;
 	    
@@ -157,7 +176,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 		private AuthorizationValidator authorizationValidator;
 		
-		private Map<String, TupleSource> lookups;
+		private Map<LookupKey, TupleSource> lookups;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -933,19 +952,19 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	public AuthorizationValidator getAuthorizationValidator() {
 		return this.globalState.authorizationValidator;
 	}
-
-	public TupleSource getCodeLookup(String matTableName) {
+	
+	public TupleSource getCodeLookup(String matTableName, Object keyValue) {
 		if (this.globalState.lookups != null) {
-			return this.globalState.lookups.remove(matTableName);
+			return this.globalState.lookups.remove(new LookupKey(matTableName, keyValue));
 		}
 		return null;
 	}
 
-	public void putCodeLookup(String matTableName, TupleSource ts) {
+	public void putCodeLookup(String matTableName, Object keyValue, TupleSource ts) {
 		if (this.globalState.lookups == null) {
-			this.globalState.lookups = new HashMap<String, TupleSource>();
+			this.globalState.lookups = new TreeMap<LookupKey, TupleSource>();
 		}
-		this.globalState.lookups.put(matTableName, ts);
+		this.globalState.lookups.put(new LookupKey(matTableName, keyValue), ts);
 	}
 	
 	
