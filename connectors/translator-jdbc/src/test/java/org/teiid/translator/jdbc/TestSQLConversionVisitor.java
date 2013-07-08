@@ -442,6 +442,15 @@ public class TestSQLConversionVisitor {
             output, TRANSLATOR);
     }
     
+    @Test public void testVarbinary() throws Exception {
+    	String input = "select X'AB' FROM parts"; //$NON-NLS-1$
+        String output = "SELECT X'AB' FROM PARTS"; //$NON-NLS-1$
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.PARTS_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
     @Test public void testConcat2() {
         helpTestVisitor(getTestVDB(),
                         "select part_name from parts where concat2(part_name, 'x') = concat2(part_weight, part_id)", //$NON-NLS-1$
