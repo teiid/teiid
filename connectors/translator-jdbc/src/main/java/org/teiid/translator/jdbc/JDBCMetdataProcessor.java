@@ -73,7 +73,7 @@ public class JDBCMetdataProcessor {
 	private boolean importKeys;
 	private boolean importIndexes;
 	private String procedureNamePattern;
-	private boolean useFullSchemaName = true;	
+	protected boolean useFullSchemaName = true;	
 	private String[] tableTypes;
 	private String tableNamePattern;
 	private String catalog;
@@ -225,8 +225,12 @@ public class JDBCMetdataProcessor {
 			String tableName = tables.getString(3);
 			String remarks = tables.getString(5);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
+			if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
+				excludedTables++;
+				continue;
+			}
 			Table table = addTable(metadataFactory, tableCatalog, tableSchema,
-					tableName, remarks, fullName);
+					tableName, remarks, fullName, tables);
 			if (table == null) {
 				continue;
 			}
@@ -240,13 +244,29 @@ public class JDBCMetdataProcessor {
 		return tableMap;
 	}
 
+	/**
+	 * @throws SQLException  
+	 */
+	protected Table addTable(MetadataFactory metadataFactory,
+			String tableCatalog, String tableSchema, String tableName,
+			String remarks, String fullName, ResultSet tables) throws SQLException {
+		return addTable(metadataFactory, tableCatalog, tableSchema, tableName,
+				remarks, fullName);
+	}
+
+	/**
+	 * 
+	 * @param metadataFactory
+	 * @param tableCatalog
+	 * @param tableSchema
+	 * @param tableName
+	 * @param remarks
+	 * @param fullName
+	 * @return
+	 */
 	protected Table addTable(MetadataFactory metadataFactory,
 			String tableCatalog, String tableSchema, String tableName,
 			String remarks, String fullName) {
-		if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
-			excludedTables++;
-			return null;
-		}
 		Table table = metadataFactory.addTable(useFullSchemaName?fullName:tableName);
 		table.setNameInSource(getFullyQualifiedName(tableCatalog, tableSchema, tableName, true));
 		table.setSupportsUpdate(true);
@@ -536,7 +556,7 @@ public class JDBCMetdataProcessor {
 		return getFullyQualifiedName(catalogName, schemaName, objectName, false);
 	}
 	
-	private String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
+	protected String getFullyQualifiedName(String catalogName, String schemaName, String objectName, boolean quoted) {
 		String fullName = (quoted?quoteName(objectName):objectName);
 		if (useQualifiedName) {
 			if (schemaName != null && schemaName.length() > 0) {

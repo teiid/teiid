@@ -32,14 +32,13 @@ import org.teiid.dqp.internal.datamgr.TestInsertImpl;
 import org.teiid.dqp.internal.datamgr.TestProcedureImpl;
 import org.teiid.dqp.internal.datamgr.TestQueryImpl;
 import org.teiid.dqp.internal.datamgr.TestUpdateImpl;
-import org.teiid.dqp.internal.datamgr.TstLanguageBridgeFactory;
 import org.teiid.language.LanguageObject;
-import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
 /**
  */
+@SuppressWarnings("nls")
 public class TestSQLConversionVisitor {
 
     public static final ExecutionContext context = new ExecutionContextImpl("VDB",  //$NON-NLS-1$
@@ -79,8 +78,6 @@ public class TestSQLConversionVisitor {
 		}
     }
     
-    public static final RuntimeMetadata metadata = TstLanguageBridgeFactory.metadataFactory;
-
     private String getStringWithContext(LanguageObject obj) throws TranslatorException {
     	JDBCExecutionFactory env = new JDBCExecutionFactory();
     	env.setUseCommentsInSourceQuery(true);
@@ -454,6 +451,20 @@ public class TestSQLConversionVisitor {
                         "select 1", //$NON-NLS-1$
                         "SELECT 1", //$NON-NLS-1$
                         true); 
+    }
+    
+    @Test public void testFunctionNativeQuery() {
+    	String ddl = "create foreign table t (x integer, y integer); create foreign function bsl (arg1 integer, arg2 integer) returns integer OPTIONS (\"teiid_rel:native-query\" '$1 << $2');";
+    	
+        helpTestVisitor(ddl,
+                        "select bsl(x, y) from t", //$NON-NLS-1$
+                        "SELECT t.x << t.y FROM t", //$NON-NLS-1$
+                        true); 
+        //make sure we don't treat arguments as bind values
+        helpTestVisitor(ddl,
+                "select bsl(x, y) from t where x = 1 + 1", //$NON-NLS-1$
+                "SELECT t.x << t.y FROM t WHERE t.x = ?", //$NON-NLS-1$
+                true);
     }
 
 }

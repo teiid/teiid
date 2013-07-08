@@ -34,11 +34,11 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
 	}
 	
     private Direction direction;
-    private Literal argumentValue;
+    private Expression argumentValue;
     private ProcedureParameter metadataObject;
     private Class<?> type;
     
-    public Argument(Direction direction, Literal value, Class<?> type, ProcedureParameter metadataObject) {
+    public Argument(Direction direction, Expression value, Class<?> type, ProcedureParameter metadataObject) {
         this.direction = direction;
         this.argumentValue = value;
     	this.metadataObject = metadataObject;
@@ -54,7 +54,7 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
      * @return the value or null if this is an out parameter
      */
     public Literal getArgumentValue() {
-        return this.argumentValue;
+        return (Literal)this.argumentValue;
     }
     
     public Class<?> getType() {
@@ -85,5 +85,13 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
     public void setMetadataObject(ProcedureParameter metadataObject) {
 		this.metadataObject = metadataObject;
 	}
+    
+    public Expression getExpression() {
+    	return this.argumentValue;
+    }
+    
+    public void setExpression(Expression ex) {
+    	this.argumentValue = ex;
+    }
     
 }

@@ -25,6 +25,7 @@ package org.teiid.cdk.api;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -67,6 +68,7 @@ public class TranslationUtility {
 
 	private void initWrapper(QueryMetadataInterface acutalMetadata) {
 		functionLibrary = acutalMetadata.getFunctionLibrary();
+		this.functions.addAll(Arrays.asList(this.functionLibrary.getUserFunctions()));
 		metadata = new BasicQueryMetadataWrapper(acutalMetadata) {
         	@Override
         	public FunctionLibrary getFunctionLibrary() {
@@ -115,6 +117,9 @@ public class TranslationUtility {
     private List<FunctionTree> functions = new ArrayList<FunctionTree>();
     
     public void addUDF(String schema, Collection<FunctionMethod> methods) {
+    	if (methods == null || methods.isEmpty()) {
+    		return;
+    	}
     	this.functions.add(new FunctionTree(schema, new UDFSource(methods)));
 		SystemFunctionManager sfm = new SystemFunctionManager();
 		functionLibrary = new FunctionLibrary(sfm.getSystemFunctions(), this.functions.toArray(new FunctionTree[this.functions.size()]));

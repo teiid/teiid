@@ -43,6 +43,7 @@ import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.SetQuery.Operation;
 import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.metadata.Procedure;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TypeFacility;
@@ -192,6 +193,22 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
          */
         this.preparedValues = obj.getArguments();
         buffer.append(generateSqlForStoredProcedure(obj));
+    }
+    
+    public void visit(Function obj) {
+    	FunctionMethod f = obj.getMetadataObject();
+    	if (f != null) {
+	    	String nativeQuery = f.getProperty(TEIID_NATIVE_QUERY, false);
+	    	if (nativeQuery != null) {
+	    		List<Argument> args = new ArrayList<Argument>(obj.getParameters().size());
+	    		for (Expression p : obj.getParameters()) {
+	    			args.add(new Argument(Direction.IN, p, p.getType(), null));
+	    		}
+	    		parseNativeQueryParts(nativeQuery, args, buffer, this);
+	    		return;
+	    	}
+    	}
+    	super.visit(obj);
     }
 
 	@Override
@@ -388,7 +405,7 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 
 	@Override
 	public void substitute(Argument arg, StringBuilder builder, int index) {
-		if (this.prepared) {
+		if (this.prepared && arg.getExpression() instanceof Literal) {
 			buffer.append('?');
 			this.preparedValues.add(arg);
 		} else {

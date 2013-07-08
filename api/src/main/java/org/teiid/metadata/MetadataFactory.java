@@ -455,6 +455,20 @@ public class MetadataFactory implements Serializable {
 	}
 	
 	/**
+	 * Add a function with the given name to the model.  
+	 * @param name
+	 * @return
+	 * @throws MetadataException 
+	 */
+	public FunctionMethod addFunction(String name, String returnType, String... paramTypes) {
+		FunctionMethod function = FunctionMethod.createFunctionMethod(name, null, null, returnType, paramTypes);
+		function.setPushdown(PushDown.MUST_PUSHDOWN);
+		setUUID(function);
+		schema.addFunction(function);
+		return function;
+	}
+	
+	/**
 	 * Adds a non-pushdown function based upon the given {@link Method}.
 	 * @param name
 	 * @param method

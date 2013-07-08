@@ -487,6 +487,9 @@ public class FunctionMethod extends AbstractMetadataRecord {
 		if (function.getInvocationMethod() == null) {
 			function.setInvocationMethod(javaMethod);
 		}
+		if (!procedureRecord.getParameters().isEmpty()) {
+			function.setProperties(procedureRecord.getProperties());
+		}
 		boolean aggregate = Boolean.valueOf(procedureRecord.getProperty(AbstractMetadataRecord.RELATIONAL_URI + "aggregate", true)); //$NON-NLS-1$
 		if (deterministic != null) {
 			function.setDeterminism(Boolean.valueOf(deterministic)?Determinism.DETERMINISTIC:Determinism.NONDETERMINISTIC);

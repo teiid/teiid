@@ -31,8 +31,6 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
-import junit.framework.Assert;
-
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
@@ -41,6 +39,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 
@@ -61,7 +60,11 @@ public class TranslationHelper {
     	} else if (BQT_VDB.equals(vdbFileName)){
     		util = FakeTranslationFactory.getInstance().getBQTTranslationUtility();
     	} else {
-    		Assert.fail("unknown vdb"); //$NON-NLS-1$
+    		try {
+				util = new TranslationUtility(RealMetadataFactory.fromDDL(vdbFileName, "vdb", "test"));
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
     	}
     	
     	if (udf != null) {
