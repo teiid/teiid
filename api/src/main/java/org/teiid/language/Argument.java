@@ -50,8 +50,9 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
     }
 
     /**
-     * Get the argument value
-     * @return the value or null if this is an out parameter
+     * Get the argument as a {@link Literal} value.
+     * Will throw a {@link ClassCastException} if the {@link Expression} is not a {@link Literal}.
+     * @return the value or null if this is an non-in parameter
      */
     public Literal getArgumentValue() {
         return (Literal)this.argumentValue;
