@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.teiid.metadata.ForeignKey;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -156,6 +157,21 @@ public class TestJoinPushdownRestrictions {
 
         TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(),  
         		new String[] {"SELECT g_0.e2 FROM pm1.g2 AS g_0", "SELECT g_0.e2 FROM pm1.g1 AS g_0"}, capFinder, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
+	}
+	
+	@Test public void testOuterRestrictionMultiLevel() throws Exception {
+		String ddl = "create foreign table g1 (e1 integer primary key, e2 integer); " +
+				"create foreign table g2 (e1 integer primary key, e2 integer, FOREIGN KEY (e2) REFERENCES g1 (e1));" +
+				"create foreign table g3 (e1 integer primary key, e2 integer, FOREIGN KEY (e2) REFERENCES g2 (e1));";
+		
+		String sql = "select g1.e2, g2.e2 from g1, g2, g3 where g1.e1 = g2.e2 and g2.e1 = g3.e2"; //$NON-NLS-1$
+
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_FROM_JOIN_INNER, false);
+        caps.setSourceProperty(Capability.JOIN_CRITERIA_ALLOWED, SupportedJoinCriteria.KEY);
+
+        TestOptimizer.helpPlan(sql, RealMetadataFactory.fromDDL(ddl, "x", "y"),  
+        		new String[] {"SELECT g_1.e2, g_2.e2 FROM y.g3 AS g_0 LEFT OUTER JOIN (y.g1 AS g_1 LEFT OUTER JOIN y.g2 AS g_2 ON g_1.e1 = g_2.e2) ON g_2.e1 = g_0.e2 WHERE g_2.e2 IS NOT NULL"}, new DefaultCapabilitiesFinder(caps), TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$   
 	}
 	
 	@Test public void testOuterPreservation() throws Exception {

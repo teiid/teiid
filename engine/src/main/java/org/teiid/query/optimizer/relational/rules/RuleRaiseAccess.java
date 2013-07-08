@@ -107,7 +107,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             {
                 modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning, record, context);
                 if(modelID != null) {
-                    raiseAccessOverJoin(parentNode, accessNode, modelID, true);                    
+                    raiseAccessOverJoin(parentNode, accessNode, modelID, capFinder, metadata, true);                    
                     return rootNode;
                 }
                 return null;
@@ -658,13 +658,6 @@ public final class RuleRaiseAccess implements OptimizerRule {
     				}
         		}
 				
-        		/*
-        		 * Key joins must be left linear
-        		 */
-        		if (sjc == SupportedJoinCriteria.KEY && children.get(0).getGroups().size() != 1) {
-        			return null;
-        		}
-        		
 				if(crits != null && !crits.isEmpty()) {
 					for (Criteria crit : crits) {
 				        if (!isSupportedJoinCriteria(sjc, crit, accessModelID, metadata, capFinder, record)) {
@@ -681,9 +674,21 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				        }
 					}
 					if (sjc == SupportedJoinCriteria.KEY) {
+						PlanNode left = children.get(0);
+						PlanNode right = children.get(1);
+        				if (left.getGroups().size() != 1) {
+        					if (right.getGroups().size() != 1) {
+        						return null; //require the simple case of 1 side being a single group
+        					}
+        					if (type != JoinType.JOIN_INNER) {
+        						return null;
+        					}
+        					left = children.get(1);
+        					right = children.get(0);
+        				}
 						LinkedList<Expression> leftExpressions = new LinkedList<Expression>();
 						LinkedList<Expression> rightExpressions = new LinkedList<Expression>();
-						RuleChooseJoinStrategy.separateCriteria(children.get(0).getGroups(), children.get(1).getGroups(), leftExpressions, rightExpressions, crits, new LinkedList<Criteria>());
+						RuleChooseJoinStrategy.separateCriteria(left.getGroups(), right.getGroups(), leftExpressions, rightExpressions, crits, new LinkedList<Criteria>());
 						ArrayList<Object> leftIds = new ArrayList<Object>(leftExpressions.size());
 						ArrayList<Object> rightIds = new ArrayList<Object>(rightExpressions.size());
 						for (Expression expr : leftExpressions) {
@@ -706,7 +711,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 						if (rightGroup == null) {
 							return null;
 						}
-						if (!matchesForeignKey(metadata, leftIds, rightIds,	children.get(0).getGroups().iterator().next(), true) 
+						if (!matchesForeignKey(metadata, leftIds, rightIds,	left.getGroups().iterator().next(), true) 
 								&& !matchesForeignKey(metadata, rightIds, leftIds, rightGroup, true)) {
 							return null;
 						}
@@ -828,9 +833,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		return false;
 	}
     
-    static PlanNode raiseAccessOverJoin(PlanNode joinNode, PlanNode accessNode, Object modelID, boolean insert) {
+    static PlanNode raiseAccessOverJoin(PlanNode joinNode, PlanNode accessNode, Object modelID, CapabilitiesFinder capFinder, QueryMetadataInterface metadata, boolean insert) 
+    		throws QueryMetadataException, TeiidComponentException {
 		PlanNode leftAccess = joinNode.getFirstChild();
 		PlanNode rightAccess = joinNode.getLastChild();
+		boolean switchChildren = false;
+		if (leftAccess.getGroups().size() != 1 && joinNode.getProperty(Info.JOIN_TYPE) == JoinType.JOIN_INNER && CapabilitiesUtil.getSupportedJoinCriteria(modelID, metadata, capFinder) == SupportedJoinCriteria.KEY) {
+			switchChildren = true;
+		}
 		
 		PlanNode other = leftAccess == accessNode?rightAccess:leftAccess;
 
@@ -861,6 +871,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
             joinNode.addAsParent(accessNode);
         } else {
             accessNode.addFirstChild(joinNode);
+        }
+        
+        if (switchChildren) {
+        	JoinUtil.swapJoinChildren(joinNode);
         }
         
         return accessNode;
