@@ -44,6 +44,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	protected LinkedHashMap<String, Object> columnValues = new LinkedHashMap<String, Object>();
 	private DB mongoDB;
+	private BasicDBObject pull;
 
 	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata, DB mongoDB) {
 		super(executionFactory, metadata);
@@ -120,7 +121,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
         }
 	}
 
-	public BasicDBObject getInsert(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
+	public BasicDBObject getInsert(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) {
 		IDRef pk = null;
 
 		BasicDBObject insert = new BasicDBObject();
@@ -220,5 +221,16 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			}
 		}
 		return update;
-	}	
+	}
+
+	public DBObject getPullQuery() {
+		if (this.match == null) {
+			return null;
+		}
+		if (this.pull == null) {
+			this.pull =  new BasicDBObject(this.mongoDoc.getTable().getName(), this.onGoingPullCriteria.pop());
+		}
+		return this.pull;
+
+	}
 }

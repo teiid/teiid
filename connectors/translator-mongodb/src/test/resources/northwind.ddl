@@ -157,25 +157,21 @@ CREATE FOREIGN TABLE T3 (
     e3 integer
 ) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
-CREATE FOREIGN TABLE address (
-  address_id    INTEGER NOT NULL PRIMARY KEY,
-  address       VARCHAR(50) NOT NULL,
-  city_id       INTEGER NOT NULL,
-  postal_code   VARCHAR(10),
-  phone         VARCHAR(20) NOT NULL,
-  FOREIGN KEY (city_id) REFERENCES city(city_id)
-) OPTIONS (UPDATABLE TRUE);
+CREATE FOREIGN TABLE payment (
+    payment_id integer NOT NULL PRIMARY KEY,
+    rental_id integer,
+    amount decimal(9,2),
+    FOREIGN KEY (rental_id) REFERENCES rental (rental_id)
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'rental');
 
+CREATE FOREIGN TABLE rental (
+    rental_id integer PRIMARY KEY,
+    amount decimal(9,2) NOT NULL,
+    customer_id integer,
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'customer');
 
-CREATE FOREIGN TABLE city (
-  city_id       INTEGER NOT NULL PRIMARY KEY,
-  city          VARCHAR(50) NOT NULL,
-  country_id    INTEGER NOT NULL,
-  FOREIGN KEY (country_id) REFERENCES country(country_id)
-) OPTIONS (UPDATABLE TRUE, "teiid_mongo:MERGE" 'address');
-
-
-CREATE FOREIGN TABLE country (
-  country_id    INTEGER NOT NULL  PRIMARY KEY,
-  country       VARCHAR(50) NOT NULL
-) OPTIONS (UPDATABLE TRUE, "teiid_mongo:MERGE" 'city');
+CREATE FOREIGN TABLE customer (
+    customer_id integer PRIMARY KEY,
+    name varchar(25)
+) OPTIONS(UPDATABLE 'TRUE');

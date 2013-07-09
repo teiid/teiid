@@ -79,8 +79,8 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			}
 
 			if (!this.visitor.unwindTables.isEmpty()) {
-				for (MutableDBRef ref:this.visitor.unwindTables) {
-					buildAggregate(ops, "$unwind", "$"+ref.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+				for (String ref:this.visitor.unwindTables) {
+					buildAggregate(ops, "$unwind", "$"+ref); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 			buildAggregate(ops, "$match", this.visitor.match); //$NON-NLS-1$
@@ -102,7 +102,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 	private void buildAggregate(List<DBObject> query, String type, Object object) {
 		if (object != null) {
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, type+":"+object.toString()); //$NON-NLS-1$
+			LogManager.logInfo(LogConstants.CTX_CONNECTOR, type+":"+object.toString()); //$NON-NLS-1$
 			query.add(new BasicDBObject(type, object));
 		}
 	}

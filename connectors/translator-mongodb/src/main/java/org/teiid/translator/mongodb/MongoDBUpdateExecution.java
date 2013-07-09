@@ -90,13 +90,13 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 
 			// check if this document need to be embedded in any other document
 			if (mongoDoc.isMerged()) {
-				DBObject match = mongoDoc.getMergeDocument(this.mongoDB);
-				BasicDBObject embeddedDoc = new BasicDBObject(mongoDoc.getTable().getName(), this.visitor.getInsert(this.mongoDB, embeddedDocuments));
-				if (mongoDoc.getMergeAssosiation() == Assosiation.MANY) {
-					result = collection.update(match, new BasicDBObject("$push", embeddedDoc), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+				Object[] mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getInsert(this.mongoDB, embeddedDocuments), false);
+
+				if (mergeInfo[2] == Assosiation.MANY) {
+					result = collection.update((DBObject)mergeInfo[0], new BasicDBObject("$push", mergeInfo[1]), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 				else {
-					result = collection.update(match, new BasicDBObject("$set", embeddedDoc), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+					result = collection.update((DBObject)mergeInfo[0], new BasicDBObject("$set", mergeInfo[1]), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 				}
 			}
 			else {
@@ -112,7 +112,17 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 				match = this.visitor.match;
 			}
 
-			result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+			if (mongoDoc.isMerged()) {
+				Object[] mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, this.visitor.getUpdate(this.mongoDB, embeddedDocuments), false);
+				boolean nested = (Boolean)mergeInfo[3];
+				if (nested) {
+					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
+				}
+				result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+			}
+			else {
+				result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+			}
 
 			// if the update is for the "embeddable" table, then since it is copied to other tables
 			// those references need to be updated. I know this is not atomic operation, but not sure
@@ -145,7 +155,18 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 					}
 				}
 			}
-			result = collection.remove(match, WriteConcern.ACKNOWLEDGED);
+
+			if (mongoDoc.isMerged()) {
+				Object[] mergeInfo = mongoDoc.getMergeParentCriteria(this.mongoDB, null, null, new BasicDBObject(), false);
+				Boolean nested = (Boolean)mergeInfo[3];
+				if (nested) {
+					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
+				}
+				result = collection.update(match, new BasicDBObject("$pull", this.visitor.getPullQuery()), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+			}
+			else {
+				result = collection.remove(match, WriteConcern.ACKNOWLEDGED);
+			}
 		}
 
 		if (result != null) {
@@ -211,7 +232,7 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 	private DBCollection getCollection(String name) throws TranslatorException {
 		return getCollection(this.metadata.getTable(this.visitor.mongoDoc.getTable().getParent().getName(), name));
 	}
-	private DBCollection getCollection(Table table) throws TranslatorException {
+	private DBCollection getCollection(Table table) {
 		DBCollection collection;
 		if (!this.mongoDB.collectionExists(table.getName())) {
 			collection = this.mongoDB.createCollection(table.getName(), null);

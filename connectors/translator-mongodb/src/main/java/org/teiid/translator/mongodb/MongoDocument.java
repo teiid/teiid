@@ -37,7 +37,9 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
@@ -68,14 +70,19 @@ class MongoDocument {
 
 	public Table getTargetTable() throws TranslatorException {
 		if (isMerged()) {
-			return getMergeTable();
+			Table merge = getMergeTable();
+			MongoDocument mergeDoc = getDocument(merge.getName());
+			if (mergeDoc.isMerged()) {
+				return mergeDoc.getTargetTable();
+			}
+			return merge;
 		}
 		return getTable();
 	}
 
 	public MongoDocument getTargetDocument() throws TranslatorException {
 		if (isMerged()) {
-			return getMergeDocument();
+			return getMergeDocument().getTargetDocument();
 		}
 		return this;
 	}
@@ -298,23 +305,52 @@ class MongoDocument {
 			if (ref.getName().equals(docName)) {
 				DBRef dbRef = ref.getDBRef(mongoDB, false);
 				if (dbRef != null) {
-					return dbRef.fetch();
+					return mongoDB.getCollection(dbRef.getRef()).findOne(new BasicDBObject("_id", dbRef.getId())); //$NON-NLS-1$
 				}
 			}
 		}
 		return null;
 	}
 
-	public DBObject getMergeDocument(DB mongo) throws TranslatorException {
-		DBRef dbRef = this.mergeKey.getDBRef(mongo, true);
-		if (dbRef == null) {
-			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18015, this.mergeKey.getParentTable(), this.mergeKey.getId(), this.mergeKey.getEmbeddedTable()));
+	// for nested merge, format is
+	// > db.customer.update({"_id":1, "rental._id":2}, {$push:{"rental.$.payment":{"foo":"bar"}}})
+	public Object[] getMergeParentCriteria(DB mongo, DBObject match, String embedTable, BasicDBObject insert, boolean nested) throws TranslatorException {
+		MongoDocument mergeDocument = getDocument(this.mergeKey.getParentTable());
+
+		if (mergeDocument.isMerged()) {
+			// this is the case of nested merge
+			if (match == null) {
+				match = new BasicDBObject(this.mergeKey.getParentTable()+"._id", this.mergeKey.getDBRef(mongo, true).getId()); //$NON-NLS-1$
+				embedTable = "$"; //$NON-NLS-1$
+			}
+			else {
+				DBCollection collection = mongo.getCollection(this.mergeKey.getParentTable());
+				DBObject result = collection.findOne(match);
+				match = new BasicDBObject(this.mergeKey.getParentTable()+"._id", result.get("_id")); //$NON-NLS-1$ //$NON-NLS-2$
+			}
+			return mergeDocument.getMergeParentCriteria(mongo, match, embedTable+"."+getTable().getName(), insert, true); //$NON-NLS-1$
 		}
-		DBObject match = dbRef.fetch();
+
 		if (match == null) {
+			DBRef dbRef = this.mergeKey.getDBRef(mongo, true);
+			if (dbRef == null) {
+				throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18015, this.mergeKey.getParentTable(), this.mergeKey.getId(), this.mergeKey.getEmbeddedTable()));
+			}
+			match = new BasicDBObject("_id", dbRef.getId()); //$NON-NLS-1$
+		}
+
+		DBCollection collection = mongo.getCollection(this.mergeKey.getParentTable());
+		DBObject result = collection.findOne(match);
+		if (result == null) {
 			throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18006, this.mergeKey.getParentTable(), this.mergeKey.getId(), this.mergeKey.getEmbeddedTable()));
 		}
-		return match;
+		((BasicDBObject)match).append("_id", result.get("_id")); //$NON-NLS-1$ //$NON-NLS-2$
+
+		String nestedKey = getTable().getName();
+		if (embedTable != null) {
+			nestedKey = getTable().getName()+"."+embedTable; //$NON-NLS-1$
+		}
+		return new Object[] {match, new BasicDBObject(nestedKey, insert), getMergeAssosiation(), nested};
 	}
 
 	/**

@@ -255,4 +255,21 @@ public class TestMongoDBQueryExecution {
 
 	    Mockito.verify(dbCollection).aggregate(new BasicDBObject("$project", result));
     }
+
+    @Test
+    public void testSelectNestedMerge()  throws Exception {
+    	String query = "select * from payment";
+
+		DBCollection dbCollection = helpExecute(query, new String[]{"customer"}, 3);
+
+	    BasicDBObject result = new BasicDBObject();
+	    result.append( "_m0","$rental.payment._id");
+	    result.append( "_m1","$rental.payment.rental_id");
+	    result.append( "_m2","$rental.payment.amount");
+
+	    Mockito.verify(dbCollection).aggregate(
+				new BasicDBObject("$unwind","$rental"),
+				new BasicDBObject("$unwind","$rental.payment"),
+				new BasicDBObject("$project", result));
+    }
 }
