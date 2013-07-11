@@ -102,7 +102,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 	private void buildAggregate(List<DBObject> query, String type, Object object) {
 		if (object != null) {
-			LogManager.logInfo(LogConstants.CTX_CONNECTOR, type+":"+object.toString()); //$NON-NLS-1$
+			LogManager.logDetail(LogConstants.CTX_CONNECTOR, type+":"+object.toString()); //$NON-NLS-1$
 			query.add(new BasicDBObject(type, object));
 		}
 	}
