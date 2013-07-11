@@ -29,7 +29,7 @@ import org.teiid.translator.TranslatorException;
 import com.mongodb.DB;
 import com.mongodb.DBRef;
 
-public class MutableDBRef {
+public class MutableDBRef implements Cloneable {
 	enum Assosiation {ONE, MANY};
 
 	private String parentTable;
@@ -40,11 +40,19 @@ public class MutableDBRef {
 	private String embeddedTable;
 	private Assosiation assosiation;
 	private String name;
+	private String idReference;
+	private String referenceName;
 
-	public String getRefName() {
-		if (this.columns.size() == 1) {
-			return this.columns.get(0);
-		}
+	public String getReferenceName() {
+		// this is name of the reference key in the document that the embedded document represents.
+		return this.referenceName;
+	}
+
+	public void setReferenceName(String name) {
+		this.referenceName = name;
+	}
+
+	public String getName() {
 		return this.name;
 	}
 
@@ -53,7 +61,13 @@ public class MutableDBRef {
 	}
 
 	public DBRef getDBRef(DB db, boolean push) {
-		return new DBRef(db, push?this.parentTable:this.embeddedTable, this.id.getValue());
+		if (this.id != null) {
+			if (this.idReference != null) {
+				return new DBRef(db, push?this.parentTable:this.embeddedTable, new DBRef(db, this.idReference, this.id.getValue()));
+			}
+			return new DBRef(db, push?this.parentTable:this.embeddedTable, this.id.getValue());
+		}
+		return null;
 	}
 
 	public String getParentTable() {
@@ -113,6 +127,14 @@ public class MutableDBRef {
 		this.columns = new ArrayList<String>(columns);
 	}
 
+	public String getIdReference() {
+		return this.idReference;
+	}
+
+	public void setIdReference(String idReference) {
+		this.idReference = idReference;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -120,5 +142,22 @@ public class MutableDBRef {
 		sb.append(" id:").append(this.id); //$NON-NLS-1$
 		sb.append(" EmbeddedTable:").append(this.embeddedTable); //$NON-NLS-1$
 		return sb.toString();
+	}
+
+	@Override
+	public MutableDBRef clone() {
+		MutableDBRef clone = new MutableDBRef();
+		clone.parentTable = this.parentTable;
+		if (this.id != null) {
+			clone.id = this.id.clone();
+		}
+		clone.referenceColumns = new ArrayList(this.referenceColumns);
+		clone.columns = new ArrayList<String>(this.columns);
+		clone.embeddedTable = this.embeddedTable;
+		clone.assosiation = this.assosiation;
+		clone.name = this.name;
+		clone.idReference = this.idReference;
+		clone.referenceName = this.referenceName;
+		return clone;
 	}
 }

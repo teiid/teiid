@@ -21,13 +21,11 @@
  */
 package org.teiid.translator.mongodb;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Condition;
 import org.teiid.language.Delete;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
@@ -36,10 +34,10 @@ import org.teiid.language.Literal;
 import org.teiid.language.SetClause;
 import org.teiid.language.Update;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
@@ -48,6 +46,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	protected LinkedHashMap<String, Object> columnValues = new LinkedHashMap<String, Object>();
 	private DB mongoDB;
+	private BasicDBObject pull;
+	private Condition condition;
 
 	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata, DB mongoDB) {
 		super(executionFactory, metadata);
@@ -65,14 +65,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			for (int i = 0; i < columns.size(); i++) {
 				String colName = getColumnName(columns.get(i));
 				Expression expr = values.get(i);
-				resolveExpressionValue(colName, expr);
+				resolveExpressionValue(obj.getTable().getName(), colName, expr);
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
 	}
 
-	private void resolveExpressionValue(String colName, Expression expr) throws TranslatorException {
+	private void resolveExpressionValue(String tableName, String colName, Expression expr) throws TranslatorException {
 		Object value = null;
 		if (expr instanceof Literal) {
 			value = this.executionFactory.convertToMongoType(((Literal) expr).getValue(), this.mongoDB, colName);
@@ -83,35 +83,18 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 		this.columnValues.put(colName, value);
 
-		// if this FK column, populate
-		Iterator<Entry<List<String>, MutableDBRef>> it = this.foreignKeys.entrySet().iterator();
-	    while (it.hasNext()) {
-	        Map.Entry<List<String>, MutableDBRef> pairs = it.next();
-	        List<String> keys = pairs.getKey();
-	        MutableDBRef ref = pairs.getValue();
-	        if (keys.contains(colName)) {
-	        	ref.setId(colName, value);
-	        	this.columnValues.put(colName, ref);
-	        }
-	    }
+		// Update he mongo document to keep track the reference values.
+		this.mongoDoc.updateReferenceColumnValue(tableName, colName, value);
 
-		// parent table selection query.
-		if (this.pushKey != null && this.pushKey.getReferenceColumns().contains(colName)) {
-			this.pushKey.setId(colName, value);
-		}
-
-		// child table selection query
-		if (!this.pullKeys.isEmpty()) {
-			for (MutableDBRef ref:this.pullKeys) {
-				if (ref.getColumns().contains(colName)) {
-					ref.setId(colName, value);
-				}
-			}
+		// if this FK column, replace with reference rather than simple key value
+		if (this.mongoDoc.isPartOfForeignKey(colName)) {
+			this.columnValues.put(colName, this.mongoDoc.getFKReference(colName));
 		}
 	}
 
 	@Override
 	public void visit(Update obj) {
+		this.condition = obj.getWhere();
         append(obj.getTable());
 
         List<SetClause> changes = obj.getChanges();
@@ -119,7 +102,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			for (SetClause clause:changes) {
 				String colName = getColumnName(clause.getSymbol());
 				Expression expr = clause.getValue();
-				resolveExpressionValue(colName, expr);
+				resolveExpressionValue(obj.getTable().getName(), colName, expr);
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
@@ -134,6 +117,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	@Override
 	public void visit(Delete obj) {
+		this.condition = obj.getWhere();
 		append(obj.getTable());
         append(obj.getWhere());
 
@@ -142,22 +126,18 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
         }
 	}
 
-	public BasicDBObject getInsert(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) throws TranslatorException {
+	public BasicDBObject getInsert(DB db, LinkedHashMap<String, DBObject> embeddedDocuments) {
 		IDRef pk = null;
+
 		BasicDBObject insert = new BasicDBObject();
 		for (String key:this.columnValues.keySet()) {
 			Object obj = this.columnValues.get(key);
-
-			Table targetTable = this.collectionTable;
-			if (this.pushKey != null) {
-				targetTable = this.metadata.getTable(targetTable.getParent().getName(), this.pushKey.getEmbeddedTable());
-			}
 
 			if (obj instanceof MutableDBRef) {
 				obj =  ((MutableDBRef)obj).getDBRef(db, true);
 			}
 
-			if (isPartOfPrimaryKey(targetTable, key)) {
+			if (this.mongoDoc.isPartOfPrimaryKey(key)) {
 				if (pk == null) {
 					pk = new IDRef();
 				}
@@ -172,13 +152,12 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			insert.append("_id", pk.getValue()); //$NON-NLS-1$
 		}
 
-		if (this.pullKeys != null) {
-			for (MutableDBRef ref: this.pullKeys) {
-				DBObject embedDoc = embeddedDocuments.get(ref.getEmbeddedTable());
-				if (embedDoc == null) {
-					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18008, ref.getEmbeddedTable()));
+		if (this.mongoDoc.hasEmbeddedDocuments()) {
+			for (String docName:this.mongoDoc.getEmbeddedDocumentNames()) {
+				DBObject embedDoc = embeddedDocuments.get(docName);
+				if (embedDoc != null) {
+					insert.append(docName, embedDoc);
 				}
-				insert.append(ref.getEmbeddedTable(), embedDoc);
 			}
 		}
 		return insert;
@@ -188,49 +167,52 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		BasicDBObject update = new BasicDBObject();
 
 		String embeddedDocumentName = null;
-		if (this.pushKey != null) {
-			embeddedDocumentName = this.pushKey.getEmbeddedTable();
+		if (this.mongoDoc.isMerged()) {
+			embeddedDocumentName = this.mongoDoc.getTable().getName();
 		}
 
 		for (String key:this.columnValues.keySet()) {
 			Object obj = this.columnValues.get(key);
+
 			if (obj instanceof MutableDBRef) {
 				MutableDBRef ref = ((MutableDBRef)obj);
 
-				if (ref.getId() != null) {
-					if (this.pushKey != null) {
-						// do not allow updating the main document reference where this embedded document is embedded.
-						if (ref.getParentTable().equals(this.pushKey.getParentTable())) {
-							throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18007, ref.getParentTable(), embeddedDocumentName));
-						}
+				if (this.mongoDoc.isMerged()) {
+					// do not allow updating the main document reference where this embedded document is embedded.
+					if (ref.getParentTable().equals(this.mongoDoc.getMergeTable().getName())) {
+						throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18007, ref.getParentTable(), embeddedDocumentName));
 					}
+				}
 
-					update.append(key, ref.getDBRef(db, true));
+				update.append(key, ref.getDBRef(db, true));
 
-					// also update the embedded document
-					if (this.pullKeys != null) {
-						for (MutableDBRef pullRef: this.pullKeys) {
-							if (ref.getParentTable().equals(pullRef.getEmbeddedTable())) {
-								DBObject embedDoc = embeddedDocuments.get(pullRef.getEmbeddedTable());
-								if (embedDoc == null) {
-									throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18008, ref.getEmbeddedTable()));
-								}
-								update.append(pullRef.getEmbeddedTable(), embedDoc);
+				// also update the embedded document
+				if (this.mongoDoc.hasEmbeddedDocuments()) {
+					for (MutableDBRef docKey: this.mongoDoc.getEmbeddableReferences()) {
+						if (ref.getParentTable().equals(docKey.getEmbeddedTable())) {
+							DBObject embedDoc = embeddedDocuments.get(docKey.getName());
+							if (embedDoc != null) {
+								update.append(docKey.getName(), embedDoc);
+							}
+							else {
+								update.append(docKey.getName(), null);
 							}
 						}
 					}
 				}
 			}
 			else {
-				if (this.pushKey != null && this.pushKey.getAssosiation() == Assosiation.MANY) {
-					update.append(embeddedDocumentName+".$."+key, obj); //$NON-NLS-1$
-				}
-				else {
-					if (embeddedDocumentName != null) {
+				if (this.mongoDoc.isMerged()) {
+					if (this.mongoDoc.getMergeAssosiation() == Assosiation.MANY) {
+						update.append(embeddedDocumentName+".$."+key, obj); //$NON-NLS-1$
+					}
+					else {
 						update.append(embeddedDocumentName+"."+key, obj); //$NON-NLS-1$
 					}
-					else if (isPartOfPrimaryKey(this.collectionTable, key)) {
-						if (hasCompositePrimaryKey(this.collectionTable)) {
+				}
+				else {
+					if (isPartOfPrimaryKey(this.mongoDoc.getTargetTable(), key)) {
+						if (hasCompositePrimaryKey(this.mongoDoc.getTargetTable())) {
 							update.append("_id."+key, obj);//$NON-NLS-1$
 						}
 						else {
@@ -245,4 +227,40 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		}
 		return update;
 	}
+
+	public DBObject getPullQuery() {
+		if (this.match == null) {
+			return null;
+		}
+		if (this.pull == null) {
+			this.pull =  new BasicDBObject(this.mongoDoc.getTable().getName(), this.onGoingPullCriteria.pop());
+		}
+		return this.pull;
+
+	}
+
+	public BasicDBList updateMerge(DB db, BasicDBList previousRows) throws TranslatorException {
+		BasicDBList updated = new BasicDBList();
+
+		for (int i = 0; i < previousRows.size(); i++) {
+			BasicDBObject row = (BasicDBObject)previousRows.get(i);
+			if (this.match == null || ExpressionEvaluator.matches(this.condition, row)) {
+				for (String key:this.columnValues.keySet()) {
+					Object obj = this.columnValues.get(key);
+
+					if (obj instanceof MutableDBRef) {
+						MutableDBRef ref = ((MutableDBRef)obj);
+						row.put(key, ref.getDBRef(db, true));
+					}
+					else {
+						row.put(key, obj);
+					}
+				}
+				updated.add(row);
+			}
+		}
+
+		return updated;
+	}
+
 }
