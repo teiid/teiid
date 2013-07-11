@@ -104,15 +104,14 @@ CREATE FOREIGN TABLE Orders (
 ) OPTIONS(UPDATABLE 'TRUE');
 
 CREATE FOREIGN TABLE OrderDetails (
-  odID integer,
-  OrderID integer NOT NULL,
+  odID integer NOT NULL,
   ProductID integer NOT NULL,
   UnitPrice float default '0',
   Quantity integer default '1',
   Discount float default '0',
-  FOREIGN KEY (OrderID) REFERENCES Orders (OrderID),
+  FOREIGN KEY (odID) REFERENCES Orders (OrderID),
   FOREIGN KEY (ProductID) REFERENCES Products (ProductID),
-  PRIMARY KEY (OrderID,ProductID)
+  PRIMARY KEY (odID,ProductID)
 ) OPTIONS ("teiid_mongo:MERGE" 'Orders', UPDATABLE 'TRUE');
 
 CREATE FOREIGN TABLE users (

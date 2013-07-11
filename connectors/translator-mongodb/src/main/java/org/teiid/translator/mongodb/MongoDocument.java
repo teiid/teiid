@@ -184,7 +184,15 @@ class MongoDocument {
 	private void buildEmbeddedReferences() throws TranslatorException {
     	for (ForeignKey fk:this.table.getForeignKeys()) {
 			Table referenceTable = this.metadata.getTable(this.table.getParent().getFullName()+"."+fk.getReferenceTableName()); //$NON-NLS-1$
-			if (isEmbeddable(referenceTable)) {
+			MongoDocument refereceDoc = new MongoDocument(referenceTable, this.metadata);
+			if (refereceDoc.isEmbeddable()) {
+
+				// if this table itself is merged into embedded; then skip it
+				if (isMerged() && getMergeTable().getName().equals(referenceTable.getName())) {
+					// avoid self inclusion
+					continue;
+				}
+
 				MutableDBRef key = new MutableDBRef();
 				key.setName(fk.getReferenceTableName());
 				key.setParentTable(this.table.getName());
@@ -205,6 +213,7 @@ class MongoDocument {
     	for (ForeignKey fk:this.table.getForeignKeys()) {
 			MutableDBRef key = new MutableDBRef();
 			key.setParentTable(fk.getReferenceTableName());
+			key.setEmbeddedTable(this.table.getName());
 			key.setName(fk.getName());
 			key.setColumns(MongoDBSelectVisitor.getColumnNames(fk.getColumns()));
 			key.setReferenceColumns(fk.getReferenceColumns());
@@ -261,27 +270,42 @@ class MongoDocument {
 		return true;
 	}
 
-	public void updateReferenceColumnValue(String columnName, Object value ) {
+	public void updateReferenceColumnValue(String tableName, String columnName, Object value ) {
 		Iterator<Entry<List<String>, MutableDBRef>> it = this.foreignKeys.entrySet().iterator();
 	    while (it.hasNext()) {
 	        Map.Entry<List<String>, MutableDBRef> pairs = it.next();
 	        List<String> keys = pairs.getKey();
 	        MutableDBRef ref = pairs.getValue();
-	        if (keys.contains(columnName)) {
+	        if (keys.contains(columnName) && ref.getEmbeddedTable().equals(tableName)) {
 	        	ref.setId(columnName, value);
 	        }
 	    }
 
 		// parent table selection query.
-		if (this.mergeKey != null && this.mergeKey.getReferenceColumns().contains(columnName)) {
-			this.mergeKey.setId(columnName, value);
+		if (this.mergeKey != null
+				&& this.mergeKey.getColumns().contains(columnName)
+				&& this.mergeKey.getEmbeddedTable().equals(tableName)) {
+
+			for (int i = 0; i < this.mergeKey.getColumns().size(); i++) {
+				String column = this.mergeKey.getColumns().get(i);
+				if (column.equals(columnName)) {
+					String referenceColumn = this.mergeKey.getReferenceColumns().get(i);
+					this.mergeKey.setId(referenceColumn, value);
+				}
+			}
 		}
 
 		// child table selection query
 		if (!this.pullKeys.isEmpty()) {
 			for (MutableDBRef ref:this.pullKeys) {
-				if (ref.getColumns().contains(columnName)) {
-					ref.setId(columnName, value);
+				if (ref.getColumns().contains(columnName) && ref.getParentTable().equals(tableName)) {
+					for (int i = 0; i < ref.getColumns().size(); i++) {
+						String column = ref.getColumns().get(i);
+						if (column.equals(columnName)) {
+							String referenceColumn = ref.getReferenceColumns().get(i);
+							ref.setId(referenceColumn, value);
+						}
+					}
 				}
 			}
 		}

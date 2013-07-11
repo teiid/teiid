@@ -24,7 +24,6 @@ package org.teiid.translator.mongodb;
 import java.util.ArrayList;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.CommandContext;
@@ -39,15 +38,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
-import com.mongodb.AggregationOutput;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
-import com.mongodb.QueryBuilder;
-import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
+import com.mongodb.*;
 
 @SuppressWarnings("nls")
 public class TestMongoDBUpdateExecution {
@@ -104,20 +95,19 @@ public class TestMongoDBUpdateExecution {
 	}
 
 	@Test
-	public void testEmbedInInsert() throws Exception {
+	public void testMergeInsert() throws Exception {
 		// tests one-to-many situation
-		String query = "INSERT INTO OrderDetails (odID, OrderID, ProductID, UnitPrice, Quantity, Discount) " +
-				"VALUES (12, 14, 15, 34.50, 10, 12)";
+		String query = "INSERT INTO OrderDetails (odID, ProductID, UnitPrice, Quantity, Discount) " +
+				"VALUES (14, 15, 34.50, 10, 12)";
 
 		BasicDBObject match = new BasicDBObject("_id", 14);
 		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, match, null);
 
 		BasicDBObject details = new BasicDBObject();
 		BasicDBObject pk = new BasicDBObject();
-		pk.append("OrderID", new DBRef(null,"Orders", 14));
+		pk.append("odID", new DBRef(null,"Orders", 14));
 		pk.append("ProductID", new DBRef(null,"Products", 15));
 
-		details.append("odID", 12);
 		details.append("UnitPrice", 34.50);
 		details.append("Quantity", 10);
 		details.append("Discount", 12);
@@ -171,8 +161,8 @@ public class TestMongoDBUpdateExecution {
 			Mockito.stub(out.results()).toReturn(results);
 
 			for (DBObject obj:results) {
-				Mockito.stub(dbCollection.aggregate(new BasicDBObject("$match", new BasicDBObject("_id", obj.get("_id"))))).toReturn(out);
-				Mockito.stub(dbCollection.aggregate(new BasicDBObject("$match", new BasicDBObject("_id.$id", obj.get("_id"))))).toReturn(out);
+				Mockito.stub(dbCollection.aggregate(Mockito.any(BasicDBObject.class))).toReturn(out);
+				Mockito.stub(dbCollection.aggregate(Mockito.any(BasicDBObject.class))).toReturn(out);
 			}
 		}
 
@@ -206,15 +196,15 @@ public class TestMongoDBUpdateExecution {
 
 	@Test
 	public void testDeleteMerge() throws Exception {
-		String query = "DELETE FROM OrderDetails WHERE ProductID = 14 and OrderID = 1";
+		String query = "DELETE FROM OrderDetails WHERE ProductID = 14 and odID = 1";
 
 		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, new BasicDBObject("oid", 1), null);
 
 		QueryBuilder qb = new QueryBuilder();
-		qb.and(new BasicDBObject("OrderDetails._id.ProductID.$id", 14), new BasicDBObject("OrderDetails._id.OrderID.$id", 1));
+		qb.and(new BasicDBObject("OrderDetails._id.ProductID.$id", 14), new BasicDBObject("OrderDetails._id.odID.$id", 1));
 
 		QueryBuilder pullQuery = new QueryBuilder();
-		pullQuery.and(new BasicDBObject("ProductID.$id", 14), new BasicDBObject("OrderID.$id", 1));
+		pullQuery.and(new BasicDBObject("ProductID.$id", 14), new BasicDBObject("odID.$id", 1));
 
 		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection, Mockito.times(1)).update(
@@ -224,15 +214,25 @@ public class TestMongoDBUpdateExecution {
 
 	@Test
 	public void testUpdateMerge() throws Exception {
-		String query = "UPDATE OrderDetails SET UnitPrice = 12.50 WHERE ProductID = 14 and OrderID = 1";
+		String query = "UPDATE OrderDetails SET UnitPrice = 12.50 WHERE ProductID = 14 and odID = 1";
 
-		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, new BasicDBObject("oid", 1), null);
+		ArrayList<DBObject> results = new ArrayList<DBObject>();
 
-		QueryBuilder qb = new QueryBuilder();
-		qb.and(new BasicDBObject("OrderDetails._id.ProductID.$id", 14), new BasicDBObject("OrderDetails._id.OrderID.$id", 1));
+		BasicDBList result = new BasicDBList();
+		result.add(new BasicDBObject("_id", 1).append("ProductID", 14).append("odID", 1));
+		result.add(new BasicDBObject("_id", 1).append("ProductID", 15).append("odID", 2));
+		BasicDBObject row = new BasicDBObject("OrderDetails", result).append("_id", 1);
+
+		results.add(row);
+
+		DBCollection dbCollection = helpUpdate(query, new String[]{"Orders"}, new BasicDBObject("oid", 1), results );
+		// { "$set" : { "OrderDetails" : [ { "_id" : 1 , "ProductID" : 14 , "odID" : 1 , "UnitPrice" : 12.5}]}},
+		BasicDBList expected = new BasicDBList();
+		expected.add(new BasicDBObject("_id", 1).append("ProductID", 14).append("odID", 1).append("UnitPrice", 12.50));
+
 		Mockito.verify(dbCollection, Mockito.never()).insert(new BasicDBObject(), WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection, Mockito.times(1)).update(
-				qb.get(), new BasicDBObject("$set", new BasicDBObject("OrderDetails.$.UnitPrice", 12.5)),
+				new BasicDBObject("_id", 1), new BasicDBObject("$set", new BasicDBObject("OrderDetails", expected)),
 				false, true, WriteConcern.ACKNOWLEDGED);
 	}
 
@@ -364,8 +364,7 @@ public class TestMongoDBUpdateExecution {
 
 	}
 
-	@Test
-	@Ignore
+	@Test(expected=TranslatorException.class)
 	public void testNestedMergeUpdate() throws Exception {
 	    BasicDBObject customer_result = new BasicDBObject();
 	    customer_result.append("rental._id", 2);
@@ -380,10 +379,9 @@ public class TestMongoDBUpdateExecution {
 		rental.append("_id", 3);
 		BasicDBObject rentalresult = new BasicDBObject("rental.$.payment", rental);
 
-		String query = "UPDATE payment SET amount = 3.99 WHERE payment_id = 1";
+		String query = "UPDATE payment SET amount = 3.99 WHERE payment_id = 1 and rental_id = 1";
 	    DBCollection dbCollection = helpUpdate(query, new String[]{"customer"}, match, null);
 		Mockito.verify(dbCollection, Mockito.never()).insert(customer_result, WriteConcern.ACKNOWLEDGED);
 		Mockito.verify(dbCollection).update(customer_result, new BasicDBObject("$push", rentalresult), false, true, WriteConcern.ACKNOWLEDGED);
-
 	}
 }

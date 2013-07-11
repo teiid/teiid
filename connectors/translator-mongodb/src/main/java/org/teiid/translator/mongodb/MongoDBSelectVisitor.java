@@ -564,7 +564,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         }
 
         if (obj.getLeftExpression() instanceof ColumnReference) {
-			this.mongoDoc.updateReferenceColumnValue(exprAlias.columnName, rightExpr);
+        	ColumnReference colum = (ColumnReference)obj.getLeftExpression();
+			this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
         }
 
         // build pull criteria for delete

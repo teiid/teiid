@@ -132,10 +132,10 @@ public class TestMongoDBUpdateVisitor {
 
 	@Test
 	public void testEmbeddedInsert() throws Exception {
-		helpExecute("insert into OrderDetails (odID, OrderID, ProductID, UnitPrice, Quantity, Discount) " +
-				"values (1, 2, 3, 1.50, 12, 1.0)",
+		helpExecute("insert into OrderDetails (odID, ProductID, UnitPrice, Quantity, Discount) " +
+				"values (2, 3, 1.50, 12, 1.0)",
 				"Orders",
-				"{ \"odID\" : 1 , \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"OrderID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2} , \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3}}}",
+				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3} , \"odID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2}}}",
 				null, buildKey("FK1", "Orders", "OrderDetails", "2"), null);
 	}
 
@@ -192,10 +192,10 @@ public class TestMongoDBUpdateVisitor {
 	}
 
 	@Test(expected=TranslatorException.class)
-	public void testUpdateEmbedddedInParentUpdate() throws Exception {
+	public void testUpdateMergeParentUpdate() throws Exception {
 		this.docs = new LinkedHashMap<String, DBObject>();
 		this.docs.put("Products", new BasicDBObject("key", "value"));
-		helpExecute("UPDATE OrderDetails SET OrderID = 4",  "Orders",
+		helpExecute("UPDATE OrderDetails SET odID = 4",  "Orders",
 				"{ \"Products.ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4} , \"Products\" : { \"key\" : \"value\"}}",
 				null, buildKey("FK1", "Orders", "OrderDetails", null), null);
 	}

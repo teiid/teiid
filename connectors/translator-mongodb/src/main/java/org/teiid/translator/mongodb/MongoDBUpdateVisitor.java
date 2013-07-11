@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.teiid.language.ColumnReference;
+import org.teiid.language.Condition;
 import org.teiid.language.Delete;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
@@ -36,6 +37,7 @@ import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBObject;
@@ -45,6 +47,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 	protected LinkedHashMap<String, Object> columnValues = new LinkedHashMap<String, Object>();
 	private DB mongoDB;
 	private BasicDBObject pull;
+	private Condition condition;
 
 	public MongoDBUpdateVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata, DB mongoDB) {
 		super(executionFactory, metadata);
@@ -62,14 +65,14 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			for (int i = 0; i < columns.size(); i++) {
 				String colName = getColumnName(columns.get(i));
 				Expression expr = values.get(i);
-				resolveExpressionValue(colName, expr);
+				resolveExpressionValue(obj.getTable().getName(), colName, expr);
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
 		}
 	}
 
-	private void resolveExpressionValue(String colName, Expression expr) throws TranslatorException {
+	private void resolveExpressionValue(String tableName, String colName, Expression expr) throws TranslatorException {
 		Object value = null;
 		if (expr instanceof Literal) {
 			value = this.executionFactory.convertToMongoType(((Literal) expr).getValue(), this.mongoDB, colName);
@@ -81,7 +84,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		this.columnValues.put(colName, value);
 
 		// Update he mongo document to keep track the reference values.
-		this.mongoDoc.updateReferenceColumnValue(colName, value);
+		this.mongoDoc.updateReferenceColumnValue(tableName, colName, value);
 
 		// if this FK column, replace with reference rather than simple key value
 		if (this.mongoDoc.isPartOfForeignKey(colName)) {
@@ -91,6 +94,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	@Override
 	public void visit(Update obj) {
+		this.condition = obj.getWhere();
         append(obj.getTable());
 
         List<SetClause> changes = obj.getChanges();
@@ -98,7 +102,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 			for (SetClause clause:changes) {
 				String colName = getColumnName(clause.getSymbol());
 				Expression expr = clause.getValue();
-				resolveExpressionValue(colName, expr);
+				resolveExpressionValue(obj.getTable().getName(), colName, expr);
 			}
 		} catch (TranslatorException e) {
 			this.exceptions.add(e);
@@ -113,6 +117,7 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
 	@Override
 	public void visit(Delete obj) {
+		this.condition = obj.getWhere();
 		append(obj.getTable());
         append(obj.getWhere());
 
@@ -233,4 +238,29 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		return this.pull;
 
 	}
+
+	public BasicDBList updateMerge(DB db, BasicDBList previousRows) throws TranslatorException {
+		BasicDBList updated = new BasicDBList();
+
+		for (int i = 0; i < previousRows.size(); i++) {
+			BasicDBObject row = (BasicDBObject)previousRows.get(i);
+			if (this.match == null || ExpressionEvaluator.matches(this.condition, row)) {
+				for (String key:this.columnValues.keySet()) {
+					Object obj = this.columnValues.get(key);
+
+					if (obj instanceof MutableDBRef) {
+						MutableDBRef ref = ((MutableDBRef)obj);
+						row.put(key, ref.getDBRef(db, true));
+					}
+					else {
+						row.put(key, obj);
+					}
+				}
+				updated.add(row);
+			}
+		}
+
+		return updated;
+	}
+
 }

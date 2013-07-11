@@ -43,6 +43,7 @@ import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.mongodb.MutableDBRef.Assosiation;
 
 import com.mongodb.AggregationOutput;
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -118,7 +119,18 @@ public class MongoDBUpdateExecution extends MongoDBBaseExecution implements Upda
 				if (nested) {
 					throw new TranslatorException(MongoDBPlugin.Util.gs(MongoDBPlugin.Event.TEIID18016));
 				}
-				result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
+				// multi items in array update not available, http://jira.mongodb.org/browse/SERVER-1243
+				// this work-around for above issue, re-writes whole array but atomic.
+				Iterator<DBObject> output = collection.aggregate(new BasicDBObject("$match", match)).results().iterator(); //$NON-NLS-1$
+				while(output.hasNext()) {
+					DBObject row = output.next();
+					BasicDBList previousMerge = (BasicDBList)row.get(mongoDoc.getTable().getName());
+					BasicDBList updatedDoc = this.visitor.updateMerge(this.mongoDB, previousMerge);
+					if (updatedDoc.size() != 0) {
+						result = collection.update(new BasicDBObject("_id", row.get("_id")), new BasicDBObject("$set", new BasicDBObject(mongoDoc.getTable().getName(), updatedDoc)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+					}
+				}
+				//result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
 			}
 			else {
 				result = collection.update(match, new BasicDBObject("$set", this.visitor.getUpdate(this.mongoDB, embeddedDocuments)), false, true, WriteConcern.ACKNOWLEDGED); //$NON-NLS-1$
