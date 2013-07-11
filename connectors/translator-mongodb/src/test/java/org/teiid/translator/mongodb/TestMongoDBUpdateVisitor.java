@@ -23,7 +23,9 @@ package org.teiid.translator.mongodb;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +62,16 @@ public class TestMongoDBUpdateVisitor {
 
     }
 
-    private void helpExecute(String query, String collection, String expected, String match, String pushKey, String pullKeys) throws Exception {
+    private MutableDBRef buildKey(String name, String parentTable, String embeddedTable, String id) {
+    	MutableDBRef key = new MutableDBRef();
+    	key.setName(name);
+    	key.setParentTable(parentTable);
+    	key.setEmbeddedTable(embeddedTable);
+    	key.setId("id", id);
+    	return key;
+    }
+
+    private void helpExecute(String query, String collection, String expected, String match, MutableDBRef pushKey, List<MutableDBRef> pullKeys) throws Exception {
     	Command cmd = this.utility.parseCommand(query);
     	MongoDBUpdateVisitor visitor = new MongoDBUpdateVisitor(this.translator, this.utility.createRuntimeMetadata(), Mockito.mock(DB.class));
     	visitor.visitNode(cmd);
@@ -68,7 +79,7 @@ public class TestMongoDBUpdateVisitor {
     		throw visitor.exceptions.get(0);
     	}
 
-    	assertEquals(collection, visitor.collectionTable.getName());
+    	assertEquals(collection, visitor.mongoDoc.getTargetTable().getName());
 
     	if (cmd instanceof Insert) {
     		assertEquals("wrong insert", expected, visitor.getInsert(null, this.docs).toString());
@@ -83,12 +94,13 @@ public class TestMongoDBUpdateVisitor {
     		assertEquals("match wrong", match, visitor.match.toString());
     	}
 
-    	if (visitor.pushKey != null) {
-    		assertEquals("Wrong PushKey", pushKey, visitor.pushKey.toString());
+    	MongoDocument doc = visitor.mongoDoc;
+    	if (doc.isMerged()) {
+    		assertEquals("Wrong PushKey", pushKey.toString(), visitor.mongoDoc.getMergeKey().toString());
     	}
 
-    	if (visitor.pullKeys != null && !visitor.pullKeys.isEmpty()) {
-    		assertEquals("Wrong PullKeys", visitor.pullKeys.toString(), pullKeys);
+    	if (!visitor.mongoDoc.getEmbeddableReferences().isEmpty()) {
+    		assertEquals("Wrong PullKeys", visitor.mongoDoc.getEmbeddableReferences().toString(), pullKeys.toString());
     	}
     	this.docs = null;
     }
@@ -105,23 +117,26 @@ public class TestMongoDBUpdateVisitor {
 		this.docs = new LinkedHashMap<String, DBObject>();
 		this.docs.put("Categories", new BasicDBObject("categoryK", "categoryV"));
 		this.docs.put("Suppliers", new BasicDBObject("SuppliersK", "SuppliersV"));
+
+		ArrayList<MutableDBRef> pull = new ArrayList<MutableDBRef>();
+		pull.add(buildKey("Categories", "Products", "Categories", "24"));
+		pull.add(buildKey("Suppliers", "Products", "Suppliers", "34"));
+
 		helpExecute("insert into Products (ProductID, ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued) " +
 				"values (1, 'hammer', 34, 24, 12, 12.50, 3, 4, 2, 1)",
 				"Products",
 				"{ \"ProductName\" : \"hammer\" , \"SupplierID\" : { \"$ref\" : \"Suppliers\" , \"$id\" : 34} , \"CategoryID\" : { \"$ref\" : \"Categories\" , \"$id\" : 24} , \"QuantityPerUnit\" : \"12\" , \"UnitPrice\" : 12.5 , \"UnitsInStock\" : 3 , \"UnitsOnOrder\" : 4 , \"ReorderLevel\" : 2 , \"Discontinued\" : 1 , \"_id\" : 1 , \"Categories\" : { \"categoryK\" : \"categoryV\"} , \"Suppliers\" : { \"SuppliersK\" : \"SuppliersV\"}}",
-				null, null,
-				"[ParentTable:Products id:24 EmbeddedTable:Categories, ParentTable:Products id:34 EmbeddedTable:Suppliers]");
+				null, null,	pull);
 	}
 
 
 	@Test
 	public void testEmbeddedInsert() throws Exception {
-		helpExecute("insert into OrderDetails (odID, OrderID, ProductID, UnitPrice, Quantity, Discount) " +
-				"values (1, 2, 3, 1.50, 12, 1.0)",
+		helpExecute("insert into OrderDetails (odID, ProductID, UnitPrice, Quantity, Discount) " +
+				"values (2, 3, 1.50, 12, 1.0)",
 				"Orders",
-				"{ \"odID\" : 1 , \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"OrderID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2} , \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3}}}",
-				null,
-				"ParentTable:Orders id:2 EmbeddedTable:OrderDetails", null);
+				"{ \"UnitPrice\" : 1.5 , \"Quantity\" : 12 , \"Discount\" : 1.0 , \"_id\" : { \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 3} , \"odID\" : { \"$ref\" : \"Orders\" , \"$id\" : 2}}}",
+				null, buildKey("FK1", "Orders", "OrderDetails", "2"), null);
 	}
 
 	@Test
@@ -157,14 +172,14 @@ public class TestMongoDBUpdateVisitor {
 	public void testUpdateEmbedddedInSimpleUpdate() throws Exception {
 		helpExecute("UPDATE OrderDetails SET UnitPrice = 14.50", "Orders",
 				"{ \"OrderDetails.$.UnitPrice\" : 14.5}", null,
-				"ParentTable:Orders id:null EmbeddedTable:OrderDetails", null);
+				buildKey("FK1", "Orders", "OrderDetails", null), null);
 	}
 
 	@Test
 	public void testUpdateEmbedddedInReferenceUpdate() throws Exception {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4", "Orders",
 				"{ \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4}}",
-				null, "ParentTable:Orders id:null EmbeddedTable:OrderDetails",
+				null, buildKey("FK1", "Orders", "OrderDetails", null),
 				null);
 	}
 
@@ -173,15 +188,16 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("UPDATE OrderDetails SET ProductID = 4 WHERE ProductID = 3",
 				"Orders",
 				"{ \"ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4}}", "{ \"OrderDetails._id.ProductID.$id\" : 3}",
-				"ParentTable:Orders id:null EmbeddedTable:OrderDetails",
-				null);
+				buildKey("OrderDetails", "Orders", "OrderDetails", null), null);
 	}
 
 	@Test(expected=TranslatorException.class)
-	public void testUpdateEmbedddedInParentUpdate() throws Exception {
+	public void testUpdateMergeParentUpdate() throws Exception {
 		this.docs = new LinkedHashMap<String, DBObject>();
 		this.docs.put("Products", new BasicDBObject("key", "value"));
-		helpExecute("UPDATE OrderDetails SET OrderID = 4",  "Orders", "{ \"Products.ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4} , \"Products\" : { \"key\" : \"value\"}}", null, "ParentTable:Orders id:null EmbeddedTable:OrderDetails", null);
+		helpExecute("UPDATE OrderDetails SET odID = 4",  "Orders",
+				"{ \"Products.ProductID\" : { \"$ref\" : \"Products\" , \"$id\" : 4} , \"Products\" : { \"key\" : \"value\"}}",
+				null, buildKey("FK1", "Orders", "OrderDetails", null), null);
 	}
 
 	@Test
@@ -189,11 +205,13 @@ public class TestMongoDBUpdateVisitor {
 		this.docs = new LinkedHashMap<String, DBObject>();
 		this.docs.put("Categories", new BasicDBObject("categoryK", "categoryV"));
 
+		ArrayList<MutableDBRef> pull = new ArrayList<MutableDBRef>();
+		pull.add(buildKey("Categories", "Products", "Categories", "4"));
+		pull.add(buildKey("Suppliers", "Products", "Suppliers", null));
+
 		helpExecute("UPDATE Products SET CategoryID = 4",  "Products",
 				"{ \"CategoryID\" : { \"$ref\" : \"Categories\" , \"$id\" : 4} , \"Categories\" : { \"categoryK\" : \"categoryV\"}}",
-				null,
-				null,
-				"[ParentTable:Products id:4 EmbeddedTable:Categories, ParentTable:Products id:null EmbeddedTable:Suppliers]");
+				null,null,pull);
 	}
 
 
@@ -205,7 +223,7 @@ public class TestMongoDBUpdateVisitor {
 				"{ \"Description\" : \"change\"}",
 				"{ \"_id\" : 1}",
 				null,
-				"");
+				null);
 	}
 
 	@Test
@@ -231,11 +249,6 @@ public class TestMongoDBUpdateVisitor {
 		helpExecute("insert into G2 (e1, e2, e3) values (1,2,3)", "G2",
 				"{ \"e1\" : { \"$ref\" : \"G1\" , \"$id\" : { \"e1\" : 1 , \"e2\" : 2}} , \"e2\" : { \"$ref\" : \"G1\" , \"$id\" : { \"e1\" : 1 , \"e2\" : 2}} , \"e3\" : 3}",
 				null, null, null);
-	}
-
-	@Test(expected=TranslatorException.class)
-	public void testCompositeFKUpdateFailure() throws Exception {
-		helpExecute("update G2 set e2 = 48",  "G2", "", null, null, null);
 	}
 
 	@Test

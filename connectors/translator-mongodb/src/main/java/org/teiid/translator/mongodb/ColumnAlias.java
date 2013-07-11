@@ -22,15 +22,21 @@
 package org.teiid.translator.mongodb;
 
 class ColumnAlias {
-	String projName;
-	String selName;
+	String projectedName;
+	String selectionName;
+	String pullColumnName;
+	String tableName;
+	String columnName;
 
-	public ColumnAlias(String pName, String sName) {
-		this.projName = pName;
-		this.selName = sName;
+	public ColumnAlias(String projectedName, String selectionName, String columnName, String pullColumnName, String tableName) {
+		this.projectedName = projectedName;
+		this.selectionName = selectionName;
+		this.columnName = columnName;
+		this.pullColumnName = pullColumnName;
+		this.tableName = tableName;
 	}
 	@Override
 	public String toString() {
-		return this.projName+":"+this.selName; //$NON-NLS-1$
+		return this.projectedName+":"+this.selectionName+":"+this.pullColumnName; //$NON-NLS-1$ //$NON-NLS-2$
 	}
 }
