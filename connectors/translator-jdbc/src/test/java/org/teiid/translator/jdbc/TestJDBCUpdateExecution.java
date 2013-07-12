@@ -30,11 +30,11 @@ import java.util.List;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.Expression;
 import org.teiid.language.ExpressionValueSource;
 import org.teiid.language.Insert;
 import org.teiid.language.Parameter;
-import org.teiid.translator.ExecutionContext;
 
 public class TestJDBCUpdateExecution {
 
@@ -57,7 +57,7 @@ public class TestJDBCUpdateExecution {
 		
 		JDBCExecutionFactory config = new JDBCExecutionFactory();
 		
-		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, Mockito.mock(ExecutionContext.class), config);
+		JDBCUpdateExecution updateExecution = new JDBCUpdateExecution(command, connection, new FakeExecutionContextImpl(), config);
 		updateExecution.execute();
 		Mockito.verify(p, Mockito.times(2)).addBatch();
 	}

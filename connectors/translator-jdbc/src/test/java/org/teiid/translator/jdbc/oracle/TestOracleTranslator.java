@@ -987,7 +987,7 @@ public class TestOracleTranslator {
 		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM SmallishA WHERE SmallishA.description = ? AND SmallishA.ndescription IN (?, ?)")).toReturn(ps); //$NON-NLS-1$
 		OracleExecutionFactory ef = new OracleExecutionFactory();
 		ef.start();
-		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
 		e.execute();
 		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", OracleExecutionFactory.FIXED_CHAR_TYPE);
 		Mockito.verify(ps, Mockito.times(1)).setObject(2, "b", OracleExecutionFactory.FIXED_CHAR_TYPE);
