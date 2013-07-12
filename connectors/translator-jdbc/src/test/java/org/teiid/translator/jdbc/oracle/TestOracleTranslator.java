@@ -1057,5 +1057,18 @@ public class TestOracleTranslator {
 
         helpTestVisitor(metadata, input, EMPTY_CONTEXT, null, output);
 	}
+	
+    @Test public void testSequenceFunction() throws Exception {
+        String input = "SELECT seq.nextval()"; //$NON-NLS-1$
+        String output = "SELECT seq.nextval FROM DUAL"; //$NON-NLS-1$
+               
+        String ddl = "create foreign function \"seq.nextval\" () returns integer OPTIONS (\"teiid_rel:native-query\" 'seq.nextval');";
+        
+        helpTestVisitor(RealMetadataFactory.fromDDL(ddl, "x", "y"),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+    }
 
 }
