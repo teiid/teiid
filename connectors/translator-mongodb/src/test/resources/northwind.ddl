@@ -5,7 +5,7 @@ CREATE FOREIGN TABLE  Categories (
   Picture varchar(40),
   PRIMARY KEY  (CategoryID),
   UNIQUE (CategoryName)
-) OPTIONS(UPDATABLE 'TRUE', EMBEDDABLE 'TRUE');
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE Suppliers (
   SupplierID integer NOT NULL auto_increment,
@@ -21,14 +21,14 @@ CREATE FOREIGN TABLE Suppliers (
   Fax varchar(24),
   HomePage varchar(4000),
   PRIMARY KEY  (SupplierID)
-)OPTIONS(UPDATABLE 'TRUE', EMBEDDABLE 'TRUE');
+)OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE Shippers (
   ShipperID integer NOT NULL auto_increment,
   CompanyName varchar(40),
   Phone varchar(24),
   PRIMARY KEY (ShipperID)
-)OPTIONS(UPDATABLE 'TRUE', EMBEDDABLE 'TRUE');
+)OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
 
 CREATE FOREIGN TABLE Customers (
   CustomerID varchar(5) NOT NULL default '',
@@ -104,16 +104,15 @@ CREATE FOREIGN TABLE Orders (
 ) OPTIONS(UPDATABLE 'TRUE');
 
 CREATE FOREIGN TABLE OrderDetails (
-  odID integer,
-  OrderID integer NOT NULL,
+  odID integer NOT NULL,
   ProductID integer NOT NULL,
   UnitPrice float default '0',
   Quantity integer default '1',
   Discount float default '0',
-  FOREIGN KEY (OrderID) REFERENCES Orders (OrderID),
+  FOREIGN KEY (odID) REFERENCES Orders (OrderID),
   FOREIGN KEY (ProductID) REFERENCES Products (ProductID),
-  PRIMARY KEY (OrderID,ProductID)
-) OPTIONS (EMBEDIN 'Orders', UPDATABLE 'TRUE');
+  PRIMARY KEY (odID,ProductID)
+) OPTIONS ("teiid_mongo:MERGE" 'Orders', UPDATABLE 'TRUE');
 
 CREATE FOREIGN TABLE users (
     id integer NOT NULL PRIMARY KEY,
@@ -135,4 +134,43 @@ CREATE FOREIGN TABLE G2 (
     e2 integer NOT NULL,
     e3 integer,
     FOREIGN KEY (e1, e2) REFERENCES G1 (e1, e2)
+) OPTIONS(UPDATABLE 'TRUE');
+
+CREATE FOREIGN TABLE T1 (
+    e1 integer NOT NULL,
+    e2 integer NOT NULL PRIMARY KEY,
+    e3 integer,
+    FOREIGN KEY (e1) REFERENCES T2 (e1)
+) OPTIONS(UPDATABLE 'TRUE');
+
+CREATE FOREIGN TABLE T2 (
+    e1 integer NOT NULL PRIMARY KEY,
+    e2 integer NOT NULL,
+    e3 integer,
+    FOREIGN KEY (e1) REFERENCES T3 (e1)
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
+
+CREATE FOREIGN TABLE T3 (
+    e1 integer NOT NULL PRIMARY KEY,
+    e2 integer NOT NULL,
+    e3 integer
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:EMBEDDABLE" 'TRUE');
+
+CREATE FOREIGN TABLE payment (
+    payment_id integer NOT NULL PRIMARY KEY,
+    rental_id integer,
+    amount decimal(9,2),
+    FOREIGN KEY (rental_id) REFERENCES rental (rental_id)
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'rental');
+
+CREATE FOREIGN TABLE rental (
+    rental_id integer PRIMARY KEY,
+    amount decimal(9,2) NOT NULL,
+    customer_id integer,
+    FOREIGN KEY (customer_id) REFERENCES customer (customer_id)
+) OPTIONS(UPDATABLE 'TRUE', "teiid_mongo:MERGE" 'customer');
+
+CREATE FOREIGN TABLE customer (
+    customer_id integer PRIMARY KEY,
+    name varchar(25)
 ) OPTIONS(UPDATABLE 'TRUE');

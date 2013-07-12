@@ -1237,5 +1237,16 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public void setStructRetrieval(StructRetrieval structRetrieval) {
 		this.structRetrieval = structRetrieval;
 	}
+
+	/**
+	 * 
+	 * @param context
+	 * @param command
+	 * @return true if generated keys can be returned
+	 */
+	protected boolean supportsGeneratedKeys(ExecutionContext context,
+			Command command) {
+		return supportsGeneratedKeys() && command instanceof Insert;
+	}
 	
 }

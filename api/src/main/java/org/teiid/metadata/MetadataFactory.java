@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -49,19 +49,20 @@ import org.teiid.translator.TypeFacility;
 
 /**
  * Allows connectors to build metadata for use by the engine.
- * 
+ *
  * TODO: add support for datatype import
  * TODO: add support for unique constraints
  */
 public class MetadataFactory implements Serializable {
-	
+
 	private static final String TEIID_RESERVED = "teiid_"; //$NON-NLS-1$
 	private static final String TEIID_SF = "teiid_sf"; //$NON-NLS-1$
 	private static final String TEIID_RELATIONAL = "teiid_rel"; //$NON-NLS-1$
 	private static final String TEIID_WS = "teiid_ws"; //$NON-NLS-1$
+	private static final String TEIID_MONGO = "teiid_mongo"; //$NON-NLS-1$
 
 	private static final long serialVersionUID = 8590341087771685630L;
-	
+
 	private String vdbName;
 	private int vdbVersion;
 	private Map<String, Datatype> enterpriseTypes;
@@ -72,45 +73,47 @@ public class MetadataFactory implements Serializable {
 	private String rawMetadata;
 	private Properties modelProperties;
 	private Schema schema = new Schema();
-	private String idPrefix; 
+	private String idPrefix;
 	protected int count;
 	private transient Parser parser;
 	private transient ModelMetaData model;
 	private transient Map<String, ? extends VDBResource> vdbResources;
 	private List<Grant> grants;
-	
+
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
-	
+	public static final String MONGO_URI = "{http://www.teiid.org/translator/mongodb/2013}"; //$NON-NLS-1$
+
 	public static final Map<String, String> BUILTIN_NAMESPACES;
 	static {
 		Map<String, String> map = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 		map.put(TEIID_RELATIONAL, AbstractMetadataRecord.RELATIONAL_URI.substring(1, AbstractMetadataRecord.RELATIONAL_URI.length()-1));
 		map.put(TEIID_SF, SF_URI.substring(1, SF_URI.length()-1));
 		map.put(TEIID_WS, WS_URI.substring(1, WS_URI.length()-1));
+		map.put(TEIID_MONGO, MONGO_URI.substring(1, MONGO_URI.length()-1));
 		BUILTIN_NAMESPACES = Collections.unmodifiableMap(map);
 	}
-	
+
 	public MetadataFactory(String vdbName, int vdbVersion, Map<String, Datatype> runtimeTypes, ModelMetaData model) {
 		this(vdbName, vdbVersion, model.getName(), runtimeTypes, model.getProperties(), model.getSchemaText());
 		this.model = model;
 	}
-	
+
 	public MetadataFactory(String vdbName, int vdbVersion, String schemaName, Map<String, Datatype> runtimeTypes, Properties modelProperties, String rawMetadata) {
 		this.vdbName = vdbName;
 		this.vdbVersion = vdbVersion;
 		this.dataTypes = runtimeTypes;
 		this.builtinDataTypes = runtimeTypes;
-		schema.setName(schemaName);
+		this.schema.setName(schemaName);
 		long msb = longHash(vdbName, 0);
 		msb = 31*msb + vdbVersion;
 		msb = longHash(schemaName, msb);
-		idPrefix = "tid:" + hex(msb, 12); //$NON-NLS-1$
-		setUUID(schema);	
+		this.idPrefix = "tid:" + hex(msb, 12); //$NON-NLS-1$
+		setUUID(this.schema);
 		this.modelProperties = modelProperties;
 		this.rawMetadata = rawMetadata;
 	}
-	
+
 	private long longHash(String s, long h) {
 		if (s == null) {
 			return h;
@@ -120,7 +123,7 @@ public class MetadataFactory implements Serializable {
         }
 		return h;
 	}
-	
+
 	private static String hex(long val, int hexLength) {
 		long hi = 1L << (hexLength * 4);
 		return Long.toHexString(hi | (val & (hi - 1))).substring(1);
@@ -131,55 +134,56 @@ public class MetadataFactory implements Serializable {
 	 * @return
 	 * @see #getModelProperties()
 	 */
+	@Deprecated
 	public Properties getImportProperties() {
-		return modelProperties;
+		return this.modelProperties;
 	}
-	
+
 	public Properties getModelProperties() {
-		return modelProperties;
+		return this.modelProperties;
 	}
-	
+
 	public String getRawMetadata() {
 		return this.rawMetadata;
 	}
-	
+
 	public Model getModel() {
-		return model;
+		return this.model;
 	}
-	
+
 	protected void setUUID(AbstractMetadataRecord record) {
 		int lsb = 0;
 		if (record.getParent() != null) {
 			lsb  = record.getParent().getUUID().hashCode();
 		}
 		lsb = 31*lsb + record.getName().hashCode();
-		String uuid = idPrefix+"-"+hex(lsb, 8) + "-" + hex(count++, 8); //$NON-NLS-1$ //$NON-NLS-2$
-        record.setUUID(uuid); 
+		String uuid = this.idPrefix+"-"+hex(lsb, 8) + "-" + hex(this.count++, 8); //$NON-NLS-1$ //$NON-NLS-2$
+        record.setUUID(uuid);
 	}
-	
+
 	public String getName() {
 		return this.schema.getName();
 	}
-	
+
 	public Schema getSchema() {
 		return this.schema;
 	}
 
 	/**
-	 * Add a table with the given name to the model.  
+	 * Add a table with the given name to the model.
 	 * @param name
 	 * @return
-	 * @throws MetadataException 
+	 * @throws MetadataException
 	 */
 	public Table addTable(String name) {
 		Table table = new Table();
 		table.setTableType(Table.Type.Table);
 		table.setName(name);
 		setUUID(table);
-		schema.addTable(table);
+		this.schema.addTable(table);
 		return table;
 	}
-	
+
 	/**
 	 * Adds a column to the table with the given name and type.
 	 * @param name
@@ -189,7 +193,7 @@ public class MetadataFactory implements Serializable {
 	 * @throws MetadataException
 	 */
 	public Column addColumn(String name, String type, ColumnSet<?> table) {
-		if (autoCorrectColumnNames) {
+		if (this.autoCorrectColumnNames) {
 			name.replace(AbstractMetadataRecord.NAME_DELIM_CHAR, '_');
 		} else if (name.indexOf(AbstractMetadataRecord.NAME_DELIM_CHAR) != -1) {
 			throw new MetadataException(DataPlugin.Event.TEIID60008, DataPlugin.Util.gs(DataPlugin.Event.TEIID60008, name));
@@ -209,10 +213,10 @@ public class MetadataFactory implements Serializable {
 
 	private Datatype setColumnType(String type,
 			BaseColumn column) {
-		Datatype datatype = dataTypes.get(type);
+		Datatype datatype = this.dataTypes.get(type);
 		if (datatype == null) {
-			//TODO: potentially we want to check the enterprise types, but at 
-			//this point we're keying them by name, not runtime name (which 
+			//TODO: potentially we want to check the enterprise types, but at
+			//this point we're keying them by name, not runtime name (which
 			// is an awkward difference to start with)
 			//so the runtime type names are considered fixed and a type system
 			//generalization would be needed to support injecting new runtime types
@@ -221,7 +225,7 @@ public class MetadataFactory implements Serializable {
 		column.setDatatype(datatype, true);
 		return datatype;
 	}
-	
+
 	/**
 	 * Adds a primary key to the given table.  The column names should be in key order.
 	 * @param name
@@ -240,7 +244,7 @@ public class MetadataFactory implements Serializable {
 		table.setPrimaryKey(primaryKey);
 		return primaryKey;
 	}
-	
+
 	/**
 	 * Adds an access pattern to the given table.
 	 * @param name
@@ -258,8 +262,8 @@ public class MetadataFactory implements Serializable {
 		assignColumns(columnNames, table, ap);
 		table.getAccessPatterns().add(ap);
 		return ap;
-	}	
-	
+	}
+
 	/**
 	 * Adds an index to the given table.
 	 * @param name
@@ -284,7 +288,7 @@ public class MetadataFactory implements Serializable {
 		}
 		return index;
 	}
-	
+
 	/**
 	 * Adds a function based index on the given expressions.
 	 * @param name
@@ -328,11 +332,11 @@ public class MetadataFactory implements Serializable {
 	private void assignColumn(Table table, ColumnSet<?> columns, String columnName) {
 		Column column = table.getColumnByName(columnName);
 		if (column == null) {
-			throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));				
+			throw new MetadataException(DataPlugin.Event.TEIID60011, DataPlugin.Util.gs(DataPlugin.Event.TEIID60011, columnName));
 		}
 		columns.getColumns().add(column);
 	}
-	
+
 	/**
 	 * Adds a foreign key to the given table.  The referenced primary key must already exist.  The column names should be in key order.
 	 * @param name
@@ -357,7 +361,7 @@ public class MetadataFactory implements Serializable {
 	 * @param addUniqueConstraint - if true, if the referenced table columns do not match with either PK, or FK then a UNIQUE index on reference table is created.
 	 * @return
 	 * @throws MetadataException
-	 */	
+	 */
 	public ForeignKey addForiegnKey(String name, List<String> columnNames, List<String> referencedColumnNames, String referenceTable, Table table) {
 		ForeignKey foreignKey = new ForeignKey();
 		foreignKey.setParent(table);
@@ -369,23 +373,23 @@ public class MetadataFactory implements Serializable {
 		setUUID(foreignKey);
 		table.getForeignKeys().add(foreignKey);
 		return foreignKey;
-	}	
-	
+	}
+
 	/**
-	 * Add a procedure with the given name to the model.  
+	 * Add a procedure with the given name to the model.
 	 * @param name
 	 * @return
-	 * @throws MetadataException 
+	 * @throws MetadataException
 	 */
 	public Procedure addProcedure(String name) {
 		Procedure procedure = new Procedure();
 		procedure.setName(name);
 		setUUID(procedure);
 		procedure.setParameters(new LinkedList<ProcedureParameter>());
-		schema.addProcedure(procedure);
+		this.schema.addProcedure(procedure);
 		return procedure;
 	}
-	
+
 	/**
 	 * Add a procedure parameter.
 	 * @param name
@@ -393,7 +397,7 @@ public class MetadataFactory implements Serializable {
 	 * @param parameterType should be one of {@link ProcedureParameter.Type}
 	 * @param procedure
 	 * @return
-	 * @throws MetadataException 
+	 * @throws MetadataException
 	 */
 	public ProcedureParameter addProcedureParameter(String name, String type, ProcedureParameter.Type parameterType, Procedure procedure) {
 		ProcedureParameter param = new ProcedureParameter();
@@ -413,14 +417,14 @@ public class MetadataFactory implements Serializable {
 		}
 		return param;
 	}
-	
+
 	/**
 	 * Add a procedure resultset column to the given procedure.
 	 * @param name
 	 * @param type should be one of {@link TypeFacility.RUNTIME_NAMES}
 	 * @param procedure
 	 * @return
-	 * @throws MetadataException 
+	 * @throws MetadataException
 	 */
 	public Column addProcedureResultSetColumn(String name, String type, Procedure procedure) {
 		if (procedure.getResultSet() == null) {
@@ -439,21 +443,21 @@ public class MetadataFactory implements Serializable {
 			assignColumn(table, columns, columnName);
 		}
 	}
-	
+
 	/**
-	 * Add a function with the given name to the model.  
+	 * Add a function with the given name to the model.
 	 * @param name
 	 * @return
-	 * @throws MetadataException 
+	 * @throws MetadataException
 	 */
 	public FunctionMethod addFunction(String name) {
 		FunctionMethod function = new FunctionMethod();
 		function.setName(name);
 		setUUID(function);
-		schema.addFunction(function);
+		this.schema.addFunction(function);
 		return function;
 	}
-	
+
 	/**
 	 * Add a function with the given name to the model.  
 	 * @param name
@@ -521,9 +525,9 @@ public class MetadataFactory implements Serializable {
 	public void setAutoCorrectColumnNames(boolean autoCorrectColumnNames) {
 		this.autoCorrectColumnNames = autoCorrectColumnNames;
 	}
-	
+
 	public void addNamespace(String prefix, String uri) {
-		if (StringUtil.startsWithIgnoreCase(prefix, TEIID_RESERVED)) { 
+		if (StringUtil.startsWithIgnoreCase(prefix, TEIID_RESERVED)) {
 			throw new MetadataException(DataPlugin.Event.TEIID60017, DataPlugin.Util.gs(DataPlugin.Event.TEIID60017, prefix));
 		}
 		if (uri == null || uri.indexOf('}') != -1) {
@@ -534,7 +538,7 @@ public class MetadataFactory implements Serializable {
 		}
 		this.namespaces.put(prefix, uri);
 	}
-	
+
 	public void mergeInto (MetadataStore store) {
 		store.addSchema(this.schema);
 		store.addDataTypes(this.builtinDataTypes.values()); //TODO: this is redundant
@@ -543,13 +547,13 @@ public class MetadataFactory implements Serializable {
 		}
 		store.addGrants(this.grants);
 	}
-	
+
 	public MetadataStore asMetadataStore() {
 		MetadataStore store = new MetadataStore();
 		mergeInto(store);
 		return store;
 	}
-	
+
 	/**
 	 * Set the {@link Schema} to a different instance.  This is typically called
 	 * in special situations where the {@link MetadataFactory} logic is not used
@@ -561,14 +565,14 @@ public class MetadataFactory implements Serializable {
 	}
 
 	/**
-	 * get runtime types keyed by runtime name, which is 
+	 * get runtime types keyed by runtime name, which is
 	 * a type name known to the Teiid engine
 	 * @return
 	 */
 	public Map<String, Datatype> getDataTypes() {
-		return dataTypes;
+		return this.dataTypes;
 	}
-	
+
 	/**
 	 * To be called if the MetadataFactory is deserialized to set the canonical system
 	 * type value.
@@ -599,7 +603,7 @@ public class MetadataFactory implements Serializable {
 			}
 			Datatype dt = this.builtinDataTypes.get(c.getDatatype().getName());
 			if (dt == null && this.enterpriseTypes != null) {
-				dt = enterpriseTypes.get(c.getDatatype().getName());
+				dt = this.enterpriseTypes.get(c.getDatatype().getName());
 			}
 			if (dt != null) {
 				c.setDatatype(dt);
@@ -608,22 +612,23 @@ public class MetadataFactory implements Serializable {
 				//if it's used in a single schema, we're ok, but when used in multiple there's an issue
 				//since the same record will exist as multiple instances
 				//
-				//old serialized forms do not have tracking for enterprise types, ensure that the 
+				//old serialized forms do not have tracking for enterprise types, ensure that the
 				//type is added so that it will show up in the vdb metadata
 				addEnterpriseDatatype(c.getDatatype());
 			}
 		}
 	}
-	
+
 	/**
 	 * Add an enterprise type (typically a Designer defined type extension) - typically not called
 	 * @deprecated see addEnterpriseType
 	 * @param datatype
 	 */
+	@Deprecated
 	public void addDatatype(Datatype datatype) {
 		addEnterpriseDatatype(datatype);
 	}
-	
+
 	/**
 	 * Add an enterprise type (typically a Designer defined type extension)- typically not called
 	 * @param datatype
@@ -642,27 +647,27 @@ public class MetadataFactory implements Serializable {
 		}
 		this.enterpriseTypes.put(datatype.getName(), datatype);
 	}
-	
+
 	/**
 	 * Get an enterprise type (typically a Designer defined type extension) by name.
 	 * @param name
 	 * @return
 	 */
 	public Datatype getEnterpriseDatatype(String name) {
-		if (enterpriseTypes == null) {
+		if (this.enterpriseTypes == null) {
 			return null;
 		}
-		return enterpriseTypes.get(name);
+		return this.enterpriseTypes.get(name);
 	}
 
 	public String getVdbName() {
-		return vdbName;
+		return this.vdbName;
 	}
 
 	public int getVdbVersion() {
-		return vdbVersion;
-	}	
-	
+		return this.vdbVersion;
+	}
+
 	/**
 	 * Get the namespace map.  Will be an unmodifiable empty map if {@link #addNamespace(String, String)}
 	 * has not been called successfully.
@@ -672,23 +677,23 @@ public class MetadataFactory implements Serializable {
 		if (this.namespaces == null) {
 			return Collections.emptyMap();
 		}
-		return namespaces;
+		return this.namespaces;
 	}
-	
+
 	public void setBuiltinDataTypes(Map<String, Datatype> builtinDataTypes) {
 		this.builtinDataTypes = builtinDataTypes;
 	}
 
 	/**
 	 * get all built-in types, known to Designer and defined in the system metadata.
-	 * The entries are keyed by type name, which is typically the xsd type name. 
+	 * The entries are keyed by type name, which is typically the xsd type name.
 	 * @see #getDataTypes() for run-time types
 	 * @return
 	 */
 	public Map<String, Datatype> getBuiltinDataTypes() {
-		return builtinDataTypes;
+		return this.builtinDataTypes;
 	}
-	
+
 	/**
 	 * Parses, but does not close, the given {@link Reader} into this {@link MetadataFactory}
 	 * @param ddl
@@ -697,27 +702,27 @@ public class MetadataFactory implements Serializable {
 	public void parse(Reader ddl) throws MetadataException {
 		this.parser.parseDDL(this, ddl);
 	}
-	
+
 	public void setParser(Parser parser) {
 		this.parser = parser;
 	}
-	
+
 	public void setModel(ModelMetaData model) {
 		this.model = model;
 	}
-	
+
 	public Parser getParser() {
-		return parser;
+		return this.parser;
 	}
 
 	public Map<String, ? extends VDBResource> getVDBResources() {
 		return this.vdbResources;
 	}
-	
+
 	public void setVdbResources(Map<String, ? extends VDBResource> vdbResources) {
 		this.vdbResources = vdbResources;
 	}
-	
+
 	/**
 	 * Add a permission for a {@link Table} or {@link Procedure}
 	 * @param role
@@ -745,7 +750,7 @@ public class MetadataFactory implements Serializable {
 		pmd.setConstraint(constraint);
 		addPermission(pmd, role);
 	}
-	
+
 	/**
 	 * Add a permission for the current {@link Schema} which will typically act as a default for all child objects.
 	 * @param role
@@ -768,7 +773,7 @@ public class MetadataFactory implements Serializable {
 		pmd.setAllowUpdate(allowUpdate);
 		addPermission(pmd, role);
 	}
-	
+
 	/**
 	 * Add a permission for a {@link Column}
 	 * @param role
@@ -798,7 +803,7 @@ public class MetadataFactory implements Serializable {
 		pmd.setOrder(order);
 		addPermission(pmd, role);
 	}
-	
+
 	private void addPermission(PermissionMetaData pmd, String role) {
 		if (this.grants == null) {
 			this.grants = new ArrayList<Grant>();

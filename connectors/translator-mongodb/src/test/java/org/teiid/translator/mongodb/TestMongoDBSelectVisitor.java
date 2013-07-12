@@ -60,7 +60,7 @@ public class TestMongoDBSelectVisitor {
     		throw visitor.exceptions.get(0);
     	}
 
-    	assertEquals(collection, visitor.collectionTable.getName());
+    	assertEquals(collection, visitor.mongoDoc.getTargetTable().getName());
     	if (project != null) {
     		assertEquals("project wrong", project, visitor.project.toString());
     	}

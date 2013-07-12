@@ -101,7 +101,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		setSupportsSelectDistinct(true);
 		setSupportsNativeQueries(false);
 		setSourceRequiredForMetadata(false);
-
+		//setSupportsInnerJoins(true);
 		setSupportsOuterJoins(true);
 		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
@@ -137,6 +137,11 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, MongoDBConnection connection) throws TranslatorException {
 		 return new MongoDBDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
 	}
+
+    @Override
+	public boolean useAnsiJoin() {
+    	return true;
+    }
 
 	@Override
 	public boolean supportsSelfJoins() {

@@ -830,6 +830,18 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return getVersion().compareTo(NINE_2) >= 0;
     }
     
+    @Override
+    protected boolean supportsGeneratedKeys(ExecutionContext context,
+    		Command command) {
+    	if (command instanceof Insert) {
+    		Insert insert = (Insert)command;
+    		if (insert.getParameterValues() != null) {
+    			return false; //bulk inserts result in an exception if keys are flaged for return
+    		}
+    	}
+    	return super.supportsGeneratedKeys(context, command);
+    }
+    
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;

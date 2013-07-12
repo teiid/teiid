@@ -685,7 +685,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 		returnElementName = returnElementName.toUpperCase();
     	String matTableName = CODE_PREFIX + codeTableName + ElementSymbol.SEPARATOR + keyElementName + ElementSymbol.SEPARATOR + returnElementName;
     	
-    	TupleSource ts = context.getCodeLookup(matTableName);
+    	TupleSource ts = context.getCodeLookup(matTableName, keyValue);
     	if (ts == null) {
 	    	QueryMetadataInterface metadata = context.getMetadata();
 	
@@ -711,7 +711,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 	    	ts.closeSource();
 	    	return result;
     	} catch (BlockedException e) {
-    		context.putCodeLookup(matTableName, ts);
+    		context.putCodeLookup(matTableName, keyValue, ts);
     		throw e;
     	}
     }

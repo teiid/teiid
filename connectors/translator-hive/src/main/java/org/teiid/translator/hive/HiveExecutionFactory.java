@@ -3,17 +3,17 @@
  * See the COPYRIGHT.txt file distributed with this work for information
  * regarding copyright ownership.  Some portions may be licensed
  * to Red Hat, Inc. under one or more contributor license agreements.
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
  * version 2.1 of the License, or (at your option) any later version.
- * 
+ *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
@@ -21,7 +21,12 @@
  */
 package org.teiid.translator.hive;
 
-import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -47,11 +52,11 @@ import org.teiid.translator.jdbc.SQLConversionVisitor;
 
 @Translator(name="hive", description="A translator for hive based database on HDFS")
 public class HiveExecutionFactory extends JDBCExecutionFactory {
-	
+
 	public static String HIVE = "hive"; //$NON-NLS-1$
 	protected ConvertModifier convert = new ConvertModifier();
-	
-	
+
+
 	public HiveExecutionFactory() {
 		setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
 	}
@@ -59,48 +64,49 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
-		convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
-		convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
-		convert.addTypeMapping("bigint", FunctionModifier.BIGINTEGER, FunctionModifier.LONG); //$NON-NLS-1$
-		convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-		convert.addTypeMapping("double", FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
-		convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
-		convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
+		this.convert.addTypeMapping("tinyint", FunctionModifier.BYTE); //$NON-NLS-1$
+		this.convert.addTypeMapping("smallint", FunctionModifier.SHORT); //$NON-NLS-1$
+		this.convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
+		this.convert.addTypeMapping("bigint", FunctionModifier.BIGINTEGER, FunctionModifier.LONG); //$NON-NLS-1$
+		this.convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
+		this.convert.addTypeMapping("double", FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+		this.convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
+		this.convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
+		this.convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
+		this.convert.addTypeMapping("binary", FunctionModifier.BLOB); //$NON-NLS-1$
+		this.convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
 
 		// unsupported types
-		//FunctionModifier.DATE, 
-		//FunctionModifier.TIMESTAMP
-		//FunctionModifier.TIME, 
-		//FunctionModifier.CHAR, 
-		//FunctionModifier.BLOB, 
-		//FunctionModifier.CLOB, 
+		//FunctionModifier.DATE,
+		//FunctionModifier.TIME,
+		//FunctionModifier.CHAR,
+		//FunctionModifier.CLOB,
 		//FunctionModifier.XML
-		
-		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);
-		
+
+		registerFunctionModifier(SourceSystemFunctions.CONVERT, this.convert);
+
 		registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("&")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("~")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("&")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("|")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("unix_timestamp")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$		
+		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$
         registerFunctionModifier(SourceSystemFunctions.ARRAY_GET, new FunctionModifier() {
-			
+
 			@Override
 			public List<?> translate(Function function) {
 				return Arrays.asList(function.getParameters().get(0), '[', function.getParameters().get(1), ']');
 			}
-		});        
-		
-		
+		});
+
+
 		addPushDownFunction(HIVE, "lower", STRING, STRING); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "upper", STRING, STRING); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "positive", INTEGER, DOUBLE); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "positive", DOUBLE, DOUBLE); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "negitive", INTEGER, DOUBLE); //$NON-NLS-1$
-		addPushDownFunction(HIVE, "negitive", DOUBLE, DOUBLE); //$NON-NLS-1$	
+		addPushDownFunction(HIVE, "negitive", DOUBLE, DOUBLE); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "ln", DOUBLE, DOUBLE); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "reverse", STRING, STRING); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "space", INTEGER, STRING); //$NON-NLS-1$
@@ -113,17 +119,17 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 		addPushDownFunction(HIVE, "date_add", INTEGER, DATE, INTEGER); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "date_sub", INTEGER, DATE, INTEGER); //$NON-NLS-1$
 	}
-	
+
 	@Override
     public SQLConversionVisitor getSQLConversionVisitor() {
     	return new HiveSQLConversionVisitor(this);
-    }	
-	
+    }
+
 	@Override
     public boolean useAnsiJoin() {
     	return true;
-    }	
-	
+    }
+
     @Override
     public boolean supportsCorrelatedSubqueries() {
     	//https://issues.apache.org/jira/browse/HIVE-784
@@ -155,17 +161,17 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsQuantifiedCompareCriteriaSome() {
         return false;
     }
-    
+
     @Override
     public boolean supportsBulkUpdate() {
     	return false;
     }
-    
+
     @Override
     public boolean supportsBatchedUpdates() {
     	return false;
     }
-    
+
     @Override
     public List<?> translateCommand(Command command, ExecutionContext context) {
     	return null;
@@ -175,48 +181,50 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     public List<?> translateLimit(Limit limit, ExecutionContext context) {
     	return null;
     }
-       
+
     @Override
     public boolean addSourceComment() {
         return false;
-    }   
-    
+    }
+
     @Override
     public boolean useAsInGroupAlias(){
         return false;
     }
-    
-    public boolean hasTimeType() {
+
+    @Override
+	public boolean hasTimeType() {
     	return false;
     }
 
+	@Override
 	public String getLikeRegexString() {
 		return "REGEXP"; //$NON-NLS-1$
 	}
-	
+
     @Override
     public boolean supportsScalarSubqueries() {
     	// Supported only in FROM clause
         return false;
-    }    
-    
+    }
+
     @Override
     public boolean supportsInlineViews() {
     	// must be aliased.
         return true;
-    }      
-    
+    }
+
     @Override
     public boolean supportsUnions() {
         return true;
         // only union all in subquery
-    }    
-    
+    }
+
     @Override
     public boolean supportsInsertWithQueryExpression() {
     	return false; // insert seems to be only with overwrite always
-    }    
-    
+    }
+
     @Override
     public boolean supportsIntersect() {
     	return false;
@@ -225,44 +233,44 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsExcept() {
     	return false;
-    }      
+    }
 
     @Override
     public boolean supportsAggregatesEnhancedNumeric() {
     	return true;
     }
-    
+
     @Override
     public boolean supportsCommonTableExpressions() {
     	return false;
-    } 
-    
+    }
+
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
             return "true"; //$NON-NLS-1$
         }
         return "false"; //$NON-NLS-1$
-    }    
-    
+    }
+
     @Override
     public String translateLiteralDate(java.sql.Date dateValue) {
         return formatDateValue(dateValue);
-    }    
-    
+    }
+
     @Override
     public String translateLiteralTime(Time timeValue) {
     	if (!hasTimeType()) {
-    		return translateLiteralTimestamp(new Timestamp(timeValue.getTime())); 
+    		return translateLiteralTimestamp(new Timestamp(timeValue.getTime()));
     	}
         return formatDateValue(timeValue);
-    } 
-    
+    }
+
     @Override
     public String translateLiteralTimestamp(Timestamp timestampValue) {
         return formatDateValue(timestampValue);
     }
-    
+
     @Override
     public List<String> getSupportedFunctions() {
         List<String> supportedFunctions = new ArrayList<String>();
@@ -283,7 +291,7 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.CONCAT);
         supportedFunctions.add(SourceSystemFunctions.COS);
         supportedFunctions.add(SourceSystemFunctions.CONVERT);
-		supportedFunctions.add(SourceSystemFunctions.CURDATE); 
+		supportedFunctions.add(SourceSystemFunctions.CURDATE);
 		supportedFunctions.add(SourceSystemFunctions.CURTIME);
 		supportedFunctions.add(SourceSystemFunctions.DEGREES);
 		supportedFunctions.add(SourceSystemFunctions.DAYOFMONTH);
@@ -314,11 +322,11 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
         return supportedFunctions;
-    }    
-    
+    }
+
     @Override
     protected JDBCMetdataProcessor createMetadataProcessor() {
     	return new HiveMetadataProcessor();
     }
-    
+
 }

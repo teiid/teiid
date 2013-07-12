@@ -33,6 +33,7 @@ import java.sql.Statement;
 
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.teiid.dqp.internal.datamgr.FakeExecutionContextImpl;
 import org.teiid.language.Command;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
@@ -86,7 +87,7 @@ public class TestJDBCDirectQueryExecution {
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		ef.setSupportsNativeQueries(true);
-		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  Mockito.mock(ExecutionContext.class), Mockito.mock(RuntimeMetadata.class), connection);
+		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  new FakeExecutionContextImpl(), Mockito.mock(RuntimeMetadata.class), connection);
 		execution.execute();
 		assertArrayEquals(new Object[] {5, "five"}, (Object[])execution.next().get(0));
 	}
@@ -108,7 +109,7 @@ public class TestJDBCDirectQueryExecution {
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
 		ef.setSupportsNativeQueries(true);
-		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  Mockito.mock(ExecutionContext.class), Mockito.mock(RuntimeMetadata.class), connection);
+		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  new FakeExecutionContextImpl(), Mockito.mock(RuntimeMetadata.class), connection);
 		execution.execute();
 		assertArrayEquals(new Object[] {5}, (Object[])execution.next().get(0));
 	}	

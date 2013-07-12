@@ -70,7 +70,7 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 
 		LogManager.logInfo(LogConstants.CTX_CONNECTOR, this.command);
 
-		DBCollection collection = this.mongoDB.getCollection(this.visitor.collectionTable.getName());
+		DBCollection collection = this.mongoDB.getCollection(this.visitor.mongoDoc.getTargetTable().getName());
 		if (collection != null) {
 			// TODO: check to see how to pass the hint
 			ArrayList<DBObject> ops = new ArrayList<DBObject>();
@@ -79,8 +79,8 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 			}
 
 			if (!this.visitor.unwindTables.isEmpty()) {
-				for (String name:this.visitor.unwindTables) {
-					buildAggregate(ops, "$unwind", "$"+name); //$NON-NLS-1$ //$NON-NLS-2$
+				for (String ref:this.visitor.unwindTables) {
+					buildAggregate(ops, "$unwind", "$"+ref); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 			}
 			buildAggregate(ops, "$match", this.visitor.match); //$NON-NLS-1$
