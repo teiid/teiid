@@ -45,7 +45,6 @@ public class Option implements LanguageObject {
     public final static String OPTIONAL = "optional"; //$NON-NLS-1$
 
     public static class MakeDep {
-    	private Integer min;
     	private Integer max;
     	private boolean join;
     	
@@ -53,7 +52,7 @@ public class Option implements LanguageObject {
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((getMin() == null) ? 0 : getMin().hashCode());
+			result = prime * result + ((max == null) ? 0 : max);
 			return result;
 		}
 
@@ -66,15 +65,10 @@ public class Option implements LanguageObject {
 				return false;
 			}
 			MakeDep other = (MakeDep) obj;
-			return EquivalenceUtil.areEqual(getMin(), other.getMin())
-					&& EquivalenceUtil.areEqual(max, other.max)
+			return EquivalenceUtil.areEqual(max, other.max)
 					&& join == other.join; 
 		}
 
-		public MakeDep(Integer min) {
-			this.setMin(min);
-		}
-		
 		public MakeDep() {
 			
 		}
@@ -82,14 +76,6 @@ public class Option implements LanguageObject {
 		@Override
 		public String toString() {
 			return new SQLStringVisitor().appendMakeDepOptions(this).getSQLString();
-		}
-
-		public Integer getMin() {
-			return min;
-		}
-
-		public void setMin(Integer min) {
-			this.min = min;
 		}
 
 		public Integer getMax() {

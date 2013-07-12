@@ -328,7 +328,6 @@ public interface SourceCapabilities {
         CRITERIA_SIMILAR,
         CRITERIA_LIKE_REGEX,
         DEPENDENT_JOIN,
-        DEPENDENT_JOIN_MIN,
         WINDOW_FUNCTION_DISTINCT_AGGREGATES("WindowDistinctAggregates"), //$NON-NLS-1$
         QUERY_ONLY_SINGLE_TABLE_GROUP_BY,
         ONLY_FORMAT_LITERALS,

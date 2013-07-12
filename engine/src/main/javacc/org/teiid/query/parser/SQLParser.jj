@@ -2413,19 +2413,16 @@ example={code:sql}(min:10000){code}
 */
 Option.MakeDep makedepOptions() :
 {
-	Integer min = null;
 	Integer max = null;
 	boolean join = false;
 }
 {
  [<LPAREN>
-	[<MIN><COLON> min = intVal()]
 	[<MAX><COLON> max = intVal()]
 	[<JOIN> {join = true;}]
   <RPAREN>]
  {
  	Option.MakeDep result = new Option.MakeDep();
- 	result.setMin(min);
  	result.setMax(max);
  	result.setJoin(join);
  	return result;

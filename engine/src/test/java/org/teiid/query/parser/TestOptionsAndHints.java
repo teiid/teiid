@@ -1101,8 +1101,8 @@ public class TestOptionsAndHints {
 	}
 	
     @Test public void testMakedepOptions() throws QueryParserException {
-        String sql = "Select a From db.g1 JOIN db.g2 MAKEDEP(min:100 max:300) ON a = b"; //$NON-NLS-1$
-        assertEquals("SELECT a FROM db.g1 INNER JOIN /*+ MAKEDEP(MIN:100 MAX:300) */ db.g2 ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
+        String sql = "Select a From db.g1 JOIN db.g2 MAKEDEP(max:300) ON a = b"; //$NON-NLS-1$
+        assertEquals("SELECT a FROM db.g1 INNER JOIN /*+ MAKEDEP(MAX:300) */ db.g2 ON a = b", QueryParser.getQueryParser().parseCommand(sql, new ParseInfo()).toString());         //$NON-NLS-1$
     }
 
 }

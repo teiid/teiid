@@ -28,7 +28,6 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.DataTypeManager;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
@@ -124,44 +123,6 @@ public class DependentCriteriaProcessor {
                     if (setState.maxNdv <= 0 || setState.maxNdv >= distinctCount) {
                     	continue;
                     }
-                    if (dvs.getTupleBuffer().getSchema().size() > 1 && dependentSetStates.size() > 1) {
-	                    distinctCount = 0;
-	                	ValueIterator vi = dvs.getValueIterator(setState.valueExpression);
-                    	if (setState.valueExpression.equals(dependentSetStates.get(0).valueExpression)) {
-        	            	Object last = null;
-	                    	while (vi.hasNext()) {
-    	                		Object next = vi.next();
-        	            		if (next != null && (last == null || Constant.COMPARATOR.compare(next, last) != 0)) {
-            	        			distinctCount++;
-                	    		}
-                    			last = next;
-                    		}
-                    	} else {
-                    		//secondary attributes are not in sorted order, so we use an approximate count
-                    		Set<Object> set = null;
-                    		int maxSize = Math.min(10000, dvs.getTupleBuffer().getRowCount());
-                    		List<Object> buffer = Arrays.asList(new Object[maxSize]);
-                    		if (!DataTypeManager.isHashable(setState.valueExpression.getType())) {
-                        		set = new TreeSet<Object>(Constant.COMPARATOR);
-                    		} else {
-                    			set = new HashSet<Object>();
-                    		}
-                    		int i = 0;
-	                    	while (vi.hasNext()) {
-    	                		Object next = vi.next();
-    	                		if (next == null) {
-    	                			continue;
-    	                		}
-        	            		if (set.add(next)) {
-            	        			distinctCount++;
-                	    		}
-        	            		Object old = buffer.set(i++%maxSize, next);
-        	            		if (set.size() > maxSize) {
-        	            			set.remove(old);
-        	            		}
-                    		}
-                    	}
-                	}
                 	if (!setState.overMax && distinctCount > setState.maxNdv) {
                 		LogManager.logWarning(LogConstants.CTX_DQP, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30011, valueSource, setState.valueExpression, setState.maxNdv));
                 		setState.overMax = true;
@@ -196,7 +157,7 @@ public class DependentCriteriaProcessor {
     private int maxSetSize;
     private int maxPredicates;
     private RelationalNode dependentNode;
-    private Criteria dependentCrit;
+    private boolean pushdown;
 
     //initialization state
     private List<Criteria> queryCriteria;
@@ -210,14 +171,16 @@ public class DependentCriteriaProcessor {
     private int currentIndex;
     private boolean hasNextCommand;
     protected SubqueryAwareEvaluator eval;
+	
+	private int totalPredicates;
+	private long maxSize;
 
     public DependentCriteriaProcessor(int maxSetSize, int maxPredicates, RelationalNode dependentNode, Criteria dependentCriteria) throws ExpressionEvaluationException, TeiidComponentException {
         this.maxSetSize = maxSetSize;
         this.maxPredicates = maxPredicates;
         this.dependentNode = dependentNode;
-        this.dependentCrit = dependentCriteria;
         this.eval = new SubqueryAwareEvaluator(Collections.emptyMap(), dependentNode.getDataManager(), dependentNode.getContext(), dependentNode.getBufferManager());
-        queryCriteria = Criteria.separateCriteriaByAnd(dependentCrit);
+        queryCriteria = Criteria.separateCriteriaByAnd(dependentCriteria);
         
         for (int i = 0; i < queryCriteria.size(); i++) {
         	Criteria criteria = queryCriteria.get(i);
@@ -276,8 +239,65 @@ public class DependentCriteriaProcessor {
         if (phase == SORT) {
         	for (TupleState state : dependentState.values()) {
                 state.sort();
+                if (state.dvs.getTupleBuffer().getRowCount() == 0) {
+                	return QueryRewriter.FALSE_CRITERIA;
+                }
             }
+        	
+        	//init total predicates and max size
+        	totalPredicates = setStates.size();
+        	if (this.maxPredicates > 0) {
+            	//We have a bin packing problem if totalPredicates < sources - We'll address that case later.
+        		//TODO: better handling for the correlated composite case
+        		totalPredicates = Math.max(totalPredicates, this.maxPredicates);
+        	}
+        	maxSize = Integer.MAX_VALUE;
+        	if (this.maxSetSize > 0) {
+        		maxSize = this.maxSetSize;
+        		if (this.maxPredicates > 0 && totalPredicates > this.maxPredicates) {
+        			//scale the max based upon the number of predicates - this is not perfect, but sufficient for most situations
+        			long maxParams = this.maxPredicates * this.maxSetSize;
+        			maxSize = Math.max(1, maxParams/totalPredicates);
+        		}
+        	}
+        	
+        	//determine push down handling
+			if (pushdown) {
+	        	boolean pushed = false;
+				List<Criteria> newCriteria = new ArrayList<Criteria>();
+				for (Criteria criteria : queryCriteria) {
+					if (!(criteria instanceof DependentSetCriteria)) {
+						newCriteria.add(criteria);
+						continue;
+					}
+					DependentSetCriteria dsc = (DependentSetCriteria) criteria;
+					TupleState ts = dependentState.get(dsc.getContextSymbol());
+					DependentValueSource dvs = ts.dvs;
+					// check if this has more rows than we want to push
+					if ((dsc.getMaxNdv() != -1 && dvs.getTupleBuffer().getRowCount() > dsc.getMaxNdv())
+							|| (dsc.getMakeDepOptions() != null
+									&& dsc.getMakeDepOptions().getMax() != null 
+									&& dvs.getTupleBuffer().getRowCount() > dsc.getMakeDepOptions().getMax())) {
+						continue; // don't try to pushdown
+					}
+					dsc = dsc.clone();
+					if (!pushed) {
+						//determine if this will be more than 1 source query
+						if (dvs.getTupleBuffer().getRowCount() > maxSize) {
+							pushed = true;
+						}
+						// TODO: this assumes that if any one of the dependent
+						// joins are pushed, then they all are
+					}
+					dsc.setDependentValueSource(dvs);
+					newCriteria.add(dsc);
+				}
+				if (pushed) {
+					return Criteria.combineCriteria(newCriteria);
+				}
+			}
 
+			//proceed with set based processing
             phase = SET_PROCESSING;
         }
 
@@ -335,21 +355,6 @@ public class DependentCriteriaProcessor {
      * @throws TeiidComponentException
      */
     private void replaceDependentValueIterators() throws TeiidComponentException {
-    	int totalPredicates = setStates.size();
-    	if (this.maxPredicates > 0) {
-        	//We have a bin packing problem if totalPredicates < sources - We'll address that case later.
-    		//TODO: better handling for the correlated composite case
-    		totalPredicates = Math.max(totalPredicates, this.maxPredicates);
-    	}
-    	long maxSize = Integer.MAX_VALUE;
-    	if (this.maxSetSize > 0) {
-    		maxSize = this.maxSetSize;
-    		if (this.maxPredicates > 0 && totalPredicates > this.maxPredicates) {
-    			//scale the max based upon the number of predicates - this is not perfect, but sufficient for most situations
-    			long maxParams = this.maxPredicates * this.maxSetSize;
-    			maxSize = Math.max(1, maxParams/totalPredicates);
-    		}
-    	}
     	int currentPredicates = 0;
     	for (int run = 0; currentPredicates < totalPredicates; run++) {
     		currentPredicates = 0;
@@ -477,8 +482,15 @@ public class DependentCriteriaProcessor {
     
     private Constant newConstant(Object val) {
     	Constant c = new Constant(val);
+    	//TODO: validate that this is a reasonable approach
+    	//we are using bind variables since that helps limit the size of the source sql
+    	//but a prepared plan is really of no use in this scenario
     	c.setBindEligible(true);
     	return c;
     }
+
+	public void setPushdown(boolean pushdown) {
+		this.pushdown = pushdown;
+	}
 
 }

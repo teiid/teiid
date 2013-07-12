@@ -22,16 +22,13 @@
 
 package org.teiid.query.processor.relational;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Criteria;
-import org.teiid.query.sql.lang.DependentSetCriteria;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.QueryCommand;
 
@@ -48,13 +45,11 @@ public class DependentAccessNode extends AccessNode {
     private int maxSetSize;
     private int maxPredicates;
     private boolean pushdown;
-    private int pushdownMin;
 
     //processing state
     private DependentCriteriaProcessor criteriaProcessor;
     private Criteria dependentCrit;
     private boolean sort = true;
-    private boolean isPushed;
     /**
      * Cached rewritten command to be used as the base for all dependent queries.
      */
@@ -81,7 +76,6 @@ public class DependentAccessNode extends AccessNode {
         dependentCrit = null;
         sort = true;
         rewrittenCommand = null;
-        isPushed = false;
     }
     
     @Override
@@ -103,7 +97,6 @@ public class DependentAccessNode extends AccessNode {
         clonedNode.maxSetSize = this.maxSetSize;
         clonedNode.maxPredicates = this.maxPredicates;
         clonedNode.pushdown = this.pushdown;
-        clonedNode.pushdownMin = this.pushdownMin;
         super.copyTo(clonedNode);
         return clonedNode;
     }
@@ -140,44 +133,9 @@ public class DependentAccessNode extends AccessNode {
 
         Query query = (Query)atomicCommand;
         
-        if (pushdown) {
-        	List<Criteria> newCriteria = new ArrayList<Criteria>();
-        	List<Criteria> queryCriteria = Criteria.separateCriteriaByAnd(query.getCriteria());
-            for (Criteria criteria : queryCriteria) {
-				if (!(criteria instanceof DependentSetCriteria)) {
-					newCriteria.add(criteria);
-					continue;
-				}
-				DependentSetCriteria dsc = (DependentSetCriteria)criteria;
-				DependentValueSource dvs = (DependentValueSource) getContext().getVariableContext().getGlobalValue(dsc.getContextSymbol());
-				//check if this has more rows than we want to push
-				if ((dsc.getMaxNdv() != -1 && dvs.getTupleBuffer().getRowCount() >= dsc.getMaxNdv())
-						|| (dsc.getMakeDepOptions() != null && dsc.getMakeDepOptions().getMax() != null
-						&& dvs.getTupleBuffer().getRowCount() >= dsc.getMakeDepOptions().getMax())) {
-					continue; //don't try to pushdown
-				}
-				dsc = dsc.clone();
-				if (!isPushed) {
-					if (dsc.getMakeDepOptions() != null && dsc.getMakeDepOptions().getMin() != null) {
-						if (dvs.getTupleBuffer().getRowCount() >= dsc.getMakeDepOptions().getMin()) {
-							isPushed = true;
-						}
-					} else if (pushdownMin == -1 || dvs.getTupleBuffer().getRowCount() >= pushdownMin) {
-						isPushed = true;
-					}
-					//TODO: this assumes that if any one of the dependent joins are pushed, then they all are
-				}
-				dsc.setDependentValueSource(dvs);
-				newCriteria.add(dsc);
-			}
-            if (isPushed) {
-            	query.setCriteria(Criteria.combineCriteria(newCriteria));
-                return RelationalNodeUtil.shouldExecute(atomicCommand, true);
-            }
-        }
-
         if (this.criteriaProcessor == null) {
             this.criteriaProcessor = new DependentCriteriaProcessor(this.maxSetSize, this.maxPredicates, this, query.getCriteria());
+            this.criteriaProcessor.setPushdown(pushdown);
         }
         
         if (this.dependentCrit == null) {
@@ -217,9 +175,6 @@ public class DependentAccessNode extends AccessNode {
      * @see org.teiid.query.processor.relational.AccessNode#hasNextCommand()
      */
     protected boolean hasNextCommand() {
-    	if (isPushed) {
-    		return false;
-    	}
         return criteriaProcessor.hasNextCommand();
     }
 
@@ -233,10 +188,6 @@ public class DependentAccessNode extends AccessNode {
 			return true;
 		}
 		return null;
-	}
-
-	public void setPushdownMin(int pushdownMin) {
-		this.pushdownMin = pushdownMin;
 	}
 
 }

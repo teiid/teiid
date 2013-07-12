@@ -50,7 +50,7 @@ public class DependentSetCriteria extends AbstractSetCriteria implements Context
 		public Expression dep; 
 		public Expression ind;
 		public float ndv;
-		public float maxNdv;
+		public float maxNdv = NewCalculateCostUtil.UNKNOWN_VALUE;
 	}
 	
     /**

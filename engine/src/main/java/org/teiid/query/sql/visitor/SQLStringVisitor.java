@@ -633,17 +633,11 @@ public class SQLStringVisitor extends LanguageVisitor {
 
 	public SQLStringVisitor appendMakeDepOptions(MakeDep makedep) {
 		boolean parens = false;
-		if (makedep.getMin() != null || makedep.getMax() != null || makedep.isJoin()) {
+		if (makedep.getMax() != null || makedep.isJoin()) {
 			append(Tokens.LPAREN);
 			parens = true;
 		}
 		boolean space = false;
-		if (makedep.getMin() != null) {
-			append(NonReserved.MIN);
-			append(Tokens.COLON);
-			append(makedep.getMin());
-			space = true;
-		}
 		if (makedep.getMax() != null) {
 			if (space) {
 				append(SPACE);

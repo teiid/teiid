@@ -117,7 +117,6 @@ public class ExecutionFactory<F, C> {
 	private boolean supportsNativeQueries;
 	private LinkedList<FunctionMethod> pushdownFunctionMethods = new LinkedList<FunctionMethod>();
 	private String nativeProcedureName = "native"; //$NON-NLS-1$
-	private int dependentJoinMinimum;
 	
 	/**
 	 * Initialize the connector with supplied configuration
@@ -1024,25 +1023,13 @@ public class ExecutionFactory<F, C> {
 	
 	/**
 	 * @return true if full dependent join pushdown is supported
-	 * @since 8.4
+	 * @since 8.5
 	 * @return
 	 */
 	public boolean supportsFullDependentJoins() {
 		return false;
 	}
 	
-	/**
-	 * @since 8.4
-	 * @return
-	 */
-	public int getDependentJoinMinimum() {
-		return dependentJoinMinimum;
-	}
-	
-	public void setDependentJoinMinimum(int dependentJoinMinimum) {
-		this.dependentJoinMinimum = dependentJoinMinimum;
-	}
-		
 	public enum Format {
 		NUMBER,
 		DATE

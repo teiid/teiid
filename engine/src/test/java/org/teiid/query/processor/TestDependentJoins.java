@@ -1078,7 +1078,7 @@ public class TestDependentJoins {
         
         // Construct data manager with data
         HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
-        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
+        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1), Arrays.asList("b", 2)});
         if (supportsArrayType) {
         	dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE (g_0.e1, g_0.e2) = (?, ?) ORDER BY c_0, c_1", new List[] {Arrays.asList("a", 1)});
         } else {
@@ -1087,6 +1087,8 @@ public class TestDependentJoins {
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.DEPENDENT_JOIN, true);
         bsc.setCapabilitySupport(Capability.ARRAY_TYPE, supportsArrayType);
+        bsc.setSourceProperty(Capability.MAX_DEPENDENT_PREDICATES, 1);
+        bsc.setSourceProperty(Capability.MAX_IN_CRITERIA_SIZE, 1);
         DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
         // Plan query
         ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
@@ -1098,7 +1100,7 @@ public class TestDependentJoins {
         Select s = (Select)dataManager.getPushdownCommands().get(1);
         assertEquals(1, s.getDependentValues().size());
         List<? extends List<?>> vals = s.getDependentValues().values().iterator().next();
-        assertEquals(1, vals.size());
+        assertEquals(2, vals.size());
         if (supportsArrayType) {
         	Comparison comp = (Comparison) s.getWhere();
         	Parameter p = (Parameter)((Array)comp.getRightExpression()).getExpressions().get(0);
@@ -1165,46 +1167,19 @@ public class TestDependentJoins {
     }
     
     /**
-     * ensures that pushdown is inhibited as we don't reach the min threshold
-     */
-	@Test public void testPushdownMin() {
-        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 MAKEDEP(min:2) WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
-        
-        List<?>[] expected = new List<?>[] { 
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
-        };    
-        
-        HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
-        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List<?>[] {Arrays.asList("a", 1)});
-        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e1 = 'a' AND g_0.e2 = 1 ORDER BY c_0, c_1", new List<?>[] {Arrays.asList("a", 1)});
-        
-        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        bsc.setCapabilitySupport(Capability.DEPENDENT_JOIN, true);
-        DefaultCapabilitiesFinder dcf = new DefaultCapabilitiesFinder(bsc);
-        // Plan query
-        ProcessorPlan plan = TestProcessor.helpGetPlan(sql, RealMetadataFactory.example1Cached(), dcf);
-        TestOptimizer.checkDependentJoinCount(plan, 1);
-
-        // Run query
-        TestProcessor.helpProcess(plan, dataManager, expected);
-        
-        Select s = (Select)dataManager.getPushdownCommands().get(1);
-        assertNull(s.getDependentValues());
-	}
-	
-    /**
      * ensures that we omit dependent join columns over the max
      */
 	@Test public void testPushdownMax() {
         String sql = "SELECT pm1.g1.e1 FROM pm1.g1, pm2.g1 MAKEDEP(max:2) WHERE pm1.g1.e1 = pm2.g1.e1 AND pm1.g1.e2=pm2.g1.e2 order by pm1.g1.e1"; //$NON-NLS-1$
         
         List<?>[] expected = new List<?>[] { 
-            Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
+            Arrays.asList("a"), //$NON-NLS-1$
+            Arrays.asList("b"), //$NON-NLS-1$
+            Arrays.asList("c"), //$NON-NLS-1$
         };    
         
         HardcodedDataManager dataManager = new HardcodedDataManager(RealMetadataFactory.example1Cached());
         dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 ORDER BY c_0, c_1", new List<?>[] {Arrays.asList("a", 1), Arrays.asList("b", 1), Arrays.asList("c", 1)});
-        dataManager.addData("SELECT g_0.e1 AS c_0, g_0.e2 AS c_1 FROM g1 AS g_0 WHERE g_0.e2 = 1 ORDER BY c_0, c_1", new List<?>[] {Arrays.asList("a", 1)});
         
         BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
         bsc.setCapabilitySupport(Capability.DEPENDENT_JOIN, true);
