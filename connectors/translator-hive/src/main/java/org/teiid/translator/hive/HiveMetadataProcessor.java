@@ -68,7 +68,7 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 			return TypeFacility.RUNTIME_NAMES.SHORT;
 		}
 		else if (type.equalsIgnoreCase("bigint")) { //$NON-NLS-1$
-			return TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
+			return TypeFacility.RUNTIME_NAMES.LONG;
 		}
 		else if (type.equalsIgnoreCase("string")) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.STRING;
