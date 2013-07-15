@@ -212,6 +212,7 @@ public class TestCommSockets {
 		
 		try {
 			helpEstablishConnection(false, config, p);
+			fail();
 		} catch (CommunicationException e) {
 			
 		}

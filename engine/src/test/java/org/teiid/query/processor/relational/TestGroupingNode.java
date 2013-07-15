@@ -54,7 +54,7 @@ import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings({"unchecked", "nls"})
+@SuppressWarnings({"unchecked", "rawtypes", "nls"})
 public class TestGroupingNode {
 
 	public static FakeTupleSource createTupleSource1() { 
