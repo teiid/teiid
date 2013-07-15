@@ -132,4 +132,9 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	return result;
     }
     
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.MySQL5Dialect"; //$NON-NLS-1$
+    }
+    
 }

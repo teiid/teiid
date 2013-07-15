@@ -31,6 +31,7 @@ import javax.security.auth.Subject;
 import org.teiid.CommandContext;
 import org.teiid.adminapi.Session;
 import org.teiid.jdbc.TeiidSQLWarning;
+import org.teiid.metadata.RuntimeMetadata;
 
 
 
@@ -220,4 +221,10 @@ public interface ExecutionContext {
      * @return
      */
     CacheDirective getCacheDirective();
+    
+    /**
+     * 
+     * @return the {@link RuntimeMetadata}
+     */
+    RuntimeMetadata getRuntimeMetadata();
 }

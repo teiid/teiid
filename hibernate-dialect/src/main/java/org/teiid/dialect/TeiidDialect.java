@@ -273,6 +273,26 @@ public class TeiidDialect extends Dialect {
 	public String getSelectGUIDString() {
 		return "select uuid()"; //$NON-NLS-1$
 	}
+	
+	@Override
+	public boolean supportsTemporaryTables() {
+		return true;
+	}
+	
+	@Override
+	public String getDropTemporaryTableString() {
+		return "drop table"; //$NON-NLS-1$
+	}
+	
+	@Override
+	public String getCreateTemporaryTableString() {
+		return "create local temporary table"; //$NON-NLS-1$
+	}
+	
+	@Override
+	public String getCreateTemporaryTablePostfix() {
+		return ""; //$NON-NLS-1$
+	}
    
 }
 

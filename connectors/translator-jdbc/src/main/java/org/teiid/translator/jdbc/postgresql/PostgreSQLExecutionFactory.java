@@ -22,7 +22,10 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
+import java.sql.Connection;
 import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -573,6 +576,40 @@ public class PostgreSQLExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+		if (getVersion().compareTo(EIGHT_2) >= 0) {
+			return "org.hibernate.dialect.PostgreSQL82Dialect"; //$NON-NLS-1$	
+		}
+		return "org.hibernate.dialect.PostgreSQL81Dialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+    	if (!inTransaction) {
+    		return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
+    	}
+    	return super.getCreateTemporaryTablePostfix(inTransaction);
+    }
+    
+    /**
+     * pg needs to collect stats for effective planning
+     */
+    @Override
+    public void loadedTemporaryTable(String tableName,
+    		ExecutionContext context, Connection connection) throws SQLException {
+    	Statement s = connection.createStatement();
+    	try {
+    		s.execute("ANALYZE " + tableName); //$NON-NLS-1$
+    	} finally {
+    		try {
+    			s.close();
+    		} catch (SQLException e) {
+    			
+    		}
+    	}
     }
     
 }

@@ -22,11 +22,14 @@
 
 package org.teiid.translator.jdbc.postgresql;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
+@SuppressWarnings("nls")
 public class TestPostgreSQLTranslator {
 
     private static PostgreSQLExecutionFactory TRANSLATOR; 
@@ -552,6 +555,11 @@ public class TestPostgreSQLTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
                 input, output, 
                 TRANSLATOR);
+    }
+    
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) on commit drop", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    	assertEquals("create temporary table foo (COL1 int4, COL2 varchar(100)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
     }
     
 }

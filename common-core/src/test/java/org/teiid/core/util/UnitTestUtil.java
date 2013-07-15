@@ -449,17 +449,21 @@ public class UnitTestUtil {
 	}
 	
 	public static void enableTraceLogging(String loggerName) {
+		enableLogging(Level.FINEST, loggerName);
+	}
+	
+	public static void enableLogging(Level level, String loggerName) {
 		Logger logger = Logger.getLogger(loggerName);
-    	logger.setLevel(Level.FINEST);
+    	logger.setLevel(level);
 		if (logger.getHandlers().length > 0) {
 	    	for (Handler h : logger.getHandlers()) {
-				h.setLevel(Level.FINEST);
+				h.setLevel(level);
 			}
     	} else {
     		logger.setUseParentHandlers(false);
     		ConsoleHandler ch = new ConsoleHandler();
     		ch.setFormatter(new LogFormatter());
-    		ch.setLevel(Level.FINEST);
+    		ch.setLevel(level);
     		logger.addHandler(ch);
     	}
 	}

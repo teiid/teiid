@@ -49,6 +49,8 @@ import org.teiid.translator.UpdateExecution;
 public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExecution {
 
 	private int[] result;
+	private int maxPreparedInsertBatchSize;
+	private boolean atomic = true;
 	
     /**
      * @param connection
@@ -59,6 +61,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      */
 	public JDBCUpdateExecution(Command command, Connection connection, ExecutionContext context, JDBCExecutionFactory env) {
         super(command, connection, context, env);
+        this.maxPreparedInsertBatchSize = this.executionFactory.getMaxPreparedInsertBatchSize();
     }
 
     // ===========================================================================================================================
@@ -187,7 +190,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
                     if (commitType) {
                         connection.setAutoCommit(false);
                     }
-            		int maxBatchSize = (command instanceof Insert)?this.executionFactory.getMaxPreparedInsertBatchSize():Integer.MAX_VALUE;
+            		int maxBatchSize = (command instanceof Insert)?maxPreparedInsertBatchSize:Integer.MAX_VALUE;
             		boolean done = false;
             		outer: while (!done) {
             			for (int i = 0; i < maxBatchSize; i++) {
@@ -253,6 +256,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
      * @throws TranslatorException
      */
     private boolean getAutoCommit(TranslatedCommand tCommand) throws TranslatorException {
+    	if (!atomic) {
+    		return false;
+    	}
     	try {
             return connection.getAutoCommit();
         } catch (SQLException err) {
@@ -261,7 +267,7 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     }
 
     /**
-     * If the auto comm
+     * Set autoCommit back to true
      * 
      * @param exceptionOccurred
      * @param command
@@ -277,7 +283,9 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
         	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11015, err, tCommand);
         } finally {
         	try {
-        		connection.commit(); // in JbossAs setAutocommit = true does not trigger the commit.
+        		if (!exceptionOccurred) {
+        			connection.commit(); // in JbossAs setAutocommit = true does not trigger the commit.
+        		}
         		connection.setAutoCommit(true);
         	} catch (SQLException err) {
             	 throw new JDBCExecutionException(JDBCPlugin.Event.TEIID11016, err, tCommand);
@@ -290,4 +298,12 @@ public class JDBCUpdateExecution extends JDBCBaseExecution implements UpdateExec
     		TranslatorException {
     	return result;
     }
+    
+    public void setMaxPreparedInsertBatchSize(int maxPreparedInsertBatchSize) {
+		this.maxPreparedInsertBatchSize = maxPreparedInsertBatchSize;
+	}
+    
+    public void setAtomic(boolean atomic) {
+		this.atomic = atomic;
+	}
 }

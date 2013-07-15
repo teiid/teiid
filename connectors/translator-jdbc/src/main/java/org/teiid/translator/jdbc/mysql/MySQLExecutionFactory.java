@@ -380,4 +380,9 @@ public class MySQLExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSelectWithoutFrom() {
     	return true;
     }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.MySQLDialect"; //$NON-NLS-1$
+    }
 }

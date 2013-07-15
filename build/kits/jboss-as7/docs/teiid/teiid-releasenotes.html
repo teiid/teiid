@@ -27,7 +27,14 @@
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
 <li>TEIID-2528 <b>Encrypted Buffer Files</b> - the buffer manager now supports an option to encrypt Teiid temp data files using 128-bit AES.</li>
-<li>TEIID-2249 TEIID-2559 TEIID-2555 <b>Dependent Join Enhancements</b> - greater control over full depdendent join pushdown has been added including make dep hint options max and min to control the extent of depdendent join pushdown.  The join hint is also available to pushdown the entire dependent join when supported by the source.</li>
+<li>TEIID-2249 <b>Dependent Join Enhancements</b> -
+  <ul>
+    <li>TEIID-2559</li> greater control over full depdendent join pushdown has been added including make dep hint options max/join to control the extent of depdendent join pushdown.
+    <li>TEIID-2555</li> the join hint enables the pushdown the entire dependent join when supported by the source (no built-in support is yet provided).
+    <li>TEIID-2558</li> JDBC translator support to dependent join key set pushdown for a broad set of sources including Oracle, PostgreSQL, MySQL, SQLServer, Sybase, etc.
+    use the enableDependentJoins translator property.  See the Reference for more.
+  </ul>
+</li>
 <li>TEIID-2527 <b>Configurable Runtime Multisource</b> - the server will now allow multisource models to have sources added and removed at runtime.  See the admin addSource and removeSource methods.
 <li>TEIID-2571 <b>Broader Must Pushdown</b> - must pushdown functions tied to a particular model that supports selects without from can now be called without at any time.
 <li>TEIID-2572 <b>Function native-query</b> - source functions for most translators now support the native-query extension metadata property to specify alternative syntax.

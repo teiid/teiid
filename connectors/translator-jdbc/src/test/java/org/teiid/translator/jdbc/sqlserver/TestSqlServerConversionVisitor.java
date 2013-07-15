@@ -22,6 +22,8 @@
 
 package org.teiid.translator.jdbc.sqlserver;
 
+import static org.junit.Assert.*;
+
 import java.util.List;
 
 import org.junit.BeforeClass;
@@ -41,9 +43,7 @@ import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-
-/**
- */
+@SuppressWarnings("nls")
 public class TestSqlServerConversionVisitor {
 
     private static SQLServerExecutionFactory trans = new SQLServerExecutionFactory();
@@ -217,6 +217,10 @@ public class TestSqlServerConversionVisitor {
 		CommandBuilder commandBuilder = new CommandBuilder(RealMetadataFactory.exampleBQTCached());
         Command obj = commandBuilder.getCommand(input, true, true);
         TranslationHelper.helpTestVisitor(output, trans, obj);
+    }
+    
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("create table foo (COL1 int, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(trans, true));
     }
        
 }

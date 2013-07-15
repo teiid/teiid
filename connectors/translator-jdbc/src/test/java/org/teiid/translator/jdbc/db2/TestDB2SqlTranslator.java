@@ -36,9 +36,7 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslatedCommand;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-
-/**
- */
+@SuppressWarnings("nls")
 public class TestDB2SqlTranslator {
 
     private static DB2ExecutionFactory TRANSLATOR; 
@@ -287,6 +285,10 @@ public class TestDB2SqlTranslator {
     	assertFalse(db2.supportsElementaryOlapOperations());
     	db2.setDatabaseVersion(DB2ExecutionFactory.SIX_1.toString());    	
     	assertTrue(db2.supportsElementaryOlapOperations());
+    }
+    
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
 
 }

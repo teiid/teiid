@@ -34,9 +34,12 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.Version;
 
 @Translator(name="hsql", description="A translator for open source HSQL Database")
 public class HsqlExecutionFactory extends JDBCExecutionFactory {
+	
+	public static Version TWO_0 = Version.getVersion("2.0"); //$NON-NLS-1$
 	
 	@Override
 	public void start() throws TranslatorException {
@@ -190,5 +193,15 @@ public class HsqlExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.HSQLDialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean supportsDependentJoins() {
+    	return getVersion().compareTo(TWO_0) >= 0;
     }
 }

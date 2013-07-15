@@ -27,9 +27,11 @@ package org.teiid.translator.jdbc.teiid;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.jdbc.JDBCExecutionFactory;
+import org.teiid.translator.jdbc.SQLDialect;
 import org.teiid.translator.jdbc.Version;
 
 /** 
@@ -46,6 +48,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version SEVEN_5 = Version.getVersion("7.5"); //$NON-NLS-1$
 	public static final Version SEVEN_6 = Version.getVersion("7.6"); //$NON-NLS-1$
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
+	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -277,6 +280,46 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
+    }
+    
+    @Override
+    public boolean supportsStringAgg() {
+    	return getVersion().compareTo(EIGHT_4) >= 0;
+    }
+    
+    @Override
+    public SQLDialect getDialect() {
+    	if (dialect == null) {
+    		//TODO: should pull in our own dialect
+    		this.dialect = new SQLDialect() {
+				
+				@Override
+				public boolean supportsTemporaryTables() {
+					return true;
+				}
+				
+				@Override
+				public String getTypeName(int code, long length, int precision, int scale) {
+					return JDBCSQLTypeInfo.getJavaClassName(code);
+				}
+				
+				@Override
+				public String getDropTemporaryTableString() {
+					return "drop table"; //$NON-NLS-1$
+				}
+				
+				@Override
+				public String getCreateTemporaryTableString() {
+					return "create local temporary table"; //$NON-NLS-1$
+				}
+				
+				@Override
+				public String getCreateTemporaryTablePostfix() {
+					return ""; //$NON-NLS-1$
+				}
+			};
+    	}
+    	return super.getDialect();
     }
     
 }

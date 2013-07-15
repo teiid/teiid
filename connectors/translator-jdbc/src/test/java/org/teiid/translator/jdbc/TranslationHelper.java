@@ -32,18 +32,22 @@ import java.util.List;
 import javax.xml.stream.XMLStreamException;
 
 import org.mockito.Mockito;
+import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.cdk.unittest.FakeTranslationFactory;
 import org.teiid.core.CoreConstants;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.language.ColumnReference;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
 import org.teiid.query.function.metadata.FunctionMetadataReader;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 
-
+@SuppressWarnings("nls")
 public class TranslationHelper {
 	
     public static final String PARTS_VDB = "/PartsSupplier.vdb"; //$NON-NLS-1$
@@ -119,6 +123,13 @@ public class TranslationHelper {
 		TranslatedCommand tc = new TranslatedCommand(Mockito.mock(ExecutionContext.class), translator);
 	    tc.translateCommand(obj);
 	    assertEquals("Did not get correct sql", expectedOutput, tc.getSql());             //$NON-NLS-1$
+	}
+	
+	public static String helpTestTempTable(JDBCExecutionFactory transaltor, boolean transactional) throws QueryMetadataException, TeiidComponentException {
+		List<ColumnReference> cols = new ArrayList<ColumnReference>();
+		cols.add(new ColumnReference(null, "COL1", RealMetadataFactory.exampleBQTCached().getElementID("BQT1.SMALLA.INTKEY"), TypeFacility.RUNTIME_TYPES.INTEGER));
+		cols.add(new ColumnReference(null, "COL2", RealMetadataFactory.exampleBQTCached().getElementID("BQT1.SMALLA.STRINGKEY"), TypeFacility.RUNTIME_TYPES.STRING));
+		return transaltor.getCreateTempTableSQL("foo", cols, transactional);
 	}
 
 }

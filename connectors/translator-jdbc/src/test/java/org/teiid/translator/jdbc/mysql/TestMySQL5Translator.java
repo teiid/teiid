@@ -22,13 +22,14 @@
 
 package org.teiid.translator.jdbc.mysql;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-/**
- */
+@SuppressWarnings("nls")
 public class TestMySQL5Translator {
 
     private static MySQL5ExecutionFactory TRANSLATOR; 
@@ -57,5 +58,8 @@ public class TestMySQL5Translator {
             output, TRANSLATOR);
     }
     
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("create temporary table if not exists foo (COL1 integer, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    }
     
 }

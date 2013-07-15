@@ -22,11 +22,14 @@
 
 package org.teiid.translator.jdbc.h2;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
+@SuppressWarnings("nls")
 public class TestH2Translator {
 	
     private static H2ExecutionFactory TRANSLATOR; 
@@ -64,6 +67,9 @@ public class TestH2Translator {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
 	}
-
+	
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("create cached local temporary table if not exists foo (COL1 integer, COL2 varchar(100)) on commit drop transactional", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    }
 
 }

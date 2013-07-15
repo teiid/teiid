@@ -101,6 +101,7 @@ public class ConnectorWorkItem implements ConnectorWork {
     	QueryMetadataInterface qmi = vdb.getAttachment(QueryMetadataInterface.class);
         qmi = new TempMetadataAdapter(qmi, new TempMetadataStore());
         this.queryMetadata = new RuntimeMetadataImpl(qmi);
+        this.securityContext.setRuntimeMetadata(this.queryMetadata);
 		this.securityContext.setTransactional(requestMsg.isTransactional());
         LanguageBridgeFactory factory = new LanguageBridgeFactory(this.queryMetadata);
         factory.setConvertIn(!this.connector.supportsInCriteria());

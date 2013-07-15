@@ -22,6 +22,8 @@
 
 package org.teiid.translator.jdbc;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
@@ -32,9 +34,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sql.DataSource;
 import javax.sql.rowset.serial.SerialStruct;
 
+import org.teiid.core.TeiidException;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
+import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.MixinProxy;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.core.util.ReflectionHelper;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SetQuery.Operation;
@@ -42,7 +48,15 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.translator.*;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ProcedureExecution;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.SourceSystemFunctions;
+import org.teiid.translator.Translator;
+import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TranslatorProperty;
+import org.teiid.translator.TypeFacility;
 
 
 /**
@@ -126,6 +140,8 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	private DatabaseCalender databaseCalender;
 	private boolean supportsGeneratedKeys;
 	private StructRetrieval structRetrieval = StructRetrieval.OBJECT;
+	protected SQLDialect dialect; 
+	private boolean enableDependentJoins;
 	
 	private AtomicBoolean initialConnection = new AtomicBoolean(true);
 	
@@ -239,32 +255,24 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     @Override
     public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-    	//TODO: This is not correct; this should be only called once for connection creation    	
-    	obtainedConnection(conn);
     	return new JDBCQueryExecution(command, conn, executionContext, this);
     }
     
     @Override
     public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-    	//TODO: This is not correct; this should be only called once for connection creation    	
-    	obtainedConnection(conn);
     	return new JDBCDirectQueryExecution(arguments, command, conn, executionContext, this);
     }    
     
     @Override
     public ProcedureExecution createProcedureExecution(Call command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-		//TODO: This is not correct; this should be only called once for connection creation    	
-		obtainedConnection(conn);
 		return new JDBCProcedureExecution(command, conn, executionContext, this);
     }
 
     @Override
-    public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
+    public JDBCUpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, Connection conn)
     		throws TranslatorException {
-		//TODO: This is not correct; this should be only called once for connection creation
-		obtainedConnection(conn);
 		return new JDBCUpdateExecution(command, conn, executionContext, this);
     }	
     
@@ -272,7 +280,9 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
     public Connection getConnection(DataSource ds)
     		throws TranslatorException {
 		try {
-	    	return ds.getConnection();
+	    	Connection c = ds.getConnection();
+	    	obtainedConnection(c);
+	    	return c;
 		} catch (SQLException e) {
 			 throw new TranslatorException(JDBCPlugin.Event.TEIID11009, e);
 		}
@@ -1247,6 +1257,139 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	protected boolean supportsGeneratedKeys(ExecutionContext context,
 			Command command) {
 		return supportsGeneratedKeys() && command instanceof Insert;
+	}
+
+    /**
+     * Create a temp table with the given name prefix and columns
+     * @param prefix
+	 * @param cols
+	 * @param context
+	 * @param connection
+	 * @return the name of the table created
+	 * @throws SQLException 
+	 */
+	public String createTempTable(String prefix, List<ColumnReference> cols, ExecutionContext context, Connection connection) throws SQLException {
+    	String name = getTemporaryTableName(prefix);
+		String sql = getCreateTempTableSQL(name, cols, !connection.getAutoCommit());
+    	Statement s = connection.createStatement();
+    	try {
+    		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "creating temporary table with:", sql); //$NON-NLS-1$ 
+    		s.execute(sql);
+    	} finally {
+    		try {
+    			s.close();
+    		} catch (SQLException e) {
+    			
+    		}
+    	}
+    	return name;
+	}
+
+	public String getCreateTempTableSQL(String name, List<ColumnReference> cols, boolean transactional) {
+		SQLDialect d = getDialect();
+    	StringBuilder sb = new StringBuilder(getCreateTemporaryTableString(transactional)).append(" "); //$NON-NLS-1$
+    	sb.append(name).append(" ("); //$NON-NLS-1$
+    	for (Iterator<ColumnReference> iter = cols.iterator(); iter.hasNext();) {
+    		ColumnReference col = iter.next();
+    		sb.append(col.getName());
+    		sb.append(" "); //$NON-NLS-1$
+    		Integer defaultValue = JDBCSQLTypeInfo.getDefaultPrecision(col.getType()); 
+    		int precision = defaultValue == null?255:defaultValue;
+    		int scale = col.getType() == TypeFacility.RUNTIME_TYPES.BIG_DECIMAL?2:0;
+    		long length = precision;
+    		if (col.getMetadataObject() != null) {
+    			precision = col.getMetadataObject().getPrecision();
+    			scale = col.getMetadataObject().getScale();
+    			length = col.getMetadataObject().getLength();
+    		}
+    		sb.append(d.getTypeName(TypeFacility.getSQLTypeFromRuntimeType(col.getType()), length, precision, scale));
+    		if (iter.hasNext()) {
+    			sb.append(", "); //$NON-NLS-1$
+    		}
+    	}
+    	sb.append(") ").append(getCreateTemporaryTablePostfix(transactional)); //$NON-NLS-1$
+    	String sql = sb.toString();
+		return sql;
+	}
+
+	/**
+	 * 
+	 * @param prefix
+	 * @return a valid temporary table name
+	 */
+	public String getTemporaryTableName(String prefix) {
+		return prefix;
+	}
+	
+	/**
+	 * 
+	 * @param inTransaction
+	 * @return the post script for the temp table create
+	 */
+	public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+		return getDialect().getCreateTemporaryTablePostfix();
+	}
+	
+	/**
+	 * 
+	 * @param inTransaction
+	 * @return the temp table creation ddl
+	 */
+	public String getCreateTemporaryTableString(boolean inTransaction) {
+		return getDialect().getCreateTemporaryTableString();
+	}
+	
+	public SQLDialect getDialect() {
+		if (dialect == null) {
+			String name = getHibernateDialectClassName();
+			if (name != null) {
+				try {
+					Object impl = ReflectionHelper.create(name, null, this.getClass().getClassLoader());
+					InvocationHandler handler = new MixinProxy(new Object[] {impl});
+					this.dialect = (SQLDialect) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class<?>[]{SQLDialect.class}, handler);
+				} catch (TeiidException e) {
+					LogManager.logDetail(LogConstants.CTX_CONNECTOR, e, name, "could not be loaded"); //$NON-NLS-1$
+				}
+			}
+			if (dialect == null) {
+				dialect = new DefaultSQLDialect();
+			}
+		}
+		return dialect;
+	}
+	
+	public String getHibernateDialectClassName() {
+		return null;
+	}
+	
+	@Override
+	public boolean supportsDependentJoins() {
+		return enableDependentJoins && getDialect().supportsTemporaryTables();
+	}
+	
+	public boolean tempTableRequiresTransaction() {
+		return false;
+	}
+
+	/**
+	 * Called after the temporary table has been loaded
+	 * @param tableName
+	 * @param context
+	 * @param connection
+	 * @throws SQLException 
+	 */
+	public void loadedTemporaryTable(String tableName,
+			ExecutionContext context, Connection connection) throws SQLException {
+		
+	}
+	
+	@TranslatorProperty(display="Enable Dependent Joins", description="Enable Dependent Join Pushdown",advanced=true)
+	public boolean isEnableDependentJoins() {
+		return enableDependentJoins;
+	}
+
+	public void setEnableDependentJoins(boolean enableDependentJoins) {
+		this.enableDependentJoins = enableDependentJoins;
 	}
 	
 }

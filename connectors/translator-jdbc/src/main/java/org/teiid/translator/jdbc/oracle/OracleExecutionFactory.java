@@ -25,6 +25,7 @@ package org.teiid.translator.jdbc.oracle;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.*;
 
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -236,6 +237,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		return;
     	}
     	ExpressionValueSource values = (ExpressionValueSource)insert.getValueSource();
+    	if (insert.getTable().getMetadataObject() == null) {
+    		return;
+    	}
     	List<Column> allElements = insert.getTable().getMetadataObject().getColumns();
     	if (allElements.size() == values.getValues().size()) {
     		return;
@@ -850,6 +854,57 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     @Override
     public boolean supportsSelectWithoutFrom() {
     	return true;
+    }
+    
+    @Override
+    public String createTempTable(String string, List<ColumnReference> cols,
+    		ExecutionContext context, Connection connection) throws SQLException {
+    	SQLException e1 = null;
+    	for (int i = 0; i < 5; i++) {
+	    	try {
+	    		return super.createTempTable(string, cols, context, connection);
+	    	} catch (SQLException e) {
+	    		if (e.getErrorCode() == 955) {
+	    			e1 = e;
+	    			continue;
+	    		}
+	    		throw e;
+	    	}
+    	}
+    	throw e1;
+    }
+    
+    /**
+     * uses a random table name strategy with a
+     * retry in the {@link #createTempTable(String, List, ExecutionContext, Connection)} method
+     */
+    @Override
+    public String getTemporaryTableName(String prefix) {
+    	return prefix + (int)(Math.random() * 10000000);
+    }
+    
+    @Override
+    public String getCreateTemporaryTablePostfix(boolean inTransaction) {
+    	if (!inTransaction) {
+    		return "ON COMMIT PRESERVE ROWS"; //$NON-NLS-1$
+    	}
+    	return super.getCreateTemporaryTablePostfix(inTransaction) + "; END;"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public String getCreateTemporaryTableString(boolean inTransaction) {
+    	if (!inTransaction) {
+    		return super.getCreateTemporaryTableString(inTransaction);
+    	}
+    	return "DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE '" + super.getCreateTemporaryTableString(inTransaction); //$NON-NLS-1$
+    }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	if (getVersion().getMajorVersion() >= 10) {
+        	return "org.hibernate.dialect.Oracle10gDialect"; //$NON-NLS-1$
+    	}
+    	return "org.hibernate.dialect.Oracle9iDialect"; //$NON-NLS-1$
     }
     
 }

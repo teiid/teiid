@@ -171,4 +171,19 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		return true;
 	}
 	
+	@Override
+	public boolean supportsArrayType() {
+		return true;
+	}
+	
+	@Override
+	public String getHibernateDialectClassName() {
+		return "org.hibernate.dialect.DB2Dialect"; //$NON-NLS-1$
+	}
+	
+	@Override
+	public String getTemporaryTableName(String prefix) {
+		return "session." + super.getTemporaryTableName(prefix); //$NON-NLS-1$
+	}
+	
 }

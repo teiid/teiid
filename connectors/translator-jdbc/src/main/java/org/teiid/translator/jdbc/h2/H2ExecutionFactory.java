@@ -241,4 +241,14 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsSelectWithoutFrom() {
     	return true;
     }
+    
+    @Override
+    public String getHibernateDialectClassName() {
+    	return "org.hibernate.dialect.H2Dialect"; //$NON-NLS-1$
+    }
+    
+    @Override
+    public boolean tempTableRequiresTransaction() {
+    	return true;
+    }
 }

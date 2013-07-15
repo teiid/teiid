@@ -362,4 +362,15 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return true;
     }
     
+    @Override
+    public String getHibernateDialectClassName() {
+    	if (getVersion().compareTo(NINE_0) >= 0) {
+    		if (getVersion().compareTo(TEN_0) >= 0) {
+    			return "org.hibernate.dialect.SQLServer2008Dialect"; //$NON-NLS-1$
+    		}
+    		return "org.hibernate.dialect.SQLServer2005Dialect"; //$NON-NLS-1$
+    	}
+    	return "org.hibernate.dialect.SQLServerDialect"; //$NON-NLS-1$
+    }
+    
 }

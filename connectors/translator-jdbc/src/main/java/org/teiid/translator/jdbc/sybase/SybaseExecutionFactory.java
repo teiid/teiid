@@ -422,4 +422,12 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	return true;
     }
     
+    @Override
+    public String getHibernateDialectClassName() {
+    	if (getVersion().compareTo(FIFTEEN_0_2) >= 0) {
+    		return "org.hibernate.dialect.SybaseASE15Dialect"; //$NON-NLS-1$
+    	}
+    	return "org.hibernate.dialect.Sybase11Dialect"; //$NON-NLS-1$
+    }
+    
 }

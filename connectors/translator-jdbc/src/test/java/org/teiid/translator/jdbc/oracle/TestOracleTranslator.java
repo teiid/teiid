@@ -28,9 +28,12 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +48,7 @@ import org.teiid.language.Array;
 import org.teiid.language.Command;
 import org.teiid.language.Comparison;
 import org.teiid.language.Literal;
+import org.teiid.language.Parameter;
 import org.teiid.language.Select;
 import org.teiid.language.visitor.CollectorVisitor;
 import org.teiid.metadata.Column;
@@ -1069,6 +1073,49 @@ public class TestOracleTranslator {
             EMPTY_CONTEXT,
             null,
             output);
+    }
+    
+	@Test public void testDependentJoin() throws Exception {
+		CommandBuilder commandBuilder = new CommandBuilder(getOracleSpecificMetadata());
+        Select command = (Select) commandBuilder.getCommand("select id from smalla where description = 'a'");
+        Parameter param = new Parameter();
+        param.setType(TypeFacility.RUNTIME_TYPES.STRING);
+        param.setDependentValueId("x");
+        param.setValueIndex(0);
+        Map<String, List<? extends List<?>>> dependentValues = new HashMap<String, List<? extends List<?>>>();
+        dependentValues.put("x", Arrays.asList(Arrays.asList("a"), Arrays.asList("b")));
+        command.setDependentValues(dependentValues);
+        ((Comparison)command.getWhere()).setRightExpression(param);
+		Connection connection = Mockito.mock(Connection.class);
+		Statement statement = Mockito.mock(Statement.class);
+		Mockito.stub(connection.createStatement()).toReturn(statement);
+		PreparedStatement ps = Mockito.mock(PreparedStatement.class);
+		Mockito.stub(ps.executeBatch()).toReturn(new int[] {-2, -2});
+		Mockito.stub(connection.prepareStatement("INSERT INTO TEIID_DKJ1 (COL1) VALUES (?)")).toReturn(ps); //$NON-NLS-1$
+		
+		//we won't bother to retrieve the results, but we expect the following join query
+		PreparedStatement ps1 = Mockito.mock(PreparedStatement.class);
+		Mockito.stub(connection.prepareStatement("SELECT SmallishA.ID FROM TEIID_DKJ1, SmallishA WHERE SmallishA.description = TEIID_DKJ1.COL1")).toReturn(ps1); //$NON-NLS-1$
+		
+		OracleExecutionFactory ef = new OracleExecutionFactory() {
+			public String getTemporaryTableName(String prefix) {
+				return prefix; //don't use random for testing
+			}
+		};
+		ef.start();
+		JDBCQueryExecution e = new JDBCQueryExecution(command, connection, new FakeExecutionContextImpl(),  ef);
+		e.execute();
+		Mockito.verify(statement, Mockito.times(1)).execute("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table TEIID_DKJ1 (COL1 varchar2(100 char)) on commit delete rows; END;");
+		
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "a", Types.VARCHAR);
+		Mockito.verify(ps, Mockito.times(1)).setObject(1, "b", Types.VARCHAR);
+		Mockito.verify(ps, Mockito.times(2)).addBatch();
+		Mockito.verify(ps, Mockito.times(1)).executeBatch();
+	}
+	
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("DECLARE PRAGMA AUTONOMOUS_TRANSACTION; BEGIN EXECUTE IMMEDIATE 'create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) on commit delete rows; END;", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    	assertEquals("create global temporary table foo (COL1 number(10,0), COL2 varchar2(100 char)) ON COMMIT PRESERVE ROWS", TranslationHelper.helpTestTempTable(TRANSLATOR, false));
     }
 
 }

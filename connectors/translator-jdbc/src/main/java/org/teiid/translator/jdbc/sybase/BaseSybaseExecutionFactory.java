@@ -144,5 +144,10 @@ public class BaseSybaseExecutionFactory extends JDBCExecutionFactory {
     public boolean booleanNullable() {
     	return false;
     }
+    
+    @Override
+    public String getTemporaryTableName(String prefix) {
+    	return "#" + super.getTemporaryTableName(prefix); //$NON-NLS-1$
+    }
 
 }

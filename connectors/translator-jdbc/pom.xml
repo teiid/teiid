@@ -26,7 +26,12 @@
           <groupId>javax.resource</groupId>
           <artifactId>connector-api</artifactId>
           <scope>provided</scope>
-        </dependency>       
+        </dependency>
+        <dependency>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-core</artifactId>
+          <scope>provided</scope>
+        </dependency>      
     </dependencies>
     
     <build>

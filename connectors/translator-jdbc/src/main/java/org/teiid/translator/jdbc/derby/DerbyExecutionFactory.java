@@ -44,6 +44,8 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	public static final Version TEN_3 = Version.getVersion("10.3"); //$NON-NLS-1$
 	public static final Version TEN_4 = Version.getVersion("10.4"); //$NON-NLS-1$
 	public static final Version TEN_5 = Version.getVersion("10.5"); //$NON-NLS-1$
+	public static final Version TEN_6 = Version.getVersion("10.6"); //$NON-NLS-1$
+	public static final Version TEN_7 = Version.getVersion("10.7"); //$NON-NLS-1$
 	
 	public DerbyExecutionFactory() {
 		setSupportsFullOuterJoins(false); //Derby supports only left and right outer joins.
@@ -179,6 +181,17 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
+	}
+	
+	@Override
+	public String getHibernateDialectClassName() {
+		if (this.getVersion().compareTo(TEN_6) >= 0) {
+			if (this.getVersion().compareTo(TEN_7) >= 0) {
+				return "org.hibernate.dialect.DerbyTenSevenDialect"; //$NON-NLS-1$
+			}
+			return "org.hibernate.dialect.DerbyTenSixDialect"; //$NON-NLS-1$
+		}
+		return "org.hibernate.dialect.DerbyTenFiveDialect"; //$NON-NLS-1$
 	}
     
 }

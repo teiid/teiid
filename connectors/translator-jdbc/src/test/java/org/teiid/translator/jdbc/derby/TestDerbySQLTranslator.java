@@ -22,14 +22,14 @@
 
 package org.teiid.translator.jdbc.derby;
 
+import static org.junit.Assert.*;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.jdbc.TranslationHelper;
 
-
-/**
- */
+@SuppressWarnings("nls")
 public class TestDerbySQLTranslator {
 
     private static DerbyExecutionFactory TRANSLATOR; 
@@ -79,5 +79,9 @@ public class TestDerbySQLTranslator {
         
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
+    
+    @Test public void testTempTable() throws Exception {
+    	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
+    }
     
 }

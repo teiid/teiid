@@ -38,6 +38,7 @@ import org.teiid.core.util.HashCodeUtil;
 import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.dqp.message.RequestID;
+import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.ExecutionContext;
@@ -65,6 +66,7 @@ public class ExecutionContextImpl implements ExecutionContext {
 	private Collection<String> hint;
 	private CommandContext commandContext;
 	private CacheDirective cacheDirective;
+	private RuntimeMetadata runtimeMetadata;
 	
 	public ExecutionContextImpl(String vdbName, int vdbVersion,  Serializable executionPayload, 
             String originalConnectionID, String connectorName, long requestId, String partId, String execCount) {
@@ -227,12 +229,12 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	@Override
 	public String getGeneralHint() {
-		return StringUtil.join(generalHint, " ");
+		return StringUtil.join(generalHint, " "); //$NON-NLS-1$
 	}
 	
 	@Override
 	public String getSourceHint() {
-		return StringUtil.join(hint, " ");
+		return StringUtil.join(hint, " "); //$NON-NLS-1$
 	}
 	
 	@Override
@@ -285,6 +287,15 @@ public class ExecutionContextImpl implements ExecutionContext {
 	
 	public void setCacheDirective(CacheDirective directive) {
 		this.cacheDirective = directive;
+	}
+
+	public void setRuntimeMetadata(RuntimeMetadataImpl queryMetadata) {
+		this.runtimeMetadata = queryMetadata;
+	}
+	
+	@Override
+	public RuntimeMetadata getRuntimeMetadata() {
+		return this.runtimeMetadata;
 	}
 
 }
