@@ -346,6 +346,19 @@ public class TestDQPCore {
         }
         assertEquals(ThreadState.IDLE, item.getThreadState());
         assertEquals(item.resultsBuffer.getManagedRowCount(), 400); //should have the full results
+        
+        //local should not buffer
+        reqMsg = exampleRequestMessage(sql);
+        reqMsg.setCursorType(ResultSet.TYPE_FORWARD_ONLY);
+        reqMsg.setSync(true);
+        
+        message = core.executeRequest(reqMsg.getExecutionId(), reqMsg);
+        rm = message.get(0, TimeUnit.MILLISECONDS);
+        assertNull(rm.getException());
+        assertEquals(rowsPerBatch, rm.getResultsList().size());
+        
+        item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
+        assertEquals(0, item.resultsBuffer.getManagedRowCount());
     }
     
     @Test public void testBufferReuse() throws Exception {

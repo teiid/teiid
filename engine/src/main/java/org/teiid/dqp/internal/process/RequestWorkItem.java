@@ -634,8 +634,13 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						return;
 					}
 					super.flushBatchDirect(batch, add);
-					if (!add && !processor.hasFinalBuffer()) {
-						 resultsBuffer.setRowCount(batch.getEndRow());
+					if (!add) {
+						if (!processor.hasFinalBuffer()) {
+							resultsBuffer.setRowCount(batch.getEndRow());
+						}
+						if ((requestMsg.getRequestOptions().isContinuous() || useCallingThread) && resultsReceiver == null) {
+				        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
+				        }
 					} else if (isForwardOnly() && add 
 							&& !processor.hasFinalBuffer() //restrict the buffer size for forward only results
 							&& !batch.getTerminationFlag() 
@@ -667,7 +672,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 									this.getTupleBuffer(), "rows", this.getTupleBuffer().getManagedRowCount(), "batch size", this.getTupleBuffer().getBatchSize()); //$NON-NLS-1$ //$NON-NLS-2$ 
 						} 
 						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_DQP, MessageLevel.DETAIL)) {
-							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans."); //$NON-NLS-1$
+							LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Exceeding buffer limit since there are pending active plans or this is using the calling thread."); //$NON-NLS-1$
 						}
 					}
 				}
@@ -883,9 +888,6 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		}
 		cancelCancelTask();
         receiver.receiveResults(response);
-        if (requestMsg.getRequestOptions().isContinuous() && this.resultsReceiver == null) {
-        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
-        }
         return result;
 	}
 
