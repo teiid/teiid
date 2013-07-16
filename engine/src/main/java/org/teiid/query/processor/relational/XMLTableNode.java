@@ -34,11 +34,13 @@ import java.util.Map;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
+import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
+import net.sf.saxon.type.Type;
 import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
@@ -305,6 +307,18 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						value = getValue((AtomicValue)colItem);
 					} else if (value instanceof Item) {
 						Item i = (Item)value;
+						if (i instanceof NodeInfo) {
+							NodeInfo ni = (NodeInfo)i;
+							if (ni.getNodeKind() == Type.ELEMENT && !ni.hasChildNodes() && Boolean.valueOf(ni.getAttributeValue(StandardNames.XSI_NIL))) {
+								tuple.add(null);
+								continue;
+							}
+							/* ideally we'd be able to check for nilled, but that doesn't work without validation
+							 if (ni.isNilled()) {
+								tuple.add(null);
+								continue;
+							}*/
+						}
 						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
 						if (bat != null) {
 							ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);

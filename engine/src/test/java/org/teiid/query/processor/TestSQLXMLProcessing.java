@@ -31,6 +31,7 @@ import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
@@ -271,6 +272,17 @@ public class TestSQLXMLProcessing {
         List<?>[] expected = new List<?>[] {
         		Arrays.asList(new BinaryType(new byte[] {0xf, (byte)0xab})),
         		Arrays.asList(new BinaryType(new byte[] {0x1F, 0x1C})),
+        };    
+    
+        process(sql, expected);
+    }
+    
+    @Test public void testXsiNil() throws Exception {
+        String sql = "select * from xmltable('/a/b' passing convert('<a xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><b xsi:nil=\"true\" xsi:type=\"xs:int\"/><b>1</b></a>', xml) columns val integer path '.') as x"; //$NON-NLS-1$
+        
+        List<?>[] expected = new List<?>[] {
+        		Collections.singletonList(null),
+        		Arrays.asList(1),
         };    
     
         process(sql, expected);
