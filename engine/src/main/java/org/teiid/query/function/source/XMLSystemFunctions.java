@@ -69,6 +69,8 @@ import javax.xml.xpath.XPathExpressionException;
 import net.sf.saxon.expr.JPConverter;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.Name11Checker;
+import net.sf.saxon.om.NodeInfo;
+import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.sxpath.XPathEvaluator;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
@@ -809,7 +811,11 @@ public class XMLSystemFunctions {
             
             // Return string value of node type
             if(o instanceof Item) {
-                return ((Item)o).getStringValue();
+            	Item i = (Item)o;
+            	if (isNull(i)) {
+            		return null;
+            	}
+                return i.getStringValue();
             }  
             
             // Return string representation of non-node value
@@ -818,6 +824,19 @@ public class XMLSystemFunctions {
         	Util.closeSource(s);
         }
     }
+    
+	public static boolean isNull(Item i) {
+		if (i instanceof NodeInfo) {
+			NodeInfo ni = (NodeInfo)i;
+			return ni.getNodeKind() == net.sf.saxon.type.Type.ELEMENT && !ni.hasChildNodes() && Boolean.valueOf(ni.getAttributeValue(StandardNames.XSI_NIL));
+			/* ideally we'd be able to check for nilled, but that doesn't work without validation
+			 if (ni.isNilled()) {
+				tuple.add(null);
+				continue;
+			}*/
+		}
+		return false;
+	}
     
     /**
      * Validate whether the XPath is a valid XPath.  If not valid, an XPathExpressionException will be thrown.

@@ -9,6 +9,8 @@ import net.sf.saxon.expr.PathMap.PathMapArc;
 import net.sf.saxon.expr.PathMap.PathMapNode;
 import net.sf.saxon.expr.PathMap.PathMapRoot;
 import net.sf.saxon.om.Axis;
+import net.sf.saxon.om.NamePool;
+import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.pattern.NodeTest;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.Type;
@@ -126,6 +128,11 @@ class PathMapFilter extends ProxyReceiver {
 			throws XPathException {
 		MatchContext mc = matchContext.getLast();
 		if (!mc.matchedElement) {
+			return;
+		}
+		int fp = nameCode & NamePool.FP_MASK;
+		if (fp == StandardNames.XSI_NIL || fp == StandardNames.XSI_TYPE) {
+			super.attribute(nameCode, typeCode, value, locationId, properties);
 			return;
 		}
 		if (mc.attributeArcs != null) {

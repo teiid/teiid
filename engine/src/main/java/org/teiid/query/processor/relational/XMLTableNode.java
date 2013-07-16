@@ -58,6 +58,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -305,6 +306,10 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						value = getValue((AtomicValue)colItem);
 					} else if (value instanceof Item) {
 						Item i = (Item)value;
+						if (XMLSystemFunctions.isNull(i)) {
+							tuple.add(null);
+							continue;
+						}
 						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
 						if (bat != null) {
 							ConversionResult cr = StringValue.convertStringToBuiltInType(i.getStringValueCS(), bat, null);
