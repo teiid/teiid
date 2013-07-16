@@ -277,15 +277,6 @@ public class SPParameter implements Cloneable {
     }
 
     /**
-     * Check whether the parameter is internal or not.  This value is derived from
-     * the parameter type.
-     * @return True if parameter is a return value, false otherwise
-     */
-    public boolean isInternal() {
-        return (this.parameterType == ParameterInfo.RETURN_VALUE || this.parameterType == ParameterInfo.RESULT_SET);
-    }
-
-    /**
      * Get element symbol representing this parameter.  The symbol will have the
      * same name and type as the parameter.
      * @return Element symbol representing the parameter

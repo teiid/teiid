@@ -34,12 +34,16 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.dqp.internal.datamgr.LanguageBridgeFactory;
+import org.teiid.language.Call;
 import org.teiid.metadata.Table;
+import org.teiid.query.eval.Evaluator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.ProcedureReservedWords;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Insert;
@@ -1086,6 +1090,28 @@ public class TestProcedureResolving {
         sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
         assertEquals("EXEC proc(1)", sp.toString());
         assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(2).getExpression());
+               
+        sp = (StoredProcedure) QueryRewriter.evaluateAndRewrite(sp, new Evaluator(null, null, null), null, tm);
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(tm);
+        Call call = (Call)lbf.translate(sp);
+        assertEquals("EXEC proc(1)", call.toString());
     }    
+    
+    @Test public void testVarArgs1() throws Exception {
+    	String ddl = "create foreign procedure proc (VARIADIC z integer) returns (x string);\n";
+    	TransformationMetadata tm = createMetadata(ddl);    	
+
+    	String sql = "call proc ()"; //$NON-NLS-1$
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc()", sp.toString());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, new ArrayList<Expression>(0)), sp.getParameter(1).getExpression());
+               
+        sp = (StoredProcedure) QueryRewriter.evaluateAndRewrite(sp, new Evaluator(null, null, null), null, tm);
+        LanguageBridgeFactory lbf = new LanguageBridgeFactory(tm);
+        Call call = (Call)lbf.translate(sp);
+        assertEquals("EXEC proc()", call.toString());
+        //we pass to the translator level flattened, so no argument
+        assertEquals(0, call.getArguments().size());
+    }
     
 }
