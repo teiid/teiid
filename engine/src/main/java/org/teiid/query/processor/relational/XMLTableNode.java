@@ -34,13 +34,11 @@ import java.util.Map;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
 import net.sf.saxon.om.SequenceIterator;
-import net.sf.saxon.om.StandardNames;
 import net.sf.saxon.sxpath.XPathDynamicContext;
 import net.sf.saxon.sxpath.XPathExpression;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.type.BuiltInAtomicType;
 import net.sf.saxon.type.ConversionResult;
-import net.sf.saxon.type.Type;
 import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.value.CalendarValue;
 import net.sf.saxon.value.StringValue;
@@ -60,6 +58,7 @@ import org.teiid.core.types.XMLType;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.function.FunctionDescriptor;
+import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.XMLTable;
 import org.teiid.query.sql.lang.XMLTable.XMLColumn;
@@ -307,17 +306,9 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 						value = getValue((AtomicValue)colItem);
 					} else if (value instanceof Item) {
 						Item i = (Item)value;
-						if (i instanceof NodeInfo) {
-							NodeInfo ni = (NodeInfo)i;
-							if (ni.getNodeKind() == Type.ELEMENT && !ni.hasChildNodes() && Boolean.valueOf(ni.getAttributeValue(StandardNames.XSI_NIL))) {
-								tuple.add(null);
-								continue;
-							}
-							/* ideally we'd be able to check for nilled, but that doesn't work without validation
-							 if (ni.isNilled()) {
-								tuple.add(null);
-								continue;
-							}*/
+						if (XMLSystemFunctions.isNull(i)) {
+							tuple.add(null);
+							continue;
 						}
 						BuiltInAtomicType bat = typeMapping.get(proColumn.getSymbol().getType());
 						if (bat != null) {
