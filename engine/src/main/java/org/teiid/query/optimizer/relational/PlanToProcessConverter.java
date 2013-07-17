@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -419,7 +420,7 @@ public class PlanToProcessConverter {
     					if (qc.getWith() == null) {
     						qc.setWith(new ArrayList<WithQueryCommand>(subPlans.size()));
     					}
-    					Map<GroupSymbol, RelationalPlan> plans = new HashMap<GroupSymbol, RelationalPlan>();
+    					Map<GroupSymbol, RelationalPlan> plans = new LinkedHashMap<GroupSymbol, RelationalPlan>();
     					for (Map.Entry<GroupSymbol, PlanNode> entry : subPlans.entrySet()) {
     						RelationalPlan subPlan = convert(entry.getValue());
     						List<ElementSymbol> elems = ResolverUtil.resolveElementsInGroup(entry.getKey(), metadata);

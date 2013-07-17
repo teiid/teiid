@@ -567,6 +567,11 @@ public class AccessNode extends SubqueryAwareRelationalNode {
         if (this.info != null) {
         	props.addProperty(PROP_SHARING_ID, String.valueOf(this.info.id));
         }
+        if (this.subPlans != null) {
+    		for (Map.Entry<GroupSymbol, RelationalPlan> entry : this.subPlans.entrySet()) {
+    			props.addProperty(entry.getKey() + " Dependent Subplan", entry.getValue().getDescriptionProperties()); //$NON-NLS-1$
+    		}
+        }
         return props;
     }
 

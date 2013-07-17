@@ -38,6 +38,7 @@ import java.util.Map;
 
 import org.teiid.language.*;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.visitor.HierarchyVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.DataNotAvailableException;
@@ -51,7 +52,32 @@ import org.teiid.translator.TranslatorException;
  */
 public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetExecution {
 
-    private static final String TABLE_PREFIX = "TEIID_DKJ"; //$//$NON-NLS-1$
+    private static final class RenamingVisitor extends HierarchyVisitor {
+		private Map<String, String> nameMap;
+
+		private RenamingVisitor(Map<String, String> nameMap) {
+			super(true);
+			this.nameMap = nameMap;
+		}
+
+		@Override
+		public void visit(NamedTable obj) {
+			if (obj.getMetadataObject() != null) {
+				return;
+			}
+			String name = obj.getName();
+			String val = nameMap.get(name);
+			if (val != null) {
+				obj.setName(val);
+			}
+			if (obj.getCorrelationName() == null) {
+				obj.setCorrelationName(name);
+			}
+		}
+	}
+
+	private static final String KEY_TABLE_PREFIX = "TEIID_DKJ"; //$//$NON-NLS-1$
+    private static final String FULL_TABLE_PREFIX = "TEIID_DJ"; //$//$NON-NLS-1$
     private static final String COL_PREFIX = "COL"; //$//$NON-NLS-1$
 
 	protected ResultSet results;
@@ -65,7 +91,9 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     @Override
     public void execute() throws TranslatorException {
         // get column types
-        columnDataTypes = ((QueryExpression)command).getColumnTypes();
+    	QueryExpression qe = (QueryExpression)command;
+    	
+        columnDataTypes = qe.getColumnTypes();
         TranslatedCommand translatedComm = null;
         
         boolean usingTxn = false;
@@ -75,12 +103,11 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 	        if (command instanceof Select) {
 	        	Select select = (Select)command;
 	        	if (select.getDependentValues() != null) {
-	        		if (this.executionFactory.tempTableRequiresTransaction() && connection.getAutoCommit()) {
-	        			usingTxn = true;
-	        			connection.setAutoCommit(false);
-	        		}
-	        		createTempTables(select);
+	        		usingTxn = createTempTables(select);
 	        	}
+	        }
+	        if (qe.getWith() != null) {
+	        	usingTxn = createFullTempTables(qe, usingTxn);
 	        }
 	
 	        // translate command
@@ -122,8 +149,77 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
         }
     }
 
-	protected void createTempTables(Select select) throws SQLException, TranslatorException {
-		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "creating temporary tables for dependent join processing"); //$NON-NLS-1$
+    /**
+     * 
+     * @param qe
+     * @param usingTxn
+     * @return
+     * @throws SQLException
+     * @throws TranslatorException
+     */
+	protected boolean createFullTempTables(QueryExpression qe, boolean usingTxn)
+			throws SQLException, TranslatorException {
+		//TODO: should likely consolidate the two temp table mechansims
+		
+		With with = qe.getWith();
+		int t = 1;
+		Map<String, String> nameMap = null;
+		for (Iterator<WithItem> iter = with.getItems().iterator(); iter.hasNext();) {
+			WithItem item = iter.next();
+			if (item.getDependentValues() == null) {
+				continue;
+			}
+			List<ColumnReference> cols = item.getColumns();
+			if (!usingTxn && this.executionFactory.tempTableRequiresTransaction() && connection.getAutoCommit()) {
+				usingTxn = true;
+				connection.setAutoCommit(false);
+			}
+			String tableName = this.executionFactory.createTempTable(FULL_TABLE_PREFIX + (t++), cols, this.context, getConnection());
+			if (nameMap == null) {
+				nameMap = new HashMap<String, String>();
+			}
+			nameMap.put(item.getTable().getName(), tableName);
+			NamedTable table = new NamedTable(tableName, null, null);
+			if (tempTables == null) {
+				tempTables = new ArrayList<NamedTable>();
+			}
+			tempTables.add(table);
+			iter.remove();
+			List<Expression> params = new ArrayList<Expression>(item.getColumns().size());
+			for (int i = 0; i < cols.size(); i++) {
+				Parameter parameter = new Parameter();
+				parameter.setType(cols.get(i).getType());
+				parameter.setValueIndex(i);
+				params.add(parameter);
+			}
+			loadTempTable(cols, params, tableName, table, item.getDependentValues());
+		}
+		//substitute the from with a real table name - TODO: associate real metadata through out
+		if (nameMap != null) {
+			HierarchyVisitor hv = new RenamingVisitor(nameMap);
+			qe.acceptVisitor(hv);
+
+			if (qe.getWith().getItems().isEmpty()) {
+				qe.setWith(null);
+			}
+		}
+		return usingTxn;
+	}
+
+	/**
+	 * 
+	 * @param select
+	 * @return
+	 * @throws SQLException
+	 * @throws TranslatorException
+	 */
+	protected boolean createTempTables(Select select) throws SQLException, TranslatorException {
+		boolean result = false;
+		if (this.executionFactory.tempTableRequiresTransaction() && connection.getAutoCommit()) {
+			result = true;
+			connection.setAutoCommit(false);
+		}
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "creating temporary tables for key set dependent join processing"); //$NON-NLS-1$
 		tempTables = new ArrayList<NamedTable>();
 		Condition c = select.getWhere();
 		List<Condition> conditions = LanguageUtil.separateCriteriaByAnd(c);
@@ -180,7 +276,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 				}
 			}
 			//TODO: this should return a proper Table metadata object
-			String tableName = this.executionFactory.createTempTable(TABLE_PREFIX + (t++), cols, this.context, getConnection());
+			String tableName = this.executionFactory.createTempTable(KEY_TABLE_PREFIX + (t++), cols, this.context, getConnection());
 			NamedTable table = new NamedTable(tableName, null, null);
 			tempTables.add(table);
 
@@ -201,24 +297,32 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 			
 			//bulk load
 			List<? extends List<?>> list = select.getDependentValues().get(entry.getKey());
-			LogManager.logDetail(LogConstants.CTX_CONNECTOR, "loading temporary table", tableName, "with", list.size(), "rows"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			ExpressionValueSource evs = new ExpressionValueSource(params);
-			for (ColumnReference col : cols) {
-				col.setMetadataObject(null); //we don't want to confuse the insert handling
-			}
-			Insert insert = new Insert(table, cols, evs);
-			insert.setParameterValues(list.iterator());
-			JDBCUpdateExecution ex = this.executionFactory.createUpdateExecution(insert, context, context.getRuntimeMetadata(), getConnection());
-			int size = this.executionFactory.getMaxDependentInPredicates() * this.executionFactory.getMaxInCriteriaSize();
-			ex.setMaxPreparedInsertBatchSize(Math.max(size, this.executionFactory.getMaxPreparedInsertBatchSize()));
-			ex.setAtomic(false);
-			ex.execute();
-			ex.statement.close();
-			this.executionFactory.loadedTemporaryTable(tableName, this.context, this.connection);
+			loadTempTable(cols, params, tableName, table, list);
 		}
 		
 		select.setDependentValues(null);
 		select.setWhere(LanguageUtil.combineCriteria(conditions));
+		return result;
+	}
+
+	private void loadTempTable(List<ColumnReference> cols,
+			List<Expression> params, String tableName, NamedTable table,
+			List<? extends List<?>> vals) throws TranslatorException,
+			SQLException {
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "loading temporary table", tableName, "with", vals.size(), "rows"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		ExpressionValueSource evs = new ExpressionValueSource(params);
+		for (ColumnReference col : cols) {
+			col.setMetadataObject(null); //we don't want to confuse the insert handling
+		}
+		Insert insert = new Insert(table, cols, evs);
+		insert.setParameterValues(vals.iterator());
+		JDBCUpdateExecution ex = this.executionFactory.createUpdateExecution(insert, context, context.getRuntimeMetadata(), getConnection());
+		int size = this.executionFactory.getMaxDependentInPredicates() * this.executionFactory.getMaxInCriteriaSize();
+		ex.setMaxPreparedInsertBatchSize(Math.max(size, this.executionFactory.getMaxPreparedInsertBatchSize()));
+		ex.setAtomic(false);
+		ex.execute();
+		ex.statement.close();
+		this.executionFactory.loadedTemporaryTable(tableName, this.context, this.connection);
 	}
 
 	private ColumnReference createTempColumn(int i, Expression ex) {

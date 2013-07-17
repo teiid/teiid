@@ -70,6 +70,7 @@ public class JavaLogger implements org.teiid.logging.Logger {
     		LogRecord record = new LogRecord(javaLevel, msgStr); 
     		record.setParameters(msg);
     		record.setThrown(t);
+    		record.setLoggerName(context);
     		logger.log(record);
 		}
     	else {

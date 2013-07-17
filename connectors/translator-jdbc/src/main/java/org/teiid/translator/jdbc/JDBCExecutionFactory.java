@@ -1367,6 +1367,11 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 		return enableDependentJoins && getDialect().supportsTemporaryTables();
 	}
 	
+	@Override
+	public boolean supportsFullDependentJoins() {
+		return this.supportsDependentJoins();
+	}
+	
 	public boolean tempTableRequiresTransaction() {
 		return false;
 	}

@@ -56,15 +56,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
-import org.teiid.query.optimizer.relational.rules.CapabilitiesUtil;
-import org.teiid.query.optimizer.relational.rules.CriteriaCapabilityValidatorVisitor;
-import org.teiid.query.optimizer.relational.rules.RuleApplySecurity;
-import org.teiid.query.optimizer.relational.rules.RuleAssignOutputElements;
-import org.teiid.query.optimizer.relational.rules.RuleCollapseSource;
-import org.teiid.query.optimizer.relational.rules.RuleConstants;
-import org.teiid.query.optimizer.relational.rules.RuleMergeCriteria;
-import org.teiid.query.optimizer.relational.rules.RulePlaceAccess;
-import org.teiid.query.optimizer.relational.rules.RulePushAggregates;
+import org.teiid.query.optimizer.relational.rules.*;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.proc.ProcedurePlan;
 import org.teiid.query.processor.relational.AccessNode;
@@ -533,6 +525,10 @@ public class RelationalPlanner {
         }
         if(hints.hasAggregates) {
             rules.push(new RulePushAggregates(idGenerator));
+            if (hints.hasJoin) {
+            	//we want to consider full pushdown prior to aggregate decomposition
+            	rules.push(new RuleChooseDependent(true));
+            }
         }
         if(hints.hasJoin) {
             rules.push(RuleConstants.CHOOSE_JOIN_STRATEGY);

@@ -38,7 +38,7 @@ public class MixinProxy implements InvocationHandler {
     private Object[] delegates;
     private Map<Method, Target> methodMap = new HashMap<Method, Target>();
     
-    public MixinProxy(Object[] delegates) {
+    public MixinProxy(Object... delegates) {
         this.delegates = delegates;
     }
     
