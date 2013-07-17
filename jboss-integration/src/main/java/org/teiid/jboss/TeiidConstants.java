@@ -115,11 +115,11 @@ public class TeiidConstants {
 	//SSL_KETSTORE_ELEMENT("keystore",false, false, MeasurementUnit.NONE);
 	public static TeiidAttribute SSL_KETSTORE_NAME_ATTRIBUTE = new TeiidAttribute(Element.SSL_KETSTORE_NAME_ATTRIBUTE, null, ModelType.STRING, true, false, MeasurementUnit.NONE);
 	public static TeiidAttribute SSL_KETSTORE_ALIAS_ATTRIBUTE = new TeiidAttribute(Element.SSL_KETSTORE_ALIAS_ATTRIBUTE, null, ModelType.STRING, true, false, MeasurementUnit.NONE);
-	public static TeiidAttribute SSL_KETSTORE_PASSWORD_ATTRIBUTE = new TeiidAttribute(Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE, null, ModelType.EXPRESSION, true, true, MeasurementUnit.NONE);
+	public static TeiidAttribute SSL_KETSTORE_PASSWORD_ATTRIBUTE = new TeiidAttribute(Element.SSL_KETSTORE_PASSWORD_ATTRIBUTE, null, ModelType.STRING, true, true, MeasurementUnit.NONE);
 	public static TeiidAttribute SSL_KETSTORE_TYPE_ATTRIBUTE = new TeiidAttribute(Element.SSL_KETSTORE_TYPE_ATTRIBUTE, new ModelNode("JKS"), ModelType.STRING, true, false, MeasurementUnit.NONE);
 	//SSL_TRUSTSTORE_ELEMENT("truststore",false, false, MeasurementUnit.NONE);
 	public static TeiidAttribute SSL_TRUSTSTORE_NAME_ATTRIBUTE = new TeiidAttribute(Element.SSL_TRUSTSTORE_NAME_ATTRIBUTE, null, ModelType.STRING, true, false, MeasurementUnit.NONE);
-	public static TeiidAttribute SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE = new TeiidAttribute(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, null, ModelType.EXPRESSION, true, true, MeasurementUnit.NONE);	
+	public static TeiidAttribute SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE = new TeiidAttribute(Element.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE, null, ModelType.STRING, true, true, MeasurementUnit.NONE);	
 
 	// Translator
 	// TRANSLATOR_ELEMENT("translator"),
