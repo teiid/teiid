@@ -30,10 +30,11 @@
 <li>TEIID-2249 <b>Dependent Join Enhancements</b> -
   <ul>
     <li>TEIID-2559</li> greater control over full depdendent join pushdown has been added including make dep hint options max/join to control the extent of depdendent join pushdown.
-    <li>TEIID-2555</li> the join hint enables the pushdown the entire dependent join when supported by the source (no built-in support is yet provided).
-    <li>TEIID-2558</li> JDBC translator support to dependent join key set pushdown for a broad set of sources including Oracle, PostgreSQL, MySQL, SQLServer, Sybase, etc.
-    use the enableDependentJoins translator property.  See the Reference for more.
+    <li>TEIID-2555</li> the join hint enables the pushdown the entire dependent join when supported by the source.
+    <li>TEIID-2558</li> JDBC translator support to dependent join pushdown for a broad set of sources including Oracle, PostgreSQL, MySQL, SQLServer, Sybase, etc.
+    use the enableDependentJoins translator property.
   </ul>
+  See the Reference for more.
 </li>
 <li>TEIID-2527 <b>Configurable Runtime Multisource</b> - the server will now allow multisource models to have sources added and removed at runtime.  See the admin addSource and removeSource methods.
 <li>TEIID-2571 <b>Broader Must Pushdown</b> - must pushdown functions tied to a particular model that supports selects without from can now be called without at any time.
