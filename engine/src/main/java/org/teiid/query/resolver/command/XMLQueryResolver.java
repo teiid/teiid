@@ -506,7 +506,9 @@ public class XMLQueryResolver implements CommandResolver {
         elem.setMetadataID(exactMatch.getMetadataID());
         elem.setType(exactMatch.getType());
         elem.setGroupSymbol(exactMatch.getGroupSymbol());
-        elem.setOutputName(name);
+        if (metadata.useOutputName()) {
+        	elem.setOutputName(name);
+        }
     }
 
     static List<ElementSymbol> getElementsUnderNode(Object mid, Collection<ElementSymbol> validElements, QueryMetadataInterface metadata) 

@@ -29,8 +29,8 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.api.exception.query.UnresolvedSymbolDescription;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.TransformationException;
 import org.teiid.core.types.DataTypeManager.DefaultDataTypes;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.FunctionDescriptor;
@@ -908,8 +908,10 @@ public class ResolverUtil {
 	        // should not come here
 	    } 
 	    
-	    symbol.setOutputDefinition(definition);
-	    symbol.setOutputName(name);
+	    if (metadata.useOutputName()) {
+	    	symbol.setOutputDefinition(definition);
+	    	symbol.setOutputName(name);
+	    }
 	}
 	
 	public static void findKeyPreserved(Query query, Set<GroupSymbol> keyPreservingGroups, QueryMetadataInterface metadata)

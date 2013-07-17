@@ -431,4 +431,14 @@ public class BasicQueryMetadataWrapper implements QueryMetadataInterface {
 		return actualMetadata.getExtensionProperty(metadataID, key, checkUnqualified);
 	}
 	
+	@Override
+	public boolean findShortName() {
+		return actualMetadata.findShortName();
+	}
+	
+	@Override
+	public boolean useOutputName() {
+		return actualMetadata.useOutputName();
+	}
+	
 }

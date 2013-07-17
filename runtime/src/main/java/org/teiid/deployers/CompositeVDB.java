@@ -102,7 +102,7 @@ public class CompositeVDB {
 		}
 		
 		TransformationMetadata metadata =  new TransformationMetadata(vdb, compositeStore, visibilityMap, systemFunctions, udfs);
-				
+		metadata.setUseOutputNames(false);		
 		return metadata;
 	}
 	

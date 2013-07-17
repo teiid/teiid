@@ -30,16 +30,15 @@ import org.teiid.api.exception.query.QueryMetadataException;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.query.metadata.BasicQueryMetadataWrapper;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
-import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-/**
- */
+@SuppressWarnings("nls")
 public class TestElementSymbolOptimizer {
 
     public Command helpResolve(String sql, QueryMetadataInterface metadata) throws QueryParserException, QueryResolverException, TeiidComponentException {
@@ -50,16 +49,15 @@ public class TestElementSymbolOptimizer {
     }
     
     public void helpTestOptimize(String sql, QueryMetadataInterface metadata, String expected) throws QueryMetadataException, TeiidComponentException, QueryParserException, QueryResolverException {
-    	try {
-    		ResolverVisitor.setFindShortName(true);
-	    	Command command = helpResolve(sql, metadata);
-	        String actual = command.toString();
-	            
-	        assertEquals("Expected different optimized string", expected, actual);             //$NON-NLS-1$
-    	}
-        finally {
-        	ResolverVisitor.setFindShortName(false);
-        }
+    	Command command = helpResolve(sql, new BasicQueryMetadataWrapper(metadata){
+    		@Override
+    		public boolean findShortName() {
+    			return true;
+    		}
+    	});
+        String actual = command.toString();
+            
+        assertEquals("Expected different optimized string", expected, actual);             //$NON-NLS-1$
     }
 
     /** Can be optimized */
@@ -172,5 +170,19 @@ public class TestElementSymbolOptimizer {
                             RealMetadataFactory.example1Cached(), 
                             "SELECT e1, COUNT(*) AS x FROM pm1.g1 ORDER BY x"); //$NON-NLS-1$
     }
+    
+    @Test public void testOutputNames() throws Exception {
+    	String sql = "select PM1.g1.e1, e2 FROM Pm1.G1";
+    	Command command = QueryParser.getQueryParser().parseCommand(sql);
 
+    	QueryMetadataInterface metadata = new BasicQueryMetadataWrapper(RealMetadataFactory.example1Cached()){
+    		public boolean useOutputName() {
+    			return false;
+    		};
+    	};
+    	QueryResolver.resolveCommand(command, metadata);
+        
+        assertEquals("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", command.toString());      
+    }
+    
 }

@@ -163,7 +163,6 @@ public class SimpleQueryResolver implements CommandResolver {
         }
         GroupSymbol gs = allInGroupSymbol.getGroup();
         allInGroupSymbol.setGroup(groupSymbols.get(0).clone());
-        allInGroupSymbol.getGroup().setOutputName(gs.getOutputName());
         return groupSymbols.get(0);
     }
     

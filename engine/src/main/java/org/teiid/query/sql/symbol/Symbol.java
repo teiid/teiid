@@ -39,6 +39,8 @@ import org.teiid.query.sql.visitor.SQLStringVisitor;
  */
 public abstract class Symbol implements LanguageObject {
 
+	private static boolean disableOutputNames; 
+	
 	/** 
 	 * Name of the symbol
 	 * 
@@ -146,7 +148,7 @@ public abstract class Symbol implements LanguageObject {
     }
 
     public void setOutputName(String outputName) {
-        this.outputName = DataTypeManager.getCanonicalString(outputName);
+        this.outputName = outputName;
     }
     
     /**
@@ -184,6 +186,10 @@ public abstract class Symbol implements LanguageObject {
 	        return name.substring(index+1);
 	    }
 	    return name;
+	}
+	
+	public static void setDisableOutputNames(boolean disableOutputNames) {
+		Symbol.disableOutputNames = disableOutputNames;
 	}
 
 }

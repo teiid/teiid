@@ -671,4 +671,8 @@ public interface QueryMetadataInterface {
 
 	String getExtensionProperty(Object metadataID, String key,
 			boolean checkUnqualified);
+
+	boolean useOutputName();
+
+	boolean findShortName();
 }

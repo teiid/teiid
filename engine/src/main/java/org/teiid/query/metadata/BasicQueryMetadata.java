@@ -572,4 +572,14 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
 		return null;
 	}
 	
+	@Override
+	public boolean findShortName() {
+		return false;
+	}
+	
+	@Override
+	public boolean useOutputName() {
+		return true;
+	}
+	
 }

@@ -61,16 +61,6 @@ public class ResolverVisitor extends LanguageVisitor {
     public static final String TEIID_PASS_THROUGH_TYPE = "teiid:pass-through-type"; //$NON-NLS-1$
 	private static final String SYS_PREFIX = CoreConstants.SYSTEM_MODEL + '.';
 
-    private static ThreadLocal<Boolean> determinePartialName = new ThreadLocal<Boolean>() {
-    	protected Boolean initialValue() {
-    		return false;
-    	}
-    };
-    
-    public static void setFindShortName(boolean enabled) {
-    	determinePartialName.set(enabled);
-    }
-    
     private Collection<GroupSymbol> groups;
     private GroupContext externalContext;
     protected QueryMetadataInterface metadata;
@@ -90,7 +80,7 @@ public class ResolverVisitor extends LanguageVisitor {
         this.groups = internalGroups;
         this.externalContext = externalContext;
         this.metadata = metadata;
-        this.findShortName = determinePartialName.get();
+        this.findShortName = metadata.findShortName();
     }
 
 	public void setGroups(Collection<GroupSymbol> groups) {
@@ -222,7 +212,9 @@ public class ResolverVisitor extends LanguageVisitor {
         elementSymbol.setMetadataID(resolvedSymbol.getMetadataID());
         elementSymbol.setGroupSymbol(resolvedGroup);
         elementSymbol.setShortName(resolvedSymbol.getShortName());
-        elementSymbol.setOutputName(oldName);
+        if (metadata.useOutputName()) {
+        	elementSymbol.setOutputName(oldName);
+        }
         return true;
 	}
     

@@ -138,6 +138,7 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
     private Set<String> importedModels;
     private Set<String> allowedLanguages;
     private Map<String, DataPolicyMetadata> policies = new TreeMap<String, DataPolicyMetadata>(String.CASE_INSENSITIVE_ORDER);
+    private boolean useOutputNames = true;
     
     /*
      * TODO: move caching to jboss cache structure
@@ -1132,6 +1133,15 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
 	
 	public Map<String, DataPolicyMetadata> getPolicies() {
 		return policies;
+	}
+	
+	@Override
+	public boolean useOutputName() {
+		return useOutputNames;
+	}
+	
+	public void setUseOutputNames(boolean useOutputNames) {
+		this.useOutputNames = useOutputNames;
 	}
 	
 }

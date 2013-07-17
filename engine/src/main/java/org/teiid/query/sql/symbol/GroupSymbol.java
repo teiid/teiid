@@ -191,7 +191,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		}
         copy.setIsTempTable(isTempTable);
         copy.setProcedure(isProcedure);
-        copy.setOutputDefinition(this.getOutputDefinition());
+        copy.outputDefinition = this.outputDefinition;
         copy.outputName = this.outputName;
         copy.isGlobalTable = isGlobalTable;
         copy.modelMetadataId = modelMetadataId;
@@ -251,7 +251,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
     }
     
     public String getOutputDefinition() {
-        return this.outputDefinition;
+        return this.outputDefinition == null?this.getDefinition():this.outputDefinition;
     }
 
     public void setOutputDefinition(String outputDefinition) {
