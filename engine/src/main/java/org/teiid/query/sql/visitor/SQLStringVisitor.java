@@ -357,6 +357,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             } else {
 	            append(element.getRuntimeType());
 	            if (element.getNullType() == NullType.No_Nulls) {
+	            	append(SPACE);
 	            	append(NOT);
 	            	append(SPACE);
 	            	append(NULL);
