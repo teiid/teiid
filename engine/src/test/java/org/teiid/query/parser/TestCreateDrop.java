@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.Datatype;
 import org.teiid.metadata.Table;
@@ -66,7 +67,8 @@ public class TestCreateDrop {
         column.setType(DataTypeManager.DefaultDataClasses.BYTE);
         columns.add(column);
         create.setElementSymbolsAsColumns(columns);
-        helpTest("Create local TEMPORARY table tempTable(c1 boolean, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
+        create.getColumns().get(0).setNullType(NullType.No_Nulls);
+        helpTest("Create local TEMPORARY table tempTable(c1 boolean not null, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean NOT NULL, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testCreateTempTable3() {

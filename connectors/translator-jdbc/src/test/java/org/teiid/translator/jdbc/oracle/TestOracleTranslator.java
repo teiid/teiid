@@ -102,6 +102,12 @@ public class TestOracleTranslator {
 		helpTestVisitor(getTestVDB(), "select part_name from parts union select part_id from parts", impl, null, "SELECT /*+ hello world */ g_1.PART_NAME AS c_0 FROM PARTS g_1 UNION SELECT g_0.PART_ID AS c_0 FROM PARTS g_0", true);
 	}
 	
+	@Test public void testSourceHint2() throws Exception {
+		ExecutionContextImpl impl = new FakeExecutionContextImpl();
+		impl.setHints(Arrays.asList("hello world"));
+		helpTestVisitor(getTestVDB(), "with x (y) as (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
+	}
+	
 	@Test public void testInsertWithSequnce() throws Exception {
 		helpTestVisitor("insert into smalla (doublenum) values (1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}

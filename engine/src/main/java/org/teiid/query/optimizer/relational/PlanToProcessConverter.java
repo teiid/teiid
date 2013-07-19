@@ -347,14 +347,14 @@ public class PlanToProcessConverter {
                         aNode = new AccessNode(getID());
                         processNode = aNode;
                                                 
-                        //-- special handling for temp tables. currently they cannot perform projection
-                        try {
-                            if (command instanceof Query) {
-                                processNode = correctProjectionInternalTables(node, aNode);
-                            }
-                        } catch (QueryMetadataException err) {
-                             throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
+                    }
+                    //-- special handling for temp tables. currently they cannot perform projection
+                    try {
+                    	if (command instanceof Query) {
+                            processNode = correctProjectionInternalTables(node, aNode);
                         }
+                    } catch (QueryMetadataException err) {
+                        throw new TeiidComponentException(QueryPlugin.Event.TEIID30248, err);
                     }
                     ev = EvaluatableVisitor.needsEvaluation(command, modelID, metadata, capFinder);
                     aNode.setShouldEvaluateExpressions(ev.requiresEvaluation(EvaluationLevel.PROCESSING));
