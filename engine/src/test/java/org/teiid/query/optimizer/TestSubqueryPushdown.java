@@ -1160,5 +1160,13 @@ public class TestSubqueryPushdown {
                                       RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
                                       null, false); //$NON-NLS-1$
     }
+    
+    @Test public void testSubqueryPlan() throws Exception {
+    	BasicSourceCapabilities bsc = getTypicalCapabilities();
+        ProcessorPlan plan = TestOptimizer.helpPlan("select 1, (select cast(stringkey as integer) from bqt1.smallb where intkey = smalla.intkey) from bqt1.smalla", //$NON-NLS-1$
+                                      RealMetadataFactory.exampleBQTCached(), null, new DefaultCapabilitiesFinder(bsc),
+                                      new String[] {"SELECT g_0.IntKey FROM BQT1.SmallA AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        assertEquals(5, plan.getDescriptionProperties().getProperties().size());
+    }
 
 }
