@@ -48,8 +48,10 @@ import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.Table;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.processor.BatchIterator;
@@ -335,7 +337,20 @@ public class TempTableStore {
 		return processors;
 	}
     
-    TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context) throws TeiidProcessingException, BlockedException, TeiidComponentException{
+    TempTable getOrCreateTempTable(String tempTableID, Command command, BufferManager buffer, boolean delegate, boolean forUpdate, CommandContext context, GroupSymbol group) throws TeiidProcessingException, BlockedException, TeiidComponentException{
+		if (!(group.getMetadataID() instanceof TempMetadataID)) {
+			//TODO: use a proper metadata
+			TempTableStore tts = context.getSessionTempTableStore();
+			context.setDeterminismLevel(Determinism.SESSION_DETERMINISTIC);
+			if (tts.getTempTable(tempTableID) == null) {
+				//implicitly create global (session scoped) temp table
+				LogManager.logDetail(LogConstants.CTX_DQP, "binding global temp table to session", group); //$NON-NLS-1$
+				QueryMetadataInterface metadata = context.getMetadata();
+				Create create = GlobalTableStoreImpl.getCreateCommand(group, false, metadata);
+				tts.addTempTable(tempTableID, create, buffer, true, context);
+			}
+			return getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
+		}
     	TempTable tempTable = getTempTable(tempTableID, command, buffer, delegate, forUpdate, context);
     	if (tempTable != null) {
     		if (processors != null) {
@@ -350,7 +365,6 @@ public class TempTableStore {
         List<ElementSymbol> columns = null;
         if (command instanceof Insert) {
             Insert insert = (Insert)command;
-            GroupSymbol group = insert.getGroup();
             if(group.isImplicitTempGroupSymbol()) {
                 columns = insert.getVariables();
             }

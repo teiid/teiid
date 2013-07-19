@@ -34,6 +34,9 @@ import java.util.Set;
  * 
  * Does not support modification through entry/value collections.
  * 
+ * TODO: this may not be entirely thread safe as after the clone operations there's a chance that the referenced
+ * array is replaced by rehashing.
+ * 
  * @param <K>
  * @param <V>
  */
@@ -122,6 +125,21 @@ public class CopyOnWriteLinkedHashMap<K, V> implements Map<K, V>, Serializable {
 	@Override
 	public Collection<V> values() {
 		return Collections.unmodifiableCollection(map.values());
+	}
+	
+	@Override
+	public int hashCode() {
+		return map.hashCode();
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		return map.equals(obj);
+	}
+	
+	@Override
+	public String toString() {
+		return map.toString();
 	}
 
 }

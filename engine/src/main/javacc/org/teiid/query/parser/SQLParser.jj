@@ -837,7 +837,7 @@ Command createTempTable(ParseInfo info) :
 	List<ElementSymbol> pk = null;
 }
 {
-	<CREATE> <LOCAL> <TEMPORARY> <TABLE> 
+	<CREATE> [<LOCAL>] <TEMPORARY> <TABLE> 
 	table = id(null)
 	<LPAREN>
 	{
@@ -4833,17 +4833,25 @@ example={code:sql}CREATE VIEW vw AS SELECT 1{code}
 void createTable(MetadataFactory factory) :
 {
 	boolean view = false;
+	boolean globalTemp = false;
 	String tableName = null;
 	Table table = null;
 	Token comment = null;
 	Command query = null;
 }
 {
-	<CREATE> (<FOREIGN> <TABLE> | [<VIRTUAL>] <VIEW> {view = true;}) 
+	<CREATE> (
+		(<FOREIGN> <TABLE>) | 
+		([<VIRTUAL>] <VIEW> {view = true;}) |
+		(<GLOBAL> <TEMPORARY> <TABLE> {globalTemp = true; view = true;})
+	) 
 	tableName = id(null)
 	{
 	    table = factory.addTable(tableName);
 	    table.setVirtual(view);
+	    if (globalTemp) {
+	    	table.setTableType(Table.Type.TemporaryTable);
+	    }
 	}
 	(createTableBody(table, factory) | [optionsClause(table, factory)
 	   {
@@ -4852,7 +4860,7 @@ void createTable(MetadataFactory factory) :
 	])
 	[<AS> { comment = getToken(1).specialToken; } query = queryExpression(ParseInfo.DEFAULT_INSTANCE)
 	  {
-		   if (!view) {
+		   if (!view || globalTemp) {
      		   throw new MetadataException(QueryPlugin.Util.getString("SQLParser.view_def", table.getName()));
 		   }
 		   table.setSelectTransformation((comment != null?comment.image+" ":"") + query.toString());	
@@ -4873,7 +4881,7 @@ Create createForeignTempTable(ParseInfo info) :
 	MetadataFactory factory = getTempMetadataFactory();
 }
 {
-	<CREATE> <FOREIGN> <TEMPORARY> <TABLE>
+	<CREATE> [<LOCAL>] <FOREIGN> <TEMPORARY> <TABLE>
 	tableName = id(null)
 	{
 		table = new Table();
@@ -5057,7 +5065,7 @@ void createColumn(MetadataFactory factory, Table table) :
 	String element = null;
 	ParsedDataType type = null;
 	boolean autoIncrement = false;
-	Boolean notNull = false;
+	boolean notNull = false;
 	String defalt = null;
 	Column column = null;
 	List<String> columnName = new ArrayList<String>();
@@ -5069,16 +5077,25 @@ void createColumn(MetadataFactory factory, Table table) :
 {
 	 element = id(Boolean.TRUE)
 	 (
-	  type = parseDataType()
-	  {
-		column = factory.addColumn(element, type.type, table);
-		column.setUpdatable(true);
-	    setTypeInfo(type, column);		    	
-		columnName.add(element);
-	  }
+      <SERIAL>
+      {
+        type = new ParsedDataType("INTEGER");
+        autoIncrement = true;
+        notNull = true;
+      }
+      |
+      (
+	    type = parseDataType()
+	    [<NOT> <NULL> { notNull = true; }]
+        [<AUTO_INCREMENT> {  autoIncrement = true; }]
+	  )
 	 )
-	 [<NOT> <NULL> { column.setNullType(Column.NullType.No_Nulls); }]
-	 [<AUTO_INCREMENT> {  autoIncrement = true; }]
+	 {
+       column = factory.addColumn(element, type.type, table);
+       column.setUpdatable(true);
+       setTypeInfo(type, column);                
+       columnName.add(element);
+     }
 	 ((<PRIMARY> <KEY> { pk = true; }) | ([<UNIQUE> { unique = true;  }] [<INDEX> { index = true; }]))
 	 [<DEFAULT_KEYWORD> defalt = stringVal() {column.setDefaultValue(defalt);}]
 	 [optionsClause(column, factory)
@@ -5097,7 +5114,9 @@ void createColumn(MetadataFactory factory, Table table) :
 	    	}
 	 		factory.addPrimaryKey("PK", columnName, table);
 	 	}
-	     	 	
+	 	if (notNull) {
+	       column.setNullType(Column.NullType.No_Nulls);
+	    }
 	    column.setAutoIncremented(autoIncrement);
 	 }
 }

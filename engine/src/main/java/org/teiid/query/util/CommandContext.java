@@ -59,7 +59,6 @@ import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
-import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.parser.ParseInfo;
 import org.teiid.query.processor.QueryProcessor;
 import org.teiid.query.sql.symbol.ElementSymbol;
@@ -175,6 +174,7 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		private AuthorizationValidator authorizationValidator;
 		
 		private Map<LookupKey, TupleSource> lookups;
+		private TempTableStore sessionTempTableStore;
 	}
 	
 	private GlobalState globalState = new GlobalState();
@@ -284,8 +284,9 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 		this.vdbState.vdbName = vdb.getName();
 		this.vdbState.vdbVersion = vdb.getVersion();
 		this.vdbState.dqpWorkContext = newWorkContext;
-		//we still have to wrap in a temp, but we don't need the session data
-		this.vdbState.metadata = new TempMetadataAdapter(vdb.getAttachment(QueryMetadataInterface.class), new TempMetadataStore());
+		TempMetadataAdapter metadata = new TempMetadataAdapter(vdb.getAttachment(QueryMetadataInterface.class), globalState.sessionTempTableStore.getMetadataStore());
+		metadata.setSession(true);
+		this.vdbState.metadata = metadata;
     }
     
     public String toString() {
@@ -431,6 +432,17 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 
 	public void setTempTableStore(TempTableStore tempTableStore) {
 		this.tempTableStore = tempTableStore;
+		if (globalState.sessionTempTableStore == null) {
+			globalState.sessionTempTableStore = tempTableStore;
+		}
+	} 
+	
+	public TempTableStore getSessionTempTableStore() {
+		return globalState.sessionTempTableStore;
+	}
+
+	public void setSessionTempTableStore(TempTableStore tempTableStore) {
+		this.globalState.sessionTempTableStore = tempTableStore;
 	}
 	
 	public TimeZone getServerTimeZone() {

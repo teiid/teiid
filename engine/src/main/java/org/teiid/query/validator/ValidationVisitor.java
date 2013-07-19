@@ -967,6 +967,15 @@ public class ValidationVisitor extends AbstractValidationVisitor {
         if (!drop.getTable().isTempTable()) {
             handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.drop_of_nontemptable", drop.getTable()), drop); //$NON-NLS-1$
         }
+        try {
+			if (getMetadata().isVirtualGroup(drop.getTable().getMetadataID())) {
+				handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.drop_of_globaltemptable", drop.getTable()), drop); //$NON-NLS-1$
+			}
+		} catch (QueryMetadataException e) {
+			handleException(e);
+		} catch (TeiidComponentException e) {
+			handleException(e);
+		}
     }
     
     @Override

@@ -205,7 +205,7 @@ public class MetadataValidator {
 								|| t.getTableType() == Table.Type.XmlStagingTable) {
 							continue;
 						}
-						if (t.isVirtual()) {
+						if (t.isVirtual() && t.getTableType() != Table.Type.TemporaryTable) {
 							if (t.getSelectTransformation() == null) {
 								metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31079, t.getFullName(), model.getName()));
 							}

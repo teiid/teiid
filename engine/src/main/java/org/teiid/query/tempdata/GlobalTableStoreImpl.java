@@ -54,6 +54,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.Reserved;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.Table;
@@ -61,6 +62,7 @@ import org.teiid.query.QueryPlugin;
 import org.teiid.query.ReplicatedObject;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SupportConstants;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -421,15 +423,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 	@Override
 	public TempTable createMatTable(final String tableName, GroupSymbol group) throws TeiidComponentException,
 	QueryMetadataException, TeiidProcessingException {
-		Create create = new Create();
-		create.setTable(group);
-		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
-		create.setElementSymbolsAsColumns(allColumns);
-		Object pk = metadata.getPrimaryKey(group.getMetadataID());
-		if (pk != null) {
-			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
-			create.getPrimaryKey().addAll(pkColumns);
-		}
+		Create create = getCreateCommand(group, true, metadata);
 		TempTable table = tableStore.addTempTable(tableName, create, bufferManager, false, null);
 		table.setUpdatable(false);
 		CacheHint hint = table.getCacheHint();
@@ -438,11 +432,37 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 			if (hint.getTtl() != null) {
 				getMatTableInfo(tableName).setTtl(hint.getTtl());
 			}
-			if (pk != null) {
+			if (!create.getPrimaryKey().isEmpty()) {
 				table.setUpdatable(hint.isUpdatable(false));
 			}
 		}
 		return table;
+	}
+
+	public static Create getCreateCommand(GroupSymbol group, boolean matview, QueryMetadataInterface metadata)
+			throws QueryMetadataException, TeiidComponentException {
+		Create create = new Create();
+		create.setTable(group);
+		List<ElementSymbol> allColumns = ResolverUtil.resolveElementsInGroup(group, metadata);
+		create.setElementSymbolsAsColumns(allColumns);
+		if (!matview) {
+			for (int i = 0; i < allColumns.size(); i++) {
+				ElementSymbol es = allColumns.get(i);
+				if (!metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.NULL)) {
+					create.getColumns().get(i).setNullType(NullType.No_Nulls);
+					if (es.getType() == DataTypeManager.DefaultDataClasses.INTEGER
+							&& metadata.elementSupports(es.getMetadataID(), SupportConstants.Element.AUTO_INCREMENT)) {
+						create.getColumns().get(i).setAutoIncremented(true); //serial
+					}
+				}
+			}
+		}
+		Object pk = metadata.getPrimaryKey(group.getMetadataID());
+		if (pk != null) {
+			List<ElementSymbol> pkColumns = resolveIndex(metadata, allColumns, pk);
+			create.getPrimaryKey().addAll(pkColumns);
+		}
+		return create;
 	}
 	
 	/**

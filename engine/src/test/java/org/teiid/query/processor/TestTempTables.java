@@ -49,57 +49,24 @@ import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
-import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
-import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
-import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.tempdata.TempTableDataManager;
-import org.teiid.query.tempdata.TempTableStore;
-import org.teiid.query.tempdata.TempTableStore.TransactionMode;
 import org.teiid.query.unittest.RealMetadataFactory;
-import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls", "unchecked"})
-public class TestTempTables {
+public class TestTempTables extends TempTableTestHarness {
 	
-	private TempMetadataAdapter metadata;
-	private TempTableDataManager dataManager;
-	private TempTableStore tempStore;
-	
-	private TransactionContext tc;
 	private Transaction txn;
 	private Synchronization synch;
-
-	private ProcessorPlan execute(String sql, List<?>[] expectedResults, CapabilitiesFinder finder) throws Exception {
-		CommandContext cc = TestProcessor.createCommandContext();
-		ProcessorPlan plan = TestProcessor.helpGetPlan(TestProcessor.helpParse(sql), metadata, finder, cc);
-		cc.setTransactionContext(tc);
-		cc.setMetadata(metadata);
-		cc.setTempTableStore(tempStore);
-		TestProcessor.doProcess(plan, dataManager, expectedResults, cc);
-		assertTrue(Determinism.SESSION_DETERMINISTIC.compareTo(cc.getDeterminismLevel()) <= 0);
-		return plan;
-	}
-	
-	private ProcessorPlan execute(String sql, List<?>[] expectedResults) throws Exception {
-		return execute(sql, expectedResults, DefaultCapabilitiesFinder.INSTANCE);
-	}
 	
 	@Before public void setUp() {
-		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
-		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
-		metadata.setSession(true);
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
-	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-	    
-	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
-	    cache.setTupleBufferCache(bm);
-		dataManager = new TempTableDataManager(fdm, bm, cache);
+		this.setUp(RealMetadataFactory.example1Cached(), fdm);
 	}
 	
 	@Test public void testRollbackNoExisting() throws Exception {

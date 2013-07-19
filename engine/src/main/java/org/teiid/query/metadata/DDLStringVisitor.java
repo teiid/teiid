@@ -151,27 +151,33 @@ public class DDLStringVisitor {
 			append(FOREIGN_TABLE);
 		}
 		else {
-			append(VIEW);
+			if (table.getTableType() == Table.Type.TemporaryTable) {
+				append(GLOBAL).append(SPACE).append(TEMPORARY).append(SPACE).append(TABLE);
+			} else {
+				append(VIEW);
+			}
 		}
 		append(SPACE);
 		String name = addTableBody(table);
 		
-		if (table.isVirtual()) {
-			append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
+		if (table.getTableType() != Table.Type.TemporaryTable) {
+			if (table.isVirtual()) {
+				append(NEWLINE).append(SQLConstants.Reserved.AS).append(NEWLINE).append(table.getSelectTransformation());
+			}
+			append(SQLConstants.Tokens.SEMICOLON);
+			
+			if (table.isInsertPlanEnabled()) {
+				buildTrigger(name, INSERT, table.getInsertPlan());
+			}
+			
+			if (table.isUpdatePlanEnabled()) {
+				buildTrigger(name, UPDATE, table.getUpdatePlan());
+			}	
+			
+			if (table.isDeletePlanEnabled()) {
+				buildTrigger(name, DELETE, table.getDeletePlan());
+			}			
 		}
-		append(SQLConstants.Tokens.SEMICOLON);
-		
-		if (table.isInsertPlanEnabled()) {
-			buildTrigger(name, INSERT, table.getInsertPlan());
-		}
-		
-		if (table.isUpdatePlanEnabled()) {
-			buildTrigger(name, UPDATE, table.getUpdatePlan());
-		}	
-		
-		if (table.isDeletePlanEnabled()) {
-			buildTrigger(name, DELETE, table.getDeletePlan());
-		}			
 	}
 
 	public String addTableBody(Table table) {
@@ -189,7 +195,7 @@ public class DDLStringVisitor {
 				else {
 					append(COMMA);
 				}
-				visit(c);
+				visit(table, c);
 			}
 			buildContraints(table);
 			append(NEWLINE);
@@ -340,12 +346,18 @@ public class DDLStringVisitor {
 		}
 	}	
 	
-	private void visit(Column column) {
+	private void visit(Table table, Column column) {
 		append(NEWLINE).append(TAB);
-		appendColumn(column, true, true);
-		
-		if (column.isAutoIncremented()) {
-			append(SPACE).append(AUTO_INCREMENT);
+		if (table.getTableType() == Table.Type.TemporaryTable && column.isAutoIncremented() && column.getNullType() == NullType.No_Nulls && column.getJavaType() == DataTypeManager.DefaultDataClasses.INTEGER) {
+			append(SQLStringVisitor.escapeSinglePart(column.getName()));
+			append(SPACE);
+			append(SERIAL);
+		} else {
+			appendColumn(column, true, true);
+			
+			if (column.isAutoIncremented()) {
+				append(SPACE).append(AUTO_INCREMENT);
+			}
 		}
 		
 		appendDefault(column);

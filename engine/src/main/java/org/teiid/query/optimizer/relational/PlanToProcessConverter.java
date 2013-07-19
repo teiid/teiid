@@ -348,7 +348,7 @@ public class PlanToProcessConverter {
                         processNode = aNode;
                                                 
                     }
-                    //-- special handling for temp tables. currently they cannot perform projection
+                    //-- special handling for system tables. currently they cannot perform projection
                     try {
                     	if (command instanceof Query) {
                             processNode = correctProjectionInternalTables(node, aNode);
@@ -675,7 +675,6 @@ public class PlanToProcessConverter {
         ProjectNode pnode = new ProjectNode(getID());
   
         pnode.setSelectSymbols(projectSymbols);
-        //if the following cast fails it means that we have a dependent temp table - that is not yet possible
         aNode = (AccessNode)prepareToAdd(node, aNode);
         node.setProperty(NodeConstants.Info.OUTPUT_COLS, projectSymbols);
         pnode.addChild(aNode);

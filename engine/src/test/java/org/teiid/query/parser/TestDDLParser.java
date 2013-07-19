@@ -808,4 +808,13 @@ public class TestDDLParser {
 		assertEquals(1, cols.get(2).getLength());
 		assertEquals(10000, cols.get(3).getLength());
 	}
+	
+	@Test
+	public void testGlobalTemp() throws Exception {
+		String ddl = "CREATE GLOBAL TEMPORARY TABLE T (col string);";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Table t = s.getTable("T");
+		assertEquals(1, t.getColumns().size());
+	}
 }

@@ -35,7 +35,6 @@ import java.sql.Blob;
 import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
 import java.util.List;
 import java.util.Properties;
 
@@ -65,6 +64,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
+import org.teiid.odbc.PGUtil;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
@@ -339,7 +339,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 				if (paramType != null && paramType[i] != 0) {
 					type = paramType[i];
 				} else {
-					type = convertType(meta.getParameterType(i+1));
+					type = PGUtil.convertType(meta.getParameterType(i+1));
 				}
 				writeInt(type);
 			}
@@ -839,55 +839,4 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		LogManager.logTrace(LogConstants.CTX_ODBC, (Object[])msg);
 	}
 	
-	/**
-	 * Types.ARRAY is not supported
-	 */
-    private static int convertType(final int type) {
-        switch (type) {
-        case Types.BIT:
-        case Types.BOOLEAN:
-            return PG_TYPE_BOOL;
-        case Types.VARCHAR:
-            return PG_TYPE_VARCHAR;        
-        case Types.CHAR:
-            return PG_TYPE_BPCHAR;
-        case Types.TINYINT:
-        case Types.SMALLINT:
-        	return PG_TYPE_INT2;
-        case Types.INTEGER:
-            return PG_TYPE_INT4;
-        case Types.BIGINT:
-            return PG_TYPE_INT8;
-        case Types.NUMERIC:
-        case Types.DECIMAL:
-            return PG_TYPE_NUMERIC;
-        case Types.FLOAT:
-        case Types.REAL:
-            return PG_TYPE_FLOAT4;
-        case Types.DOUBLE:
-            return PG_TYPE_FLOAT8;
-        case Types.TIME:
-            return PG_TYPE_TIME;
-        case Types.DATE:
-            return PG_TYPE_DATE;
-        case Types.TIMESTAMP:
-            return PG_TYPE_TIMESTAMP_NO_TMZONE;
-            
-        case Types.BLOB:            
-        case Types.BINARY:
-        case Types.VARBINARY:
-        case Types.LONGVARBINARY:
-        	return PG_TYPE_BYTEA;
-        	
-        case Types.LONGVARCHAR:
-        case Types.CLOB:            
-        	return PG_TYPE_TEXT;
-        
-        case Types.SQLXML:        	
-            return PG_TYPE_TEXT;
-            
-        default:
-            return PG_TYPE_UNKNOWN;
-        }
-    }	
 }

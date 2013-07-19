@@ -43,8 +43,13 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		XmlMappingClass,
 		XmlStagingTable,
 		MaterializedTable,
-		/** Temporary from a Teiid Perspective - will not have a parent set */
-		TemporaryTable 
+		/** Temporary from a Teiid Perspective - physical will not have a parent set */
+		TemporaryTable {
+			@Override
+			public String toString() {
+				return "TEMPORARY TABLE"; //$NON-NLS-1$
+			}
+		}
 	}
 	
     public static enum TriggerEvent {
@@ -356,7 +361,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
     
     @Override
     public String getFullName() {
-    	if (this.tableType == Type.TemporaryTable) {
+    	if (this.tableType == Type.TemporaryTable && !this.isVirtual) {
     		return this.getName();
     	}
     	return super.getFullName();

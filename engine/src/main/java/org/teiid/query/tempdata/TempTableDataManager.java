@@ -208,7 +208,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				protected TupleSource createTupleSource() throws TeiidComponentException,
 						TeiidProcessingException {
 		        	final String groupKey = group.getNonCorrelationName();
-		            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true, true, context);
+		            final TempTable table = contextStore.getOrCreateTempTable(groupKey, command, bufferManager, true, true, context, group);
 		        	if (command instanceof Insert) {
 		        		Insert insert = (Insert)command;
 		        		TupleSource ts = insert.getTupleSource();
@@ -550,7 +550,9 @@ public class TempTableDataManager implements ProcessorDataManager {
 			@Override
 			protected TupleSource createTupleSource()
 					throws TeiidComponentException, TeiidProcessingException {
-				TempTable tt = contextStore.getOrCreateTempTable(tableName, query, bufferManager, true, false, context);
+				TempTableStore tts = contextStore;
+				
+				TempTable tt = tts.getOrCreateTempTable(tableName, query, bufferManager, true, false, context, group);
 				if (context.getDataObjects() != null) {
 					Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
 					if (id != null) {

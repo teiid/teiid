@@ -34,6 +34,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.metadata.ParameterInfo;
 import org.teiid.common.buffer.BlockedException;
@@ -162,7 +163,7 @@ public class TestProcessor {
 	        Collection failures = new ArrayList();
 	        repo.collectInvalidObjects(failures);
 	        if (failures.size() > 0){
-	            fail("Exception during validation (" + repo); //$NON-NLS-1$
+	            throw new QueryValidatorException("Exception during validation:" + repo); //$NON-NLS-1$
 	        }        
 			command = QueryRewriter.rewrite(command, metadata, context);
 	        ProcessorPlan process = QueryOptimizer.optimizePlan(command, metadata, null, capFinder, analysisRecord, context);

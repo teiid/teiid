@@ -464,12 +464,12 @@ public class TestXMLPlanningEnhancements {
             0,      // Null
             0,      // PlanExecution
             1,      // Project
-            0,      // Select
+            1,      // Select
             0,      // Sort
             0       // UnionAll
         });        
         
-        TestOptimizer.checkDependentJoinCount(plan, 0);
+        TestOptimizer.checkDependentJoinCount(plan, 1);
     }    
     
     @Test public void testUseOfStagingCardinalityOnDependentJoinsWithCost() throws Exception {

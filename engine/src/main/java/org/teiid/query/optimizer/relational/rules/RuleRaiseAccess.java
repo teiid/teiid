@@ -38,6 +38,7 @@ import org.teiid.metadata.ForeignKey;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.SupportConstants;
+import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.OptimizerRule;
@@ -895,6 +896,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
         if(accessModelID == null && accessNode.getGroups().size() > 0) {
             GroupSymbol group = accessNode.getGroups().iterator().next();
             if(metadata.isVirtualGroup(group.getMetadataID())) {
+            	if (metadata.isTemporaryTable(group.getMetadataID())) {
+            		return TempMetadataAdapter.TEMP_MODEL;
+            	}
                 return null;
             }
             accessModelID = metadata.getModelID(group.getMetadataID());

@@ -140,6 +140,9 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 		if(metadataID == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0016")); //$NON-NLS-1$
 		}
+		if (this.isImplicitTempGroupSymbol()) {
+			this.isTempTable = true;
+		}
 		this.metadataID = metadataID;
 	}
 
@@ -164,7 +167,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
      * @since 5.5
      */
     public boolean isTempGroupSymbol() {
-        return isTempTable || isImplicitTempGroupSymbol();
+        return isTempTable || (metadataID == null && isImplicitTempGroupSymbol());
     }
     
     public boolean isImplicitTempGroupSymbol() {
@@ -186,9 +189,7 @@ public class GroupSymbol extends Symbol implements Comparable<GroupSymbol> {
 	 */
 	public GroupSymbol clone() {
 		GroupSymbol copy = new GroupSymbol(schema, getShortName(), getDefinition());
-		if(getMetadataID() != null) {
-			copy.setMetadataID(getMetadataID());
-		}
+		copy.metadataID = this.metadataID;
         copy.setIsTempTable(isTempTable);
         copy.setProcedure(isProcedure);
         copy.outputDefinition = this.outputDefinition;

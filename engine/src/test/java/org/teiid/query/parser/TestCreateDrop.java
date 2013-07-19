@@ -22,12 +22,14 @@
 
 package org.teiid.query.parser;
 
+import static org.junit.Assert.*;
 import static org.teiid.query.parser.TestParser.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.Column;
@@ -71,8 +73,9 @@ public class TestCreateDrop {
         helpTest("Create local TEMPORARY table tempTable(c1 boolean not null, c2 byte)", "CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean NOT NULL, c2 byte)", create); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    @Test public void testCreateTempTable3() {
-        helpException("Create TEMPORARY table tempTable (c1 boolean, c2 byte)"); //$NON-NLS-1$ 
+    @Test public void testCreateTempTable3() throws QueryParserException {
+    	String sql = "Create TEMPORARY table tempTable (c1 boolean, c2 byte)"; 
+        assertEquals("CREATE LOCAL TEMPORARY TABLE tempTable (c1 boolean, c2 byte)", QueryParser.getQueryParser().parseCommand(sql).toString()); //$NON-NLS-1$ 
     }
     
     @Test public void testCreateTempTable4() {

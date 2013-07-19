@@ -217,7 +217,9 @@ public abstract class ProcedureContainerResolver implements CommandResolver {
         // Resolve group so we can tell whether it is an update procedure
         GroupSymbol group = procCommand.getGroup();
         ResolverUtil.resolveGroup(group, metadata);
-        procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
+        if (!group.isTempTable()) {
+        	procCommand.setUpdateInfo(ProcedureContainerResolver.getUpdateInfo(group, metadata, procCommand.getType(), false));
+        }
     }
 
     public static GroupSymbol addScalarGroup(String name, TempMetadataStore metadata, GroupContext externalGroups, List<? extends Expression> symbols) {

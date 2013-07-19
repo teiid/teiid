@@ -654,5 +654,46 @@ public class TestEmbeddedServer {
 		es.addTranslator(MyEF.class);
 		assertTrue(started);
 	}
+	
+	@Test public void testGlobalTempTables() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE global temporary table some_temp (col1 string, col2 time) options (updatable true);]]> </metadata></model></vdb>".getBytes()));
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		
+		PreparedStatement ps = c.prepareStatement("/*+ cache */ select * from some_temp");
+		ResultSet rs = ps.executeQuery();
+		assertFalse(rs.next());
+		
+		Connection c1 = es.getDriver().connect("jdbc:teiid:test", null);
+		c1.createStatement().execute("insert into some_temp (col1) values ('a')");
+		
+		PreparedStatement ps1 = c1.prepareStatement("/*+ cache */ select * from some_temp");
+		ResultSet rs1 = ps1.executeQuery();
+		assertTrue(rs1.next()); //there's a result for the second session
+		
+		rs = ps.executeQuery();
+		assertFalse(rs.next()); //still no result in the first session
+		
+		c.createStatement().execute("insert into some_temp (col1) values ('b')");
+		
+		//TODO: ideally we should detect this change
+		rs = ps.executeQuery();
+		assertFalse(rs.next()); //still no result in the first session
+		
+		//ensure without caching that we have the right results
+		rs = c.createStatement().executeQuery("select * from some_temp");
+		assertTrue(rs.next());
+		assertEquals("b", rs.getString(1));
+		
+		rs = c1.createStatement().executeQuery("select * from some_temp");
+		assertTrue(rs.next());
+		assertEquals("a", rs.getString(1));
+	}
 
 }
