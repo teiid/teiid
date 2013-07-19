@@ -24,16 +24,22 @@ package org.teiid.query.optimizer;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Test;
+import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.metadata.Column;
+import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.optimizer.relational.rules.RuleChooseDependent;
@@ -825,5 +831,38 @@ public class TestDependentJoins {
         });             
 
     } 
+    
+    @Test public void testSystemDependent() throws TeiidComponentException, TeiidProcessingException { 
+        // Create query 
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, sys.columns makedep where pm1.g1.e1 = sys.columns.name"; //$NON-NLS-1$
+        
+        CompositeMetadataStore cms = new CompositeMetadataStore(Arrays.asList(RealMetadataFactory.example1Store(), SystemMetadata.getInstance().getSystemStore()));
+        TransformationMetadata tm = new TransformationMetadata(null, cms, null, null, null);
+        BasicSourceCapabilities bsc = new BasicSourceCapabilities();
+        bsc.setCapabilitySupport(Capability.CRITERIA_IN, true);
+        ProcessorPlan plan = TestOptimizer.helpPlan(
+                sql,  //$NON-NLS-1$
+                tm,
+                null, new DefaultCapabilitiesFinder(bsc),
+                new String[] {"SELECT pm1.g1.e1 FROM pm1.g1", "SELECT SYS.Columns.Name FROM SYS.Columns WHERE SYS.Columns.Name IN (<dependent values>)"},
+                TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING );
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+                1,      // Access
+                1,      // DependentAccess
+                0,      // DependentSelect
+                0,      // DependentProject
+                0,      // DupRemove
+                0,      // Grouping
+                0,      // NestedLoopJoinStrategy
+                1,      // MergeJoinStrategy
+                0,      // Null
+                0,      // PlanExecution
+                2,      // Project - we expect a project over the system query
+                0,      // Select
+                0,      // Sort
+                0       // UnionAll
+            }); 
+    }
     
 }
