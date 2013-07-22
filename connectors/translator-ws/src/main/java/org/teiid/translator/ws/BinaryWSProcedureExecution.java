@@ -167,7 +167,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     @Override
     public List<?> getOutputParameterValues() throws TranslatorException {
     	Object result = this.returnValue;
-		if (this.returnValue != null && this.procedure.getArguments().size() > 3 && Boolean.TRUE.equals(this.procedure.getArguments().get(3).getArgumentValue().getValue())) {
+		if (this.returnValue != null && this.procedure.getArguments().size() > 4 && Boolean.TRUE.equals(this.procedure.getArguments().get(3).getArgumentValue().getValue())) {
 			try {
 				result = new BlobType(new StreamingBlob(this.returnValue.getInputStream()));
 			} catch (IOException e) {
