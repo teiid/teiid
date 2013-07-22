@@ -21,6 +21,8 @@
  */
 package org.teiid.translator.odata;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -33,6 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.activation.DataSource;
 import javax.ws.rs.core.Response.Status;
 
 import org.odata4j.core.ODataConstants;
@@ -53,6 +56,8 @@ import org.odata4j.format.xml.AtomFeedFormatParser;
 import org.odata4j.stax2.XMLEvent2;
 import org.odata4j.stax2.XMLEventReader2;
 import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.InputStreamFactory;
 import org.teiid.language.Argument;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
@@ -206,7 +211,22 @@ public class BaseQueryExecution {
 
 		Call call = this.translator.getLanguageFactory().createCall(ODataExecutionFactory.INVOKE_HTTP, parameters, null);
 
-		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection);
+		BinaryWSProcedureExecution execution = new BinaryWSProcedureExecution(call, this.metadata, this.executionContext, null, this.connection) {
+			@Override
+			public List<?> getOutputParameterValues() throws TranslatorException {
+				ArrayList params = new ArrayList(super.getOutputParameterValues());
+				final DataSource httpOut = (DataSource)params.get(0);
+				BlobImpl out = new BlobImpl(new InputStreamFactory() {
+					@Override
+					public InputStream getInputStream() throws IOException {
+						return httpOut.getInputStream();
+					}
+				}) ;
+				params.remove(0);
+				params.add(0, out);
+				return params;
+			}
+		};
 		execution.setUseResponseContext(true);
 		execution.setAlwaysAllowPayloads(true);
 
