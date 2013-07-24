@@ -108,7 +108,7 @@ enum Element {
 	SSL_AUTH_MODE_ATTRIBUTE("authentication-mode", "ssl-authentication-mode"),
 	SSL_SSL_PROTOCOL_ATTRIBUTE("ssl-protocol", "ssl-ssl-protocol"),
 	SSL_KEY_MANAGEMENT_ALG_ATTRIBUTE("keymanagement-algorithm", "ssl-keymanagement-algorithm"),
-	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "enabled-cipher-suites"),
+	SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE("enabled-cipher-suites", "ssl-enabled-cipher-suites"),
 	SSL_KETSTORE_ELEMENT("keystore"),
 	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name"),
 	SSL_KETSTORE_ALIAS_ATTRIBUTE("key-alias", "keystore-key-alias"),
