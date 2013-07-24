@@ -248,7 +248,7 @@ public class TestLimitNode {
     }
     
     private static LimitNode getOffsetNode(int offset, RelationalNode child) throws Exception {
-        LimitNode node = new LimitNode(1, new Constant(new Integer(-1)), new Constant(new Integer(offset)));
+        LimitNode node = new LimitNode(1, null, new Constant(new Integer(offset)));
         node.addChild(child);
         node.open();
         return node;

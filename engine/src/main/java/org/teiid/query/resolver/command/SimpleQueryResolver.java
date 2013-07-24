@@ -202,7 +202,8 @@ public class SimpleQueryResolver implements CommandResolver {
             visitNode(obj.getCriteria());
             visitNode(obj.getGroupBy());
             visitNode(obj.getHaving());
-            visitNode(obj.getSelect());        
+            visitNode(obj.getSelect()); 
+            visitNode(obj.getLimit());
         }
         
         public void visit(GroupSymbol obj) {
@@ -570,6 +571,27 @@ public class SimpleQueryResolver implements CommandResolver {
 				checkImplicit(jp.getLeftClause());
 				if (allowImplicit) {
 					checkImplicit(jp.getRightClause());
+				}
+			}
+		}
+		
+		@Override
+		public void visit(Limit obj) {
+			super.visit(obj);
+			if (obj.getOffset() != null) {
+				ResolverUtil.setTypeIfNull(obj.getOffset(), DataTypeManager.DefaultDataClasses.INTEGER);
+				try {
+					obj.setOffset(ResolverUtil.convertExpression(obj.getOffset(), DataTypeManager.DefaultDataTypes.INTEGER, metadata));
+				} catch (QueryResolverException e) {
+					throw new TeiidRuntimeException(e);
+				}
+			}
+			if (obj.getRowLimit() != null) {
+				ResolverUtil.setTypeIfNull(obj.getRowLimit(), DataTypeManager.DefaultDataClasses.INTEGER);
+				try {
+					obj.setRowLimit(ResolverUtil.convertExpression(obj.getRowLimit(), DataTypeManager.DefaultDataTypes.INTEGER, metadata));
+				} catch (QueryResolverException e) {
+					throw new TeiidRuntimeException(e);
 				}
 			}
 		}

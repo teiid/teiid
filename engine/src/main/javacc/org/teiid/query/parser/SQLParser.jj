@@ -3504,15 +3504,18 @@ example={code:sql}?{code}
 */
 Expression intParam(ParseInfo info) :
 {
+   Expression ex = null;
    Integer val = null;
 }
 {
-   (val = intVal() | <QMARK>)
+   val = intVal() 
    {
-     if (val == null) {
-       return new Reference(info.referenceCount++);
-     } 
      return new Constant(val, DataTypeManager.DefaultDataClasses.INTEGER);
+   }
+   |
+   ex = unsignedValueExpressionPrimary(info)
+   {
+     return ex;
    }
 }
 

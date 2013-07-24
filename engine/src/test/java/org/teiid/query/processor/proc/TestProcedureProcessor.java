@@ -1456,6 +1456,64 @@ public class TestProcedureProcessor {
         
     }
     
+    @Test public void testEvaluatableLimit() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n") //$NON-NLS-1$
+        .append("BEGIN\n") //$NON-NLS-1$
+        .append("SELECT e1 from pm1.g1 limit param;\n") //$NON-NLS-1$
+        .append("END"); //$NON-NLS-1$
+        
+        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"param"}, new String[] {DataTypeManager.DefaultDataTypes.INTEGER});
+        
+        
+        FakeDataManager dataMgr = exampleDataManager(metadata);
+
+        String userUpdateStr = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+        
+        helpTestProcess(plan, new List[] {
+            Arrays.asList(new Object[] {"First"})}, dataMgr, metadata); //$NON-NLS-1$
+        
+        userUpdateStr = "EXEC pm1.sq1(-1)"; //$NON-NLS-1$
+        plan = getProcedurePlan(userUpdateStr, metadata);
+        
+        try {
+	        helpTestProcess(plan, new List[] {
+	            Arrays.asList(new Object[] {"First"})}, dataMgr, metadata); //$NON-NLS-1$
+	        fail();
+        } catch (QueryValidatorException e) {
+        	//shouldn't allow -1
+        }
+    }
+    
+    @Test public void testEvaluatableLimit2() throws Exception {
+    	TransformationMetadata metadata = RealMetadataFactory.fromDDL("create foreign table t (c string); " +
+    			"create virtual procedure proc (p short) returns (c string) as select c from t limit p;", "vdb", "m");
+    	HardcodedDataManager dataMgr = new HardcodedDataManager();
+    	dataMgr.addData("SELECT m.t.c FROM m.t", new List<?>[] {Arrays.asList("a"), Arrays.asList("b")});
+    	String sql = "call proc(1)";
+    	ProcessorPlan plan = getProcedurePlan(sql, metadata);
+        helpTestProcess(plan, new List[] {
+            Arrays.asList(new Object[] {"a"})}, dataMgr, metadata); //$NON-NLS-1$
+    }
+    
+    //should fail as the param type is incorrect
+    @Test(expected=QueryPlannerException.class) public void testEvaluatableLimit1() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        StringBuffer procedure = new StringBuffer("CREATE VIRTUAL PROCEDURE \n") //$NON-NLS-1$
+        .append("BEGIN\n") //$NON-NLS-1$
+        .append("SELECT e1 from pm1.g1 limit param;\n") //$NON-NLS-1$
+        .append("END"); //$NON-NLS-1$
+        
+        addProc(metadata, "sq1", procedure.toString(), new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[] {"param"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+        
+        String userUpdateStr = "EXEC pm1.sq1(1)"; //$NON-NLS-1$
+        
+        getProcedurePlan(userUpdateStr, metadata);
+    }
+    
     @Test public void testEvaluatableSelectWithOrderBy1() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         

@@ -48,6 +48,7 @@ import net.sf.saxon.trans.XPathException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.api.exception.query.QueryValidatorException;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.ComponentNotFoundException;
@@ -641,7 +642,15 @@ public class Evaluator {
 		   if (ref.isPositional() && ref.getExpression() == null) {
 			   return getContext(ref).getVariableContext().getGlobalValue(ref.getContextSymbol());
 		   }
-		   return internalEvaluate(ref.getExpression(), tuple);
+		   Object result = internalEvaluate(ref.getExpression(), tuple);
+		   if (ref.getConstraint() != null) {
+			   try {
+				   ref.getConstraint().validate(result);
+			   } catch (QueryValidatorException e) {
+				   throw new ExpressionEvaluationException(e);
+			   }
+		   }
+		   return result;
 	   } else if(expression instanceof Criteria) {
 	       return evaluate((Criteria) expression, tuple);
 	   } else if(expression instanceof ScalarSubquery) {

@@ -87,6 +87,7 @@ import org.teiid.query.sql.visitor.ValueIteratorProviderCollectorVisitor;
 import org.teiid.query.util.CommandContext;
 import org.teiid.query.validator.UpdateValidator.UpdateInfo;
 import org.teiid.query.validator.UpdateValidator.UpdateMapping;
+import org.teiid.query.validator.ValidationVisitor;
 import org.teiid.translator.SourceSystemFunctions;
 
 
@@ -96,8 +97,9 @@ import org.teiid.translator.SourceSystemFunctions;
  */
 public class QueryRewriter {
 
-    public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
-    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER));
+    private static final Constant ZERO_CONSTANT = new Constant(0, DataTypeManager.DefaultDataClasses.INTEGER);
+	public static final CompareCriteria TRUE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER));
+    public static final CompareCriteria FALSE_CRITERIA = new CompareCriteria(new Constant(1, DataTypeManager.DefaultDataClasses.INTEGER), CompareCriteria.EQ, ZERO_CONSTANT);
     public static final CompareCriteria UNKNOWN_CRITERIA = new CompareCriteria(new Constant(null, DataTypeManager.DefaultDataClasses.STRING), CompareCriteria.NE, new Constant(null, DataTypeManager.DefaultDataClasses.STRING));
     
     private static final Map<String, String> ALIASED_FUNCTIONS = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
@@ -2983,13 +2985,25 @@ public class QueryRewriter {
     
     private Limit rewriteLimitClause(Limit limit) throws TeiidComponentException, TeiidProcessingException{
         if (limit.getOffset() != null) {
-            limit.setOffset(rewriteExpressionDirect(limit.getOffset()));
-            if (new Constant(0).equals(limit.getOffset())) {
+        	if (!processing) {
+	            limit.setOffset(rewriteExpressionDirect(limit.getOffset()));
+        	} else {
+        		Constant c = evaluate(limit.getOffset(), false);
+        		limit.setOffset(c);
+        		ValidationVisitor.LIMIT_CONSTRAINT.validate(c.getValue());
+        	}
+            if (ZERO_CONSTANT.equals(limit.getOffset())) {
             	limit.setOffset(null);
             }
         }
         if (limit.getRowLimit() != null) {
-            limit.setRowLimit(rewriteExpressionDirect(limit.getRowLimit()));
+        	if (!processing) {
+	            limit.setRowLimit(rewriteExpressionDirect(limit.getRowLimit()));
+        	} else {
+        		Constant c = evaluate(limit.getRowLimit(), false);
+        		limit.setRowLimit(c);
+        		ValidationVisitor.LIMIT_CONSTRAINT.validate(c.getValue());
+        	}
         }
         return limit;
     }

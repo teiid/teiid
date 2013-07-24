@@ -36,6 +36,7 @@ import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.validator.ValidationVisitor;
 
 
 
@@ -125,6 +126,7 @@ public class LimitNode extends RelationalNode {
     	limit = -1;
     	if (limitExpr != null) {
             Integer limitVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(limitExpr, Collections.emptyList());
+            ValidationVisitor.LIMIT_CONSTRAINT.validate(limitVal);
             limit = limitVal.intValue();
     	}
         if (limit == 0) {
@@ -132,6 +134,7 @@ public class LimitNode extends RelationalNode {
         }
         if (offsetExpr != null) {
             Integer offsetVal = (Integer)new Evaluator(Collections.emptyMap(), getDataManager(), getContext()).evaluate(offsetExpr, Collections.emptyList());
+            ValidationVisitor.LIMIT_CONSTRAINT.validate(offsetVal);
             offset = offsetVal.intValue();
         } else {
             offset = 0;

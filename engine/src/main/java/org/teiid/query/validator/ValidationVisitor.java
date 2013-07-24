@@ -79,6 +79,7 @@ import org.teiid.query.sql.proc.Statement.Labeled;
 import org.teiid.query.sql.proc.WhileStatement;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.symbol.AggregateSymbol.Type;
+import org.teiid.query.sql.symbol.Reference.Constraint;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor.AggregateStopNavigator;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
@@ -93,7 +94,7 @@ import org.teiid.translator.SourceSystemFunctions;
 
 public class ValidationVisitor extends AbstractValidationVisitor {
 
-    private final class PositiveIntegerConstraint implements
+    private static final class PositiveIntegerConstraint implements
 			Reference.Constraint {
     	
     	private String msgKey;
@@ -104,11 +105,13 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     	
 		@Override
 		public void validate(Object value) throws QueryValidatorException {
-			if (((Integer)value).intValue() < 0) {
+			if (value == null || ((Integer)value).intValue() < 0) {
 				 throw new QueryValidatorException(QueryPlugin.Event.TEIID30242, QueryPlugin.Util.getString(msgKey));
 			}
 		}
 	}
+    
+    public static final Constraint LIMIT_CONSTRAINT = new PositiveIntegerConstraint("ValidationVisitor.badlimit2"); //$NON-NLS-1$ 
 
 	// State during validation
     private boolean isXML = false;	// only used for Query commands
@@ -1037,26 +1040,25 @@ public class ValidationVisitor extends AbstractValidationVisitor {
     }
     
     public void visit(Limit obj) {
-        Expression offsetExpr = obj.getOffset();
-        if (offsetExpr instanceof Constant) {
-            Integer offset = (Integer)((Constant)offsetExpr).getValue();
-            if (offset.intValue() < 0) {
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badoffset2"), obj); //$NON-NLS-1$
-            }
-        } else if (offsetExpr instanceof Reference) {
-        	((Reference)offsetExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badoffset2")); //$NON-NLS-1$
-        }
-        Expression limitExpr = obj.getRowLimit();
-        if (limitExpr instanceof Constant) {
-            Integer limit = (Integer)((Constant)limitExpr).getValue();
-            if (limit.intValue() < 0) {
-                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit2"), obj); //$NON-NLS-1$
-            }
-        } else if (limitExpr instanceof Reference) {
-        	((Reference)limitExpr).setConstraint(new PositiveIntegerConstraint("ValidationVisitor.badlimit2")); //$NON-NLS-1$
-        }
+        validateLimitExpression(obj, obj.getOffset());
+        validateLimitExpression(obj, obj.getRowLimit());
     }
-    
+
+	private void validateLimitExpression(Limit obj, Expression limitExpr) {
+		if (limitExpr != null) {
+	        if (limitExpr instanceof Constant) {
+	            Integer limit = (Integer)((Constant)limitExpr).getValue();
+	            if (limit.intValue() < 0) {
+	                handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit2"), obj); //$NON-NLS-1$
+	            }
+	        } else if (limitExpr instanceof Reference) {
+	        	((Reference)limitExpr).setConstraint(LIMIT_CONSTRAINT); 
+	        } else if (!EvaluatableVisitor.willBecomeConstant(limitExpr)) {
+	        	handleValidationError(QueryPlugin.Util.getString("ValidationVisitor.badlimit1"), obj); //$NON-NLS-1$
+	        }
+        }
+	}
+
     @Override
     public void visit(XMLForest obj) {
     	validateDerivedColumnNames(obj, obj.getArgs());
