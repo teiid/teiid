@@ -104,6 +104,13 @@ public class TestOracleTranslator {
 		helpTestVisitor(getTestVDB(), "with x (y) as (select part_name from parts) select y from x", impl, null, "WITH x AS (SELECT PARTS.PART_NAME AS y FROM PARTS) SELECT /*+ hello world */ g_0.y FROM x g_0", true);
 	}
 	
+	@Test public void testSourceHint3() throws Exception {
+		ExecutionContextImpl impl = new FakeExecutionContextImpl();
+		impl.setHint("hello world");
+		impl.setGeneralHint("other");
+		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world other */ g_0.PART_NAME FROM PARTS g_0", true);
+	}
+	
 	@Test public void testInsertWithSequnce() throws Exception {
 		helpTestVisitor("insert into smalla (doublenum) values (1)", "INSERT INTO SmallishA (DoubleNum, ID) VALUES (1.0, MYSEQUENCE.nextVal)"); //$NON-NLS-1$ //$NON-NLS-2$
 	}
