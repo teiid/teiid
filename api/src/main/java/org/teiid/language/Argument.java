@@ -45,6 +45,33 @@ public class Argument extends BaseLanguageObject implements MetadataReference<Pr
     	this.type = type;
     }
     
+    /**
+     * Typical constructor for an out/return parameter
+     * @param direction
+     * @param type
+     * @param metadataObject
+     */
+    public Argument(Direction direction, Class<?> type, ProcedureParameter metadataObject) {
+        this.direction = direction;
+    	this.metadataObject = metadataObject;
+    	this.type = type;
+    }
+    
+    /**
+     * Typical constructor for an in/in out parameter
+     * @param direction
+     * @param type
+     * @param metadataObject
+     */
+    public Argument(Direction direction, Literal value, ProcedureParameter metadataObject) {
+        this.direction = direction;
+        this.argumentValue = value;
+    	this.metadataObject = metadataObject;
+    	if (value != null) {
+    		this.type = value.getType();
+    	}
+    }
+    
     public Direction getDirection() {
         return this.direction;
     }
