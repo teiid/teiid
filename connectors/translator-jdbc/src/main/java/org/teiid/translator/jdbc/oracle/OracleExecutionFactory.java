@@ -411,10 +411,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	}
     	
     	if (!usingPayloadComment && context != null) {
-    		String hint = null;
-    		hint = context.getSourceHint();
-    		if (hint == null) {
-    			hint = context.getGeneralHint();
+    		String hint = context.getSourceHint();
+    		if (context.getGeneralHint() != null) {
+    			if (hint != null) {
+    				hint += (" " + context.getGeneralHint()); //$NON-NLS-1$
+    			} else {
+    				hint = context.getGeneralHint();
+    			}
     		}
     		if (hint != null) {
     			//append a source hint

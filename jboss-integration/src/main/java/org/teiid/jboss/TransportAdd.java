@@ -21,7 +21,8 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.teiid.jboss.TeiidConstants.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -57,7 +58,6 @@ import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.SSLConfiguration;
 import org.teiid.transport.SocketConfiguration;
-import static org.teiid.jboss.TeiidConstants.*;
 
 class TransportAdd extends AbstractAddStepHandler {
 	public static TransportAdd INSTANCE = new TransportAdd();
@@ -86,7 +86,8 @@ class TransportAdd extends AbstractAddStepHandler {
 		TeiidConstants.SSL_KETSTORE_TYPE_ATTRIBUTE,
 		TeiidConstants.SSL_TRUSTSTORE_NAME_ATTRIBUTE,
 		TeiidConstants.SSL_TRUSTSTORE_PASSWORD_ATTRIBUTE,
-		TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE
+		TeiidConstants.SSL_KETSTORE_ALIAS_ATTRIBUTE,
+		TeiidConstants.SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE
 	};
 	
 	@Override
@@ -235,8 +236,12 @@ class TransportAdd extends AbstractAddStepHandler {
     	}	
     	
     	if (SSL_KETSTORE_ALIAS_ATTRIBUTE.isDefined(node, context)) {
-    		ssl.setKeystorekeyAlias(SSL_KETSTORE_ALIAS_ATTRIBUTE.asString(node, context));
+    		ssl.setKeystoreKeyAlias(SSL_KETSTORE_ALIAS_ATTRIBUTE.asString(node, context));
     	}    	
+    	
+    	if (SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE.isDefined(node, context)) {
+    		ssl.setKeystoreKeyPassword(SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE.asString(node, context));
+    	}
     	
     	if (SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.isDefined(node, context)) {
     		ssl.setEnabledCipherSuites(SSL_ENABLED_CIPHER_SUITES_ATTRIBUTE.asString(node, context));

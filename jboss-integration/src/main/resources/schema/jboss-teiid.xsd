@@ -330,7 +330,12 @@
                                     <xs:annotation>
                                         <xs:documentation>key alias name</xs:documentation>
                                     </xs:annotation>                    
-                                </xs:attribute>                                
+                                </xs:attribute>                   
+                                <xs:attribute name="key-password" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key password</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>             
                             </xs:complexType>                        
                         </xs:element>
                         <xs:element name="truststore" minOccurs="0" maxOccurs="1">
@@ -380,6 +385,12 @@
                     <xs:attribute name="ssl-protocol" type="xs:string" default="TLSv1"/>
                     <xs:attribute name="keymanagement-algorithm" type="xs:string"/>
                     <xs:attribute name="enable" type="xs:boolean"/>
+                    <xs:attribute name="enabled-cipher-suites" type="xs:string">
+                        <xs:annotation>
+                            <xs:documentation>Comma separated cipher suites that are allowed to be used for SSL. Use to restrict encryption strength(128 bit, 256 bit). 
+                            Only provide encryption suites that are supported by the server JVM.</xs:documentation>
+                        </xs:annotation>        
+                    </xs:attribute>
                 </xs:complexType>
             </xs:element>            
         </xs:sequence>
@@ -410,12 +421,6 @@
                         Setting this value above the max available processors is not recommended.</xs:documentation>
                 </xs:annotation>        
         </xs:attribute>
-        <xs:attribute name="enabled-cipher-suites" type="xs:string">
-                <xs:annotation>
-                    <xs:documentation>Cipher suites that are allowed to be used for SSL. Use to restrict encryption strength(128 bit, 256 bit). 
-                    Only provide encryption suites that are supported by both client and server JVM.</xs:documentation>
-                </xs:annotation>        
-        </xs:attribute>        
     </xs:complexType>
 
 </xs:schema>
