@@ -53,6 +53,8 @@
             "input-buffer-size" : 2,
             "keystore-name" : "keystore name",
             "keystore-password" : "keystore passs",
+            "keystore-key-alias" : "x",
+            "keystore-key-password" : "y",
             "keystore-type" : "keystore type",
             "max-socket-threads" : 1,
             "output-buffer-size" : 3,

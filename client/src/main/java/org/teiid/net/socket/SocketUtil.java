@@ -43,9 +43,11 @@ import java.util.logging.Logger;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509ExtendedKeyManager;
 import javax.net.ssl.X509KeyManager;
 
 import org.teiid.core.util.PropertiesUtils;
@@ -70,6 +72,7 @@ public class SocketUtil {
     static final String KEYSTORE_FILENAME = "org.teiid.ssl.keyStore"; //$NON-NLS-1$
     public static final String ALLOW_ANON = "org.teiid.ssl.allowAnon"; //$NON-NLS-1$
     static final String KEYSTORE_ALIAS = "org.teiid.ssl.keyAlias"; //$NON-NLS-1$
+    static final String KEY_PASSWORD = "org.teiid.ssl.keyPassword"; //$NON-NLS-1$
     
     static final String DEFAULT_KEYSTORE_TYPE = "JKS"; //$NON-NLS-1$
     
@@ -106,6 +109,7 @@ public class SocketUtil {
         String truststore = props.getProperty(TRUSTSTORE_FILENAME, keystore); 
         String truststorePassword = props.getProperty(TRUSTSTORE_PASSWORD, keystorePassword);
         String keyAlias = props.getProperty(KEYSTORE_ALIAS);
+        String keyPassword = props.getProperty(KEY_PASSWORD);
         
         boolean anon = PropertiesUtils.getBooleanProperty(props, ALLOW_ANON, true);
         
@@ -117,10 +121,10 @@ public class SocketUtil {
         // 3) else = javax properties; this is default way to define the SSL anywhere.
         if (keystore != null) {
             // 2 way SSL
-            result = getClientSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias);
+            result = getClientSSLContext(keystore, keystorePassword, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias, keyPassword);
         } else  if(truststore != null) {
             // One way SSL with custom properties defined
-            result = getClientSSLContext(null, null, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, keyAlias);
+            result = getClientSSLContext(null, null, truststore, truststorePassword, keystoreAlgorithm, keystoreType, keystoreProtocol, null, null);
         } else {
         	result = SSLContext.getDefault();
         }
@@ -138,8 +142,9 @@ public class SocketUtil {
                                             String algorithm,
                                             String keystoreType,
                                             String protocol,
-                                            String keyAlias) throws IOException, GeneralSecurityException {
-        return getSSLContext(keystore, password, truststore, truststorePassword, algorithm, keystoreType, protocol, keyAlias);
+                                            String keyAlias,
+                                            String keyPassword) throws IOException, GeneralSecurityException {
+        return getSSLContext(keystore, password, truststore, truststorePassword, algorithm, keystoreType, protocol, keyAlias, keyPassword);
     }
     
     public static boolean addCipherSuite(SSLSocket engine, String cipherSuite) {
@@ -159,7 +164,7 @@ public class SocketUtil {
     }
 
     public static SSLContext getAnonSSLContext() throws IOException, GeneralSecurityException {
-        return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL, null);
+        return getSSLContext(null, null, null, null, null, null, DEFAULT_PROTOCOL, null, null);
     }
     
     public static SSLContext getSSLContext(String keystore,
@@ -169,7 +174,7 @@ public class SocketUtil {
                                             String algorithm,
                                             String keystoreType,
                                             String protocol,
-                                            String keyAlias) throws IOException, GeneralSecurityException {
+                                            String keyAlias, String keyPassword) throws IOException, GeneralSecurityException {
         
     	if (algorithm == null) {
     		algorithm = KeyManagerFactory.getDefaultAlgorithm();
@@ -180,19 +185,23 @@ public class SocketUtil {
             KeyStore ks = loadKeyStore(keystore, password, keystoreType);
             if (ks != null) {
             	
-                if (keyAlias != null && !ks.isKeyEntry(keyAlias)) {
-                    throw new IOException(JDBCPlugin.Util.getString("alias_no_key_entry", keyAlias)); //$NON-NLS-1$
-                }            	
-            	
                 KeyManagerFactory kmf = KeyManagerFactory.getInstance(algorithm);
-                kmf.init(ks, password.toCharArray());
+                if (keyPassword == null) {
+                	keyPassword = password;
+                }
+                kmf.init(ks, keyPassword != null ? keyPassword.toCharArray() : null);
                 keyManagers = kmf.getKeyManagers();
                 if (keyAlias != null) {
+                	if (!ks.isKeyEntry(keyAlias)) {
+                        throw new GeneralSecurityException(JDBCPlugin.Util.getString("alias_no_key_entry", keyAlias)); //$NON-NLS-1$
+                    }            	
                     if (DEFAULT_KEYSTORE_TYPE.equals(keystoreType)) {
                         keyAlias = keyAlias.toLowerCase(Locale.ENGLISH);
                     }
                     for(int i=0; i < keyManagers.length; i++) {
-                    	keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
+                    	if (keyManagers[i] instanceof X509KeyManager) {
+                    		keyManagers[i] = new AliasAwareKeyManager((X509KeyManager)keyManagers[i], keyAlias);
+                    	}
                     }
                 }                
             }
@@ -247,7 +256,7 @@ public class SocketUtil {
         return ks;
     }
 
-    static class AliasAwareKeyManager implements X509KeyManager {
+    static class AliasAwareKeyManager extends X509ExtendedKeyManager {
     	private X509KeyManager delegate;
     	private String keyAlias;
     	
@@ -258,7 +267,7 @@ public class SocketUtil {
 
 		@Override
 		public String chooseClientAlias(String[] keyType, Principal[] issuers,Socket socket) {
-			return delegate.chooseClientAlias(keyType, issuers, socket);
+			return keyAlias;
 		}
 
 		@Override
@@ -284,6 +293,18 @@ public class SocketUtil {
 		@Override
 		public String[] getServerAliases(String keyType, Principal[] issuers) {
 			return delegate.getServerAliases(keyType, issuers);
+		}
+		
+		@Override
+		public String chooseEngineClientAlias(String[] keyType,
+				Principal[] issuers, SSLEngine engine) {
+			return keyAlias;
+		}
+		
+		@Override
+		public String chooseEngineServerAlias(String keyType,
+				Principal[] issuers, SSLEngine engine) {
+			return keyAlias;
 		}
     }
 }

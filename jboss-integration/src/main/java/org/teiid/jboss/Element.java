@@ -112,6 +112,7 @@ enum Element {
 	SSL_KETSTORE_ELEMENT("keystore"),
 	SSL_KETSTORE_NAME_ATTRIBUTE("name", "keystore-name"),
 	SSL_KETSTORE_ALIAS_ATTRIBUTE("key-alias", "keystore-key-alias"),
+	SSL_KETSTORE_KEY_PASSWORD_ATTRIBUTE("key-password", "keystore-key-password"),
 	SSL_KETSTORE_PASSWORD_ATTRIBUTE("password", "keystore-password"),
 	SSL_KETSTORE_TYPE_ATTRIBUTE("type", "keystore-type"),
 	SSL_TRUSTSTORE_ELEMENT("truststore"),

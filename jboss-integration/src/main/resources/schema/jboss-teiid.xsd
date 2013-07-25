@@ -325,7 +325,12 @@
                                     <xs:annotation>
                                         <xs:documentation>key alias name</xs:documentation>
                                     </xs:annotation>                    
-                                </xs:attribute>                                
+                                </xs:attribute>                   
+                                <xs:attribute name="key-password" type="xs:string">
+                                    <xs:annotation>
+                                        <xs:documentation>key password</xs:documentation>
+                                    </xs:annotation>                    
+                                </xs:attribute>             
                             </xs:complexType>                        
                         </xs:element>
                         <xs:element name="truststore" minOccurs="0" maxOccurs="1">
