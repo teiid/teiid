@@ -110,8 +110,8 @@ public class TestOracleTranslator {
 	
 	@Test public void testSourceHint3() throws Exception {
 		ExecutionContextImpl impl = new FakeExecutionContextImpl();
-		impl.setHint("hello world");
-		impl.setGeneralHint("other");
+		impl.setHints(Arrays.asList("hello world"));
+		impl.setGeneralHints(Arrays.asList("other"));
 		helpTestVisitor(getTestVDB(), "select part_name from parts", impl, null, "SELECT /*+ hello world other */ g_0.PART_NAME FROM PARTS g_0", true);
 	}
 	
