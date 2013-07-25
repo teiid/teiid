@@ -556,7 +556,7 @@ public class TempTableDataManager implements ProcessorDataManager {
 				if (context.getDataObjects() != null) {
 					Object id = RelationalPlanner.getTrackableGroup(group, context.getMetadata());
 					if (id != null) {
-						context.accessedDataObject(group.getMetadataID());
+						context.accessedDataObject(id);
 					}
 				}
 				return tt.createTupleSource(query.getProjectedSymbols(), query.getCriteria(), query.getOrderBy());

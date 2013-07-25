@@ -1171,18 +1171,30 @@ public class RelationalPlanner {
 
 	public static Object getTrackableGroup(GroupSymbol group, QueryMetadataInterface metadata)
 			throws TeiidComponentException, QueryMetadataException {
+		Object metadataID = group.getMetadataID();
 		if (group.isTempGroupSymbol()) {
 			QueryMetadataInterface qmi = metadata.getSessionMetadata();
 			try {
 				//exclude proc scoped temp tables
-				if (group.isGlobalTable() || (qmi != null && qmi.getGroupID(group.getNonCorrelationName()) == group.getMetadataID())) {
-					return group.getMetadataID();
+				if (group.isGlobalTable()) {
+					return metadataID;
+				}
+				if (qmi != null) {
+					Object mid = qmi.getGroupID(group.getNonCorrelationName());
+					if (mid == metadataID || metadata.isVirtualGroup(metadataID)) {
+						//global temp should use the session metadata reference instead
+						return mid;
+					}
 				}
 			} catch (QueryMetadataException e) {
 				//not a session table
 			}
+			if (metadata.isVirtualGroup(metadataID)) {
+				//global temp table
+				return metadataID;
+			}
 		} else {
-			return group.getMetadataID();
+			return metadataID;
 		}
 		return null;
 	}

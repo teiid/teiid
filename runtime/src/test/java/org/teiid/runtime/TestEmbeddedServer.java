@@ -657,6 +657,7 @@ public class TestEmbeddedServer {
 	
 	@Test public void testGlobalTempTables() throws Exception {
 		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setMaxResultSetCacheStaleness(0);
 		MockTransactionManager tm = new MockTransactionManager();
 		ec.setTransactionManager(tm);
 		ec.setUseDisk(false);
@@ -682,9 +683,8 @@ public class TestEmbeddedServer {
 		
 		c.createStatement().execute("insert into some_temp (col1) values ('b')");
 		
-		//TODO: ideally we should detect this change
 		rs = ps.executeQuery();
-		assertFalse(rs.next()); //still no result in the first session
+		assertTrue(rs.next()); //still no result in the first session
 		
 		//ensure without caching that we have the right results
 		rs = c.createStatement().executeQuery("select * from some_temp");
