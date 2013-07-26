@@ -193,5 +193,10 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 		}
 		return "org.hibernate.dialect.DerbyTenFiveDialect"; //$NON-NLS-1$
 	}
+	
+	@Override
+	public boolean supportsGroupByRollup() {
+		return this.getVersion().compareTo(TEN_6) >= 0;
+	}
     
 }

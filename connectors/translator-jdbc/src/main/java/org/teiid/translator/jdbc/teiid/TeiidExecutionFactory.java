@@ -49,6 +49,7 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 	public static final Version SEVEN_6 = Version.getVersion("7.6"); //$NON-NLS-1$
 	public static final Version EIGHT_3 = Version.getVersion("8.3"); //$NON-NLS-1$
 	public static final Version EIGHT_4 = Version.getVersion("8.4"); //$NON-NLS-1$
+	public static final Version EIGHT_5 = Version.getVersion("8.5"); //$NON-NLS-1$
 	
 	public TeiidExecutionFactory() {
 	}
@@ -320,6 +321,11 @@ public class TeiidExecutionFactory extends JDBCExecutionFactory {
 			};
     	}
     	return super.getDialect();
+    }
+    
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return getVersion().compareTo(EIGHT_5) >= 0;
     }
     
 }

@@ -430,4 +430,10 @@ public class SybaseExecutionFactory extends BaseSybaseExecutionFactory {
     	return "org.hibernate.dialect.Sybase11Dialect"; //$NON-NLS-1$
     }
     
+    @Override
+    public boolean supportsGroupByRollup() {
+    	//TODO: there is support in SQL Anywhere/IQ, but not ASE
+    	return false;
+    }
+    
 }

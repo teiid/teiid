@@ -186,4 +186,9 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 		return "session." + super.getTemporaryTableName(prefix); //$NON-NLS-1$
 	}
 	
+	@Override
+	public boolean supportsGroupByRollup() {
+		return true;
+	}
+	
 }
