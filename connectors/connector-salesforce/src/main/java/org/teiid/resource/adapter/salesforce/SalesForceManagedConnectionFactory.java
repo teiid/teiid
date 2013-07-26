@@ -47,6 +47,8 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 	private String password;
 	private URL URL; //sf url
 	private String configFile; // path to the "jbossws-cxf.xml" file
+	private Long requestTimeout;
+	private Long connectTimeout;
 
 	//cxf bus
 	private Bus bus;
@@ -89,6 +91,22 @@ public class SalesForceManagedConnectionFactory extends BasicManagedConnectionFa
 
 	public void setConfigFile(String config) {
 		this.configFile = config;
+	}
+	
+	public Long getConnectTimeout() {
+		return connectTimeout;
+	}
+	
+	public void setConnectTimeout(Long connectTimeout) {
+		this.connectTimeout = connectTimeout;
+	}
+
+	public Long getRequestTimeout() {
+		return requestTimeout;
+	}
+	
+	public void setRequestTimeout(Long requestTimeout) {
+		this.requestTimeout = requestTimeout;
 	}
 	
 	@Override
