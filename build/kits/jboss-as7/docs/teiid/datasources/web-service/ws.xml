@@ -13,6 +13,12 @@
                         
                       <!-- End point for the web service -->
                       <config-property name="EndPoint">{endpoint_url}</config-property>
+                      
+                      <!-- 
+                        optional properties to set timeouts, which can also be done through the CXF config
+                        <config-property name="requestTimeout">long value</config-property>
+                        <config-property name="connectTimeout">long value</config-property>
+                      -->
                         
                         <!-- 
                             Uncomment these properties to supply specific CXF configuration for this service. This file
