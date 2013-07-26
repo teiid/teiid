@@ -814,6 +814,21 @@ public class TestAggregateProcessing {
 		helpProcess(plan, hdm, expected);
 	}
 	
+	@Test public void testRollupHaving() throws Exception {
+		String sql = "select e1, sum(e2) from pm1.g1 group by rollup(e1) having e1 is not null"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList("a", Long.valueOf(3)),
+				Arrays.asList("b", Long.valueOf(1))
+				};
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("b", 1));
+		helpProcess(plan, hdm, expected);
+	}
+	
 	@Test public void testRollup2() throws Exception {
 		String sql = "select e1, e2, sum(e4) from pm1.g1 group by rollup(e1, e2)"; //$NON-NLS-1$
 

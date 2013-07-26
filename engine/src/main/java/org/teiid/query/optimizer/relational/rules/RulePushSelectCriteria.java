@@ -169,6 +169,19 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 		if (critNode.hasBooleanProperty(NodeConstants.Info.IS_HAVING)) {
 			return false;
 		}
+		if (sourceNode.hasBooleanProperty(Info.ROLLUP)) {
+			//there is a pre/post affect.  we can push, but then there is
+			//null filtering that may need to occur
+			//the more complicated approach would be to determine the effective null tests,
+			//but instead we'll just clone the node
+			if (inPlan) {
+				PlanNode copy = copyNode(critNode);
+				critNode.setProperty(Info.IS_PUSHED, true);
+				critNode.setProperty(Info.IS_HAVING, true);
+				critNode.getFirstChild().addAsParent(copy);	
+				critNode = copy;
+			}
+		}
 		boolean moved = false;
 		SymbolMap symbolMap = (SymbolMap) sourceNode.getProperty(NodeConstants.Info.SYMBOL_MAP);
 		FrameUtil.convertNode(critNode, null, null, symbolMap.asMap(), metadata, true);

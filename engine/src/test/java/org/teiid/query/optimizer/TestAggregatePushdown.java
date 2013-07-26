@@ -1297,6 +1297,16 @@ public class TestAggregatePushdown {
                 new String[]{"SELECT MAX(g_0.e1) AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 GROUP BY ROLLUP(g_0.e2) ORDER BY c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
     }
+
+    /**
+     * Note the pre/post affect of the having in the source query
+     */
+	@Test public void testRollupHaving() throws Exception {
+		String sql = "select e1, sum(e2) from pm1.g1 group by rollup(e1) having e1 is not null"; //$NON-NLS-1$
+		BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, true);
+		helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {"SELECT g_0.e1, SUM(g_0.e2) FROM pm1.g1 AS g_0 WHERE g_0.e1 IS NOT NULL GROUP BY ROLLUP(g_0.e1) HAVING g_0.e1 IS NOT NULL"}, new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING);
+	}
     
     @Test public void testStringAggPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
