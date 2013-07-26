@@ -786,5 +786,80 @@ public class TestAggregateProcessing {
 		helpProcess(plan, dataManager, expected);
 	}
 	
+	@Test public void testRollup() throws Exception {
+		String sql = "select e1, sum(e2) from pm1.g1 group by rollup(e1)"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList("a", Long.valueOf(3)),
+				Arrays.asList("b", Long.valueOf(1)),
+				Arrays.asList(null, Long.valueOf(4))
+				};
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", Arrays.asList("a", 1), Arrays.asList("a", 2), Arrays.asList("b", 1));
+		helpProcess(plan, hdm, expected);
+		
+		expected = new List[] {
+				Arrays.asList("a", Long.valueOf(4)),
+				Arrays.asList(null, Long.valueOf(4))
+				};
+
+		plan.close();
+		plan.reset();
+
+		hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", Arrays.asList("a", 1), Arrays.asList("a", 3));
+		helpProcess(plan, hdm, expected);
+	}
+	
+	@Test public void testRollup2() throws Exception {
+		String sql = "select e1, e2, sum(e4) from pm1.g1 group by rollup(e1, e2)"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList("a", 1, 1.0),
+				Arrays.asList("a", 3, 2.0),
+			    Arrays.asList("a", null, 3.0),
+				Arrays.asList("b", 2, 3.0),
+				Arrays.asList("b", 4, 4.0),
+				Arrays.asList("b", null, 7.0),
+				Arrays.asList(null, null, 10.0),
+				};
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1", Arrays.asList("a", 1, 1.0), Arrays.asList("a", 3, 2.0), Arrays.asList("b", 2, 3.0), Arrays.asList("b", 4, 4.0));
+		helpProcess(plan, hdm, expected);
+		
+		plan.close();
+		plan.reset();
+		
+		//an empty rollup should produce no rows
+		hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e4 FROM pm1.g1");
+		helpProcess(plan, hdm, new List<?>[0]);
+	}
+	
+	@Test public void testRollup3() throws Exception {
+		String sql = "select e1, e2, e3, sum(e4) from pm1.g1 group by rollup(e1, e2, e3)"; //$NON-NLS-1$
+
+		List[] expected = new List[] {
+				Arrays.asList("a", 1, true, 3.0),
+				Arrays.asList("a", 1, null, 3.0),
+			    Arrays.asList("a", null, null, 3.0),
+				Arrays.asList("b", 2, false, 7.0),
+				Arrays.asList("b", 2, null, 7.0),
+				Arrays.asList("b", null, null, 7.0),
+				Arrays.asList(null, null, null, 10.0),
+				};
+
+		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
+
+		HardcodedDataManager hdm = new HardcodedDataManager();
+		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", Arrays.asList("a", 1, Boolean.TRUE, 1.0), Arrays.asList("a", 1, Boolean.TRUE, 2.0), Arrays.asList("b", 2, Boolean.FALSE, 3.0), Arrays.asList("b", 2, Boolean.FALSE, 4.0));
+		helpProcess(plan, hdm, expected);
+	}
 	
 }

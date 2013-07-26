@@ -77,6 +77,7 @@ public class AnalysisRecord {
     public static final String PROP_INTO_GROUP = "Into Target"; //$NON-NLS-1$
     public static final String PROP_SORT_COLS = "Sort Columns"; //$NON-NLS-1$
     public static final String PROP_SORT_MODE = "Sort Mode"; //$NON-NLS-1$
+    public static final String PROP_ROLLUP = "Rollup"; //$NON-NLS-1$
     public static final String PROP_NODE_STATS_LIST = "Statistics"; //$NON-NLS-1$
     public static final String PROP_NODE_COST_ESTIMATES = "Cost Estimates";  //$NON-NLS-1$
     public static final String PROP_ROW_OFFSET = "Row Offset";  //$NON-NLS-1$

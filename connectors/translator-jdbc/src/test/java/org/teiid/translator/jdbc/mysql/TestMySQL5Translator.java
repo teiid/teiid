@@ -62,4 +62,13 @@ public class TestMySQL5Translator {
     	assertEquals("create temporary table if not exists foo (COL1 integer, COL2 varchar(100)) ", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
     
+    @Test public void testRollup() throws Exception {
+    	String input = "select intkey, max(stringkey) from bqt1.smalla group by rollup(intkey)";
+        String output = "SELECT SmallA.IntKey, MAX(SmallA.StringKey) FROM SmallA GROUP BY SmallA.IntKey WITH ROLLUP";
+          
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+            input, 
+            output, TRANSLATOR);
+    }
+    
 }

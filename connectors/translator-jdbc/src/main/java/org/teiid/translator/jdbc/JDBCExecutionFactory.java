@@ -1396,5 +1396,12 @@ public class JDBCExecutionFactory extends ExecutionFactory<DataSource, Connectio
 	public void setEnableDependentJoins(boolean enableDependentJoins) {
 		this.enableDependentJoins = enableDependentJoins;
 	}
+
+	/**
+	 * @return true if the rollup syntax is WITH ROLLUP
+	 */
+	public boolean useWithRollup() {
+		return false;
+	}
 	
 }

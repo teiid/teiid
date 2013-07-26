@@ -367,6 +367,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
         	groupNode.recordDebugAnnotation("non-searchable group by column", modelID, "cannot push group by", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
         	return false;
         }
+        if (groupNode.hasBooleanProperty(Info.ROLLUP) && !CapabilitiesUtil.supports(Capability.QUERY_GROUP_BY_ROLLUP, modelID, metadata, capFinder)) {
+        	groupNode.recordDebugAnnotation("source does not support rollup", modelID, "cannot push group by", record, metadata); //$NON-NLS-1$ //$NON-NLS-2$
+        	return false;
+        }
         return true;
     }
 
@@ -422,6 +426,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
         if (accessNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) {
         	return false;
         }
+        
+        //we don't need to check for extended grouping here since we'll create an inline view later
         
         return true;
     }

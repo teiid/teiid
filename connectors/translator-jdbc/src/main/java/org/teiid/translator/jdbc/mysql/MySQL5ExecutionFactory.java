@@ -137,4 +137,19 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	return "org.hibernate.dialect.MySQL5Dialect"; //$NON-NLS-1$
     }
     
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return true;
+    }
+    
+    @Override
+    public boolean useWithRollup() {
+    	return true;
+    }
+    
+    @Override
+    public boolean supportsOrderByWithExtendedGrouping() {
+    	return false;
+    }
+    
 }

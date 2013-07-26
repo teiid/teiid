@@ -341,8 +341,8 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 				List<?> tuple = specificationTs.nextTuple();
 				if (multiGroup) {
 				    if (lastRow != null) {
-				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow);
-				    	if (!aggs.isEmpty() && (!samePartition || !GroupingNode.sameGroup(orderIndexes, tuple, lastRow))) {
+				    	boolean samePartition = GroupingNode.sameGroup(partitionIndexes, tuple, lastRow) == -1;
+				    	if (!aggs.isEmpty() && (!samePartition || GroupingNode.sameGroup(orderIndexes, tuple, lastRow) != -1)) {
 			        		saveValues(specIndex, aggs, groupId, samePartition, false);
 		        			groupId++;
 				    	}

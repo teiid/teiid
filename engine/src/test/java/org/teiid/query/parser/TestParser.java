@@ -1174,6 +1174,29 @@ public class TestParser {
 				 "SELECT a FROM m.g GROUP BY b, c",  //$NON-NLS-1$
 				 query);
 	}
+	
+	@Test public void testGroupByRollup() {
+		GroupSymbol g = new GroupSymbol("m.g"); //$NON-NLS-1$
+		From from = new From();
+		from.addGroup(g);
+
+		Select select = new Select();
+		select.addSymbol(new ElementSymbol("a", false)); //$NON-NLS-1$
+		
+		GroupBy groupBy = new GroupBy();
+		groupBy.setRollup(true);
+		groupBy.addSymbol(new ElementSymbol("b", false));		 //$NON-NLS-1$
+		groupBy.addSymbol(new ElementSymbol("c", false)); //$NON-NLS-1$
+		
+
+		Query query = new Query();
+		query.setSelect(select);
+		query.setFrom(from);
+		query.setGroupBy(groupBy);
+		helpTest("SELECT a FROM m.g GROUP BY rollup(b, c)",  //$NON-NLS-1$
+				 "SELECT a FROM m.g GROUP BY ROLLUP(b, c)",  //$NON-NLS-1$
+				 query);
+	}
 
 	/** SELECT a FROM m.g GROUP BY b, c HAVING b=5*/
 	@Test public void testGroupByHaving() {

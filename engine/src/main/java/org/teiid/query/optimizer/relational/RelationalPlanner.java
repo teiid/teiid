@@ -1352,11 +1352,13 @@ public class RelationalPlanner {
 		
 		GroupBy groupBy = query.getGroupBy();
 		List<Expression> groupingCols = null;
+		PlanNode groupNode = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
 		if (groupBy != null) {
 			groupingCols = groupBy.getSymbols();
+			if (groupBy.isRollup()) {
+				groupNode.setProperty(Info.ROLLUP, Boolean.TRUE);				
+			}
 		}
-		
-		PlanNode groupNode = NodeFactory.getNewNode(NodeConstants.Types.GROUP);
 		
 		Map<Expression, ElementSymbol> mapping = buildGroupingNode(aggs, groupingCols, groupNode, this.context, this.idGenerator).inserseMapping();
 

@@ -910,4 +910,9 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     	return "org.hibernate.dialect.Oracle9iDialect"; //$NON-NLS-1$
     }
     
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return true;
+    }
+    
 }

@@ -27,12 +27,14 @@ import static org.teiid.query.analysis.AnalysisRecord.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.client.plan.PlanNode;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
@@ -106,7 +108,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     private TupleSource groupTupleSource;
     
     // Group phase
-    private AggregateFunction[] functions;
+    private AggregateFunction[][] functions;
     private List<?> lastRow;
 	private List<?> currentGroupTuple;
 
@@ -114,6 +116,8 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     private static final int SORT = 2;
     private static final int GROUP = 3;
 	private int[] indexes;
+	private boolean rollup;
+	private HashMap<Integer, Integer> indexMap;
 
 	public GroupingNode(int nodeID) {
 		super(nodeID);
@@ -131,8 +135,10 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         currentGroupTuple = null;
         
         if (this.functions != null) {
-	    	for (AggregateFunction function : this.functions) {
-				function.reset();
+	    	for (AggregateFunction[] functions : this.functions) {
+	    		for (AggregateFunction function : functions) {
+	    			function.reset();
+	    		}
 			}
         }
     }
@@ -177,7 +183,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         }
         
         // Construct aggregate function state accumulators
-        functions = new AggregateFunction[getElements().size()];
+        functions = new AggregateFunction[getElements().size()][];
         for(int i=0; i<getElements().size(); i++) {
             Expression symbol = getElements().get(i);
             if (this.outputMapping != null) {
@@ -186,11 +192,15 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
             Class<?> outputType = symbol.getType();
             if(symbol instanceof AggregateSymbol) {
             	AggregateSymbol aggSymbol = (AggregateSymbol) symbol;
-            	functions[i] = initAccumulator(aggSymbol, this, this.collectedExpressions);
+            	functions[i] = new AggregateFunction[rollup?orderBy.size()+1:1];
+            	for (int j = 0; j < functions[i].length; j++) {
+            		functions[i][j] = initAccumulator(aggSymbol, this, this.collectedExpressions);
+            	}
             } else {
-                functions[i] = new ConstantFunction();
-                functions[i].setArgIndexes(new int[] {this.collectedExpressions.get(symbol)});
-                functions[i].initialize(outputType, new Class<?>[]{symbol.getType()});
+                AggregateFunction af = new ConstantFunction();
+                af.setArgIndexes(new int[] {this.collectedExpressions.get(symbol)});
+                af.initialize(outputType, new Class<?>[]{symbol.getType()});
+                functions[i] = new AggregateFunction[] {af};
             }
         }
     }
@@ -304,7 +314,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		return elements;
 	}
 
-    AggregateFunction[] getFunctions() {
+    AggregateFunction[][] getFunctions() {
 		return functions;
 	}
 
@@ -366,6 +376,12 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         		sortIndexes[i] = i; 
         	}
         	this.indexes = Arrays.copyOf(sortIndexes, orderBy.size());
+        	if (rollup) {
+        		this.indexMap = new HashMap<Integer, Integer>();
+        		for (int i = 0; i < indexes.length; i++) {
+        			this.indexMap.put(indexes[i], orderBy.size() - i);
+        		}
+        	}
             this.sortUtility = new SortUtility(getCollectionTupleSource(), removeDuplicates?Mode.DUP_REMOVE_SORT:Mode.SORT, getBufferManager(),
                     getConnectionID(), new ArrayList<Expression>(collectedExpressions.keySet()), sortTypes, nullOrdering, sortIndexes);
             this.phase = SORT;
@@ -380,6 +396,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
     }
 
     private TupleBatch groupPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	CommandContext context = getContext();
         while(true) {
 
         	if (currentGroupTuple == null) {
@@ -393,22 +410,21 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
                 // First row we've seen
                 lastRow = currentGroupTuple;
 
-            } else if(! sameGroup(indexes, currentGroupTuple, lastRow)) {
-                // Close old group
-                List<Object> row = new ArrayList<Object>(functions.length);
-                for(int i=0; i<functions.length; i++) {
-                    row.add( functions[i].getResult(getContext()) );
-                    functions[i].reset();
-                }
+            } else {
+            	int colDiff = sameGroup(indexes, currentGroupTuple, lastRow); 
+            	if (colDiff != -1) {
+                    // Close old group
+            		closeGroup(colDiff, true, context);
 
-                // Reset last tuple
-                lastRow = currentGroupTuple;
-                
-                // Save in output batch
-                addBatchRow(row);
-                if (this.isBatchFull()) {
-                	return pullBatch();
-                }
+                    // Reset last tuple
+                    lastRow = currentGroupTuple;
+                    
+                    // Save in output batch
+                    
+                    if (this.isBatchFull()) {
+                    	return pullBatch();
+                    }
+            	}
             }
 
             // Update function accumulators with new row - can throw blocked exception
@@ -417,30 +433,68 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
         }
         if(lastRow != null || orderBy == null) {
             // Close last group
-            List<Object> row = new ArrayList<Object>(functions.length);
-            for(int i=0; i<functions.length; i++) {
-                row.add( functions[i].getResult(getContext()) );
-            }
-            
-            addBatchRow(row);
+        	closeGroup(-1, false, context);
         } 
 
         this.terminateBatches();
         return pullBatch();
     }
 
-	public static boolean sameGroup(int[] indexes, List<?> newTuple, List<?> oldTuple) {
-		if (indexes == null) {
-			return true;
+	private void closeGroup(int colDiff, boolean reset, CommandContext context) throws FunctionExecutionException,
+			ExpressionEvaluationException, TeiidComponentException,
+			TeiidProcessingException {
+		List<Object> row = new ArrayList<Object>(functions.length);
+		for(int i=0; i<functions.length; i++) {
+		    row.add( functions[i][0].getResult(context) );
+		    if (reset && !rollup) {
+		    	functions[i][0].reset();
+		    }
 		}
-        return MergeJoinStrategy.compareTuples(newTuple, oldTuple, indexes, indexes, true) == 0;
+		addBatchRow(row);
+		if (rollup) {
+			int rollups = orderBy.size() - colDiff;
+			for (int j = 1; j < rollups; j++) {
+				row = new ArrayList<Object>(functions.length);
+				for(int i=0; i<functions.length; i++) {
+					if (functions[i].length == 1) {
+						int index = functions[i][0].getArgIndexes()[0];
+						Integer val = this.indexMap.get(index);
+						if (val != null && val <= j) {
+							row.add(null);
+						} else {
+							row.add(functions[i][0].getResult(context));
+						}
+					} else {
+		                row.add( functions[i][j].getResult(context) );
+		                if (reset) {
+		                	functions[i][j].reset();
+		                }
+					}
+		        }
+				addBatchRow(row);
+			}
+			if (reset) {
+				for(int i=0; i<functions.length; i++) {
+			    	functions[i][0].reset();
+				}
+			}
+		}
+	}
+
+	public static int sameGroup(int[] indexes, List<?> newTuple, List<?> oldTuple) {
+		if (indexes == null) {
+			return -1;
+		}
+        return MergeJoinStrategy.compareTuples(newTuple, oldTuple, indexes, indexes, true, true);
     }
 
     private void updateAggregates(List<?> tuple)
     throws TeiidComponentException, TeiidProcessingException {
 
         for(int i=0; i<functions.length; i++) {
-            functions[i].addInput(tuple, getContext());
+        	for (AggregateFunction function : functions[i]) {
+        		function.addInput(tuple, getContext());
+        	}
         }
     }
 
@@ -469,6 +523,7 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
 		clonedNode.removeDuplicates = removeDuplicates;
 		clonedNode.outputMapping = outputMapping;
 		clonedNode.orderBy = orderBy;
+		clonedNode.rollup = rollup;
 		return clonedNode;
 	}
 
@@ -485,8 +540,14 @@ public class GroupingNode extends SubqueryAwareRelationalNode {
             props.addProperty(PROP_GROUP_COLS, groupCols);
         }
         props.addProperty(PROP_SORT_MODE, String.valueOf(this.removeDuplicates));
-
+        if (rollup) {
+        	props.addProperty(PROP_ROLLUP, Boolean.TRUE.toString());
+        }
         return props;
     }
+
+	public void setRollup(boolean rollup) {
+		this.rollup = rollup;
+	}
 
 }

@@ -546,7 +546,9 @@ public class LanguageBridgeFactory {
         for (Iterator i = items.iterator(); i.hasNext();) {
             translatedItems.add(translate((Expression)i.next()));
         }
-        return new org.teiid.language.GroupBy(translatedItems);
+        org.teiid.language.GroupBy result = new org.teiid.language.GroupBy(translatedItems);
+        result.setRollup(groupBy.isRollup());
+        return result;
     }
 
     public org.teiid.language.OrderBy translate(OrderBy orderBy, boolean set) {

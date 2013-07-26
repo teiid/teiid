@@ -373,4 +373,14 @@ public class SQLServerExecutionFactory extends SybaseExecutionFactory {
     	return "org.hibernate.dialect.SQLServerDialect"; //$NON-NLS-1$
     }
     
+    @Override
+    public boolean supportsGroupByRollup() {
+    	return getVersion().compareTo(NINE_0) >= 0;
+    }
+    
+    @Override
+    public boolean useWithRollup() {
+    	return getVersion().compareTo(TEN_0) < 0;
+    }
+    
 }

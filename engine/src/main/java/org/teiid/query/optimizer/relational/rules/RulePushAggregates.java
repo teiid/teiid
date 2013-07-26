@@ -101,6 +101,9 @@ public class RulePushAggregates implements
     	groupingNodes = NodeEditor.findAllNodes(plan, NodeConstants.Types.GROUP, NodeConstants.Types.ACCESS);
         outer: for (int i = 0; i < groupingNodes.size(); i++) {
         	PlanNode groupNode = groupingNodes.get(i);
+        	if (groupNode.hasBooleanProperty(Info.ROLLUP)) {
+        		continue;
+        	}
             PlanNode child = groupNode.getFirstChild();
 
         	List<Expression> groupingExpressions = (List<Expression>)groupNode.getProperty(NodeConstants.Info.GROUP_COLS);

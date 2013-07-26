@@ -268,7 +268,14 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(SPACE);
         append(BY);
         append(SPACE);
+        if (obj.isRollup()) {
+        	append(ROLLUP);
+        	append(Tokens.LPAREN);
+        }
         registerNodes(obj.getSymbols(), 0);
+        if (obj.isRollup()) {
+        	append(Tokens.RPAREN);
+        }
     }
 
     public void visit( Insert obj ) {

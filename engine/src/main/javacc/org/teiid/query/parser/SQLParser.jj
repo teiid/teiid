@@ -3392,12 +3392,23 @@ example={code:sql}GROUP BY col1, col2{code}
 GroupBy groupBy(ParseInfo info) :
 {
 	List<Expression> expressions = null;
+	boolean rollup = false;
 }
 {
 	<GROUP> <BY>
-    expressions = expressionList(info)	
+	(<ROLLUP><LPAREN>
+     expressions = expressionList(info)
+     <RPAREN>
+     {
+       rollup = true;
+     }
+     |
+     expressions = expressionList(info)
+    )	
 	{
-		return new GroupBy(expressions);
+		GroupBy result = new GroupBy(expressions);
+		result.setRollup(rollup);
+		return result;
 	}
 }
 

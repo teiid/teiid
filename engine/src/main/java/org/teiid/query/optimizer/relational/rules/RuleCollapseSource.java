@@ -261,9 +261,15 @@ public final class RuleCollapseSource implements OptimizerRule {
 	        ExpressionMappingVisitor.mapExpressions(query.getSelect(), symbolMap.asMap()); 
 	        ExpressionMappingVisitor.mapExpressions(query.getHaving(), symbolMap.asMap()); 
 	
-			if (!CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) {
+	        if (!CapabilitiesUtil.supports(Capability.QUERY_FUNCTIONS_IN_GROUP_BY, modelID, metadata, capFinder)) {
 				//if group by expressions are not support, add an inline view to compensate
-				query = RuleCollapseSource.rewriteGroupByExpressionsAsView(query, metadata);
+				query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, false);
+			}
+			if (query.getOrderBy() != null 
+					&& groupNode.hasBooleanProperty(Info.ROLLUP) 
+					&& !CapabilitiesUtil.supports(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, modelID, metadata, capFinder)) {
+				//if ordering is not directly supported over extended grouping, add an inline view to compensate
+				query = RuleCollapseSource.rewriteGroupByAsView(query, metadata, true);
 			}
 		}
 		return query;
@@ -450,6 +456,9 @@ public final class RuleCollapseSource implements OptimizerRule {
                 List groups = (List) node.getProperty(NodeConstants.Info.GROUP_COLS);
                 if(groups != null && !groups.isEmpty()) {
                     query.setGroupBy(new GroupBy(groups));
+                    if (node.hasBooleanProperty(Info.ROLLUP)) {
+                    	query.getGroupBy().setRollup(true);
+                    }
                 }
                 break;
             }
@@ -668,21 +677,25 @@ public final class RuleCollapseSource implements OptimizerRule {
    		return "CollapseSource"; //$NON-NLS-1$
    	}
 
-	public static Query rewriteGroupByExpressionsAsView(Query query, QueryMetadataInterface metadata) {
+	public static Query rewriteGroupByAsView(Query query, QueryMetadataInterface metadata, boolean addViewForOrderBy) {
 		if (query.getGroupBy() == null) {
 			return query;
 		}
-	    // we check for group by expressions here to create an ANSI SQL plan
-	    boolean hasExpression = false;
-	    for (final Iterator<Expression> iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
-	        hasExpression = !(iterator.next() instanceof ElementSymbol);
-	    } 
-	    if (!hasExpression) {
-	    	return query;
-	    }
+		if (!addViewForOrderBy) {
+		    // we check for group by expressions here to create an ANSI SQL plan
+		    boolean hasExpression = false;
+		    for (final Iterator<Expression> iterator = query.getGroupBy().getSymbols().iterator(); !hasExpression && iterator.hasNext();) {
+		        hasExpression = !(iterator.next() instanceof ElementSymbol);
+		    } 
+		    if (!hasExpression) {
+		    	return query;
+		    }
+		}
 		Select select = query.getSelect();
-	    GroupBy groupBy = query.getGroupBy();
-	    query.setGroupBy(null);
+		GroupBy groupBy = query.getGroupBy();
+	    if (!addViewForOrderBy) {
+	    	query.setGroupBy(null);
+		}
 	    Criteria having = query.getHaving();
 	    query.setHaving(null);
 	    OrderBy orderBy = query.getOrderBy();
@@ -719,8 +732,10 @@ public final class RuleCollapseSource implements OptimizerRule {
 	    for (Expression symbol : query.getSelect().getProjectedSymbols()) {
 	        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
 	    }
-	    ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
-	    outerQuery.setGroupBy(groupBy);
+	    if (!addViewForOrderBy) {
+		    ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);
+		    outerQuery.setGroupBy(groupBy);
+	    }
 	    ExpressionMappingVisitor.mapExpressions(having, expressionMap);
 	    outerQuery.setHaving(having);
 	    ExpressionMappingVisitor.mapExpressions(orderBy, expressionMap);

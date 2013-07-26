@@ -304,11 +304,11 @@ public class MergeJoinStrategy extends JoinStrategy {
                              int[] leftExpressionIndecies,
                              int[] rightExpressionIndecies) {
         return compareTuples(leftProbe, rightProbe, leftExpressionIndecies,
-				rightExpressionIndecies, grouping);
+				rightExpressionIndecies, grouping, false);
     }
 
 	public static int compareTuples(List<?> leftProbe, List<?> rightProbe,
-			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals) {
+			int[] leftExpressionIndecies, int[] rightExpressionIndecies, boolean nullEquals, boolean columnDiff) {
 		for (int i = 0; i < leftExpressionIndecies.length; i++) {
             Object leftValue = leftProbe.get(leftExpressionIndecies[i]);
             Object rightValue = rightProbe.get(rightExpressionIndecies[i]);
@@ -316,19 +316,30 @@ public class MergeJoinStrategy extends JoinStrategy {
                 if (nullEquals && leftValue == null) {
                     continue;
                 }
+                if (columnDiff) {
+                	return i;
+                }
                 return -1;
             }
 
             if (leftValue == null) {
+                if (columnDiff) {
+                	return i;
+                }
                 return 1;
             }
 
             int c = Constant.COMPARATOR.compare(rightValue, leftValue);
             if (c != 0) {
+                if (columnDiff) {
+                	return i;
+                }
                 return c;
             }
         }
-
+        if (columnDiff) {
+        	return -1; 
+        }
         // Found no difference, must be a match
         return 0;
     }

@@ -1125,7 +1125,24 @@ public class ExecutionFactory<F, C> {
 		return false;
 	}
 	
+	/**
+	 * @return true if the translator support SELECT without a FROM clause
+	 */
 	public boolean supportsSelectWithoutFrom() {
 		return false;
+	}
+
+	/**
+	 * @return true if the translator support GROUP BY ROLLUP
+	 */
+	public boolean supportsGroupByRollup() {
+		return false;
+	}
+	
+	/**
+	 * @return true if order by is supported over a grouping with a rollup, cube, etc.
+	 */
+	public boolean supportsOrderByWithExtendedGrouping() {
+		return supportsOrderBy();
 	}
 }

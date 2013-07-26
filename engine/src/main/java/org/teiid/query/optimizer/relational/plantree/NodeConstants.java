@@ -134,6 +134,7 @@ public final class NodeConstants {
         
         // Group node properties
         GROUP_COLS,         // List <Expression>
+        ROLLUP,             // Boolean
 
         // Special constant used in converting plan to process for all nodes
         OUTPUT_COLS,        // List <SingleElementSymbol>

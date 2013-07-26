@@ -449,7 +449,14 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
               .append(Tokens.SPACE)
               .append(BY)
               .append(Tokens.SPACE);
+        if (obj.isRollup()) {
+        	buffer.append(ROLLUP);
+        	buffer.append(Tokens.LPAREN);
+        }
         append(obj.getElements());
+        if (obj.isRollup()) {
+        	buffer.append(Tokens.RPAREN);
+        }
     }
 
     public void visit(In obj) {

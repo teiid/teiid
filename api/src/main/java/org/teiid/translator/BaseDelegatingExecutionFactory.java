@@ -483,4 +483,12 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsSelectWithoutFrom() {
 		return delegate.supportsSelectWithoutFrom();
 	}
+	@Override
+	public boolean supportsGroupByRollup() {
+		return delegate.supportsGroupByRollup();
+	}
+	@Override
+	public boolean supportsOrderByWithExtendedGrouping() {
+		return delegate.supportsOrderByWithExtendedGrouping();
+	}
 }

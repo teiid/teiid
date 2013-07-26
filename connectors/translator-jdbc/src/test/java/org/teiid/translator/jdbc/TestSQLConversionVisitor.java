@@ -475,5 +475,12 @@ public class TestSQLConversionVisitor {
                 "SELECT t.x << t.y FROM t WHERE t.x = ?", //$NON-NLS-1$
                 true);
     }
+    
+    @Test public void testGroupByRollup() {
+        helpTestVisitor(getTestVDB(),
+                        "select part_name, max(part_weight) from parts group by rollup(part_name)", //$NON-NLS-1$
+                        "SELECT PARTS.PART_NAME, MAX(PARTS.PART_WEIGHT) FROM PARTS GROUP BY ROLLUP(PARTS.PART_NAME)", //$NON-NLS-1$
+                        true); 
+    }
 
 }

@@ -1238,6 +1238,66 @@ public class TestAggregatePushdown {
         }); 
     }
     
+    /**
+     * ensure the agg is not decomposed as we do not have rollup compensation
+     */
+    @Test public void testUnionGroupingWithRollup() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SEARCHED_CASE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select count(*) from (select e1, e2, 1 as part from pm1.g1 union all select e1, e2, 2 as part from pm1.g2) z group by rollup(e1)", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT g_0.e1 FROM pm1.g2 AS g_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+    }
+    
+    @Test public void testRollupPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e1), e2 from pm1.g2 group by rollup(e2)", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT g_0.e2, g_0.e1 FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            0,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            1,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            0,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+        
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, true);
+        plan = TestOptimizer.helpPlan("select max(e1), e2 from pm1.g2 group by rollup(e2)", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+                new String[]{"SELECT MAX(g_0.e1), g_0.e2 FROM pm1.g2 AS g_0 GROUP BY ROLLUP(g_0.e2)"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
+    @Test public void testRollupOrderByPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY_ROLLUP, true);
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select max(e1), e2 from pm1.g2 group by rollup(e2) order by e2", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_0.c_1) AS c_0, v_0.c_0 AS c_1 FROM (SELECT g_0.e2 AS c_0, g_0.e1 AS c_1 FROM pm1.g2 AS g_0 GROUP BY ROLLUP(g_0.e2)) AS v_0 ORDER BY c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+        
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY_EXTENDED_GROUPING, true);
+        
+        plan = TestOptimizer.helpPlan("select max(e1), e2 from pm1.g2 group by rollup(e2) order by e2", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
+                new String[]{"SELECT MAX(g_0.e1) AS c_0, g_0.e2 AS c_1 FROM pm1.g2 AS g_0 GROUP BY ROLLUP(g_0.e2) ORDER BY c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);
+    }
+    
     @Test public void testStringAggPushdown() throws Exception {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getAggregateCapabilities();

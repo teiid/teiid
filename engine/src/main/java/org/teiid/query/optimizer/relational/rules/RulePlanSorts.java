@@ -95,7 +95,7 @@ public class RulePlanSorts implements OptimizerRule {
 			List<Expression> orderColumns = orderBy.getSortKeys();
 			List<Expression> sortExpressions = new ArrayList<Expression>(orderColumns.size());
 			PlanNode possibleSort = NodeEditor.findNodePreOrder(node, NodeConstants.Types.GROUP, NodeConstants.Types.SOURCE | NodeConstants.Types.ACCESS);
-			if (possibleSort != null) {
+			if (possibleSort != null && !possibleSort.hasBooleanProperty(Info.ROLLUP)) {
 				boolean otherExpression = false;
 				SymbolMap groupMap = (SymbolMap)possibleSort.getProperty(Info.SYMBOL_MAP);
 				for (Expression singleElementSymbol : orderColumns) {

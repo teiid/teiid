@@ -418,4 +418,16 @@ public class SQLConversionVisitor extends SQLStringVisitor implements SQLStringV
 		}
 	}
 	
+	@Override
+	public void visit(GroupBy obj) {
+		if (obj.isRollup() && executionFactory.useWithRollup()) {
+			obj.setRollup(false);
+			super.visit(obj);
+			obj.setRollup(true);
+			buffer.append(" WITH ROLLUP"); //$NON-NLS-1$
+			return;
+		}
+		super.visit(obj);
+	}
+	
 }

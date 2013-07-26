@@ -262,7 +262,7 @@ public class RuleImplementJoinStrategy implements OptimizerRule {
 	            }
 	            return true;
 	        }
-        } else if (sourceNode.getType() == NodeConstants.Types.GROUP) {
+        } else if (sourceNode.getType() == NodeConstants.Types.GROUP && !sourceNode.hasBooleanProperty(Info.ROLLUP)) {
         	sourceNode.addAsParent(sortNode);
         	sort = false; // the grouping columns must contain all of the ordering columns
         }

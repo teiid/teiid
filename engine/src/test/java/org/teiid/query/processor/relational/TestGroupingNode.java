@@ -171,8 +171,8 @@ public class TestGroupingNode {
         helpProcess(mgr, node, context, expected, null);
         
         //ensure that the distinct input type is correct
-        AggregateFunction[] functions = node.getFunctions();
-        AggregateFunction countDist = functions[5];
+        AggregateFunction[][] functions = node.getFunctions();
+        AggregateFunction countDist = functions[5][0];
         SortingFilter dup = (SortingFilter)countDist;
         assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, dup.getElements().get(0).getType());
 	}
