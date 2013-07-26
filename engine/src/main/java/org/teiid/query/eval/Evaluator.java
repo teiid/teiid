@@ -720,7 +720,7 @@ public class Evaluator {
 			if (value instanceof String) {
 				String string = (String)value;
 				result = new SQLXMLImpl(string);
-				result.setEncoding(Streamable.ENCODING);
+				result.setCharset(Streamable.CHARSET);
 				if (!xp.isWellFormed()) {
 					Reader r = new StringReader(string);
 					type = validate(xp, r);

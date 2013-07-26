@@ -122,7 +122,7 @@ public class FileExecutionFactory extends ExecutionFactory<ConnectionFactory, Fi
 			Object value = null;
 			if (isText) {
 				ClobImpl clob = new ClobImpl(isf, -1);
-				clob.setEncoding(encoding.name());
+				clob.setCharset(encoding);
 				value = new ClobType(clob);
 			} else {
 				value = new BlobType(new BlobImpl(isf));
