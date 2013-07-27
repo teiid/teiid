@@ -115,17 +115,16 @@ public class ConnectorManagerRepository implements Serializable{
 					}
 					continue;
 				}
-				cm = createConnectorManager(name, connection);
 				ExecutionFactory<Object, Object> ef = provider.getExecutionFactory(name);
-				cm.setExecutionFactory(ef);
+				cm = createConnectorManager(name, connection, ef);
 				addConnectorManager(source.getName(), cm);
 			}
 		}
 	}
 
 	protected ConnectorManager createConnectorManager(String name,
-			String connection) {
-		return new ConnectorManager(name, connection);
+			String connection, ExecutionFactory<Object, Object> ef) {
+		return new ConnectorManager(name, connection, ef);
 	}
 	
 	public void setProvider(ExecutionFactoryProvider provider) {

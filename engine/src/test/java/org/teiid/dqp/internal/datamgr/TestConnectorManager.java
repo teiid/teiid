@@ -107,13 +107,12 @@ public final class TestConnectorManager {
     		}
     	};
     	final Object[] cfHolder = new Object[1]; 
-		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
+		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector", ef) { //$NON-NLS-1$ //$NON-NLS-2$
 			
 			public Object getConnectionFactory(){
 				return cfHolder[0];
 			}
 		};
-		cm.setExecutionFactory(ef);
 		cm.start();
 		try {
 			cm.getCapabilities();
@@ -137,7 +136,12 @@ public final class TestConnectorManager {
     		public void closeConnection(Object connection, Object factory) {
         	}
 		};
-    	cm.setExecutionFactory(ef);
+		cm = new ConnectorManager("FakeConnector","FakeConnector", ef) { //$NON-NLS-1$ //$NON-NLS-2$
+			
+			public Object getConnectionFactory(){
+				return cfHolder[0];
+			}
+		};
 		cfHolder[0] = cf;
 		cm.getCapabilities();
     }

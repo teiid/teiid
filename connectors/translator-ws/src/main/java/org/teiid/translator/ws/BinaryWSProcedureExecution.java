@@ -59,7 +59,7 @@ import org.teiid.translator.WSConnection;
  */
 public class BinaryWSProcedureExecution implements ProcedureExecution {
 
-	private static final class StreamingBlob extends BlobImpl {
+	public static final class StreamingBlob extends BlobImpl {
 		InputStream is;
 
 		public StreamingBlob(InputStream is) {

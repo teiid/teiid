@@ -148,21 +148,16 @@ public abstract class VDBStatusChecker {
 			String oldDsName = stripContext(cm.getConnectionName());
 			if (!EquivalenceUtil.areEqual(dsName, oldDsName)) {
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40076, vdb.getName(), vdb.getVersion(), model.getSourceTranslatorName(sourceName), dsName));
-				cm = new ConnectorManager(translatorName, dsName);
-				cm.setExecutionFactory(ef);
 				dsReplaced = true;
 			}
 			if (!currentTranslatorName.equals(translatorName)) {
 				try {
 					ef = cmr.getProvider().getExecutionFactory(translatorName);
-					if (!dsReplaced) {
-						cm = new ConnectorManager(translatorName, dsName);
-					}
-					cm.setExecutionFactory(ef);
 				} catch (TeiidException e) {
 					throw new AdminProcessingException(RuntimePlugin.Event.TEIID40033, e);
 				}
 			}
+			cm = new ConnectorManager(translatorName, dsName, ef);
 			cmr.addConnectorManager(sourceName, cm);
 			if (dsReplaced) {
 				ArrayList<Runnable> runnables = new ArrayList<Runnable>(1);

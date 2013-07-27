@@ -111,12 +111,13 @@ public class LobManager {
 			}
 			Streamable lob = (Streamable) anObj;
 			try {
+				StorageMode storageMode = InputStreamFactory.getStorageMode(lob);
 				if (lob.getReferenceStreamId() == null || (inlineLobs 
-						&& (InputStreamFactory.getStorageMode(lob) == StorageMode.MEMORY
-						|| lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes))) {
+						&& (storageMode == StorageMode.MEMORY
+						|| (storageMode != StorageMode.FREE && lob.length()*(lob instanceof ClobType?2:1) <= maxMemoryBytes)))) {
 					lob.setReferenceStreamId(null);
 					//since this is untracked at this point, we must detach if possible
-					if (inlineLobs && InputStreamFactory.getStorageMode(lob) == StorageMode.OTHER) {
+					if (inlineLobs && storageMode == StorageMode.OTHER) {
 						persistLob(lob, null, null, true, maxMemoryBytes);
 					}
 					continue;
