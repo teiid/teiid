@@ -36,6 +36,7 @@ import org.apache.cxf.configuration.Configurer;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxws.JaxWsClientFactoryBean;
 import org.teiid.core.BundleUtil;
+import org.teiid.core.util.EquivalenceUtil;
 import org.teiid.resource.spi.BasicConnectionFactory;
 import org.teiid.resource.spi.BasicManagedConnectionFactory;
 
@@ -62,7 +63,8 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	private String endPointName = WSManagedConnectionFactory.DEFAULT_LOCAL_NAME;
 	private String authPassword; // httpbasic - password
 	private String authUserName; // httpbasic - username
-	private Long requestTimeout = -1L;
+	private Long requestTimeout;
+	private Long connectTimeout;
 	private String namespaceUri = WSManagedConnectionFactory.DEFAULT_NAMESPACE_URI;
 	//shared derived state
 	private Bus bus;
@@ -229,6 +231,14 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 	public List<? extends Interceptor> getOutInterceptors() {
 		return this.outInterceptors;
 	}
+	
+	public Long getConnectTimeout() {
+		return connectTimeout;
+	}
+	
+	public void setConnectTimeout(Long connectTimeout) {
+		this.connectTimeout = connectTimeout;
+	}
 
 	@Override
 	public int hashCode() {
@@ -273,6 +283,7 @@ public class WSManagedConnectionFactory extends BasicManagedConnectionFactory {
 		if (!checkEquals(this.securityType, other.securityType)) {
 			return false;
 		}
-		return true;
+		return EquivalenceUtil.areEqual(this.requestTimeout, other.requestTimeout)
+				&& EquivalenceUtil.areEqual(this.connectTimeout, other.connectTimeout);
 	}
 }

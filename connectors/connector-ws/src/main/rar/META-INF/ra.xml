@@ -105,6 +105,12 @@
             </config-property>     
             
             <config-property>
+                <description>{$display:"Connect Timeout",$description:"Timeout for connection"}</description>
+                <config-property-name>ConnectTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property> 
+            
+            <config-property>
                 <description>{$display:"WSDL",$description:"WSDL file or URL for the web service",$advanced:"true"}</description>
                 <config-property-name>Wsdl</config-property-name>
                 <config-property-type>java.lang.String</config-property-type>

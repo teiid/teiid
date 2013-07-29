@@ -26,6 +26,11 @@
 			<groupId>org.jboss.teiid</groupId>
 		</dependency>
 		<dependency>
+            <artifactId>translator-ws</artifactId>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <version>${project.version}</version>
+        </dependency>
+		<dependency>
             <groupId>commons-logging</groupId>
             <artifactId>commons-logging</artifactId>
 		</dependency>

@@ -24,6 +24,7 @@ package org.teiid.transport;
 
 import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.NotSerializableException;
 import java.net.InetSocketAddress;
 import java.sql.Connection;
@@ -31,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.After;
@@ -39,12 +41,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.service.AutoGenDataService;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ConnectionProfile;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.TestMMDatabaseMetaData;
@@ -53,6 +58,7 @@ import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.SocketServerConnectionFactory;
 import org.teiid.runtime.EmbeddedConfiguration;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 @SuppressWarnings("nls")
 public class TestJDBCSocketTransport {
@@ -245,6 +251,20 @@ public class TestJDBCSocketTransport {
 		ResultSet rs = s.getResultSet();
 		rs.next();
 		assertEquals(1, rs.getInt(1));
+	}
+	
+	@Test public void testStreamingLob() throws Exception {
+		HardCodedExecutionFactory ef = new HardCodedExecutionFactory();
+		ef.addData("SELECT helloworld.x FROM helloworld", Arrays.asList(Arrays.asList(new BlobType(new BinaryWSProcedureExecution.StreamingBlob(new ByteArrayInputStream(new byte[100]))))));
+		server.addTranslator("custom", ef);
+		server.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\"><source name=\"test\" translator-name=\"custom\"/><metadata type=\"DDL\"><![CDATA[CREATE foreign table helloworld (x blob);]]> </metadata></model></vdb>".getBytes("UTF-8")));
+		conn = TeiidDriver.getInstance().connect("jdbc:teiid:test@mm://"+addr.getHostName()+":" +jdbcTransport.getPort(), null);
+		
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select to_chars(x, 'UTF-8') from helloworld");
+		rs.next();
+		//TODO: if we use getString streaming will still fail because the string logic gets the length first
+		assertEquals(100, ObjectConverterUtil.convertToCharArray(rs.getCharacterStream(1), -1).length);
 	}
 	
 }

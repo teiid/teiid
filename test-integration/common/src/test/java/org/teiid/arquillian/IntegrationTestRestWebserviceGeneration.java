@@ -22,16 +22,17 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.util.Properties;
 
 import org.jboss.arquillian.junit.Arquillian;
 import org.junit.After;
@@ -41,6 +42,8 @@ import org.junit.runner.RunWith;
 import org.teiid.adminapi.Admin;
 import org.teiid.adminapi.AdminException;
 import org.teiid.adminapi.AdminFactory;
+import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.ReaderInputStream;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.TeiidDriver;
@@ -65,8 +68,21 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 	
 	@Test
     public void testGetOperation() throws Exception {
+		Properties p = new Properties();
+		p.setProperty("class-name", "org.teiid.resource.adapter.ws.WSManagedConnectionFactory");
+		p.setProperty("EndPoint", "http://localhost:8080");
+		p.setProperty("RequestTimeout", "20000");
+		AdminUtil.createDataSource(admin, "sample-ws", "webservice", p);
+
 		admin.deploy("sample-vdb.xml",new FileInputStream(UnitTestUtil.getTestDataFile("sample-vdb.xml")));
 		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample", 1, 3));
+		
+		admin.deploy("sample-ws-vdb.xml",new ReaderInputStream(new StringReader(
+				//simple ws vdb
+				"<vdb name=\"sample-ws\" version=\"1\">"
+				+ "<model name=\"ws\"><source name=\"ws\" translator-name=\"ws\" connection-jndi-name=\"java:/sample-ws\"/></model>"
+				+"</vdb>"), Charset.forName("UTF-8")));
+		assertTrue(AdminUtil.waitForVDBLoad(admin, "sample-ws", 1, 3));
 		
 		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample@mm://localhost:31000;user=user;password=user", null);
 		
@@ -77,7 +93,16 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		// get based call
 		String response = httpCall("http://localhost:8080/sample_1/view/g1/123", "GET", null);
-		assertEquals("response did not match expected", "<rows p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		String expected = "<rows p1=\"123\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>";
+		assertEquals("response did not match expected", expected, response);
+
+		this.internalConnection.close();
+		
+		//try the same thing through a vdb
+		this.internalConnection =  TeiidDriver.getInstance().connect("jdbc:teiid:sample-ws@mm://localhost:31000;user=user;password=user", null);
+		execute("select to_chars(x.result, 'UTF-8') from (call invokeHttp(action=>'GET',endpoint=>'sample_1/view/g1/123')) as x");
+		this.internalResultSet.next();
+		assertEquals(expected, this.internalResultSet.getString(1));
     }
 	
 	@Test
@@ -106,7 +131,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 	
 	
 	private String httpCall(String url, String method, String params) throws Exception {
-		StringBuffer buff = new StringBuffer();
 		HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 		connection.setRequestMethod(method);
 		connection.setDoOutput(true);
@@ -116,12 +140,6 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		    wr.write(params);
 		    wr.flush();
 		}
-		
-		BufferedReader serverResponse = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-		String line;
-		while ((line = serverResponse.readLine()) != null) {
-			buff.append(line);
-		}
-		return buff.toString();
+		return ObjectConverterUtil.convertToString(new InputStreamReader(connection.getInputStream(), Charset.forName("UTF-8")));
 	}		
 }

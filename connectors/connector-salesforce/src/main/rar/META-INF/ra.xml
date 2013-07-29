@@ -65,6 +65,18 @@
                 <config-property-type>java.lang.String</config-property-type>
             </config-property>
             
+            <config-property>
+                <description>{$display:"Request Timeout",$description:"Timeout for request"}</description>
+                <config-property-name>RequestTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property>     
+            
+            <config-property>
+                <description>{$display:"Connect Timeout",$description:"Timeout for connection"}</description>
+                <config-property-name>ConnectTimeout</config-property-name>
+                <config-property-type>java.lang.Long</config-property-type>
+            </config-property> 
+            
             <connectionfactory-interface>javax.resource.cci.ConnectionFactory</connectionfactory-interface>
             <connectionfactory-impl-class>org.teiid.resource.spi.WrappedConnectionFactory</connectionfactory-impl-class>
             <connection-interface>javax.resource.cci.Connection</connection-interface>

@@ -74,9 +74,8 @@ public class TestVDBStatusChecker {
 				return new ExecutionFactory<Object, Object>();
 			}
 		});
-		ConnectorManager mgr = new ConnectorManager("oracle", "dsName");
 		ExecutionFactory ef1 = new ExecutionFactory();
-		mgr.setExecutionFactory(ef1);
+		ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);
 		cmr.addConnectorManager("BQT1", mgr);
 		repo.addVDB(vdb, metadataStore, null, null, cmr);
 		

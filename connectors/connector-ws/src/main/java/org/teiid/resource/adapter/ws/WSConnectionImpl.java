@@ -57,6 +57,7 @@ import org.apache.cxf.endpoint.Endpoint;
 import org.apache.cxf.interceptor.Interceptor;
 import org.apache.cxf.jaxrs.client.WebClient;
 import org.apache.cxf.jaxws.DispatchImpl;
+import org.apache.cxf.transports.http.configuration.HTTPClientPolicy;
 import org.apache.cxf.ws.security.SecurityConstants;
 import org.apache.cxf.ws.security.wss4j.WSS4JInInterceptor;
 import org.apache.cxf.ws.security.wss4j.WSS4JOutInterceptor;
@@ -76,6 +77,9 @@ import org.teiid.translator.WSConnection;
  * TODO: set a handler chain
  */
 public class WSConnectionImpl extends BasicConnection implements WSConnection {
+
+	private static final String CONNECTION_TIMEOUT = "javax.xml.ws.client.connectionTimeout"; //$NON-NLS-1$
+	private static final String RECEIVE_TIMEOUT = "javax.xml.ws.client.receiveTimeout"; //$NON-NLS-1$
 
 	private static final class HttpDataSource implements DataSource {
 		private final URL url;
@@ -142,6 +146,17 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				if (msg != null) {
 					payload = msg.getInputStream();
 				}
+				
+				HTTPClientPolicy clientPolicy = WebClient.getConfig(this.client).getHttpConduit().getClient();
+				Long timeout = (Long) this.requestContext.get(RECEIVE_TIMEOUT); 
+				if (timeout != null) {
+					clientPolicy.setReceiveTimeout(timeout);
+				}
+				timeout = (Long) this.requestContext.get(CONNECTION_TIMEOUT);
+				if (timeout != null) {
+					clientPolicy.setConnectionTimeout(timeout);
+				}
+				
 				javax.ws.rs.core.Response response = this.client.invoke((String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD), payload);
 				readResponseHeaders(response);
 
@@ -362,8 +377,11 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 			dispatch.getRequestContext().put(Dispatch.PASSWORD_PROPERTY, password);
 		}
 
-		if (this.mcf.getRequestTimeout() != -1L){
-			dispatch.getRequestContext().put("javax.xml.ws.client.receiveTimeout", this.mcf.getRequestTimeout()); //$NON-NLS-1$
+		if (this.mcf.getRequestTimeout() != null){
+			dispatch.getRequestContext().put(RECEIVE_TIMEOUT, this.mcf.getRequestTimeout()); 
+		}
+		if (this.mcf.getConnectTimeout() != null){
+			dispatch.getRequestContext().put(CONNECTION_TIMEOUT, this.mcf.getConnectTimeout()); 
 		}
 	}
 

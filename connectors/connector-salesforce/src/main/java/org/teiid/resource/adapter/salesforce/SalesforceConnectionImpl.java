@@ -25,6 +25,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.resource.ResourceException;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -56,6 +57,10 @@ import com.sforce.soap.partner.sobject.SObject;
 import com.sforce.ws.ConnectorConfig;
 
 public class SalesforceConnectionImpl extends BasicConnection implements SalesforceConnection {
+	
+	private static final String CONNECTION_TIMEOUT = "javax.xml.ws.client.connectionTimeout"; //$NON-NLS-1$
+	private static final String RECEIVE_TIMEOUT = "javax.xml.ws.client.receiveTimeout"; //$NON-NLS-1$
+
 	private Soap sfSoap;
 	private BulkConnection bulkConnection; 
 	
@@ -98,6 +103,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
 		Bus bus = BusFactory.getThreadDefaultBus();
 		BusFactory.setThreadDefaultBus(mcf.getBus());
+		Map<String, Object> requestContext = ((BindingProvider)sfSoap).getRequestContext();
+		if (mcf.getConnectTimeout() != null) {
+			requestContext.put(CONNECTION_TIMEOUT, mcf.getConnectTimeout());
+		}
 		try {
 			sfService = new SforceService();
 			sh = new SessionHeader();
@@ -106,7 +115,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			sfService.setHandlerResolver(new SalesforceHandlerResolver(sh));
 			
 			sfSoap = sfService.getSoap();
-			((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
+			requestContext.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
 			loginResult = sfSoap.login(username, password);
 			
 			// Set the SessionId after login, for subsequent calls
@@ -126,12 +135,13 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
 					
 		// Reset the SOAP endpoint to the returned server URL
-		((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,loginResult.getServerUrl());
+		requestContext.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,loginResult.getServerUrl());
 		// or maybe org.apache.cxf.message.Message.ENDPOINT_ADDRESS
-		((BindingProvider)sfSoap).getRequestContext().put(BindingProvider.SESSION_MAINTAIN_PROPERTY,Boolean.TRUE);
+		requestContext.put(BindingProvider.SESSION_MAINTAIN_PROPERTY,Boolean.TRUE);
 		// Set the timeout.
-		//((BindingProvider)sfSoap).getRequestContext().put(JAXWSProperties.CONNECT_TIMEOUT, timeout);
-
+		if (mcf.getRequestTimeout() != null) {
+			requestContext.put(RECEIVE_TIMEOUT, mcf.getRequestTimeout());
+		}
 		
 		// Test the connection.
 		try {

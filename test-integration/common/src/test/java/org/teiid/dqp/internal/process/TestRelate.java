@@ -69,13 +69,12 @@ public class TestRelate {
 		ExecutionFactory h2 = new H2ExecutionFactory();
 		h2.start();
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
-		ConnectorManager cm = new ConnectorManager("source", "bar") {
+		ConnectorManager cm = new ConnectorManager("source", "bar", h2) {
 			@Override
 			public Object getConnectionFactory() throws TranslatorException {
 				return ds;
 			}
 		};
-		cm.setExecutionFactory(h2);
 		cmr.addConnectorManager("source", cm);
 		server.setConnectorManagerRepository(cmr);
 		server.deployVDB("VehicleRentalsVDB", UnitTestUtil.getTestDataPath()+"/relate/VehicleRentalsVDB.vdb");

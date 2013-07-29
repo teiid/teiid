@@ -55,25 +55,30 @@ public class ConnectorManager  {
 	
 	private static final String JAVA_CONTEXT = "java:/"; //$NON-NLS-1$
 
-	private String translatorName;
-	private String connectionName;
-	private List<String> id;
+	private final String translatorName;
+	private final String connectionName;
+	private final List<String> id;
 	
     // known requests
-    private ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
+    private final ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem> requestStates = new ConcurrentHashMap<AtomicRequestID, ConnectorWorkItem>();
 	
 	private volatile SourceCapabilities cachedCapabilities;
 	
 	private volatile boolean stopped;
-	private ExecutionFactory<Object, Object> executionFactory;
+	private final ExecutionFactory<Object, Object> executionFactory;
 	
     public ConnectorManager(String translatorName, String connectionName) {
-    	this.translatorName = translatorName;
-    	this.connectionName = connectionName;
-    	this.id = Arrays.asList(translatorName, connectionName);
+    	this(translatorName, connectionName, new ExecutionFactory<Object, Object>());
     }
     
-    public String getStausMessage() {
+    public ConnectorManager(String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) {
+    	this.translatorName = translatorName;
+    	this.connectionName = connectionName;
+    	this.executionFactory = ef;
+    	this.id = Arrays.asList(translatorName, connectionName);
+	}
+
+	public String getStausMessage() {
     	String msg = ""; //$NON-NLS-1$
     	ExecutionFactory<Object, Object> ef = getExecutionFactory();
 		
@@ -109,6 +114,9 @@ public class ConnectorManager  {
 		checkStatus();
 		ExecutionFactory<Object, Object> translator = getExecutionFactory();
 		synchronized (this) {
+			if (cachedCapabilities != null) {
+	    		return cachedCapabilities;
+	    	}
 			if (translator.isSourceRequiredForCapabilities()) {
 				Object connection = null;
 				Object connectionFactory = null;
@@ -153,9 +161,9 @@ public class ConnectorManager  {
      * Remove the state associated with
      * the given <code>RequestID</code>.
      */
-    boolean removeState(AtomicRequestID id) {
-    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {id, "Remove State"}); //$NON-NLS-1$
-        return requestStates.remove(id) != null;
+    boolean removeState(AtomicRequestID sid) {
+    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {sid, "Remove State"}); //$NON-NLS-1$
+        return requestStates.remove(sid) != null;
     }
 
     int size() {
@@ -201,16 +209,16 @@ public class ConnectorManager  {
         }
         
         String modelName = qr.getModelName();
-        AtomicRequestID id = qr.getAtomicRequestID();
+        AtomicRequestID sid = qr.getAtomicRequestID();
         
         String principal = userName == null ? "unknown" : userName; //$NON-NLS-1$
         
         CommandLogMessage message = null;
         if (cmdStatus == Event.NEW) {
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, sqlStr, context);
         } 
         else {
-            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), id.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context);
+            message = new CommandLogMessage(System.currentTimeMillis(), qr.getRequestID().toString(), sid.getNodeID(), transactionID, modelName, translatorName, qr.getWorkContext().getSessionId(), principal, finalRowCnt, cmdStatus, context);
         }         
         LogManager.log(MessageLevel.DETAIL, LogConstants.CTX_COMMANDLOGGING, message);
     }
@@ -222,10 +230,6 @@ public class ConnectorManager  {
 	public ExecutionFactory<Object, Object> getExecutionFactory() {
 		return this.executionFactory;
     }
-    
-	public void setExecutionFactory(ExecutionFactory<?, ?> ef) {
-		this.executionFactory = (ExecutionFactory<Object, Object>) ef;
-	}
     
     /**
      * Get the ConnectionFactory object required by this manager

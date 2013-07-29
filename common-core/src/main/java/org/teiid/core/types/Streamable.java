@@ -35,6 +35,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.teiid.core.CorePlugin;
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.MultiArrayOutputStream;
 
 
@@ -86,6 +87,9 @@ public abstract class Streamable<T> implements Externalizable {
     
     public long length() throws SQLException {
     	if (length == -1) {
+    		if (InputStreamFactory.getStorageMode(this.reference) == StorageMode.FREE) {
+    			throw new SQLException("Already freed or streaming"); //$NON-NLS-1$ 
+    		}
     		length = computeLength();
     	}
     	return length;
