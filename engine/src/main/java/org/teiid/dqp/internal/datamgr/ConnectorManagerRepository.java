@@ -105,21 +105,36 @@ public class ConnectorManagerRepository implements Serializable{
 				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31102, model.getName(), deployment.getName(), deployment.getVersion()));
 			}
 			for (SourceMappingMetadata source : model.getSourceMappings()) {
-				ConnectorManager cm = getConnectorManager(source.getName());
-				String name = source.getTranslatorName();
-				String connection = source.getConnectionJndiName();
-				if (cm != null) {
-					if (!cm.getTranslatorName().equals(name)
-							|| !EquivalenceUtil.areEqual(cm.getConnectionName(), connection)) {
-						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, source, deployment.getName(), deployment.getVersion()));
-					}
-					continue;
-				}
-				ExecutionFactory<Object, Object> ef = provider.getExecutionFactory(name);
-				cm = createConnectorManager(name, connection, ef);
-				addConnectorManager(source.getName(), cm);
+				createConnectorManager(deployment, provider, source, false);
 			}
 		}
+	}
+
+	public void createConnectorManager(
+			VDBMetaData deployment, ExecutionFactoryProvider provider,
+			SourceMappingMetadata source, boolean replace) throws ConnectorManagerException {
+		ConnectorManager cm = getConnectorManager(source.getName());
+		String name = source.getTranslatorName();
+		String connection = source.getConnectionJndiName();
+		ExecutionFactory<Object, Object> ef = null;
+		if (cm != null) {
+			if (!cm.getTranslatorName().equals(name)
+					|| !EquivalenceUtil.areEqual(cm.getConnectionName(), connection)) {
+				if (!replace) {
+					throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31103, source, deployment.getName(), deployment.getVersion()));
+				}
+				if (cm.getTranslatorName().equals(name)) {
+					ef = cm.getExecutionFactory();
+				}
+			} else {
+				return;
+			}
+		}
+		if (ef == null) {
+			ef = provider.getExecutionFactory(name);
+		}
+		cm = createConnectorManager(name, connection, ef);
+		addConnectorManager(source.getName(), cm);
 	}
 
 	protected ConnectorManager createConnectorManager(String name,
