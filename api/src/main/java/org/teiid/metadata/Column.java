@@ -272,10 +272,10 @@ public class Column extends BaseColumn implements Comparable<Column> {
     
     public void setColumnStats(ColumnStats stats) {
     	if (stats.getDistinctValues() != null) {
-			setDistinctValues(stats.getDistinctValues());
+			setDistinctValues(stats.getDistinctValues().intValue());
 		}
 		if (stats.getNullValues() != null) {
-			setNullValues(stats.getNullValues());
+			setNullValues(stats.getNullValues().intValue());
 		}
 		if (stats.getMaximumValue() != null) {
 			setMaximumValue(stats.getMaximumValue());

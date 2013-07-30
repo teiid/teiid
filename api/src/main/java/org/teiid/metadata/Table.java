@@ -318,7 +318,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	
 	public void setTableStats(TableStats stats) {
 		if (stats.getCardinality() != null) {
-			setCardinality(stats.getCardinality());
+			setCardinality(stats.getCardinality().intValue());
 		}
 	}
 	
