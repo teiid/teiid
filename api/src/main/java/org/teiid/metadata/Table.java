@@ -57,6 +57,23 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 		UPDATE,
 		DELETE
 	}
+    
+    static final int asInt(long f) {
+		if (f == -1 || f < 0) {
+    		return -1;
+    	} else if (f <= Integer.MAX_VALUE) {
+    		return (int)f;
+    	}
+		//NaN 0x7ffffffff will map to -1 (unknown)
+		return Float.floatToRawIntBits(f) | 0x80000000;
+	}
+	
+	static final float asFloat(int i) {
+		if (i >= -1) {
+    		return i;
+    	}
+    	return Float.intBitsToFloat(i & 0x7fffffff);
+	}
 
 	private volatile int cardinality = -1;
     private Type tableType;
@@ -107,7 +124,14 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	}
 
     public int getCardinality() {
-        return cardinality;
+    	if (cardinality >= -1) {
+    		return cardinality;
+    	}
+    	return Integer.MAX_VALUE;
+    }
+    
+    public float getCardinalityAsFloat() {
+    	return asFloat(cardinality);
     }
 
     public boolean isVirtual() {
@@ -141,7 +165,11 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
      * @param i
      */
     public void setCardinality(int i) {
-        cardinality = i;
+    	cardinality = asInt(i);
+    }
+    
+    public void setCardinality(long f) {
+    	cardinality = asInt(f);
     }
 
     /**
@@ -323,7 +351,7 @@ public class Table extends ColumnSet<Schema> implements Modifiable, DataModifiab
 	
 	public void setTableStats(TableStats stats) {
 		if (stats.getCardinality() != null) {
-			setCardinality(stats.getCardinality());
+			setCardinality(stats.getCardinality().longValue());
 		}
 	}
 	

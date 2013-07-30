@@ -62,9 +62,8 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private String format;
     private int charOctetLength;
     private volatile int distinctValues = -1;
-    private volatile  int nullValues = -1;
+    private volatile int nullValues = -1;
     private ColumnSet<?> parent;
-    
     
     @Override
     public void setDatatype(Datatype datatype, boolean copyAttributes) {
@@ -154,12 +153,26 @@ public class Column extends BaseColumn implements Comparable<Column> {
         return nativeType;
     }
 
-    public int getDistinctValues() {
-        return this.distinctValues;
-    }
-
     public int getNullValues() {
-        return this.nullValues;
+    	if (nullValues >= -1) {
+    		return nullValues;
+    	}
+    	return Integer.MAX_VALUE;
+    }
+    
+    public float getNullValuesAsFloat() {
+    	return Table.asFloat(nullValues);
+    }
+    
+    public int getDistinctValues() {
+    	if (distinctValues >= -1) {
+    		return distinctValues;
+    	}
+    	return Integer.MAX_VALUE;
+    }
+    
+    public float getDistinctValuesAsFloat() {
+    	return Table.asFloat(distinctValues);
     }
 
     /**
@@ -251,7 +264,11 @@ public class Column extends BaseColumn implements Comparable<Column> {
      * @since 4.3
      */
     public void setDistinctValues(int distinctValues) {
-        this.distinctValues = distinctValues;
+        this.distinctValues = Table.asInt(distinctValues);
+    }
+    
+    public void setDistinctValues(long distinctValues) {
+    	this.distinctValues = Table.asInt(distinctValues);
     }
 
     /**
@@ -259,7 +276,11 @@ public class Column extends BaseColumn implements Comparable<Column> {
      * @since 4.3
      */
     public void setNullValues(int nullValues) {
-        this.nullValues = nullValues;
+        this.nullValues = Table.asInt(nullValues);
+    }
+    
+    public void setNullValues(long nullValues) {
+    	this.nullValues = Table.asInt(nullValues);
     }
 
     /**
@@ -272,10 +293,10 @@ public class Column extends BaseColumn implements Comparable<Column> {
     
     public void setColumnStats(ColumnStats stats) {
     	if (stats.getDistinctValues() != null) {
-			setDistinctValues(stats.getDistinctValues());
+			setDistinctValues(stats.getDistinctValues().longValue());
 		}
 		if (stats.getNullValues() != null) {
-			setNullValues(stats.getNullValues());
+			setNullValues(stats.getNullValues().longValue());
 		}
 		if (stats.getMaximumValue() != null) {
 			setMaximumValue(stats.getMaximumValue());

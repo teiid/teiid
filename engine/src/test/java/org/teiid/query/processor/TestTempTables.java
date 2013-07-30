@@ -492,7 +492,7 @@ public class TestTempTables extends TempTableTestHarness {
 		//ensure that we're using the actual metadata
 		assertNotNull(id);
 		assertNotNull(this.metadata.getPrimaryKey(id));
-		assertEquals(1000, this.metadata.getCardinality(id));
+		assertEquals(1000, this.metadata.getCardinality(id), 0);
 		assertEquals("pm1", this.metadata.getName(this.metadata.getModelID(id)));
 		
 		hdm.addData("SELECT x.a, x.e2, x.e3 FROM x", new List[] {Arrays.asList(1, 2, "3")});

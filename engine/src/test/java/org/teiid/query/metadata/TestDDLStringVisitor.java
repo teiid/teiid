@@ -181,11 +181,11 @@ public class TestDDLStringVisitor {
 	
 	@Test 
 	public void testView() throws Exception {
-		String ddl = "CREATE View G1( e1 integer, e2 varchar) OPTIONS (CARDINALITY 12) AS select e1, e2 from foo.bar";
+		String ddl = "CREATE View G1( e1 integer, e2 varchar) OPTIONS (CARDINALITY 1234567890123) AS select e1, e2 from foo.bar";
 		String expected = "CREATE VIEW G1 (\n" + 
 				"	e1 integer,\n" + 
 				"	e2 string\n" + 
-				") OPTIONS (CARDINALITY 12)\n" + 
+				") OPTIONS (CARDINALITY 1234567954432)\n" + 
 				"AS\n" + 
 				"SELECT e1, e2 FROM foo.bar;";
 		helpTest(ddl, expected);

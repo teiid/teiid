@@ -572,7 +572,7 @@ public class SQLParserUtil {
 		
     	value = props.remove(DDLConstants.CARDINALITY); 
     	if (value != null) {
-    		table.setCardinality(Integer.parseInt(value));
+			table.setCardinality(Long.valueOf(value));
     	}
     }     
     

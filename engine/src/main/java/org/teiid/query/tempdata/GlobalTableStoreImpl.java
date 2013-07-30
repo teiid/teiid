@@ -301,7 +301,7 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 					}
 					id = tableStore.getMetadataStore().addTempGroup(matTableName, allCols, false, true);
 					id.setQueryNode(qnode);
-					id.setCardinality(metadata.getCardinality(viewId));
+					id.setCardinality((int)metadata.getCardinality(viewId));
 					id.setOriginalMetadataID(viewId);
 					
 					Object pk = metadata.getPrimaryKey(viewId);

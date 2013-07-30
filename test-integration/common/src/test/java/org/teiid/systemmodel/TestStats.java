@@ -61,6 +61,10 @@ public class TestStats {
     	rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
     	rs.next();
     	assertEquals(32, rs.getInt(1));
+    	s.execute("call setTableStats(tableName=>'partssupplier.partssupplier.parts', cardinality=>321100000000)");
+    	rs = s.executeQuery("select cardinality from tables where name = 'PARTSSUPPLIER.PARTS'");
+    	rs.next();
+    	assertEquals(Integer.MAX_VALUE, rs.getInt(1));
     }
     
     @Test public void testSetColumnStats() throws Exception {

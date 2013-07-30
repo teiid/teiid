@@ -246,7 +246,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    int getDistinctValues(Object elementID)
+    float getDistinctValues(Object elementID)
         throws TeiidComponentException, QueryMetadataException;        
 
     /**
@@ -257,7 +257,7 @@ public interface QueryMetadataInterface {
      * @throws QueryMetadataException Metadata implementation detected a problem during the request
      * @throws TeiidComponentException Unexpected internal system problem during request
      */
-    int getNullValues(Object elementID)
+    float getNullValues(Object elementID)
         throws TeiidComponentException, QueryMetadataException;        
 
 	/**
@@ -487,7 +487,7 @@ public interface QueryMetadataInterface {
     * @param groupID Metadata identifier specifying group
     * @return cardinality for the given group. If unknown, return UNKNOWN_CARDINALITY. 
     */ 
-   int getCardinality(Object groupID) 
+   float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException;
         
    /**

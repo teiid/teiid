@@ -827,8 +827,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				if (c == null) {
 					 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30552, columnName + TransformationMetadata.NOT_EXISTS_MESSAGE);
 				}
-				Integer distinctVals = (Integer)((Constant)proc.getParameter(3).getExpression()).getValue();
-				Integer nullVals = (Integer)((Constant)proc.getParameter(4).getExpression()).getValue();
+				Number distinctVals = (Number)((Constant)proc.getParameter(3).getExpression()).getValue();
+				Number nullVals = (Number)((Constant)proc.getParameter(4).getExpression()).getValue();
 				String max = (String) ((Constant)proc.getParameter(5).getExpression()).getValue();
 				String min = (String) ((Constant)proc.getParameter(6).getExpression()).getValue();
 				ColumnStats columnStats = new ColumnStats();
@@ -846,13 +846,13 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				break;
 			case SETTABLESTATS:
 				Constant val = (Constant)proc.getParameter(2).getExpression();
-				int cardinality = (Integer)val.getValue();
+				Number cardinality = (Number)val.getValue();
 				TableStats tableStats = new TableStats();
 				tableStats.setCardinality(cardinality);
 				if (getMetadataRepository(table, vdb) != null) {
 					getMetadataRepository(table, vdb).setTableStats(vdbName, vdbVersion, table, tableStats);
 				}
-				table.setCardinality(cardinality);
+				table.setTableStats(tableStats);
 				if (eventDistributor != null) {
 					eventDistributor.setTableStats(vdbName, vdbVersion, table.getParent().getName(), table.getName(), tableStats);
 				}

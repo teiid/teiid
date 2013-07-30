@@ -540,7 +540,7 @@ public class NewCalculateCostUtil {
 			float ndv = metadata.getDistinctValues(es.getMetadataID());
 			float nnv = metadata.getNullValues(es.getMetadataID());
 			if (cardinality != UNKNOWN_VALUE) {
-            	int groupCardinality = metadata.getCardinality(es.getGroupSymbol().getMetadataID());
+            	float groupCardinality = metadata.getCardinality(es.getGroupSymbol().getMetadataID());
             	if (groupCardinality != UNKNOWN_VALUE && groupCardinality > cardinality) {
             		if (ndv != UNKNOWN_VALUE) {
             			ndv *= cardinality / Math.max(1, groupCardinality);

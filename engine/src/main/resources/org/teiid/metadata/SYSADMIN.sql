@@ -29,11 +29,11 @@ OPTIONS (UPDATECOUNT 0)
 CREATE FOREIGN PROCEDURE refreshMatViewRow(OUT RowsUpdated integer NOT NULL RESULT, IN ViewName string NOT NULL, IN Key object NOT NULL)
 OPTIONS (UPDATECOUNT 0)
 
-CREATE FOREIGN PROCEDURE setColumnStats(IN tableName string NOT NULL, IN columnName string NOT NULL, IN distinctCount integer, IN nullCount integer, IN max string, IN min string)
+CREATE FOREIGN PROCEDURE setColumnStats(IN tableName string NOT NULL, IN columnName string NOT NULL, IN distinctCount long, IN nullCount long, IN max string, IN min string)
 OPTIONS (UPDATECOUNT 0)
 
 CREATE FOREIGN PROCEDURE setProperty(OUT OldValue clob(2097152) NOT NULL RESULT, IN UID string(50) NOT NULL, IN Name string NOT NULL, IN "Value" clob(2097152))
 OPTIONS (UPDATECOUNT 0)
 
-CREATE FOREIGN PROCEDURE setTableStats(IN tableName string NOT NULL, IN cardinality integer NOT NULL)
+CREATE FOREIGN PROCEDURE setTableStats(IN tableName string NOT NULL, IN cardinality long NOT NULL)
 OPTIONS (UPDATECOUNT 0)

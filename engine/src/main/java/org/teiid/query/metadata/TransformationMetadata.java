@@ -773,8 +773,9 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         return Collections.emptySet();
     }
 
-    public int getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
-        return ((Table) groupID).getCardinality();
+    @Override
+    public float getCardinality(final Object groupID) throws TeiidComponentException, QueryMetadataException {
+        return ((Table) groupID).getCardinalityAsFloat();
     }
 
     public List<SQLXMLImpl> getXMLSchemas(final Object groupID) throws TeiidComponentException, QueryMetadataException {
@@ -893,9 +894,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getDistinctValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    @Override
+    public float getDistinctValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getDistinctValues();
+            return ((Column) elementID).getDistinctValuesAsFloat();
         } else if(elementID instanceof ProcedureParameter) {
             return -1;            
         } else {
@@ -903,9 +905,10 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
         }
     }
 
-    public int getNullValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
+    @Override
+    public float getNullValues(final Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof Column) {
-            return ((Column) elementID).getNullValues();
+            return ((Column) elementID).getNullValuesAsFloat();
         } else if(elementID instanceof ProcedureParameter) {
             return -1;            
         } else {

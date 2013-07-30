@@ -146,7 +146,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
      * @see org.teiid.query.metadata.QueryMetadataInterface#getDistinctValues(java.lang.Object)
      * @since 4.3
      */
-    public int getDistinctValues(Object elementID) throws TeiidComponentException,
+    public float getDistinctValues(Object elementID) throws TeiidComponentException,
                                                   QueryMetadataException {
         return -1;
     }
@@ -154,7 +154,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
      * @see org.teiid.query.metadata.QueryMetadataInterface#getNullValues(java.lang.Object)
      * @since 4.3
      */
-    public int getNullValues(Object elementID) throws TeiidComponentException,
+    public float getNullValues(Object elementID) throws TeiidComponentException,
                                               QueryMetadataException {
         return -1;
     }
@@ -390,7 +390,7 @@ public class BasicQueryMetadata implements QueryMetadataInterface {
     	return Collections.EMPTY_SET;    	
     }
     
-    public int getCardinality(Object groupID) 
+    public float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException{
     		
     	return QueryMetadataInterface.UNKNOWN_CARDINALITY;

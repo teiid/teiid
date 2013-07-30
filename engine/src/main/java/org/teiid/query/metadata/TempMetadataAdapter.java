@@ -294,7 +294,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getDistinctValues(java.lang.Object)
      */
-    public int getDistinctValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public float getDistinctValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if(elementID instanceof TempMetadataID) {
             return -1;
         }         
@@ -304,7 +304,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     /**
      * @see org.teiid.query.metadata.QueryMetadataInterface#getNullValues(java.lang.Object)
      */
-    public int getNullValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
+    public float getNullValues(Object elementID) throws TeiidComponentException, QueryMetadataException {
         if (elementID instanceof TempMetadataID) {
             TempMetadataID id = (TempMetadataID)elementID;
             elementID = id.getOriginalMetadataID();
@@ -598,7 +598,7 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
         return this.actualMetadata.getXMLTempGroups(groupID);    
     }
     
-    public int getCardinality(Object groupID) 
+    public float getCardinality(Object groupID) 
     	throws TeiidComponentException, QueryMetadataException{
     	
     	groupID = getActualMetadataId(groupID);

@@ -238,7 +238,11 @@ public class DDLStringVisitor {
 			addOption(options, UPDATABLE, table.supportsUpdate());
 		}
 		if (table.getCardinality() != -1) {
-			addOption(options, CARDINALITY, table.getCardinality());
+			if (table.getCardinality() != table.getCardinalityAsFloat()) {
+				addOption(options, CARDINALITY, (long)table.getCardinalityAsFloat());
+			} else {
+				addOption(options, CARDINALITY, table.getCardinality());
+			}
 		}
 		if (!table.getProperties().isEmpty()) {
 			for (String key:table.getProperties().keySet()) {
