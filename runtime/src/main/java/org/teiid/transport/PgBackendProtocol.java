@@ -682,6 +682,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		writeString("08P01");
 		write('M');
 		writeString(message);
+		write(0);
 		sendMessage();
 	}
 	

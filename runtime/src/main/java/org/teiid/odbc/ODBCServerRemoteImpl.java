@@ -429,6 +429,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			}
 		} catch (SQLException e) {
 			errorOccurred(e);
+			return;
 		}
 		
 		this.portalMap.put(bindName, new Portal(bindName, prepareName, previous.sql, previous.stmt, resultColumnFormat));
