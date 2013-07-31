@@ -72,7 +72,7 @@ public class TestAsynch {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
 		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
-		ts.submitExecute("select * from SYS.columns a, sys.tables b", new StatementCallback() {
+		ts.submitExecute("select * from sys.tables a, sys.tables b, sys.tables c", new StatementCallback() {
 			int rowCount;
 			@Override
 			public void onRow(Statement s, ResultSet rs) {
@@ -80,6 +80,9 @@ public class TestAsynch {
 				try {
 					if (!rs.isLast()) {
 						assertTrue(rs.unwrap(TeiidResultSet.class).available() > 0);
+					}
+					if (rowCount == 10000) {
+						s.close();
 					}
 				} catch (AsynchPositioningException e) {
 					try {
@@ -102,7 +105,7 @@ public class TestAsynch {
 				result.getResultsReceiver().receiveResults(rowCount);
 			}
 		}, new RequestOptions());
-		assertEquals(6804, result.get().intValue());
+		assertEquals(10000, result.get().intValue());
 	}
 	
 	@Test public void testAsynchContinuousEmpty() throws Exception {

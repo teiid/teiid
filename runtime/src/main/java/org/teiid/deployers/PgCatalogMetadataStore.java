@@ -266,15 +266,17 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("indisunique", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
 		// If true, this index represents the primary key of the table (indisunique should always be true when this is true)
 		addColumn("indisprimary", DataTypeManager.DefaultDataTypes.BOOLEAN, t); //$NON-NLS-1$ 
-		// Expression trees (in nodeToString() representation) for index attributes that are not simple 
-		// column references. This is a list with one element for each zero entry in indkey. 
-		// NULL if all index attributes are simple references
-		addColumn("indexprs", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		
 		// This is an array of indnatts values that indicate which table columns this index indexes.
 		Column c = addColumn("indkey", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
 		c.setRuntimeType(DataTypeManager.getDataTypeName(DataTypeManager.getArrayType(DataTypeManager.DefaultDataClasses.SHORT)));
 		c.setProperty("pg_type:oid", String.valueOf(PG_TYPE_INT2VECTOR)); //$NON-NLS-1$
+		
+		// Expression trees (in nodeToString() representation) for index attributes that are not simple 
+		// column references. This is a list with one element for each zero entry in indkey. 
+		// NULL if all index attributes are simple references
+		addColumn("indexprs", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$ 
+		addColumn("indpred", DataTypeManager.DefaultDataTypes.STRING, t); //$NON-NLS-1$
 		
 		addPrimaryKey("pk_pg_index", Arrays.asList("oid"), t); //$NON-NLS-1$ //$NON-NLS-2$
 		
@@ -285,8 +287,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 				"false indisclustered, " + //$NON-NLS-1$
 				"(CASE WHEN t1.KeyType in ('Unique', 'Primary') THEN true ELSE false END) as indisunique, " + //$NON-NLS-1$
 				"(CASE t1.KeyType WHEN 'Primary' THEN true ELSE false END) as indisprimary, " + //$NON-NLS-1$
-				"'' as indexprs, asPGVector(" + //$NON-NLS-1$
-				arrayAgg("(select at.attnum FROM pg_catalog.pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = (SELECT pg_catalog.getOid(uid) FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName))", "t1.position") +") as indkey " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				"asPGVector(" + //$NON-NLS-1$
+				arrayAgg("(select at.attnum FROM pg_catalog.pg_attribute as at WHERE at.attname = t1.Name AND at.attrelid = (SELECT pg_catalog.getOid(uid) FROM SYS.Tables WHERE SchemaName = t1.SchemaName AND Name = t1.TableName))", "t1.position") +") as indkey, " + //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+				"null as indexprs, null as indpred " + //$NON-NLS-1$
 				"FROM Sys.KeyColumns as t1 GROUP BY t1.uid, t1.KeyType, t1.SchemaName, t1.TableName, t1.KeyName"; //$NON-NLS-1$
 		t.setSelectTransformation(transformation);
 		t.setMaterialized(true);

@@ -375,6 +375,15 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertEquals("", rs.getString(1));
 	}
 	
+	@Test public void testSetNonString() throws Exception {
+		Statement s = conn.createStatement();
+		assertFalse(s.execute("SET extra_float_digits TO 2"));
+		assertTrue(s.execute("SHOW extra_float_digits"));
+		ResultSet rs = s.getResultSet();
+		assertTrue(rs.next());
+		assertEquals("2", rs.getString(1));
+	}
+	
 	@Test public void testColons() throws Exception {
 		Statement s = conn.createStatement();
 		//make sure that we aren't mishandling the ::

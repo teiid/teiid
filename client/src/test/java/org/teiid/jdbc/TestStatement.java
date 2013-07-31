@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -206,5 +207,10 @@ public class TestStatement {
 		assertEquals(Boolean.FALSE.toString(), statement.getExecutionProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
 		
 	}	
+	
+	@Test public void testSet() {
+		Matcher m = StatementImpl.SET_STATEMENT.matcher("set foo to 1");
+		assertTrue(m.matches());
+	}
 	
 }

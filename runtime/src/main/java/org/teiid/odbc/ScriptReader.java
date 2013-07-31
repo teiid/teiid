@@ -190,8 +190,23 @@ public class ScriptReader {
                             	String type = builder.substring(start+1, builder.length() - (c<0?0:1));
                             	builder.setLength(start-1);
                             	if (expressionStart != -1 && expressionEnd == start -1) {
-                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$
-                                	builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
+                            		//special handling for regclass cast - it won't always work
+                            		if ("regclass".equalsIgnoreCase(type)) { //$NON-NLS-1$
+                            			String name = builder.substring(expressionStart);
+                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$ 
+                            				name = name.substring(2, name.length()-2);
+                            				name = '\''+ name + '\'';
+                            			}
+                        				if (name.startsWith("'")) { //$NON-NLS-1$ 
+                        					builder.setLength(expressionStart);
+                            				builder.append(name.toUpperCase());
+                        				}
+                            			builder.insert(expressionStart, "(SELECT oid FROM pg_class WHERE upper(relname) = "); //$NON-NLS-1$
+                            			builder.append(")"); //$NON-NLS-1$ 
+                            		} else {
+	                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$
+	                                	builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$
+                            		}
                             	}
                             	if (c != -1) {
                             		builder.append((char)c);

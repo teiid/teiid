@@ -157,7 +157,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     protected Map<String, Integer> outParamByName = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
     
     static Pattern TRANSACTION_STATEMENT = Pattern.compile("\\s*(commit|rollback|(start\\s+transaction))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
-    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:([a-zA-Z]\\w*)|((?:'[^']*')+))\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
+    static Pattern SET_STATEMENT = Pattern.compile("\\s*set(?:\\s+(payload))?\\s+((?:session authorization)|(?:[a-zA-Z]\\w*))\\s+(?:to\\s+)?((?:[^\\s]*)|(?:'[^']*')+)\\s*;?\\s*", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     static Pattern SHOW_STATEMENT = Pattern.compile("\\s*show\\s+([a-zA-Z]\\w*)\\s*;?\\s*?", Pattern.CASE_INSENSITIVE); //$NON-NLS-1$
     
     /**
@@ -426,8 +426,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         		}
         		String key = match.group(2);
         		String value = match.group(3);
-        		if (value == null) {
-        			value = match.group(4);
+        		if (value != null && value.startsWith("\'") && value.endsWith("\'")) { //$NON-NLS-1$
         			value = value.substring(1, value.length() - 1);
         			value = StringUtil.replaceAll(value, "''", "'"); //$NON-NLS-1$ //$NON-NLS-2$
         		}
