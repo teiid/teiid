@@ -57,6 +57,7 @@ public class ConnectorManager  {
 
 	private final String translatorName;
 	private final String connectionName;
+	private final String jndiName;
 	private final List<String> id;
 	
     // known requests
@@ -74,6 +75,15 @@ public class ConnectorManager  {
     public ConnectorManager(String translatorName, String connectionName, ExecutionFactory<Object, Object> ef) {
     	this.translatorName = translatorName;
     	this.connectionName = connectionName;
+    	if (this.connectionName != null) {
+			if (!this.connectionName.startsWith(JAVA_CONTEXT)) {
+				jndiName = JAVA_CONTEXT + this.connectionName;
+			} else {
+				jndiName = this.connectionName;	
+			}
+    	} else {
+    		jndiName = null;
+    	}
     	this.executionFactory = ef;
     	this.id = Arrays.asList(translatorName, connectionName);
 	}
@@ -237,11 +247,6 @@ public class ConnectorManager  {
      */
     public Object getConnectionFactory() throws TranslatorException {
     	if (this.connectionName != null) {
-    		String jndiName = this.connectionName;
-    		if (!this.connectionName.startsWith(JAVA_CONTEXT)) {
-    			jndiName = JAVA_CONTEXT + jndiName;
-    		}
-
 			try {
 				InitialContext ic = new InitialContext();    		
 				try {
@@ -250,6 +255,7 @@ public class ConnectorManager  {
 					if (!jndiName.equals(this.connectionName)) {
 						return ic.lookup(this.connectionName);
 					}
+					throw e;
 				}
 			} catch (Exception e) {
 				 throw new TranslatorException(QueryPlugin.Event.TEIID30481, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30481, this.connectionName));
