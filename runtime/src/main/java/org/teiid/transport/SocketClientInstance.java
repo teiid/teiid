@@ -116,7 +116,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 
 	static boolean isDetailLevel(Throwable t) {
 		return t instanceof IOException &&
-				(ExceptionUtil.getExceptionOfType(t, ClosedChannelException.class) != null || ExceptionUtil.getExceptionOfType(t, SocketException.class) != null);
+				(ExceptionUtil.getExceptionOfType(t, ClosedChannelException.class) != null || ExceptionUtil.getExceptionOfType(t, SocketException.class) != null || t.getCause() == t || t.getCause() == null);
 	}
 
 	public void onConnection() throws CommunicationException {

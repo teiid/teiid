@@ -27,7 +27,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.teiid.jdbc.JDBCPlugin;
 
 
 /**
@@ -36,11 +39,12 @@ import java.util.concurrent.TimeoutException;
  */
 public class ResultsFuture<T> implements Future<T> {
 	
-	public static ResultsFuture<Void> NULL_FUTURE = new ResultsFuture<Void>();
+	public static final ResultsFuture<Void> NULL_FUTURE = new ResultsFuture<Void>();
 	
 	static {
 		NULL_FUTURE.getResultsReceiver().receiveResults(null);
 	}
+	private static final Logger logger = Logger.getLogger("org.teiid"); //$NON-NLS-1$
 	
 	public interface CompletionListener<T> {
 		void onCompletion(ResultsFuture<T> future);
@@ -127,7 +131,11 @@ public class ResultsFuture<T> implements Future<T> {
 	private void done() {
 		synchronized (this.listeners) {
 			for (CompletionListener<T> completionListener : this.listeners) {
-				completionListener.onCompletion(this);
+				try {
+					completionListener.onCompletion(this);
+				} catch (Throwable t) {
+					logger.log(Level.SEVERE, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20031), t);
+				}
 			}
 			this.listeners.clear();
 		}
@@ -136,7 +144,11 @@ public class ResultsFuture<T> implements Future<T> {
 	public void addCompletionListener(CompletionListener<T> listener) {
 		synchronized (this) {
 			if (done) {
-				listener.onCompletion(this);
+				try {
+					listener.onCompletion(this);
+				} catch (Throwable t) {
+					logger.log(Level.SEVERE, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20031), t);
+				}
 				return;
 			}
 			synchronized (this.listeners) {
