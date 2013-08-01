@@ -203,6 +203,23 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		assertEquals(7000, i);
 	}
 	
+	/**
+	 * tests that the portal max is handled correctly
+	 */
+	@Test public void testMultibatchSelectPrepared() throws Exception {
+		PreparedStatement s = conn.prepareStatement("select * from tables t1, tables t2 where t1.name > ?");
+		conn.setAutoCommit(false);
+		s.setFetchSize(100);
+		s.setString(1, "a");
+		ResultSet rs = s.executeQuery();
+		int i = 0;
+		while (rs.next()) {
+			i++;
+			rs.getString(1);
+		}
+		assertEquals(448, i);
+	}
+	
 	@Test public void testBlob() throws Exception {
 		Statement s = conn.createStatement();
 		assertTrue(s.execute("select to_bytes('abc', 'UTF-16')"));
@@ -434,5 +451,5 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 		Statement s = conn.createStatement();
 		s.execute("set client_encoding LATIN1");
 	}
-
+	
 }

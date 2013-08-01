@@ -34,7 +34,11 @@ public class MetadataProvider {
 	protected Map[] metadata;
 
     public MetadataProvider(Map[] metadata) {
-    	this.metadata = metadata;
+    	if (metadata == null) {
+    		this.metadata = new Map[0];
+    	} else {
+    		this.metadata = metadata;
+    	}
     }
     
     public Object getValue(int columnIndex, Integer metadataPropertyKey) throws SQLException {

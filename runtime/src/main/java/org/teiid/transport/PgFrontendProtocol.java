@@ -271,13 +271,13 @@ public class PgFrontendProtocol extends FrameDecoder {
         for (int i = 0; i < resultCodeCount; i++) {
             resultColumnFormat[i] = data.readShort();
         }
-        this.odbcProxy.bindParameters(bindName, prepName, paramCount, params, resultCodeCount, resultColumnFormat);
+        this.odbcProxy.bindParameters(bindName, prepName, params, resultCodeCount, resultColumnFormat);
         return message;
 	}	
 
 	private Object buildExecute(NullTerminatedStringDataInputStream data) throws IOException {
 		String portalName = data.readString();
-        int maxRows = data.readShort();
+        int maxRows = data.readInt();
         this.odbcProxy.execute(portalName, maxRows);
         return message;
 	}	
