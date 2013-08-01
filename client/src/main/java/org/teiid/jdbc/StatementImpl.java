@@ -608,6 +608,7 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
         } else {
         	reqMsg.setExecutionPayload(this.getMMConnection().getPayload());
         }
+        reqMsg.setDelaySerialization(true);
         reqMsg.setCursorType(this.resultSetType);
         reqMsg.setFetchSize(this.fetchSize);
         reqMsg.setRowLimit(this.maxRows);

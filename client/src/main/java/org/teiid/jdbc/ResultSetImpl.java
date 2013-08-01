@@ -62,7 +62,6 @@ import org.teiid.jdbc.BatchResults.BatchFetcher;
 
 public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchFetcher {
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
-	private static AsynchPositioningException ape = new AsynchPositioningException();
 	
 	private static final int BEFORE_FIRST_ROW = 0;
 
@@ -372,7 +371,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         		synchronized (this) {
             		asynchResults = results;
 				}
-        		throw ape;
+        		throw new AsynchPositioningException();
         	}
         	ResultsMessage currentResultMsg = getResults(results);
             return processBatch(currentResultMsg);
