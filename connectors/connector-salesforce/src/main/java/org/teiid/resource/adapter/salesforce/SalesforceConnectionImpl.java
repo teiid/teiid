@@ -103,10 +103,6 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 
 		Bus bus = BusFactory.getThreadDefaultBus();
 		BusFactory.setThreadDefaultBus(mcf.getBus());
-		Map<String, Object> requestContext = ((BindingProvider)sfSoap).getRequestContext();
-		if (mcf.getConnectTimeout() != null) {
-			requestContext.put(CONNECTION_TIMEOUT, mcf.getConnectTimeout());
-		}
 		try {
 			sfService = new SforceService();
 			sh = new SessionHeader();
@@ -115,6 +111,10 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			sfService.setHandlerResolver(new SalesforceHandlerResolver(sh));
 			
 			sfSoap = sfService.getSoap();
+			Map<String, Object> requestContext = ((BindingProvider)sfSoap).getRequestContext();
+			if (mcf.getConnectTimeout() != null) {
+				requestContext.put(CONNECTION_TIMEOUT, mcf.getConnectTimeout());
+			}
 			requestContext.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, url.toExternalForm());
 			loginResult = sfSoap.login(username, password);
 			
@@ -133,7 +133,7 @@ public class SalesforceConnectionImpl extends BasicConnection implements Salesfo
 			BusFactory.setThreadDefaultBus(bus);
 		}
 		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Login was successful for username " + username); //$NON-NLS-1$
-					
+		Map<String, Object> requestContext = ((BindingProvider)sfSoap).getRequestContext();
 		// Reset the SOAP endpoint to the returned server URL
 		requestContext.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY,loginResult.getServerUrl());
 		// or maybe org.apache.cxf.message.Message.ENDPOINT_ADDRESS
