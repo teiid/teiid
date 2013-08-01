@@ -38,8 +38,8 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.teiid.client.DQP;
 import org.teiid.client.RequestMessage;
-import org.teiid.client.ResultsMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
+import org.teiid.client.ResultsMessage;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.net.ServerConnection;
@@ -201,6 +201,11 @@ public class TestPreparedStatement {
 		PreparedStatementImpl stmt = getMMPreparedStatement("delete from table where col=?"); //$NON-NLS-1$
 		stmt.setBlob(1, (Blob)null);
 	}	
+	
+	@Test public void testShowParameterMetadata() throws Exception {
+		PreparedStatementImpl stmt = getMMPreparedStatement("show plan"); //$NON-NLS-1$
+		assertEquals(0, stmt.getParameterMetaData().getParameterCount());
+	}
 	
 	/**
 	 * Test the <code>addBatch()</code> method of <code>MMPreparedStatement</code> 

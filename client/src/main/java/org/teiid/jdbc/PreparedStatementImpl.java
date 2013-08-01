@@ -310,7 +310,9 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 
 	private MetadataResult getMetadataResults() throws SQLException {
 		if (metadataResults == null) {
-			if (StatementImpl.SET_STATEMENT.matcher(prepareSql).matches() || StatementImpl.TRANSACTION_STATEMENT.matcher(prepareSql).matches()) {
+			if (StatementImpl.SET_STATEMENT.matcher(prepareSql).matches() 
+					|| StatementImpl.TRANSACTION_STATEMENT.matcher(prepareSql).matches()
+					|| StatementImpl.SHOW_STATEMENT.matcher(prepareSql).matches()) {
 				metadataResults = new MetadataResult();
 			} else {
 				try {

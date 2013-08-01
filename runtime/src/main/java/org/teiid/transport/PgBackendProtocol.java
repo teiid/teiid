@@ -32,7 +32,6 @@ import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.sql.Blob;
-import java.sql.ParameterMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -64,7 +63,6 @@ import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
-import org.teiid.odbc.PGUtil;
 import org.teiid.odbc.PGUtil.PgColInfo;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.pg.PGbytea;
@@ -329,43 +327,18 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 
 	@Override
-	public void sendParameterDescription(ParameterMetaData meta, int[] paramType) {
-		try {
-			int count = meta.getParameterCount();
-			startMessage('t');
-			writeShort(count);
-			for (int i = 0; i < count; i++) {
-				int type;
-				if (paramType != null && paramType[i] != 0) {
-					type = paramType[i];
-				} else {
-					type = PGUtil.convertType(meta.getParameterType(i+1));
-				}
-				writeInt(type);
-			}
-			sendMessage();
-		} catch (SQLException e) {
-			sendErrorResponse(e);
-		}			
+	public void sendParameterDescription(int[] paramType) {
+		startMessage('t');
+		writeShort(paramType.length);
+		for (int i = 0; i < paramType.length; i++) {
+			writeInt(paramType[i]);
+		}
+		sendMessage();
 	}
 
 	@Override
 	public void sendResultSetDescription(List<PgColInfo> cols) {
 		sendRowDescription(cols);
-	}
-	
-	@Override
-	public void sendCursorResults(ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount) {
-    	sendRowDescription(cols);
-
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
-    	r.run();  	        					
-	}
-	
-	@Override
-	public void sendPortalResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean portal) {
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
-    	r.run();	        	
 	}
 	
 	@Override
@@ -385,7 +358,8 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}		
 	
 	@Override
-	public void sendResults(final String sql, final ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, boolean describeRows) {
+	public void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols,
+			ResultsFuture<Integer> result, int rowCount, boolean describeRows) {
 		if (nextFuture != null) {
 			sendErrorResponse(new IllegalStateException("Pending results have not been sent")); //$NON-NLS-1$
 		}
@@ -393,7 +367,7 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
     	if (describeRows) {
     		sendRowDescription(cols);
     	}
-    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, -1);
+    	ResultsWorkItem r = new ResultsWorkItem(cols, rs, result, rowCount);
     	r.sql = sql;
     	r.run();    
 	}

@@ -60,6 +60,7 @@ import org.teiid.deployers.UDFMetaData;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.deployers.VDBStatusChecker;
 import org.teiid.dqp.internal.datamgr.TranslatorRepository;
+import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.index.IndexMetadataRepository;
@@ -242,10 +243,17 @@ class VDBDeployer implements DeploymentUnitProcessor {
 			final VDBKey vdbKey,
 			final String dsName) {
 		final String jndiName = getJndiName(dsName);
-		final ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
+		ServiceName dsListenerServiceName;
+		try {
+			dsListenerServiceName = TeiidServiceNames.dsListenerServiceName(vdbKey.getName(), vdbKey.getVersion(), dsName);
+		} catch (InvalidServiceNameException e) {
+			LogManager.logWarning(LogConstants.CTX_RUNTIME, e, e.getMessage());
+			return;
+		}
+		ContextNames.BindInfo bindInfo = ContextNames.bindInfoFor(jndiName);
 		final ServiceName svcName = bindInfo.getBinderServiceName();
 		DataSourceListener dsl = new DataSourceListener(dsName, svcName, vdbKey);									
-		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(TeiidServiceNames.dsListenerServiceName(vdbKey.getName(), vdbKey.getVersion(), dsName), dsl);
+		ServiceBuilder<DataSourceListener> sb = serviceTarget.addService(dsListenerServiceName, dsl);
 		sb.addDependency(svcName);
 		sb.addDependency(TeiidServiceNames.VDB_STATUS_CHECKER, VDBStatusChecker.class, dsl.vdbStatusCheckInjector);
 		sb.setInitialMode(Mode.PASSIVE).install();
@@ -336,7 +344,12 @@ class VDBDeployer implements DeploymentUnitProcessor {
 					continue;
 				}
 		        
-				final ServiceController<?> dsService = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName));
+				ServiceController<?> dsService;
+				try {
+					dsService = deploymentUnit.getServiceRegistry().getService(TeiidServiceNames.dsListenerServiceName(deployment.getName(), deployment.getVersion(), dsName));
+				} catch (InvalidServiceNameException e) {
+					continue;
+				}
 				if (dsService != null) {
 					dsService.setMode(ServiceController.Mode.REMOVE);
 				}

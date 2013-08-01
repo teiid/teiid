@@ -87,6 +87,7 @@ import org.teiid.dqp.internal.datamgr.TranslatorRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.dqp.internal.process.SessionAwareCache;
+import org.teiid.jboss.TeiidServiceNames.InvalidServiceNameException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
@@ -1127,7 +1128,12 @@ abstract class VDBOperations extends BaseOperationHandler<RuntimeVDB>{
 		}
 		if (rr.removedDs != null) {
 			final ServiceRegistry registry = context.getServiceRegistry(true);
-		    final ServiceName serviceName = TeiidServiceNames.dsListenerServiceName(vdb.getVdb().getName(), vdb.getVdb().getVersion(), rr.removedDs);
+		    ServiceName serviceName;
+			try {
+				serviceName = TeiidServiceNames.dsListenerServiceName(vdb.getVdb().getName(), vdb.getVdb().getVersion(), rr.removedDs);
+			} catch (InvalidServiceNameException e) {
+				return; //the old isn't valid
+			}
 		    final ServiceController<?> controller = registry.getService(serviceName);
 		    if (controller != null) {
 		    	context.removeService(serviceName);

@@ -33,7 +33,7 @@ public interface ODBCServerRemote {
 	
 	void prepare(String prepareName, String sql, int[] paramType);
 
-	void bindParameters(String bindName, String prepareName, int paramCount, Object[] paramdata, int resultCodeCount, int[] resultColumnFormat);
+	void bindParameters(String bindName, String prepareName, Object[] paramdata, int resultCodeCount, int[] resultColumnFormat);
 	
 	void execute(String bindName, int maxrows);
 	

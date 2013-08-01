@@ -46,6 +46,7 @@ import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
 import org.jboss.as.controller.PathAddress;
 import org.jboss.as.controller.PathElement;
+import org.jboss.as.controller.ProcessType;
 import org.jboss.as.controller.ServiceVerificationHandler;
 import org.jboss.as.controller.registry.ImmutableManagementResourceRegistration;
 import org.jboss.as.controller.registry.Resource;
@@ -147,7 +148,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 	protected void populateModel(final OperationContext context, final ModelNode operation, final Resource resource) throws  OperationFailedException {	
 		resource.getModel().setEmptyObject();
 		populate(operation, resource.getModel());
-		if (context.isNormalServer()) {
+		
+		if (context.getProcessType().equals(ProcessType.STANDALONE_SERVER) && context.isNormalServer()) {
 			deployResources(context);
 		}
 	}

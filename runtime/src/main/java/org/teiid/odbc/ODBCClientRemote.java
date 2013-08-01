@@ -21,7 +21,6 @@
  */
 package org.teiid.odbc;
 
-import java.sql.ParameterMetaData;
 import java.util.List;
 import java.util.Properties;
 
@@ -61,7 +60,7 @@ public interface ODBCClientRemote {
 	void terminated();
 	
 	//	ParameterDescription (B)
-	void sendParameterDescription(ParameterMetaData parameterMetaData, int[] paramType);
+	void sendParameterDescription(int[] paramType);
 
 	//	BindComplete (B)
 	void bindComplete();
@@ -72,11 +71,7 @@ public interface ODBCClientRemote {
 	
 	//	DataRow (B)
 	//	CommandComplete (B)
-	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, boolean describeRows);
-	
-	void sendCursorResults(ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount);
-	
-	void sendPortalResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean portal);
+	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean describeRows);
 	
 	void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results);
 	
