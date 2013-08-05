@@ -73,8 +73,6 @@ public interface ODBCClientRemote {
 	//	CommandComplete (B)
 	void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols, ResultsFuture<Integer> result, int rowCount, boolean describeRows);
 	
-	void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results);
-	
 	void sendCommandComplete(String sql, Integer count);	
 
 	//	CommandComplete (B)

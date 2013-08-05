@@ -342,22 +342,6 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 	}
 	
 	@Override
-	public void sendMoveCursor(ResultSetImpl rs, int rowCount, ResultsFuture<Integer> results) {
-		try {
-			int rowsMoved = 0;
-			for (int i = 0; i < rowCount; i++) {
-				if (!rs.next()) {
-					break;
-				}
-				rowsMoved++;
-			}				
-			results.getResultsReceiver().receiveResults(rowsMoved);
-		} catch (SQLException e) {
-			sendErrorResponse(e);
-		}
-	}		
-	
-	@Override
 	public void sendResults(String sql, ResultSetImpl rs, List<PgColInfo> cols,
 			ResultsFuture<Integer> result, int rowCount, boolean describeRows) {
 		if (nextFuture != null) {

@@ -296,11 +296,13 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (cursor == null) {
 			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, cursorName));
 		}
-		cursor.fetchSize = rows;
+		if (rows < 1) {
+			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40112, cursorName, rows));
+		}
 		this.client.sendResults("FETCH", cursor.rs, cursor.prepared.columnMetadata, completion, rows, true); //$NON-NLS-1$
 	}
 	
-	private void cursorMove(String prepareName, int rows, final ResultsFuture<Integer> completion) throws SQLException {
+	private void cursorMove(String prepareName, final int rows, final ResultsFuture<Integer> completion) throws SQLException {
 		
 		// win odbc driver sending a move after close; and error is ending up in failure; since the below
 		// is not harmful it is ok to send empty move.
@@ -310,23 +312,47 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			return;			
 		}
 		
-		Cursor cursor = this.cursorMap.get(prepareName);
+		final Cursor cursor = this.cursorMap.get(prepareName);
 		if (cursor == null) {
 			throw new SQLException(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40078, prepareName));
 		}
-		ResultsFuture<Integer> result = new ResultsFuture<Integer>();
-		this.client.sendMoveCursor(cursor.rs, rows, result);
-		result.addCompletionListener(new ResultsFuture.CompletionListener<Integer>() {
-        	public void onCompletion(ResultsFuture<Integer> future) {
-        		try {
-					int rowsMoved = future.get();
-					client.sendCommandComplete("MOVE", rowsMoved); //$NON-NLS-1$						
-					completion.getResultsReceiver().receiveResults(rowsMoved);
-				} catch (Throwable e) {
-					completion.getResultsReceiver().exceptionOccurred(e);
+		Runnable r = new Runnable() {
+			public void run() {
+				run(null, 0);
+			}
+			public void run(ResultsFuture<Boolean> next, int i) {
+				for (; i < rows; i++) {
+					try {
+						if (next == null) {
+							next = cursor.rs.submitNext();
+						}
+						if (!next.isDone()) {
+							final int current = i;
+							next.addCompletionListener(new ResultsFuture.CompletionListener<Boolean>() {
+								@Override
+								public void onCompletion(
+										ResultsFuture<Boolean> future) {
+									run(future, current); //restart later
+								}
+							});
+							return;
+						}
+						if (!next.get()) {
+							break; //no next row
+						}
+						next = null;
+					} catch (Throwable e) {
+						completion.getResultsReceiver().exceptionOccurred(e);
+						return;
+					}
+				} 
+				if (!completion.isDone()) {
+					client.sendCommandComplete("MOVE", i); //$NON-NLS-1$						
+					completion.getResultsReceiver().receiveResults(i);
 				}
-        	};
-		});			
+			}
+		};
+		r.run();
 	}	
 	
 	private void cursorClose(String prepareName) throws SQLException {
@@ -426,7 +452,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		if (bindName == null || bindName.length() == 0) {
 			this.portalMap.remove(UNNAMED);
 			bindName  = UNNAMED;
-		} else if (this.portalMap.get(bindName) != null) {
+		} else if (this.portalMap.get(bindName) != null || this.cursorMap.get(bindName) != null) {
 			errorOccurred(RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40111, bindName));
 			return;
 		}
@@ -481,7 +507,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 		// special case cursor execution through portal
 		final Cursor cursor = this.cursorMap.get(bindName);
 		if (cursor != null) {
-			sendCursorResults(cursor, maxRows>-1?Math.min(maxRows,cursor.fetchSize):cursor.fetchSize);
+			sendCursorResults(cursor, maxRows);
 			return;
 		}		
 		
@@ -538,7 +564,7 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
 			public void onCompletion(ResultsFuture<Integer> future) {
 				try {
 					int rowsSent = future.get();
-					if (rowsSent < fetchSize) {
+					if (rowsSent < fetchSize || fetchSize <= 0) {
 						client.sendCommandComplete(cursor.prepared.sql, rowsSent);
 					}
 					else {
@@ -1066,7 +1092,6 @@ public class ODBCServerRemoteImpl implements ODBCServerRemote {
     }
     
     static class Cursor extends Portal {
-    	volatile int fetchSize = 1000;
     	
     	public Cursor (String name, String sql, PreparedStatementImpl stmt, ResultSetImpl rs, List<PgColInfo> colMetadata) {
     		super(name, new Prepared(UNNAMED, sql, sql, null, colMetadata), null, stmt);

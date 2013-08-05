@@ -50,6 +50,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.postgresql.Driver;
+import org.postgresql.core.v3.ExtendedQueryExectutorImpl;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.util.UnitTestUtil;
@@ -328,10 +329,24 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	}
 	
 	// this does not work as JDBC always sends the queries in prepared form
-	public void testPgDeclareCursor() throws Exception {
+	@Test public void testCursor() throws Exception {
 		Statement stmt = conn.createStatement();
-		ResultSet rs = stmt.executeQuery("begin;declare \"foo\" cursor for select * from pg_proc;fetch 10 in \"foo\"; close \"foo\"");
-		rs.next();		
+		ExtendedQueryExectutorImpl.simplePortal = "foo";
+		try {
+			assertFalse(stmt.execute("declare \"foo\" cursor for select * from pg_proc;"));
+			assertFalse(stmt.execute("move 5 in \"foo\""));
+			stmt.execute("fetch 10 in \"foo\"");
+			ResultSet rs = stmt.getResultSet();
+			int rowCount = 0;
+			while (rs.next()) {
+				rowCount++;
+			}
+			assertEquals(3, rowCount);
+			stmt.execute("close \"foo\"");
+		} finally {
+			ExtendedQueryExectutorImpl.simplePortal = null;
+		}
+		
 	}	
 	
 	@Test public void testPgProcedure() throws Exception {
