@@ -86,6 +86,18 @@ public class UpdateProcedureResolver implements CommandResolver {
      */
     public void resolveCommand(Command command, TempMetadataAdapter metadata, boolean resolveNullLiterals)
         throws QueryMetadataException, QueryResolverException, TeiidComponentException {
+
+        //by creating a new group context here it means that variables will resolve with a higher precedence than input/changing
+        GroupContext externalGroups = command.getExternalGroupContexts();
+        
+        List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
+        
+        String countVar = ProcedureReservedWords.VARIABLES + Symbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
+        ElementSymbol updateCount = new ElementSymbol(countVar);
+        updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        symbols.add(updateCount);
+
+        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);    
     	
     	if (command instanceof TriggerAction) {
     		TriggerAction ta = (TriggerAction)command;
@@ -99,17 +111,6 @@ public class UpdateProcedureResolver implements CommandResolver {
 
         CreateProcedureCommand procCommand = (CreateProcedureCommand) command;
 
-        //by creating a new group context here it means that variables will resolve with a higher precedence than input/changing
-        GroupContext externalGroups = command.getExternalGroupContexts();
-        
-        List<ElementSymbol> symbols = new LinkedList<ElementSymbol>();
-        
-        String countVar = ProcedureReservedWords.VARIABLES + Symbol.SEPARATOR + ProcedureReservedWords.ROWCOUNT;
-        ElementSymbol updateCount = new ElementSymbol(countVar);
-        updateCount.setType(DataTypeManager.DefaultDataClasses.INTEGER);
-        symbols.add(updateCount);
-
-        ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, metadata.getMetadataStore(), externalGroups, symbols);    
         resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
     }
 
