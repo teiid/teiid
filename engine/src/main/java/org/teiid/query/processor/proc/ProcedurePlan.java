@@ -86,7 +86,7 @@ import org.teiid.query.util.CommandContext;
 
 /**
  */
-public class ProcedurePlan extends ProcessorPlan {
+public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager {
 
 	private static class CursorState {
 		QueryProcessor processor;
@@ -95,7 +95,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		TupleBuffer resultsBuffer;
 	}
 	
-	static ElementSymbol ROWCOUNT =
+	static final ElementSymbol ROWCOUNT =
 		new ElementSymbol(ProcedureReservedWords.VARIABLES+"."+ProcedureReservedWords.ROWCOUNT); //$NON-NLS-1$
 	
 	static {
@@ -105,7 +105,6 @@ public class ProcedurePlan extends ProcessorPlan {
     private Program originalProgram;
 
 	// State initialized by processor
-	private ProcessorDataManager dataMgr;
 	private ProcessorDataManager parentDataMrg;
     private BufferManager bufferMgr;
     private int batchSize;
@@ -167,32 +166,6 @@ public class ProcedurePlan extends ProcessorPlan {
         this.batchSize = bufferMgr.getProcessorBatchSize(getOutputElements());
         this.parentContext = context.getVariableContext();
         setContext(context.clone());
-        this.dataMgr = new ProcessorDataManager() {
-			
-			@Override
-			public TupleSource registerRequest(CommandContext context, Command command,
-					String modelName, RegisterRequestParameter parameterObject)
-					throws TeiidComponentException, TeiidProcessingException {
-				TupleSource ts = parentDataMrg.registerRequest(context, command, modelName, parameterObject);
-				if (blockContext != null && ts instanceof DataTierTupleSource) {
-					txnTupleSources.add(new WeakReference<DataTierTupleSource>((DataTierTupleSource)ts));
-				}
-				return ts;
-			}
-			
-			@Override
-			public Object lookupCodeValue(CommandContext context, String codeTableName,
-					String returnElementName, String keyElementName, Object keyValue)
-					throws BlockedException, TeiidComponentException,
-					TeiidProcessingException {
-				return parentDataMrg.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
-			}
-			
-			@Override
-			public EventDistributor getEventDistributor() {
-				return parentDataMrg.getEventDistributor();
-			}
-		};
         this.parentDataMrg = dataMgr;
         if (evaluator == null) {
         	this.evaluator = new SubqueryAwareEvaluator(Collections.emptyMap(), getDataManager(), getContext(), this.bufferMgr);
@@ -224,7 +197,7 @@ public class ProcedurePlan extends ProcessorPlan {
     }
 
     public ProcessorDataManager getDataManager() {
-        return this.dataMgr;
+        return this;
     }
 
     public void open() throws TeiidProcessingException, TeiidComponentException {
@@ -454,7 +427,6 @@ public class ProcedurePlan extends ProcessorPlan {
         if (this.evaluator != null) {
         	this.evaluator.close();
         }
-        this.dataMgr = parentDataMrg;
         this.txnTupleSources.clear();
         this.blockContext = null;
     }
@@ -566,7 +538,7 @@ public class ProcedurePlan extends ProcessorPlan {
 		        CommandContext subContext = getContext().clone();
 		        subContext.setVariableContext(this.currentVarContext);
 		        state = new CursorState();
-		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this.dataMgr);
+		        state.processor = new QueryProcessor(command, subContext, this.bufferMgr, this);
 		        state.ts = new BatchIterator(state.processor);
 		        if (mode == Mode.HOLD && procAssignments != null && state.processor.getOutputElements().size() - procAssignments.size() > 0) {
 		        	state.resultsBuffer = bufferMgr.createTupleBuffer(state.processor.getOutputElements().subList(0, state.processor.getOutputElements().size() - procAssignments.size()), getContext().getConnectionId(), TupleSourceType.PROCESSOR);
@@ -600,7 +572,8 @@ public class ProcedurePlan extends ProcessorPlan {
             	while (this.currentState.ts.hasNext()) {
             		List<?> tuple = this.currentState.ts.nextTuple();
         			this.currentState.resultsBuffer.addTuple(tuple);
-            	}	
+            	}
+            	getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
             } else if (mode == Mode.UPDATE) {
         		List<?> t = this.currentState.ts.nextTuple();
         		if (this.currentState.ts.hasNext()) {
@@ -623,6 +596,7 @@ public class ProcedurePlan extends ProcessorPlan {
             		this.currentState.ts.nextTuple();
             	}
             	this.currentState = null;
+            	getCurrentVariableContext().setValue(ProcedurePlan.ROWCOUNT, 0);
             	return;
         	}
         	if (this.currentState.resultsBuffer != null) {
@@ -659,7 +633,7 @@ public class ProcedurePlan extends ProcessorPlan {
     		TransactionContext tc = this.blockContext;
     		this.blockContext = null;
     		try {
-    			this.getContext().getTransactionServer().resume(tc);
+    			ts.resume(tc);
 	    		for (WeakReference<DataTierTupleSource> ref : txnTupleSources) {
 	    			DataTierTupleSource dtts = ref.get();
 	    			if (dtts != null) {
@@ -835,5 +809,30 @@ public class ProcedurePlan extends ProcessorPlan {
     public void setRunInContext(boolean runInContext) {
 		this.runInContext = runInContext;
 	}
-    
+
+	@Override
+	public TupleSource registerRequest(CommandContext context, Command command,
+			String modelName, RegisterRequestParameter parameterObject)
+			throws TeiidComponentException, TeiidProcessingException {
+		//programs will be empty for parameter evaluation
+		TupleSource ts = parentDataMrg.registerRequest(context, command, modelName, parameterObject);
+		if (blockContext != null && ts instanceof DataTierTupleSource) {
+			txnTupleSources.add(new WeakReference<DataTierTupleSource>((DataTierTupleSource)ts));
+		}
+		return ts;
+	}
+
+	@Override
+	public Object lookupCodeValue(CommandContext context, String codeTableName,
+			String returnElementName, String keyElementName, Object keyValue)
+			throws BlockedException, TeiidComponentException,
+			TeiidProcessingException {
+		return parentDataMrg.lookupCodeValue(context, codeTableName, returnElementName, keyElementName, keyValue);
+	}
+
+	@Override
+	public EventDistributor getEventDistributor() {
+		return parentDataMrg.getEventDistributor();
+	}
+
 }
