@@ -266,7 +266,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		List<RequestMetadata> requests = new ArrayList<RequestMetadata>();
 		Collection<SessionMetadata> sessions = this.sessionService.getActiveSessions();
 		for (SessionMetadata session:sessions) {
-			if (session.getVDBName().equals(vdbName) && session.getVDBVersion() == vdbVersion) {
+			if (vdbName.equals(session.getVDBName()) && session.getVDBVersion() == vdbVersion) {
 				requests.addAll(getDQP().getRequestsForSession(session.getSessionId()));
 			}
 		}
