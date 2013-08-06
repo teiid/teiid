@@ -2139,7 +2139,26 @@ public class TestProcedureProcessor {
         plan = getProcedurePlan(sql, tm);
         expected = new List[] { Arrays.asList(null, null, null) }; //$NON-NLS-1$
         helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    @Test public void testAnonBlock() throws Exception {
+        String sql = "begin insert into #temp (e1) select e1 from pm1.g1; select * from #temp; end;"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
 
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        dataManager.addData("SELECT g1.e1 FROM g1", new List<?>[] {Arrays.asList("a")});
+        List[] expected = new List[] { Arrays.asList("a") }; //$NON-NLS-1$
+        helpTestProcess(plan, expected, dataManager, tm);
+    }
+    
+    /**
+     * Should fail as the results conflict from multiple statements
+     */
+    @Test(expected=QueryValidatorException.class) public void testAnonBlockResolveFails() throws Exception {
+        String sql = "begin insert into #temp (e1) select e1 from pm1.g1; select * from #temp; select * from pm1.g1; end;"; //$NON-NLS-1$
+        TransformationMetadata tm = RealMetadataFactory.example1Cached();
+        getProcedurePlan(sql, tm);
     }
 
     private static final boolean DEBUG = false;

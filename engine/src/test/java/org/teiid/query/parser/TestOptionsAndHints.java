@@ -951,7 +951,7 @@ public class TestOptionsAndHints {
         String sql = "/*+ cache */ CREATE VIRTUAL PROCEDURE BEGIN END"; //$NON-NLS-1$
         CreateProcedureCommand command = new CreateProcedureCommand(new Block());
         command.setCacheHint(new CacheHint());
-        TestParser.helpTest(sql, "/*+ cache */ CREATE VIRTUAL PROCEDURE\nBEGIN\nEND", command);         //$NON-NLS-1$
+        TestParser.helpTest(sql, "/*+ cache */ BEGIN\nEND", command);         //$NON-NLS-1$
     }
     
     @Test public void testCacheScope() {
@@ -1097,7 +1097,7 @@ public class TestOptionsAndHints {
         assertEquals("WITH x AS (SELECT /*+sh:'x' */ 1) SELECT /*+sh:'foo' bar:'leading' */ e1 FROM pm1.g1 ORDER BY e1 LIMIT 1", QueryParser.getQueryParser().parseCommand(sql, ParseInfo.DEFAULT_INSTANCE).toString());
         
         sql = "create virtual procedure begin loop on (select /*+ sh:'y' */ 1) as x begin end end"; //$NON-NLS-1$
-        assertEquals("CREATE VIRTUAL PROCEDURE\nBEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseDesignerCommand(sql).toString());
+        assertEquals("BEGIN\nLOOP ON (SELECT /*+sh:'y' */ 1) AS x\nBEGIN\nEND\nEND", QueryParser.getQueryParser().parseDesignerCommand(sql).toString());
 	}
 	
     @Test public void testMakedepOptions() throws QueryParserException {

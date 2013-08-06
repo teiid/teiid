@@ -1443,7 +1443,7 @@ public class TestSQLStringVisitor {
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
     
     @Test public void testCreateUpdateProcedure2() {
@@ -1457,7 +1457,7 @@ public class TestSQLStringVisitor {
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
 
     @Test public void testCreateUpdateProcedure3() {
@@ -1471,7 +1471,7 @@ public class TestSQLStringVisitor {
     	b.addStatement(assigStmt);
     	b.addStatement(errStmt);
 	    CreateProcedureCommand cup = new CreateProcedureCommand(b);
-		helpTest(cup, "CREATE VIRTUAL PROCEDURE\nBEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
+		helpTest(cup, "BEGIN\nDELETE FROM g;\na = 1;\nRAISE 'My Error';\nEND");	     //$NON-NLS-1$
     }
 
     @Test public void testSubqueryCompareCriteria1() {
@@ -1735,7 +1735,7 @@ public class TestSQLStringVisitor {
     }
     
     @Test public void testReturnStatement() throws QueryParserException {
-		helpTest(QueryParser.getQueryParser().parseProcedure("begin if (true) return 1; return; end", false), "CREATE VIRTUAL PROCEDURE\nBEGIN\nIF(TRUE)\nBEGIN\nRETURN 1;\nEND\nRETURN;\nEND");
+		helpTest(QueryParser.getQueryParser().parseProcedure("begin if (true) return 1; return; end", false), "BEGIN\nIF(TRUE)\nBEGIN\nRETURN 1;\nEND\nRETURN;\nEND");
     }
     
     @Test public void testConditionNesting() throws Exception {

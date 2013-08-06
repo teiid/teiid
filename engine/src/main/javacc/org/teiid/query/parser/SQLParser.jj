@@ -785,6 +785,7 @@ Command userCommand(ParseInfo info) :
 {
 	Command command = null;
 	SourceHint sourceHint = null;
+	Block block = null;
 }
 {
 	(command = queryExpression(info) |
@@ -796,7 +797,8 @@ Command userCommand(ParseInfo info) :
 	LOOKAHEAD(2) command = createTempTable(info) |
 	LOOKAHEAD(2) command = createForeignTempTable(info) |
 	command = alter(info) |
-	command = createTrigger(info)
+	command = createTrigger(info) |
+	block = compoundStatement(info) {command = new CreateProcedureCommand(block);}
 	)
 	{
 		setSourceHint(sourceHint, command);
@@ -1346,7 +1348,7 @@ CreateProcedureCommand  createProcedure(ParseInfo info) :
 /*
 name=procedure body definition
 description=Defines a procedure body on a Procedure metadata object.
-example={code:sql}CREATE VIRTUAL PROCEDURE BEGIN ... END{code}
+example={code:sql}BEGIN ... END{code}
 index=true
 */
 CreateProcedureCommand  procedureBodyCommand(ParseInfo info) :

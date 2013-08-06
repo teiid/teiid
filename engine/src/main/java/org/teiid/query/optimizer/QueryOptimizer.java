@@ -105,8 +105,8 @@ public class QueryOptimizer {
 		switch (command.getType()) {
 		case Command.TYPE_UPDATE_PROCEDURE:
 			CreateProcedureCommand cupc = (CreateProcedureCommand)command;
-			if (cupc.getUpdateType() != Command.TYPE_UNKNOWN) {
-				//row update procedure
+			if (cupc.getUpdateType() != Command.TYPE_UNKNOWN || cupc.getVirtualGroup() == null) {
+				//row update procedure or anon block
 				result = planProcedure(command, metadata, idGenerator, capFinder, analysisRecord, context);
 			} else {
 				Object pid = cupc.getVirtualGroup().getMetadataID();

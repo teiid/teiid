@@ -1164,7 +1164,7 @@ public class TestQueryRewriter {
         procedure1 += "select e1 from pm1.g1;\n"; //$NON-NLS-1$
         procedure1 += "END"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nSELECT e1 FROM pm1.g1;\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nSELECT e1 FROM pm1.g1;\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1176,7 +1176,7 @@ public class TestQueryRewriter {
         procedure1 += "select e1 from pm1.g1;\n"; //$NON-NLS-1$
         procedure1 += "end\n"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nBEGIN ATOMIC\nSELECT e1 FROM pm1.g1;\nEND\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nBEGIN ATOMIC\nSELECT e1 FROM pm1.g1;\nEND\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1187,7 +1187,7 @@ public class TestQueryRewriter {
         procedure1 += "exception e\n"; //$NON-NLS-1$
         procedure1 += "end\n"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /';\nEXCEPTION e\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nRAISE 'org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /';\nEXCEPTION e\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1198,7 +1198,7 @@ public class TestQueryRewriter {
         procedure1 += "declare integer x = 1 + 1;\n"; //$NON-NLS-1$
         procedure1 += "END"; //$NON-NLS-1$
         
-        String expected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nDECLARE integer x = 2;\nEND"; //$NON-NLS-1$
+        String expected = "BEGIN\nDECLARE integer x = 2;\nEND"; //$NON-NLS-1$
         
         helpTestRewriteCommand(procedure1, expected);
     }
@@ -1304,7 +1304,7 @@ public class TestQueryRewriter {
         procedure += "Select x from temp;\n"; //$NON-NLS-1$
         procedure += "END\n"; //$NON-NLS-1$
         
-        helpTestRewriteCommand(procedure, "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (x, y, z) SELECT convert(X.e2, string) AS x, X.x AS y, X.x_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS x_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
+        helpTestRewriteCommand(procedure, "BEGIN\nCREATE LOCAL TEMPORARY TABLE temp (x string, y integer, z integer);\nINSERT INTO temp (x, y, z) SELECT convert(X.e2, string) AS x, X.x AS y, X.x_0 AS z FROM (SELECT pm1.g1.e2, 1 AS x, 2 AS x_0 FROM pm1.g1 ORDER BY pm1.g1.e2 LIMIT 1) AS X;\nSELECT x FROM temp;\nEND"); //$NON-NLS-1$
     }
     
     @Test public void testRewriteNot() {
@@ -1661,7 +1661,7 @@ public class TestQueryRewriter {
 
 		QueryMetadataInterface metadata = RealMetadataFactory.fromDDL(ddl, "x", "phy");
 		
-    	helpTestRewriteCommand("merge into x (y) values (1)", "CREATE VIRTUAL PROCEDURE\nBEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X) AS X1\nBEGIN\nIF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\nBEGIN\nEND\nELSE\nBEGIN\nINSERT INTO x (y) VALUES (X1.y);\nEND\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND", metadata);
+    	helpTestRewriteCommand("merge into x (y) values (1)", "BEGIN ATOMIC\nDECLARE integer VARIABLES.ROWS_UPDATED = 0;\nLOOP ON (SELECT X.expr1 AS y FROM (SELECT '1' AS expr1) AS X) AS X1\nBEGIN\nIF(EXISTS (SELECT 1 FROM x WHERE y = X1.y LIMIT 1))\nBEGIN\nEND\nELSE\nBEGIN\nINSERT INTO x (y) VALUES (X1.y);\nEND\nVARIABLES.ROWS_UPDATED = (VARIABLES.ROWS_UPDATED + 1);\nEND\nSELECT VARIABLES.ROWS_UPDATED;\nEND", metadata);
     }
 
 }

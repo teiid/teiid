@@ -2559,7 +2559,7 @@ public class TestResolver {
         
         Command cmd = helpResolve(proc.toString()); 
 
-        String sExpected = "CREATE VIRTUAL PROCEDURE\nBEGIN\nCREATE LOCAL TEMPORARY TABLE #matt (x integer);\nINSERT INTO #matt (x) VALUES (1);\nEND\n\tCREATE LOCAL TEMPORARY TABLE #matt (x integer)\n\tINSERT INTO #matt (x) VALUES (1)\n";   //$NON-NLS-1$
+        String sExpected = "BEGIN\nCREATE LOCAL TEMPORARY TABLE #matt (x integer);\nINSERT INTO #matt (x) VALUES (1);\nEND\n\tCREATE LOCAL TEMPORARY TABLE #matt (x integer)\n\tINSERT INTO #matt (x) VALUES (1)\n";   //$NON-NLS-1$
         String sActual = cmd.printCommandTree(); 
         assertEquals( sExpected, sActual );
     }

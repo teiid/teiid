@@ -1547,13 +1547,6 @@ public class SQLStringVisitor extends LanguageVisitor {
 
     public void visit( CreateProcedureCommand obj ) {
     	addCacheHint(obj.getCacheHint());
-        append(CREATE);
-        append(SPACE);
-        append(VIRTUAL);
-        append(SPACE);
-        append(PROCEDURE);
-        append("\n"); //$NON-NLS-1$
-        addTabs(0);
         visitNode(obj.getBlock());
     }
 
