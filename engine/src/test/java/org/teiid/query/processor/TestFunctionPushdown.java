@@ -126,7 +126,7 @@ public class TestFunctionPushdown {
         ProcessorPlan plan = helpPlan(sql, tm, null, capFinder, 
                                       new String[] {}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ 
         
-        HardcodedDataManager dataManager = new HardcodedDataManager();
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         dataManager.addData("SELECT func(1)", new List[] {Arrays.asList(2)});
         TestProcessor.helpProcess(plan, cc, dataManager, new List[] {Arrays.asList(2)});
         

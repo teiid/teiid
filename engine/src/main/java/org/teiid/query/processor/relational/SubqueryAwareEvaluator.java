@@ -98,7 +98,6 @@ public class SubqueryAwareEvaluator extends Evaluator {
 		@Override
 		public void open() throws TeiidComponentException, TeiidProcessingException {
 			RegisterRequestParameter parameterObject = new RegisterRequestParameter();
-			parameterObject.selectWithNoFrom = true;
 			ts = dataMgr.registerRequest(getContext(), command, fd.getSchema(), parameterObject);
 		}
 

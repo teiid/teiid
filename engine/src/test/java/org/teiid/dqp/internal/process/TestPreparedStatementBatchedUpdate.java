@@ -30,7 +30,11 @@ import java.util.List;
 
 import org.junit.Test;
 import org.teiid.cache.DefaultCacheFactory;
+import org.teiid.language.Parameter;
+import org.teiid.language.visitor.CollectorVisitor;
+import org.teiid.metadata.Table;
 import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
@@ -41,6 +45,7 @@ import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.sql.lang.Update;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.TestUpdateValidator;
 
 
 /**
@@ -80,6 +85,47 @@ public class TestPreparedStatementBatchedUpdate {
     	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, RealMetadataFactory.example1Cached(), prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
     	Update update = (Update)dataManager.getCommandHistory().iterator().next();
     	assertTrue(((Constant)update.getChangeList().getClauses().get(0).getValue()).isMultiValued());
+    }
+    
+    @Test public void testBatchedUpdatePushdown1() throws Exception {
+    	//TODO: just use straight ddl
+    	TransformationMetadata metadata = TestUpdateValidator.example1();
+		TestUpdateValidator.createView("select 1 as x, 2 as y", metadata, "GX");
+		Table t = metadata.getMetadataStore().getSchemas().get("VM1").getTables().get("GX");
+		t.setDeletePlan("");
+		t.setUpdatePlan("");
+		t.setInsertPlan("FOR EACH ROW BEGIN insert into pm1.g1 (e1) values (new.x); END");
+		
+		String preparedSql = "insert into gx (x, y) values (?,?)"; //$NON-NLS-1$
+        
+		// Create a testable prepared plan cache
+		SessionAwareCache<PreparedPlan> prepPlanCache = new SessionAwareCache<PreparedPlan>("preparedplan", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.PREPAREDPLAN, 0);
+		
+		// Construct data manager with data
+        HardcodedDataManager dataManager = new HardcodedDataManager(metadata);
+		dataManager.addData("INSERT INTO g1 (e1) VALUES (convert(?, string))", new List[] {Arrays.asList(2)}); //$NON-NLS-1$
+		// Source capabilities must support batched updates
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.BULK_UPDATE, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        
+        // batch with two commands
+		ArrayList<ArrayList<Object>> values = new ArrayList<ArrayList<Object>>(2);
+		values.add(new ArrayList<Object>(Arrays.asList(3, 4)));  //$NON-NLS-1$
+    	values.add(new ArrayList<Object>(Arrays.asList(5, 6)));
+    	
+    	List<?>[] expected = new List[] { 
+                Arrays.asList(2)
+        };
+    	
+    	// Create the plan and process the query
+    	TestPreparedStatement.helpTestProcessing(preparedSql, values, expected, dataManager, capFinder, metadata, prepPlanCache, false, false, false,RealMetadataFactory.example1VDB());
+    	org.teiid.language.Insert insert = (org.teiid.language.Insert)dataManager.getPushdownCommands().iterator().next();
+    	Parameter p = CollectorVisitor.collectObjects(Parameter.class, insert).iterator().next();
+    	assertEquals(0, p.getValueIndex());
+    	assertEquals(Arrays.asList(3), insert.getParameterValues().next());
+    	assertTrue(insert.getParameterValues().hasNext());
     }
     
     @Test public void testBatchedUpdateNotPushdown() throws Exception {

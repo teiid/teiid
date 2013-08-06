@@ -108,15 +108,7 @@ public class BatchedUpdateCommand extends Command {
 	}
 
     public String toString() {
-        StringBuffer val = new StringBuffer("BatchedUpdate{"); //$NON-NLS-1$
-        if (commands != null && commands.size() > 0) {
-            val.append(getCommandToken(commands.get(0).getType()));
-            for (int i = 1; i < commands.size(); i++) {
-                val.append(',').append(getCommandToken(commands.get(i).getType()));
-            }
-        }
-        val.append('}');
-        return val.toString();
+       return getStringForm(false);
     }
     
 	public void setVariableContexts(List<VariableContext> variableContexts) {
@@ -150,6 +142,33 @@ public class BatchedUpdateCommand extends Command {
 	
 	public boolean isSingleResult() {
 		return singleResult;
+	}
+
+	public String getStringForm(boolean full) {
+		StringBuffer val = new StringBuffer(); 
+		if (!full) {
+			val.append("BatchedUpdate{"); //$NON-NLS-1$
+		}
+        if (commands != null && commands.size() > 0) {
+            for (int i = 0; i < commands.size(); i++) {
+            	if (i > 0) { 
+            		if (full) {
+            			val.append(";\n"); //$NON-NLS-1$
+            		} else {
+            			val.append(","); //$NON-NLS-1$
+            		}
+            	}
+            	if (full) {
+            		val.append(commands.get(i));
+            	} else {
+            		val.append(getCommandToken(commands.get(i).getType()));	
+            	}
+            }
+        }
+        if (!full) {
+        	val.append('}');
+        }
+	    return val.toString();
 	}
 	
 }

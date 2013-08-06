@@ -35,7 +35,7 @@ public class RegisterRequestParameter {
 	public SharedAccessInfo info;
 	public boolean doNotCache;
 	public int fetchSize;
-	public boolean selectWithNoFrom;
+	public boolean mustExecute;
 
 	public RegisterRequestParameter(String connectorBindingId, int nodeID,
 			int limit) {

@@ -27,12 +27,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.teiid.client.xa.XATransactionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.eval.Evaluator;
 import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -58,6 +63,8 @@ public class ForEachRowPlan extends ProcessorPlan {
     private QueryProcessor rowProcessor;
     private List<?> currentTuple;
     private int updateCount;
+    
+    private TransactionContext planContext;
 
 	@Override
 	public ProcessorPlan clone() {
@@ -75,6 +82,16 @@ public class ForEachRowPlan extends ProcessorPlan {
 			this.queryProcessor.closeProcessing();
 			if (this.rowProcessor != null) {
 				this.rowProcessor.closeProcessing();
+			}
+		}
+		if (this.planContext != null) {
+			TransactionService ts = this.getContext().getTransactionServer();
+			try {
+				ts.resume(planContext);
+				ts.rollback(planContext);
+				this.planContext = null;
+			} catch (XATransactionException e) {
+				throw new TeiidComponentException(QueryPlugin.Event.TEIID30165, e);
 			}
 		}
 	}
@@ -95,41 +112,70 @@ public class ForEachRowPlan extends ProcessorPlan {
 	@Override
 	public TupleBatch nextBatch() throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
-		while (true) {
-			if (currentTuple == null) {
-				currentTuple = tupleSource.nextTuple();
+		if (planContext != null) {
+			this.getContext().getTransactionServer().resume(planContext);
+		}
+		try {
+			while (true) {
 				if (currentTuple == null) {
-					TupleBatch result = new TupleBatch(1, new List[] {Arrays.asList(updateCount)});
-					result.setTerminationFlag(true);
-					return result;
-				}
-			}
-			if (this.rowProcessor == null) {
-				rowProcedure.reset();
-				rowProcedure.setRunInContext(false); //for each row procedures are properly encapsulated
-				CommandContext context = getContext().clone();
-				this.rowProcessor = new QueryProcessor(rowProcedure, context, this.bufferMgr, this.dataMgr);
-				Evaluator eval = new Evaluator(Collections.emptyMap(), dataMgr, context);
-				for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
-					Integer index = this.lookupMap.get(entry.getValue());
-					if (index != null) {
-						rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), this.currentTuple.get(index));
-					} else {
-						rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
+					currentTuple = tupleSource.nextTuple();
+					if (currentTuple == null) {
+						if (this.planContext != null) {
+							TransactionService ts = this.getContext().getTransactionServer();
+							ts.commit(this.planContext);
+							this.planContext = null;
+						}
+						TupleBatch result = new TupleBatch(1, new List[] {Arrays.asList(updateCount)});
+						result.setTerminationFlag(true);
+						return result;
 					}
 				}
+				if (this.rowProcessor == null) {
+					rowProcedure.reset();
+					rowProcedure.setRunInContext(false); //for each row procedures are properly encapsulated
+					CommandContext context = getContext().clone();
+					this.rowProcessor = new QueryProcessor(rowProcedure, context, this.bufferMgr, this.dataMgr);
+					Evaluator eval = new Evaluator(Collections.emptyMap(), dataMgr, context);
+					for (Map.Entry<ElementSymbol, Expression> entry : this.params.entrySet()) {
+						Integer index = this.lookupMap.get(entry.getValue());
+						if (index != null) {
+							rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), this.currentTuple.get(index));
+						} else {
+							rowProcedure.getCurrentVariableContext().setValue(entry.getKey(), eval.evaluate(entry.getValue(), null));
+						}
+					}
+				}
+				//just getting the next batch is enough
+				this.rowProcessor.nextBatch();
+				this.rowProcessor.closeProcessing();
+				this.rowProcessor = null;
+				this.currentTuple = null;
+				this.updateCount++;
+			} 
+		} finally {
+			if (planContext != null) {
+				this.getContext().getTransactionServer().suspend(planContext);
 			}
-			//just getting the next batch is enough
-			this.rowProcessor.nextBatch();
-			this.rowProcessor.closeProcessing();
-			this.rowProcessor = null;
-			this.currentTuple = null;
-			this.updateCount++;
-		}		
+		}
 	}
 
 	@Override
 	public void open() throws TeiidComponentException, TeiidProcessingException {
+    	TransactionContext tc = this.getContext().getTransactionContext();
+    	if (tc != null && tc.getTransactionType() == Scope.NONE) {
+    		//start a transaction - if not each of the row plans will
+    		//be executed in it's own transaction, which is bad for performance
+    		
+    		//TODO: should probably allow non-atomic row plans
+    		//the parser accepts a trigger block without atomic
+    		//but the spec mandates it - and we treat it as atomic
+    		//either way
+    		
+    		//TODO: for non-transactional environments this will
+    		//trigger an error
+    		this.getContext().getTransactionServer().begin(tc);
+    		this.planContext = tc;
+    	}
 		queryProcessor = new QueryProcessor(queryPlan, getContext(), this.bufferMgr, this.dataMgr);
 		tupleSource = new BatchCollector.BatchProducerTupleSource(queryProcessor);
 	}
@@ -159,6 +205,7 @@ public class ForEachRowPlan extends ProcessorPlan {
 		this.rowProcessor = null;
 		this.queryProcessor = null;
 		this.tupleSource = null;
+		this.planContext = null;
 	}
 	
 	@Override

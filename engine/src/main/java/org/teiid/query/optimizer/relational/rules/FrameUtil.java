@@ -475,7 +475,7 @@ public class FrameUtil {
      * @param accessNode
      * @return
      */
-    static ProcessorPlan getNestedPlan(PlanNode accessNode) {
+    public static ProcessorPlan getNestedPlan(PlanNode accessNode) {
         PlanNode sourceNode = accessNode.getFirstChild(); 
         if (sourceNode == null) {
         	return null;

@@ -229,6 +229,11 @@ public class RelationalPlanner {
 		} catch (TeiidProcessingException e) {
 			 throw new QueryPlannerException(e);
 		}
+		
+		if (plan.getType() == NodeConstants.Types.SOURCE) {
+			//this was effectively a rewrite
+			return (RelationalPlan)plan.getProperty(Info.PROCESSOR_PLAN);
+		}
 
 		if(debug) {
             analysisRecord.println("\nCANONICAL PLAN: \n" + plan); //$NON-NLS-1$
@@ -689,7 +694,10 @@ public class RelationalPlanner {
 	            }
         	}
         }
-        
+        if (usingTriggerAction && FrameUtil.getNestedPlan(projectNode) instanceof RelationalPlan) {
+        	sourceNode.removeFromParent();
+        	return sourceNode;
+        }
         return projectNode;
 	}
 
