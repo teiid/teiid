@@ -110,26 +110,33 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
     
     private void doHandshake() throws IOException, CommunicationException {
     	Handshake handshake = null;
+    	boolean sentInit = false;
     	for (int i = 0; i < HANDSHAKE_RETRIES; i++) {
 	        try {
 				Object obj = this.socketChannel.read();
 				
 				if (!(obj instanceof Handshake)) {
-					 throw new CommunicationException(JDBCPlugin.Event.TEIID20009, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20009));
+					 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20009, null, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20009));
 				}
 				handshake = (Handshake)obj;
 				break;
 			} catch (ClassNotFoundException e1) {
-				 throw new CommunicationException(JDBCPlugin.Event.TEIID20010, e1, e1.getMessage());
+				 throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20010, e1, e1.getMessage());
 			} catch (SocketTimeoutException e) {
-				if (i == 0 && !this.info.isSsl()) {
+				if (!sentInit && !this.info.isSsl()) {
 					//write a dummy initialization value - if the server is actually ssl, this can cause the server side handshake to fail, otherwise it's ignored
 					//TODO: could always do this initialization in the non-ssl case and not wait for a timeout
 		    		this.socketChannel.write(null);
+		    		sentInit = true;
 		    	}
 				if (i == HANDSHAKE_RETRIES - 1) {
 					throw e;
 				}
+			} catch (IOException e) {
+				if (sentInit && !this.info.isSsl()) {
+					throw new SingleInstanceCommunicationException(JDBCPlugin.Event.TEIID20032, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20032));
+				}
+				throw e;
 			}
     	}
 
