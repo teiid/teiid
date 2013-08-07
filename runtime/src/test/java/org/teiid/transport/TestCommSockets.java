@@ -32,7 +32,6 @@ import java.util.Properties;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManagerFactory;
@@ -120,7 +119,6 @@ public class TestCommSockets {
 		assertEquals(1, stats.maxSockets);
 	}
 
-	@Ignore
 	@Test public void testLobs() throws Exception {
 		SocketServerConnection conn = helpEstablishConnection(false);
 		FakeService fs = conn.getService(FakeService.class);
@@ -252,6 +250,19 @@ public class TestCommSockets {
 		Properties p = new Properties();
 		p.setProperty("org.teiid.ssl.trustStore", UnitTestUtil.getTestDataPath() + "/keystore.jks");
 		p.setProperty("org.teiid.ssl.trustStorePassword", "password");
+		helpEstablishConnection(true, config, p);
+	}
+	
+	@Test public void testSSLSelfSignedTrustAll() throws Exception {
+		SSLConfiguration config = new SSLConfiguration();
+		config.setMode(SSLConfiguration.ENABLED);
+		config.setAuthenticationMode(SSLConfiguration.ONEWAY);
+		config.setKeystoreFilename(UnitTestUtil.getTestDataPath() + "/keystore.jks");
+		config.setKeystorePassword("password");
+		config.setKeystoreKeyPassword("changeit");
+		config.setKeystoreKeyAlias("selfsigned");
+		Properties p = new Properties();
+		p.setProperty("org.teiid.ssl.trustAll", "true");
 		helpEstablishConnection(true, config, p);
 	}
 	

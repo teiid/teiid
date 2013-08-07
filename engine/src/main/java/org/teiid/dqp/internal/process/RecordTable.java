@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.SortedMap;
+import java.util.TreeSet;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.core.TeiidComponentException;
@@ -172,10 +173,16 @@ abstract class RecordTable<T extends AbstractMetadataRecord> implements Searchab
 			final SortedMap<String, ?> fMap = map;
 			return new SimpleIterator<T>() {
 				int i = 0;
+				TreeSet<String> seen = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
 				@Override
 				public T next() throws TeiidProcessingException, TeiidComponentException {
 					while (i < vals.size()) {
-						T s = extractRecord(fMap.get(vals.get(i++).get(0)));
+						String key = (String)vals.get(i++).get(0);
+						if (!seen.add(key)) {
+							//filter to only a single match 
+							continue;
+						}
+						T s = extractRecord(fMap.get(key));
 						if (isValid(s, vdb, rowBuffer, crit)) {
 							return s;
 						}

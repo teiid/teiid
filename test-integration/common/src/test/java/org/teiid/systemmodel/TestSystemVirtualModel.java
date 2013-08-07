@@ -38,6 +38,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.jdbc.AbstractMMQueryTestCase;
 import org.teiid.jdbc.FakeServer;
@@ -56,6 +58,17 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
     @BeforeClass public static void setup() throws Exception {
     	server = new FakeServer(true);
     	server.deployVDB(VDB, UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
+    	ModelMetaData mmd = new ModelMetaData();
+    	mmd.setName("x");
+    	mmd.setModelType(Type.VIRTUAL);
+    	mmd.setSchemaSourceType("DDL");
+    	mmd.setSchemaText("create view t as select 1");
+    	ModelMetaData mmd1 = new ModelMetaData();
+    	mmd1.setName("y");
+    	mmd1.setModelType(Type.VIRTUAL);
+    	mmd1.setSchemaSourceType("DDL");
+    	mmd1.setSchemaText("create view T as select 1");
+    	server.deployVDB("test", mmd, mmd1);
     }
     
     @AfterClass public static void teardown() throws Exception {
@@ -214,6 +227,17 @@ public class TestSystemVirtualModel extends AbstractMMQueryTestCase {
 		this.execute("select name from schemas where upper(name) like 'ab[_'");
 		//should be 0 rows rather than an exception
 		assertRowCount(0);		
+	}
+	
+	@Test public void testColumnsIn() throws Exception {
+		this.internalConnection.close();
+		this.internalConnection = server.createConnection("jdbc:teiid:test");
+		this.execute("select tablename, name from columns where tablename in ('t', 'T')");
+		//should be 2, not 4 rows
+		assertRowCount(2);
+		
+		this.execute("select tablename, name from columns where upper(tablename) in ('t', 's')");
+		assertRowCount(0);
 	}
 	
 }

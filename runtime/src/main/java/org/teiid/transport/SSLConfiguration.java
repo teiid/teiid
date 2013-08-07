@@ -82,7 +82,8 @@ public class SSLConfiguration {
                                     keyStoreType,
                                     sslProtocol,
                                     keyAlias,
-                                    keyPassword);
+                                    keyPassword,
+                                    false);
         } 
 
         SSLEngine result = context.createSSLEngine();
