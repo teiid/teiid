@@ -678,10 +678,10 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 				}
 			}
 		};
-		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0 && !request.isReturingParams()) {
+		if (!request.addedLimit && this.requestMsg.getRowLimit() > 0 && this.requestMsg.getRowLimit() < Integer.MAX_VALUE) {
 			//covers maxrows for commands that already have a limit, are prepared, or are a stored procedure
-			//TODO: allow max rows to have an effect for callablestatements with out params
         	this.collector.setRowLimit(this.requestMsg.getRowLimit());
+    		this.collector.setSaveLastRow(request.isReturingParams());
         }
 		this.resultsBuffer = collector.getTupleBuffer();
 		if (this.resultsBuffer == null) {
@@ -730,8 +730,8 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     	CachedResults cr = new CachedResults();
     	cr.setCommand(originalCommand);
         cr.setResults(resultsBuffer, processor.getProcessorPlan());
-        if (requestMsg.getRowLimit() > 0 && resultsBuffer.getRowCount() == requestMsg.getRowLimit()) {
-        	cr.setRowLimit(resultsBuffer.getRowCount());
+        if (requestMsg.getRowLimit() > 0 && resultsBuffer.getRowCount() == requestMsg.getRowLimit() + (collector.isSaveLastRow()?1:0)) {
+        	cr.setRowLimit(requestMsg.getRowLimit());
         }
         if (originalCommand.getCacheHint() != null) {
         	LogManager.logDetail(LogConstants.CTX_DQP, requestID, "Using cache hint", originalCommand.getCacheHint()); //$NON-NLS-1$

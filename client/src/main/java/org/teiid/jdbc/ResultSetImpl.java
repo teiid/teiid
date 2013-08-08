@@ -87,6 +87,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     private PlanNode updatedPlanDescription;
     private int maxFieldSize;
     private int fetchSize;
+    private int maxRows;
     
 	private Map<String, Integer> columnMap;
 	
@@ -97,6 +98,8 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     
     private ResultsFuture<ResultsMessage> prefetch;
     private boolean usePrefetch;
+
+	private int skipTo;
 
 	/**
 	 * Constructor.
@@ -137,6 +140,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 			logger.finer("Creating ResultSet requestID: " + requestID + " beginRow: " + resultsMsg.getFirstRow() + " resultsColumns: " + resultColumns + " parameters: " + parameters); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 		}
 		this.usePrefetch = cursorType == ResultSet.TYPE_FORWARD_ONLY && !statement.useCallingThread();
+		this.maxRows = statement.getMaxRows();
 		this.batchResults = new BatchResults(this, getCurrentBatch(resultsMsg), this.cursorType == ResultSet.TYPE_FORWARD_ONLY ? 1 : BatchResults.DEFAULT_SAVED_BATCHES);
 	}
 	
@@ -386,6 +390,9 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 
 	private ResultsFuture<ResultsMessage> submitRequestBatch(int beginRow)
 			throws TeiidSQLException {
+		if (beginRow > maxRows && skipTo > 0) {
+			beginRow = skipTo;
+		}
 		ResultsFuture<ResultsMessage> results;
 		if (asynch) {
 			synchronized (this) {
@@ -436,8 +443,47 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 			prefetch = submitRequestBatch(currentResultMsg.getLastRow() + 1);
 		}
 		currentResultMsg.processResults();
-		Batch result = new Batch(currentResultMsg.getResults(), currentResultMsg.getFirstRow(), currentResultMsg.getLastRow());
-		result.setLastRow(currentResultMsg.getFinalRow());
+		List<?> lastTuple = null;
+		List<List<?>> resultsList = (List<List<?>>) currentResultMsg.getResultsList();
+		//similar logic to BatchCollector on the server side
+		//this is a catch all in case the server doesn't enforce the max
+		//such as currently the case with cached subset results
+		List<?>[] tuples = null;
+		int firstRow = currentResultMsg.getFirstRow();
+		int endRow = currentResultMsg.getLastRow();
+		int lastRow = currentResultMsg.getFinalRow();
+		if (maxRows > 0) {
+	    	if (parameters > 0) {
+	    		if (currentResultMsg.getLastRow() == currentResultMsg.getFinalRow()) {
+	    			lastTuple = resultsList.get(resultsList.size() - 1);
+	    		} else if (maxRows < currentResultMsg.getFirstRow()) {
+	    			//awkward scenario - there are parameters at the end
+	    			//skip ahead as far as possible
+	    			if (lastRow != 0) {
+	    				skipTo = lastRow;
+	    			} else {
+	    				skipTo = endRow + 1;
+	    			}
+	    			return new Batch(new List<?>[0], firstRow, firstRow - 1);
+	    		}
+	    	}
+	    	if (maxRows < currentResultMsg.getLastRow()) {
+	    		firstRow = Math.min(maxRows + 1, firstRow);
+	    		resultsList = resultsList.subList(0, maxRows - firstRow + 1);
+	    		endRow = maxRows;
+	    		lastRow = endRow;
+	    	}
+	    	tuples = resultsList.toArray(new List<?>[resultsList.size()+(lastTuple!=null?1:0)]);
+	    	if (lastTuple != null) {
+	    		endRow++;
+	    		lastRow = endRow;
+	    		tuples[tuples.length-1] = lastTuple;
+	    	}
+		} else {
+			tuples = resultsList.toArray(new List<?>[resultsList.size()]);
+		}
+		Batch result = new Batch(tuples, firstRow, endRow);
+		result.setLastRow(lastRow);
 		return result;
 	}
     

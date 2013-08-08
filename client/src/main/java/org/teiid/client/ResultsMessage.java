@@ -111,14 +111,6 @@ public class ResultsMessage implements Externalizable {
 		return results;
 	}
 	
-	/**
-	 * @deprecated see {@link #getResultsList()}
-	 * @return
-	 */
-	public List<?>[] getResults() {
-		return results.toArray(new List[results.size()]);
-	}
-	
 	public void processResults() throws TeiidSQLException {
 		if (results == null && resultBytes != null) {
 			try {

@@ -124,6 +124,8 @@ public class BatchCollector {
     private boolean forwardOnly;
     private int rowLimit = -1; //-1 means no_limit
     private boolean hasFinalBuffer;
+
+	private boolean saveLastRow;
     
     public BatchCollector(BatchProducer sourceNode, BufferManager bm, CommandContext context, boolean forwardOnly) throws TeiidComponentException {
         this.sourceNode = sourceNode;
@@ -156,9 +158,26 @@ public class BatchCollector {
     	    	if (!done) {
     	    		this.sourceNode.close();
     	    	}
+    	    	List<?> lastTuple = null;
+    	    	if (saveLastRow) {
+    	    		if (batch.getTerminationFlag()) {
+    	    			lastTuple = batch.getTuples().get(batch.getTuples().size() - 1);
+    	    		} else if (rowLimit < batch.getBeginRow()) {
+    	    			continue; //skip until end
+    	    		}
+    	    	}
+    	    	boolean modified = false;
     	    	if (rowLimit < batch.getEndRow()) {
-    	    		List<List<?>> tuples = batch.getTuples().subList(0, rowLimit - batch.getBeginRow() + 1);
-    	    		batch = new TupleBatch(batch.getBeginRow(), tuples);
+    	    		int firstRow = Math.min(rowLimit + 1, batch.getBeginRow());
+    	    		List<List<?>> tuples = batch.getTuples().subList(0, rowLimit - firstRow + 1);
+    	    		batch = new TupleBatch(firstRow, tuples);
+    	    		modified = true;
+    	    	}
+    	    	if (lastTuple != null) {
+    	    		if (!modified) {
+    	    			batch = new TupleBatch(batch.getBeginRow(), batch.getTuples());
+    	    		}
+    	    		batch.getTuples().add(lastTuple);
     	    	}
     	    	batch.setTerminationFlag(true);
     	    }
@@ -207,6 +226,14 @@ public class BatchCollector {
     
     public void setRowLimit(int rowLimit) {
 		this.rowLimit = rowLimit;
+	}
+
+	public void setSaveLastRow(boolean saveLastRow) {
+		this.saveLastRow = saveLastRow;
+	}
+	
+	public boolean isSaveLastRow() {
+		return saveLastRow;
 	}
     
 }

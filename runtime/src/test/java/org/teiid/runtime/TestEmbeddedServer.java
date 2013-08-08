@@ -27,6 +27,7 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -694,6 +695,64 @@ public class TestEmbeddedServer {
 		rs = c1.createStatement().executeQuery("select * from some_temp");
 		assertTrue(rs.next());
 		assertEquals("a", rs.getString(1));
+	}
+	
+	@Test public void testMaxRows() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setMaxResultSetCacheStaleness(0);
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE virtual procedure proc (out col1 string result) returns TABLE (r1 string) as begin col1 = 'a'; select 'b' union all select 'c'; end;]]> </metadata></model></vdb>".getBytes()));
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		
+		CallableStatement cs = c.prepareCall("{? = call proc()}");
+		ResultSet rs = cs.executeQuery();
+		assertTrue(rs.next());
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		assertEquals("a", cs.getString(1));
+		
+		//ensure that we don't drop the parameter row (which is last)
+		cs.setMaxRows(1);
+		rs = cs.executeQuery();
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		assertEquals("a", cs.getString(1));
+		
+		//ensure that we can skip batches
+		cs.setMaxRows(1);
+		cs.setFetchSize(1);
+		rs = cs.executeQuery();
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		assertEquals("a", cs.getString(1));
+		
+		//cache should behave as expected when populated
+		cs = c.prepareCall("/*+ cache */ {? = call proc()}");
+		cs.setMaxRows(1);
+		rs = cs.executeQuery();
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		assertEquals("a", cs.getString(1));
+		
+		//accessing from cache without the max should still give us the full result
+		cs.setMaxRows(0);
+		rs = cs.executeQuery();
+		assertTrue(rs.next());
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		assertEquals("a", cs.getString(1));
+		
+		//accessing again with max should give the smaller result
+		cs.setMaxRows(1);
+		rs = cs.executeQuery();
+		assertTrue(rs.next());
+		assertFalse(rs.next());
+		assertEquals("a", cs.getString(1));
 	}
 
 }

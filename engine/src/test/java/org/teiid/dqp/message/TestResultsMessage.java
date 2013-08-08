@@ -114,15 +114,15 @@ public class TestResultsMessage extends TestCase {
         
         assertNotNull(copy.getPlanDescription());
         assertEquals(4, copy.getPlanDescription().getProperties().size());
-        List<?>[] results = copy.getResults();
+        List<? extends List<?>> results = copy.getResultsList();
         assertNotNull(results);
-        assertEquals(1, results.length);
-        assertNotNull(results[0]);
-        assertEquals(4, results[0].size());
-        assertEquals(new BigInteger("100"), copy.getResults()[0].get(0)); //$NON-NLS-1$
-        assertEquals(new BigInteger("200"), copy.getResults()[0].get(1)); //$NON-NLS-1$
-        assertEquals(new BigInteger("300"), copy.getResults()[0].get(2)); //$NON-NLS-1$
-        assertEquals(new BigInteger("400"), copy.getResults()[0].get(3)); //$NON-NLS-1$
+        assertEquals(1, results.size());
+        assertNotNull(results.get(0));
+        assertEquals(4, results.get(0).size());
+        assertEquals(new BigInteger("100"), copy.getResultsList().get(0).get(0)); //$NON-NLS-1$
+        assertEquals(new BigInteger("200"), copy.getResultsList().get(0).get(1)); //$NON-NLS-1$
+        assertEquals(new BigInteger("300"), copy.getResultsList().get(0).get(2)); //$NON-NLS-1$
+        assertEquals(new BigInteger("400"), copy.getResultsList().get(0).get(3)); //$NON-NLS-1$
         
         assertNotNull(copy.getWarnings());
         assertEquals(2, copy.getWarnings().size());

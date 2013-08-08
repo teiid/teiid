@@ -37,7 +37,7 @@ import org.teiid.jdbc.BatchResults.BatchFetcher;
 /** 
  * @since 4.3
  */
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls","unchecked"})
 public class TestBatchResults {
 	
 	static class MockBatchFetcher implements BatchFetcher {
@@ -98,7 +98,7 @@ public class TestBatchResults {
 	}
     
     private static List<?>[] createBatch(int begin, int end) {
-        List<Integer>[] results = new List[end - begin + 1];
+		List<Integer>[] results = new List[end - begin + 1];
         for(int i=0; i<(end - begin + 1); i++) {
             results[i] = new ArrayList<Integer>();
             results[i].add(new Integer(i+begin));
@@ -337,17 +337,13 @@ public class TestBatchResults {
         assertEquals(2, batchResults.getCurrentRowNumber());
     }
     
-    @Test public void testSetException() throws Exception {
+    @Test(expected=SQLException.class) public void testSetException() throws Exception {
     	BatchResults batchResults = getBatchResults(createBatch(1, 1), false);
     	MockBatchFetcher batchFetcher = new MockBatchFetcher();
     	batchResults.setBatchFetcher(batchFetcher);
     	batchFetcher.throwException();
     	batchResults.next();
-        try {
-            batchResults.hasNext();
-            fail("Expected exception, but did not get.");
-        }catch(SQLException e) {           
-        }
+        batchResults.hasNext();
     }
     
     BatchResults getBatchResults(List<?>[] batch, boolean isLast) {

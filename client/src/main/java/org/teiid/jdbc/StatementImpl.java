@@ -838,6 +838,9 @@ public class StatementImpl extends WrapperImpl implements TeiidStatement {
     public void setMaxRows(int maxRows) throws SQLException {
         //Check to see the statement is closed and throw an exception
         checkStatement();
+        if (maxRows < 0 || maxRows == Integer.MAX_VALUE) {
+        	maxRows = 0;
+        }
         this.maxRows = maxRows;
     }
 
