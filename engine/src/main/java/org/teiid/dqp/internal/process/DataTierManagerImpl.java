@@ -167,6 +167,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		@Override
 		public void onCompletion(FutureWork<Void> future) {
 			signalMore();
+			toRead.closeSource();
 			dtts.fullyCloseSource();
 		}
 	}
