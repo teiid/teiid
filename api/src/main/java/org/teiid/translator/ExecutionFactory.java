@@ -100,6 +100,7 @@ public class ExecutionFactory<F, C> {
 	private boolean immutable;
 	private boolean sourceRequired = true;
 	private Boolean sourceRequiredForMetadata;
+	private boolean threadBound;
 	
 	/*
 	 * Support properties
@@ -1084,6 +1085,14 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
+	 * @return True, if this translator's executions must complete in a single thread.
+	 */
+	@TranslatorProperty(display="Thread Bound", description="True, if this translator's executions must complete in a single thread.", advanced=true)
+	public boolean isThreadBound() {
+		return threadBound;
+	}
+	
+	/**
 	 * The engine currently uses array types for dependent joins.
 	 * @return true if an array type is supported.
 	 */
@@ -1144,5 +1153,9 @@ public class ExecutionFactory<F, C> {
 	 */
 	public boolean supportsOrderByWithExtendedGrouping() {
 		return supportsOrderBy();
+	}
+	
+	public void setThreadBound(boolean threadBound) {
+		this.threadBound = threadBound;
 	}
 }

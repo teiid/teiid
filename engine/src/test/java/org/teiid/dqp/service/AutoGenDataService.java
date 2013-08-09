@@ -74,6 +74,7 @@ public class AutoGenDataService extends ConnectorManager{
 	public boolean copyLobs;
 	public CacheDirective cacheDirective;
 	public boolean dataAvailable;
+	public boolean threadBound;
 
     public AutoGenDataService() {
     	super("FakeConnector","FakeConnector"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -182,6 +183,11 @@ public class AutoGenDataService extends ConnectorManager{
 			@Override
 			public boolean isForkable() {
 				return true;
+			}
+			
+			@Override
+			public boolean isThreadBound() {
+				return threadBound;
 			}
 			
 		};

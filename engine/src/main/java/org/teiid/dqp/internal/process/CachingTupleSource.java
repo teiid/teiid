@@ -44,7 +44,7 @@ import org.teiid.translator.CacheDirective.Scope;
  * A proxy {@link TupleSource} that caches a {@link DataTierTupleSource}
  */
 final class CachingTupleSource extends
-		TupleSourceCache.BufferedTupleSource {
+		TupleSourceCache.CopyOnReadTupleSource {
 	private final DataTierManagerImpl dataTierManagerImpl;
 	private final CacheID cid;
 	private final RegisterRequestParameter parameterObject;

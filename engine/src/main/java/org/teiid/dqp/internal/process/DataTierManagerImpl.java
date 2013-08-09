@@ -35,6 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -61,11 +65,14 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManager;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.ConnectorWork;
+import org.teiid.dqp.internal.process.AbstractWorkItem.ThreadState;
+import org.teiid.dqp.internal.process.DQPCore.CompletionListener;
 import org.teiid.dqp.internal.process.RecordTable.ExpandingSimpleIterator;
 import org.teiid.dqp.internal.process.RecordTable.SimpleIterator;
 import org.teiid.dqp.internal.process.RecordTable.SimpleIteratorWrapper;
 import org.teiid.dqp.internal.process.SessionAwareCache.CacheID;
 import org.teiid.dqp.internal.process.TupleSourceCache.CachableVisitor;
+import org.teiid.dqp.internal.process.TupleSourceCache.CopyOnReadTupleSource;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.events.EventDistributor;
 import org.teiid.logging.LogConstants;
@@ -110,6 +117,59 @@ import org.teiid.translator.TranslatorException;
 public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private static final int MAX_VALUE_LENGTH = 1 << 21;
+
+	private static final class ThreadBoundTask implements Callable<Void>, CompletionListener<Void> {
+		private final RequestWorkItem workItem;
+		private final TupleSource toRead;
+		final AtomicBoolean done = new AtomicBoolean();
+		private final DataTierTupleSource dtts;
+
+		private ThreadBoundTask(RequestWorkItem workItem, TupleSource toRead, DataTierTupleSource dtts) {
+			this.workItem = workItem;
+			this.toRead = toRead;
+			this.dtts = dtts;
+		}
+
+		@Override
+		public Void call() throws TeiidProcessingException, TeiidComponentException {
+			//pull the whole thing.  the side effect will be saving
+			while (true) {
+				try {
+					if (done.get() || toRead.nextTuple() == null) {
+						break;
+					}
+					signalMore();
+				} catch (BlockedException e) {
+					//data not available
+					Future<Void> future = dtts.getScheduledFuture();
+					if (future != null) {
+						try {
+							future.get();
+						} catch (Exception e1) {
+							throw new TeiidComponentException(e);
+						}
+					}
+				}
+			};
+			return null;
+		}
+
+		private void signalMore() {
+			if (!done.get()) {
+				synchronized (workItem) {
+					if (workItem.getThreadState() != ThreadState.MORE_WORK) {
+						workItem.moreWork();
+					}
+				}
+			}
+		}
+
+		@Override
+		public void onCompletion(FutureWork<Void> future) {
+			signalMore();
+			dtts.fullyCloseSource();
+		}
+	}
 
 	private enum SystemTables {
 		VIRTUALDATABASES,
@@ -709,11 +769,117 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 			}
 		}
 		DataTierTupleSource dtts = new DataTierTupleSource(aqr, workItem, work, this, parameterObject.limit);
+		TupleSource result = dtts;
+		TupleBuffer tb = null;
         if (cid != null) {
-        	TupleBuffer tb = getBufferManager().createTupleBuffer(aqr.getCommand().getProjectedSymbols(), aqr.getCommandContext().getConnectionId(), TupleSourceType.PROCESSOR);
-        	return new CachingTupleSource(this, tb, dtts, cid, parameterObject, cd, accessedGroups);
+        	tb = getBufferManager().createTupleBuffer(aqr.getCommand().getProjectedSymbols(), aqr.getCommandContext().getConnectionId(), TupleSourceType.PROCESSOR);
+        	result = new CachingTupleSource(this, tb, (DataTierTupleSource)result, cid, parameterObject, cd, accessedGroups);
         }
-		return dtts;
+        if (work.isThreadBound()) {
+        	result = handleThreadBound(workItem, aqr, work, cid, result, dtts, tb);
+		} else if (!aqr.isSerial()) {
+			dtts.addWork();
+		}
+		return result;
+	}
+
+	/**
+	 * thread bound work is tricky for our execution model
+	 * 
+	 * the strategy here is that 
+	 * 
+	 * - if the result is not already a copying tuplesource (from caching)
+	 * then wrap in a copying tuple source
+	 * 
+	 * - submit a workitem that will pull the results/fill the buffer,
+	 * 
+	 * - return a tuplesource off of the buffer for use by the caller
+	 */
+	private TupleSource handleThreadBound(final RequestWorkItem workItem,
+			AtomicRequestMessage aqr, ConnectorWork work, CacheID cid,
+			TupleSource result, DataTierTupleSource dtts, TupleBuffer tb) throws AssertionError,
+			TeiidComponentException, TeiidProcessingException {
+		if (workItem.useCallingThread) {
+			//in any case we want the underlying work done in the thread accessing the connectorworkitem
+			aqr.setSerial(true); 
+			return result; //simple case, just rely on the client using the same thread
+		}
+		if (tb == null) {
+			tb = getBufferManager().createTupleBuffer(aqr.getCommand().getProjectedSymbols(), aqr.getCommandContext().getConnectionId(), TupleSourceType.PROCESSOR);
+		}
+		final TupleSource ts = tb.createIndexedTupleSource(cid == null);
+		if (cid == null) {
+			result = new CopyOnReadTupleSource(tb, result) {
+				
+				@Override
+				public void closeSource() {
+					ts.closeSource();
+				}
+			};
+		}
+		final ThreadBoundTask callable = new ThreadBoundTask(workItem, result, dtts);
+		
+		//if serial we have to fully perform the operation with the current thread
+		//but we do so lazily just in case the results aren't needed
+		if (aqr.isSerial()) {
+			return new TupleSource() {
+				boolean processed = false;
+				@Override
+				public List<?> nextTuple() throws TeiidComponentException,
+						TeiidProcessingException {
+					if (!processed) {
+						callable.call();
+						processed = true;
+					}
+					return ts.nextTuple();
+				}
+				
+				@Override
+				public void closeSource() {
+					ts.closeSource();
+				}
+			};
+		}
+		aqr.setSerial(true);
+		final FutureWork<Void> future = workItem.addWork(callable, callable, 100);
+		final TupleBuffer buffer = tb;
+		//return a thread-safe TupleSource
+		return new TupleSource() {
+			boolean checkedDone;
+			@Override
+			public List<?> nextTuple() throws TeiidComponentException,
+					TeiidProcessingException {
+				//check the future to see if there was an exception to relay
+				//TODO: could refactor as completion listener
+				if (!checkedDone && future.isDone()) {
+					checkedDone = true;
+					try {
+						future.get();
+					} catch (InterruptedException e) {
+						throw new TeiidComponentException(e);
+					} catch (ExecutionException e) {
+						if (e.getCause() instanceof TeiidComponentException) {
+							throw (TeiidComponentException)e.getCause();
+						}
+						if (e.getCause() instanceof TeiidProcessingException) {
+							throw (TeiidProcessingException)e.getCause();
+						}
+						throw new TeiidComponentException(e);
+					}
+				}
+				synchronized (buffer) {
+					return ts.nextTuple();
+				}
+			}
+			
+			@Override
+			public void closeSource() {
+				synchronized (buffer) {
+					ts.closeSource();
+				}
+				callable.done.set(true);
+			}
+		};
 	}
 
 	/**
@@ -914,9 +1080,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         aqr.setExceptionOnMaxRows(requestMgr.isExceptionOnMaxSourceRows());
         aqr.setPartialResults(request.supportsPartialResults());
         aqr.setSerial(requestMgr.getUserRequestSourceConcurrency() == 1);
-        if (nodeID >= 0) {
-        	aqr.setTransactionContext(workItem.getTransactionContext());
-        }
+    	aqr.setTransactionContext(workItem.getTransactionContext());
         
         if (connectorBindingId == null) {
         	VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();

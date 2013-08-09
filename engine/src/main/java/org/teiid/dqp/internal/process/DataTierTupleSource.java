@@ -146,12 +146,9 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
         
     	Assertion.isNull(workItem.getConnectorRequest(aqr.getAtomicRequestID()));
         workItem.addConnectorRequest(aqr.getAtomicRequestID(), this);
-        if (!aqr.isSerial()) {
-        	addWork();
-        }
     }
 
-	private void addWork() {
+	void addWork() {
 		this.canAsynchClose = true;
 		futureResult = workItem.addWork(new Callable<AtomicResultsMessage>() {
 			@Override
@@ -574,6 +571,10 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	
 	public boolean isExplicitClose() {
 		return explicitClose;
+	}
+	
+	public Future<Void> getScheduledFuture() {
+		return scheduledFuture;
 	}
 	
 }

@@ -472,9 +472,26 @@ public class TestDQPCore {
     }
     
     @Test public void testSourceConcurrencyWithLimitedUnion() throws Exception {
-    	//setup default of 2
     	agds.setSleep(100);
-    	BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+    	helpTestSourceConcurrencyWithLimitedUnion();
+    }
+    
+    @Test public void testSourceConcurrencyWithLimitedUnionThreadBound() throws Exception {
+    	agds.setSleep(100);
+    	agds.threadBound = true;
+    	helpTestSourceConcurrencyWithLimitedUnion();
+    }
+    
+    @Test(expected=TeiidProcessingException.class) public void testThreadBoundException() throws Exception {
+    	agds.threadBound = true;
+    	agds.throwExceptionOnExecute = true;
+    	String sql = "SELECT IntKey FROM BQT1.SmallA"; //$NON-NLS-1$
+        String userName = "logon"; //$NON-NLS-1$
+    	helpExecute(sql, userName);
+    }
+
+	private void helpTestSourceConcurrencyWithLimitedUnion() throws Exception {
+		BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
     	bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
     	agds.setCaps(bsc);
     	StringBuffer sql = new StringBuffer();
@@ -508,8 +525,7 @@ public class TestDQPCore {
     	agds.setRows(0);
     	helpExecute(sql.toString(), "a", 4, false);
     	assertEquals(20, agds.getExecuteCount().get());
-    	
-    }
+	}
     
     @Test public void testUsingFinalBuffer() throws Exception {
     	String sql = "select intkey from bqt1.smalla union select 1";

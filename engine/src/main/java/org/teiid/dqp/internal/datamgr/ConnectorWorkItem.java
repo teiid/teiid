@@ -427,5 +427,10 @@ public class ConnectorWorkItem implements ConnectorWork {
 	public boolean isForkable() {
 		return this.connector.isForkable();
 	}
+	
+	@Override
+	public boolean isThreadBound() {
+		return this.connector.isThreadBound();
+	}
 
 }

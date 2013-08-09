@@ -491,4 +491,8 @@ public class BaseDelegatingExecutionFactory<F, C> extends ExecutionFactory<F, C>
 	public boolean supportsOrderByWithExtendedGrouping() {
 		return delegate.supportsOrderByWithExtendedGrouping();
 	}
+	@Override
+	public boolean isThreadBound() {
+		return delegate.isThreadBound();
+	}
 }

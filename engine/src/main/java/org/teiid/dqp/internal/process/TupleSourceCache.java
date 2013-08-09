@@ -85,12 +85,12 @@ public class TupleSourceCache {
     	}
     }
 	
-	public abstract static class BufferedTupleSource implements TupleSource {
+	public abstract static class CopyOnReadTupleSource implements TupleSource {
 		int rowNumber = 1;
 		TupleBuffer tb;
 		TupleSource ts;
 		
-		protected BufferedTupleSource(TupleBuffer tb, TupleSource ts) {
+		protected CopyOnReadTupleSource(TupleBuffer tb, TupleSource ts) {
 			this.tb = tb;
 			this.ts = ts;
 		}
@@ -98,25 +98,27 @@ public class TupleSourceCache {
 		@Override
 		public List<?> nextTuple() throws TeiidComponentException,
 				TeiidProcessingException {
-			if (rowNumber <= tb.getRowCount()) {
-				return tb.getBatch(rowNumber).getTuple(rowNumber++);
+			synchronized (tb) {
+				if (rowNumber <= tb.getRowCount()) {
+					return tb.getBatch(rowNumber).getTuple(rowNumber++);
+				}
+				if (tb.isFinal()) {
+					return null;
+				}
+				List<?> row = ts.nextTuple();
+				if (row == null) {
+					tb.setFinal(true);
+				} else {
+					tb.addTuple(row);
+					rowNumber++;
+				}
+				return row;
 			}
-			if (tb.isFinal()) {
-				return null;
-			}
-			List<?> row = ts.nextTuple();
-			if (row == null) {
-				tb.setFinal(true);
-			} else {
-				tb.addTuple(row);
-				rowNumber++;
-			}
-			return row;
 		}
 
 	}
 	
-	private class SharedTupleSource extends BufferedTupleSource {
+	private class SharedTupleSource extends CopyOnReadTupleSource {
 		private SharedState state;
 		
 		public SharedTupleSource(SharedState state) {

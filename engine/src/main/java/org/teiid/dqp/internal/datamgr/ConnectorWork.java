@@ -50,5 +50,7 @@ public interface ConnectorWork {
 	boolean areLobsUsableAfterClose();
 	
 	boolean isForkable();
+
+	boolean isThreadBound();
 	
 }

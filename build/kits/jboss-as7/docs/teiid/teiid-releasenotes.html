@@ -300,7 +300,6 @@ temporary table access.
 	<li>For compatibility with the 7.0 release if a stored procedure parameter list begins with identifier=, then it will be parsed as a named parameter invocation even if the intent was to use a comparison predicate 
 	as the first parameter value.  The workaround is to use nesting parens, e.g. call proc((identifier=value), ...), which clarifies that this is positional value.  This workaround will not be needed in later releases.
 	<li><a url="https://issues.jboss.org/browse/TEIID-1511">TEIID-1511</a> - When a VDB is deployed and undeployed a socket is left open, which may lead to "too manay open files". Check the defect comments for details.
-	<li>TEIID-1648 - Teradata lobs can only be consistently read from an embedded client (with the default option to use the calling thread) and in single threaded mode (transactional or thread-count-for-source-concurrency=1). Usage of Teradata lobs under any other configuration is unlikely to work.
 	<li>TEIID-2101 - Statement.setMaxRows is not used for cached result sets or when getting a result set from a CallableStatement procedure that returns parameters.	  
 </ul>
 <h4>from 7.0</h4>
