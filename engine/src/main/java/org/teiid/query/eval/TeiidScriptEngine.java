@@ -34,8 +34,10 @@ import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -49,9 +51,11 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
+import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.util.LRUCache;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.FunctionMethods;
 
 /**
  * A simplistic script engine that supports root variable access and 0-ary methods on the subsequent objects.
@@ -68,12 +72,18 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 	@Override
 	public CompiledScript compile(String script) throws ScriptException {
 		final String[] parts = splitter.split(script);
+		final int[] indexes = new int[parts.length];
 		for (int i = 1; i < parts.length; i++) {
 			String string = parts[i];
 			for (int j = 0; j < string.length(); j++) {
 				if (!Character.isJavaIdentifierPart(string.charAt(j))) {
 					throw new ScriptException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30431,string, string.charAt(j)));
 				}
+			}
+			try {
+				indexes[i] = Integer.parseInt(string);
+			} catch (NumberFormatException e) {
+				indexes[i] = -1;
 			}
 		}
 		return new CompiledScript() {
@@ -100,6 +110,25 @@ public final class TeiidScriptEngine extends AbstractScriptEngine implements Com
 					Map<String, Method> methodMap = getMethodMap(obj.getClass());
 					Method m = methodMap.get(part);
 					if (m == null) {
+						int index = indexes[i];
+						if (index > 0) { //assume it's a list/array
+							if (obj instanceof List) {
+								try {
+									obj = ((List<?>)obj).get(index - 1);
+								} catch (IndexOutOfBoundsException e) {
+									obj = null;
+								}
+								continue;
+							}
+							try {
+								obj = FunctionMethods.array_get(obj, index);
+								continue;
+							} catch (FunctionExecutionException e) {
+								throw new ScriptException(e);
+							} catch (SQLException e) {
+								throw new ScriptException(e);
+							}
+						}
 						throw new ScriptException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31111, part, obj.getClass()));
 					}
 					try {
