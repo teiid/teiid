@@ -104,4 +104,10 @@ public class TestArray {
 		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
 		a1.getArray(-1, 1);
 	}
+	
+	@Test public void testSerialize() throws Exception {
+		ArrayImpl a1 = new ArrayImpl(new Integer[] {1, 2, 3});
+		a1 = UnitTestUtil.helpSerialize(a1);
+		assertEquals(1, a1.getValues()[0]);
+	}
 }

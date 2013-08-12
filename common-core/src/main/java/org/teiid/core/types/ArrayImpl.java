@@ -230,7 +230,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 		if (INVALID.equalsIgnoreCase(componentType)) {
 			return;
 		}
-		ExternalizeUtil.readArray(in, DataTypeManager.getDataTypeClass(componentType));
+		this.values = ExternalizeUtil.readArray(in, DataTypeManager.getDataTypeClass(componentType));
 		zeroBased = in.readBoolean();
 	}
 	
