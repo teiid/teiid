@@ -50,7 +50,7 @@ public interface VDB extends AdminObject, DomainAware {
     	 */
     	ACTIVE,  
     	/**
-    	 * A invalid vdb that cannot transition to active
+    	 * A vdb that cannot be successfully loaded - and cannot later transition to active
     	 */
     	FAILED,
     	REMOVED

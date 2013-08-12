@@ -204,7 +204,6 @@ public class TestCommSockets {
 		config.setEnabledCipherSuites("x"); //ensure that this cipher suite is not used
 		config.setAuthenticationMode(SSLConfiguration.ANONYMOUS);
 		Properties p = new Properties();
-		p.setProperty("org.teiid.sockets.soTimeout", "500");
 		helpEstablishConnection(true, config, p);
 		SocketServerConnection conn = helpEstablishConnection(true, config, p);
 		conn.close();
