@@ -297,11 +297,13 @@ public class DataTypeManager {
 	private static Transform getTransformFromMaps(String srcType,
 			String targetType) {
 		Map<String, Transform> innerMap = transforms.get(srcType);
+		boolean found = false;
 		if (innerMap != null) {
 			Transform result = innerMap.get(targetType);
 			if (result != null) {
 				return result;
 			}
+			found = true;
 		}
 		if (srcType.equals(targetType)) {
 			return null;
@@ -315,6 +317,29 @@ public class DataTypeManager {
 		if (srcType.equals(DefaultDataTypes.OBJECT)) {
 			return ObjectToAnyTransform.INSTANCE;
 		}
+		if (found) {
+			//built-in type
+			return null;
+		}
+		int sourceDims = 0;
+		while (isArrayType(srcType)) {
+			srcType = srcType.substring(0, srcType.length() - 2);
+			sourceDims++;
+		}
+		int targetDims = 0;
+		while(isArrayType(targetType)) {
+			targetType = targetType.substring(0, targetType.length() - 2);
+			targetDims++;
+		}
+		//go from typed[] to object[]
+		if (DataTypeManager.DefaultDataTypes.OBJECT.equals(targetType) && targetDims <= sourceDims) {
+			return AnyToObjectTransform.INSTANCE;
+		}
+		//go from object[] to typed[]
+		if (DataTypeManager.DefaultDataTypes.OBJECT.equals(srcType) && targetDims >= sourceDims) {
+			return ObjectToAnyTransform.INSTANCE;
+		}
+		//TODO: will eventually allow integer[] to long[], etc.
 		return null;
 	}
 

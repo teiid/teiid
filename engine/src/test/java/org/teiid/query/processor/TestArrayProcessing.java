@@ -138,6 +138,25 @@ public class TestArrayProcessing {
         helpProcess(plan, new HardcodedDataManager(), expected);
 	}
 	
+	@Test public void testMultiDimensionalGet() throws Exception {
+		String sql = "select ((e2, e2), (e2, e2))[1][1] from pm1.g1"; //$NON-NLS-1$
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, command.getProjectedSymbols().get(0).getType());
+	}
+	
+	@Test public void testMultiDimensionalCast() throws Exception {
+		String sql = "select cast( ((e2, e2), (e2, e2)) as object[])  from pm1.g1"; //$NON-NLS-1$
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    assertEquals(Object[].class, command.getProjectedSymbols().get(0).getType());
+	    
+	    sql = "select cast(cast( ((e2, e2), (e2, e2)) as object[]) as integer[][])  from pm1.g1"; //$NON-NLS-1$
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    assertEquals(Integer[][].class, command.getProjectedSymbols().get(0).getType());
+	}
+	
 	/**
 	 * TODO
  	@Test public void testArrayLobs() {
