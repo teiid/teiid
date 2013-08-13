@@ -207,11 +207,11 @@ public class TestSQLException {
         String message = "top level message"; //$NON-NLS-1$
         
         TeiidSQLException exception = TeiidSQLException.create(sqlexception, message);
-        
+        exception.printStackTrace();
+        assertEquals(sqlexception, exception.getCause());
         assertEquals(exception.getMessage(), message);
         assertEquals(exception.getSQLState(), sqlexception.getSQLState());        
-        assertEquals(exception.getNextException().getMessage(), sqlexception.getMessage());
-        assertEquals(exception.getNextException().getNextException().getMessage(), nested.getMessage());
+        assertEquals(exception.getNextException().getMessage(), nested.getMessage());
     }
 	public static enum Event implements BundleUtil.Event {
 		TEIID21,

@@ -305,7 +305,7 @@ public class TextTableNode extends SubqueryAwareRelationalNode {
 		    }
 		    return (char)c;
 		} catch (IOException e) {
-			 throw new TeiidProcessingException(QueryPlugin.Event.TEIID30179, e);
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30179, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30179, systemId));
 		}
 	}
 

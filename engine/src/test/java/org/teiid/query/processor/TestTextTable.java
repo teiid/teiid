@@ -450,4 +450,15 @@ public class TestTextTable {
         processPreparedStatement(sql, null, dataManager, new DefaultCapabilitiesFinder(), RealMetadataFactory.example1Cached(), Arrays.asList(new ClobType(new SerialClob(data))));
     }
 	
+	@Test public void testTextTableInvalidData1() throws Exception {
+    	String sql = "select * from texttable(to_chars(X'610D810D', 'ascii') COLUMNS PARTNAME string) x"; //$NON-NLS-1$
+    	ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), new String[] {});
+    	try {
+    		helpProcess(plan, createCommandContext(), new HardcodedDataManager(), new List[] {Arrays.asList("a")});
+    		fail();
+    	} catch (TeiidProcessingException e) {
+    		assertEquals("TEIID10082 Error converting byte stream to characters using the US-ASCII charset at byte 3.", e.getCause().getMessage());
+    	}
+    }
+	
 }

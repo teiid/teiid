@@ -46,6 +46,7 @@ public class InputStreamReader extends Reader {
 	private ByteBuffer bb;
 	private CharBuffer cb;
 	private boolean done;
+	private int bytesProcessed;
 	
 	public InputStreamReader(InputStream in, CharsetDecoder cd) {
 		this(in, cd, ReaderInputStream.DEFAULT_BUFFER_SIZE);
@@ -88,6 +89,7 @@ public class InputStreamReader extends Reader {
 	    		checkResult(cr);
 	    		done = true;
 	    	}
+	    	bytesProcessed += bb.position() - pos;
 	    	if (bb.position() != read + pos) {
 	    		bb.compact();
 	    	} else {
@@ -109,7 +111,7 @@ public class InputStreamReader extends Reader {
 				try {
 					cr.throwException();
 				} catch (CharacterCodingException e) {
-					throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cd.charset().displayName()), e);
+					throw new IOException(CorePlugin.Util.gs(CorePlugin.Event.TEIID10082, cd.charset().displayName(), bytesProcessed + bb.position() + 1), e);
 				}
 			}
 		    cr.throwException();
