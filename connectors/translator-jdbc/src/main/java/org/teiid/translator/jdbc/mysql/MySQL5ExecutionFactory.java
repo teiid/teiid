@@ -68,7 +68,9 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
 			}
 		}); 
 		
-		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() {
+		addPushDownFunction("mysql", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
+		
+		registerFunctionModifier(SourceSystemFunctions.TIMESTAMPDIFF, new FunctionModifier() { 
 			
 			@Override
 			public List<?> translate(Function function) {
@@ -88,7 +90,8 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
-        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        //mysql rounds down even when crossing a date part
+        //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
         return supportedFunctions;
     }
     

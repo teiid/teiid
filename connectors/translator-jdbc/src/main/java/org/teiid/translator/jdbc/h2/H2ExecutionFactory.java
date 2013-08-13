@@ -35,6 +35,7 @@ import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.AliasModifier;
 import org.teiid.translator.jdbc.ConvertModifier;
 import org.teiid.translator.jdbc.FunctionModifier;
@@ -79,6 +80,7 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
 		convert.addTypeMapping("char(1)", FunctionModifier.CHAR); //$NON-NLS-1$
 		convert.addTypeMapping("varchar", FunctionModifier.STRING); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, convert);		
+		addPushDownFunction("h2", "timestampdiff", TypeFacility.RUNTIME_NAMES.INTEGER, TypeFacility.RUNTIME_NAMES.STRING, TypeFacility.RUNTIME_NAMES.TIMESTAMP, TypeFacility.RUNTIME_NAMES.TIMESTAMP); //$NON-NLS-1$ //$NON-NLS-2$
 	}
 	
     @Override
@@ -163,7 +165,8 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.QUARTER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
-        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        //h2 rounds up
+        //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
         //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPCREATE);
         supportedFunctions.add(SourceSystemFunctions.WEEK);
         supportedFunctions.add(SourceSystemFunctions.YEAR);

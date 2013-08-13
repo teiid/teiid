@@ -632,7 +632,7 @@ public class ResolverVisitor extends LanguageVisitor {
 	    			setDesiredType(args[0], function.getType(), function);
 	    		}
 	    		if (args[0].getType() != DataTypeManager.DefaultDataClasses.OBJECT) {
-	    			throw new QueryResolverException(QueryPlugin.Event.TEIID31144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31144, DataTypeManager.getDataTypeName(args[0].getType()), function));
+	    			throw new QueryResolverException(QueryPlugin.Event.TEIID31145, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31145, DataTypeManager.getDataTypeName(args[0].getType()), function));
 	    		}
 	    	}
 	    } else if (Boolean.valueOf(fd.getMethod().getProperty(TEIID_PASS_THROUGH_TYPE, false))) {

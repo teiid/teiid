@@ -74,17 +74,13 @@ class WarningUtil {
         if(exceptions == null || exceptions.size() == 0) {
             return null;    
         }
-        SQLWarning warning = null;
-
-        for (Throwable ex : exceptions) {
-            SQLWarning newWarning = createWarning(ex); 
-            if(warning == null) {
-                warning = newWarning;
-            } else {
-                warning.setNextWarning(newWarning);
-            }
+        SQLWarning root = createWarning(exceptions.get(0));
+        SQLWarning current = root;
+        for (int i = 1; i < exceptions.size(); i++) {
+            SQLWarning newWarning = createWarning(exceptions.get(i)); 
+            current.setNextWarning(newWarning);
+            current = newWarning;
         }
-     
-        return warning;   
+        return root;   
     }
 }

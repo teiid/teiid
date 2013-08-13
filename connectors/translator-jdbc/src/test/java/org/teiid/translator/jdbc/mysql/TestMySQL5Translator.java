@@ -50,7 +50,7 @@ public class TestMySQL5Translator {
     
 
     @Test public void testTimestampFunctions() throws Exception {
-    	String input = "SELECT timestampdiff(SQL_TSI_FRAC_SECOND, timestampvalue, {d '1970-01-01'}), timestampdiff(SQL_TSI_HOUR, timestampvalue, {d '1970-01-01'}), timestampadd(SQL_TSI_FRAC_SECOND, 2000, MediumA.TimestampValue) FROM BQT1.MediumA"; //$NON-NLS-1$
+    	String input = "SELECT mysql.timestampdiff('SQL_TSI_FRAC_SECOND', timestampvalue, {d '1970-01-01'}), mysql.timestampdiff('SQL_TSI_HOUR', timestampvalue, {d '1970-01-01'}), timestampadd(SQL_TSI_FRAC_SECOND, 2000, MediumA.TimestampValue) FROM BQT1.MediumA"; //$NON-NLS-1$
         String output = "SELECT timestampdiff(MICROSECOND, MediumA.TimestampValue, {ts '1970-01-01 00:00:00.0'}) * 1000, timestampdiff(SQL_TSI_HOUR, MediumA.TimestampValue, {ts '1970-01-01 00:00:00.0'}), timestampadd(MICROSECOND, (2000 / 1000), MediumA.TimestampValue) FROM MediumA"; //$NON-NLS-1$
           
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,

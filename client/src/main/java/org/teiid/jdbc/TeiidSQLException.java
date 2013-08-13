@@ -77,10 +77,9 @@ public class TeiidSQLException extends SQLException {
     }
     
     private TeiidSQLException(SQLException ex, String message, boolean addChildren) {
-        super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode());
-        
+        super(message, ex.getSQLState() == null ? SQLStates.DEFAULT : ex.getSQLState(), ex.getErrorCode(), ex);
         if (addChildren) {
-        	SQLException childException = ex; // this a child to the SQLException constructed from reason
+        	SQLException childException = ex.getNextException(); // this a child to the SQLException constructed from reason
 
             while (childException != null) {
                 if (childException instanceof TeiidSQLException) {
@@ -92,6 +91,7 @@ public class TeiidSQLException extends SQLException {
             }
         }
     }    
+    
     public static TeiidSQLException create(Throwable exception, String message) {
 		message = getMessage(exception, message);
 		Throwable origException = exception;
@@ -225,18 +225,6 @@ public class TeiidSQLException extends SQLException {
         return message;
     }
     
-    
-    /** 
-     * @see java.lang.Throwable#getCause()
-     * @since 4.3.2
-     */
-    public Throwable getCause() {
-        if (this.getNextException() != null) {
-        	return getNextException();
-        }
-        return super.getCause();
-    }
-
     /** 
      * @see org.teiid.jdbc.api.SQLException#isSystemErrorState()
      * @since 4.3
