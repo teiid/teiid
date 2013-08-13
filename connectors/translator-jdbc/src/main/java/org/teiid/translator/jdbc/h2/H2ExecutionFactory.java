@@ -165,7 +165,8 @@ public class H2ExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.QUARTER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
-        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        //h2 rounds up
+        //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
         //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPCREATE);
         supportedFunctions.add(SourceSystemFunctions.WEEK);
         supportedFunctions.add(SourceSystemFunctions.YEAR);

@@ -104,7 +104,7 @@ public class MetaMatrixExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add("PARSETIMESTAMP"); //$NON-NLS-1$
         supportedFunctions.add("SECOND"); //$NON-NLS-1$
         supportedFunctions.add("TIMESTAMPADD"); //$NON-NLS-1$
-        supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
+        //supportedFunctions.add("TIMESTAMPDIFF"); //$NON-NLS-1$
         supportedFunctions.add("WEEK"); //$NON-NLS-1$
         supportedFunctions.add("YEAR"); //$NON-NLS-1$
         supportedFunctions.add("MODIFYTIMEZONE"); //$NON-NLS-1$

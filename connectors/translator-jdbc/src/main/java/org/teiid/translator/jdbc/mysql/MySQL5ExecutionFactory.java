@@ -90,7 +90,8 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
         List<String> supportedFunctions = new ArrayList<String>();
         supportedFunctions.addAll(super.getSupportedFunctions());
         supportedFunctions.add(SourceSystemFunctions.TIMESTAMPADD);
-        supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
+        //mysql rounds down even when crossing a date part
+        //supportedFunctions.add(SourceSystemFunctions.TIMESTAMPDIFF);
         return supportedFunctions;
     }
     
