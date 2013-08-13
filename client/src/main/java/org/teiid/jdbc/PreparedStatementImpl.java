@@ -38,6 +38,8 @@ import java.util.TimeZone;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 
+import javax.sql.rowset.serial.SerialArray;
+
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ResultsMode;
 import org.teiid.client.RequestMessage.StatementType;
@@ -45,6 +47,7 @@ import org.teiid.client.metadata.MetadataResult;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.DataTypeManager;
@@ -619,7 +622,11 @@ public class PreparedStatementImpl extends StatementImpl implements TeiidPrepare
 	}
 
 	public void setArray(int parameterIndex, Array x) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		if (x instanceof ArrayImpl) {
+			setObject(parameterIndex, x);
+		} else {
+			setObject(parameterIndex, new SerialArray(x));
+		}
 	}
 
 	@Override

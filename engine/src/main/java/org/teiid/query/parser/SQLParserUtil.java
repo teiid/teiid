@@ -842,6 +842,16 @@ public class SQLParserUtil {
 		return workContext.getTempMetadataFactory();
 	}
 	
+	List<Expression> arrayExpressions(List<Expression> expressions, Expression expr) {
+		if (expressions == null) {
+			expressions = new ArrayList<Expression>();
+		}
+		if (expr != null) {
+			expressions.add(expr);
+		}
+		return expressions;
+	}
+	
 	static class  ParsedDataType{
 		String type;
 		Integer length;

@@ -22,7 +22,10 @@
 
 package org.teiid.metadata;
 
+import java.util.Collections;
+
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.util.StringUtil;
 import org.teiid.translator.TypeFacility;
 
 public abstract class BaseColumn extends AbstractMetadataRecord {
@@ -50,6 +53,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     private NullType nullType;
     private int position;
     private Datatype datatype;
+    private int arrayDimensions;
 
     public String getDefaultValue() {
         return defaultValue;
@@ -134,19 +138,31 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 		defaultValue = DataTypeManager.getCanonicalString(object);
 	}
 
+	/**
+	 * Get the type.  Represents the component type if {@link #getArrayDimensions()} > 0 
+	 * @return
+	 */
     public Datatype getDatatype() {
 		return datatype;
 	}
     
     public void setDatatype(Datatype datatype) {
-    	setDatatype(datatype, false);
+    	setDatatype(datatype, false, 0);
     }
     
     public void setDatatype(Datatype datatype, boolean copyAttributes) {
+    	setDatatype(datatype, copyAttributes, 0);
+    }
+    
+    public void setDatatype(Datatype datatype, boolean copyAttributes, int arrayDimensions) {
 		this.datatype = datatype;
+		this.arrayDimensions = arrayDimensions;
 		if (datatype != null) {
 			this.datatypeUUID = this.datatype.getUUID();
 			this.runtimeType = this.datatype.getRuntimeTypeName();
+			if (arrayDimensions > 0) {
+				this.runtimeType += StringUtil.join(Collections.nCopies(arrayDimensions, "[]"), ""); //$NON-NLS-1$ //$NON-NLS-2$
+			}
 			if (copyAttributes) {
 				this.radix = this.datatype.getRadix();
 				this.length = this.datatype.getLength();
@@ -155,6 +171,14 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
 				this.nullType = this.datatype.getNullType();
 			}
 		}
+	}
+    
+    /**
+     * Get the array dimensions.
+     * @return
+     */
+    public int getArrayDimensions() {
+		return arrayDimensions;
 	}
     
 }

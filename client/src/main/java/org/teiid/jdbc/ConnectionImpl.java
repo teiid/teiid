@@ -43,6 +43,7 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.client.xa.XATransactionException;
 import org.teiid.client.xa.XidImpl;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
@@ -842,7 +843,7 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 
 	public Array createArrayOf(String typeName, Object[] elements)
 			throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return new ArrayImpl(elements);
 	}
 
 	public Blob createBlob() throws SQLException {

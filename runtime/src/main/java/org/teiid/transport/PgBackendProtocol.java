@@ -31,6 +31,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.sql.Array;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -487,17 +488,20 @@ public class PgBackendProtocol implements ChannelDownstreamHandler, ODBCClientRe
 		    case PG_TYPE_TEXTARRAY:
 		    case PG_TYPE_OIDARRAY:
 		    	{
-		    	ArrayImpl obj = (ArrayImpl)rs.getObject(column);
+		    	Array obj = rs.getArray(column);
 		    	if (obj != null) {
 		    		writer.append("{");
 			    	boolean first = true;
-			    	for (Object o:obj.getValues()) {
+			    	Object array = obj.getArray();
+					int length = java.lang.reflect.Array.getLength(array);
+			    	for (int i = 0; i < length; i++) {
 			    		if (!first) {
 			    			writer.append(",");
 			    		}
 			    		else {
 			    			first = false;
 			    		}
+			    		Object o = java.lang.reflect.Array.get(array, i);
 			    		if (o != null) {
 				    		if (col.type == PG_TYPE_TEXTARRAY) {
 				    			escapeQuote(writer, o.toString());

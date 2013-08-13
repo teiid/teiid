@@ -22,14 +22,14 @@
 
 package org.teiid.jdbc;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.stub;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -42,17 +42,13 @@ import org.teiid.client.xa.XidImpl;
 import org.teiid.net.ServerConnection;
 
 @SuppressWarnings("nls")
-public class TestConnection extends TestCase {
+public class TestConnection {
 
 	protected static final String STD_DATABASE_NAME         = "QT_Ora9DS"; //$NON-NLS-1$
     protected static final int STD_DATABASE_VERSION      = 1; 
     
     static String serverUrl = "jdbc:teiid:QT_Ora9DS@mm://localhost:7001;version=1;user=metamatrixadmin;password=mm"; //$NON-NLS-1$
 
-    public TestConnection(String name) {
-        super(name);
-    }
-    
     static class  InnerDriver extends TeiidDriver {
     	String iurl = null;
     	public InnerDriver(String url) {
@@ -109,38 +105,38 @@ public class TestConnection extends TestCase {
     	return new ConnectionImpl(mock, props, url);
     }
 
-    public void testGetMetaData() throws Exception {
+    @Test public void testGetMetaData() throws Exception {
         assertNotNull(getMMConnection().getMetaData());
     }
 
-    public void testGetSchema() throws Exception {
+    @Test public void testGetSchema() throws Exception {
         assertEquals("Actual schema is not equql to the expected one. ", STD_DATABASE_NAME, getMMConnection().getVDBName()); //$NON-NLS-1$
     }
 
-    public void testNativeSql() throws Exception {
+    @Test public void testNativeSql() throws Exception {
         String sql = "SELECT * FROM BQT1.SmallA"; //$NON-NLS-1$
         assertEquals("Actual schema is not equql to the expected one. ", sql, getMMConnection().nativeSQL(sql)); //$NON-NLS-1$
     }
 
     /** test getUserName() through DriverManager */
-    public void testGetUserName2() throws Exception {        
+    @Test public void testGetUserName2() throws Exception {        
         assertEquals("Actual userName is not equal to the expected one. ", "admin", getMMConnection().getUserName()); //$NON-NLS-1$ //$NON-NLS-2$
     }
       
     /** test isReadOnly default value on Connection */
-    public void testIsReadOnly() throws Exception {
+    @Test public void testIsReadOnly() throws Exception {
         assertEquals(false, getMMConnection().isReadOnly());
     }
 
     /** test setReadOnly on Connection */
-    public void testSetReadOnly1() throws Exception {
+    @Test public void testSetReadOnly1() throws Exception {
     	ConnectionImpl conn = getMMConnection();
         conn.setReadOnly(true);
         assertEquals(true, conn.isReadOnly());
     }
 
     /** test setReadOnly on Connection during a transaction */
-    public void testSetReadOnly2() throws Exception {
+    @Test public void testSetReadOnly2() throws Exception {
     	ConnectionImpl conn = getMMConnection();
         conn.setAutoCommit(false);
         try {
@@ -154,7 +150,7 @@ public class TestConnection extends TestCase {
     /**
      * Test the default of the JDBC4 spec semantics is true
      */
-    public void testDefaultSpec() throws Exception {
+    @Test public void testDefaultSpec() throws Exception {
         assertEquals("true",
         		(getMMConnection().getExecutionProperties().getProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS) == null ? "true" : "false"));
     } 
@@ -162,15 +158,20 @@ public class TestConnection extends TestCase {
     /**
      * Test turning off the JDBC 4 semantics
      */
-    public void testTurnOnSpec() throws Exception {
+    @Test public void testTurnOnSpec() throws Exception {
         assertEquals("true", getMMConnection(serverUrl + ";useJDBC4ColumnNameAndLabelSemantics=true").getExecutionProperties().getProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
     }    
     
     /**
      * Test turning off the JDBC 4 semantics
      */
-    public void testTurnOffSpec() throws Exception {
+    @Test public void testTurnOffSpec() throws Exception {
         assertEquals("false", getMMConnection(serverUrl + ";useJDBC4ColumnNameAndLabelSemantics=false").getExecutionProperties().getProperty(ExecutionProperties.JDBC4COLUMNNAMEANDLABELSEMANTICS));
+    }
+    
+    @Test public void testCreateArray() throws SQLException {
+    	Array array = getMMConnection().createArrayOf("integer[]", new Integer[] {3, 4});
+    	assertEquals(3, java.lang.reflect.Array.get(array.getArray(), 0));
     }
 
 }

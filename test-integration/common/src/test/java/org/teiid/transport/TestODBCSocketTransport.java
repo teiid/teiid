@@ -31,6 +31,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
+import java.sql.Array;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
@@ -474,6 +475,21 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 	@Test(expected=SQLException.class) public void test_pg_client_encoding1() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set client_encoding LATIN1");
+	}
+	
+	@Test public void testArray() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("select (1,2)");
+		rs.next();
+		Array result = rs.getArray(1);
+		ResultSet rs1 = result.getResultSet();
+		rs1.next();
+		assertEquals(1, rs1.getInt(1));
+		
+		//TODO:we are squashing the result to a text array, since
+		//that is a known type - eventually we will need typed array support
+		//Object array = result.getArray();
+		//assertEquals(1, java.lang.reflect.Array.get(array, 0));
 	}
 	
 }

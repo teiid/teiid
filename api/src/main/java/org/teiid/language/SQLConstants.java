@@ -46,6 +46,8 @@ public class SQLConstants {
 		public static final String GE = ">="; //$NON-NLS-1$
 		public static final String LPAREN = "("; //$NON-NLS-1$
 		public static final String RPAREN = ")"; //$NON-NLS-1$
+		public static final String LSBRACE = "["; //$NON-NLS-1$
+		public static final String RSBRACE = "]"; //$NON-NLS-1$
 		public static final String COLON = ":"; //$NON-NLS-1$
 		public static final String TICK = "'"; //$NON-NLS-1$
 		public static final String SEMICOLON = ";"; //$NON-NLS-1$

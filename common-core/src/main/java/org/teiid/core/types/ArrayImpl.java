@@ -54,7 +54,7 @@ public final class ArrayImpl implements Comparable<ArrayImpl>, Externalizable, A
 	public final static class NullException extends RuntimeException {};
 	private final static NullException ex = new NullException();
 	
-	public ArrayImpl(Object[] values) {
+	public ArrayImpl(Object... values) {
 		this.values = values;
 	}
 

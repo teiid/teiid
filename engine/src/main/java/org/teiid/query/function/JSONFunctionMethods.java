@@ -161,7 +161,7 @@ public class JSONFunctionMethods {
 					writer.write(object.toString());
 				} else {
 					writer.append('"');
-					String text = DataTypeManager.transformValue(object, DataTypeManager.DefaultDataClasses.STRING);
+					String text = (String)DataTypeManager.transformValue(object, DataTypeManager.DefaultDataClasses.STRING);
 					JSONParser.escape(text, writer);
 					writer.append('"');
 				}

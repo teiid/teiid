@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.junit.Test;
+import org.teiid.core.types.ArrayImpl;
 
 @SuppressWarnings("nls")
 public class TestDataTypeTransformer {
@@ -60,6 +61,13 @@ public class TestDataTypeTransformer {
 	@Test public void testGetString() throws Exception {
 		assertEquals("", DataTypeTransformer.getString(new SerialClob(new char[0])));
 	}
-
+	
+	@Test public void testGetArray() throws Exception {
+		assertEquals(new ArrayImpl(new Object[] {1, 2}), DataTypeTransformer.getArray(new int[] {1,2}));
+	}
+	
+	@Test public void testGetArray1() throws Exception {
+		assertEquals(new ArrayImpl(new Object[] {1, 2}), DataTypeTransformer.getArray(new Integer[] {1,2}));
+	}
 	
 }

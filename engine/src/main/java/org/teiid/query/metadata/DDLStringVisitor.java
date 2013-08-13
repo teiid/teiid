@@ -40,6 +40,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.metadata.*;
 import org.teiid.metadata.BaseColumn.NullType;
 import org.teiid.metadata.FunctionMethod.Determinism;
@@ -397,6 +398,9 @@ public class DDLStringVisitor {
 					append(COMMA).append(column.getScale());
 				}
 				append(RPAREN);
+			}
+			for (int dims = column.getArrayDimensions(); dims > 0; dims--) {
+				append(Tokens.LSBRACE).append(Tokens.RSBRACE);
 			}
 			if (column.getNullType() == NullType.No_Nulls) {
 				append(SPACE).append(NOT_NULL);

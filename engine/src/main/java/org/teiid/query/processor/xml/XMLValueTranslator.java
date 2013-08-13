@@ -183,7 +183,7 @@ public final class XMLValueTranslator {
      * @since 5.0
      */
     static String defaultTranslation(Object value) throws TransformationException {
-        return DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.STRING);
+        return (String)DataTypeManager.transformValue(value, DataTypeManager.DefaultDataClasses.STRING);
     }
     
     /**

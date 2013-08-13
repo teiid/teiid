@@ -163,7 +163,7 @@ public class TextLine implements Expression {
 		ArrayList<Object> result = new ArrayList<Object>();
 		for (Iterator<T> iterator = values.iterator(); iterator.hasNext();) {
 			T t = iterator.next();
-			String text = DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
+			String text = (String)DataTypeManager.transformValue(valueExtractor.getValue(t), DataTypeManager.DefaultDataClasses.STRING);
 			if (text == null) {
 				continue;
 			}

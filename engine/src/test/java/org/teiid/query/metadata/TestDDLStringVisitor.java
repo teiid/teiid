@@ -274,4 +274,12 @@ public class TestDDLStringVisitor {
 		String expected = "CREATE GLOBAL TEMPORARY TABLE myTemp (\n	x string,\n	y SERIAL,\n	PRIMARY KEY(x)\n)";
 		helpTest(ddl, expected);
 	}
+	
+	@Test public void testArrayTypes() throws Exception {
+		String ddl = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, p2 varchar, INOUT p3 decimal) " +
+				"RETURNS (r1 varchar(100)[], r2 decimal[][])";
+		
+		String expected = "CREATE FOREIGN PROCEDURE myProc(OUT p1 boolean, IN p2 string, INOUT p3 bigdecimal) RETURNS TABLE (r1 string(100)[], r2 bigdecimal[][])";
+		helpTest(ddl, expected);		
+	}
 }

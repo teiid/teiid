@@ -38,6 +38,7 @@ import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.types.NullType;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.types.basic.ObjectToAnyTransform;
 import org.teiid.core.util.TimestampWithTimezone;
 
 /**
@@ -188,18 +189,7 @@ public class TypeFacility {
 	 * @return
 	 */
 	public static Class<?> convertPrimitiveToObject(Class<?> clazz) {
-		if (!clazz.isPrimitive()) {
-			return clazz;
-		}
-		if      ( clazz == Boolean.TYPE   ) clazz = Boolean.class;
-		else if ( clazz == Character.TYPE ) clazz = Character.class;
-		else if ( clazz == Byte.TYPE      ) clazz = Byte.class;
-		else if ( clazz == Short.TYPE     ) clazz = Short.class;
-		else if ( clazz == Integer.TYPE   ) clazz = Integer.class;
-		else if ( clazz == Long.TYPE      ) clazz = Long.class;
-		else if ( clazz == Float.TYPE     ) clazz = Float.class;
-		else if ( clazz == Double.TYPE    ) clazz = Double.class;
-		return clazz;
+		return ObjectToAnyTransform.convertPrimitiveToObject(clazz);
 	}
 
 }

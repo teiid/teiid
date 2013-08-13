@@ -2315,6 +2315,9 @@ public class SQLStringVisitor extends LanguageVisitor {
     	}
     	registerNodes(array.getExpressions(), 0);
     	if (!array.isImplicit()) {
+    		if (array.getExpressions().size() == 1) {
+    			append(Tokens.COMMA);
+    		}
     		append(Tokens.RPAREN);
     	}
     }

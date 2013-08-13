@@ -983,6 +983,9 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
     public void visit(Array array) {
     	buffer.append(Tokens.LPAREN);
     	append(array.getExpressions());
+    	if (array.getExpressions().size() == 1) {
+    		buffer.append(Tokens.COMMA);
+    	}
     	buffer.append(Tokens.RPAREN);
     }
  

@@ -66,8 +66,8 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private ColumnSet<?> parent;
     
     @Override
-    public void setDatatype(Datatype datatype, boolean copyAttributes) {
-    	super.setDatatype(datatype, copyAttributes);
+    public void setDatatype(Datatype datatype, boolean copyAttributes, int arrayDimensions) {
+    	super.setDatatype(datatype, copyAttributes, arrayDimensions);
     	if (datatype != null && copyAttributes) {
     		//if (DefaultDataTypes.STRING.equals(datatype.getRuntimeTypeName())) { 
     		    //TODO - this is not quite valid since we are dealing with length representing chars in UTF-16, then there should be twice the bytes

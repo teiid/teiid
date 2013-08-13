@@ -1225,11 +1225,11 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	}
 
 	public Array getArray(int columnIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return DataTypeTransformer.getArray(getObject(columnIndex));
 	}
 
 	public Array getArray(String columnLabel) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();	
+		return DataTypeTransformer.getArray(getObject(columnLabel));
 	}
 
 	public InputStream getAsciiStream(int columnIndex) throws SQLException {

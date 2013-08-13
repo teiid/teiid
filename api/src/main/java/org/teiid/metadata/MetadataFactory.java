@@ -213,6 +213,11 @@ public class MetadataFactory implements Serializable {
 
 	private Datatype setColumnType(String type,
 			BaseColumn column) {
+		int arrayDimensions = 0;
+		while (DataTypeManager.isArrayType(type)) {
+			arrayDimensions++;
+			type = type.substring(0, type.length()-2);
+		}
 		Datatype datatype = this.dataTypes.get(type);
 		if (datatype == null) {
 			//TODO: potentially we want to check the enterprise types, but at
@@ -222,7 +227,7 @@ public class MetadataFactory implements Serializable {
 			//generalization would be needed to support injecting new runtime types
 			 throw new MetadataException(DataPlugin.Event.TEIID60009, DataPlugin.Util.gs(DataPlugin.Event.TEIID60009, type));
 		}
-		column.setDatatype(datatype, true);
+		column.setDatatype(datatype, true, arrayDimensions);
 		return datatype;
 	}
 

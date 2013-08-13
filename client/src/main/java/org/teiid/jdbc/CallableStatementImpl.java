@@ -238,11 +238,11 @@ public class CallableStatementImpl extends PreparedStatementImpl implements Call
 	}
 
 	public Array getArray(int parameterIndex) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getArray(getObject(parameterIndex));
 	}
 
 	public Array getArray(String parameterName) throws SQLException {
-		throw SqlUtil.createFeatureNotSupportedException();
+		return DataTypeTransformer.getArray(getObject(parameterName));
 	}
 
 	public BigDecimal getBigDecimal(String parameterName) throws SQLException {

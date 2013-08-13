@@ -318,13 +318,19 @@ public class ResolverVisitor extends LanguageVisitor {
 	    			array.getExpressions().set(i, ResolverUtil.convertExpression(expr, type, metadata));
 	    		}
 	    	} else {
-	    		String[] types = new String[array.getExpressions().size()];
+	    		Class<?> type = null;
 	    		for (int i = 0; i < array.getExpressions().size(); i++) {
 	    			Expression expr = array.getExpressions().get(i);
-	    			types[i] = DataTypeManager.getDataTypeName(expr.getType());
+	    			if (type == null) {
+	    				type = expr.getType();
+	    			} else if (type != expr.getType()) {
+	    				type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    			}
 	    		}
-	    		String commonType = ResolverUtil.getCommonType(types);
-	    		array.setComponentType(DataTypeManager.getDataTypeClass(commonType));
+	    		if (type == null) {
+	    			type = DataTypeManager.DefaultDataClasses.OBJECT;
+	    		}
+	    		array.setComponentType(type);
 	    	}
     	} catch (QueryResolverException e) {
     		handleException(e);
@@ -618,9 +624,17 @@ public class ResolverVisitor extends LanguageVisitor {
 	    } else if(fd.isSystemFunction(FunctionLibrary.LOOKUP)) {
 			ResolverUtil.ResolvedLookup lookup = ResolverUtil.resolveLookup(function, metadata);
 			fd = library.copyFunctionChangeReturnType(fd, lookup.getReturnElement().getType());
-	    } else if (fd.isSystemFunction(FunctionLibrary.ARRAY_GET) && args[0].getType().isArray()) {
-	    	//hack to use typed array values
-			fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
+	    } else if (fd.isSystemFunction(FunctionLibrary.ARRAY_GET)) {
+	    	if (args[0].getType().isArray()) {
+				fd = library.copyFunctionChangeReturnType(fd, args[0].getType().getComponentType());
+	    	} else {
+	    		if (function.getType() != null) {
+	    			setDesiredType(args[0], function.getType(), function);
+	    		}
+	    		if (args[0].getType() != DataTypeManager.DefaultDataClasses.OBJECT) {
+	    			throw new QueryResolverException(QueryPlugin.Event.TEIID31144, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31144, DataTypeManager.getDataTypeName(args[0].getType()), function));
+	    		}
+	    	}
 	    } else if (Boolean.valueOf(fd.getMethod().getProperty(TEIID_PASS_THROUGH_TYPE, false))) {
 	    	//hack largely to support pg
 	    	fd = library.copyFunctionChangeReturnType(fd, args[0].getType());

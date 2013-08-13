@@ -47,7 +47,7 @@ import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.LanguageVisitor;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.navigator.PostOrderNavigator;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
@@ -134,6 +134,19 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     @Override
     public void visit(QueryString obj) {
     	markInvalid(obj, "Pushdown of QueryString not allowed"); //$NON-NLS-1$
+    }
+    
+    @Override
+    public void visit(Array array) {
+    	try {
+			if (!CapabilitiesUtil.supports(Capability.ARRAY_TYPE, modelID, metadata, capFinder)) {
+				markInvalid(array, "Array type not supported by source"); //$NON-NLS-1$
+			}
+		} catch (QueryMetadataException e) {
+            handleException(new TeiidComponentException(e));
+        } catch(TeiidComponentException e) {
+            handleException(e);            
+		}
     }
     
     public void visit(AggregateSymbol obj) {
@@ -695,7 +708,22 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         CriteriaCapabilityValidatorVisitor visitor = new CriteriaCapabilityValidatorVisitor(modelID, metadata, capFinder, caps);
         visitor.analysisRecord = analysisRecord;
         visitor.isJoin = isJoin;
-        PostOrderNavigator.doVisit(obj, visitor);
+        //we use an array to represent multiple comparision attributes,
+        //but we don't want that to inhibit pushdown as we'll account for that later
+        //in criteria processing
+        PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.POST_ORDER, false) {
+        	@Override
+        	public void visit(DependentSetCriteria obj1) {
+        		if (obj1.hasMultipleAttributes()) {
+        			Array array = (Array) obj1.getExpression();
+        			visitNodes(array.getExpressions());
+            		super.postVisitVisitor(obj1);
+        		} else {
+        			super.visit(obj1);
+        		}
+        	}
+        };
+        obj.acceptVisitor(nav);
         
         if(visitor.getException() != null) {
             throw visitor.getException();

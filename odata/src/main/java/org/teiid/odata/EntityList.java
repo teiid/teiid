@@ -100,7 +100,7 @@ class EntityList extends ArrayList<OEntity>{
 			else if (t == null && BlobType.class == targetType && sourceType == SQLXML.class) {
 				return OProperties.binary(propName, ((SQLXML)value).getString().getBytes());
 			}			
-			return OProperties.simple(propName, expectedType, t!=null?t.transform(value):value);
+			return OProperties.simple(propName, expectedType, t!=null?t.transform(value, targetType):value);
 		}
 		return OProperties.simple(propName, expectedType,value);
 	}

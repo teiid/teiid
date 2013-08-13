@@ -817,4 +817,14 @@ public class TestDDLParser {
 		Table t = s.getTable("T");
 		assertEquals(1, t.getColumns().size());
 	}
+	
+	@Test public void testArrayType() throws Exception {
+		String ddl = "CREATE VIEW V (col string[]) as select ('a','b');";
+		
+		Schema s = helpParse(ddl, "model").getSchema();
+		Table t = s.getTable("V");
+		assertEquals(1, t.getColumns().size());
+		assertEquals("string[]", t.getColumns().get(0).getRuntimeType());
+		assertEquals(String[].class, t.getColumns().get(0).getJavaType());
+	}
 }

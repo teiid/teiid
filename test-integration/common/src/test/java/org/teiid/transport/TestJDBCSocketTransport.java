@@ -32,6 +32,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -41,6 +42,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -265,6 +267,16 @@ public class TestJDBCSocketTransport {
 		rs.next();
 		//TODO: if we use getString streaming will still fail because the string logic gets the length first
 		assertEquals(100, ObjectConverterUtil.convertToCharArray(rs.getCharacterStream(1), -1).length);
+	}
+	
+	@Test public void testArray() throws Exception {
+		Statement s = conn.createStatement();
+		ResultSet rs = s.executeQuery("SELECT (1, (1,2))");
+		rs.next();
+		assertEquals(new ArrayImpl(new Object[] {1, new ArrayImpl(new Object[] {1, 2})}), rs.getArray(1));
+		assertEquals("java.sql.Array", rs.getMetaData().getColumnClassName(1));
+		assertEquals(Types.ARRAY, rs.getMetaData().getColumnType(1));
+		assertEquals("object[]", rs.getMetaData().getColumnTypeName(1));
 	}
 	
 }
