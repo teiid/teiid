@@ -79,6 +79,8 @@ public class MetadataFactory implements Serializable {
 	private transient ModelMetaData model;
 	private transient Map<String, ? extends VDBResource> vdbResources;
 	private List<Grant> grants;
+	private List<String> startTriggers;
+	private List<String> shutdownTriggers;
 
 	public static final String SF_URI = "{http://www.teiid.org/translator/salesforce/2012}"; //$NON-NLS-1$
 	public static final String WS_URI = "{http://www.teiid.org/translator/ws/2012}"; //$NON-NLS-1$
@@ -551,6 +553,12 @@ public class MetadataFactory implements Serializable {
 			store.addDataTypes(this.enterpriseTypes.values());
 		}
 		store.addGrants(this.grants);
+		if (startTriggers != null) {
+			store.setVDBStartTriggers(this.startTriggers);
+		}
+		if (shutdownTriggers != null) {
+			store.setVDBShutdownTriggers(this.shutdownTriggers);
+		}
 	}
 
 	public MetadataStore asMetadataStore() {
@@ -816,4 +824,24 @@ public class MetadataFactory implements Serializable {
 		this.grants.add(new Grant(role, pmd));
 	}
 
+	public void addVDBStartTrigger(String dml) {
+		if (startTriggers == null) {
+			startTriggers = new ArrayList<String>();
+		}
+		startTriggers.add(dml);
+	}
+	public void addVDBShutdownTrigger(String dml) {
+		if (shutdownTriggers == null) {
+			shutdownTriggers = new ArrayList<String>();
+		}
+		shutdownTriggers.add(dml);
+	}
+	
+	public List<String> getVDBStartTriggers(){
+		return startTriggers;
+	}
+
+	public List<String> getVDBShutdownTriggers(){
+		return shutdownTriggers;
+	}
 }

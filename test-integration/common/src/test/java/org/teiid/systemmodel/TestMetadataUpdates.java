@@ -21,7 +21,10 @@
  */
 package org.teiid.systemmodel;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -43,8 +46,8 @@ import org.teiid.metadata.ColumnStats;
 import org.teiid.metadata.DefaultMetadataRepository;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.Table;
-import org.teiid.metadata.TableStats;
 import org.teiid.metadata.Table.TriggerEvent;
+import org.teiid.metadata.TableStats;
 
 @SuppressWarnings("nls")
 public class TestMetadataUpdates {
@@ -178,7 +181,7 @@ public class TestMetadataUpdates {
     	assertNull(s.getClob(1));
     	
     	Statement stmt = connection.createStatement();
-    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from tables where name='vw')");
+    	ResultSet rs = stmt.executeQuery("select name, \"value\" from properties where uid = (select uid from tables where name='vw') and name = 'foo'");
     	rs.next();
     	assertEquals("foo", rs.getString(1));
     	assertEquals("bar", rs.getString(2));

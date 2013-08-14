@@ -64,7 +64,9 @@ public class ResteasyEnabler implements VDBLifeCycleListener {
 	@Override
 	public synchronized void added(String name, int version, CompositeVDB vdb) {
 	}
-	
+	@Override
+	public void beforeRemove(String name, int version, CompositeVDB vdb) {
+	}	
 	@Override
 	public synchronized void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 		if (this.vdbName.equals(name) && this.vdbVersion == version) {

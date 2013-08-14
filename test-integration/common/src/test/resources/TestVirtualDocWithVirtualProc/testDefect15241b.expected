@@ -2,13 +2,37 @@ string                                                             string       
 Name                                                               Value                                                              UID                                               
 NugentXAttribute                                                   Nuuuuuge22222                                                      mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
 NugentYAttribute                                                   Nuuuuuge44444                                                      mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
+SELECT_PLAN                                                        <?xml version="1.0" encoding="UTF-8"?>
+<xmlMapping><mappingNode>$ mmuuid:4789b280-841c-1f15-9526-ebd0cace03e1       
+SELECT_PLAN                                                        SELECT test2.NewGroup.KEY, test2.NewGroup.KEYVALUESTRING AS keyAn$ mmuuid:51ca3580-841c-1f15-9526-ebd0cace03e1       
+SELECT_PLAN                                                        SELECT * FROM (EXEC test.NewProcedure2()) AS X                     mmuuid:b01d67c1-2f02-1f15-890c-cdb9b341bd39       
+SELECT_PLAN                                                        <?xml version="1.0" encoding="UTF-8"?>
+<xmlMapping><mappingNode>$ mmuuid:cdfd72c0-e236-1f1f-9225-fc156604a313       
+SELECT_PLAN                                                        SELECT 'location' AS key, CONCAT('http://', CONCAT(CASE WHEN (HOS$ mmuuid:d1af7e40-e236-1f1f-9225-fc156604a313       
+SELECT_PLAN                                                        SELECT 0 as oid, 'btree' as amname                                 tid:7ff2755e9621-065a8b74-00000033                
+SELECT_PLAN                                                        SELECT pg_catalog.getOid(uid) as oid, t1.Name as nspname FROM SYS$ tid:7ff2755e9621-37a09513-00000001                
+SELECT_PLAN                                                        SELECT 0, null, null, null                                         tid:7ff2755e9621-3be1b5b4-00000072                
+SELECT_PLAN                                                        SELECT pg_catalog.getOid(t1.uid) as oid, t1.name as relname, (SEL$ tid:7ff2755e9621-62e78530-00000004                
+SELECT_PLAN                                                        SELECT pg_catalog.getOid(t1.uid) as oid, pg_catalog.getOid(t1.uid$ tid:7ff2755e9621-633d048a-00000027                
+SELECT_PLAN                                                        select pg_class.oid as attrelid, attnum, attname, relname, nspnam$ tid:7ff2755e9621-75d65150-00000060                
+SELECT_PLAN                                                        SELECT 1 as oid, 1 as tgconstrrelid, 1 as tgfoid, 1 as tgargs, 1 $ tid:7ff2755e9621-d50d2370-00000042                
+SELECT_PLAN                                                        SELECT pg_catalog.getOid(t1.uid) as oid, t1.Name as proname, (SEL$ tid:7ff2755e9621-d9ec709e-00000036                
+SELECT_PLAN                                                        select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Sche$ tid:7ff2755e9621-d9ee5c82-0000001b                
+SELECT_PLAN                                                        SELECT 0 as oid, null as usename, false as usecreatedb, false as $ tid:7ff2755e9621-d9eeb913-0000005b                
+SELECT_PLAN                                                        SELECT 0 as oid, 'teiid' as datname, 6 as encoding, 100000 as dat$ tid:7ff2755e9621-dda8fac3-00000051                
+SELECT_PLAN                                                        select pt.oid as oid, pt.typname as typname, t.Name name, t.UID, $ tid:7ff2755e9621-e544c1cc-0000006a                
+SELECT_PLAN                                                        SELECT pg_catalog.getOid(st.uid) as adrelid, convert(t1.Position,$ tid:7ff2755e9621-ec00662c-0000004c                
+SELECT_PLAN                                                        SELECT pg_catalog.getOid(t1.uid) as oid, pg_catalog.getOid(st.uid$ tid:7ff2755e9621-edc4ea54-0000000f                
+UPDATE_COUNT                                                       1                                                                  mmuuid:5be3d144-9ab0-1f13-890c-cdb9b341bd39       
+UPDATE_COUNT                                                       1                                                                  tid:60b87e792634-1388485f-0000003a                
+UPDATE_COUNT                                                       1                                                                  tid:60b87e792634-f786f077-00000030                
 pg_type:oid                                                        1002                                                               tid:7ff2755e9621-c6363c8c-0000003e                
 pg_type:oid                                                        1009                                                               tid:7ff2755e9621-c63e18a4-0000003d                
 pg_type:oid                                                        30                                                                 tid:7ff2755e9621-c69d99d5-0000003c                
 pg_type:oid                                                        22                                                                 tid:7ff2755e9621-ef456826-0000002f                
 pg_type:oid                                                        1028                                                               tid:7ff2755e9621-f418fbfc-0000003f                
 teiid:pass-through-type                                            true                                                               tid:7ff2755e9621-e548fc4c-0000007a                
-Row Count : 8
+Row Count : 30
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 Name           12             xmlvp           java.lang.String    Name            string             SYS            Properties    255                   255           0         false            true             false       false                 0           true        true          false     false       
 Value          12             xmlvp           java.lang.String    Value           string             SYS            Properties    255                   255           0         false            true             false       false                 0           true        true          false     false       

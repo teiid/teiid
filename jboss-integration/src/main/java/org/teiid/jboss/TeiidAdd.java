@@ -22,7 +22,14 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CONTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEPLOYMENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ENABLED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.PERSISTENT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.URL;
 import static org.teiid.jboss.TeiidConstants.*;
 
 import java.io.BufferedReader;
@@ -91,6 +98,7 @@ import org.teiid.logging.LogManager;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
+import org.teiid.runtime.MaterializationManager;
 import org.teiid.services.InternalEventDistributorFactory;
 
 class TeiidAdd extends AbstractAddStepHandler {
@@ -189,8 +197,8 @@ class TeiidAdd extends AbstractAddStepHandler {
 		
 		final JBossLifeCycleListener shutdownListener = new JBossLifeCycleListener();
 		
-		final String asyncThreadPoolName = ASYNC_THREAD_POOL_ELEMENT.asString(operation, context); 
-		
+		final String asyncThreadPoolName = ASYNC_THREAD_POOL_ELEMENT.asString(operation, context);
+				
 		// translator repository
     	final TranslatorRepository translatorRepo = new TranslatorRepository();
     	ValueService<TranslatorRepository> translatorService = new ValueService<TranslatorRepository>(new org.jboss.msc.value.Value<TranslatorRepository>() {
@@ -410,7 +418,15 @@ class TeiidAdd extends AbstractAddStepHandler {
 		newControllers.add(binderBuilder.install());
 		
 		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("event_distributor_bound", jndiName)); //$NON-NLS-1$
-        
+
+		// Materialization management service
+		MaterializationManagementService matviewService = new MaterializationManagementService(shutdownListener);
+		ServiceBuilder<MaterializationManager> matviewBuilder = target.addService(TeiidServiceNames.MATVIEW_SERVICE, matviewService);
+		matviewBuilder.addDependency(TeiidServiceNames.ENGINE, DQPCore.class,  matviewService.dqpInjector);
+		matviewBuilder.addDependency(TeiidServiceNames.executorServiceName(asyncThreadPoolName), Executor.class,  matviewService.executorInjector);
+		matviewBuilder.addDependency(TeiidServiceNames.VDB_REPO, VDBRepository.class, matviewService.vdbRepositoryInjector);
+		newControllers.add(matviewBuilder.install());
+		
         // Register VDB deployer
         context.addStep(new AbstractDeploymentChainStep() {
 			@Override

@@ -22,7 +22,10 @@
 
 package org.teiid.transport;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -74,21 +77,25 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			}			
 		}
 
+		@Override
 		public Socket createSocket() throws IOException {
 			return sslSocketFactory.createSocket();
 		}
 
+		@Override
 		public Socket createSocket(InetAddress address, int port,
 				InetAddress localAddress, int localPort) throws IOException {
 			return sslSocketFactory.createSocket(address, port, localAddress,
 					localPort);
 		}
 
+		@Override
 		public Socket createSocket(InetAddress host, int port)
 				throws IOException {
 			return sslSocketFactory.createSocket(host, port);
 		}
 
+		@Override
 		public Socket createSocket(Socket s, String host, int port,
 				boolean autoClose) throws IOException {
 			SSLSocket socket = (SSLSocket)sslSocketFactory.createSocket(s, host, port, autoClose);
@@ -96,6 +103,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			return socket;
 		}
 
+		@Override
 		public Socket createSocket(String host, int port,
 				InetAddress localHost, int localPort) throws IOException,
 				UnknownHostException {
@@ -103,15 +111,18 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 					localPort);
 		}
 
+		@Override
 		public Socket createSocket(String host, int port) throws IOException,
 				UnknownHostException {
 			return sslSocketFactory.createSocket(host, port);
 		}
 
+		@Override
 		public String[] getDefaultCipherSuites() {
 			return sslSocketFactory.getDefaultCipherSuites();
 		}
 
+		@Override
 		public String[] getSupportedCipherSuites() {
 			return sslSocketFactory.getSupportedCipherSuites();
 		}
@@ -342,7 +353,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			while (rs.next()) {
 				rowCount++;
 			}
-			assertEquals(3, rowCount);
+			assertEquals(5, rowCount);
 			stmt.execute("close \"foo\"");
 		} finally {
 			ExtendedQueryExectutorImpl.simplePortal = null;
