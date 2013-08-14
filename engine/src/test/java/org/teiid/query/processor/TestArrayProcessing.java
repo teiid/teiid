@@ -139,7 +139,7 @@ public class TestArrayProcessing {
 	}
 	
 	@Test public void testMultiDimensionalGet() throws Exception {
-		String sql = "select ((e2, e2), (e2, e2))[1][1] from pm1.g1"; //$NON-NLS-1$
+		String sql = "select -((e2, e2), (e2, e2))[1][1] from pm1.g1"; //$NON-NLS-1$
 		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
 		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
 	    assertEquals(DataTypeManager.DefaultDataClasses.INTEGER, command.getProjectedSymbols().get(0).getType());
