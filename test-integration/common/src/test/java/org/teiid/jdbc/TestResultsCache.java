@@ -87,13 +87,11 @@ public class TestResultsCache {
 	@Test public void testCacheHintTtl() throws Exception {
 		Statement s = conn.createStatement();
 		s.execute("set showplan on");
-		ResultSet rs = s.executeQuery("/* cache(ttl:50) */ select 1");
+		ResultSet rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
 		assertTrue(rs.next());
 		s.execute("set noexec on");
-		rs = s.executeQuery("/* cache(ttl:50) */ select 1");
-		assertTrue(rs.next());
 		Thread.sleep(60);
-		rs = s.executeQuery("/* cache(ttl:50) */ select 1");
+		rs = s.executeQuery("/*+ cache(ttl:50) */ select 1");
 		assertFalse(rs.next());
 	}
 	
