@@ -315,7 +315,9 @@ public class ResolverVisitor extends LanguageVisitor {
 	    		for (int i = 0; i < array.getExpressions().size(); i++) {
 	    			Expression expr = array.getExpressions().get(i);
 	    			setDesiredType(expr, array.getComponentType(), array);
-	    			array.getExpressions().set(i, ResolverUtil.convertExpression(expr, type, metadata));
+	    			if (array.getComponentType() != DefaultDataClasses.OBJECT) {
+	    				array.getExpressions().set(i, ResolverUtil.convertExpression(expr, type, metadata));
+	    			}
 	    		}
 	    	} else {
 	    		Class<?> type = null;

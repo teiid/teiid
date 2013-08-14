@@ -29,6 +29,8 @@ import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.query.eval.Evaluator;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
 import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.symbol.Constant;
@@ -39,7 +41,7 @@ import org.teiid.query.sql.symbol.Reference;
 import org.teiid.query.sql.symbol.XMLSerialize;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-
+@SuppressWarnings("nls")
 public class TestFunctionResolving {
 
     @Test public void testResolveBadConvert() throws Exception {
@@ -165,6 +167,23 @@ public class TestFunctionResolving {
     @Test(expected=QueryResolverException.class) public void testStringAggWrongArgs() throws Exception {
     	String sql = "string_agg(pm1.g1.e1)"; //$NON-NLS-1$
     	getExpression(sql);
+    }
+    
+    public static String vararg(Object... vals) {
+    	return String.valueOf(vals.length);
+    }
+    
+    @Test public void testVarArgsFunction() throws Exception {
+    	String ddl = "create foreign function func (VARIADIC z object) returns string options (JAVA_CLASS '"+this.getClass().getName()+"', JAVA_METHOD 'vararg');\n";
+    	TransformationMetadata tm = RealMetadataFactory.fromDDL(ddl, "x", "y");    	
+
+    	String sql = "func(('a', 'b'))";
+    	
+    	Function func = (Function) QueryParser.getQueryParser().parseExpression(sql);
+		ResolverVisitor.resolveLanguageObject(func, tm);
+		assertEquals(1, func.getArgs().length);
+		
+		assertEquals("2", Evaluator.evaluate(func));
     }
     
 }

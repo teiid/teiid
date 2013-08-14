@@ -1095,6 +1095,13 @@ public class TestProcedureResolving {
         LanguageBridgeFactory lbf = new LanguageBridgeFactory(tm);
         Call call = (Call)lbf.translate(sp);
         assertEquals("EXEC proc(1)", call.toString());
+        
+        sql = "call proc (1, (2, 3))"; //$NON-NLS-1$
+        sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc(1, (2, 3))", sp.toString());
+        assertEquals(new Constant(1), sp.getParameter(1).getExpression());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(2), new Constant(3))), sp.getParameter(2).getExpression());
+        assertEquals(SPParameter.RESULT_SET, sp.getParameter(3).getParameterType());
     }    
     
     @Test public void testVarArgs1() throws Exception {
@@ -1112,6 +1119,24 @@ public class TestProcedureResolving {
         assertEquals("EXEC proc()", call.toString());
         //we pass to the translator level flattened, so no argument
         assertEquals(0, call.getArguments().size());
+    }
+    
+    @Test public void testVarArgs2() throws Exception {
+    	String ddl = "create foreign procedure proc (VARIADIC z object) returns (x string);\n";
+    	TransformationMetadata tm = createMetadata(ddl);    	
+
+    	String sql = "call proc ()"; //$NON-NLS-1$
+        StoredProcedure sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc()", sp.toString());
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.OBJECT, new ArrayList<Expression>(0)), sp.getParameter(1).getExpression());
+               
+        sql = "call proc (1, (2, 3))"; //$NON-NLS-1$
+        sp = (StoredProcedure) TestResolver.helpResolve(sql, tm);
+        assertEquals("EXEC proc(1, (2, 3))", sp.toString());
+        ArrayList<Expression> expressions = new ArrayList<Expression>();
+        expressions.add(new Constant(1));
+        expressions.add(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(2), new Constant(3))));
+        assertEquals(new Array(DataTypeManager.DefaultDataClasses.OBJECT, expressions), sp.getParameter(1).getExpression());
     }
     
 }
