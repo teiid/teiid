@@ -166,11 +166,11 @@ public class AccessInfo implements Serializable {
 					if (m.getLastModified() < 0) {
 						return false; //invalid object
 					}
-					if (sensitiveToMetadataChanges && m.getLastModified() - modTime > this.creationTime) {
+					if (sensitiveToMetadataChanges && m.getLastModified() - modTime >= this.creationTime) {
 						return false;
 					}
 				}
-			} else if (o instanceof DataModifiable && ((DataModifiable)o).getLastDataModification() - modTime > this.creationTime) {
+			} else if (o instanceof DataModifiable && ((DataModifiable)o).getLastDataModification() - modTime >= this.creationTime) {
 				return false;
 			}
 		}
