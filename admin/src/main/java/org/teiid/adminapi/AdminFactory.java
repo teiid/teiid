@@ -22,7 +22,9 @@
 
 package org.teiid.adminapi;
 
-import static org.jboss.as.controller.client.helpers.ClientConstants.*;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_REMOVE_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.DEPLOYMENT_UNDEPLOY_OPERATION;
+import static org.jboss.as.controller.client.helpers.ClientConstants.RESULT;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -246,9 +248,18 @@ public class AdminFactory {
 
 			if (!getInstalledResourceAdaptorNames().contains(rarName)) {
 				///subsystem=resource-adapters/resource-adapter=fileDS:add
-				addResourceAdapter(rarName);
+				addArchiveResourceAdapter(rarName);
 			}
 
+			//AS-4776 HACK - BEGIN
+			else {
+				// add duplicate resource adapter AS-4776 Workaround
+				String moduleName = getResourceAdapterModuleName(rarName);
+				addModuleResourceAdapter(deploymentName, moduleName);
+				rarName = deploymentName;
+			}
+			//AS-4776 HACK - END
+			
 			BuildPropertyDefinitions bpd = new BuildPropertyDefinitions();
 			buildResourceAdpaterProperties(rarName, bpd);
 			ArrayList<PropertyDefinition> jcaSpecific = bpd.getPropertyDefinitions();
@@ -330,11 +341,42 @@ public class AdminFactory {
 		}
 
 		// /subsystem=resource-adapters/resource-adapter=teiid-connector-ws.rar:add(archive=teiid-connector-ws.rar, transaction-support=NoTransaction)
-		private void addResourceAdapter(String rarName) throws AdminException {
+		private void addArchiveResourceAdapter(String rarName) throws AdminException {
 			cliCall("add", new String[] { "subsystem", "resource-adapters",
 					"resource-adapter", rarName },
 					new String[] { "archive", rarName, "transaction-support","NoTransaction" },
 					new ResultCallback());
+		}
+		
+		private void addModuleResourceAdapter(String rarName, String moduleName) throws AdminException {
+			cliCall("add", new String[] { "subsystem", "resource-adapters",
+					"resource-adapter", rarName },
+					new String[] { "module", moduleName, "transaction-support","NoTransaction" },
+					new ResultCallback());			
+		}
+
+		private String getResourceAdapterModuleName(String rarName)
+				throws AdminException {
+			final List<String> props = new ArrayList<String>();
+			cliCall("read-resource",
+					new String[] { "subsystem", "resource-adapters", "resource-adapter", rarName},
+					null, new ResultCallback() {
+						@Override
+						void onSuccess(ModelNode outcome, ModelNode result) throws AdminException {
+				    		List<ModelNode> properties = outcome.get("result").asList();
+				    		
+			        		for (ModelNode prop:properties) {
+			        			if (!prop.getType().equals(ModelType.PROPERTY)) {
+			        				continue;
+			        			}
+			    				org.jboss.dmr.Property p = prop.asProperty();			        			
+								if (p.getName().equals("module")) {
+									props.add(p.getValue().asString());
+								}
+			        		}
+						}
+					});
+			return props.get(0);
 		}
 
 		class AbstractMetadatMapper implements MetadataMapper<String>{
@@ -636,6 +678,14 @@ public class AdminFactory {
 							"resource-adapters", "resource-adapter", rarName,
 							"connection-definitions", deployedName }, null,
 							new ResultCallback());
+					
+					//AS-4776 HACK - BEGIN
+					if (getInstalledResourceAdaptorNames().contains(deployedName)) {
+						cliCall("remove", new String[] { "subsystem",
+								"resource-adapters", "resource-adapter", deployedName}, null,
+								new ResultCallback());
+					}
+					//AS-4776 HACK - END
 				}
 			}
 
@@ -956,6 +1006,13 @@ public class AdminFactory {
 		private Set<String> getResourceAdapterNames() throws AdminException {
 			Set<String> templates = getDeployedResourceAdaptorNames();
             templates.addAll(getInstalledResourceAdaptorNames());
+            
+            //AS-4776 HACK - BEGIN
+            Map<String, String> connFactoryMap = getConnectionFactoryNames();
+            for (String key:connFactoryMap.keySet()) {
+            	templates.remove(key);
+            }
+            //AS-4776 HACK - END
 	        return templates;
 		}
 
