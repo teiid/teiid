@@ -50,7 +50,7 @@ public class TestAsynch {
 	private static FakeServer server;
 	private ConnectionImpl internalConnection;
     
-    @BeforeClass public static void setup() throws Exception {
+    @BeforeClass public static void oneTimeSetup() throws Exception {
     	server = new FakeServer(true);
     	ModelMetaData mmd = new ModelMetaData();
     	mmd.setName("v");
@@ -60,7 +60,7 @@ public class TestAsynch {
     	server.deployVDB("x", mmd);
     }
     
-    @AfterClass public static void teardown() throws Exception {
+    @AfterClass public static void oneTimeTeardown() throws Exception {
     	server.stop();
     }
     

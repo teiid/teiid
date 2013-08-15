@@ -58,10 +58,15 @@ public class ElementSymbol extends Symbol implements DerivedExpression {
     public ElementSymbol(String name) {
         super(name);		
     }
-    
+
     public ElementSymbol(String shortName, GroupSymbol group) {
+    	this(shortName, group, null);
+    }
+    
+    public ElementSymbol(String shortName, GroupSymbol group, Class<?> type) {
     	this.setShortName(shortName);
     	this.groupSymbol = group;
+    	this.type = type;
     }
     
     /**

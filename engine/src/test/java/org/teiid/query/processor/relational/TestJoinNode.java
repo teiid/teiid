@@ -620,11 +620,11 @@ public class TestJoinNode {
         ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
         es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ElementSymbol es3 = new ElementSymbol("e3"); //$NON-NLS-1$
-        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        es3.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ElementSymbol es4 = new ElementSymbol("e4"); //$NON-NLS-1$
-        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        es4.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         ElementSymbol es5 = new ElementSymbol("e5"); //$NON-NLS-1$
-        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        es5.setType(DataTypeManager.DefaultDataClasses.INTEGER);
         
         leftNode = new BlockingFakeRelationalNode(1, leftTuples);
         leftNode.setElements(Arrays.asList(es1, es2));

@@ -464,7 +464,6 @@ public class TestAggregateProcessing {
 		ProcessorPlan plan = helpGetPlan(sql, RealMetadataFactory.example1Cached());
 		CommandContext cc = TestProcessor.createCommandContext();
 		BufferManagerImpl impl = BufferManagerFactory.getTestBufferManager(0, 2);
-		impl.setUseWeakReferences(false);
 		cc.setBufferManager(impl);
 		// Run query
 		helpProcess(plan, cc, dataManager, expected);
