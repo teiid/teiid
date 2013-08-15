@@ -54,6 +54,7 @@ import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.DataTypeManager.WeakReferenceHashedValueCache;
 import org.teiid.core.types.Streamable;
+import org.teiid.core.util.Assertion;
 import org.teiid.dqp.internal.process.DQPConfiguration;
 import org.teiid.dqp.internal.process.RequestWorkItem;
 import org.teiid.logging.LogConstants;
@@ -525,7 +526,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		Class<?>[] types = new Class[elements.size()];
         for (ListIterator<? extends Expression> i = elements.listIterator(); i.hasNext();) {
             Expression expr = i.next();
-            types[i.previousIndex()] = expr.getType();
+            Class<?> type = expr.getType();
+            Assertion.isNotNull(type);
+			types[i.previousIndex()] = type;
         }
 		return types;
 	}

@@ -32,6 +32,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.BufferManager.TupleSourceType;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBuffer;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.query.processor.relational.FakeRelationalNode;
 import org.teiid.query.sql.symbol.ElementSymbol;
 
@@ -46,7 +47,7 @@ public class TestBatchIterator {
 			Arrays.asList(1)
 		}, 1));
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-		bi.setBuffer(bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR), true);  //$NON-NLS-1$
+		bi.setBuffer(bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR), true);  //$NON-NLS-1$
 		bi.mark();
 		bi.nextTuple();
 		bi.nextTuple();
@@ -61,7 +62,7 @@ public class TestBatchIterator {
 			Arrays.asList(3)
 		}, 2));
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR);
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR);
 		bi.setBuffer(tb, true);  //$NON-NLS-1$
 		bi.nextTuple();
 		bi.mark();
@@ -77,7 +78,7 @@ public class TestBatchIterator {
 			Arrays.asList(2),
 		}, 2));
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR);
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR);
 		bi.setBuffer(tb, true);  //$NON-NLS-1$
 		bi.hasNext();
 		bi.mark();
@@ -98,7 +99,7 @@ public class TestBatchIterator {
 			Arrays.asList(1),
 		}, 2));
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-		bi.setBuffer(bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR), true);  //$NON-NLS-1$
+		bi.setBuffer(bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR), true);  //$NON-NLS-1$
 		bi.mark();
 		assertNotNull(bi.nextTuple());
 		assertNotNull(bi.nextTuple());
@@ -121,7 +122,7 @@ public class TestBatchIterator {
 			Arrays.asList(1),
 		}, 2));
 		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x")), "test", TupleSourceType.PROCESSOR);
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR);
 		bi.setBuffer(tb, false);  //$NON-NLS-1$
 		bi.setPosition(2);
 		assertTrue(bi.hasNext());
