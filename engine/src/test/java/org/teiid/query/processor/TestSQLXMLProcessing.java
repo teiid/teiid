@@ -42,6 +42,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.client.util.ResultsFuture;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.BlobImpl;
@@ -463,7 +464,23 @@ public class TestSQLXMLProcessing {
         		Arrays.asList("<b xmlns=\"\" x=\"2\"/>", 1)
         };    
     
-        executeStreaming(sql, expected);
+        executeStreaming(sql, expected, -1);
+    }
+    
+    @Test public void testXmlTableStreamingMultibatch() throws Throwable {
+    	String sql = "select t.* from (select xmlelement(a, xmlagg(xmlelement(b, e1))) doc from pm1.g1) as x, xmltable('/a/b' passing doc columns x string path '.') as t"; //$NON-NLS-1$
+        
+        final List<?>[] expected = new List<?>[] {
+        		Arrays.asList("a"),
+        		Arrays.asList(""),
+        		Arrays.asList("a"),
+        		Arrays.asList("c"),
+        		Arrays.asList("b"),
+        		Arrays.asList("a")
+        };    
+
+        dataManager.setBlockOnce();
+        executeStreaming(sql, expected, 2);
     }
     
     @Test(expected=TeiidProcessingException.class) public void testXmlTableStreamingTimingWithError() throws Throwable {
@@ -474,12 +491,15 @@ public class TestSQLXMLProcessing {
         		Arrays.asList(2, 1)
         };    
     
-        executeStreaming(sql, expected);
+        executeStreaming(sql, expected, -1);
     }
 
-	private void executeStreaming(String sql, final List<?>[] expected)
+	private void executeStreaming(String sql, final List<?>[] expected, int batchSize)
 			throws Throwable {
 		final CommandContext cc = createCommandContext();
+		if (batchSize != -1) {
+			cc.setBufferManager(BufferManagerFactory.getTestBufferManager(0, 1));
+		}
         final ResultsFuture<Runnable> r = new ResultsFuture<Runnable>();
         Executor ex = new Executor() {
         	
