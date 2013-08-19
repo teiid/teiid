@@ -653,10 +653,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	public ExecutionFactory<Object, Object> getExecutionFactory(String name)
 			throws ConnectorManagerException {
 		ExecutionFactory<?, ?> ef = translators.get(name);
-		if (ef == null) {
-			//TODO: consolidate this exception into the connectormanagerrepository
-			throw new ConnectorManagerException(name);
-		}
 		return (ExecutionFactory<Object, Object>) ef;
 	}
 	

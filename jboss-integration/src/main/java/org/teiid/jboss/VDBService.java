@@ -82,6 +82,7 @@ import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.index.IndexMetadataRepository;
 import org.teiid.query.ObjectReplicator;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.runtime.AbstractVDBDeployer;
@@ -316,26 +317,29 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			translator = repo.getTranslatorMetaData(name);
 		}
 		if (translator == null) {
-			throw new ConnectorManagerException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50078, deployment.getName(), deployment.getVersion(), name));
+			return null;
 		}
-		try {
-			ExecutionFactory<Object, Object> ef = map.get(translator);
-			if ( ef == null) {
+		ExecutionFactory<Object, Object> ef = map.get(translator);
+		if ( ef == null) {
+			try {
 				ef = TranslatorUtil.buildExecutionFactory(translator);
-				if (ef instanceof DelegatingExecutionFactory) {
-					DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
-					String delegateName = delegator.getDelegateName();
-					if (delegateName != null) {
-						ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
-						((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
-					}
-				}
-				map.put(translator, ef);
+			} catch (TeiidException e) {
+				throw new ConnectorManagerException(e);
 			}
-			return ef;
-		} catch(TeiidException e) {
-			throw new ConnectorManagerException(e);
+			if (ef instanceof DelegatingExecutionFactory) {
+				DelegatingExecutionFactory delegator = (DelegatingExecutionFactory)ef;
+				String delegateName = delegator.getDelegateName();
+				if (delegateName != null) {
+					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
+					if (translator == null) {
+						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), name));
+					}
+					((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
+				}
+			}
+			map.put(translator, ef);
 		}
+		return ef;
 	}
 
 	@Override
