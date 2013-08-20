@@ -132,6 +132,9 @@ public class ConnectorManagerRepository implements Serializable{
 		}
 		if (ef == null) {
 			ef = provider.getExecutionFactory(name);
+			if (ef == null) {
+				throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), name));
+			}
 		}
 		cm = createConnectorManager(name, connection, ef);
 		addConnectorManager(source.getName(), cm);

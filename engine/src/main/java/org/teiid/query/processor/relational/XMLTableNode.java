@@ -72,7 +72,7 @@ import org.teiid.query.xquery.saxon.XQueryEvaluator;
  * When streaming the results will be fully built and stored in a buffer
  * before being returned
  */
-public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor, TupleBuffer.RowSource {
+public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProcessor {
 
 	private static Map<Class<?>, BuiltInAtomicType> typeMapping = new HashMap<Class<?>, BuiltInAtomicType>();
 	
@@ -127,7 +127,7 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 	
 	@Override
-	public void reset() {
+	public synchronized void reset() {
 		super.reset();
 		if (this.result != null) {
 			result.close();
@@ -224,13 +224,11 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 				public void run() {
 					try {
 						XQueryEvaluator.evaluateXQuery(table.getXQueryExpression(), contextItem, parameters, XMLTableNode.this, getContext());
-					} catch (TeiidException e) {
-						asynchException = new TeiidRuntimeException(e);
 					} catch (TeiidRuntimeException e) {
 						if (e != EARLY_TERMINATION) {
 							asynchException = e;
 						}
-					} catch (RuntimeException e) {
+					} catch (Throwable e) {
 						asynchException = new TeiidRuntimeException(e);
 					} finally {
 						synchronized (XMLTableNode.this) {
@@ -247,7 +245,6 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 					}
 				}
 			};
-			this.buffer.setRowSourceLock(this);
 			this.getContext().getExecutor().execute(r);
 			return;
 		}
@@ -258,21 +255,6 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		}
 	}
 	
-	@Override
-	public synchronized void finalRow() throws TeiidComponentException,
-			TeiidProcessingException {
-		while (state == State.BUILDING) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				throw new TeiidRuntimeException(e);
-			}
-		}
-		if (this.asynchException != null) {
-			unwrapException(this.asynchException);
-		}
-	}
-
 	private List<?> processRow() throws ExpressionEvaluationException, BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		List<Object> tuple = new ArrayList<Object>(projectedColumns.size());
@@ -344,24 +326,6 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 			}
 		}
 		return Value.convertToJava(value);
-	}
-	
-	@Override
-	public boolean hasFinalBuffer() {
-		return this.table.getXQueryExpression().isStreaming();
-	}
-	
-	@Override
-	public synchronized TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
-			TeiidComponentException, TeiidProcessingException {
-		this.rowLimit = maxRows;
-		evaluate(true);
-		usingOutput = true;
-    	TupleBuffer finalBuffer = this.buffer;
-    	if (!this.table.getXQueryExpression().isStreaming()) {
-    		close();
-    	}
-		return finalBuffer;
 	}
 	
 	@Override

@@ -31,6 +31,7 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.util.Assertion;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
@@ -193,6 +194,7 @@ class SourceState {
     		}
     		if (this.source.hasFinalBuffer()) {
     			this.buffer = this.source.getFinalBuffer(-1);
+    			Assertion.assertTrue(this.buffer.isFinal());
     			return;
     		}
 			createPrefetch();
@@ -256,6 +258,7 @@ class SourceState {
         	}
     		if (source.hasFinalBuffer()) {
     			this.buffer = source.getFinalBuffer(-1);
+    			Assertion.assertTrue(this.buffer.isFinal());
     			return this.buffer;
     		}
     		this.implicitBuffer = ImplicitBuffer.FULL;
