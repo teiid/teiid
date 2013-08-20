@@ -39,15 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.transaction.HeuristicMixedException;
-import javax.transaction.HeuristicRollbackException;
-import javax.transaction.InvalidTransactionException;
-import javax.transaction.NotSupportedException;
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import javax.transaction.*;
 
 import org.junit.After;
 import org.junit.Before;
@@ -401,7 +393,8 @@ public class TestEmbeddedServer {
 		mmd1.setSchemaText("create view v as select 1; " +
 				"create virtual procedure proc () options (updatecount 2) as begin select * from v; end; " +
 				"create virtual procedure proc1 () as begin atomic select * from v; end; " +
-				"create virtual procedure proc2 (x integer) as begin atomic select 1; begin select 1/x; end exception e end;");
+				"create virtual procedure proc2 (x integer) as begin atomic select 1; begin select 1/x; end exception e end; " +
+				"create virtual procedure proc3 (x integer) as begin begin atomic select 1; end create local temporary table x (y string); begin atomic select 1; end end;");
 
 		es.deployVDB("test", mmd1);
 		
@@ -454,6 +447,16 @@ public class TestEmbeddedServer {
 		}
 		txn = tm.txnHistory.remove(0);
 		Mockito.verify(txn, Mockito.times(0)).commit();
+		
+		tm.commit();
+		c.setAutoCommit(true);
+		
+		tm.txnHistory.clear();
+		//ensure that we properly reset the txn context
+		s.execute("call proc3(0)");
+		assertEquals(2, tm.txnHistory.size());
+		txn = tm.txnHistory.remove(0);
+		Mockito.verify(txn, Mockito.times(0)).registerSynchronization((Synchronization) Mockito.any());
 	}
 	
 	@Test public void testMultiSourcePreparedDynamicUpdate() throws Exception {

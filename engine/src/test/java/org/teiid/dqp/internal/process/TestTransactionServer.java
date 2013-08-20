@@ -369,6 +369,7 @@ public class TestTransactionServer {
     	TransactionContext tc = server.getOrCreateTransactionContext(THREAD1);
     	server.begin(tc);
     	server.commit(tc);
+    	assertEquals(TransactionContext.Scope.NONE, tc.getTransactionType());
     	Mockito.verify(tm).commit();
     }
     
@@ -377,6 +378,7 @@ public class TestTransactionServer {
     	server.begin(tc);
     	
     	server.rollback(tc);
+    	assertEquals(TransactionContext.Scope.NONE, tc.getTransactionType());
     	Mockito.verify(tm).rollback();
     }     
     

@@ -528,6 +528,7 @@ public class TransactionServerImpl implements TransactionService {
         }
         beginDirect(context);
         context.setTransactionType(TransactionContext.Scope.REQUEST);
+        this.transactions.addTransactionContext(context); //it may have been removed if this is a block level operation
     }
 
     /**
@@ -535,7 +536,12 @@ public class TransactionServerImpl implements TransactionService {
      */    
     public void commit(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
-        commitDirect(context);
+        try {
+        	commitDirect(context);
+        } finally {
+        	context.setTransaction(null);
+        	context.setTransactionType(Scope.NONE);
+        }
     }
 
     /**
@@ -543,7 +549,12 @@ public class TransactionServerImpl implements TransactionService {
      */    
     public void rollback(TransactionContext context) throws XATransactionException {
         Assertion.assertTrue(context.getTransactionType() == TransactionContext.Scope.REQUEST);
-        rollbackDirect(context);
+        try {
+            rollbackDirect(context);
+        } finally {
+        	context.setTransaction(null);
+        	context.setTransactionType(Scope.NONE);
+        }
     }
 
     public void cancelTransactions(String threadId, boolean requestOnly) throws XATransactionException {
