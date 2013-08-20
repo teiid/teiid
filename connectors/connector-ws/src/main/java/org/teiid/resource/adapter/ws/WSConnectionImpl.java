@@ -37,7 +37,7 @@ import java.util.concurrent.Future;
 import javax.activation.DataSource;
 import javax.resource.ResourceException;
 import javax.security.auth.Subject;
-import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response.Status;
 import javax.xml.namespace.QName;
 import javax.xml.ws.AsyncHandler;
 import javax.xml.ws.Binding;
@@ -158,22 +158,14 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 				}
 				
 				javax.ws.rs.core.Response response = this.client.invoke((String)this.requestContext.get(MessageContext.HTTP_REQUEST_METHOD), payload);
-				readResponseHeaders(response);
+				this.responseContext.put(WSConnection.STATUS_CODE, response.getStatus());
+				this.responseContext.putAll(response.getMetadata());
 
 				ArrayList contentTypes = (ArrayList)this.responseContext.get("content-type"); //$NON-NLS-1$
 				return new HttpDataSource(url, (InputStream)response.getEntity(), (String)contentTypes.get(0));
 			} catch (IOException e) {
 				throw new WebServiceException(e);
 			}
-		}
-
-		private void readResponseHeaders(javax.ws.rs.core.Response response) {
-			MultivaluedMap<String,Object> headers = response.getMetadata();
-			for (String key:headers.keySet()) {
-				this.responseContext.put(key, headers.get(key));
-			}
-			this.responseContext.put("status-code", response.getStatus()); //$NON-NLS-1$
-			this.responseContext.put("status-message", javax.ws.rs.core.Response.status(response.getStatus()).build().getEntity()); //$NON-NLS-1$
 		}
 
 		@Override
@@ -402,5 +394,14 @@ public class WSConnectionImpl extends BasicConnection implements WSConnection {
 	@Override
 	public QName getPortQName() {
 		return this.mcf.getPortQName();
+	}
+	
+	@Override
+	public String getStatusMessage(int status) {
+		Status s = javax.ws.rs.core.Response.Status.fromStatusCode(status);
+		if (s != null) {
+			return s.getReasonPhrase();
+		}
+		return null;
 	}
 }

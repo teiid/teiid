@@ -24,6 +24,7 @@ package org.teiid.translator.odata;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.Charset;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import org.teiid.language.Call;
 import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -184,8 +186,8 @@ public class BaseQueryExecution {
 		try {
 			Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 			FormatParser<OError> parser = FormatParserFactory.getParser(OError.class, FormatType.ATOM, null);
-			OError error = parser.parse(new InputStreamReader(blob.getBinaryStream()));
-			return new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17013, error.getCode(), error.getMessage()));
+			OError error = parser.parse(new InputStreamReader(blob.getBinaryStream(), Charset.forName("UTF-8"))); //$NON-NLS-1$
+			return new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17013, execution.getResponseCode(), error.getCode(), error.getMessage()));
 		}
 		catch (Throwable t) {
 			return new TranslatorException(t);
@@ -193,9 +195,11 @@ public class BaseQueryExecution {
 	}
 
 	protected BinaryWSProcedureExecution executeDirect(String method, String uri, String payload, Map<String, List<String>> headers) throws TranslatorException {
-		try {
-			LogManager.logDetail(LogConstants.CTX_ODATA, "Source-URL=", URLDecoder.decode(uri, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
-		} catch (UnsupportedEncodingException e) {
+		if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL)) {
+			try {
+				LogManager.logDetail(LogConstants.CTX_ODATA, "Source-URL=", URLDecoder.decode(uri, "UTF-8")); //$NON-NLS-1$ //$NON-NLS-2$
+			} catch (UnsupportedEncodingException e) {
+			}
 		}
 
 		List<Argument> parameters = new ArrayList<Argument>();

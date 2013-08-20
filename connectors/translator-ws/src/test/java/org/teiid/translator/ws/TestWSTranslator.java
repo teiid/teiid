@@ -27,7 +27,9 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.activation.DataSource;
@@ -66,7 +68,7 @@ public class TestWSTranslator {
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
-		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
+		Dispatch<Object> mockDispatch = mockDispatch();
 		Mockito.stub(mockDispatch.invoke(Mockito.any(DataSource.class))).toReturn(Mockito.mock(DataSource.class));
 		Mockito.stub(mockConnection.createDispatch(Mockito.any(String.class), Mockito.any(String.class), Mockito.any(Class.class), Mockito.any(Service.Mode.class))).toReturn(mockDispatch);
 		CommandBuilder cb = new CommandBuilder(tm);
@@ -96,7 +98,7 @@ public class TestWSTranslator {
 		TransformationMetadata tm = RealMetadataFactory.createTransformationMetadata(mf.asMetadataStore(), "vdb");
 		RuntimeMetadataImpl rm = new RuntimeMetadataImpl(tm);
 		WSConnection mockConnection = Mockito.mock(WSConnection.class);
-		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
+		Dispatch<Object> mockDispatch = mockDispatch();
 		DataSource mock = Mockito.mock(DataSource.class);
 		ByteArrayInputStream baos = new ByteArrayInputStream(new byte[100]);
 		Mockito.stub(mock.getInputStream()).toReturn(baos);
@@ -117,6 +119,14 @@ public class TestWSTranslator {
 		} catch (SQLException e) {
 			//should only be able to read once
 		}
+	}
+
+	private Dispatch<Object> mockDispatch() {
+		Dispatch<Object> mockDispatch = Mockito.mock(Dispatch.class);
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put(WSConnection.STATUS_CODE, 200);
+		Mockito.stub(mockDispatch.getResponseContext()).toReturn(map);
+		return mockDispatch;
 	}
 	
 }
