@@ -525,7 +525,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         throws TeiidComponentException, TeiidProcessingException {
     	
         CursorState state = this.cursorStates.get(rsName);
-        if (state == null) {
+        if (state == null || rsName == null) {
         	if (this.currentState != null && this.currentState.processor.getProcessorPlan() != command) {
         		//sanity check for non-deterministic paths
         		removeState(this.currentState);

@@ -873,6 +873,49 @@ public class TestProcedureProcessor {
         helpTestProcess(plan, expected, dataMgr, metadata);
     }
     
+    @Test public void testMultipleReturnable() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "SELECT e1, e2 FROM pm1.g1; select e1, e2 from pm1.g2; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+
+        String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[0]);
+        dataMgr.addData("SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2", new List<?>[] {Arrays.asList("a", 1)});
+
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+                
+        List[] expected = new List<?>[] {Arrays.asList("a", 1)};
+        helpTestProcess(plan, expected, dataMgr, metadata);
+        assertEquals(6, dataMgr.getCommandHistory().size());
+    }
+    
+    /**
+     * Should return the first results
+     */
+    @Test public void testReturnable1() throws Exception {
+        TransformationMetadata metadata = RealMetadataFactory.example1();
+        
+        addProc(metadata, "sq2", "CREATE VIRTUAL PROCEDURE BEGIN\n" //$NON-NLS-1$ //$NON-NLS-2$
+				        + "SELECT e1, e2 FROM pm1.g1; select e1, e2 from pm1.g2 without return; END", new String[] { "e1", "e2" }
+        , new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER }, new String[] {"in"}, new String[] {DataTypeManager.DefaultDataTypes.STRING});
+
+        String userUpdateStr = "EXEC pm1.sq2('First')"; //$NON-NLS-1$
+        
+        HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", new List<?>[0]);
+        dataMgr.addData("SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2", new List<?>[] {Arrays.asList("a", 1)});
+
+        ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+                
+        List[] expected = new List<?>[0];
+        helpTestProcess(plan, expected, dataMgr, metadata);
+        assertEquals(6, dataMgr.getCommandHistory().size());
+    }
+    
     @Test public void testDynamicCommandWithUsing() throws Exception {
         TransformationMetadata metadata = RealMetadataFactory.example1();
         
