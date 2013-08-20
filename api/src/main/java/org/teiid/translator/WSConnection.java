@@ -38,6 +38,8 @@ import javax.xml.ws.Service;
  * Simple {@link Connection} interface for web services
  */
 public interface WSConnection extends Connection {
+	
+	public static final String STATUS_CODE = "status-code"; //$NON-NLS-1$
 
 	<T> Dispatch<T> createDispatch(String binding, String endpoint, Class<T> type, Service.Mode mode);
 	
@@ -84,5 +86,7 @@ public interface WSConnection extends Connection {
 		}
 		
 	}
+
+	String getStatusMessage(int status);
 	
 }

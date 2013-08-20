@@ -86,7 +86,6 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     Map<String, List<String>> customHeaders = new HashMap<String, List<String>>();
     Map<String, Object> responseContext = Collections.emptyMap();
     int responseCode = 200;
-    String responseMessage;
     private boolean useResponseContext;
     private boolean alwaysAllowPayloads;
 
@@ -145,19 +144,23 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 			}
 
 			this.returnValue = dispatch.invoke(ds);
+			
+			Map<String, Object> rc = dispatch.getResponseContext();
+			this.responseCode = (Integer)rc.get(WSConnection.STATUS_CODE);
 			if (this.useResponseContext) {
-				this.responseContext = dispatch.getResponseContext();
-				buildResposeCode();
+				//it's presumed that the caller will handle the response codes
+				this.responseContext = rc;
+			} else {
+				//TODO: may need to add logic around some 200/300 codes - cxf should at least be logging this
+				if (this.responseCode >= 400) {
+		    		String message = conn.getStatusMessage(this.responseCode);
+		    		throw new TranslatorException(WSExecutionFactory.Event.TEIID15005, WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15005, this.responseCode, message));
+				}
 			}
 		} catch (WebServiceException e) {
 			throw new TranslatorException(e);
 		}
     }
-
-    private void buildResposeCode() {
-    	this.responseCode = (Integer)this.responseContext.get("status-code"); //$NON-NLS-1$
-    	this.responseMessage = (String)this.responseContext.get("status-message");//$NON-NLS-1$
-	}
 
 	@Override
     public List<?> next() throws TranslatorException, DataNotAvailableException {
@@ -197,7 +200,4 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
     	return this.responseCode;
     }
 
-    public String getResponseMessage() {
-    	return this.responseMessage;
-    }
 }
