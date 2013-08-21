@@ -628,6 +628,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
         	this.currentVarContext = this.currentVarContext.getParentContext();
         }
     	program.getTempTableStore().removeTempTables();
+    	this.getContext().setTempTableStore(getTempTableStore());
     	if (success != null && program.startedTxn() && this.blockContext != null) {
     		TransactionService ts = this.getContext().getTransactionServer();
     		TransactionContext tc = this.blockContext;
