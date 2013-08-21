@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -518,7 +519,33 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	
         	@Override
         	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent) {
-        		return parent.getProperties().entrySet();
+        		ConcurrentSkipListMap props = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+        		props.putAll(parent.getProperties());
+        		if (parent instanceof Table) {
+        			Table table = (Table)parent;
+        			if (table.isMaterialized() && table.getMaterializedTable() != null) {
+        				props.put("MATERIALIZED_TABLE", table.getMaterializedTable().getName()); //$NON-NLS-1$
+        			}
+        			if (table.isVirtual()) {
+        				props.put("SELECT_PLAN", table.getSelectTransformation()); //$NON-NLS-1$
+        				if (table.isInsertPlanEnabled() && table.getInsertPlan() != null) {
+        					props.put("INSERT_PLAN", table.getInsertPlan()); //$NON-NLS-1$
+        				}
+        				if (table.isUpdatePlanEnabled() && table.getUpdatePlan() != null) {
+        					props.put("UPDATE_PLAN", table.getUpdatePlan()); //$NON-NLS-1$
+        				}
+        				if (table.isDeletePlanEnabled() && table.getDeletePlan() != null) {
+        					props.put("DELETE_PLAN", table.getDeletePlan()); //$NON-NLS-1$
+        				}
+        			}
+        		}
+        		if (parent instanceof Procedure) {
+        			Procedure proc = (Procedure)parent;
+        			if (proc.getUpdateCount() > 0) {
+        				props.put("UPDATE_COUNT", String.valueOf(proc.getUpdateCount())); //$NON-NLS-1$
+        			}
+        		}
+        		return props.entrySet();
         	}
 		});
         name = SystemTables.COLUMNS.name();

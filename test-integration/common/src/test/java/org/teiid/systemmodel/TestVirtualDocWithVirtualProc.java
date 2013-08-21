@@ -63,7 +63,8 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     	this.internalConnection = server.createConnection("jdbc:teiid:" + VDB); //$NON-NLS-1$ //$NON-NLS-2$	    	
     }
     
-    @After public void tearDown() {
+    @Override
+	@After public void tearDown() {
     	closeConnection();
     }
     
@@ -104,7 +105,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     @Test public void testPropertyJoin() throws Exception {
     	String sql = "select * from sys.tables c left outer JOIN sys.Properties p ON p.UID=c.UID where c.name = 'yyyTestDocument' and schemaName='testDoc'"; //$NON-NLS-1$
     	execute(sql);
-    	assertRowCount(2);
+    	assertRowCount(3);
     }
 
 }

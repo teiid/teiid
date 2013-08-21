@@ -253,6 +253,7 @@ public class VDBRepository implements Serializable{
 	}
 
 	private VDBMetaData removeVDB(VDBKey key) {
+		notifyBeforeRemove(key.getName(), key.getVersion(), this.vdbRepo.get(key));
 		this.pendingDeployments.remove(key);
 		CompositeVDB removed = this.vdbRepo.remove(key);
 		if (removed == null) {
@@ -371,6 +372,13 @@ public class VDBRepository implements Serializable{
 			l.removed(name, version, vdb);
 		}
 	}
+	
+	private void notifyBeforeRemove(String name, int version, CompositeVDB vdb) {
+		for(VDBLifeCycleListener l:this.listeners) {
+			l.beforeRemove(name, version, vdb);
+		}
+	}
+	
 	
 	public void setSystemFunctionManager(SystemFunctionManager mgr) {
 		this.systemFunctionManager = mgr;

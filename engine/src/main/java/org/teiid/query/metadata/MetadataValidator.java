@@ -48,6 +48,7 @@ import org.teiid.query.report.ReportItem;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.resolver.util.ResolverUtil;
 import org.teiid.query.resolver.util.ResolverVisitor;
+import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
@@ -187,6 +188,7 @@ public class MetadataValidator {
 				}
 				ModelMetaData model = vdb.getModel(schema.getName());
 				MetadataFactory mf = new MetadataFactory(vdb.getName(), vdb.getVersion(), metadataValidator.typeMap, model) {
+					@Override
 					protected void setUUID(AbstractMetadataRecord record) {
 						if (count >= 0) {
 							count = Integer.MIN_VALUE;
@@ -257,7 +259,7 @@ public class MetadataValidator {
     			Table t = (Table)record;
     			
     			GroupSymbol symbol = new GroupSymbol(t.getFullName());
-    			ResolverUtil.resolveGroup(symbol, metadata);
+    			ResolverUtil.resolveGroup(symbol, metadata);    			
     			if (t.isVirtual() && (t.getColumns() == null || t.getColumns().isEmpty())) {
     				QueryCommand command = (QueryCommand)QueryParser.getQueryParser().parseCommand(t.getSelectTransformation());
     				QueryResolver.resolveCommand(command, metadata);
@@ -274,6 +276,7 @@ public class MetadataValidator {
     				}
     			}
     			
+    			boolean addCacheHint = false;
     			if (t.isMaterialized() && t.getMaterializedTable() == null) {
 	    			List<KeyRecord> fbis = t.getFunctionBasedIndexes();
 	    			List<GroupSymbol> groups = Arrays.asList(symbol);
@@ -303,9 +306,18 @@ public class MetadataValidator {
 						}
 					}
     			}
+    			else {
+    				addCacheHint = true;
+    			}
     			
     			// this seems to parse, resolve and validate.
-    			QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
+    			QueryNode node = QueryResolver.resolveView(symbol, new QueryNode(t.getSelectTransformation()), SQLConstants.Reserved.SELECT, metadata);
+    			CacheHint cacheHint = node.getCommand().getCacheHint();
+				Long ttl = -1L;
+				if (cacheHint != null && cacheHint.getTtl() != null && addCacheHint) {
+					ttl = cacheHint.getTtl();
+					t.setProperty("{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL", String.valueOf(ttl)); //$NON-NLS-1$
+				}
     		}
 			if(resolverReport != null && resolverReport.hasItems()) {
 				for (ValidatorFailure v:resolverReport.getItems()) {

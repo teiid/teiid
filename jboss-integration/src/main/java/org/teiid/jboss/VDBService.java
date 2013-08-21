@@ -142,7 +142,9 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			@Override
 			public void added(String name, int version, CompositeVDB cvdb) {
 			}
-
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+			}
 			@Override
 			public void removed(String name, int version, CompositeVDB cvdb) {
 			}
@@ -161,7 +163,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 
 					vdbInstance.addAttchment(GlobalTableStore.class, gts);
 					vdbService.install();
-				}
+				}				
 			}
 		};
 		
@@ -232,6 +234,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			}			
 		};
 		return new RuntimeVDB(vdbMetadata, modificationListener) {
+			@Override
 			protected VDBStatusChecker getVDBStatusChecker() {
 				return VDBService.this.vdbStatusCheckInjector.getValue();
 			}
@@ -266,6 +269,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         if (switchSvc != null) {
             switchSvc.setMode(ServiceController.Mode.REMOVE);
         }
+                
 		// stop object replication
 		if (this.objectReplicatorInjector.getValue() != null) {
 			GlobalTableStore gts = vdb.getAttachment(GlobalTableStore.class);
@@ -470,6 +474,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		getSerializer().removeAttachment(cachedFile);
 	}
 
+	@Override
 	protected VDBRepository getVDBRepository() {
 		return vdbRepositoryInjector.getValue();
 	}
@@ -532,5 +537,4 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
         }
 		return null;
 	}	
-
 }

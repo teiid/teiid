@@ -22,7 +22,10 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -93,7 +96,9 @@ public class TestProcedureProcessor {
 
         AnalysisRecord analysisRecord = new AnalysisRecord(false, DEBUG);
         try {
-        	if ( capabilitiesFinder == null ) capabilitiesFinder = new DefaultCapabilitiesFinder();
+        	if ( capabilitiesFinder == null ) {
+				capabilitiesFinder = new DefaultCapabilitiesFinder();
+			}
         	ProcessorPlan plan = QueryOptimizer.optimizePlan(userCommand, metadata, null, capabilitiesFinder, analysisRecord, null);
 
             return plan;
@@ -803,7 +808,7 @@ public class TestProcedureProcessor {
             };           
         helpTestProcess(plan, expected, dataMgr, metadata);
       }
-
+    
 	private void addProc(TransformationMetadata metadata, String query) {
 		addProc(metadata, "sq2", query, new String[] { "e1" }, new String[] { DataTypeManager.DefaultDataTypes.STRING }, new String[0], new String[0]);
 	}

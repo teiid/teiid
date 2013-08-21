@@ -132,6 +132,7 @@ public class RelationalPlanner {
 			return HashCodeUtil.hashCode(group.getMetadataID().hashCode(), command.getType());
 		}
 		
+		@Override
 		public boolean equals(Object obj) {
 			if (obj == this) {
 				return true;
@@ -151,6 +152,7 @@ public class RelationalPlanner {
 	}
 	
 	private static ThreadLocal<HashSet<PlanningStackEntry>> planningStack = new ThreadLocal<HashSet<PlanningStackEntry>>() {
+		@Override
 		protected HashSet<PlanningStackEntry> initialValue() {
 			return new LinkedHashSet<PlanningStackEntry>();
 		}
@@ -192,7 +194,7 @@ public class RelationalPlanner {
 	        		}
 	                RelationalPlan plan = optimize(subCommand);
 	                subCommand.setProcessorPlan(plan);
-	                RelationalPlan procPlan = (RelationalPlan) plan;
+	                RelationalPlan procPlan = plan;
 	                RelationalNode root = procPlan.getRootNode();
 	                Number planCardinality = root.getEstimateNodeCardinality();
 	                if (planCardinality != null) {
@@ -1572,6 +1574,7 @@ public class RelationalPlanner {
         		for (ElementSymbol el : ResolverUtil.resolveElementsInGroup(virtualGroup, metadata)) {
         			symbols.add(new ElementSymbol(el.getShortName()));
         		}
+
         		Query query = createMatViewQuery(matMetadataId, matTableName, symbols, isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);
@@ -1596,7 +1599,7 @@ public class RelationalPlanner {
 		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
 		return query;
 	}
-
+	
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,
                                           Object metadataID,
                                           Option option) throws QueryMetadataException,

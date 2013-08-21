@@ -50,6 +50,7 @@ public class TeiidServiceNames {
 	public static ServiceName EVENT_DISTRIBUTOR_FACTORY = ServiceName.JBOSS.append("teiid", "event-distributor-factory");//$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName RESULTSET_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-rs-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
 	public static ServiceName PREPAREDPLAN_CACHE_FACTORY = ServiceName.JBOSS.append("teiid", "infinispan-pp-cache-factory"); //$NON-NLS-1$ //$NON-NLS-2$
+	public static ServiceName MATVIEW_SERVICE = ServiceName.JBOSS.append("teiid", "matview-service"); //$NON-NLS-1$ //$NON-NLS-2$
 	
 	public static class InvalidServiceNameException extends TeiidException {
 

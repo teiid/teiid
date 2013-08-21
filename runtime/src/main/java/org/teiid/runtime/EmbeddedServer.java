@@ -223,6 +223,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	protected TransactionServerImpl transactionService = new TransactionServerImpl();
 	protected boolean waitForLoad;
 	protected ClientServiceRegistryImpl services = new ClientServiceRegistryImpl() {
+		@Override
 		public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
 			if (waitForLoad) {
 				repo.waitForFinished(vdbName, vdbVersion, timeOutMillis);
@@ -395,6 +396,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				
 				vdb.getVDB().addAttchment(GlobalTableStore.class, gts);
 			}
+
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB vdb) {
+			}
 		});
 		this.repo.setSystemFunctionManager(new SystemFunctionManager());
 		this.repo.start();
@@ -454,6 +459,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	 * @see {@link #addTranslator(String, ExecutionFactory)} or {@link #addTranslator(Class)}
 	 * if the translator has overrides or multiple translators of a given type are needed.
 	 */
+	@Deprecated
 	public void addTranslator(ExecutionFactory<?, ?> ef) {
 		Translator t = ef.getClass().getAnnotation(Translator.class);
 		String name = ef.getClass().getName();
