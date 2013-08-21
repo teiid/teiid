@@ -78,6 +78,9 @@ public abstract class EventDistributorImpl implements EventDistributor {
 					el.vdbDeployed(name, version);
 				}
 			}
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB vdb) {
+			}			
 		});
 	}
 	

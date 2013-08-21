@@ -135,8 +135,12 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 			}			
+			
+			@Override
+			public void beforeRemove(String name, int version, CompositeVDB cvdb) {
+			}
 		}); 		
 
     	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50001, this.dqpCore.getRuntimeVersion(), new Date(System.currentTimeMillis()).toString()));

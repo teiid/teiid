@@ -21,7 +21,12 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -153,6 +158,137 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
         }
         return transports;
 	}
+	
+	public static ModelNode executeQuery(final VDBMetaData vdb,  final DQPCore engine, final String command, final long timoutInMilli, final ModelNode resultsNode, final boolean timeAsString) throws OperationFailedException {
+		String user = "CLI ADMIN"; //$NON-NLS-1$
+		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
+
+        final SessionMetadata session = TempTableDataManager.createTemporarySession(user, "admin-console", vdb); //$NON-NLS-1$
+
+		final long requestID =  0L;
+
+		DQPWorkContext workContext = new DQPWorkContext();
+		workContext.setUseCallingThread(true);
+		workContext.setSession(session);
+
+		try {
+			return workContext.runInContext(new Callable<ModelNode>() {
+				@Override
+				public ModelNode call() throws Exception {
+
+					long start = System.currentTimeMillis();
+					RequestMessage request = new RequestMessage(command);
+					request.setExecutionId(requestID);
+					request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
+					Future<ResultsMessage> message = engine.executeRequest(requestID, request);
+					ResultsMessage rm = null;
+					if (timoutInMilli < 0) {
+						rm = message.get();
+					} else {
+						rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
+					}
+			        if (rm.getException() != null) {
+			             throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50047, rm.getException());
+			        }
+
+			        if (rm.isUpdateResult()) {
+			        	writeResults(resultsNode, Arrays.asList("update-count"), rm.getResultsList(), timeAsString); //$NON-NLS-1$
+			        }
+			        else {
+			        	writeResults(resultsNode, Arrays.asList(rm.getColumnNames()), rm.getResultsList(), timeAsString);
+
+				        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
+				        	long elapsed = System.currentTimeMillis() - start;
+							message = engine.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
+							rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+							writeResults(resultsNode, Arrays.asList(rm.getColumnNames()), rm.getResultsList(), timeAsString);
+				        }
+			        }
+
+			        long elapsed = System.currentTimeMillis() - start;
+			        ResultsFuture<?> response = engine.closeRequest(requestID);
+			        response.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
+					return resultsNode;
+				}
+			});
+		} catch (Throwable t) {
+			throw new OperationFailedException(new ModelNode().set(t.getMessage()));
+		} finally {
+			try {
+				workContext.runInContext(new Callable<Void>() {
+					@Override
+					public Void call() throws Exception {
+						engine.terminateSession(session.getSessionId());
+						return null;
+					}
+				});
+			} catch (Throwable e) {
+				throw new OperationFailedException(new ModelNode().set(e.getMessage()));
+			}
+		}
+	}
+
+	private static void writeResults(ModelNode resultsNode, List<String> columns,  List<? extends List<?>> results, boolean timeAsString) throws SQLException {
+		for (List<?> row:results) {
+			ModelNode rowNode = new ModelNode();
+
+			for (int colNum = 0; colNum < columns.size(); colNum++) {
+
+				Object aValue = row.get(colNum);
+				if (aValue != null) {
+					if (aValue instanceof Integer) {
+						rowNode.get(columns.get(colNum)).set((Integer)aValue);
+					}
+					else if (aValue instanceof Long) {
+						rowNode.get(columns.get(colNum)).set((Long)aValue);
+					}
+					else if (aValue instanceof Double) {
+						rowNode.get(columns.get(colNum)).set((Double)aValue);
+					}
+					else if (aValue instanceof Boolean) {
+						rowNode.get(columns.get(colNum)).set((Boolean)aValue);
+					}
+					else if (aValue instanceof BigInteger) {
+						rowNode.get(columns.get(colNum)).set((BigInteger)aValue);
+					}
+					else if (aValue instanceof BigDecimal) {
+						rowNode.get(columns.get(colNum)).set((BigDecimal)aValue);
+					}
+					else if (aValue instanceof java.sql.Timestamp && !timeAsString) {
+						rowNode.get(columns.get(colNum)).set(((java.sql.Timestamp)aValue).getTime());
+					}
+					else if (aValue instanceof java.sql.Date && !timeAsString) {
+						rowNode.get(columns.get(colNum)).set(((java.sql.Date)aValue).getTime());
+					}	
+					else if (aValue instanceof java.sql.Time && !timeAsString) {
+						rowNode.get(columns.get(colNum)).set(((java.sql.Time)aValue).getTime());
+					}					
+					else if (aValue instanceof String) {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
+						rowNode.get(columns.get(colNum)).set((String)aValue);
+					}
+					else if (aValue instanceof Blob) {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.OBJECT);
+						rowNode.get(columns.get(colNum)).set("blob"); //$NON-NLS-1$
+					}
+					else if (aValue instanceof Clob) {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.OBJECT);
+						rowNode.get(columns.get(colNum)).set("clob"); //$NON-NLS-1$
+					}
+					else if (aValue instanceof SQLXML) {
+						SQLXML xml = (SQLXML)aValue;
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
+						rowNode.get(columns.get(colNum)).set(xml.getString());
+					}
+					else {
+						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
+						rowNode.get(columns.get(colNum)).set(aValue.toString());
+					}
+				}
+			}
+			resultsNode.add(rowNode);
+		}
+	}	
 }
 
 abstract class TranslatorOperationHandler extends BaseOperationHandler<TranslatorRepository> {
@@ -730,7 +866,12 @@ class ExecuteQuery extends TeiidOperationHandler{
 			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50096, vdbName, vdbVersion)));
 		}
 
-		result.set(executeQuery(context, engine, vdbName, vdbVersion, sql, timeout, new ModelNode()));
+        VDBMetaData vdb = getVDBrepository(context).getLiveVDB(vdbName, vdbVersion);
+        if (vdb == null) {
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("wrong_vdb")));//$NON-NLS-1$
+        }
+		
+		result.set(executeQuery(vdb, engine, sql, timeout, new ModelNode(), true));
 	}
 
 	@Override
@@ -743,133 +884,6 @@ class ExecuteQuery extends TeiidOperationHandler{
 		builder.setReplyType(ModelType.LIST);
 		builder.setReplyValueType(ModelType.STRING);
 	}
-
-	public ModelNode executeQuery(final OperationContext context,  final DQPCore engine, final String vdbName, final int version, final String command, final long timoutInMilli, final ModelNode resultsNode) throws OperationFailedException {
-		String user = "CLI ADMIN"; //$NON-NLS-1$
-		LogManager.logDetail(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.getString("admin_executing", user, command)); //$NON-NLS-1$
-
-        VDBMetaData vdb = getVDBrepository(context).getLiveVDB(vdbName, version);
-        if (vdb == null) {
-        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString("wrong_vdb")));//$NON-NLS-1$
-        }
-        final SessionMetadata session = TempTableDataManager.createTemporarySession(user, "admin-console", vdb); //$NON-NLS-1$
-
-		final long requestID =  0L;
-
-		DQPWorkContext workContext = new DQPWorkContext();
-		workContext.setUseCallingThread(true);
-		workContext.setSession(session);
-
-		try {
-			return workContext.runInContext(new Callable<ModelNode>() {
-				@Override
-				public ModelNode call() throws Exception {
-
-					long start = System.currentTimeMillis();
-					RequestMessage request = new RequestMessage(command);
-					request.setExecutionId(requestID);
-					request.setRowLimit(engine.getMaxRowsFetchSize()); // this would limit the number of rows that are returned.
-					Future<ResultsMessage> message = engine.executeRequest(requestID, request);
-					ResultsMessage rm = null;
-					if (timoutInMilli < 0) {
-						rm = message.get();
-					} else {
-						rm = message.get(timoutInMilli, TimeUnit.MILLISECONDS);
-					}
-			        if (rm.getException() != null) {
-			             throw new AdminProcessingException(IntegrationPlugin.Event.TEIID50047, rm.getException());
-			        }
-
-			        if (rm.isUpdateResult()) {
-			        	writeResults(resultsNode, Arrays.asList("update-count"), rm.getResultsList()); //$NON-NLS-1$
-			        }
-			        else {
-			        	writeResults(resultsNode, Arrays.asList(rm.getColumnNames()), rm.getResultsList());
-
-				        while (rm.getFinalRow() == -1 || rm.getLastRow() < rm.getFinalRow()) {
-				        	long elapsed = System.currentTimeMillis() - start;
-							message = engine.processCursorRequest(requestID, rm.getLastRow()+1, 1024);
-							rm = message.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
-							writeResults(resultsNode, Arrays.asList(rm.getColumnNames()), rm.getResultsList());
-				        }
-			        }
-
-			        long elapsed = System.currentTimeMillis() - start;
-			        ResultsFuture<?> response = engine.closeRequest(requestID);
-			        response.get(timoutInMilli-elapsed, TimeUnit.MILLISECONDS);
-					return resultsNode;
-				}
-			});
-		} catch (Throwable t) {
-			throw new OperationFailedException(new ModelNode().set(t.getMessage()));
-		} finally {
-			try {
-				workContext.runInContext(new Callable<Void>() {
-					@Override
-					public Void call() throws Exception {
-						engine.terminateSession(session.getSessionId());
-						return null;
-					}
-				});
-			} catch (Throwable e) {
-				throw new OperationFailedException(new ModelNode().set(e.getMessage()));
-			}
-		}
-	}
-
-	private void writeResults(ModelNode resultsNode, List<String> columns,  List<? extends List<?>> results) throws SQLException {
-		for (List<?> row:results) {
-			ModelNode rowNode = new ModelNode();
-
-			for (int colNum = 0; colNum < columns.size(); colNum++) {
-
-				Object aValue = row.get(colNum);
-				if (aValue != null) {
-					if (aValue instanceof Integer) {
-						rowNode.get(columns.get(colNum)).set((Integer)aValue);
-					}
-					else if (aValue instanceof Long) {
-						rowNode.get(columns.get(colNum)).set((Long)aValue);
-					}
-					else if (aValue instanceof Double) {
-						rowNode.get(columns.get(colNum)).set((Double)aValue);
-					}
-					else if (aValue instanceof Boolean) {
-						rowNode.get(columns.get(colNum)).set((Boolean)aValue);
-					}
-					else if (aValue instanceof BigInteger) {
-						rowNode.get(columns.get(colNum)).set((BigInteger)aValue);
-					}
-					else if (aValue instanceof BigDecimal) {
-						rowNode.get(columns.get(colNum)).set((BigDecimal)aValue);
-					}
-					else if (aValue instanceof String) {
-						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
-						rowNode.get(columns.get(colNum)).set((String)aValue);
-					}
-					else if (aValue instanceof Blob) {
-						rowNode.get(columns.get(colNum), TYPE).set(ModelType.OBJECT);
-						rowNode.get(columns.get(colNum)).set("blob"); //$NON-NLS-1$
-					}
-					else if (aValue instanceof Clob) {
-						rowNode.get(columns.get(colNum), TYPE).set(ModelType.OBJECT);
-						rowNode.get(columns.get(colNum)).set("clob"); //$NON-NLS-1$
-					}
-					else if (aValue instanceof SQLXML) {
-						SQLXML xml = (SQLXML)aValue;
-						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
-						rowNode.get(columns.get(colNum)).set(xml.getString());
-					}
-					else {
-						rowNode.get(columns.get(colNum), TYPE).set(ModelType.STRING);
-						rowNode.get(columns.get(colNum)).set(aValue.toString());
-					}
-				}
-			}
-			resultsNode.add(rowNode);
-		}
-	}
-
 }
 
 class GetVDB extends BaseOperationHandler<VDBRepository>{
