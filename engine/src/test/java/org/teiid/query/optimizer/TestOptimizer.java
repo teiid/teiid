@@ -2655,11 +2655,8 @@ public class TestOptimizer {
      * See also case 2912.
      */
     @Test public void testCopyCriteriaWithOuterJoin5_defect10050(){
-        
-        ProcessorPlan plan = helpPlan(
-            "select pm2.g1.e1, pm2.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm2.g2 on pm2.g1.e1=pm2.g2.e1) right outer join pm2.g3 on pm2.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
-            new String[] { "SELECT g_2.e1, g_1.e1, g_0.e1 FROM pm2.g3 AS g_0 LEFT OUTER JOIN (pm2.g2 AS g_1 LEFT OUTER JOIN pm2.g1 AS g_2 ON g_2.e1 = g_1.e1 AND g_2.e1 = 'a') ON g_1.e1 = g_0.e1 AND g_1.e1 = 'a' WHERE g_0.e1 = 'a'" }); //$NON-NLS-1$
-        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    	helpPlan("select pm2.g1.e1, pm1.g2.e1, pm2.g3.e1 from ( (pm2.g1 right outer join pm1.g2 on pm2.g1.e1=pm1.g2.e1) right outer join pm2.g3 on pm1.g2.e1=pm2.g3.e1) where pm2.g3.e1 = 'a'", example1(), //$NON-NLS-1$
+                new String[] { "SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm2.g1 AS g_0 WHERE g_0.e1 = 'a'", "SELECT g_0.e1 FROM pm2.g3 AS g_0 WHERE g_0.e1 = 'a'" }); //$NON-NLS-1$         
     } 
     
     /**
@@ -2680,7 +2677,19 @@ public class TestOptimizer {
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1 right outer join pm2.g2 on pm2.g2.e1=pm2.g1.e1 where pm2.g2.e1 IN ('a', 'b')", example1(), //$NON-NLS-1$
             new String[] { "SELECT pm2.g1.e1, pm2.g2.e1 FROM pm2.g2 LEFT OUTER JOIN pm2.g1 ON pm2.g2.e1 = pm2.g1.e1 AND pm2.g1.e1 IN ('a', 'b') WHERE pm2.g2.e1 IN ('a', 'b')" }); //$NON-NLS-1$
         checkNodeTypes(plan, FULL_PUSHDOWN);         
-    }         
+    } 
+    
+    @Test public void testCopyCriteriaWithTransitivePushdown(){
+        ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2, pm2.g3 where pm2.g1.e1 = pm2.g2.e1 and pm2.g2.e1 = pm2.g3.e1", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1, pm2.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 = g_2.e1)" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
+    
+    @Test public void testCopyCriteriaWithTransitivePushdown1(){
+        ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2, pm2.g3 where pm2.g1.e1 = pm2.g2.e1 and pm2.g2.e1 = pm2.g3.e1 and pm2.g1.e1 = 'a'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1, g_1.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1, pm2.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_1.e1 = g_2.e1) AND (g_0.e1 = 'a') AND (g_1.e1 = 'a') AND (g_2.e1 = 'a')" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
     
     @Test public void testCleanCriteria(){
         

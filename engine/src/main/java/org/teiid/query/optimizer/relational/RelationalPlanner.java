@@ -524,9 +524,13 @@ public class RelationalPlanner {
             rules.push(RuleConstants.PUSH_SELECT_CRITERIA);
             rules.push(RuleConstants.PLAN_JOINS);
         }
+        if(hints.hasJoin) {
+            rules.push(RuleConstants.CLEAN_CRITERIA);
+            rules.push(RuleConstants.COPY_CRITERIA);
+        }
         rules.push(RuleConstants.RAISE_ACCESS);
         if (hints.hasFunctionBasedColumns) {
-        	rules.push(RuleConstants.SUBSTITUE_EXPRESSIONS);
+        	rules.push(RuleConstants.SUBSTITUTE_EXPRESSIONS);
         }
         if (hints.hasSetQuery) {
             rules.push(RuleConstants.PLAN_UNIONS);
@@ -537,8 +541,7 @@ public class RelationalPlanner {
             rules.push(RuleConstants.CLEAN_CRITERIA);
         }
         if(hints.hasJoin) {
-            rules.push(RuleConstants.COPY_CRITERIA);
-            rules.push(RuleConstants.PUSH_NON_JOIN_CRITERIA);
+        	rules.push(RuleConstants.PUSH_NON_JOIN_CRITERIA);
         }
         if(hints.hasVirtualGroups) {
             rules.push(RuleConstants.MERGE_VIRTUAL);
