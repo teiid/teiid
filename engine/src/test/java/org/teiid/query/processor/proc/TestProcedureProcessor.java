@@ -2203,6 +2203,34 @@ public class TestProcedureProcessor {
         TransformationMetadata tm = RealMetadataFactory.example1Cached();
         getProcedurePlan(sql, tm);
     }
+    
+    @Test 
+    public void testDynamicCommandWithIntoExpressionInNestedBlock() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.example1();
+		String query = "CREATE VIRTUAL PROCEDURE \n"
+				+ "BEGIN\n"
+				+ "EXECUTE IMMEDIATE 'SELECT e1 FROM pm1.g1 WHERE e1 = ''First''' as x string into #temp;\n"
+				+ "declare string VARIABLES.RESULT = select x from #temp;\n"
+				+ "IF (VARIABLES.RESULT = 'First')\n"
+				+ "  BEGIN ATOMIC\n"
+				+ "  EXECUTE IMMEDIATE 'SELECT e1 FROM pm1.g1' AS x string;"
+				+ "  EXECUTE IMMEDIATE 'SELECT e1 FROM pm1.g1 WHERE e1 = ''Second''' as x string into #temp2 WITHOUT RETURN;\n"
+				+ "  VARIABLES.RESULT = select x from #temp2;\n" + "  END"
+				+ " select VARIABLES.RESULT;" + "END";
+
+		addProc(metadata, query);
+
+		String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
+
+		FakeDataManager dataMgr = exampleDataManager(metadata);
+
+		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+
+		// Create expected results
+		List[] expected = new List[] { Arrays.asList(new Object[] { "Second" }), //$NON-NLS-1$
+		};
+		helpTestProcess(plan, expected, dataMgr, metadata);
+    }
 
     private static final boolean DEBUG = false;
     
