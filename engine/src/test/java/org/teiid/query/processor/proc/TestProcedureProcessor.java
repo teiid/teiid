@@ -2206,9 +2206,8 @@ public class TestProcedureProcessor {
     
     @Test 
     public void testDynamicCommandWithIntoExpressionInNestedBlock() throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.example1();
-		String query = "CREATE VIRTUAL PROCEDURE \n"
-				+ "BEGIN\n"
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		String query = "BEGIN\n"
 				+ "EXECUTE IMMEDIATE 'SELECT e1 FROM pm1.g1 WHERE e1 = ''First''' as x string into #temp;\n"
 				+ "declare string VARIABLES.RESULT = select x from #temp;\n"
 				+ "IF (VARIABLES.RESULT = 'First')\n"
@@ -2218,13 +2217,9 @@ public class TestProcedureProcessor {
 				+ "  VARIABLES.RESULT = select x from #temp2;\n" + "  END"
 				+ " select VARIABLES.RESULT;" + "END";
 
-		addProc(metadata, query);
-
-		String userUpdateStr = "EXEC pm1.sq2()"; //$NON-NLS-1$
-
 		FakeDataManager dataMgr = exampleDataManager(metadata);
 
-		ProcessorPlan plan = getProcedurePlan(userUpdateStr, metadata);
+		ProcessorPlan plan = getProcedurePlan(query, metadata);
 
 		// Create expected results
 		List[] expected = new List[] { Arrays.asList(new Object[] { "Second" }), //$NON-NLS-1$

@@ -322,7 +322,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
 			context.pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
 		} else {
-			context.pushCall(parentProcCommand.getVirtualGroup().toString());
+			if (parentProcCommand.getVirtualGroup() != null) {
+				context.pushCall(parentProcCommand.getVirtualGroup().toString());
+			}
 		}
 	}
 
