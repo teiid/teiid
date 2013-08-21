@@ -133,15 +133,7 @@ public class Constant implements Expression, Comparable<Constant> {
         if(type == null) {
             throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0014")); //$NON-NLS-1$
         }
-        Class<?> originalType = type;
-        while (type.isArray()) {
-        	type = type.getComponentType();
-        }
-        if(! DataTypeManager.getAllDataTypeClasses().contains(type)) {
-            throw new IllegalArgumentException(QueryPlugin.Util.getString("ERR.015.010.0015", type.getName())); //$NON-NLS-1$
-        }
-        assert value == null || originalType.isArray() || originalType.isAssignableFrom(value.getClass()) : "Invalid value for specified type."; //$NON-NLS-1$
-        this.type = originalType;
+        this.type = type;
 	}
 
 	/**
