@@ -127,7 +127,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         }
     }
     
-    public AtomicResultsMessage more() throws TranslatorException {
+    public synchronized AtomicResultsMessage more() throws TranslatorException {
     	if (this.dnae != null) {
     		//clear the exception if it has been set
     		DataNotAvailableException e = this.dnae;

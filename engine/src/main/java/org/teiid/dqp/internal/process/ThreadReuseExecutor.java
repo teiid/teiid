@@ -305,6 +305,7 @@ public class ThreadReuseExecutor implements TeiidExecutor {
 			}
 			List<Runnable> result = new ArrayList<Runnable>(queue);
 			queue.clear();
+			result.addAll(this.tpe.shutdownNow());
 			return result;
 		}
 	}

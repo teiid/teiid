@@ -78,14 +78,22 @@ public final class FutureWork<T> extends FutureTask<T> implements PrioritizedRun
 		
 	}
 	
-	void addCompletionListener(CompletionListener<T> completionListener) {
+	synchronized void addCompletionListener(CompletionListener<T> completionListener) {
+		if (this.isDone()) {
+			completionListener.onCompletion(this);
+			return;
+		}
 		this.completionListeners.add(completionListener);
 	}
 	
 	@Override
-	protected void done() {
+	protected synchronized void done() {
 		for (CompletionListener<T> listener : this.completionListeners) {
-			listener.onCompletion(this);
+			try {
+				listener.onCompletion(this);
+			} catch (Throwable t) {
+				LogManager.logError(LogConstants.CTX_DQP, t, "Uncaught throwable from completion listener"); //$NON-NLS-1$
+			}
 		}
 		completionListeners.clear();
 	}

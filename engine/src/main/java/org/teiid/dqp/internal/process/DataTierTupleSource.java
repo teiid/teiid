@@ -109,7 +109,6 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     private int rowsProcessed;
     private AtomicResultsMessage arm;
     private AtomicBoolean closed = new AtomicBoolean();
-    private volatile boolean canAsynchClose;
     private volatile boolean canceled;
     private volatile boolean cancelAsynch;
     private boolean executed;
@@ -152,7 +151,6 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
     }
 
 	private void addWork() {
-		this.canAsynchClose = true;
 		futureResult = workItem.addWork(new Callable<AtomicResultsMessage>() {
 			@Override
 			public AtomicResultsMessage call() throws Exception {
@@ -467,16 +465,16 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 		cancelAsynch = true;
     	if (closed.compareAndSet(false, true)) {
 	    	workItem.closeAtomicRequest(this.aqr.getAtomicRequestID());
-	    	if (aqr.isSerial()) {
+	    	if (aqr.isSerial() || futureResult == null) {
 	    		this.cwi.close();
-	    	} else if (!canAsynchClose) {
-	    		workItem.addHighPriorityWork(new Callable<Void>() {
-    				@Override
-    				public Void call() throws Exception {
-    					cwi.close();
-    					return null;
-    				}
-    			});
+	    	} else {
+	    		futureResult.addCompletionListener(new CompletionListener<AtomicResultsMessage>() {
+					
+					@Override
+					public void onCompletion(FutureWork<AtomicResultsMessage> future) {
+						cwi.close();						
+					}
+				});
 	    	}
     	}
     }
@@ -562,14 +560,10 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 
 	@Override
 	public void onCompletion(FutureWork<AtomicResultsMessage> future) {
+		running = false;		
 		if (!cancelAsynch) {
 			workItem.moreWork(); //this is not necessary in some situations with DataNotAvailable
 		}
-		canAsynchClose = false;
-		if (closed.get()) {
-			cwi.close();
-		}
-		running = false;		
 	}
 	
 	public boolean isExplicitClose() {

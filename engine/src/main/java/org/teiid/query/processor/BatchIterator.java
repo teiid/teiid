@@ -29,7 +29,6 @@ import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.TupleBatch;
 import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.core.TeiidComponentException;
-import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.processor.BatchCollector.BatchProducer;
 
@@ -83,11 +82,15 @@ public class BatchIterator extends AbstractTupleSource {
 	protected List<?> getCurrentTuple() throws TeiidComponentException,
 			BlockedException, TeiidProcessingException {
 		List<?> tuple = super.getCurrentTuple();
+		saveTuple(tuple);
+		return tuple;
+	}
+
+	private void saveTuple(List<?> tuple) throws TeiidComponentException {
 		if (tuple != null && mark && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
         	this.buffer.setRowCount(this.getCurrentIndex() - 1);
         	this.buffer.addTuple(tuple);
         }
-		return tuple;
 	}
 	
 	public int available() {
@@ -120,18 +123,13 @@ public class BatchIterator extends AbstractTupleSource {
     }
 
     @Override
-    public void mark() {
+    public void mark() throws TeiidComponentException {
     	super.mark();
     	if (this.buffer != null && saveOnMark && this.getCurrentIndex() > this.buffer.getRowCount()) {
 			this.buffer.purge();
     	}
     	mark = true;
-    	if (saveOnMark) {
-        	try {
-    			getCurrentTuple();
-    		} catch (TeiidException e) {
-    		}
-    	}
+		saveTuple(this.currentTuple);
     }
     
     @Override
