@@ -118,7 +118,7 @@ public class SystemMetadata {
 		loadSchema(vdb, p, "SYSADMIN", parser).mergeInto(systemStore); //$NON-NLS-1$
 		TransformationMetadata tm = new TransformationMetadata(vdb, new CompositeMetadataStore(systemStore), null, new SystemFunctionManager().getSystemFunctions(), null);
 		vdb.addAttchment(QueryMetadataInterface.class, tm);
-		MetadataValidator validator = new MetadataValidator(this.typeMap);
+		MetadataValidator validator = new MetadataValidator(this.typeMap, parser);
 		ValidatorReport report = validator.validate(vdb, systemStore);
 		if (report.hasItems()) {
 			throw new TeiidRuntimeException(report.getFailureMessage());

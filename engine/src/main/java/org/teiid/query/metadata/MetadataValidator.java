@@ -65,17 +65,20 @@ import org.teiid.translator.TranslatorException;
 public class MetadataValidator {
 	
 	private Map<String, Datatype> typeMap;
+	private QueryParser parser;
 	
 	interface MetadataRule {
 		void execute(VDBMetaData vdb, MetadataStore vdbStore, ValidatorReport report, MetadataValidator metadataValidator);
 	}	
 	
-	public MetadataValidator(Map<String, Datatype> typeMap) {
+	public MetadataValidator(Map<String, Datatype> typeMap, QueryParser parser) {
 		this.typeMap = typeMap;
+		this.parser = parser;
 	}
 	
 	public MetadataValidator() {
 		this.typeMap = SystemMetadata.getInstance().getRuntimeTypeMap();
+		this.parser = QueryParser.getQueryParser();
 	}
 
 	public ValidatorReport validate(VDBMetaData vdb, MetadataStore store) {
@@ -252,7 +255,7 @@ public class MetadataValidator {
     	try {
     		if (record instanceof Procedure) {
     			Procedure p = (Procedure)record;
-    			Command command = QueryParser.getQueryParser().parseProcedure(p.getQueryPlan(), false);
+    			Command command = parser.parseProcedure(p.getQueryPlan(), false);
     			QueryResolver.resolveCommand(command, new GroupSymbol(p.getFullName()), Command.TYPE_STORED_PROCEDURE, metadata, false);
     			resolverReport =  Validator.validate(command, metadata);
     		} else if (record instanceof Table) {
