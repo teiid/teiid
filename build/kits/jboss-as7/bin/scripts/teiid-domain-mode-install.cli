@@ -28,7 +28,7 @@ connect
 /profile=ha/subsystem=security/security-domain=teiid-security/authentication=classic:add(login-modules=[{"code"=>"org.jboss.security.auth.spi.UsersRolesLoginModule", "flag"=>"required", "module-options"=>[("usersProperties"=>"${jboss.domain.config.dir}/teiid-security-users.properties"), ("rolesProperties"=>"${jboss.domain.config.dir}/teiid-security-roles.properties")]}]) 
 /profile=ha/subsystem=threads/bounded-queue-thread-pool=teiid-async:add(max-threads=4, queue-length=100)
 
-/profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
+/profile=ha/subsystem=teiid:add(async-thread-pool=teiid-async, distributed-cache-jgroups-stack=udp, resultset-cache-infinispan-container=teiid-cache, resultset-cache-name=resultset-repl, preparedplan-cache-infinispan-container=teiid-cache, policy-decider-module=org.jboss.teiid)
 /profile=ha/subsystem=teiid/transport=embedded:add()
 /profile=ha/subsystem=teiid/transport=odata:add(authentication-security-domain=teiid-security)
 /profile=ha/subsystem=teiid/transport=jdbc:add(protocol=teiid, socket-binding=teiid-jdbc, authentication-security-domain=teiid-security)
