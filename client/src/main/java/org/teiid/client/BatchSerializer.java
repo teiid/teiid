@@ -781,7 +781,7 @@ public class BatchSerializer {
 	                            break objectSearch;
 	                        }
 	                    }
-	                     throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20001, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20001, new Object[] {types[i], new Integer(i), objectClass}));
+	                     throw new TeiidRuntimeException(JDBCPlugin.Event.TEIID20001, e, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20001, new Object[] {types[i], new Integer(i), objectClass}));
 	                }
 	            }
             }

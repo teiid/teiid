@@ -874,7 +874,7 @@ public class Evaluator {
 		Evaluator.NameValuePair<Object>[] nameValuePairs = getNameValuePairs(tuple, args, true, true);
 		
 		try {
-			return TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function);
+			return new ArrayImpl(TextLine.evaluate(Arrays.asList(nameValuePairs), defaultExtractor, function));
 		} catch (TransformationException e) {
 			 throw new ExpressionEvaluationException(e);
 		}

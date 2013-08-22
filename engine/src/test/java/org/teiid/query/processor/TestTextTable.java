@@ -33,6 +33,7 @@ import java.util.List;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.junit.Test;
+import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.ClobImpl;
 import org.teiid.core.types.ClobType;
@@ -48,6 +49,7 @@ import org.teiid.query.processor.relational.JoinNode;
 import org.teiid.query.processor.relational.NestedTableJoinStrategy;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"unchecked", "nls"})
 public class TestTextTable {
@@ -438,6 +440,37 @@ public class TestTextTable {
         };    
 
         helpProcess(plan, hdm, expected);    	
+    }
+    
+    @Test public void testTextAggGroupBy() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+        
+        BasicSourceCapabilities caps = getTypicalCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$        
+        
+        ProcessorPlan plan = helpPlan("select convert(to_chars(textagg(pm1.g1.e1), 'UTF-8'), string) as x from pm1.g1 group by e2", metadata,  null, capFinder, //$NON-NLS-1$
+            new String[] { "SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0" }, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        HardcodedDataManager hdm = new HardcodedDataManager();
+        hdm.addData("SELECT g_0.e2, g_0.e1 FROM pm1.g1 AS g_0", new List<?>[] {
+        		Arrays.asList(2, "z"), Arrays.asList(1, "b"),
+        		Arrays.asList(2, "z"), Arrays.asList(1, "b"),
+        		Arrays.asList(2, "c"), Arrays.asList(2, "a")});
+        hdm.setBlockOnce(true);
+                
+        String nl = System.getProperty("line.separator");
+        ArrayList<Object> list = new ArrayList<Object>();
+        list.add("\"b\""+nl+"\"b\""+nl);
+        ArrayList<Object> list1 = new ArrayList<Object>();
+        list1.add("\"a\""+nl+"\"z\""+nl+"\"c\""+nl+"\"z\""+nl);
+        List<?>[] expected = new List<?>[] {
+        		list, list1
+        };    
+
+        CommandContext context = createCommandContext();
+        context.setBufferManager(BufferManagerFactory.getTestBufferManager(0, 2));
+        helpProcess(plan, context, hdm, expected);    	
     }
     
 	@Test(expected=TeiidProcessingException.class) public void testTextTableInvalidData() throws Exception {

@@ -24,6 +24,7 @@ package org.teiid.query.function.aggregate;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.Array;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -62,7 +63,7 @@ public class TextAgg extends SingleArgumentAggregateFunction {
 			FileStoreInputStreamFactory fisf = new FileStoreInputStreamFactory(fs, textLine.getEncoding()==null?Streamable.ENCODING:textLine.getEncoding());
 			Writer w = fisf.getWriter();
 			if (textLine.isIncludeHeader()) {
-				List<Object> header = TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
+				Object[] header = TextLine.evaluate(textLine.getExpressions(), new TextLine.ValueExtractor<DerivedColumn>() {
 					public Object getValue(DerivedColumn t) {
 						if (t.getAlias() == null && t.getExpression() instanceof ElementSymbol) {
 							return ((ElementSymbol)t.getExpression()).getShortName();
@@ -79,9 +80,9 @@ public class TextAgg extends SingleArgumentAggregateFunction {
 		}
 	}
 
-	private void writeList(Writer w, List<Object> list) throws IOException {
-		for (int i = 0; i < list.size(); i++) {
-			w.write(list.get(i).toString());
+	private void writeList(Writer w, Object[] list) throws IOException {
+		for (int i = 0; i < list.length; i++) {
+			w.write(list[i].toString());
 		}
 	}
 
@@ -99,10 +100,12 @@ public class TextAgg extends SingleArgumentAggregateFunction {
     		if (this.result == null) {
     			this.result = buildResult(commandContext);
     		}
-    		List<Object> in = (List<Object>)input;
+    		Array in = (Array)input;
     		Writer w = result.getWriter();
-    		writeList(w, in);
+    		writeList(w, (Object[])in.getArray());
 			w.flush();
+		} catch (SQLException e) {
+			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
 		} catch (IOException e) {
 			throw new TeiidProcessingException(QueryPlugin.Event.TEIID30421, e);
 		}
