@@ -360,7 +360,7 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
     /**
      * @see org.teiid.translator.jdbc.JDBCBaseExecution#close()
      */
-    public synchronized void close() {
+    public void close() {
         // first we would need to close the result set here then we can close
         // the statement, using the base class.
     	try {

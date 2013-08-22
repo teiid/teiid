@@ -29,7 +29,7 @@ import org.teiid.core.TeiidProcessingException;
 public abstract class AbstractTupleSource implements IndexedTupleSource {
     private int currentRow = 1;
     private int mark = 1;
-	private List<?> currentTuple;
+	protected List<?> currentTuple;
 	protected TupleBatch batch;
 
     @Override
@@ -100,7 +100,7 @@ public abstract class AbstractTupleSource implements IndexedTupleSource {
 	}
 
     @Override
-    public void mark() {
+    public void mark() throws TeiidComponentException {
         this.mark = currentRow;
     }
 

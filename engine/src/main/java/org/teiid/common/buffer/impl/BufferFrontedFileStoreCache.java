@@ -621,9 +621,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 				//entries are mutable after adding, the original should be removed shortly so just ignore
 				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object "+ entry.getId() +" changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
 			} else if (e == BlockOutputStream.exceededMax){
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001)); 
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001,s.getId(), entry.getId())); 
 			} else {
-				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30002,entry.getId()));
+				LogManager.logError(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30002,s.getId(), entry.getId()));
 			}
 		} finally {
 			if (hasPermit) {
@@ -733,9 +733,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
         } catch(IOException e) {
-        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, oid));
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, info.gid, oid));
         } catch (ClassNotFoundException e) {
-        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, oid));
+        	 throw new TeiidComponentException(QueryPlugin.Event.TEIID30048, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30048, info.gid, oid));
         } catch (InterruptedException e) {
         	 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30049, e);
 		} finally {

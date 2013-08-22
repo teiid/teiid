@@ -35,6 +35,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BinaryType;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.TimestampWithTimezone;
@@ -44,6 +45,7 @@ import org.teiid.query.unittest.TimestampUtil;
 /** 
  * @since 4.2
  */
+@SuppressWarnings("nls")
 public class TestBatchSerializer {
 
     private static void helpTestSerialization(String[] types, List<?>[] batch, byte version) throws IOException, ClassNotFoundException {
@@ -148,6 +150,10 @@ public class TestBatchSerializer {
     
     @Test(expected=IOException.class) public void testOutOfRangeDate() throws Exception {
         helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.DATE}, new List[] {Arrays.asList(TimestampUtil.createDate(-2, 0, 1))}, (byte)1);
+    }
+    
+    @Test public void testStringArray() throws IOException, ClassNotFoundException {
+    	helpTestSerialization(new String[] {DataTypeManager.DefaultDataTypes.LONG,  "string[]"}, new List[] {Arrays.asList(1l, new ArrayImpl(new String[] {"a", "b"}))}, BatchSerializer.CURRENT_VERSION);
     }
 
 }

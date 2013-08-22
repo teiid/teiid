@@ -36,8 +36,9 @@ public interface IndexedTupleSource extends TupleSource {
 
 	/**
 	 * Save the current position that can be restored with a call to {@link #reset()}
+	 * @throws TeiidComponentException 
 	 */
-	void mark();
+	void mark() throws TeiidComponentException;
 
 	/**
 	 * Restore the previous mark and set the mark back to the first position.

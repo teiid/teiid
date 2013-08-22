@@ -287,6 +287,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
                         }
                     }
                     this.recordBatch(batch);
+                    recordStats = false;
                 }
                 //24663: only return non-zero batches. 
                 //there have been several instances in the code that have not correctly accounted for non-terminal zero length batches

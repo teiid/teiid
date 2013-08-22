@@ -876,7 +876,7 @@ public class TestJoinNode {
         };
         helpCreateJoin();               
         this.joinStrategy = new MergeJoinStrategy(SortOption.SORT, SortOption.ALREADY_SORTED, false);
-        FakeRelationalNode newNode = new FakeRelationalNode(2, rightTuples) {
+        FakeRelationalNode newNode = new BlockingFakeRelationalNode(2, rightTuples) {
         	@Override
         	public TupleBatch nextBatchDirect() throws BlockedException,
         			TeiidComponentException, TeiidProcessingException {

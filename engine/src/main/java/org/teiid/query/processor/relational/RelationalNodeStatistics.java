@@ -52,7 +52,7 @@ public class RelationalNodeStatistics {
     private long batchEndTime;
      
     // The processing time for the node (does not include child processing)
-    private long nodeProcessingTime;
+    private long nodeNextBatchProcessingTime;
     
     // the total processing time for the node (indcludes child processing (lastEndTime - firstStartTime)
     private long nodeCumulativeProcessingTime;
@@ -107,21 +107,21 @@ public class RelationalNodeStatistics {
         // set nodeEndTime to the time gathered at the end of the last batch
         this.nodeEndTime = this.batchEndTime;
         this.nodeCumulativeProcessingTime = this.nodeEndTime - this.nodeStartTime;
-        this.nodeProcessingTime = this.nodeCumulativeProcessingTime;
+        this.nodeNextBatchProcessingTime = this.nodeCumulativeProcessingTime;
         for (int i = 0; i < relationalNodes.length; i++) {
         	if (relationalNodes[i] == null) {
         		break;
         	}
-            this.nodeProcessingTime -= relationalNodes[i].getNodeStatistics().getNodeCumulativeProcessingTime();                      
+            this.nodeNextBatchProcessingTime -= relationalNodes[i].getNodeStatistics().getNodeCumulativeNextBatchProcessingTime();                      
         }
     }
     
     public List<String> getStatisticsList() {
     	ArrayList<String> statisticsList = new ArrayList<String>(6);
     	statisticsList.add("Node Output Rows: " + this.nodeOutputRows); //$NON-NLS-1$
-        statisticsList.add("Node Process Time: " + this.nodeProcessingTime); //$NON-NLS-1$
-        statisticsList.add("Node Cumulative Process Time: " + this.nodeCumulativeProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Next Batch Process Time: " + this.nodeNextBatchProcessingTime); //$NON-NLS-1$
         statisticsList.add("Node Cumulative Next Batch Process Time: " + this.nodeCumulativeNextBatchProcessingTime); //$NON-NLS-1$
+        statisticsList.add("Node Cumulative Process Time: " + this.nodeCumulativeProcessingTime); //$NON-NLS-1$
         statisticsList.add("Node Next Batch Calls: " + this.nodeNextBatchCalls); //$NON-NLS-1$
         statisticsList.add("Node Blocks: " + this.nodeBlocks); //$NON-NLS-1$
         return statisticsList;
@@ -173,8 +173,8 @@ public class RelationalNodeStatistics {
      * @return Returns the nodeProcessingTime.
      * @since 4.2
      */
-    public long getNodeProcessingTime() {
-        return this.nodeProcessingTime;
+    public long getNodeNextBatchProcessingTime() {
+        return this.nodeNextBatchProcessingTime;
     }
     /** 
      * @return Returns the nodeStartTime.
