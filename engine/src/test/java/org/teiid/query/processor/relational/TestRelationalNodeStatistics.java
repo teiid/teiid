@@ -25,6 +25,7 @@ package org.teiid.query.processor.relational;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -73,14 +74,16 @@ public class TestRelationalNodeStatistics {
     	children[0] = createFakeNode(createData(1));
     	children[1] = createFakeNode(createData(1));
     	children[0].getNodeStatistics().setBatchEndTime(100);
+    	children[0].getNodeStatistics().collectCumulativeNodeStats(new TupleBatch(1, Collections.EMPTY_LIST), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
     	children[0].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
     	children[1].getNodeStatistics().setBatchEndTime(200);
+    	children[1].getNodeStatistics().collectCumulativeNodeStats(new TupleBatch(1, Collections.EMPTY_LIST), RelationalNodeStatistics.BATCHCOMPLETE_STOP);
     	children[1].getNodeStatistics().collectNodeStats(new RelationalNode[0]);
     	RelationalNodeStatistics stats = new RelationalNodeStatistics();
     	stats.setBatchEndTime(1000);
     	stats.collectNodeStats(children);
     	assertEquals(1000, stats.getNodeCumulativeProcessingTime());
-    	assertEquals(700, stats.getNodeProcessingTime());
+    	assertEquals(700, stats.getNodeNextBatchProcessingTime());
     }
 
     @Test public void testDescriptionProperties() throws Exception {
