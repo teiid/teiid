@@ -17,6 +17,14 @@ CREATE FOREIGN TABLE VDBResources (
 	PRIMARY KEY (resourcePath)
 );
 
+CREATE FOREIGN TABLE Transformations (
+	Name string(255) NOT NULL,
+	"Value" string(4000) NOT NULL,
+	UID string(50) NOT NULL,
+	ClobValue clob(2097152),
+	UNIQUE(UID, Name)
+);
+
 CREATE FOREIGN PROCEDURE isLoggable(OUT loggable boolean NOT NULL RESULT, IN level string NOT NULL DEFAULT 'DEBUG', IN context string NOT NULL DEFAULT 'org.teiid.PROCESSOR')
 OPTIONS (UPDATECOUNT 0)
 
@@ -71,6 +79,7 @@ BEGIN
 	DECLARE string uid = (SELECT UID FROM Sys.Tables WHERE VDBName = VARIABLES.vdbName AND SchemaName = schemaName AND Name = viewName);
 	DECLARE string status = 'CHECK';
 	DECLARE integer rowsUpdated = 0;
+	DECLARE string crit;
 	
 	IF (uid IS NULL)
 	BEGIN
@@ -89,18 +98,36 @@ BEGIN
 	DECLARE string loadScript = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_LOAD_SCRIPT');
 	DECLARE string afterLoadScript = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_AFTER_LOAD_SCRIPT');
 	DECLARE integer ttl = (SELECT convert("value", integer) from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL');
-	DECLARE string matViewTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = 'MATERIALIZED_TABLE');	
+	DECLARE string matViewTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATERIALIZED_TABLE');
+	DECLARE string matViewStageTable = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATERIALIZED_STAGE_TABLE');	
+	DECLARE string transformation = (SELECT "value" from SYSADMIN.Transformations WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}SELECT_PLAN');
+	DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
 
-	DECLARE string crit = ' WHERE VDBName = DVARS.vdbName AND VDBVersion = DVARS.vdbVersion AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
+	IF ((scope IS null) OR (scope = 'NONE'))
+	BEGIN 
+		VARIABLES.crit = ' WHERE VDBName = DVARS.vdbName AND VDBVersion = DVARS.vdbVersion AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
+	END
+	ELSE IF (scope = 'VDB')
+	BEGIN
+		VARIABLES.crit = ' WHERE VDBName = DVARS.vdbName AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
+	END
+	ELSE IF (scope = 'SCHEMA')
+	BEGIN
+		VARIABLES.crit = ' WHERE schemaName = DVARS.schemaName AND Name = DVARS.viewName';
+	END
+	
 	DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality' ||  crit;
 
-	EXECUTE IMMEDIATE 'SELECT TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality FROM ' || VARIABLES.statusTable || crit AS TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
+	EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
 	
-	DECLARE boolean valid = (SELECT valid FROM #load);
-	IF (valid is null)
+	DECLARE string previousRow = (SELECT Name FROM #load);
+	IF (previousRow is null)
     BEGIN ATOMIC
         EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, null, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now();
         VARIABLES.status = 'LOAD';
+    EXCEPTION e
+        VARIABLES.rowsUpdated = -1;
+        VARIABLES.status = 'DONE';
     END
 	
 	IF (VARIABLES.status = 'CHECK')
@@ -108,22 +135,46 @@ BEGIN
 	    LOOP ON (SELECT valid, updated, loadstate, cardinality FROM #load) AS matcursor
 	    BEGIN
 		    IF (not matcursor.valid OR (matcursor.valid AND TIMESTAMPDIFF(SQL_TSI_SECOND, matcursor.updated, now()) > (ttl/1000)) OR invalidate OR loadstate = 'NEEDS_LOADING')
-	        BEGIN ATOMIC
-	            EXECUTE IMMEDIATE updateStmt USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'LOADING', valid = convert('false', boolean), cardinality = matcursor.cardinality;
-	            VARIABLES.status = 'LOAD';				
-	        END
+		        BEGIN ATOMIC
+		            EXECUTE IMMEDIATE updateStmt AS "rows" integer into #updated USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'LOADING', valid = convert('false', boolean), cardinality = matcursor.cardinality;
+					DECLARE integer updated = (SELECT "rows" FROM #updated);
+					IF (updated = 0)
+						BEGIN
+							VARIABLES.status = 'DONE';
+							VARIABLES.rowsUpdated = -1;
+						END
+					ELSE
+						BEGIN					            
+				            VARIABLES.status = 'LOAD';
+			            END				
+		        END
 	        ELSE
-	        BEGIN
-	        	VARIABLES.status = 'DONE';
-	        END
+		        BEGIN
+		        	VARIABLES.rowsUpdated = -2;
+		        	VARIABLES.status = 'DONE';
+		        END
 	    END
     END
 	
     IF(VARIABLES.status = 'LOAD')
     BEGIN ATOMIC
-        EXECUTE IMMEDIATE beforeLoadScript;
-        EXECUTE IMMEDIATE loadScript;        
-        EXECUTE IMMEDIATE afterLoadScript;
+    	IF (VARIABLES.loadScript IS null)
+    	BEGIN
+    		VARIABLES.loadScript = 'SELECT X.* INTO ' || matViewStageTable || ' FROM ('|| transformation || ') AS X';
+    	END
+    	
+    	IF (VARIABLES.beforeLoadScript IS NOT null)
+    	BEGIN
+        	EXECUTE IMMEDIATE beforeLoadScript;
+        END
+        
+        EXECUTE IMMEDIATE loadScript;
+    	
+    	IF (VARIABLES.afterLoadScript IS NOT null)
+    	BEGIN                
+        	EXECUTE IMMEDIATE afterLoadScript;
+        END
+        
         EXECUTE IMMEDIATE 'SELECT count(*) as rowCount FROM ' || matViewTable AS rowCount integer INTO #load_count;        
         rowsUpdated = (SELECT rowCount FROM #load_count);        
         EXECUTE IMMEDIATE updateStmt USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'LOADED', valid = convert('true', boolean), cardinality = VARIABLES.rowsUpdated;        			
@@ -131,6 +182,7 @@ BEGIN
     EXCEPTION e 
         EXECUTE IMMEDIATE updateStmt USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = convert('false', boolean), cardinality = -1;
         VARIABLES.status = 'FAILED';
+        VARIABLES.rowsUpdated = -3;
     END
 
 	RETURN  rowsUpdated;
