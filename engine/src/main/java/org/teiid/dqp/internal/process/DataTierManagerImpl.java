@@ -189,7 +189,8 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	
 	private enum SystemAdminTables {
 		MATVIEWS,
-		VDBRESOURCES
+		VDBRESOURCES,
+		TRANSFORMATIONS
 	}
 	
 	private enum SystemAdminProcs {
@@ -524,30 +525,83 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		if (parent instanceof Table) {
         			Table table = (Table)parent;
         			if (table.isMaterialized() && table.getMaterializedTable() != null) {
-        				props.put("MATERIALIZED_TABLE", table.getMaterializedTable().getName()); //$NON-NLS-1$
-        			}
-        			if (table.isVirtual()) {
-        				props.put("SELECT_PLAN", table.getSelectTransformation()); //$NON-NLS-1$
-        				if (table.isInsertPlanEnabled() && table.getInsertPlan() != null) {
-        					props.put("INSERT_PLAN", table.getInsertPlan()); //$NON-NLS-1$
-        				}
-        				if (table.isUpdatePlanEnabled() && table.getUpdatePlan() != null) {
-        					props.put("UPDATE_PLAN", table.getUpdatePlan()); //$NON-NLS-1$
-        				}
-        				if (table.isDeletePlanEnabled() && table.getDeletePlan() != null) {
-        					props.put("DELETE_PLAN", table.getDeletePlan()); //$NON-NLS-1$
-        				}
+        				props.put("{http://www.teiid.org/ext/relational/2012}MATERIALIZED_TABLE", table.getMaterializedTable().getName()); //$NON-NLS-1$
         			}
         		}
         		if (parent instanceof Procedure) {
         			Procedure proc = (Procedure)parent;
         			if (proc.getUpdateCount() > 0) {
-        				props.put("UPDATE_COUNT", String.valueOf(proc.getUpdateCount())); //$NON-NLS-1$
+        				props.put("{http://www.teiid.org/ext/relational/2012}UPDATE_COUNT", String.valueOf(proc.getUpdateCount())); //$NON-NLS-1$
         			}
         		}
         		return props.entrySet();
         	}
 		});
+        name = SystemAdminTables.TRANSFORMATIONS.name();
+        columns = getColumns(tm, name);
+        systemAdminTables.put(SystemAdminTables.TRANSFORMATIONS, new ChildRecordExtractionTable<AbstractMetadataRecord, Map.Entry<String, String>>(
+        		new RecordTable<AbstractMetadataRecord>(new int[] {0}, columns.subList(2, 3)) {
+        			@Override
+        			protected void fillRow(AbstractMetadataRecord s, List<Object> rowBuffer) {
+        				rowBuffer.add(s.getUUID());
+        			}
+        			
+        			@Override
+        			public SimpleIterator<AbstractMetadataRecord> processQuery(
+        					VDBMetaData vdb, CompositeMetadataStore metadataStore,
+        					BaseIndexInfo<?> ii) {
+        				return processQuery(vdb, metadataStore.getOids(), ii);
+        			}
+        			
+        			@Override
+        			protected AbstractMetadataRecord extractRecord(Object val) {
+        				if (val != null) {
+        					return ((RecordHolder)val).getRecord();
+        				}
+        				return null;
+        			}
+        		}, columns) {
+        	
+        	@Override
+        	public void fillRow(List<Object> row, Map.Entry<String,String> entry, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<Map.Entry<String, String>> iter) {
+        		String value = entry.getValue();
+				Clob clobValue = null;
+				if (value != null) {
+					clobValue = new ClobType(ClobImpl.createClob(value.toCharArray()));
+				}
+				row.add(entry.getKey());
+				row.add(entry.getValue());
+				row.add(((ExpandingSimpleIterator<AbstractMetadataRecord, Entry<String, String>>)iter).getCurrentParent().getUUID());
+				row.add(clobValue);
+        	}
+        	
+        	@Override
+        	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent) {
+        		ConcurrentSkipListMap props = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);        		
+        		if (parent instanceof Table) {
+        			Table table = (Table)parent;
+        			if (table.isVirtual()) {
+        				props.put("{http://www.teiid.org/ext/relational/2012}SELECT_PLAN", table.getSelectTransformation()); //$NON-NLS-1$
+        				if (table.isInsertPlanEnabled() && table.getInsertPlan() != null) {
+        					props.put("{http://www.teiid.org/ext/relational/2012}INSERT_PLAN", table.getInsertPlan()); //$NON-NLS-1$
+        				}
+        				if (table.isUpdatePlanEnabled() && table.getUpdatePlan() != null) {
+        					props.put("{http://www.teiid.org/ext/relational/2012}UPDATE_PLAN", table.getUpdatePlan()); //$NON-NLS-1$
+        				}
+        				if (table.isDeletePlanEnabled() && table.getDeletePlan() != null) {
+        					props.put("{http://www.teiid.org/ext/relational/2012}DELETE_PLAN", table.getDeletePlan()); //$NON-NLS-1$
+        				}
+        			}
+        		}
+        		if (parent instanceof Procedure) {
+        			Procedure proc = (Procedure)parent;
+        			if (proc.isVirtual() && !proc.isFunction()) {
+        				props.put("{http://www.teiid.org/ext/relational/2012}PROCEDURE_PLAN", proc.getQueryPlan()); //$NON-NLS-1$
+        			}
+        		}
+        		return props.entrySet();
+        	}
+		});        
         name = SystemTables.COLUMNS.name();
         columns = getColumns(tm, name);
         systemTables.put(SystemTables.COLUMNS, new ChildRecordExtractionTable<Table, Column>(new TableSystemTable(1, 2, columns), columns) {

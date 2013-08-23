@@ -230,7 +230,7 @@ public static class AnonSSLSocketFactory extends SSLSocketFactory {
 			i++;
 			rs.getString(1);
 		}
-		assertEquals(448, i);
+		assertEquals(462, i);
 	}
 	
 	@Test public void testBlob() throws Exception {

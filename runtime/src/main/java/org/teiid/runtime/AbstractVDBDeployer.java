@@ -55,6 +55,7 @@ import org.teiid.query.metadata.ChainingMetadataRepository;
 import org.teiid.query.metadata.DDLFileMetadataRepository;
 import org.teiid.query.metadata.DDLMetadataRepository;
 import org.teiid.query.metadata.DirectQueryMetadataRepository;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.NativeMetadataRepository;
 import org.teiid.query.metadata.VDBResources;
 import org.teiid.query.parser.QueryParser;
@@ -118,6 +119,9 @@ public abstract class AbstractVDBDeployer {
 		}
 		if (model.getModelType() == ModelMetaData.Type.PHYSICAL) {
 			repos.add(new DirectQueryMetadataRepository());
+		}
+		if (model.getModelType() == ModelMetaData.Type.VIRTUAL) {
+			repos.add(new MaterializationMetadataRepository());
 		}
 		if (repos.size() == 1) {
 			return repos.get(0);

@@ -105,7 +105,7 @@ public class TestVirtualDocWithVirtualProc extends AbstractMMQueryTestCase {
     @Test public void testPropertyJoin() throws Exception {
     	String sql = "select * from sys.tables c left outer JOIN sys.Properties p ON p.UID=c.UID where c.name = 'yyyTestDocument' and schemaName='testDoc'"; //$NON-NLS-1$
     	execute(sql);
-    	assertRowCount(3);
+    	assertRowCount(2);
     }
 
 }
