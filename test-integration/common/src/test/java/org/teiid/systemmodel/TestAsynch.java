@@ -200,6 +200,39 @@ public class TestAsynch {
 		assertEquals(1024, result.get().intValue());
 	}
 	
+	@Test public void testAsynchContinuousMergeBlock() throws Exception {
+		Statement stmt = this.internalConnection.createStatement();
+		stmt.execute("create temporary table t (c string, primary key (c))");
+		stmt.execute("set autoCommitTxn off");
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute("begin merge into t select name from schemas limit 2; select rowcount; end", new StatementCallback() {
+			int rowCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) throws SQLException {
+				rowCount++;
+				if (rowCount == 10) {
+					s.close();
+				}
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(rowCount);
+			}
+		}, new RequestOptions().continuous(true));
+		assertEquals(10, result.get().intValue());
+		stmt = this.internalConnection.createStatement();
+		ResultSet rs = stmt.executeQuery("select count(*) from t");
+		rs.next();
+		assertEquals(2, rs.getInt(1));
+	}
+	
 	@Test public void testAsynchContinuousWithAlter() throws Exception {
 		Statement stmt = this.internalConnection.createStatement();
 		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);

@@ -216,6 +216,9 @@ public class UpdateProcedureResolver implements CommandResolver {
                 
                 if (command.getResultSetColumns() == null && cmdStmt.isReturnable() && subCommand.returnsResultSet() && !subCommand.getResultSetColumns().isEmpty()) {
                 	command.setResultSetColumns(subCommand.getResultSetColumns());
+                	if (command.getProjectedSymbols().isEmpty()) {
+                		command.setProjectedSymbols(subCommand.getResultSetColumns());
+                	}
                 }
 
                 break;

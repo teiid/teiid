@@ -240,5 +240,10 @@ public class CreateProcedureCommand extends Command {
 	public ElementSymbol getReturnVariable() {
 		return returnVariable;
 	}
+	
+	@Override
+	public boolean returnsResultSet() {
+		return this.resultSetColumns != null && !this.resultSetColumns.isEmpty();
+	}
 
 } // END CLASS

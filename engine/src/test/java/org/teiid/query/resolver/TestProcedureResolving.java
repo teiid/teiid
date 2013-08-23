@@ -60,6 +60,7 @@ import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Symbol;
 import org.teiid.query.sql.visitor.CommandCollectorVisitor;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
 import org.teiid.query.unittest.RealMetadataFactory;
@@ -1137,6 +1138,22 @@ public class TestProcedureResolving {
         expressions.add(new Constant(1));
         expressions.add(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(2), new Constant(3))));
         assertEquals(new Array(DataTypeManager.DefaultDataClasses.OBJECT, expressions), sp.getParameter(1).getExpression());
+    }
+    
+    @Test public void testAnonBlock() throws Exception {
+    	String sql = "begin select 1 as something; end"; //$NON-NLS-1$
+        CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
+        assertEquals(1, sp.getResultSetColumns().size());
+        assertEquals("something", Symbol.getName(sp.getResultSetColumns().get(0)));
+        assertEquals(1, sp.getProjectedSymbols().size());
+        assertTrue(sp.returnsResultSet());
+    }
+    
+    @Test public void testAnonBlockNoResult() throws Exception {
+    	String sql = "begin select 1 as something without return; end"; //$NON-NLS-1$
+        CreateProcedureCommand sp = (CreateProcedureCommand) TestResolver.helpResolve(sql, RealMetadataFactory.example1Cached());
+        assertEquals(0, sp.getProjectedSymbols().size());
+        assertFalse(sp.returnsResultSet());
     }
     
 }
