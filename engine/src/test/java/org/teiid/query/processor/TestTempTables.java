@@ -52,6 +52,7 @@ import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
+import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
@@ -559,6 +560,36 @@ public class TestTempTables {
 		} catch (QueryResolverException e) {
 			
 		}
+	}
+	
+	@Test public void testInherentUpdateUsingTemp() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(
+				"create foreign table g1 (e1 string primary key, e2 integer, e3 boolean, e4 double, FOREIGN KEY (e1) REFERENCES G2 (e1)) options (updatable true);"
+			    + " create foreign table g2 (e1 string primary key, e2 integer, e3 boolean, e4 double) options (updatable true);"
+				+ " create view v options (updatable true) as select g1.e2 from g1 inner join g2 on g1.e1 = g2.e1;"
+				, "x", "pm1");
+		HardcodedDataManager hdm = new HardcodedDataManager(metadata);
+		setUp(metadata, hdm);
+		
+	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+	    cache.setTupleBufferCache(bm);
+		dataManager = new TempTableDataManager(hdm, bm, cache);
+		
+		execute("create temporary table x (e1 string, e2 integer, e3 string, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		
+		execute("insert into x values ('a', 1, 'b')", new List[] {Arrays.asList(1)});
+		
+		TempMetadataID id = this.tempStore.getMetadataStore().getData().get("x");
+		
+		//ensure that we're using the actual metadata
+		assertNotNull(id);
+		assertNotNull(this.metadata.getPrimaryKey(id));
+		
+		hdm.addData("SELECT g_0.e1 FROM g1 AS g_0, g2 AS g_1 WHERE g_0.e1 = g_1.e1 AND g_0.e2 = 1", new List[] {Arrays.asList("a")});
+		hdm.addData("DELETE FROM g1 WHERE g1.e1 = 'a'", new List[] {Arrays.asList(1)});
+		
+		execute("delete from v where e2 = (select max(e2) from x as z where e3 = z.e3)", new List[] {Arrays.asList(1)}, TestOptimizer.getGenericFinder()); //$NON-NLS-1$
 	}
 	
 	@Test public void testDependentArrayType() throws Exception {
