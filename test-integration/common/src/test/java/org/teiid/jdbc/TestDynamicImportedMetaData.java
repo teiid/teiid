@@ -22,7 +22,9 @@
 
 package org.teiid.jdbc;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import java.sql.Connection;
 import java.util.List;
@@ -110,7 +112,7 @@ public class TestDynamicImportedMetaData {
     	importProperties.setProperty("importer.excludeTables", "VDB\\.SYS\\..*");
     	importProperties.setProperty("importer.excludeProcedures", "VDB\\..*");
     	MetadataFactory mf = getMetadata(importProperties, conn);
-    	assertEquals(String.valueOf(mf.asMetadataStore().getSchemas().get("TEST").getTables()), 19, mf.asMetadataStore().getSchemas().get("TEST").getTables().size());
+    	assertEquals(String.valueOf(mf.asMetadataStore().getSchemas().get("TEST").getTables()), 20, mf.asMetadataStore().getSchemas().get("TEST").getTables().size());
     	assertEquals(0, mf.asMetadataStore().getSchemas().get("TEST").getProcedures().size());
     }
         
