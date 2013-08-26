@@ -50,6 +50,7 @@ import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionContext.Scope;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -92,15 +93,19 @@ public class TestTempTables {
 	
 	@Before public void setUp() {
 		tempStore = new TempTableStore("1", TransactionMode.ISOLATE_WRITES); //$NON-NLS-1$
-		metadata = new TempMetadataAdapter(RealMetadataFactory.example1Cached(), tempStore.getMetadataStore());
-		metadata.setSession(true);
 		FakeDataManager fdm = new FakeDataManager();
 	    TestProcessor.sampleData1(fdm);
+	    setUp(RealMetadataFactory.example1Cached(), fdm);
+	}
+	
+	public void setUp(QueryMetadataInterface md, ProcessorDataManager dm) {
+		metadata = new TempMetadataAdapter(md, tempStore.getMetadataStore());
+		metadata.setSession(true);
 	    BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
 	    
 	    SessionAwareCache<CachedResults> cache = new SessionAwareCache<CachedResults>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
 	    cache.setTupleBufferCache(bm);
-		dataManager = new TempTableDataManager(fdm, bm, cache);
+		dataManager = new TempTableDataManager(dm, bm, cache);		
 	}
 	
 	@Test public void testRollbackNoExisting() throws Exception {
@@ -576,7 +581,7 @@ public class TestTempTables {
 	    cache.setTupleBufferCache(bm);
 		dataManager = new TempTableDataManager(hdm, bm, cache);
 		
-		execute("create temporary table x (e1 string, e2 integer, e3 string, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
+		execute("create local temporary table x (e1 string, e2 integer, e3 string, primary key (e1))", new List[] {Arrays.asList(0)}); //$NON-NLS-1$
 		
 		execute("insert into x values ('a', 1, 'b')", new List[] {Arrays.asList(1)});
 		
