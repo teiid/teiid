@@ -22,10 +22,7 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2209,8 +2206,7 @@ public class TestProcedureProcessor {
         getProcedurePlan(sql, tm);
     }
     
-    @Test 
-    public void testDynamicCommandWithIntoExpressionInNestedBlock() throws Exception {
+    @Test public void testDynamicCommandWithIntoExpressionInNestedBlock() throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
 		String query = "BEGIN\n"
 				+ "EXECUTE IMMEDIATE 'SELECT e1 FROM pm1.g1 WHERE e1 = ''First''' as x string into #temp;\n"
@@ -2228,6 +2224,23 @@ public class TestProcedureProcessor {
 
 		// Create expected results
 		List[] expected = new List[] { Arrays.asList(new Object[] { "Second" }), //$NON-NLS-1$
+		};
+		helpTestProcess(plan, expected, dataMgr, metadata);
+    }
+    
+    @Test public void testDynamicAnon() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		String query = "BEGIN\n"
+				+ "declare string VARIABLES.RESULT;\n"
+				+ "EXECUTE IMMEDIATE 'begin variables.result = ''a''; end' without return;\n"
+				+ " select VARIABLES.RESULT;" + "END";
+
+		FakeDataManager dataMgr = exampleDataManager(metadata);
+
+		ProcessorPlan plan = getProcedurePlan(query, metadata);
+
+		// Create expected results
+		List[] expected = new List[] { Arrays.asList(new Object[] { "a" }), //$NON-NLS-1$
 		};
 		helpTestProcess(plan, expected, dataMgr, metadata);
     }

@@ -204,7 +204,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                     
                     if(dynCommand.getIntoGroup() == null
                     		&& !dynCommand.isAsClauseSet()) {
-            		    if ((command.getResultSetColumns() != null && command.getResultSetColumns().isEmpty()) || !cmdStmt.isReturnable()) {
+            		    if ((command.getResultSetColumns() != null && command.getResultSetColumns().isEmpty()) || !cmdStmt.isReturnable() || command.getResultSetColumns() == null) {
             		    	//we're not interested in the resultset
             		    	dynCommand.setAsColumns(Collections.EMPTY_LIST);
             		    } else {
@@ -214,7 +214,7 @@ public class UpdateProcedureResolver implements CommandResolver {
                     }
                 }
                 
-                if (command.getResultSetColumns() == null && cmdStmt.isReturnable() && subCommand.returnsResultSet() && !subCommand.getResultSetColumns().isEmpty()) {
+                if (command.getResultSetColumns() == null && cmdStmt.isReturnable() && subCommand.returnsResultSet() && subCommand.getResultSetColumns() != null && !subCommand.getResultSetColumns().isEmpty()) {
                 	command.setResultSetColumns(subCommand.getResultSetColumns());
                 	if (command.getProjectedSymbols().isEmpty()) {
                 		command.setProjectedSymbols(subCommand.getResultSetColumns());

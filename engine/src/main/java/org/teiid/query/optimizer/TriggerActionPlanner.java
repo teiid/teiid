@@ -111,6 +111,7 @@ public final class TriggerActionPlanner {
 		command.setVirtualGroup(ta.getView());
 		command.setUpdateType(userCommand.getType());
 		ProcedurePlan rowProcedure = (ProcedurePlan)QueryOptimizer.optimizePlan(command, metadata, idGenerator, capFinder, analysisRecord, context);
+		rowProcedure.setRunInContext(false);
 		result.setRowProcedure(rowProcedure);
 		return result;
 	}

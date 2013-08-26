@@ -506,7 +506,7 @@ public class ProcedurePlan extends ProcessorPlan implements ProcessorDataManager
     }
     
 	private void createVariableContext() {
-		this.currentVarContext = new VariableContext(false);
+		this.currentVarContext = new VariableContext(runInContext && this.params == null);
         this.currentVarContext.setValue(ROWCOUNT, 0);
 	}
 
