@@ -28,13 +28,26 @@ import static org.teiid.query.processor.proc.TestProcedureProcessor.*;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.transaction.Transaction;
+
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.dqp.service.TransactionContext;
+import org.teiid.dqp.service.TransactionContext.Scope;
+import org.teiid.dqp.service.TransactionService;
 import org.teiid.jdbc.TeiidSQLException;
+import org.teiid.query.metadata.QueryMetadataInterface;
+import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.TestProcedureResolving;
+import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings("nls")
 public class TestProcErrors {
@@ -118,7 +131,7 @@ public class TestProcErrors {
      */
     @Test public void testExceptionHandlingWithResultSet() throws Exception {
     	String ddl = 
-    			"create virtual procedure proc2 (x integer) as begin atomic select 1; begin select 1/x; end exception e end;";
+    			"create virtual procedure proc2 (x integer) returns table(y integer) as begin atomic select 1; begin select 1/x; end exception e end;";
     	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
 
     	String sql = "call proc2(0)"; //$NON-NLS-1$
@@ -164,6 +177,87 @@ public class TestProcErrors {
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         
     	helpTestProcess(plan, new List[] {Arrays.asList(5)}, dataManager, tm);
+    }
+    
+    @Test public void testDynamicAnon() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		String query = "BEGIN atomic\n"
+				+ " declare string VARIABLES.RESULT = 1/0;\n"
+				+ " select VARIABLES.RESULT;" +
+				"exception e " +
+				"execute immediate 'select \"ERRORCODE\"' as x string into #temp;" +
+				" select x from #temp; end";
+
+		ProcessorPlan plan = getProcedurePlan(query, metadata);
+
+		// Create expected results
+		List[] expected = new List[] { Arrays.asList("30328"), //$NON-NLS-1$
+		};
+		helpTestProcess(plan, expected, new HardcodedDataManager(), metadata);
+    }
+    
+    /**
+     * Ensures that values in the block are not resolvable
+     */
+    @Test(expected=QueryResolverException.class) public void testErrorResolving() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+		String query = "BEGIN atomic\n"
+				+ " declare string VARIABLES.RESULT = 1/0;\n"
+				+ " select VARIABLES.RESULT;" +
+				"exception e " +
+				"execute immediate 'select \"ERRORCODE\"' || VARIABLES.RESULT as x string into #temp;" +
+				" select x from #temp; end";
+
+		getProcedurePlan(query, metadata);
+    }
+    
+    @Test public void testNestedBeginAtomicException() throws Exception {
+		TransformationMetadata tm = RealMetadataFactory.example1Cached();
+		String query = "BEGIN atomic\n"
+				+ " declare string VARIABLES.RESULT;\n"
+				+ " begin atomic select 1/0; exception e end end";
+	
+		ProcessorPlan plan = getProcedurePlan(query, tm);
+	
+		// Create expected results
+		List<?>[] expected = new List[0];
+		
+	    CommandContext context = new CommandContext("pID", null, null, null, 1); //$NON-NLS-1$
+		QueryMetadataInterface metadata = new TempMetadataAdapter(tm, new TempMetadataStore());
+	    context.setMetadata(metadata);
+	
+	    TransactionContext tc = new TransactionContext();
+	    Transaction txn = Mockito.mock(Transaction.class);
+		tc.setTransaction(txn);
+	    tc.setTransactionType(Scope.REQUEST);
+	    TransactionService ts = Mockito.mock(TransactionService.class);
+	    context.setTransactionService(ts);
+	    context.setTransactionContext(tc);
+	    
+		TestProcessor.helpProcess(plan, context, new HardcodedDataManager(), expected);
+		
+		Mockito.verify(txn, Mockito.times(3)).setRollbackOnly();
+    }
+    
+    @Test public void testExceptionHandlingWithLoops() throws Exception {
+    	String ddl = 
+    			"create virtual procedure proc2 (out x integer result) as "
+    			+ "begin create local temporary table t (i integer); insert into t (i) values (0); "
+    			+ "begin loop on (select * from t) as x select 1/0; exception e end "
+    			+ "insert into t (i) values (1); "
+    			+ "declare integer result = 0; "
+    			+ "loop on (select * from t) as x result = result + 1; "
+    			+ "x = result;"
+    			+ "select result; end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+
+    	String sql = "call proc2()"; //$NON-NLS-1$
+
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+    	helpTestProcess(plan, new List[] {Arrays.asList(2)}, dataManager, tm);
     }
 	
 }

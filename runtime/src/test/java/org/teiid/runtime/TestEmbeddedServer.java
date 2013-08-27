@@ -435,7 +435,7 @@ public class TestEmbeddedServer {
 		//verify that the block txn was committed because the exception was caught
 		assertEquals(1, tm.txnHistory.size());
 		txn = tm.txnHistory.remove(0);
-		Mockito.verify(txn).commit();
+		Mockito.verify(txn).rollback();
 
 		//test detection
 		tm.txnHistory.clear();

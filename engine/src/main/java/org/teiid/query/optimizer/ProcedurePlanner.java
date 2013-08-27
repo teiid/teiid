@@ -242,7 +242,7 @@ public final class ProcedurePlanner implements CommandPlanner {
 				if (command.getType() == Command.TYPE_DYNAMIC){
 					instruction = new ExecDynamicSqlInstruction(parentProcCommand,((DynamicCommand)command), metadata, idGenerator, capFinder, cmdStmt.isReturnable() );
 				}else{
-					instruction = new CreateCursorResultSetInstruction(null, commandPlan, (!command.returnsResultSet()&&!(command instanceof StoredProcedure))?Mode.UPDATE:(cmdStmt.isReturnable()&&cmdStmt.getCommand().returnsResultSet())?Mode.HOLD:Mode.NOHOLD);
+					instruction = new CreateCursorResultSetInstruction(null, commandPlan, getMode(parentProcCommand, cmdStmt, command));
 					//handle stored procedure calls
 					if (command.getType() == Command.TYPE_STORED_PROCEDURE) {
 						StoredProcedure sp = (StoredProcedure)command;
@@ -334,5 +334,16 @@ public final class ProcedurePlanner implements CommandPlanner {
 		}
 		return instruction;
     }
+
+	private Mode getMode(CreateProcedureCommand parentProcCommand,
+			CommandStatement cmdStmt, Command command) {
+		if (!command.returnsResultSet()&&!(command instanceof StoredProcedure)) { 
+			return Mode.UPDATE;
+		}
+		if (parentProcCommand.returnsResultSet()&&cmdStmt.isReturnable()&&cmdStmt.getCommand().returnsResultSet()) {
+			return Mode.HOLD;
+		}
+		return Mode.NOHOLD;
+	}
         
 } // END CLASS

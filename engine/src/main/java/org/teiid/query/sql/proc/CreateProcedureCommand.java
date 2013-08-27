@@ -225,7 +225,8 @@ public class CreateProcedureCommand extends Command {
     }
 
 	public void setUpdateType(int type) {
-		this.resultSetColumns = Collections.emptyList();
+		//we select the count as the last operation
+		this.resultSetColumns = Command.getUpdateCommandSymbol();
 		this.updateType = type;
 	}
 	

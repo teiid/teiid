@@ -258,10 +258,12 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		localContext.getFlattenedContextMap(variableMap);
 		Map<ElementSymbol, Expression> nameValueMap = new HashMap<ElementSymbol, Expression>(variableMap.size());
 		for (Map.Entry<ElementSymbol, Object> entry : variableMap.entrySet()) {
-			if (entry.getValue() instanceof Expression) {
-				nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
-			} else {
-				nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+			if (entry.getKey() instanceof ElementSymbol) {
+				if (entry.getValue() instanceof Expression) {
+					nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
+				} else {
+					nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+				}
 			}
 		}
 		return nameValueMap;

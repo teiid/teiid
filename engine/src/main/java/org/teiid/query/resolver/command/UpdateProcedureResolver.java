@@ -114,15 +114,15 @@ public class UpdateProcedureResolver implements CommandResolver {
         resolveBlock(procCommand, procCommand.getBlock(), externalGroups, metadata);
     }
 
-	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext externalGroups, 
-                              TempMetadataAdapter metadata)
+	public void resolveBlock(CreateProcedureCommand command, Block block, GroupContext originalExternalGroups, 
+                              TempMetadataAdapter original)
         throws QueryResolverException, QueryMetadataException, TeiidComponentException {
         LogManager.logTrace(org.teiid.logging.LogConstants.CTX_QUERY_RESOLVER, new Object[]{"Resolving block", block}); //$NON-NLS-1$
         
         //create a new variable and metadata context for this block so that discovered metadata is not visible else where
-        TempMetadataStore store = metadata.getMetadataStore().clone();
-        metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
-        externalGroups = new GroupContext(externalGroups, null);
+        TempMetadataStore store = original.getMetadataStore().clone();
+        TempMetadataAdapter metadata = new TempMetadataAdapter(original.getMetadata(), store);
+        GroupContext externalGroups = new GroupContext(originalExternalGroups, null);
         
         //create a new variables group for this block
         GroupSymbol variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
@@ -133,9 +133,9 @@ public class UpdateProcedureResolver implements CommandResolver {
         
         if (block.getExceptionGroup() != null) {
             //create a new variable and metadata context for this block so that discovered metadata is not visible else where
-        	store = metadata.getMetadataStore().clone();
-            metadata = new TempMetadataAdapter(metadata.getMetadata(), store);
-            externalGroups = new GroupContext(externalGroups, null);
+        	store = original.getMetadataStore().clone();
+            metadata = new TempMetadataAdapter(original.getMetadata(), store);
+            externalGroups = new GroupContext(originalExternalGroups, null);
             
             //create a new variables group for this block
             variables = ProcedureContainerResolver.addScalarGroup(ProcedureReservedWords.VARIABLES, store, externalGroups, new LinkedList<Expression>());
