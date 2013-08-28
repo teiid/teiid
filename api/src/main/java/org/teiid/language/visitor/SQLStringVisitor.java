@@ -31,9 +31,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.util.StringUtil;
-import org.teiid.jdbc.JDBCPlugin;
 import org.teiid.language.*;
 import org.teiid.language.Argument.Direction;
 import org.teiid.language.SQLConstants.NonReserved;
@@ -1020,11 +1020,11 @@ public class SQLStringVisitor extends AbstractLanguageVisitor {
 				}
 				int index = Integer.parseInt(match.substring(end + 1))-1;
 				if (index < 0 || index >= list.size()) {
-					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
+					throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.invalid_parameter", index+1, list.size())); //$NON-NLS-1$
 				}
 				Argument arg = list.get(index);
 				if (arg.getDirection() != Direction.IN) {
-					throw new IllegalArgumentException(JDBCPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
+					throw new IllegalArgumentException(DataPlugin.Util.getString("SQLConversionVisitor.not_in_parameter", index+1)); //$NON-NLS-1$
 				}
 				substitutor.substitute(arg, stringBuilder, index);
 			}
