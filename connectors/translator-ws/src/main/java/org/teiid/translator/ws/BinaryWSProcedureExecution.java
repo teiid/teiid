@@ -134,7 +134,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 
 			DataSource ds = null;
 			if (payload instanceof String) {
-				ds = new InputStreamFactory.ClobInputStreamFactory(ClobImpl.createClob(((String)payload).toCharArray()));
+				ds = new InputStreamFactory.ClobInputStreamFactory(new ClobImpl((String)payload));
 			} else if (payload instanceof SQLXML) {
 				ds = new InputStreamFactory.SQLXMLInputStreamFactory((SQLXML)payload);
 			} else if (payload instanceof Clob) {

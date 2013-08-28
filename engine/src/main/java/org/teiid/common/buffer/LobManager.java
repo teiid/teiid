@@ -221,7 +221,7 @@ public class LobManager {
 				} else if (lob instanceof ClobType) {
 					ClobType c = (ClobType)lob;
 					String s = c.getSubString(1, (int)(byteLength>>>1));
-					c.setReference(ClobImpl.createClob(s.toCharArray()));
+					c.setReference(new ClobImpl(s));
 					return c;
 				} else {
 					XMLType x = (XMLType)lob;

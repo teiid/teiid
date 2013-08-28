@@ -509,7 +509,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		String value = entry.getValue();
 				Clob clobValue = null;
 				if (value != null) {
-					clobValue = new ClobType(ClobImpl.createClob(value.toCharArray()));
+					clobValue = new ClobType(new ClobImpl(value));
 				}
 				row.add(entry.getKey());
 				row.add(entry.getValue());
@@ -567,7 +567,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		String value = entry.getValue();
 				Clob clobValue = null;
 				if (value != null) {
-					clobValue = new ClobType(ClobImpl.createClob(value.toCharArray()));
+					clobValue = new ClobType(new ClobImpl(value));
 				}
 				row.add(entry.getKey());
 				row.add(entry.getValue());
@@ -1051,7 +1051,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						if (result == null) {
 							rows.add(Arrays.asList((Clob)null));
 						} else {
-							rows.add(Arrays.asList(new ClobType(ClobImpl.createClob(result.toCharArray()))));
+							rows.add(Arrays.asList(new ClobType(new ClobImpl(result))));
 						}
 					}
 					return new CollectionTupleSource(rows.iterator());

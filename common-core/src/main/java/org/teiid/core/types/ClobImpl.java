@@ -58,7 +58,7 @@ public class ClobImpl extends BaseLob implements Clob {
 
 		@Override
 		public InputStream getInputStream() throws IOException {
-			return new ByteArrayInputStream(str.getBytes());
+			return new ByteArrayInputStream(str.getBytes(Streamable.CHARSET));
 		}
 
 		@Override
