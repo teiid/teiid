@@ -34,6 +34,7 @@ import org.jboss.as.server.deployment.DeploymentUnitProcessingException;
 import org.jboss.as.server.deployment.DeploymentUnitProcessor;
 import org.jboss.msc.service.ServiceController;
 import org.jboss.vfs.VirtualFile;
+import org.jboss.vfs.VirtualFileFilter;
 import org.teiid.adminapi.Model;
 import org.teiid.adminapi.VDB.Status;
 import org.teiid.adminapi.impl.ModelMetaData;
@@ -55,7 +56,7 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 	}
 	
 	public void deploy(final DeploymentPhaseContext phaseContext)  throws DeploymentUnitProcessingException {
-		DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
+		final DeploymentUnit deploymentUnit = phaseContext.getDeploymentUnit();
 		if (!TeiidAttachments.isVDBDeployment(deploymentUnit)) {
 			return;
 		}
@@ -67,33 +68,33 @@ class VDBParserDeployer implements DeploymentUnitProcessor {
 		}
 		else {
 			// scan for different files 
-			List<VirtualFile> childFiles = file.getChildren();
-			for (VirtualFile childFile:childFiles) {
-				scanVDB(childFile, deploymentUnit, phaseContext);
-			}
-			
-			mergeMetaData(deploymentUnit);
-		}
-	}
-	
-	private void scanVDB(VirtualFile file, DeploymentUnit deploymentUnit, DeploymentPhaseContext phaseContext) throws DeploymentUnitProcessingException {
-		if (file.isDirectory()) {
-			List<VirtualFile> childFiles = file.getChildren();
-			for (VirtualFile childFile:childFiles) {
-				scanVDB(childFile, deploymentUnit, phaseContext);
-			}
-		}
-		else {
-			if (file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE)) {
-				parseVDBXML(file, deploymentUnit, phaseContext);
-			}
-			else if (file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
-				UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
-				if (udf == null) {
-					udf = new FileUDFMetaData();
-					deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
+			try {
+				List<VirtualFile> childFiles = file.getChildrenRecursively(new VirtualFileFilter() {
+					
+					@Override
+					public boolean accepts(VirtualFile file) {
+						if (file.isDirectory() && file.getName().toLowerCase().endsWith(VDBResources.MODEL_EXT)) {
+							UDFMetaData udf = deploymentUnit.getAttachment(TeiidAttachments.UDF_METADATA);
+							if (udf == null) {
+								udf = new FileUDFMetaData();
+								deploymentUnit.putAttachment(TeiidAttachments.UDF_METADATA, udf);
+							}
+							((FileUDFMetaData)udf).addModelFile(file);
+							return false;
+						}
+						return !file.isDirectory() && file.getName().toLowerCase().equals(VDBResources.DEPLOYMENT_FILE);
+					}
+				});
+				
+				if (childFiles.size() != 1) {
+					throw new DeploymentUnitProcessingException(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50101, deploymentUnit, childFiles.size()));
 				}
-				((FileUDFMetaData)udf).addModelFile(file);				
+				parseVDBXML(childFiles.get(0), deploymentUnit, phaseContext);
+				
+				mergeMetaData(deploymentUnit);
+
+			} catch (IOException e) {
+				throw new DeploymentUnitProcessingException(IntegrationPlugin.Event.TEIID50017.name(), e);	
 			}
 		}
 	}

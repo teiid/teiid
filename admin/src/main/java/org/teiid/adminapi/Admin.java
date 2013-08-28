@@ -105,8 +105,6 @@ public interface Admin {
      * @param deployName  Name of the VDB file to save under
      * @param content
      * @throws AdminException
-     *
-     * @return the {@link VDB} representing the current property values and runtime state.
      */
     public void deploy(String deployName, InputStream content) throws AdminException;
 

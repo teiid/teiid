@@ -21,7 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
 
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -37,10 +37,6 @@ import org.jboss.as.controller.descriptions.StandardResourceDescriptionResolver;
 import org.jboss.as.controller.registry.ManagementResourceRegistration;
 import org.jboss.as.controller.services.path.ResolvePathHandler;
 import org.jboss.dmr.ModelNode;
-import org.jboss.msc.service.ServiceController;
-import org.teiid.adminapi.VDB;
-import org.teiid.adminapi.impl.VDBMetaData;
-import org.teiid.deployers.VDBRepository;
 
 public abstract class BaseOperationHandler<T> implements OperationStepHandler {
 	private static final String DESCRIBE = ".describe"; //$NON-NLS-1$
@@ -142,13 +138,4 @@ public abstract class BaseOperationHandler<T> implements OperationStepHandler {
 	protected void describeParameters(@SuppressWarnings("unused") SimpleOperationDefinitionBuilder builder) {
 	}
 	
-	boolean isValidVDB(OperationContext context, String vdbName, int vdbVersion) {
-	    ServiceController<?> sc = context.getServiceRegistry(false).getRequiredService(TeiidServiceNames.VDB_REPO);
-	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());	
-		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
-		if (vdb == null || (vdb.getStatus() != VDB.Status.ACTIVE)) {
-			return false;
-		}
-		return true;
-	}	
 }
