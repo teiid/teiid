@@ -258,10 +258,12 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		localContext.getFlattenedContextMap(variableMap);
 		Map<ElementSymbol, Expression> nameValueMap = new HashMap<ElementSymbol, Expression>(variableMap.size());
 		for (Map.Entry<ElementSymbol, Object> entry : variableMap.entrySet()) {
-			if (entry.getValue() instanceof Expression) {
-				nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
-			} else {
-				nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+			if (entry.getKey() instanceof ElementSymbol) {
+				if (entry.getValue() instanceof Expression) {
+					nameValueMap.put(entry.getKey(), (Expression) entry.getValue());
+				} else {
+					nameValueMap.put(entry.getKey(), new Constant(entry.getValue(), entry.getKey().getType()));
+				}
 			}
 		}
 		return nameValueMap;
@@ -322,7 +324,9 @@ public class ExecDynamicSqlInstruction extends ProgramInstruction {
 		if (parentProcCommand.getUpdateType() != Command.TYPE_UNKNOWN) {
 			context.pushCall(Command.getCommandToken(parentProcCommand.getUpdateType()) + " " + parentProcCommand.getVirtualGroup()); //$NON-NLS-1$
 		} else {
-			context.pushCall(parentProcCommand.getVirtualGroup().toString());
+			if (parentProcCommand.getVirtualGroup() != null) {
+				context.pushCall(parentProcCommand.getVirtualGroup().toString());
+			}
 		}
 	}
 

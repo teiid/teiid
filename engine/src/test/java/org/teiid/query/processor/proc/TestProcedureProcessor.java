@@ -2154,7 +2154,21 @@ public class TestProcedureProcessor {
 		};
 		helpTestProcess(plan, expected, dataMgr, metadata);
     }
+    
+    @Test public void testResultSetAtomic() throws Exception {
+    	String ddl = 
+    			"create virtual procedure proc2 (x integer) returns table(y integer) as begin select 1; begin atomic select 2; end end;";
+    	TransformationMetadata tm = TestProcedureResolving.createMetadata(ddl);    	
+    
+    	String sql = "call proc2(0)"; //$NON-NLS-1$
 
+        ProcessorPlan plan = getProcedurePlan(sql, tm);
+
+        HardcodedDataManager dataManager = new HardcodedDataManager(tm);
+        
+    	helpTestProcess(plan, new List[] {Arrays.asList(2)}, dataManager, tm);
+    }
+    
     private static final boolean DEBUG = false;
     
 }

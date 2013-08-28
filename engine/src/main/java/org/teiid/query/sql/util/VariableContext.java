@@ -77,12 +77,11 @@ public class VariableContext {
      * @param variable The <code>ElementSymbol</code> to be added as a variable.
      * @param value The value to be set for the given variable.
      */
-    public void setValue(ElementSymbol variable, Object value) {
+    public Object setValue(Object variable, Object value) {
     	if (delegateSets && parentContext != null && parentContext.containsVariable(variable)) {
-    		parentContext.setValue(variable, value);
-    	} else {
-    		variableMap.put(variable, value);
+    		return parentContext.setValue(variable, value);
     	}
+		return variableMap.put(variable, value);
     }
 
     /**
@@ -92,7 +91,7 @@ public class VariableContext {
      * @param variable The <code>ElementSymbol</code> whose value needs to be returned.
      * @return The value of the given variable
      */
-    public Object getValue(ElementSymbol variable) {
+    public Object getValue(Object variable) {
         if (variableMap.containsKey(variable)) {
             return variableMap.get(variable);
         }
@@ -139,7 +138,7 @@ public class VariableContext {
      * @return A boolean value indiating if the given variable is present on this context
      * or any of it's parent contexts.
      */
-    public boolean containsVariable(ElementSymbol variable) {
+    public boolean containsVariable(Object variable) {
         if(!variableMap.containsKey(variable)) {
             if(this.parentContext != null) {
                 return this.parentContext.containsVariable(variable);
@@ -163,7 +162,7 @@ public class VariableContext {
         return false;
     }
     
-    public Object remove(ElementSymbol symbol) {
+    public Object remove(Object symbol) {
     	if (!this.variableMap.containsKey(symbol)) {
     		if (this.parentContext != null) {
     			return this.parentContext.remove(symbol);
@@ -189,5 +188,9 @@ public class VariableContext {
     public List<Object> getLocalValues() {
     	return new ArrayList<Object>(this.variableMap.values());
     }
+    
+    public Map<Object, Object> getVariableMap() {
+		return variableMap;
+	}
     
 }
