@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -80,6 +79,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
 import org.teiid.metadata.*;
+import org.teiid.metadata.Table.TriggerEvent;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.CompositeMetadataStore;
 import org.teiid.query.metadata.CompositeMetadataStore.RecordHolder;
@@ -190,7 +190,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 	private enum SystemAdminTables {
 		MATVIEWS,
 		VDBRESOURCES,
-		TRANSFORMATIONS
+		TRIGGERS
 	}
 	
 	private enum SystemAdminProcs {
@@ -520,88 +520,50 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	
         	@Override
         	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent) {
-        		ConcurrentSkipListMap props = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);
-        		props.putAll(parent.getProperties());
-        		if (parent instanceof Table) {
-        			Table table = (Table)parent;
-        			if (table.isMaterialized() && table.getMaterializedTable() != null) {
-        				props.put("{http://www.teiid.org/ext/relational/2012}MATERIALIZED_TABLE", table.getMaterializedTable().getName()); //$NON-NLS-1$
-        			}
-        		}
-        		if (parent instanceof Procedure) {
-        			Procedure proc = (Procedure)parent;
-        			if (proc.getUpdateCount() > 0) {
-        				props.put("{http://www.teiid.org/ext/relational/2012}UPDATE_COUNT", String.valueOf(proc.getUpdateCount())); //$NON-NLS-1$
-        			}
-        		}
-        		return props.entrySet();
+        		return parent.getProperties().entrySet();
         	}
 		});
-        name = SystemAdminTables.TRANSFORMATIONS.name();
+        name = SystemAdminTables.TRIGGERS.name();
         columns = getColumns(tm, name);
-        systemAdminTables.put(SystemAdminTables.TRANSFORMATIONS, new ChildRecordExtractionTable<AbstractMetadataRecord, Map.Entry<String, String>>(
-        		new RecordTable<AbstractMetadataRecord>(new int[] {0}, columns.subList(2, 3)) {
-        			@Override
-        			protected void fillRow(AbstractMetadataRecord s, List<Object> rowBuffer) {
-        				rowBuffer.add(s.getUUID());
-        			}
-        			
-        			@Override
-        			public SimpleIterator<AbstractMetadataRecord> processQuery(
-        					VDBMetaData vdb, CompositeMetadataStore metadataStore,
-        					BaseIndexInfo<?> ii) {
-        				return processQuery(vdb, metadataStore.getOids(), ii);
-        			}
-        			
-        			@Override
-        			protected AbstractMetadataRecord extractRecord(Object val) {
-        				if (val != null) {
-        					return ((RecordHolder)val).getRecord();
-        				}
-        				return null;
-        			}
-        		}, columns) {
-        	
+        systemAdminTables.put(SystemAdminTables.TRIGGERS, new ChildRecordExtractionTable<Table, Trigger>(new TableSystemTable(1, 2, columns), columns) {
         	@Override
-        	public void fillRow(List<Object> row, Map.Entry<String,String> entry, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<Map.Entry<String, String>> iter) {
-        		String value = entry.getValue();
-				Clob clobValue = null;
-				if (value != null) {
-					clobValue = new ClobType(new ClobImpl(value));
+        	protected void fillRow(List<Object> row, Trigger record, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<Trigger> iter) {
+        		Clob clobValue = null;
+				if (record.body != null) {
+					clobValue = new ClobType(ClobImpl.createClob(record.body.toCharArray()));
 				}
-				row.add(entry.getKey());
-				row.add(entry.getValue());
-				row.add(((ExpandingSimpleIterator<AbstractMetadataRecord, Entry<String, String>>)iter).getCurrentParent().getUUID());
+				AbstractMetadataRecord table = ((ExpandingSimpleIterator<AbstractMetadataRecord, Trigger>)iter).getCurrentParent();				
+				row.add(vdb.getName());
+				row.add(table.getParent().getName());
+				row.add(table.getName());
+				row.add(record.name);
+				row.add(record.triggerType);
+				row.add(record.triggerEvent);
+				row.add(record.status);
+				row.add(record.firingTime);
+				row.add(record.body);
 				row.add(clobValue);
+				row.add(table.getUUID());
         	}
         	
         	@Override
-        	protected Collection<Map.Entry<String,String>> getChildren(AbstractMetadataRecord parent) {
-        		ConcurrentSkipListMap props = new ConcurrentSkipListMap<String, String>(String.CASE_INSENSITIVE_ORDER);        		
-        		if (parent instanceof Table) {
-        			Table table = (Table)parent;
-        			if (table.isVirtual()) {
-        				props.put("{http://www.teiid.org/ext/relational/2012}SELECT_PLAN", table.getSelectTransformation()); //$NON-NLS-1$
-        				if (table.isInsertPlanEnabled() && table.getInsertPlan() != null) {
-        					props.put("{http://www.teiid.org/ext/relational/2012}INSERT_PLAN", table.getInsertPlan()); //$NON-NLS-1$
-        				}
-        				if (table.isUpdatePlanEnabled() && table.getUpdatePlan() != null) {
-        					props.put("{http://www.teiid.org/ext/relational/2012}UPDATE_PLAN", table.getUpdatePlan()); //$NON-NLS-1$
-        				}
-        				if (table.isDeletePlanEnabled() && table.getDeletePlan() != null) {
-        					props.put("{http://www.teiid.org/ext/relational/2012}DELETE_PLAN", table.getDeletePlan()); //$NON-NLS-1$
-        				}
+        	protected Collection<Trigger> getChildren(Table table) {
+        		ArrayList<Trigger> cols = new ArrayList<Trigger>();
+        		if (table .isVirtual()) {
+        			cols.add(new Trigger("st", "EXECUTION", true, null, table.getSelectTransformation())); //$NON-NLS-1$ //$NON-NLS-2$ 
+        			if (table.getInsertPlan() != null) {
+        				cols.add(new Trigger("it", TriggerEvent.INSERT.name(), table.isInsertPlanEnabled(), null, table.getInsertPlan())); //$NON-NLS-1$ 
         			}
-        		}
-        		if (parent instanceof Procedure) {
-        			Procedure proc = (Procedure)parent;
-        			if (proc.isVirtual() && !proc.isFunction()) {
-        				props.put("{http://www.teiid.org/ext/relational/2012}PROCEDURE_PLAN", proc.getQueryPlan()); //$NON-NLS-1$
+        			if (table.getUpdatePlan() != null) {
+        				cols.add(new Trigger("ut", TriggerEvent.UPDATE.name(), table.isUpdatePlanEnabled(), null, table.getUpdatePlan())); //$NON-NLS-1$ 
         			}
+        			if (table.getDeletePlan() != null) {
+        				cols.add(new Trigger("dt", TriggerEvent.DELETE.name(), table.isDeletePlanEnabled(), null, table.getDeletePlan())); //$NON-NLS-1$ 
+        			}        			
         		}
-        		return props.entrySet();
+        		return cols;
         	}
-		});        
+        });        
         name = SystemTables.COLUMNS.name();
         columns = getColumns(tm, name);
         systemTables.put(SystemTables.COLUMNS, new ChildRecordExtractionTable<Table, Column>(new TableSystemTable(1, 2, columns), columns) {
@@ -1193,4 +1155,21 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		return this.bufferManager;
 	}
     
+	static class Trigger {
+		String name;
+		String triggerType;
+		String triggerEvent;
+		String status;
+		String firingTime;
+		String body;
+		
+		Trigger(String name, String event, boolean status, String time, String body){
+			this.name = name;
+			this.triggerType = body.startsWith("FOR EACH ROW")?"ROW":"STATEMENT"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			this.triggerEvent = event;
+			this.status = status?"ENABLED":"DISABLED"; //$NON-NLS-1$ //$NON-NLS-2$  
+			this.firingTime = time;
+			this.body = body;
+		}
+	}    
 }
