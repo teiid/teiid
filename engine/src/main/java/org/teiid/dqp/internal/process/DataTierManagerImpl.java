@@ -530,7 +530,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	protected void fillRow(List<Object> row, Trigger record, VDBMetaData vdb, TransformationMetadata metadata, CommandContext cc, SimpleIterator<Trigger> iter) {
         		Clob clobValue = null;
 				if (record.body != null) {
-					clobValue = new ClobType(ClobImpl.createClob(record.body.toCharArray()));
+					clobValue = new ClobType(new ClobImpl(record.body));
 				}
 				AbstractMetadataRecord table = ((ExpandingSimpleIterator<AbstractMetadataRecord, Trigger>)iter).getCurrentParent();				
 				row.add(vdb.getName());
@@ -540,8 +540,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(record.triggerType);
 				row.add(record.triggerEvent);
 				row.add(record.status);
-				row.add(record.firingTime);
-				row.add(record.body);
 				row.add(clobValue);
 				row.add(table.getUUID());
         	}
@@ -550,7 +548,6 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         	protected Collection<Trigger> getChildren(Table table) {
         		ArrayList<Trigger> cols = new ArrayList<Trigger>();
         		if (table .isVirtual()) {
-        			cols.add(new Trigger("st", "EXECUTION", true, null, table.getSelectTransformation())); //$NON-NLS-1$ //$NON-NLS-2$ 
         			if (table.getInsertPlan() != null) {
         				cols.add(new Trigger("it", TriggerEvent.INSERT.name(), table.isInsertPlanEnabled(), null, table.getInsertPlan())); //$NON-NLS-1$ 
         			}
@@ -1157,18 +1154,15 @@ public class DataTierManagerImpl implements ProcessorDataManager {
     
 	static class Trigger {
 		String name;
-		String triggerType;
+		String triggerType = "INSTEAD OF"; //$NON-NLS-1$
 		String triggerEvent;
 		String status;
-		String firingTime;
 		String body;
 		
 		Trigger(String name, String event, boolean status, String time, String body){
 			this.name = name;
-			this.triggerType = body.startsWith("FOR EACH ROW")?"ROW":"STATEMENT"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 			this.triggerEvent = event;
 			this.status = status?"ENABLED":"DISABLED"; //$NON-NLS-1$ //$NON-NLS-2$  
-			this.firingTime = time;
 			this.body = body;
 		}
 	}    
