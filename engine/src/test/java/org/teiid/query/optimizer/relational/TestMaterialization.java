@@ -22,9 +22,14 @@
 
 package org.teiid.query.optimizer.relational;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.optimizer.TestOptimizer.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.teiid.query.optimizer.TestOptimizer.DEBUG;
+import static org.teiid.query.optimizer.TestOptimizer.getGenericFinder;
+import static org.teiid.query.optimizer.TestOptimizer.helpGetCommand;
 
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Ignore;
@@ -37,7 +42,13 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
-import org.teiid.query.sql.lang.Command;
+import org.teiid.query.processor.relational.SelectNode;
+import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
 import org.teiid.query.tempdata.GlobalTableStoreImpl;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
@@ -199,4 +210,47 @@ public class TestMaterialization {
         assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
     }
 
+    @Test public void testManagedMaterializedTransformation() throws Exception {
+        String userSql = "SELECT * FROM ManagedMatView"; //$NON-NLS-1$
+        
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMaterializedView();
+        AnalysisRecord analysis = new AnalysisRecord(true, DEBUG);
+        
+        Command command = helpGetCommand(userSql, metadata, null);
+        
+        RelationalPlan plan = (RelationalPlan)TestOptimizer.helpPlanCommand(command, metadata, getGenericFinder(), analysis, new String[] {"SELECT g_0.e1 FROM MatTable.MatTable AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+
+        Criteria crit = ((SelectNode)plan.getRootNode().getChildren()[0]).getCriteria();
+        
+        
+        
+        Expression expr1 = new ElementSymbol("Valid"); //$NON-NLS-1$
+		Expression expr2 = new ElementSymbol("LoadState"); //$NON-NLS-1$
+		Expression expr3 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
+		
+		Query subquery = new Query();
+		Select subSelect = new Select();
+        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3})); //$NON-NLS-1$
+        subquery.setSelect(subSelect);
+		GroupSymbol statusTable = new GroupSymbol("MatSrc.Status");
+		statusTable.setGlobalTable(false);
+		subquery.setFrom(new From(Arrays.asList(new UnaryFromClause(statusTable))));
+		
+        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant("MatView")); //$NON-NLS-1$
+        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant("ManagedMatView")); //$NON-NLS-1$
+        CompoundCriteria cc  = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
+        subquery.setCriteria(cc);
+        Limit limit = new Limit(null, new Constant(1));
+        limit.setImplicit(true);
+        subquery.setLimit(limit);
+        Criteria expected = new ExistsCriteria(subquery);
+        
+        assertEquals(expected.toString(), crit.toString());
+        
+        Collection<Annotation> annotations = analysis.getAnnotations();
+        assertNotNull("Expected annotations but got none", annotations); //$NON-NLS-1$
+        assertEquals("Expected catagory mat view", annotations.iterator().next().getCategory(), Annotation.MATERIALIZED_VIEW); //$NON-NLS-1$
+    }
+    
+    
 }

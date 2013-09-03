@@ -247,7 +247,7 @@ public class TestProjectNode extends TestCase {
             Arrays.asList(new Object[] { "1" }),  //$NON-NLS-1$
             Arrays.asList(new Object[] { "2x" }) }; //$NON-NLS-1$
 
-        String expectedMessage = "TEIID30328 Unable to evaluate convert(e1, integer): TEIID30384 Error while evaluating function convert"; //$NON-NLS-1$
+        String expectedMessage = "TEIID30328 Unable to evaluate convert(e1, integer): TEIID30384 Error while evaluating function convert : ROOT ERROR NULL"; //$NON-NLS-1$
 
         helpTestProjectFails(projectElements, data, elements, expectedMessage);        
     }
