@@ -46,6 +46,13 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 	public static final String MATVIEW_STATUS_TABLE = "{http://www.teiid.org/ext/relational/2012}MATVIEW_STATUS_TABLE"; //$NON-NLS-1$
 	public static final String MATVIEW_TTL = "{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL"; //$NON-NLS-1$
 	public static final String MATVIEW_STAGE_TABLE = "{http://www.teiid.org/ext/relational/2012}MATERIALIZED_STAGE_TABLE"; //$NON-NLS-1$
+	public static final String MATVIEW_SHARE_SCOPE = "{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE"; //$NON-NLS-1$
+	
+	public enum LoadStates {NEEDS_LOADING, LOADING, LOADED, FAILED_LOAD};
+	public enum Scope {NONE, VDB, SCHEMA};
+	public enum ErrorAction {THROW_EXCEPTION, IGNORE, WAIT}
+	// Status table column names
+	//VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, OnErrorAction
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
