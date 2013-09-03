@@ -69,6 +69,7 @@ import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.util.CommandContext;
 
 /**
@@ -1482,4 +1483,16 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
+	public static boolean mvstatus(boolean validity, String status, String action) throws SQLException {
+		if (!validity || !status.equalsIgnoreCase(MaterializationMetadataRepository.LoadStates.LOADED.name())) {
+			if (action.equalsIgnoreCase(MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name())) {
+				throw new SQLException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147));
+			}
+			if (action.equalsIgnoreCase(MaterializationMetadataRepository.ErrorAction.IGNORE.name())) {
+				return true;
+			}			
+			return false;
+		}
+		return true;
+	}
 }

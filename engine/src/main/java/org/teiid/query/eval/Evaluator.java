@@ -1067,11 +1067,11 @@ public class Evaluator {
 					}
 					return XMLSystemFunctions.jsonToXml(context, rootName, (Clob)lob, true);
 				} catch (IOException e) {
-					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName()));
+					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName(), e.getMessage()));
 				} catch (SQLException e) {
-					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName()));
+					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName(), e.getMessage()));
 				} catch (TeiidProcessingException e) {
-					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName()));
+					throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, f.getFunctionDescriptor().getName(), e.getMessage()));
 				}
 			}
 		} else if (passing.getExpression() instanceof XMLParse) {

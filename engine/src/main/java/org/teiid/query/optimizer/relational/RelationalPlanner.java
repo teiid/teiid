@@ -43,6 +43,7 @@ import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.BasicQueryMetadata;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
@@ -1578,7 +1579,7 @@ public class RelationalPlanner {
         			symbols.add(new ElementSymbol(el.getShortName()));
         		}
 
-        		Query query = createMatViewQuery(matMetadataId, matTableName, symbols, isImplicitGlobal);
+        		Query query = createMatViewQuery(metadataID, matMetadataId, matTableName, symbols, isImplicitGlobal);
         		query.setCacheHint(hint);
         		qnode.setCommand(query);
                 cacheString = "matview"; //$NON-NLS-1$
@@ -1601,6 +1602,57 @@ public class RelationalPlanner {
 		gs.setMetadataID(matMetadataId);
 		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
 		return query;
+	}    
+	
+	public Query createMatViewQuery(Object viewMatadataId, Object matMetadataId, String matTableName, List<? extends Expression> select, boolean isGlobal) throws QueryMetadataException, TeiidComponentException {
+		Query query = new Query();
+		query.setSelect(new Select(select));
+		GroupSymbol gs = new GroupSymbol(matTableName);
+		gs.setGlobalTable(isGlobal);
+		gs.setMetadataID(matMetadataId);
+		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
+		
+		boolean allow = false;
+		if (!(viewMatadataId instanceof TempMetadataID)) {
+			allow = Boolean.parseBoolean(metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false));
+		}
+		if (allow) {
+			String statusTableName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
+			String scope = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
+			Expression expr1 = new ElementSymbol("Valid"); //$NON-NLS-1$
+			Expression expr2 = new ElementSymbol("LoadState"); //$NON-NLS-1$
+			Expression expr3 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
+			
+			Query subquery = new Query();
+			Select subSelect = new Select();
+	        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3})); //$NON-NLS-1$
+	        subquery.setSelect(subSelect);
+			GroupSymbol statusTable = new GroupSymbol(statusTableName);
+			statusTable.setGlobalTable(false);
+			subquery.setFrom(new From(Arrays.asList(new UnaryFromClause(statusTable))));
+			
+			String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
+			String viewName = metadata.getName(viewMatadataId);
+			
+			CompoundCriteria cc  = null;
+	        CompareCriteria c1 = new CompareCriteria(new ElementSymbol("VDBName"), CompareCriteria.EQ, new Constant(context.getVdbName())); //$NON-NLS-1$
+	        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(context.getVdbVersion())); //$NON-NLS-1$
+	        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant(schemaName)); //$NON-NLS-1$
+	        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant(viewName)); //$NON-NLS-1$
+			
+	        if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.NONE.name())) { 
+		        cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c2, c3, c4));
+			}
+			else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.VDB.name())) {
+				cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c3, c4));
+			}
+			else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.SCHEMA.name())) { 
+				cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
+			}			
+	        subquery.setCriteria(cc);
+			query.setCriteria(new ExistsCriteria(subquery));
+		}
+	return query;
 	}
 	
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,
