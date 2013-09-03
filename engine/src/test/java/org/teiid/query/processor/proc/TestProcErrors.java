@@ -22,8 +22,10 @@
 
 package org.teiid.query.processor.proc;
 
-import static org.junit.Assert.*;
-import static org.teiid.query.processor.proc.TestProcedureProcessor.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.teiid.query.processor.proc.TestProcedureProcessor.getProcedurePlan;
+import static org.teiid.query.processor.proc.TestProcedureProcessor.helpTestProcess;
 
 import java.util.Arrays;
 import java.util.List;
@@ -100,7 +102,7 @@ public class TestProcErrors {
 
         HardcodedDataManager dataManager = new HardcodedDataManager(tm);
         
-    	helpTestProcess(plan, new List[] {Arrays.asList("50000 30328 TEIID30328 org.teiid.jdbc.TeiidSQLException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function / org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function /")}, dataManager, tm);
+    	helpTestProcess(plan, new List[] {Arrays.asList("50000 30328 TEIID30328 org.teiid.jdbc.TeiidSQLException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function / : root error null org.teiid.api.exception.query.ExpressionEvaluationException: TEIID30328 Unable to evaluate (1 / 0): TEIID30384 Error while evaluating function / : root error null")}, dataManager, tm);
     }
     
     @Test public void testExceptionHandling() throws Exception {

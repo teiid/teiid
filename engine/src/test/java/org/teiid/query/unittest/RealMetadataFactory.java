@@ -61,6 +61,7 @@ import org.teiid.query.mapping.xml.MappingSequenceNode;
 import org.teiid.query.mapping.xml.MappingVisitor;
 import org.teiid.query.mapping.xml.Navigator;
 import org.teiid.query.metadata.CompositeMetadataStore;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.MetadataValidator;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
@@ -402,6 +403,11 @@ public class RealMetadataFactory {
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        Table status = createPhysicalGroup("Status", physModel_virtSrc); //$NON-NLS-1$
+        createElements(status,
+                                      new String[] { "VDBName", "VDBVersion", "SchemaName", "Name", "TargetSchemaName", "TargetName", "Valid", "LoadState", "Cardinality", "OnErrorAction", "Updated" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.BOOLEAN, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.INTEGER, DataTypeManager.DefaultDataTypes.STRING, DataTypeManager.DefaultDataTypes.TIMESTAMP});
+        
         QueryNode virtTrans = new QueryNode("SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table virtGroup = createVirtualGroup("MatView", virtModel, virtTrans); //$NON-NLS-1$
         createElements(virtGroup,
@@ -411,6 +417,20 @@ public class RealMetadataFactory {
         virtGroup.setMaterialized(true);
         virtGroup.setMaterializedTable(physGroup);
         virtGroup.setMaterializedStageTable(physGroupStage);
+        
+        QueryNode virtTransManaged = new QueryNode("SELECT x as e1 FROM MatSrc.MatSrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table virtGroupManaged = createVirtualGroup("ManagedMatView", virtModel, virtTransManaged); //$NON-NLS-1$
+        createElements(virtGroupManaged,
+                                      new String[] { "e1" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+       
+        virtGroupManaged.setMaterialized(true);
+        virtGroupManaged.setMaterializedTable(physGroup);
+        virtGroupManaged.setMaterializedStageTable(physGroupStage);
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, "true");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, "MatSrc.Status");
+        virtGroupManaged.setProperty(MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, "SCHEMA");
+        
         
         //add one virtual group that uses the materialized group in transformation with NOCACHE option
         QueryNode vTrans = new QueryNode("SELECT e1 FROM MatView.MatView option NOCACHE");         //$NON-NLS-1$ //$NON-NLS-2$
@@ -1651,6 +1671,7 @@ public class RealMetadataFactory {
 	
 	static void extractColumns(final Table table, MappingDocument plan) {
 		MappingVisitor mv = new MappingVisitor() {
+			@Override
 			public void visit(MappingElement element) {
 				String type = element.getType();
 				addColumn(element, type);
@@ -1670,6 +1691,7 @@ public class RealMetadataFactory {
 				createElement(element.getFullyQualifiedName(), table, type);
 			}
 			
+			@Override
 			public void visit(MappingAttribute attribute) {
 				String type = attribute.getType();
 				addColumn(attribute, type);

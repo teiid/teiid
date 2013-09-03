@@ -1612,7 +1612,10 @@ public class RelationalPlanner {
 		gs.setMetadataID(matMetadataId);
 		query.setFrom(new From(Arrays.asList(new UnaryFromClause(gs))));
 		
-		boolean allow = Boolean.parseBoolean(metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false));
+		boolean allow = false;
+		if (!(viewMatadataId instanceof TempMetadataID)) {
+			allow = Boolean.parseBoolean(metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false));
+		}
 		if (allow) {
 			String statusTableName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
 			String scope = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
