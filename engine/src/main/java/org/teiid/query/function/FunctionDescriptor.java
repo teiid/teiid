@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.ArrayImpl;
@@ -190,7 +191,7 @@ public class FunctionDescriptor implements Serializable, Cloneable {
 	 * @param fd Function descriptor describing the name and types of the arguments
 	 * @return Result of invoking the function
 	 */
-	public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException {
+	public Object invokeFunction(Object[] values, CommandContext context, Object functionTarget) throws FunctionExecutionException, BlockedException {
         if (!isNullDependent()) {
         	for (int i = requiresContext?1:0; i < values.length; i++) {
 				if (values[i] == null) {
@@ -265,6 +266,9 @@ public class FunctionDescriptor implements Serializable, Cloneable {
         } catch(ArithmeticException e) {
     		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName(), e.getMessage()));
         } catch(InvocationTargetException e) {
+        	 if (e.getTargetException() instanceof BlockedException) {
+        		 throw (BlockedException)e.getTargetException();
+        	 }
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30384, e.getTargetException(), QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30384, getFullName(), e.getMessage()));
         } catch(IllegalAccessException e) {
              throw new FunctionExecutionException(QueryPlugin.Event.TEIID30385, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30385, method.toString()));

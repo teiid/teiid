@@ -1619,13 +1619,15 @@ public class RelationalPlanner {
 		if (allow) {
 			String statusTableName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
 			String scope = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
-			Expression expr1 = new ElementSymbol("Valid"); //$NON-NLS-1$
-			Expression expr2 = new ElementSymbol("LoadState"); //$NON-NLS-1$
-			Expression expr3 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
+			Expression expr1 = new ElementSymbol("SchemaName"); //$NON-NLS-1$
+			Expression expr2 = new ElementSymbol("Name"); //$NON-NLS-1$
+			Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
+			Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
+			Expression expr5 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
 			
 			Query subquery = new Query();
 			Select subSelect = new Select();
-	        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3})); //$NON-NLS-1$
+	        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, expr5})); //$NON-NLS-1$ 
 	        subquery.setSelect(subSelect);
 			GroupSymbol statusTable = new GroupSymbol(statusTableName);
 			statusTable.setGlobalTable(false);
@@ -1650,9 +1652,9 @@ public class RelationalPlanner {
 				cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
 			}			
 	        subquery.setCriteria(cc);
-			query.setCriteria(new ExistsCriteria(subquery));
+			query.setCriteria(new SubqueryCompareCriteria(new Constant(1), subquery, SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL));
 		}
-	return query;
+		return query;
 	}
 	
     public static boolean isNoCacheGroup(QueryMetadataInterface metadata,

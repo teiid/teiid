@@ -43,7 +43,15 @@ import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.relational.RelationalPlan;
 import org.teiid.query.processor.relational.SelectNode;
-import org.teiid.query.sql.lang.*;
+import org.teiid.query.sql.lang.Command;
+import org.teiid.query.sql.lang.CompareCriteria;
+import org.teiid.query.sql.lang.CompoundCriteria;
+import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.From;
+import org.teiid.query.sql.lang.Query;
+import org.teiid.query.sql.lang.Select;
+import org.teiid.query.sql.lang.SubqueryCompareCriteria;
+import org.teiid.query.sql.lang.UnaryFromClause;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
@@ -222,15 +230,15 @@ public class TestMaterialization {
 
         Criteria crit = ((SelectNode)plan.getRootNode().getChildren()[0]).getCriteria();
         
-        
-        
-        Expression expr1 = new ElementSymbol("Valid"); //$NON-NLS-1$
-		Expression expr2 = new ElementSymbol("LoadState"); //$NON-NLS-1$
-		Expression expr3 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
+		Expression expr1 = new ElementSymbol("SchemaName"); //$NON-NLS-1$
+		Expression expr2 = new ElementSymbol("Name"); //$NON-NLS-1$
+		Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
+		Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
+		Expression expr5 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
 		
 		Query subquery = new Query();
 		Select subSelect = new Select();
-        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3})); //$NON-NLS-1$
+        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, expr5})); //$NON-NLS-1$
         subquery.setSelect(subSelect);
 		GroupSymbol statusTable = new GroupSymbol("MatSrc.Status");
 		statusTable.setGlobalTable(false);
@@ -240,10 +248,7 @@ public class TestMaterialization {
         CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant("ManagedMatView")); //$NON-NLS-1$
         CompoundCriteria cc  = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
         subquery.setCriteria(cc);
-        Limit limit = new Limit(null, new Constant(1));
-        limit.setImplicit(true);
-        subquery.setLimit(limit);
-        Criteria expected = new ExistsCriteria(subquery);
+        Criteria expected = new SubqueryCompareCriteria(new Constant(1), subquery, SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL);
         
         assertEquals(expected.toString(), crit.toString());
         

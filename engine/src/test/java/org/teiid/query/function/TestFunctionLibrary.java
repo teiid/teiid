@@ -22,7 +22,12 @@
 
 package org.teiid.query.function;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -46,6 +51,7 @@ import org.junit.Test;
 import org.teiid.adminapi.impl.SessionMetadata;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.InvalidFunctionException;
+import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
@@ -104,20 +110,25 @@ public class TestFunctionLibrary {
         final String fname = name;
         final Class<?>[] ftypes = types;
         return new FunctionDescriptor() {
-            public String getName() {
+            @Override
+			public String getName() {
                 return fname;
             }
-            public PushDown getPushdown() {
+            @Override
+			public PushDown getPushdown() {
                 return PushDown.CAN_PUSHDOWN;
             }
-            public Class<?>[] getTypes() { 
+            @Override
+			public Class<?>[] getTypes() { 
                 return ftypes;
             }
-            public Class<?> getReturnType() { 
+            @Override
+			public Class<?> getReturnType() { 
                 return null;
             }
             
-            public String toString() {
+            @Override
+			public String toString() {
                 StringBuffer str = new StringBuffer(fname);
                 str.append("("); //$NON-NLS-1$
                 for(int i=0; i<ftypes.length; i++) {
@@ -132,10 +143,12 @@ public class TestFunctionLibrary {
                 }
                 return str.toString();
             }
-            public boolean requiresContext() {
+            @Override
+			public boolean requiresContext() {
                 return false;
             }
-            public boolean isNullDependent() {
+            @Override
+			public boolean isNullDependent() {
                 return true;
             }
             
@@ -208,14 +221,14 @@ public class TestFunctionLibrary {
         } 
 	}
     
-    private void helpInvokeMethod(String fname, Class<?>[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException {
+    private void helpInvokeMethod(String fname, Class<?>[] types, Object[] inputs, CommandContext context, Object expectedOutput) throws FunctionExecutionException, BlockedException {
     	Object actualOutput = helpInvokeMethod(fname, types, inputs, context);
         assertEquals("Actual function output not equal to expected: ", expectedOutput, actualOutput); //$NON-NLS-1$
     }
 
 	private Object helpInvokeMethod(String fname, Class<?>[] types,
 			Object[] inputs, CommandContext context)
-			throws FunctionExecutionException {
+			throws FunctionExecutionException, BlockedException {
 		if (types == null) {
             // Build type signature
             types = new Class<?>[inputs.length];
@@ -254,7 +267,8 @@ public class TestFunctionLibrary {
             helpInvokeMethod(fname, types, inputs, null);
             fail("expected exception"); //$NON-NLS-1$
         } catch (FunctionExecutionException err) {
-        }    
+        } catch (BlockedException e) {
+        }
     }    
 	// ################################## ACTUAL TESTS ################################
 	
