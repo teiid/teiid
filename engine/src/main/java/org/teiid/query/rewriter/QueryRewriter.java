@@ -1404,7 +1404,9 @@ public class QueryRewriter {
                 Object result = descriptor.invokeFunction(new Object[] { const2.getValue(), const1.getValue() }, null, this.context );
                 combinedConst = new Constant(result, descriptor.getReturnType());
             } catch(FunctionExecutionException e) {
-            	 throw new QueryValidatorException(QueryPlugin.Event.TEIID30373, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30373, e.getMessage()));
+            	throw new QueryValidatorException(QueryPlugin.Event.TEIID30373, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30373, e.getMessage()));
+        	} catch (BlockedException e) {
+        		throw new QueryValidatorException(QueryPlugin.Event.TEIID30373, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30373, e.getMessage()));        		
         	}
         } else {
             Function conversion = new Function(descriptor.getName(), new Expression[] { rightExpr, const1 });
@@ -1647,6 +1649,8 @@ public class QueryRewriter {
     	} catch(FunctionExecutionException e) {
             //Not all numeric formats are invertable, so just return the criteria as it may still be valid
             return crit;
+        } catch (BlockedException e) {
+        	return crit;
         }
         //parseFunctions are all potentially narrowing
         if (!isFormat) {

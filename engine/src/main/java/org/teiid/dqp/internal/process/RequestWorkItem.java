@@ -33,7 +33,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.teiid.client.RequestMessage;
 import org.teiid.client.RequestMessage.ShowPlan;
@@ -614,6 +617,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			
 			int maxRows = 0;
 			
+			@Override
 			protected void flushBatchDirect(TupleBatch batch, boolean add) throws TeiidComponentException,TeiidProcessingException {
 				resultsBuffer = getTupleBuffer();
 				if (maxRows == 0) {
@@ -1202,6 +1206,16 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
     
     public RequestID getRequestID() {
 		return requestID;
+	}
+
+	public List<? extends List<?>> execute(String command) throws TeiidException, TimeoutException, ExecutionException, InterruptedException {
+		RequestMessage request = new RequestMessage(command); 
+		Future<ResultsMessage> message = dqpCore.executeRequest(requestID.getExecutionID() + 100, request);
+		ResultsMessage rm = message.get(30000, TimeUnit.MILLISECONDS);
+		if (rm.getException() != null) {
+			throw rm.getException();
+		}
+		return rm.getResultsList();
 	}
 
 }
