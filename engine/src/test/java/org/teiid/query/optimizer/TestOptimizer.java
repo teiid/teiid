@@ -2691,6 +2691,12 @@ public class TestOptimizer {
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
     
+    @Test public void testCopyCriteriaWithTransitivePushdown2(){
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1, pm1.g2.e1 from pm1.g1, pm1.g4, pm1.g2, pm1.g3 where pm1.g1.e1 = pm1.g2.e1 and pm1.g2.e1 = pm1.g3.e1 and pm1.g1.e1 = 'a'", example1(), //$NON-NLS-1$
+            new String[] { "SELECT g_1.e1, g_2.e1 FROM pm1.g4 AS g_0, pm1.g1 AS g_1, pm1.g2 AS g_2, pm1.g3 AS g_3 WHERE (g_2.e1 = g_3.e1) AND (g_1.e1 = g_2.e1) AND (g_1.e1 = 'a') AND (g_2.e1 = 'a') AND (g_3.e1 = 'a')" }); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
+    
     @Test public void testCleanCriteria(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2 where pm2.g1.e1=pm2.g2.e1 and pm2.g1.e2 IN (1, 2)", example1(), //$NON-NLS-1$

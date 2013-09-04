@@ -178,6 +178,9 @@ public final class RuleCopyCriteria implements OptimizerRule {
         //if this is unique or it a duplicate but reduced a current join conjunct, return true
         if (isNew) {
             joinCriteria.add(tgtCrit);
+            if (tgtCrit instanceof CompareCriteria) {
+            	((CompareCriteria)tgtCrit).setOptional(true);
+            }
             return true;
         } else if (checkForGroupReduction) {
             return true;
@@ -325,19 +328,13 @@ public final class RuleCopyCriteria implements OptimizerRule {
             
             if (copyCriteria(crit, srcToTgt, newJoinCrits, combinedCriteria, copyingJoinCriteria, metadata, underAccess)) {
             	changedTree = true;
-            	if (!copyingJoinCriteria) {
-            		crit = newJoinCrits.get(newJoinCrits.size() - 1);
-            	}
-            	//TODO more criteria can be "optional"
-            	if (crit instanceof CompareCriteria) {
-            		CompareCriteria cc = (CompareCriteria)crit;
-            		//if (cc.getLeftExpression() instanceof ElementSymbol && cc.getRightExpression() instanceof ElementSymbol) {
-            			//don't remove theta criteria, just mark it as optional
-        				cc.setOptional(copyingJoinCriteria?null:true);
-            			continue;
-            		//}
-            	}
             	if (copyingJoinCriteria) {
+            		if (crit instanceof CompareCriteria) {
+            			CompareCriteria cc = (CompareCriteria)crit;
+            			//don't remove theta criteria, just mark it as optional
+        				cc.setOptional(null);
+            			continue;
+            		}
             		i.remove();
             	}
             }
@@ -447,7 +444,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
 		}
 		if (!GroupsUsedByElementsVisitor.getGroups(crit.getLeftExpression()).isEmpty() && !GroupsUsedByElementsVisitor.getGroups(crit.getRightExpression()).isEmpty()
 				&& (GroupsUsedByElementsVisitor.getGroups(left).isEmpty() || GroupsUsedByElementsVisitor.getGroups(oldValue).isEmpty())) {
-			crit.setOptional(true); //the original has been simplified
+			crit.setOptional(null); //the original has been simplified
 		}
 		return false;
 	}
