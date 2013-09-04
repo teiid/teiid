@@ -307,7 +307,7 @@ public final class RuleCollapseSource implements OptimizerRule {
                 if (crits == null || crits.isEmpty()) {
                     crits = new ArrayList<Criteria>();
                 } else {
-                	RuleChooseJoinStrategy.filterOptionalCriteria(crits);
+                	RuleChooseJoinStrategy.filterOptionalCriteria(crits, false);
                 	if (crits.isEmpty() && joinType == JoinType.JOIN_INNER) {
                 		joinType = JoinType.JOIN_CROSS;
                 	}

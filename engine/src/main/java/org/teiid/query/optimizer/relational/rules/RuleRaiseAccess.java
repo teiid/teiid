@@ -570,14 +570,14 @@ public final class RuleRaiseAccess implements OptimizerRule {
 			}
 		}
         
-        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record, context);		
+        return canRaiseOverJoin(joinNode.getChildren(), metadata, capFinder, crits, type, record, context, afterJoinPlanning);		
 	}
 
     static Object canRaiseOverJoin(List<PlanNode> children,
                                            QueryMetadataInterface metadata,
                                            CapabilitiesFinder capFinder,
                                            List<Criteria> crits,
-                                           JoinType type, AnalysisRecord record, CommandContext context) throws QueryMetadataException,
+                                           JoinType type, AnalysisRecord record, CommandContext context, boolean considerOptional) throws QueryMetadataException,
                                                          TeiidComponentException {
         //we only want to consider binary joins
         if (children.size() != 2) {
@@ -672,9 +672,10 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				    				continue;
 				    			}
 				    		}
+				        	//TODO: plan based upon a predicate subset when possible
 				        	return null;
 				        } else if (crit instanceof CompareCriteria) {
-				        	thetaCriteria.add((CompareCriteria)crit);
+							thetaCriteria.add((CompareCriteria)crit);
 				        }
 					}
 					if (sjc == SupportedJoinCriteria.KEY) {
@@ -750,18 +751,22 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		    return null;
 		}
 		
-		if (sjc == SupportedJoinCriteria.KEY) {
-			for (CompareCriteria criteria : thetaCriteria) {
-				criteria.setOptional(false);
-			}
-		} else {
-			//TODO: this should be done in a less arbitrary way, and what about composite keys?
-			boolean hasCriteria = false;
-			for (CompareCriteria criteria : thetaCriteria) {
-				if (criteria.getIsOptional() == null || (!hasCriteria && criteria.getIsOptional())) {
+		if (crits != null && !crits.isEmpty()) {
+			if (considerOptional) {
+				for (CompareCriteria criteria : thetaCriteria) {
 					criteria.setOptional(false);
 				}
-				hasCriteria = true;
+			} else {
+				boolean hasCriteria = false;
+				for (CompareCriteria criteria : thetaCriteria) {
+					if (criteria.getIsOptional() == null || !criteria.isOptional()) {
+						hasCriteria = true;
+						break;
+					}
+				}	
+				if (!hasCriteria) {
+					return null;
+				}
 			}
 		}
 		
