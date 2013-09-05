@@ -31,13 +31,18 @@ import org.jboss.msc.service.ServiceController;
 import org.teiid.deployers.ContainerLifeCycleListener;
 
 class JBossLifeCycleListener extends AbstractServiceListener<Object> implements TerminateListener, ContainerLifeCycleListener {
-
+	private boolean bootInProgress = true;
 	private boolean shutdownInProgress = false;
 	private List<ContainerLifeCycleListener.LifeCycleEventListener> listeners = Collections.synchronizedList(new ArrayList<ContainerLifeCycleListener.LifeCycleEventListener>());
 	
 	@Override
 	public boolean isShutdownInProgress() {
 		return shutdownInProgress;
+	}
+	
+	@Override
+	public boolean isBootInProgress() {
+		return bootInProgress;
 	}
 
 	@Override
@@ -60,6 +65,8 @@ class JBossLifeCycleListener extends AbstractServiceListener<Object> implements 
 		else if (transition.equals(ServiceController.Transition.STOP_REQUESTED_to_UP)) {
 			this.shutdownInProgress = false;
 		}
-		
+		else if (transition.equals(ServiceController.Transition.STARTING_to_UP)) {
+			this.bootInProgress = false;
+		}
     }	
 }
