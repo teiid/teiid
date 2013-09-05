@@ -108,31 +108,32 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
-		doMaterializationActions(vdb, new MaterializationAction() {
-			
-			@Override
-			public void process(Table table) {
-				String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
-				if (start != null) {
-					for (String script : StringUtil.tokenize(start, ';')) {
-						try {
-							executeQuery(vdb, script);
-						} catch (SQLException e) {
-							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+		if (!this.shutdownListener.isBootInProgress()) {
+			doMaterializationActions(vdb, new MaterializationAction() {
+				
+				@Override
+				public void process(Table table) {
+					String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
+					if (start != null) {
+						for (String script : StringUtil.tokenize(start, ';')) {
+							try {
+								executeQuery(vdb, script);
+							} catch (SQLException e) {
+								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+							}
 						}
 					}
+					
+					String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+					if (ttlStr != null) {
+						long ttl = Long.parseLong(ttlStr);
+						if (ttl > 0) {
+							scheduleJob(vdb, table, ttl, 0L);
+						}
+					}				
 				}
-				
-				String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
-				if (ttlStr != null) {
-					long ttl = Long.parseLong(ttlStr);
-					if (ttl > 0) {
-						scheduleJob(vdb, table, ttl, 0L);
-					}
-				}				
-			}
-		});
-		
+			});
+		}
 	}
 	
 	private void doMaterializationActions(VDBMetaData vdb, MaterializationAction action) {
