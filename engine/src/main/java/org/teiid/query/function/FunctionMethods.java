@@ -44,20 +44,16 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.core.CorePlugin;
-import org.teiid.core.TeiidException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -72,6 +68,7 @@ import org.teiid.core.util.StringUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants;
 import org.teiid.language.SQLConstants.NonReserved;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
@@ -1488,54 +1485,18 @@ public final class FunctionMethods {
 		 throw new FunctionExecutionException(QueryPlugin.Event.TEIID30416, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30416, array.getClass()));
 	}
 	
-	public static int mvstatus(CommandContext context, String schemaName, String viewName, boolean validity, String status, String action) throws SQLException, BlockedException {
-		if (!validity || !status.equalsIgnoreCase(MaterializationMetadataRepository.LoadStates.LOADED.name())) {
-			if (action.equalsIgnoreCase(MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name())) {
-				throw new SQLException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147));
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM, determinism=Determinism.NONDETERMINISTIC)
+	public static int mvstatus(CommandContext context, String schemaName, String viewName, Boolean validity, String status, String action) throws BlockedException, FunctionExecutionException {
+		if (!validity) {
+			if (MaterializationMetadataRepository.ErrorAction.THROW_EXCEPTION.name().equalsIgnoreCase(action)) {
+				throw new FunctionExecutionException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31147, schemaName, viewName));
 			}
-			if (action.equalsIgnoreCase(MaterializationMetadataRepository.ErrorAction.WAIT.name())){
-				if (isMatViewLoaded(context, schemaName, viewName) <= 0) {
-					context.getWorkItem().scheduleWork(30000);
-					throw BlockedException.INSTANCE;
-				}
-				return 1;
+			if (MaterializationMetadataRepository.ErrorAction.WAIT.name().equalsIgnoreCase(action)){
+				context.getWorkItem().scheduleWork(30000);
+				throw BlockedException.INSTANCE;
 			}
-			if (validity && action.equalsIgnoreCase(MaterializationMetadataRepository.ErrorAction.IGNORE.name())) {
-				return 1;
-			}			
-			return 0;
 		}
 		return 1;
 	}	
 	
-	private static int isMatViewLoaded(CommandContext context, String schemaName, String viewName) throws SQLException {
-		try {
-			String query = "SELECT X.Valid, X.LoadState FROM (EXECUTE SYSADMIN.matViewStatus('" + schemaName + "', '" + viewName + "')) AS X"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-			List<? extends List<?>> results = context.getWorkItem().execute(query);
-
-			Boolean newValid = (Boolean)results.get(0).get(0);
-			String newStatus = (String)results.get(0).get(1);
-			
-			if (newStatus.equalsIgnoreCase(MaterializationMetadataRepository.LoadStates.LOADING.name()) || 
-					newStatus.equalsIgnoreCase(MaterializationMetadataRepository.LoadStates.NEEDS_LOADING.name())) {
-				return -2;
-			}
-			if (!newValid || newStatus.equalsIgnoreCase(MaterializationMetadataRepository.LoadStates.FAILED_LOAD.name())) {
-				// should this result in exception?
-				return -1;
-			}
-			if (newValid && newStatus.equalsIgnoreCase(MaterializationMetadataRepository.LoadStates.LOADED.name())) {
-				return 1;
-			}
-			return 0;
-		} catch (TeiidException e) {
-			throw new SQLException(e);
-		} catch (TimeoutException e) {
-			throw new SQLException(e);
-		} catch (ExecutionException e) {
-			throw new SQLException(e);
-		} catch (InterruptedException e) {
-			throw new SQLException(e);
-		}
-	}
 }

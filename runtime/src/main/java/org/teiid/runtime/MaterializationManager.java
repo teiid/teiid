@@ -27,11 +27,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
 
 import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.core.util.StringUtil;
 import org.teiid.deployers.CompositeVDB;
 import org.teiid.deployers.ContainerLifeCycleListener;
 import org.teiid.deployers.VDBLifeCycleListener;
@@ -40,11 +42,16 @@ import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
 import org.teiid.metadata.Table;
+import org.teiid.query.metadata.MaterializationMetadataRepository;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.vdb.runtime.VDBKey;
 
 public abstract class MaterializationManager implements VDBLifeCycleListener {
-	private static final String MATVIEW_TTL = "{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL"; //$NON-NLS-1$
+	
+	private interface MaterializationAction {
+		void process(Table table);
+	}
+	
 	private Map<VDBKey, List<TimerTask>> scheduledTasks = Collections.synchronizedMap(new HashMap<VDBKey,List<TimerTask>>());
 	private ContainerLifeCycleListener shutdownListener;
 	
@@ -61,7 +68,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 		if (cvdb == null) {
 			return;
 		}
-		VDBMetaData vdb = cvdb.getVDB();
+		final VDBMetaData vdb = cvdb.getVDB();
 		
         // cancel any matview load pending tasks
 		List<TimerTask> tasks = scheduledTasks.remove(new VDBKey(vdb.getName(), vdb.getVersion()));
@@ -73,19 +80,22 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
         
         // If VDB is being undeployed, run the shutdown triggers
 		if (!shutdownListener.isShutdownInProgress()) {
-			TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
-			if (metadata != null) {
-				MetadataStore store = metadata.getMetadataStore();
-				if (store != null && store.getVDBShutdownTriggers() != null) {
-					for (String cmd:store.getVDBShutdownTriggers()) {
-						try {
-							executeQuery(vdb, cmd);
-						} catch (SQLException e) {
-							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-						}
+			doMaterializationActions(vdb, new MaterializationAction() {
+				
+				@Override
+				public void process(Table table) {
+					String remove = table.getProperty(MaterializationMetadataRepository.ON_VDB_DROP_SCRIPT, false);
+					if (remove != null) {
+						for (String cmd: StringUtil.tokenize(remove, ';')) {
+							try {
+								executeQuery(vdb, cmd);
+							} catch (SQLException e) {
+								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+							}
+						}					
 					}
 				}
-			}
+			});
 		}
 	}
 
@@ -97,36 +107,55 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
 
 		// execute start triggers
-		VDBMetaData vdb = cvdb.getVDB();
-		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
-		if (metadata != null) {
-			MetadataStore store = metadata.getMetadataStore();
-			if (store != null && store.getVDBStartTriggers() != null) {
-				for (String cmd:store.getVDBStartTriggers()) {
-					try {
-						executeQuery(vdb, cmd);
-					} catch (SQLException e) {
-						LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
-					}
-				}
-			}
+		final VDBMetaData vdb = cvdb.getVDB();
+		doMaterializationActions(vdb, new MaterializationAction() {
 			
-			// schedule materialization loads
-			if (store != null) {
-				for (Schema schema : store.getSchemaList()) {
-					for (Table table:schema.getTables().values()) {
-						// find external matview table
-						if (table.isVirtual() && table.isMaterialized() && table.getMaterializedTable() != null) {
-							String ttlStr = table.getProperty(MATVIEW_TTL, false);
-							if (ttlStr != null) {
-								long ttl = Long.parseLong(ttlStr);
-								if (ttl > 0) {
-									scheduleJob(vdb, table, ttl, 0L);
-								}
-							}
+			@Override
+			public void process(Table table) {
+				String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
+				if (start != null) {
+					for (String script : StringUtil.tokenize(start, ';')) {
+						try {
+							executeQuery(vdb, script);
+						} catch (SQLException e) {
+							LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
 						}
 					}
 				}
+				
+				String ttlStr = table.getProperty(MaterializationMetadataRepository.MATVIEW_TTL, false);
+				if (ttlStr != null) {
+					long ttl = Long.parseLong(ttlStr);
+					if (ttl > 0) {
+						scheduleJob(vdb, table, ttl, 0L);
+					}
+				}				
+			}
+		});
+		
+	}
+	
+	private void doMaterializationActions(VDBMetaData vdb, MaterializationAction action) {
+		TransformationMetadata metadata = vdb.getAttachment(TransformationMetadata.class);
+		if (metadata == null) {
+			return;
+		}
+		
+		Set<String> imports = vdb.getImportedModels();
+		MetadataStore store = metadata.getMetadataStore();
+		// schedule materialization loads and do the start actions
+		for (Schema schema : store.getSchemaList()) {
+			if (imports.contains(schema.getName())) {
+				continue;
+			}
+			for (Table table:schema.getTables().values()) {
+				// find external matview table
+				if (!table.isVirtual() || !table.isMaterialized() 
+						|| table.getMaterializedTable() == null
+						|| !Boolean.valueOf(table.getProperty(MaterializationMetadataRepository.ALLOW_MATVIEW_MANAGEMENT, false))) {
+					continue;
+				}
+				action.process(table);
 			}
 		}
 	}

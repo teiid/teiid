@@ -108,12 +108,6 @@ public class MetadataStore implements Serializable {
 			}
 			addDataTypes(store.getDatatypes().values());
 			addGrants(store.grants);
-			if (store.getVDBStartTriggers() != null) {
-				setVDBStartTriggers(store.getVDBStartTriggers());
-			}
-			if (store.getVDBShutdownTriggers() != null) {
-				setVDBShutdownTriggers(store.getVDBShutdownTriggers());
-			}
 		}
 	}
 
@@ -126,19 +120,5 @@ public class MetadataStore implements Serializable {
 		}
 		this.grants.addAll(g);
 	}
-	
-	public List<String> getVDBStartTriggers(){
-		return startTriggers;
-	}
 
-	public List<String> getVDBShutdownTriggers(){
-		return shutdownTriggers;
-	}	
-	
-	public void setVDBStartTriggers(List<String> triggers) {
-		startTriggers = new ArrayList<String>(triggers);
-	}
-	public void setVDBShutdownTriggers(List<String> triggers) {
-		shutdownTriggers = new ArrayList<String>(triggers);
-	}	
 }

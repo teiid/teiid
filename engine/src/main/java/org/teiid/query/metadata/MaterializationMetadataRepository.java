@@ -21,7 +21,6 @@
  */
 package org.teiid.query.metadata;
 
-import org.teiid.core.util.StringUtil;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
@@ -37,7 +36,7 @@ import org.teiid.translator.TranslatorException;
 public class MaterializationMetadataRepository extends MetadataRepository {
 	
 	public static final String ALLOW_MATVIEW_MANAGEMENT = "{http://www.teiid.org/ext/relational/2012}ALLOW_MATVIEW_MANAGEMENT";//$NON-NLS-1$
-	public static final String ON_VDB_CREATE_SCRIPT = "{http://www.teiid.org/ext/relational/2012}ON_VDB_CREATE_SCRIPT";//$NON-NLS-1$
+	public static final String ON_VDB_START_SCRIPT = "{http://www.teiid.org/ext/relational/2012}ON_VDB_START_SCRIPT";//$NON-NLS-1$
 	public static final String ON_VDB_DROP_SCRIPT = "{http://www.teiid.org/ext/relational/2012}ON_VDB_DROP_SCRIPT";//$NON-NLS-1$
 	
 	public static final String MATVIEW_AFTER_LOAD_SCRIPT = "{http://www.teiid.org/ext/relational/2012}MATVIEW_AFTER_LOAD_SCRIPT";//$NON-NLS-1$
@@ -47,12 +46,13 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 	public static final String MATVIEW_TTL = "{http://www.teiid.org/ext/relational/2012}MATVIEW_TTL"; //$NON-NLS-1$
 	public static final String MATVIEW_STAGE_TABLE = "{http://www.teiid.org/ext/relational/2012}MATERIALIZED_STAGE_TABLE"; //$NON-NLS-1$
 	public static final String MATVIEW_SHARE_SCOPE = "{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE"; //$NON-NLS-1$
+	public static final String MATVIEW_ONERROR_ACTION = "{http://www.teiid.org/ext/relational/2012}MATVIEW_ONERROR_ACTION"; //$NON-NLS-1$
 	
 	public enum LoadStates {NEEDS_LOADING, LOADING, LOADED, FAILED_LOAD};
 	public enum Scope {NONE, VDB, SCHEMA};
 	public enum ErrorAction {THROW_EXCEPTION, IGNORE, WAIT}
 	// Status table column names
-	//VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, OnErrorAction
+	//VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber
 	
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
@@ -61,7 +61,7 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 				// external materialization
 				if (table.getMaterializedTable() != null) {
 					String manage = table.getProperty(ALLOW_MATVIEW_MANAGEMENT, false); 
-					if (manage == null || !Boolean.parseBoolean(manage)) {
+					if (!Boolean.valueOf(manage)) {
 						continue;
 					}
 					String statusTable = table.getProperty(MATVIEW_STATUS_TABLE, false); 
@@ -78,22 +78,6 @@ public class MaterializationMetadataRepository extends MetadataRepository {
 						LogManager.logWarning(LogConstants.CTX_MATVIEWS, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31144));
 					}
 					
-					String onLoadScript = table.getProperty(ON_VDB_CREATE_SCRIPT, false);
-					String onDropScript = table.getProperty(ON_VDB_DROP_SCRIPT, false);
-					
-					// start up script
-					if (onLoadScript != null) {
-						for (String dml:StringUtil.tokenize(onLoadScript, ';')) {
-							factory.addVDBStartTrigger(dml);
-						}
-					}
-					
-					// add cleanup trigger
-					if (onDropScript != null) {
-						for (String dml:StringUtil.tokenize(onDropScript, ';')) {
-							factory.addVDBShutdownTrigger(dml);
-						}
-					}
 				}
 				else {
 					// internal materialization

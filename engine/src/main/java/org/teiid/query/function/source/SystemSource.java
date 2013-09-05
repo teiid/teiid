@@ -200,7 +200,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
         addFunctions(JSONFunctionMethods.class);
         addFunctions(SystemFunctionMethods.class);
         addFunctions(FunctionMethods.class);
-        addMatViewStatusFunction();
     }
     
     private void addFunctions(Class<?> clazz) {
@@ -1107,18 +1106,6 @@ public class SystemSource extends UDFSource implements FunctionCategoryConstants
                 new FunctionParameter("result", type, QueryPlugin.Util.getString("SystemSource.coalesce_result")), false, Determinism.DETERMINISTIC)); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
-    private void addMatViewStatusFunction() {
-        functions.add(
-            new FunctionMethod(FunctionLibrary.MVSTATUS, QueryPlugin.Util.getString("SystemSource.mv_status_description"), MISCELLANEOUS, PushDown.CAN_PUSHDOWN, FUNCTION_CLASS, FunctionLibrary.MVSTATUS, //$NON-NLS-1$ 
-                Arrays.asList(
-                    new FunctionParameter("schemaName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.mv_status_schemaName")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("viewName", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.mv_status_viewName")),  //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("valid", DataTypeManager.DefaultDataTypes.BOOLEAN, QueryPlugin.Util.getString("SystemSource.mv_status_valid")), //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("loadstate", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.mv_status_loadstate")),  //$NON-NLS-1$ //$NON-NLS-2$
-                    new FunctionParameter("action", DataTypeManager.DefaultDataTypes.STRING, QueryPlugin.Util.getString("SystemSource.mv_status_action"))), //$NON-NLS-1$ //$NON-NLS-2$
-                new FunctionParameter("result", DataTypeManager.DefaultDataTypes.INTEGER, QueryPlugin.Util.getString("SystemSource.mv_status_result")), false, Determinism.DETERMINISTIC)); //$NON-NLS-1$ //$NON-NLS-2$
-    }    
-		
     /**
      * Get all function signatures for this metadata source.
      * @return Unordered collection of {@link FunctionMethod}s

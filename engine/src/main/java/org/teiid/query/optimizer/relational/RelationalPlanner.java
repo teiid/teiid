@@ -44,6 +44,7 @@ import org.teiid.query.function.FunctionLibrary;
 import org.teiid.query.mapping.relational.QueryNode;
 import org.teiid.query.metadata.BasicQueryMetadata;
 import org.teiid.query.metadata.MaterializationMetadataRepository;
+import org.teiid.query.metadata.MaterializationMetadataRepository.ErrorAction;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataID;
@@ -1623,36 +1624,42 @@ public class RelationalPlanner {
 			Expression expr2 = new ElementSymbol("Name"); //$NON-NLS-1$
 			Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$
 			Expression expr4 = new ElementSymbol("LoadState"); //$NON-NLS-1$
-			Expression expr5 = new ElementSymbol("OnErrorAction"); //$NON-NLS-1$
+			String onErrorAction = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_ONERROR_ACTION, false);
 			
-			Query subquery = new Query();
-			Select subSelect = new Select();
-	        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, expr5})); //$NON-NLS-1$ 
-	        subquery.setSelect(subSelect);
-			GroupSymbol statusTable = new GroupSymbol(statusTableName);
-			statusTable.setGlobalTable(false);
-			subquery.setFrom(new From(Arrays.asList(new UnaryFromClause(statusTable))));
-			
-			String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
-			String viewName = metadata.getName(viewMatadataId);
-			
-			CompoundCriteria cc  = null;
-	        CompareCriteria c1 = new CompareCriteria(new ElementSymbol("VDBName"), CompareCriteria.EQ, new Constant(context.getVdbName())); //$NON-NLS-1$
-	        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(context.getVdbVersion())); //$NON-NLS-1$
-	        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant(schemaName)); //$NON-NLS-1$
-	        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant(viewName)); //$NON-NLS-1$
-			
-	        if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.NONE.name())) { 
-		        cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c2, c3, c4));
+			if (onErrorAction == null || !ErrorAction.IGNORE.name().equalsIgnoreCase(onErrorAction)) {
+				Query subquery = new Query();
+				Select subSelect = new Select();
+		        subSelect.addSymbol(new Function("mvstatus", new Expression[] {expr1, expr2, expr3, expr4, new Constant(onErrorAction)})); //$NON-NLS-1$ 
+		        subquery.setSelect(subSelect);
+				GroupSymbol statusTable = new GroupSymbol(statusTableName);
+				statusTable.setGlobalTable(false);
+				Query one = new Query();
+				Select s = new Select();
+				s.addSymbol(new Constant(1));
+				one.setSelect(s);
+				subquery.setFrom(new From(Arrays.asList(new JoinPredicate(new SubqueryFromClause("x", one), new UnaryFromClause(statusTable), JoinType.JOIN_LEFT_OUTER, QueryRewriter.TRUE_CRITERIA)))); //$NON-NLS-1$
+				
+				String schemaName = metadata.getName(metadata.getModelID(viewMatadataId));
+				String viewName = metadata.getName(viewMatadataId);
+				
+				CompoundCriteria cc  = null;
+		        CompareCriteria c1 = new CompareCriteria(new ElementSymbol("VDBName"), CompareCriteria.EQ, new Constant(context.getVdbName())); //$NON-NLS-1$
+		        CompareCriteria c2 = new CompareCriteria(new ElementSymbol("VDBVersion"), CompareCriteria.EQ, new Constant(context.getVdbVersion())); //$NON-NLS-1$
+		        CompareCriteria c3 = new CompareCriteria(new ElementSymbol("SchemaName"), CompareCriteria.EQ, new Constant(schemaName)); //$NON-NLS-1$
+		        CompareCriteria c4 = new CompareCriteria(new ElementSymbol("Name"), CompareCriteria.EQ, new Constant(viewName)); //$NON-NLS-1$
+				
+		        if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.NONE.name())) { 
+			        cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c2, c3, c4));
+				}
+				else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.VDB.name())) {
+					cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c3, c4));
+				}
+				else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.SCHEMA.name())) { 
+					cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
+				}			
+		        subquery.setCriteria(cc);
+				query.setCriteria(new ExistsCriteria(subquery));
 			}
-			else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.VDB.name())) {
-				cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c1, c3, c4));
-			}
-			else if (scope.equalsIgnoreCase(MaterializationMetadataRepository.Scope.SCHEMA.name())) { 
-				cc = new CompoundCriteria(CompoundCriteria.AND, Arrays.asList(c3, c4));
-			}			
-	        subquery.setCriteria(cc);
-			query.setCriteria(new SubqueryCompareCriteria(new Constant(1), subquery, SubqueryCompareCriteria.EQ, SubqueryCompareCriteria.ALL));
 		}
 		return query;
 	}
