@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module xmlns="urn:jboss:module:1.0" name="org.olap4j">
+    <resources>
+        <resource-root path="olap4j-1.1.0.jar" />
+        <resource-root path="olap4j-xmla-1.1.0.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api" />
+        <module name="org.apache.xerces"/>
+    </dependencies>
+
+</module>
