@@ -25,15 +25,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.jboss.as.controller.ControlledProcessState;
+import org.jboss.as.controller.ControlledProcessStateService;
 import org.jboss.msc.service.AbstractServiceListener;
 import org.jboss.msc.service.ServiceContainer.TerminateListener;
 import org.jboss.msc.service.ServiceController;
 import org.teiid.deployers.ContainerLifeCycleListener;
 
 class JBossLifeCycleListener extends AbstractServiceListener<Object> implements TerminateListener, ContainerLifeCycleListener {
-	private boolean bootInProgress = true;
 	private boolean shutdownInProgress = false;
 	private List<ContainerLifeCycleListener.LifeCycleEventListener> listeners = Collections.synchronizedList(new ArrayList<ContainerLifeCycleListener.LifeCycleEventListener>());
+	private ControlledProcessStateService state;
 	
 	@Override
 	public boolean isShutdownInProgress() {
@@ -42,7 +44,7 @@ class JBossLifeCycleListener extends AbstractServiceListener<Object> implements 
 	
 	@Override
 	public boolean isBootInProgress() {
-		return bootInProgress;
+		return state.getCurrentState().equals(ControlledProcessState.State.STARTING);
 	}
 
 	@Override
@@ -65,8 +67,9 @@ class JBossLifeCycleListener extends AbstractServiceListener<Object> implements 
 		else if (transition.equals(ServiceController.Transition.STOP_REQUESTED_to_UP)) {
 			this.shutdownInProgress = false;
 		}
-		else if (transition.equals(ServiceController.Transition.STARTING_to_UP)) {
-			this.bootInProgress = false;
-		}
     }	
+	
+	void setControlledProcessStateService(ControlledProcessStateService state) {
+		this.state = state;	
+	}
 }

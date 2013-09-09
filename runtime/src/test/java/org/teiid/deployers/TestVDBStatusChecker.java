@@ -22,7 +22,11 @@
 
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.Executor;
 
@@ -77,7 +81,7 @@ public class TestVDBStatusChecker {
 		ExecutionFactory ef1 = new ExecutionFactory();
 		ConnectorManager mgr = new ConnectorManager("oracle", "dsName", ef1);
 		cmr.addConnectorManager("BQT1", mgr);
-		repo.addVDB(vdb, metadataStore, null, null, cmr);
+		repo.addVDB(vdb, metadataStore, null, null, cmr, false);
 		
 		assertTrue(vsc.dataSourceReplaced("bqt", 1, "BQT1", "BQT1", "oracle", "dsName1"));
 		ExecutionFactory ef = cmr.getConnectorManager("BQT1").getExecutionFactory();

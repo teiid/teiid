@@ -60,7 +60,7 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 	
 	@Override
-	public void added(String name, int version, CompositeVDB cvdb) {
+	public void added(String name, int version, CompositeVDB cvdb, boolean reloading) {
 	}
 
 	@Override
@@ -104,22 +104,22 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 	}
 
 	@Override
-	public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
+	public void finishedDeployment(String name, int version, CompositeVDB cvdb, final boolean reloading) {
 
 		// execute start triggers
 		final VDBMetaData vdb = cvdb.getVDB();
-		if (!this.shutdownListener.isBootInProgress()) {
 			doMaterializationActions(vdb, new MaterializationAction() {
-				
 				@Override
 				public void process(Table table) {
-					String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
-					if (start != null) {
-						for (String script : StringUtil.tokenize(start, ';')) {
-							try {
-								executeQuery(vdb, script);
-							} catch (SQLException e) {
-								LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+					if (!reloading) {
+						String start = table.getProperty(MaterializationMetadataRepository.ON_VDB_START_SCRIPT, false);
+						if (start != null) {
+							for (String script : StringUtil.tokenize(start, ';')) {
+								try {
+									executeQuery(vdb, script);
+								} catch (SQLException e) {
+									LogManager.logWarning(LogConstants.CTX_MATVIEWS, e, e.getMessage());
+								}
 							}
 						}
 					}
@@ -133,7 +133,6 @@ public abstract class MaterializationManager implements VDBLifeCycleListener {
 					}				
 				}
 			});
-		}
 	}
 	
 	private void doMaterializationActions(VDBMetaData vdb, MaterializationAction action) {

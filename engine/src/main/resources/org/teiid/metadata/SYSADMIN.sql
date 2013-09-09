@@ -51,7 +51,7 @@ OPTIONS (UPDATECOUNT 0)
 CREATE FOREIGN PROCEDURE setTableStats(IN tableName string NOT NULL, IN cardinality long NOT NULL)
 OPTIONS (UPDATECOUNT 0)
 
-CREATE VIRTUAL PROCEDURE matViewStatus(IN schemaName string NOT NULL, IN viewName string NOT NULL) RETURNS TABLE (TargetSchemaName varchar(50), TargetName varchar(50), Valid boolean, LoadState varchar(25), Updated timestamp, Cardinality integer, OnErrorAction varchar(25)) AS
+CREATE VIRTUAL PROCEDURE matViewStatus(IN schemaName string NOT NULL, IN viewName string NOT NULL) RETURNS TABLE (TargetSchemaName varchar(50), TargetName varchar(50), Valid boolean, LoadState varchar(25), Updated timestamp, Cardinality integer, LoadNumber integer, OnErrorAction varchar(25)) AS
 BEGIN
 	DECLARE string vdbName = (SELECT Name FROM VirtualDatabases);
 	DECLARE integer vdbVersion = (SELECT convert(Version, integer) FROM VirtualDatabases);
@@ -73,7 +73,7 @@ BEGIN
 	DECLARE string action = (SELECT "Value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_ONERROR_ACTION');
 	DECLARE string crit = ' WHERE VDBName = DVARS.vdbName AND VDBVersion = DVARS.vdbVersion AND schemaName = DVARS.schemaName AND Name = DVARS.viewName';
 
-	EXECUTE IMMEDIATE 'SELECT TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, OnErrorAction FROM ' || VARIABLES.statusTable || crit AS TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer, OnErrorAction string USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, OnErrorAction = VARIABLES.action;
+	EXECUTE IMMEDIATE 'SELECT TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber, VARIABLES.action FROM ' || VARIABLES.statusTable || crit AS TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer, LoadNumber integer, OnErrorAction varchar(25) USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
 END
 
 
@@ -86,6 +86,8 @@ BEGIN
 	DECLARE string status = 'CHECK';
 	DECLARE integer rowsUpdated = 0;
 	DECLARE string crit;
+	DECLARE integer lineCount = 0;
+	DECLARE integer index = 0;
 	
 	IF (uid IS NULL)
 	BEGIN
@@ -108,6 +110,7 @@ BEGIN
 	DECLARE string scope = (SELECT "value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_SHARE_SCOPE');
 	DECLARE string matViewTable = (SELECT TargetName from SYSADMIN.MatViews WHERE VDBName = VARIABLES.vdbName AND SchemaName = schemaName AND Name = viewName);
 	DECLARE string action = (SELECT "Value" from SYS.Properties WHERE UID = VARIABLES.uid AND Name = '{http://www.teiid.org/ext/relational/2012}MATVIEW_ONERROR_ACTION');
+	DECLARE boolean implicitLoadScript = false;
 	
 	IF ((scope IS null) OR (scope = 'NONE'))
 	BEGIN 
@@ -124,16 +127,16 @@ BEGIN
 
 	DECLARE string updateStmt = 'UPDATE ' || VARIABLES.statusTable || ' SET LoadNumber = DVARS.LoadNumber, LoadState = DVARS.LoadState, valid = DVARS.valid, Updated = DVARS.updated, Cardinality = DVARS.cardinality' ||  crit;
 
-	EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
+	EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer, LoadNumber integer INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
 	
 	DECLARE string previousRow = (SELECT Name FROM #load);
 	IF (previousRow is null)
     BEGIN 
-        EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, null, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1, 1)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now(), action = VARIABLES.action;
+        EXECUTE IMMEDIATE 'INSERT INTO '|| VARIABLES.statusTable ||' (VDBName, VDBVersion, SchemaName, Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber) values (DVARS.vdbName, DVARS.vdbVersion, DVARS.schemaName, DVARS.viewName, null, DVARS.matViewTable, DVARS.valid, DVARS.loadStatus, DVARS.updated, -1, 1)' USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, valid=false, loadStatus='LOADING', matViewTable=matViewTable, updated = now();
         VARIABLES.status = 'LOAD';
     EXCEPTION e
         DELETE FROM #load;
-        EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
+        EXECUTE IMMEDIATE 'SELECT Name, TargetSchemaName, TargetName, Valid, LoadState, Updated, Cardinality, LoadNumber FROM ' || VARIABLES.statusTable || crit AS Name string, TargetSchemaName string, TargetName string, Valid boolean, LoadState string, Updated timestamp, Cardinality integer, LoadNumber integer INTO #load USING vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName;
     END
     
     DECLARE integer VARIABLES.loadNumber = 1;
@@ -172,15 +175,29 @@ BEGIN
     	IF (VARIABLES.loadScript IS null)
     	BEGIN
     		VARIABLES.loadScript = 'INSERT INTO ' || matViewStageTable || ' SELECT * FROM ' || schemaName || '.' || viewName || ' OPTION NOCACHE ' || schemaName || '.' || viewName;
+    		VARIABLES.implicitLoadScript = true;
     	END
     	
     	IF (VARIABLES.beforeLoadScript IS NOT null)
     	BEGIN
-        	EXECUTE IMMEDIATE beforeLoadScript;
+    	   VARIABLES.index = 1;
+    	   VARIABLES.lineCount = convert(token_length(VARIABLES.beforeLoadScript, ';'), integer);
+    	    WHILE (index <= lineCount)
+    	    BEGIN 
+        	   EXECUTE IMMEDIATE token_get(VARIABLES.beforeLoadScript, ';', index);
+        	   index = index +1;
+        	END
         END
+
+        VARIABLES.index = 1;
+        VARIABLES.lineCount = convert(token_length(VARIABLES.loadScript, ';'), integer);
+        WHILE (index <= lineCount)
+        BEGIN 
+           EXECUTE IMMEDIATE token_get(VARIABLES.loadScript, ';', index);
+           index = index +1;
+        END        
         
-        EXECUTE IMMEDIATE loadScript;
-        IF (VARIABLES.loadScript IS null)
+        IF (VARIABLES.implicitLoadScript)
         BEGIN
 	       rowsUpdated = VARIABLES.rowcount;
         END 
@@ -191,14 +208,20 @@ BEGIN
         END 
     	
     	IF (VARIABLES.afterLoadScript IS NOT null)
-    	BEGIN                
-        	EXECUTE IMMEDIATE afterLoadScript;
+    	BEGIN
+            VARIABLES.index = 1;
+            VARIABLES.lineCount = convert(token_length(VARIABLES.afterLoadScript, ';'), integer);
+            WHILE (index <= lineCount)
+            BEGIN 
+               EXECUTE IMMEDIATE token_get(VARIABLES.afterLoadScript, ';', index);
+               index = index +1;
+            END        
         END
         
-        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || loadNumber USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			
+        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'LOADED', valid = true, cardinality = VARIABLES.rowsUpdated;        			
         VARIABLES.status = 'DONE';
     EXCEPTION e 
-        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = ' || loadNumber USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = VARIABLES.valid AND NOT invalidate, cardinality = -1;
+        EXECUTE IMMEDIATE updateStmt || ' AND loadNumber = DVARS.loadNumber' USING  loadNumber = VARIABLES.loadNumber, vdbName = VARIABLES.vdbName, vdbVersion = VARIABLES.vdbVersion, schemaName = schemaName, viewName = viewName, updated = now(), LoadState = 'FAILED_LOAD', valid = VARIABLES.valid AND NOT invalidate, cardinality = -1;
         VARIABLES.status = 'FAILED';
         VARIABLES.rowsUpdated = -3;
     END
