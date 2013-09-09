@@ -21,47 +21,30 @@
  */
 package org.teiid.odata;
 
-import java.io.StringWriter;
-import java.util.ArrayList;
-
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
 
-import org.odata4j.core.ODataConstants;
 import org.odata4j.core.OError;
-import org.odata4j.core.OErrors;
 import org.odata4j.exceptions.ODataProducerException;
-import org.odata4j.format.FormatWriter;
-import org.odata4j.format.FormatWriterFactory;
-import org.odata4j.producer.ErrorResponse;
-import org.odata4j.producer.Responses;
 import org.odata4j.producer.resources.ExceptionMappingProvider;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.logging.MessageLevel;
 
 @Provider
 public class ODataExceptionMappingProvider extends ExceptionMappingProvider {
 
 	public Response toResponse(RuntimeException e) {
 		if (e instanceof ODataProducerException) {
-			return super.toResponse(e);
+			OError oError = ((ODataProducerException) e).getOError();
+			if (LogManager.isMessageToBeRecorded(LogConstants.CTX_ODATA, MessageLevel.DETAIL)) {
+				LogManager.logWarning(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16012, oError.getCode(), oError.getMessage()));
+			} else {
+				LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16012, oError.getCode(), oError.getMessage()));
+			}
+		} else {
+			LogManager.logError(LogConstants.CTX_ODATA, e, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16013));
 		}
-
-		ArrayList<MediaType> headers = new ArrayList<MediaType>();
-		headers.add(MediaType.APPLICATION_XML_TYPE);
-		headers.add(MediaType.APPLICATION_JSON_TYPE);
-		FormatWriter<ErrorResponse> fw = FormatWriterFactory.getFormatWriter(ErrorResponse.class, headers,"atom", null);
-		StringWriter sw = new StringWriter();
-		fw.write(null, sw, getErrorResponse(e));
-
-		return Response.status(Status.INTERNAL_SERVER_ERROR.getStatusCode())
-				.type(fw.getContentType())
-				.header(ODataConstants.Headers.DATA_SERVICE_VERSION,ODataConstants.DATA_SERVICE_VERSION_HEADER)
-				.entity(sw.toString()).build();
-	}
-
-	public ErrorResponse getErrorResponse(RuntimeException exception) {
-		OError error = OErrors.error("", exception.getMessage(), null);
-		return Responses.error(error);
+		return super.toResponse(e);
 	}
 }
