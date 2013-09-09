@@ -357,7 +357,7 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 		model.addRuntimeMessage(Severity.INFO, msg); 
 		LogManager.logInfo(LogConstants.CTX_RUNTIME, msg);
 
-		Runnable job = new Runnable() {
+		final Runnable job = new Runnable() {
 			@Override
 			public void run() {
 				
@@ -442,7 +442,20 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 			job.run();
 		}
 		else {
-    		executor.execute(job);
+			//wrap the runnable to trap exceptions that may be caused by an asynch deployment issue
+    		executor.execute(new Runnable() {
+    			@Override
+    			public void run() {
+    				try {
+    					job.run();
+    				} catch (IllegalStateException e) {
+    					if (vdb.getStatus() != Status.FAILED && vdb.getStatus() != Status.REMOVED) {
+    						throw e;
+    					}
+    					LogManager.logDetail(LogConstants.CTX_RUNTIME, e, "Could not load metadata for a removed or failed deployment.");
+    				}
+    			}
+    		});
 		}
 	}	
     
