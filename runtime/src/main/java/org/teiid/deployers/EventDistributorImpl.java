@@ -62,7 +62,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 				}
 			}
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB vdb, boolean reloading) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
 					if (vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
 						el.vdbLoaded(vdb.getVDB());
@@ -73,7 +73,7 @@ public abstract class EventDistributorImpl implements EventDistributor {
 				}
 			}
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
 				for(EventListener el:EventDistributorImpl.this.listeners) {
 					el.vdbDeployed(name, version);
 				}

@@ -1620,6 +1620,9 @@ public class RelationalPlanner {
 		if (allow) {
 			String statusTableName = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_STATUS_TABLE, false);
 			String scope = metadata.getExtensionProperty(viewMatadataId, MaterializationMetadataRepository.MATVIEW_SHARE_SCOPE, false);
+			if (scope == null) {
+				scope = MaterializationMetadataRepository.Scope.NONE.name();
+			}
 			Expression expr1 = new ElementSymbol("SchemaName"); //$NON-NLS-1$
 			Expression expr2 = new ElementSymbol("Name"); //$NON-NLS-1$
 			Expression expr3 = new ElementSymbol("Valid"); //$NON-NLS-1$

@@ -1499,4 +1499,19 @@ public final class FunctionMethods {
 		return 1;
 	}	
 	
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
+	public static String token_get(String str, char delimiter, int index) {
+		if (str == null) {
+			return null;
+		}
+		return StringUtil.tokenize(str, delimiter).get(index-1);
+	}
+	
+	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
+	public static int token_length(String str, char delimiter) {
+		if (str == null) {
+			return 0;
+		}
+		return StringUtil.tokenize(str, delimiter).size();
+	}	
 }

@@ -79,7 +79,7 @@ public class VDBRepository implements Serializable{
 	private ReentrantLock lock = new ReentrantLock();
 	private Condition vdbAdded = lock.newCondition();
 	
-	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr) throws VirtualDatabaseException {
+	public void addVDB(VDBMetaData vdb, MetadataStore metadataStore, LinkedHashMap<String, VDBResources.Resource> visibilityMap, UDFMetaData udf, ConnectorManagerRepository cmr, boolean reload) throws VirtualDatabaseException {
 		VDBKey key = vdbId(vdb);
 		
 		// get the system VDB metadata store
@@ -109,7 +109,7 @@ public class VDBRepository implements Serializable{
 		} finally {
 			lock.unlock();
 		}
-		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb);
+		notifyAdd(vdb.getName(), vdb.getVersion(), cvdb, reload);
 	}
 	
 	public void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException {
@@ -275,7 +275,7 @@ public class VDBRepository implements Serializable{
 		}
 	}
 	
-	public void finishDeployment(String name, int version) {
+	public void finishDeployment(String name, int version, boolean reload) {
 		VDBKey key = new VDBKey(name, version);
 		CompositeVDB v = this.vdbRepo.get(key);
 		if (v == null) {
@@ -298,19 +298,19 @@ public class VDBRepository implements Serializable{
 					if (!metadataAwareVDB.isPreview() && !processMetadataValidatorReport(key, report)) {
 						metadataAwareVDB.setStatus(Status.FAILED);
 						LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
-						notifyFinished(name, version, v);
+						notifyFinished(name, version, v, reload);
 						return;
 					}
 				} 
 				validateDataSources(metadataAwareVDB);
 				metadataAwareVDB.setStatus(Status.ACTIVE);
 				LogManager.logInfo(LogConstants.CTX_RUNTIME, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40003,name, version, metadataAwareVDB.getStatus()));
-				notifyFinished(name, version, v);
+				notifyFinished(name, version, v, reload);
 			} finally {
 				if (metadataAwareVDB.getStatus() != Status.ACTIVE && metadataAwareVDB.getStatus() != Status.FAILED) {
 					//guard against an unexpected exception - probably bad validation logic
 					metadataAwareVDB.setStatus(Status.FAILED);
-					notifyFinished(name, version, v);
+					notifyFinished(name, version, v, reload);
 				}
 			}
 		}
@@ -347,9 +347,9 @@ public class VDBRepository implements Serializable{
 	}
 	
 	
-	private void notifyFinished(String name, int version, CompositeVDB v) {
+	private void notifyFinished(String name, int version, CompositeVDB v, boolean reloading) {
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.finishedDeployment(name, version, v);
+			l.finishedDeployment(name, version, v, reloading);
 		}
 	}
 	
@@ -361,9 +361,9 @@ public class VDBRepository implements Serializable{
 		this.listeners.remove(listener);
 	}
 	
-	private void notifyAdd(String name, int version, CompositeVDB vdb) {
+	private void notifyAdd(String name, int version, CompositeVDB vdb, boolean reloading) {
 		for(VDBLifeCycleListener l:this.listeners) {
-			l.added(name, version, vdb);
+			l.added(name, version, vdb, reloading);
 		}
 	}
 	
