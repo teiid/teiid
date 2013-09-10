@@ -48,8 +48,8 @@ public class TeiidExtension implements Extension {
 		
 		subsystem.registerXMLElementWriter(TeiidSubsystemParser.INSTANCE);
 
-		// Main Teiid system, with children query engine and translators.
-		subsystem.registerSubsystemModel(new TeiidSubsytemResourceDefinition());
+		// Main Teiid system, with children query engine and translators, register only if this is a server
+		subsystem.registerSubsystemModel(new TeiidSubsytemResourceDefinition(context.getProcessType().isServer()));
 	}
 
 	@Override
