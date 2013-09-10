@@ -569,11 +569,12 @@ public class TestOracleTranslator {
     /** Helper method takes a QueryMetadataInterface impl instead of a VDB filename 
      * @throws TranslatorException 
      */
-    private void helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
+    private Command helpTestVisitor(QueryMetadataInterface metadata, String input, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
         // Convert from sql to objects
         CommandBuilder commandBuilder = new CommandBuilder(metadata);
         Command obj = commandBuilder.getCommand(input);
 		this.helpTestVisitor(obj, context, dbmsTimeZone, expectedOutput);
+		return obj;
     }
     
     private void helpTestVisitor(Command obj, ExecutionContext context, String dbmsTimeZone, String expectedOutput) throws TranslatorException {
@@ -1086,6 +1087,33 @@ public class TestOracleTranslator {
             EMPTY_CONTEXT,
             null,
             output);
+    }
+    
+    @Test public void testCursorResult() throws Exception {
+        String input = "call proc('foo')"; //$NON-NLS-1$
+        String output = "{call proc(?,?)}"; //$NON-NLS-1$
+               
+        String ddl = "create foreign procedure proc (in x string, out y object options (native_type 'REF CURSOR')) returns table (a string);";
+        
+        Command command = helpTestVisitor(RealMetadataFactory.fromDDL(ddl, "x", "y"),
+            input, 
+            EMPTY_CONTEXT,
+            null,
+            output);
+        
+		Connection connection = Mockito.mock(Connection.class);
+		CallableStatement cs = Mockito.mock(CallableStatement.class);
+		Mockito.stub(cs.getUpdateCount()).toReturn(-1);
+		ResultSet rs = Mockito.mock(ResultSet.class);
+		Mockito.stub(cs.getObject(2)).toReturn(rs);
+		Mockito.stub(connection.prepareCall(output)).toReturn(cs); //$NON-NLS-1$
+		OracleExecutionFactory ef = new OracleExecutionFactory();
+		
+		JDBCProcedureExecution procedureExecution = new JDBCProcedureExecution(command, connection, Mockito.mock(ExecutionContext.class),  ef);
+		procedureExecution.execute();
+		//TODO we may not want to actually return the resultset, but this ensures full compatibility
+		assertEquals(Arrays.asList(rs), procedureExecution.getOutputParameterValues());
+		Mockito.verify(cs, Mockito.times(1)).registerOutParameter(2, OracleExecutionFactory.CURSOR_TYPE);
     }
     
 	@Test public void testDependentJoin() throws Exception {

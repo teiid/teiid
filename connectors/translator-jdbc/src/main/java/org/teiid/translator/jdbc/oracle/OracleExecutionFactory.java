@@ -37,6 +37,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.teiid.language.*;
+import org.teiid.language.Argument.Direction;
 import org.teiid.language.Comparison.Operator;
 import org.teiid.language.Like.MatchMode;
 import org.teiid.language.SQLConstants.Tokens;
@@ -47,6 +48,7 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.Column;
+import org.teiid.metadata.ProcedureParameter;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -100,6 +102,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
 	 */
 	static final class RefCursorType {}
 	static int CURSOR_TYPE = -10;
+	static final String REF_CURSOR = "REF CURSOR";
 	
 	/*
 	 * handling for char bindings
@@ -484,9 +487,13 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
        
     @Override
     public void bindValue(PreparedStatement stmt, Object param, Class<?> paramType, int i) throws SQLException {
-    	if(param == null && Object.class.equals(paramType)){
+    	if(Object.class.equals(paramType)){
     		//Oracle drive does not support JAVA_OBJECT type
-    		stmt.setNull(i, Types.LONGVARBINARY);
+    		if (param == null) {
+	    		stmt.setNull(i, Types.LONGVARBINARY);
+    		} else {
+    			stmt.setObject(i, param);
+    		}
     		return;
     	}
     	if (paramType == FixedCharType.class) {
@@ -598,12 +605,39 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		
     		@Override
     		public void visit(Call call) {
-        		if (oracleSuppliedDriver && call.getReturnType() == null && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) { 
-        			//oracle returns the resultset as a parameter
-        			call.setReturnType(RefCursorType.class);
+        		if (oracleSuppliedDriver && call.getResultSetColumnTypes().length > 0 && call.getMetadataObject() != null) {
+        			if (call.getReturnType() == null && call.getMetadataObject().getProperty(SQLConversionVisitor.TEIID_NATIVE_QUERY, false) == null) {
+	        			//assume stored function handling
+        				if (!setOutCursorType(call)) {
+        					call.setReturnType(RefCursorType.class);
+        				}
+        			} else {
+        				//TODO we only will allow a single out cursor
+        				if (call.getMetadataObject() != null) {
+	        				ProcedureParameter param = call.getReturnParameter();
+	        				if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
+	    	        			call.setReturnType(RefCursorType.class);
+	        				}
+        				}
+        				setOutCursorType(call);
+        			}
         		}
         		super.visit(call);
     		}
+
+			private boolean setOutCursorType(Call call) {
+				boolean set = false;
+				for (Argument arg : call.getArguments()) {
+					if (arg.getDirection() == Direction.OUT) {
+						ProcedureParameter param = arg.getMetadataObject();
+						if (param != null && REF_CURSOR.equalsIgnoreCase(param.getNativeType())) {
+							arg.setType(RefCursorType.class);
+							set = true;
+						}
+					}
+				}
+				return set;
+			}
     		
     		@Override
     		public void visit(Like obj) {
@@ -781,21 +815,35 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     protected void registerSpecificTypeOfOutParameter(
     		CallableStatement statement, Class<?> runtimeType, int index)
     		throws SQLException {
-    	if (oracleSuppliedDriver && index == 1 && runtimeType == RefCursorType.class) {
-    		statement.registerOutParameter(1, CURSOR_TYPE);
-    	} else {
-    		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
+    	if (oracleSuppliedDriver) {
+    		if (runtimeType == RefCursorType.class) {
+    			statement.registerOutParameter(index, CURSOR_TYPE);
+    			return;
+    		} else if (runtimeType == TypeFacility.RUNTIME_TYPES.OBJECT) {
+    			//TODO: this is not currently handled and oracle will throw an exception.  
+    			//we need additional logic to handle sub types (possibly using the nativeType)
+    		}
     	}
+		super.registerSpecificTypeOfOutParameter(statement, runtimeType, index);
     }
     
     @Override
     public ResultSet executeStoredProcedure(CallableStatement statement,
     		List<Argument> preparedValues, Class<?> returnType) throws SQLException {
     	ResultSet rs = super.executeStoredProcedure(statement, preparedValues, returnType);
-    	if (!oracleSuppliedDriver || returnType != RefCursorType.class) {
+    	if (!oracleSuppliedDriver || rs != null) {
     		return rs;
     	}
-    	return (ResultSet)statement.getObject(1);
+    	if (returnType == RefCursorType.class) {
+    		return (ResultSet)statement.getObject(1);
+    	}
+    	for (int i = 0; i < preparedValues.size(); i++) {
+    		Argument arg = preparedValues.get(i);
+    		if (arg.getType() == RefCursorType.class) {
+    			return (ResultSet)statement.getObject(i + (returnType == null?1:2));
+    		}
+    	}
+    	return null;
     }
     
     @Override
@@ -824,7 +872,7 @@ public class OracleExecutionFactory extends JDBCExecutionFactory {
     		protected String getRuntimeType(int type, String typeName,
     				int precision) {
     			//overrides for varchar2 and nvarchar2
-    			if (type == 1111 || type == 12) {
+    			if (type == 12 || (type == Types.OTHER && typeName != null && typeName.contains("char"))) { //$NON-NLS-1$
     				return TypeFacility.RUNTIME_NAMES.STRING;
     			}
     			return super.getRuntimeType(type, typeName, precision);

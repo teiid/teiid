@@ -167,9 +167,7 @@ public class JDBCMetdataProcessor {
 				String runtimeType = getRuntimeType(sqlType, typeName, precision);
 				switch (columnType) {
 				case DatabaseMetaData.procedureColumnResult:
-					Column column = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
-					record = column;
-					column.setNativeType(typeName);
+					record = metadataFactory.addProcedureResultSetColumn(columnName, runtimeType, procedure);
 					break;
 				case DatabaseMetaData.procedureColumnIn:
 					record = metadataFactory.addProcedureParameter(columnName, runtimeType, Type.In, procedure);
@@ -186,6 +184,7 @@ public class JDBCMetdataProcessor {
 				default:
 					continue; //shouldn't happen
 				}
+				record.setNativeType(typeName);
 				record.setPrecision(columns.getInt(8));
 				record.setLength(columns.getInt(9));
 				record.setScale(columns.getInt(10));
