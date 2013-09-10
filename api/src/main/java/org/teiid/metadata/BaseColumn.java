@@ -54,6 +54,7 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     private int position;
     private Datatype datatype;
     private int arrayDimensions;
+    private String nativeType;
 
     public String getDefaultValue() {
         return defaultValue;
@@ -180,5 +181,17 @@ public abstract class BaseColumn extends AbstractMetadataRecord {
     public int getArrayDimensions() {
 		return arrayDimensions;
 	}
+    
+    public String getNativeType() {
+        return nativeType;
+    }
+    
+    /**
+     * @param nativeType The nativeType to set.
+     * @since 4.2
+     */
+    public void setNativeType(String nativeType) {
+        this.nativeType = DataTypeManager.getCanonicalString(nativeType);
+    }
     
 }

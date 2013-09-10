@@ -58,6 +58,7 @@ public class Column extends BaseColumn implements Comparable<Column> {
     private SearchType searchType;
     private volatile String minimumValue;
     private volatile String maximumValue;
+    //TODO: nativeType is now on the base class, but left here for serialization compatibility
     private String nativeType;
     private String format;
     private int charOctetLength;
