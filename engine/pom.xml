@@ -105,12 +105,23 @@
             <artifactId>nux</artifactId>
             <version>1.6</version>
         </dependency>
+         
 
         <dependency>
-            <groupId>xom</groupId>
-            <artifactId>xom</artifactId>
-            <version>1.2</version>
+          <groupId>xom</groupId>
+          <artifactId>xom</artifactId>
+          <version>1.2.5</version>
+          <scope>provided</scope>
         </dependency>
+
+        <dependency>
+          <groupId>jaxen</groupId>
+          <artifactId>jaxen</artifactId>
+          <version>1.1.4</version>
+          <scope>provided</scope>          
+        </dependency>
+
+
 	</dependencies>
 
 </project>
