@@ -30,9 +30,11 @@ import org.jboss.as.controller.registry.ManagementResourceRegistration;
 
 public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 	protected static final PathElement PATH_SUBSYSTEM = PathElement.pathElement(SUBSYSTEM, TeiidExtension.TEIID_SUBSYSTEM);
-
-	public TeiidSubsytemResourceDefinition() {
+	private boolean server;
+	
+	public TeiidSubsytemResourceDefinition(boolean server) {
 		super(PATH_SUBSYSTEM,TeiidExtension.getResourceDescriptionResolver(TeiidExtension.TEIID_SUBSYSTEM),TeiidAdd.INSTANCE, TeiidRemove.INSTANCE);
+		this.server = server;
 	}
 
     @Override
@@ -75,8 +77,10 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 
     @Override
     public void registerAttributes(ManagementResourceRegistration resourceRegistration) {
-    	resourceRegistration.registerReadOnlyAttribute(TeiidConstants.RUNTIME_VERSION, new GetRuntimeVersion(TeiidConstants.RUNTIME_VERSION.getName())); 
-    	resourceRegistration.registerReadOnlyAttribute(TeiidConstants.ACTIVE_SESSION_COUNT, new GetActiveSessionsCount(TeiidConstants.ACTIVE_SESSION_COUNT.getName()));
+    	if (this.server) {
+	    	resourceRegistration.registerMetric(TeiidConstants.RUNTIME_VERSION, new GetRuntimeVersion(TeiidConstants.RUNTIME_VERSION.getName())); 
+	    	resourceRegistration.registerMetric(TeiidConstants.ACTIVE_SESSION_COUNT, new GetActiveSessionsCount(TeiidConstants.ACTIVE_SESSION_COUNT.getName()));
+    	}
     	
 		for (int i = 0; i < TeiidAdd.ATTRIBUTES.length; i++) {
 			resourceRegistration.registerReadWriteAttribute(TeiidAdd.ATTRIBUTES[i], null, new AttributeWrite(TeiidAdd.ATTRIBUTES[i]));
