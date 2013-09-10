@@ -374,7 +374,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.repo.addListener(new VDBLifeCycleListener() {
 
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
 
 			}
 
@@ -388,7 +388,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB vdb, boolean reloading) {
 				if (!vdb.getVDB().getStatus().equals(Status.ACTIVE)) {
 					return;
 				}
@@ -561,9 +561,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		UDFMetaData udfMetaData = new UDFMetaData();
 		udfMetaData.setFunctionClassLoader(Thread.currentThread().getContextClassLoader());
 		this.assignMetadataRepositories(vdb, null);
-		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, VDBResources.Resource>(), udfMetaData, cmr);
+		repo.addVDB(vdb, metadataStore, new LinkedHashMap<String, VDBResources.Resource>(), udfMetaData, cmr, false);
 		try {
-			this.loadMetadata(vdb, cmr, metadataStore, resources);
+			this.loadMetadata(vdb, cmr, metadataStore, resources, false);
 		} catch (VDBValidationError e) {
 			throw new VirtualDatabaseException(RuntimePlugin.Event.valueOf(e.getCode()), e.getMessage());
 		}
@@ -611,7 +611,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (te != null) {
 			throw te;
 		}
-		metadataLoaded(vdb, model, store, loadCount, factory, true);
+		metadataLoaded(vdb, model, store, loadCount, factory, true, false);
 	}
 	
 	public void undeployVDB(String vdbName) {

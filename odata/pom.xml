@@ -2,7 +2,7 @@
   <parent>
     <artifactId>teiid-parent</artifactId>
     <groupId>org.jboss.teiid</groupId>
-    <version>8.5.0.CR2-SNAPSHOT</version>
+    <version>8.6.0.Alpha1-SNAPSHOT</version>
   </parent>
   
   <modelVersion>4.0.0</modelVersion>
@@ -76,7 +76,14 @@
         <artifactId>odata4j-core</artifactId>
         <classifier>redhat</classifier>
         <scope>provided</scope>
-    </dependency>     
+    </dependency>
+    
+    
+    <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+        <scope>provided</scope>
+    </dependency>
     
     <dependency>
         <artifactId>core4j</artifactId>

@@ -10,7 +10,7 @@
 	<artifactId>teiid-parent</artifactId>
 	<packaging>pom</packaging>
 	<name>Teiid</name>
-	<version>8.5.0.CR2-SNAPSHOT</version>
+	<version>8.6.0.Alpha1-SNAPSHOT</version>
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<site.url>http://www.jboss.org/teiid</site.url>
@@ -45,7 +45,7 @@
         <version.javax.ws.rs>1.1</version.javax.ws.rs>
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
         <version.core4j>0.5</version.core4j>
-        <version.resteasy-jaxrs>2.3.5.Final</version.resteasy-jaxrs>
+        <version.resteasy-jaxrs>2.3.6.Final</version.resteasy-jaxrs>
         <version.com.force.api>26.0.0</version.com.force.api>
 	</properties>
 	<scm>

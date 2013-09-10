@@ -48,6 +48,7 @@ import javax.transaction.TransactionManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.as.clustering.jgroups.ChannelFactory;
 import org.jboss.as.controller.AbstractAddStepHandler;
+import org.jboss.as.controller.ControlledProcessStateService;
 import org.jboss.as.controller.OperationContext;
 import org.jboss.as.controller.OperationFailedException;
 import org.jboss.as.controller.OperationStepHandler;
@@ -398,6 +399,7 @@ class TeiidAdd extends AbstractAddStepHandler {
         ServiceContainer container =  controller.getServiceContainer();
         container.addTerminateListener(shutdownListener);
         container.getService(Services.JBOSS_SERVER_CONTROLLER).addListener(shutdownListener);
+        shutdownListener.setControlledProcessStateService((ControlledProcessStateService)container.getService(ControlledProcessStateService.SERVICE_NAME).getValue());
             	
         // add JNDI for event distributor
 		final ReferenceFactoryService<EventDistributorFactory> referenceFactoryService = new ReferenceFactoryService<EventDistributorFactory>();

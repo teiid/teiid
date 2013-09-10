@@ -21,7 +21,9 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +89,7 @@ public class TestCompositeVDB {
 		Mockito.stub(ef.getPushDownFunctions()).toReturn(funcs);
 		
 		ConnectorManager cm = new ConnectorManager(translatorName,connectionName) { 
+			@Override
 			public ExecutionFactory getExecutionFactory() {
 				return ef;
 			}
@@ -130,7 +133,7 @@ public class TestCompositeVDB {
 		repo.setSystemFunctionManager(RealMetadataFactory.SFM);
 		MetadataStore metadataStore = RealMetadataFactory.exampleBQTCached().getMetadataStore();
 		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
-		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
 		
 		vdb = createVDBMetadata(metadataStore, "bqt1");
 		VDBImportMetadata vdbImport = new VDBImportMetadata();
@@ -139,7 +142,7 @@ public class TestCompositeVDB {
 		
 		try {
 			//foo does not exist
-			repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+			repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
 			fail();
 		} catch (VirtualDatabaseException e) {
 			
@@ -150,7 +153,7 @@ public class TestCompositeVDB {
 		vdb.getVDBImports().add(vdbImport);
 		
 		//model conflict
-		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
 	}
 	
 	@Test public void testDeepNesting() throws Exception {
@@ -162,7 +165,7 @@ public class TestCompositeVDB {
 		VDBMetaData vdb = createVDBMetadata(metadataStore, "bqt");
 		ConnectorManagerRepository cmr = new ConnectorManagerRepository();
 		cmr.addConnectorManager("x", new ConnectorManager("y", "z"));
-		repo.addVDB(vdb, metadataStore, null, null, cmr);
+		repo.addVDB(vdb, metadataStore, null, null, cmr, false);
 		
 		metadataStore = new MetadataStore();
 		RealMetadataFactory.createPhysicalModel("y", metadataStore);
@@ -170,7 +173,7 @@ public class TestCompositeVDB {
 		VDBImportMetadata vdbImport = new VDBImportMetadata();
 		vdbImport.setName("bqt");
 		vdb.getVDBImports().add(vdbImport);
-		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
 		
 		VDBMetaData vdbInstance = repo.getVDB("ex", 1);
 		assertTrue(!vdbInstance.getAttachment(ConnectorManagerRepository.class).getConnectorManagers().isEmpty());
@@ -181,7 +184,7 @@ public class TestCompositeVDB {
 		vdbImport = new VDBImportMetadata();
 		vdbImport.setName("ex");
 		vdb.getVDBImports().add(vdbImport);
-		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository());
+		repo.addVDB(vdb, metadataStore, null, null, new ConnectorManagerRepository(), false);
 		
 		vdbInstance = repo.getVDB("ex1", 1);
 		assertTrue(!vdbInstance.getAttachment(ConnectorManagerRepository.class).getConnectorManagers().isEmpty());

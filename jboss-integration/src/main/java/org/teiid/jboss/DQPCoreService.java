@@ -104,7 +104,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			}
 			
 			@Override
-			public void added(String name, int version, CompositeVDB vdb) {
+			public void added(String name, int version, CompositeVDB vdb, boolean reloading) {
 				if (!recentlyRemoved.remove(new VDBKey(name, version))) {
 					return;
 				}
@@ -135,7 +135,7 @@ public class DQPCoreService extends DQPConfiguration implements Serializable, Se
 			}
 
 			@Override
-			public void finishedDeployment(String name, int version, CompositeVDB cvdb) {
+			public void finishedDeployment(String name, int version, CompositeVDB cvdb, boolean reloading) {
 			}			
 			
 			@Override

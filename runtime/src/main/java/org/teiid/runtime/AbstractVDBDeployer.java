@@ -143,7 +143,7 @@ public abstract class AbstractVDBDeployer {
     }
     
 	protected void loadMetadata(VDBMetaData vdb, ConnectorManagerRepository cmr,
-			MetadataStore store, VDBResources vdbResources) throws TranslatorException {
+			MetadataStore store, VDBResources vdbResources, boolean reloading) throws TranslatorException {
 		// load metadata from the models
 		AtomicInteger loadCount = new AtomicInteger();
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
@@ -152,7 +152,7 @@ public abstract class AbstractVDBDeployer {
 			}
 		}
 		if (loadCount.get() == 0) {
-			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
+			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion(), reloading);
 			return;
 		}
 		for (ModelMetaData model: vdb.getModelMetaDatas().values()) {
@@ -177,7 +177,7 @@ public abstract class AbstractVDBDeployer {
 	protected void metadataLoaded(final VDBMetaData vdb,
 			final ModelMetaData model,
 			final MetadataStore vdbMetadataStore,
-			final AtomicInteger loadCount, MetadataFactory factory, boolean success) {
+			final AtomicInteger loadCount, MetadataFactory factory, boolean success, boolean reloading) {
 		if (success) {
 			// merge into VDB metadata
 			factory.mergeInto(vdbMetadataStore);
@@ -192,7 +192,7 @@ public abstract class AbstractVDBDeployer {
 		}
 		
 		if (loadCount.decrementAndGet() == 0 || vdb.getStatus() == Status.FAILED) {
-			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion());
+			getVDBRepository().finishDeployment(vdb.getName(), vdb.getVersion(), reloading);
 		}
 	}
 	
