@@ -21,13 +21,18 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
 import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.odata4j.core.NamedValue;
@@ -43,10 +48,20 @@ import org.odata4j.expression.OrderByExpression.Direction;
 import org.odata4j.producer.QueryInfo;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
 import org.teiid.translator.odata.ODataTypeManager;
 
 public class ODataSQLBuilder extends ODataHierarchyVisitor {
@@ -121,7 +136,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	String aliasGroup = "g"+this.groupCount.getAndIncrement();
 	        	
 	        	for (ForeignKey fk:joinTable.getForeignKeys()) {
-	        		if (fk.getReferenceTableName().equals(entityTable.getName())) {
+	        		if (fk.getPrimaryKey().getParent().equals(entityTable)) {
 
 	        			if(this.assosiatedTables.get(joinTable.getName()) == null) {
 		        			List<String> refColumns = fk.getReferenceColumns();
@@ -138,7 +153,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	// if association not found; see at the other end of the reference
 	        	if (!associationFound) {
 	            	for (ForeignKey fk:entityTable.getForeignKeys()) {
-	            		if (fk.getReferenceTableName().equals(joinTable.getName())) {
+	            		if (fk.getPrimaryKey().getParent().equals(joinTable)) {
 	            			if(this.assosiatedTables.get(joinTable.getName()) == null) {
 	            				List<String> refColumns = fk.getReferenceColumns();
 	            				if (refColumns == null) {
@@ -235,7 +250,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	String aliasGroup = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
     	
     	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
-    		if (fk.getReferenceTableName().equals(joinTable.getName())) {
+    		if (fk.getPrimaryKey().getParent().equals(joinTable)) {
     			if(this.assosiatedTables.get(joinKey) == null) {
     				List<String> refColumns = fk.getReferenceColumns();
     				if (refColumns == null) {
@@ -249,7 +264,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	
     	// if join direction is other way
     	for (ForeignKey fk:joinTable.getForeignKeys()) {
-    		if (fk.getReferenceTableName().equals(this.resultEntityTable.getName())) {
+    		if (fk.getPrimaryKey().getParent().equals(this.resultEntityTable)) {
     			if(this.assosiatedTables.get(joinKey) == null) {
     				List<String> refColumns = fk.getReferenceColumns();
     				if (refColumns == null) {

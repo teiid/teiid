@@ -149,7 +149,7 @@ class MongoDocument {
 		if (isEmbeddable()) {
         	for (Table t:this.table.getParent().getTables().values()) {
         		for (ForeignKey fk:t.getForeignKeys()) {
-        			if (fk.getReferenceTableName().equals(this.table.getName())){
+        			if (fk.getPrimaryKey().getParent().equals(this.table)){
         				MutableDBRef key = new MutableDBRef();
         				key.setName(this.table.getName());
         				key.setParentTable(t.getName());
@@ -183,7 +183,7 @@ class MongoDocument {
 
 	private void buildEmbeddedReferences() throws TranslatorException {
     	for (ForeignKey fk:this.table.getForeignKeys()) {
-			Table referenceTable = this.metadata.getTable(this.table.getParent().getFullName()+"."+fk.getReferenceTableName()); //$NON-NLS-1$
+			Table referenceTable = fk.getPrimaryKey().getParent();
 			MongoDocument refereceDoc = new MongoDocument(referenceTable, this.metadata);
 			if (refereceDoc.isEmbeddable()) {
 
@@ -229,7 +229,7 @@ class MongoDocument {
 		}
 		Table mergeTable = getMergeTable();
 		for (ForeignKey fk:this.table.getForeignKeys()) {
-			if (fk.getReferenceTableName().equalsIgnoreCase(mergeTable.getName())) {
+			if (fk.getPrimaryKey().getParent().equals(mergeTable)) {
 				MutableDBRef key = new MutableDBRef();
 				key.setName(this.table.getName());
 				key.setParentTable(mergeTable.getName());
@@ -242,7 +242,7 @@ class MongoDocument {
 				// check to see if the parent table has relation to this table, if yes
 				// then it is one-to-one, other wise many-to-one
 				for (ForeignKey fk1:mergeTable.getForeignKeys()) {
-					if (fk1.getReferenceTableName().equals(this.table.getName())) {
+					if (fk1.getPrimaryKey().getParent().equals(this.table)) {
 						key.setAssosiation(Assosiation.ONE);
 						break;
 					}
