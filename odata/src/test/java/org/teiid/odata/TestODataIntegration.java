@@ -34,7 +34,6 @@ import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -48,7 +47,6 @@ import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.producer.resources.EntitiesRequestResource;
 import org.odata4j.producer.resources.EntityRequestResource;
-import org.odata4j.producer.resources.ExceptionMappingProvider;
 import org.odata4j.producer.resources.MetadataResource;
 import org.odata4j.producer.resources.ODataBatchProvider;
 import org.odata4j.producer.resources.ServiceDocumentResource;
@@ -58,7 +56,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-@Ignore
 @SuppressWarnings("nls")
 public class TestODataIntegration extends BaseResourceTest {
 	
@@ -71,7 +68,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
 		deployment.getProviderFactory().registerProviderInstance(ODataBatchProvider.class);
-		deployment.getProviderFactory().registerProviderInstance(ExceptionMappingProvider.class);
+		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
 		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
 	}	
 	
@@ -120,9 +117,36 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class));
         
-        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
         //Assert.assertEquals("", response.getEntity());		
+	}	
+	
+	@Test
+	public void testError() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
+		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+		Client client = mock(Client.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+		MockProvider.CLIENT = client;
+		
+		OEntity entity = createCustomersEntity(eds);
+		ArrayList<OEntity> list = new ArrayList<OEntity>();
+		list.add(entity);
+		
+		EntityList result = Mockito.mock(EntityList.class);
+		when(result.get(0)).thenReturn(entity);
+		when(result.size()).thenReturn(1);
+		when(result.iterator()).thenReturn(list.iterator());
+		
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
+		
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
+        ClientResponse<String> response = request.get(String.class);
+        
+        Assert.assertEquals(500, response.getStatus());
+        Assert.assertTrue(response.getEntity().endsWith("<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>ServerErrorException</code><message lang=\"en-US\">Internal Server Error</message></error>"));
 	}	
 	
 	

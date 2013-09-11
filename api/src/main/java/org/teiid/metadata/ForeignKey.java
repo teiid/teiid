@@ -69,6 +69,9 @@ public class ForeignKey extends KeyRecord {
 	}
 
 	public String getReferenceTableName() {
+		if (referenceTableName == null && primaryKey != null) {
+			referenceTableName = primaryKey.getParent().getName();
+		}
 		return referenceTableName;
 	}
 
