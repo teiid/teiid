@@ -106,6 +106,7 @@ public class ODataEntitySchemaBuilder {
 		    
 			for (Table table: schema.getTables().values()) {
 				
+				// skip if the table does not have the PK or unique
 				KeyRecord primaryKey = table.getPrimaryKey();
 				List<KeyRecord> uniques = table.getUniqueKeys();
 				if (primaryKey == null && uniques.isEmpty()) {
