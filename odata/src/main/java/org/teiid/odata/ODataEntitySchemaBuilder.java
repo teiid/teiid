@@ -97,7 +97,7 @@ public class ODataEntitySchemaBuilder {
 		}
 		return null;
 	}	
-
+	
 	private static void buildEntityTypes(MetadataStore metadataStore, List<EdmSchema.Builder> edmSchemas) {
 		for (Schema schema:metadataStore.getSchemaList()) {
 			
@@ -106,6 +106,7 @@ public class ODataEntitySchemaBuilder {
 		    
 			for (Table table: schema.getTables().values()) {
 				
+				// skip if the table does not have the PK or unique
 				KeyRecord primaryKey = table.getPrimaryKey();
 				List<KeyRecord> uniques = table.getUniqueKeys();
 				if (primaryKey == null && uniques.isEmpty()) {
@@ -179,6 +180,14 @@ public class ODataEntitySchemaBuilder {
 			List<EdmAssociation.Builder> assosiations = new ArrayList<EdmAssociation.Builder>();
 			
 			for (Table table: schema.getTables().values()) {
+				
+				// skip if the table does not have the PK or unique
+				KeyRecord primaryKey = table.getPrimaryKey();
+				List<KeyRecord> uniques = table.getUniqueKeys();				
+				if (primaryKey == null && uniques.isEmpty()) {
+					continue;
+				}
+				
 				// build Associations
 				for (ForeignKey fk:table.getForeignKeys()) {
 					

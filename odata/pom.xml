@@ -76,7 +76,14 @@
         <artifactId>odata4j-core</artifactId>
         <classifier>redhat</classifier>
         <scope>provided</scope>
-    </dependency>     
+    </dependency>
+    
+    
+    <dependency>
+        <groupId>commons-logging</groupId>
+        <artifactId>commons-logging</artifactId>
+        <scope>provided</scope>
+    </dependency>
     
     <dependency>
         <artifactId>core4j</artifactId>
