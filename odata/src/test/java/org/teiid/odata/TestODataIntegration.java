@@ -21,8 +21,13 @@
  */
 package org.teiid.odata;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.stub;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -34,7 +39,6 @@ import org.jboss.resteasy.test.EmbeddedContainer;
 import org.jboss.resteasy.test.TestPortProvider;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -48,7 +52,6 @@ import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.producer.resources.EntitiesRequestResource;
 import org.odata4j.producer.resources.EntityRequestResource;
-import org.odata4j.producer.resources.ExceptionMappingProvider;
 import org.odata4j.producer.resources.MetadataResource;
 import org.odata4j.producer.resources.ODataBatchProvider;
 import org.odata4j.producer.resources.ServiceDocumentResource;
@@ -58,7 +61,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 
-@Ignore
 @SuppressWarnings("nls")
 public class TestODataIntegration extends BaseResourceTest {
 	
@@ -71,7 +73,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getRegistry().addPerRequestResource(MetadataResource.class);
 		deployment.getRegistry().addPerRequestResource(ServiceDocumentResource.class);
 		deployment.getProviderFactory().registerProviderInstance(ODataBatchProvider.class);
-		deployment.getProviderFactory().registerProviderInstance(ExceptionMappingProvider.class);
+		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
 		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
 	}	
 	
@@ -120,9 +122,63 @@ public class TestODataIntegration extends BaseResourceTest {
         ClientResponse<String> response = request.get(String.class);
         verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class));
         
-        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
         //Assert.assertEquals("", response.getEntity());		
+	}	
+	
+	@Test
+	public void testSkipNoPKTable() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
+		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+		Client client = mock(Client.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+		MockProvider.CLIENT = client;
+		
+		OEntity entity = createCustomersEntity(eds);
+		ArrayList<OEntity> list = new ArrayList<OEntity>();
+		list.add(entity);
+		
+		EntityList result = Mockito.mock(EntityList.class);
+		when(result.get(0)).thenReturn(entity);
+		when(result.size()).thenReturn(1);
+		when(result.iterator()).thenReturn(list.iterator());
+		
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
+		
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/NoPKTable"));
+        ClientResponse<String> response = request.get(String.class);
+        
+        Assert.assertEquals(404, response.getStatus());
+        Assert.assertTrue(response.getEntity().endsWith("<?xml version=\"1.0\" encoding=\"utf-8\"?><error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>NotFoundException</code><message lang=\"en-US\">TEIID16011 EntitySet \"NoPKTable\" is not found; Check the spelling, use modelName.tableName; The table that representing the Entity type must either have a PRIMARY KEY or UNIQUE key(s)</message></error>"));
+	}	
+	
+	@Test
+	public void testError() throws Exception {
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
+		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+		Client client = mock(Client.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+		MockProvider.CLIENT = client;
+		
+		OEntity entity = createCustomersEntity(eds);
+		ArrayList<OEntity> list = new ArrayList<OEntity>();
+		list.add(entity);
+		
+		EntityList result = Mockito.mock(EntityList.class);
+		when(result.get(0)).thenReturn(entity);
+		when(result.size()).thenReturn(1);
+		when(result.iterator()).thenReturn(list.iterator());
+		
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
+		
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
+        ClientResponse<String> response = request.get(String.class);
+        
+        Assert.assertEquals(500, response.getStatus());
+        Assert.assertTrue(response.getEntity().endsWith("<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>ServerErrorException</code><message lang=\"en-US\">Internal Server Error</message></error>"));
 	}	
 	
 	
