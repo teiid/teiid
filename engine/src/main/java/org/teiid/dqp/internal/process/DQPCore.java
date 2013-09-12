@@ -240,7 +240,7 @@ public class DQPCore implements DQP {
 		RequestID requestID = workContext.getRequestID(reqID);
 		requestMsg.setFetchSize(Math.min(requestMsg.getFetchSize(), this.config.getMaxRowsFetchSize()));
 		Request request = null;
-	    if ( requestMsg.isPreparedStatement() || requestMsg.isCallableStatement()) {
+	    if ( requestMsg.isPreparedStatement() || requestMsg.isCallableStatement() || requestMsg.getRequestOptions().isContinuous()) {
 	    	request = new PreparedStatementRequest(prepPlanCache);
 	    } else {
 	    	request = new Request();

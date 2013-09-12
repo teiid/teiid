@@ -309,7 +309,6 @@ public class Request {
     private void createProcessor() throws TeiidComponentException {
     	this.context.setTransactionContext(getTransactionContext(true));
         this.processor = new QueryProcessor(processPlan, context, bufferManager, processorDataManager);
-    	this.processor.setContinuous(this.requestMsg.getRequestOptions().isContinuous(), this.requestMsg.getCommandString());
     }
 
 	TransactionContext getTransactionContext(boolean startAutoWrap) throws TeiidComponentException {

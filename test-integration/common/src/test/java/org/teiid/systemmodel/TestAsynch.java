@@ -27,6 +27,9 @@ import static org.junit.Assert.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -39,28 +42,50 @@ import org.teiid.jdbc.AsynchPositioningException;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.ContinuousStatementCallback;
 import org.teiid.jdbc.FakeServer;
+import org.teiid.jdbc.HardCodedExecutionFactory;
 import org.teiid.jdbc.RequestOptions;
 import org.teiid.jdbc.StatementCallback;
 import org.teiid.jdbc.TeiidResultSet;
 import org.teiid.jdbc.TeiidStatement;
+import org.teiid.language.QueryExpression;
+import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 
 @SuppressWarnings("nls")
 public class TestAsynch {
 	
 	private static FakeServer server;
 	private ConnectionImpl internalConnection;
+	private static HardCodedExecutionFactory ef;
+	private static List<String> partIds = new ArrayList<String>();
     
     @BeforeClass public static void oneTimeSetup() throws Exception {
     	server = new FakeServer(true);
     	ModelMetaData mmd = new ModelMetaData();
     	mmd.setName("v");
-    	mmd.setModelType(Type.VIRTUAL);
+    	mmd.setModelType(Type.PHYSICAL);
     	mmd.setSchemaSourceType("ddl");
-    	mmd.setSchemaText("create view test (col integer) as select 1;");
+    	mmd.addSourceMapping("z", "z", null);
+    	mmd.setSchemaText("create view test (col integer) as select 1; create foreign table someTable (col integer);");
+    	ef = new HardCodedExecutionFactory() {
+    		@Override
+    		public ResultSetExecution createResultSetExecution(
+    				QueryExpression command, ExecutionContext executionContext,
+    				RuntimeMetadata metadata, Object connection)
+    				throws TranslatorException {
+    			partIds.add(executionContext.getPartIdentifier());
+    			return super.createResultSetExecution(command, executionContext, metadata,
+    					connection);
+    		}
+    	};
+		server.addTranslator("z", ef);
     	server.deployVDB("x", mmd);
     }
     
     @AfterClass public static void oneTimeTeardown() throws Exception {
+    	partIds.clear();
     	server.stop();
     }
     
@@ -276,6 +301,42 @@ public class TestAsynch {
 			}
 		}, new RequestOptions().continuous(true));
 		assertEquals(3, result.get().intValue());
+	}
+	
+	@Test public void testAsynchPlaning() throws Exception {
+		Statement stmt = this.internalConnection.createStatement();
+		TeiidStatement ts = stmt.unwrap(TeiidStatement.class);
+		ef.addData("SELECT someTable.col FROM someTable", Arrays.asList(Arrays.asList(1)));
+		final ResultsFuture<Integer> result = new ResultsFuture<Integer>(); 
+		ts.submitExecute("select * from someTable", new StatementCallback() {
+			int rowCount;
+			@Override
+			public void onRow(Statement s, ResultSet rs) {
+				try {
+					rowCount++;
+					if (rowCount == 3) {
+						s.close();
+					}
+				} catch (SQLException e) {
+					result.getResultsReceiver().exceptionOccurred(e);
+					throw new RuntimeException(e);
+				}
+			}
+			
+			@Override
+			public void onException(Statement s, Exception e) {
+				result.getResultsReceiver().exceptionOccurred(e);
+			}
+			
+			@Override
+			public void onComplete(Statement s) {
+				result.getResultsReceiver().receiveResults(rowCount);
+			}
+		}, new RequestOptions().continuous(true));
+		assertEquals(3, result.get().intValue());
+		assertEquals(3, partIds.size());
+		assertEquals(partIds.get(0), partIds.get(1));
+		assertEquals(partIds.get(1), partIds.get(2));
 	}
 
 }

@@ -210,7 +210,6 @@ public class QueryProcessor implements BatchProducer {
 		if (!open) {
 			if (continuous && context.getReuseCount() > 0) {
 				//validate the plan prior to the next run
-	    		//ideally we would reuse the prepared plan from initial planning in the case of a prepared statement
 	    		if (this.plan != null && !this.plan.validate()) {
 					this.plan = null;
 	    		}
@@ -319,12 +318,11 @@ public class QueryProcessor implements BatchProducer {
 		return bufferMgr;
 	}
 	
-	public void setContinuous(boolean continuous, String sql) {
-		this.continuous = continuous;
-		if (this.continuous) {
-			this.query = sql;
-			this.context.setContinuous();
-		}
+	public void setContinuous(PreparedPlan prepPlan, String query) {
+		this.continuous = true;
+		this.plan = prepPlan;
+		this.query = query;
+		this.context.setContinuous();
 	}
 	
 	@Override

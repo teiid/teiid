@@ -282,4 +282,13 @@ public class PreparedStatementRequest extends Request {
 		}
 		return false;
 	}
+	
+	@Override
+	public void processRequest() throws TeiidComponentException,
+			TeiidProcessingException {
+		super.processRequest();
+		if (this.requestMsg.getRequestOptions().isContinuous()) {
+			this.processor.setContinuous(this.prepPlan, this.requestMsg.getCommandString());
+		}
+	}
 } 
