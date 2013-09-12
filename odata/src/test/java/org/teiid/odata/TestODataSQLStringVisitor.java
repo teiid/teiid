@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +75,12 @@ public class TestODataSQLStringVisitor {
 		te("a eq time'PT13H20M'", "a = {t'13:20:00'}");
 		te("a eq datetime'2008-10-13T00:00:00'", "a = {ts'2008-10-13 00:00:00.0'}");
 		//te("a eq datetimeoffset'2008-10-13T00:00:00-04:00'", "a = {ts '2008-10-13T00:00:00.000'}");
+	}
+	
+	@Test
+	public void testNegate() {
+		te("- a", "(-1 * a)");
+		te("-4.5f", "-4.5");
 	}	
 	
 	@Test

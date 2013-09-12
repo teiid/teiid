@@ -31,17 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-
 import org.odata4j.core.OCollection;
 import org.odata4j.core.OCollections;
 import org.odata4j.core.OComplexObject;
 import org.odata4j.core.OComplexObjects;
-import org.odata4j.core.OFunctionParameter;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
-import org.odata4j.core.OSimpleObject;
 import org.odata4j.edm.EdmCollectionType;
 import org.odata4j.edm.EdmComplexType;
 import org.odata4j.edm.EdmDataServices;
@@ -56,11 +51,9 @@ import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.Responses;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
-import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.PropertiesUtils;
-import org.teiid.deployers.VDBRepository;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
 import org.teiid.jdbc.EmbeddedProfile;
@@ -77,7 +70,6 @@ import org.teiid.query.sql.lang.Query;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.odata.ODataTypeManager;
-import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.LocalServerConnection;
 
 public class LocalClient implements Client {
@@ -93,6 +85,7 @@ public class LocalClient implements Client {
 	private String connectionString;
 	private EdmDataServices edmMetaData;
 	private long lastLookup = -1L;
+	private TeiidDriver driver = TeiidDriver.getInstance();
 
 	public LocalClient(String vdbName, int vdbVersion, Properties props) {
 		this.vdbName = vdbName;
@@ -116,14 +109,17 @@ public class LocalClient implements Client {
 	public int getVDBVersion() {
 		return this.vdbVersion;
 	}
-
+	
+	public void setDriver(TeiidDriver driver) {
+		this.driver = driver;
+	}
 
 	private ConnectionImpl getConnection() throws SQLException {
-		return TeiidDriver.getInstance().connect(this.connectionString, null);
+		return driver.connect(this.connectionString, null);
 	}
 
 	@Override
-	public BaseResponse executeCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType) {
+	public BaseResponse executeCall(String sql, List<SQLParam> parameters, EdmType returnType) {
 		ConnectionImpl connection = null;
 		try {
 			LogManager.logDetail(LogConstants.CTX_ODATA, "Teiid-Query:",sql); //$NON-NLS-1$
@@ -136,9 +132,8 @@ public class LocalClient implements Client {
 			}
 
 			if (!parameters.isEmpty()) {
-				for (String key:parameters.keySet()) {
-					OFunctionParameter param = parameters.get(key);
-					stmt.setObject(i++, ((OSimpleObject)param.getValue()).getValue());
+				for (SQLParam param:parameters) {
+					stmt.setObject(i++, param.value, param.sqlType);
 				}
 			}
 
@@ -186,21 +181,27 @@ public class LocalClient implements Client {
 	@Override
 	public MetadataStore getMetadataStore() {
 		MetadataStore store = null;
+		ConnectionImpl connection = null;
 		long currentTime = System.currentTimeMillis();
 		if (this.metadataStore == null || this.lastLookup == -1 || currentTime-this.lastLookup > this.cacheTime) {
 			try {
-				InitialContext ic = new InitialContext();
-				ClientServiceRegistry csr = (ClientServiceRegistry)ic.lookup(LocalServerConnection.jndiNameForRuntime(this.transportName));
-				VDBRepository repo = csr.getClientService(VDBRepository.class);
-				VDBMetaData vdb = repo.getVDB(this.vdbName, this.vdbVersion);
+				connection = getConnection();
+				LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
+				VDBMetaData vdb = lsc.getWorkContext().getVDB();
 				if (vdb == null) {
 					throw new NotFoundException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16001, this.vdbName, this.vdbVersion));
 				}
 				store = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
-			} catch (NamingException e) {
-				 throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
-			} catch (ComponentNotFoundException e) {
+			} catch (SQLException e) {
 				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
+			} finally {
+				if (connection != null) {
+					try {
+						connection.close();
+					} catch (SQLException e) {
+						
+					}
+				}
 			}
 		}
 
