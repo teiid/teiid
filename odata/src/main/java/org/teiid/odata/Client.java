@@ -24,7 +24,6 @@ package org.teiid.odata;
 import java.util.List;
 import java.util.Map;
 
-import org.odata4j.core.OFunctionParameter;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmType;
@@ -41,7 +40,7 @@ public interface Client {
 	
 	MetadataStore getMetadataStore();
 	
-	BaseResponse executeCall(String sql, Map<String, OFunctionParameter> parameters, EdmType returnType);
+	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, EdmType returnType);
 
 	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount);
 	

@@ -26,6 +26,7 @@ import static org.mockito.Mockito.*;
 
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -44,7 +45,10 @@ import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
+import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.EdmType;
 import org.odata4j.format.xml.EdmxFormatWriter;
+import org.odata4j.producer.Responses;
 import org.odata4j.producer.resources.EntitiesRequestResource;
 import org.odata4j.producer.resources.EntityRequestResource;
 import org.odata4j.producer.resources.MetadataResource;
@@ -55,9 +59,13 @@ import org.teiid.core.util.UnitTestUtil;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.unittest.TimestampUtil;
 
 @SuppressWarnings("nls")
 public class TestODataIntegration extends BaseResourceTest {
+	
+	private static TransformationMetadata metadata;
+	private static EdmDataServices eds;
 	
 	@BeforeClass
 	public static void before() throws Exception {
@@ -70,12 +78,12 @@ public class TestODataIntegration extends BaseResourceTest {
 		deployment.getProviderFactory().registerProviderInstance(ODataBatchProvider.class);
 		deployment.getProviderFactory().addExceptionMapper(ODataExceptionMappingProvider.class);
 		deployment.getProviderFactory().addContextResolver(org.teiid.odata.MockProvider.class);		
+		metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
+		eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 	}	
 	
 	@Test
 	public void testMetadata() throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
-		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 		Client client = mock(Client.class);
 		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());	
 		stub(client.getMetadata()).toReturn(eds);
@@ -93,8 +101,6 @@ public class TestODataIntegration extends BaseResourceTest {
 
 	@Test
 	public void testProjectedColumns() throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
-		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 		Client client = mock(Client.class);
 		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
 		stub(client.getMetadata()).toReturn(eds);
@@ -123,49 +129,45 @@ public class TestODataIntegration extends BaseResourceTest {
 	}	
 	
 	@Test
-	public void testSkipNoPKTable() throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
-		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+	public void testProcedure() throws Exception {
 		Client client = mock(Client.class);
 		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
 		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
+		ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+		ArgumentCaptor<List> params = ArgumentCaptor.forClass(List.class);
 		
-		OEntity entity = createCustomersEntity(eds);
-		ArrayList<OEntity> list = new ArrayList<OEntity>();
-		list.add(entity);
+		when(client.executeCall(any(String.class), anyListOf(SQLParam.class), any(EdmType.class))).thenReturn(Responses.simple(EdmSimpleType.INT32, "return", org.odata4j.expression.Expression.null_()));
 		
-		EntityList result = Mockito.mock(EntityList.class);
-		when(result.get(0)).thenReturn(entity);
-		when(result.size()).thenReturn(1);
-		when(result.iterator()).thenReturn(list.iterator());
-		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/getCustomers?p2=datetime'2011-09-11T00:00:00'&p3=2.0M"));
+        ClientResponse<String> response = request.get(String.class);
+        verify(client).executeCall(sql.capture(), params.capture(), any(EdmType.class));
+        
+        Assert.assertEquals("{? = call nw.getCustomers(p2=>?,p3=>?)}", sql.getValue().toString());
+        Assert.assertEquals(TimestampUtil.createTimestamp(111, 8, 11, 0, 0, 0, 0), ((SQLParam)params.getValue().get(1)).value);
+        Assert.assertEquals(200, response.getStatus());
+	}
+	
+	@Test
+	public void testSkipNoPKTable() throws Exception {
+		Client client = mock(Client.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+		MockProvider.CLIENT = client;
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/NoPKTable"));
         ClientResponse<String> response = request.get(String.class);
         
         Assert.assertEquals(404, response.getStatus());
-        Assert.assertTrue(response.getEntity().endsWith("<?xml version=\"1.0\" encoding=\"utf-8\"?><error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>NotFoundException</code><message lang=\"en-US\">TEIID16011 EntitySet \"NoPKTable\" is not found; Check the spelling, use modelName.tableName; The table that representing the Entity type must either have a PRIMARY KEY or UNIQUE key(s)</message></error>"));
+        Assert.assertTrue(response.getEntity().endsWith("<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>NotFoundException</code><message lang=\"en-US\">TEIID16011 EntitySet \"NoPKTable\" is not found; Check the spelling, use modelName.tableName; The table that representing the Entity type must either have a PRIMARY KEY or UNIQUE key(s)</message></error>"));
 	}	
 	
 	@Test
 	public void testError() throws Exception {
-		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.ddl")),"northwind", "nw");
-		EdmDataServices eds = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
 		Client client = mock(Client.class);
 		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
 		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
-		
-		OEntity entity = createCustomersEntity(eds);
-		ArrayList<OEntity> list = new ArrayList<OEntity>();
-		list.add(entity);
-		
-		EntityList result = Mockito.mock(EntityList.class);
-		when(result.get(0)).thenReturn(entity);
-		when(result.size()).thenReturn(1);
-		when(result.iterator()).thenReturn(list.iterator());
 		
 		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
 		
@@ -176,6 +178,34 @@ public class TestODataIntegration extends BaseResourceTest {
         Assert.assertTrue(response.getEntity().endsWith("<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"><code>ServerErrorException</code><message lang=\"en-US\">Internal Server Error</message></error>"));
 	}	
 	
+	@Test
+	public void testProcedureCall() throws Exception {
+		Client client = mock(Client.class);
+		stub(client.getMetadataStore()).toReturn(metadata.getMetadataStore());
+		stub(client.getMetadata()).toReturn(eds);
+		MockProvider.CLIENT = client;
+		ArgumentCaptor<Query> sql = ArgumentCaptor.forClass(Query.class);
+		ArgumentCaptor<EdmEntitySet> entitySet = ArgumentCaptor.forClass(EdmEntitySet.class);
+		
+		OEntity entity = createCustomersEntity(eds);
+		ArrayList<OEntity> list = new ArrayList<OEntity>();
+		list.add(entity);
+		
+		EntityList result = Mockito.mock(EntityList.class);
+		when(result.get(0)).thenReturn(entity);
+		when(result.size()).thenReturn(1);
+		when(result.iterator()).thenReturn(list.iterator());
+		
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		
+        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
+        ClientResponse<String> response = request.get(String.class);
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class));
+        
+        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals(200, response.getStatus());
+        //Assert.assertEquals("", response.getEntity());		
+	}	
 	
 	private OEntity createCustomersEntity(EdmDataServices metadata) {
 		EdmEntitySet entitySet = metadata.findEdmEntitySet("Customers");

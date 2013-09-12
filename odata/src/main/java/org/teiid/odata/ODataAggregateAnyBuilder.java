@@ -21,7 +21,6 @@
  */
 package org.teiid.odata;
 
-import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -43,7 +42,9 @@ import org.teiid.query.sql.lang.SubqueryCompareCriteria;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.translator.SourceSystemFunctions;
 
 /**
  * http://host/service.svc/Orders?$filter=OrderLines/all(ol: ol/Quantity gt 10)
@@ -52,7 +53,6 @@ import org.teiid.query.sql.symbol.GroupSymbol;
  */
 public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 	private Stack<Expression> stack = new Stack<Expression>();
-	private boolean negitive = false;
 	private AggregateAllFunction parentExpr;
 	private GroupSymbol childGroup;
 	private GroupSymbol parentGroup;
@@ -142,7 +142,9 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(NegateExpression expr) {
-		this.negitive = true;
+		visitNode(expr.getExpression());
+		Expression ex = stack.pop();
+		stack.push(new Function(SourceSystemFunctions.MULTIPLY_OP, new Expression[] {new Constant(-1), ex}));
 	}
 
 	@Override
@@ -196,17 +198,12 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(DecimalLiteral expr) {
-		if (this.negitive) {
-			this.negitive = false;
-			stack.add(new Constant(expr.getValue().multiply(new BigDecimal(-1)))); //$NON-NLS-1$
-		} else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-		}
+		stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
 	}
 
 	@Override
 	public void visit(GuidLiteral expr) {
-		stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+		stack.add(new Constant(expr.getValue().toString())); //$NON-NLS-1$
 	}
 
 	@Override
@@ -226,42 +223,22 @@ public class ODataAggregateAnyBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(SingleLiteral expr) {
-		if (this.negitive) {
-			this.negitive = false;
-			stack.add(new Constant(-1 * expr.getValue())); //$NON-NLS-1$
-		} else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-		}
+		stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
 	}
 
 	@Override
 	public void visit(DoubleLiteral expr) {
-		if (this.negitive) {
-			this.negitive = false;
-			stack.add(new Constant(-1 * expr.getValue())); //$NON-NLS-1$
-		} else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-		}
+		stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
 	}
 
 	@Override
 	public void visit(IntegralLiteral expr) {
-		if (this.negitive) {
-			this.negitive = false;
-			stack.add(new Constant(-1 * expr.getValue())); //$NON-NLS-1$
-		} else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-		}
+		stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
 	}
 
 	@Override
 	public void visit(Int64Literal expr) {
-		if (this.negitive) {
-			this.negitive = false;
-			stack.add(new Constant(-1 * expr.getValue())); //$NON-NLS-1$
-		} else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-		}
+		stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
 	}
 
 	@Override

@@ -21,8 +21,13 @@
  */
 package org.teiid.translator.odata;
 
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.HashMap;
 
+import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
+import org.odata4j.core.Guid;
 import org.odata4j.edm.EdmSimpleType;
 import org.teiid.core.types.DataTypeManager;
 
@@ -75,5 +80,22 @@ public class ODataTypeManager {
 	
 	public static EdmSimpleType odataType(String teiidType) {
 		return teiidkeyed.get(teiidType);
+	}
+	
+	public static Object convertToTeiidRuntimeType(Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (DataTypeManager.getAllDataTypeClasses().contains(value.getClass())) {
+			return value;
+		}
+		if (value instanceof LocalDateTime) {
+			return new Timestamp(((LocalDateTime)value).toDateTime().getMillis());
+		} else if (value instanceof Guid) {
+			return value.toString();
+		} else if (value instanceof LocalTime) {
+			return new Time(((LocalTime)value).toDateTimeToday().getMillis());
+		}
+		return value;
 	}
 }
