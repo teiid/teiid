@@ -108,6 +108,7 @@ import org.teiid.query.tempdata.GlobalTableStore;
 import org.teiid.query.tempdata.GlobalTableStoreImpl.MatTableInfo;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
+import org.teiid.translator.CacheDirective.Invalidation;
 import org.teiid.translator.CacheDirective.Scope;
 import org.teiid.translator.TranslatorException;
 
@@ -793,12 +794,16 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 						if (cmdString.length() < 100000) { //TODO: this check won't be needed if keys aren't exclusively held in memory
 							cid = new CacheID(workItem.getDqpWorkContext(), ParseInfo.DEFAULT_INSTANCE, cmdString);
 							cid.setParameters(cv.parameters);
-							CachedResults cr = workItem.getRsCache().get(cid);
-							if (cr != null && (cr.getRowLimit() == 0 || (parameterObject.limit > 0 && cr.getRowLimit() >= parameterObject.limit))) {
-								parameterObject.doNotCache = true;
-								LogManager.logDetail(LogConstants.CTX_DQP, "Using cache entry for", cid); //$NON-NLS-1$
-								work.close();
-								return cr.getResults().createIndexedTupleSource();
+							if (cd.getInvalidation() == null || cd.getInvalidation() == Invalidation.NONE) {
+								CachedResults cr = workItem.getRsCache().get(cid);
+								if (cr != null && (cr.getRowLimit() == 0 || (parameterObject.limit > 0 && cr.getRowLimit() >= parameterObject.limit))) {
+									parameterObject.doNotCache = true;
+									LogManager.logDetail(LogConstants.CTX_DQP, "Using cache entry for", cid); //$NON-NLS-1$
+									work.close();
+									return cr.getResults().createIndexedTupleSource();
+								}
+							} else if (cd.getInvalidation() == Invalidation.IMMEDIATE) {
+								workItem.getRsCache().remove(cid, CachingTupleSource.getDeterminismLevel(cd.getScope()));
 							}
 						}
 					}

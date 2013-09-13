@@ -21,10 +21,9 @@
  */
 package org.teiid.dqp.internal.process;
 
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.times;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -137,8 +136,34 @@ public class TestSessionAwareCache {
 		
 		assertNull(cache.get(id));
 	}
-
 	
+	@Test public void testRemove() {
+		
+		SessionAwareCache<Cachable> cache = new SessionAwareCache<Cachable>("resultset", DefaultCacheFactory.INSTANCE, SessionAwareCache.Type.RESULTSET, 0);
+		
+		CacheID id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		
+		Cachable result = Mockito.mock(Cachable.class);
+		Mockito.stub(result.prepare((BufferManager)anyObject())).toReturn(true);
+		Mockito.stub(result.restore((BufferManager)anyObject())).toReturn(true);		
+		
+		id = new CacheID(buildWorkContext(), new ParseInfo(), "SELECT * FROM FOO");
+		cache.put(id, Determinism.VDB_DETERMINISTIC, result, null);
+		
+		Object c = cache.get(id);
+		
+		assertTrue(result==c);
+		
+		assertTrue(cache.remove(id, Determinism.VDB_DETERMINISTIC) != null);
+		assertNull(cache.get(id));
+		
+		//session scope
+		cache.put(id, Determinism.SESSION_DETERMINISTIC, result, null);
+		assertTrue(cache.get(id) != null);
+		assertTrue(cache.remove(id, Determinism.SESSION_DETERMINISTIC) != null);
+		assertNull(cache.get(id));
+	}
+
 	public static DQPWorkContext buildWorkContext() {
 		DQPWorkContext workContext = new DQPWorkContext();
 		SessionMetadata session = new SessionMetadata();

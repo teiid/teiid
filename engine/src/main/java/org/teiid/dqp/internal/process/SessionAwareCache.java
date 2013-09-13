@@ -155,6 +155,25 @@ public class SessionAwareCache<T> {
 		return localCache.size() + distributedCache.size();
 	}
 	
+	public T remove(CacheID id, Determinism determinismLevel){
+		if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {
+			id.setSessionId(id.originalSessionId);
+			LogManager.logTrace(LogConstants.CTX_DQP, "Removing from session/local cache", id); //$NON-NLS-1$
+			return this.localCache.remove(id);
+		} 
+		id.setSessionId(null);
+		
+		if (determinismLevel == Determinism.USER_DETERMINISTIC) {
+			id.setUserName(id.originalUserName);
+		}
+		else {
+			id.setUserName(null);
+		}
+		
+		LogManager.logTrace(LogConstants.CTX_DQP, "Removing from global/distributed cache", id); //$NON-NLS-1$
+		return this.distributedCache.remove(id);
+	}
+	
 	public void put(CacheID id, Determinism determinismLevel, T t, Long ttl){
 		cachePuts.incrementAndGet();
 		if (determinismLevel.compareTo(Determinism.SESSION_DETERMINISTIC) <= 0) {

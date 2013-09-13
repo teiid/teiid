@@ -94,22 +94,27 @@ final class CachingTupleSource extends
 		        	cr.setRowLimit(rowNumber);
 		        }
 		        tb.setPrefersMemory(Boolean.TRUE.equals(cd.getPrefersMemory()));
-		    	Determinism determinismLevel = Determinism.SESSION_DETERMINISTIC;
-		    	if (dtts.scope != null) {
-		    		switch (dtts.scope) {
-		    		case VDB:
-		    			determinismLevel = Determinism.VDB_DETERMINISTIC;
-		    		case SESSION:
-		    			determinismLevel = Determinism.SESSION_DETERMINISTIC;
-		    		case USER:
-		    			determinismLevel = Determinism.USER_DETERMINISTIC;
-		    		}
-		    	}
+		    	Determinism determinismLevel = getDeterminismLevel(this.dtts.scope);
 		        this.dataTierManagerImpl.requestMgr.getRsCache().put(cid, determinismLevel, cr, cd.getTtl()); 
 		        tb = null;
 			}
 		}
 		return tuple;
+	}
+
+	public static Determinism getDeterminismLevel(CacheDirective.Scope scope) {
+		Determinism determinismLevel = Determinism.SESSION_DETERMINISTIC;
+		if (scope != null) {
+			switch (scope) {
+			case VDB:
+				determinismLevel = Determinism.VDB_DETERMINISTIC;
+			case SESSION:
+				determinismLevel = Determinism.SESSION_DETERMINISTIC;
+			case USER:
+				determinismLevel = Determinism.USER_DETERMINISTIC;
+			}
+		}
+		return determinismLevel;
 	}
 
 	private void removeTupleBuffer() {

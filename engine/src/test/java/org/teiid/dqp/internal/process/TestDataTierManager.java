@@ -70,6 +70,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 import org.teiid.translator.CacheDirective;
+import org.teiid.translator.CacheDirective.Invalidation;
 
 @SuppressWarnings("nls")
 public class TestDataTierManager {
@@ -354,6 +355,17 @@ public class TestDataTierManager {
     	
     	assertEquals(2, this.rm.getRsCache().getCachePutCount());
     	assertEquals(2, this.rm.getRsCache().getTotalCacheEntries());
+    	
+    	//proactive invalidation, removes immediately
+    	command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
+    	cd.setInvalidation(Invalidation.IMMEDIATE);
+    	rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertTrue(ts instanceof CachingTupleSource);
+    	assertEquals(10, pullTuples(ts, -1));
+    	assertEquals(3, connectorManager.getExecuteCount().get());
+    	assertFalse(rrp.doNotCache);
     }
     
     @Test public void testTypeConversion() throws Exception {

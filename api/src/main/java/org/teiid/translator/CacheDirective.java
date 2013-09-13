@@ -35,6 +35,21 @@ public class CacheDirective implements Serializable {
 		USER,
 		VDB
 	}
+	
+	public enum Invalidation {
+		/**
+		 * No invalidation - the default
+		 */
+		NONE,
+		/**
+		 * Invalidate after new results have been obtained
+		 */
+		LAZY,
+		/**
+		 * Invalidate immediately
+		 */
+		IMMEDIATE
+	}
 
 	private static final long serialVersionUID = -4119606289701982511L;
 	
@@ -43,6 +58,7 @@ public class CacheDirective implements Serializable {
 	private Boolean readAll;
 	private Long ttl;
 	private Scope scope;
+	private Invalidation invalidation = Invalidation.NONE;
 	
 	public CacheDirective() {
 	}
@@ -121,12 +137,21 @@ public class CacheDirective implements Serializable {
 		&& EquivalenceUtil.areEqual(this.readAll, other.readAll) 
 		&& EquivalenceUtil.areEqual(this.ttl, other.ttl) 
 		&& EquivalenceUtil.areEqual(this.updatable, other.updatable)
-		&& EquivalenceUtil.areEqual(this.scope, other.scope);
+		&& EquivalenceUtil.areEqual(this.scope, other.scope)
+		&& EquivalenceUtil.areEqual(this.invalidation, other.invalidation);
 	}
 	
 	@Override
 	public int hashCode() {
 		return HashCodeUtil.hashCode(1, scope, ttl, updatable);
+	}
+	
+	public Invalidation getInvalidation() {
+		return invalidation;
+	}
+	
+	public void setInvalidation(Invalidation invalidation) {
+		this.invalidation = invalidation;
 	}
 
 }
