@@ -199,19 +199,21 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 	}
 
 	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType) throws TransformationException {
-		if (value instanceof DataSource && (!(value instanceof Source) || desiredType != DataTypeManager.DefaultDataClasses.XML)) {
+		if (desiredType != DataTypeManager.DefaultDataClasses.XML || !(value instanceof Source)) {
 			if (value instanceof InputStreamFactory) {
 				return new BlobType(new BlobImpl((InputStreamFactory)value));
 			}
-			FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
-			//TODO: guess at the encoding from the content type
-			FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
-
-			try {
-				SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
-				return new BlobType(new BlobImpl(is.getInputStreamFactory()));
-			} catch (IOException e) {
-				throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
+			if (value instanceof DataSource) {
+				FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
+				//TODO: guess at the encoding from the content type
+				FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+	
+				try {
+					SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
+					return new BlobType(new BlobImpl(is.getInputStreamFactory()));
+				} catch (IOException e) {
+					throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
+				}
 			}
 		}
 		if (value instanceof Source) {

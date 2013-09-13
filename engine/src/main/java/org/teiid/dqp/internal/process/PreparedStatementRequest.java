@@ -249,11 +249,11 @@ public class PreparedStatementRequest extends Request {
                     Expression expr = ResolverUtil.convertExpression(new Constant(DataTypeManager.convertToRuntimeType(value, param.getType() != DataTypeManager.DefaultDataClasses.OBJECT)), targetTypeName, metadata);
                     value = Evaluator.evaluate(expr);
 				} catch (ExpressionEvaluationException e) {
-                    String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
-                    throw new QueryResolverException(QueryPlugin.Event.TEIID30557, msg);
+                    String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", i + 1, value, value.getClass(), DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID30557, e, msg);
 				} catch (QueryResolverException e) {
-					String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", new Integer(i + 1), value, DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
-                    throw new QueryResolverException(QueryPlugin.Event.TEIID30558, msg);
+					String msg = QueryPlugin.Util.getString("QueryUtil.Error_executing_conversion_function_to_convert_value", i + 1, value, value.getClass(), DataTypeManager.getDataTypeName(param.getType())); //$NON-NLS-1$
+                    throw new QueryResolverException(QueryPlugin.Event.TEIID30558, e, msg);
 				}
 	        }
 	        	        

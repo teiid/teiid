@@ -619,7 +619,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 		} catch (Throwable e) {
 			if ((e == BlockOutputStream.exceededMax && newEntry) || e == PhysicalInfo.sizeChanged) {
 				//entries are mutable after adding, the original should be removed shortly so just ignore
-				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object "+ entry.getId() +" changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
+				LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Object ", entry.getId(), " changed size since first persistence, keeping the original."); //$NON-NLS-1$ //$NON-NLS-2$
 			} else if (e == BlockOutputStream.exceededMax){
 				LogManager.logError(LogConstants.CTX_BUFFER_MGR, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30001,s.getId(), entry.getId())); 
 			} else {

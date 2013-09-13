@@ -324,7 +324,7 @@ public class TestPreparedStatement {
 	        helpGetProcessorPlan(preparedSql, values, prepCache, SESSION_ID);
 	        fail();
 		}catch(QueryResolverException qe){
-            assertEquals("TEIID30558 Error converting parameter number 1 with value \"x\" to expected type integer.", qe.getMessage()); //$NON-NLS-1$
+            assertEquals("TEIID30558 Error converting parameter number 1 with value \"x\" of class java.lang.String to expected type integer.", qe.getMessage()); //$NON-NLS-1$
     	}    	
     	assertEquals(0, prepCache.getCacheHitCount());
     	

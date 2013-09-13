@@ -172,7 +172,7 @@ public class ConnectorManager  {
      * the given <code>RequestID</code>.
      */
     boolean removeState(AtomicRequestID sid) {
-    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {sid, "Remove State"}); //$NON-NLS-1$
+    	LogManager.logDetail(LogConstants.CTX_CONNECTOR, sid, "Remove State"); //$NON-NLS-1$
         return requestStates.remove(sid) != null;
     }
 
