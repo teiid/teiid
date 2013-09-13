@@ -246,7 +246,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                 List<Criteria> newJoinCrits = new LinkedList<Criteria>();
 
                 //we don't want to continue discovery since that could be recursive
-                Map<Expression, Expression> srcToTgt = buildElementMap(joinCrits, node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)?null:newJoinCrits, combinedCriteria, metadata);
+                Map<Expression, Expression> srcToTgt = buildElementMap(joinCrits, node.hasBooleanProperty(NodeConstants.Info.IS_COPIED)?null:newJoinCrits, combinedCriteria, metadata, underAccess);
                 
                 changedTree |= !newJoinCrits.isEmpty();
 
@@ -254,7 +254,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
                     
                     changedTree |= createCriteria(false, toCopy, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess);
                     
-                    srcToTgt = buildElementMap(allCriteria, null, null, metadata);
+                    srcToTgt = buildElementMap(allCriteria, null, null, metadata, underAccess);
                                 
                     changedTree |= createCriteria(true, joinCrits, combinedCriteria, srcToTgt, newJoinCrits, metadata, underAccess);
                 }
@@ -381,7 +381,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @param metadata 
      * @return
      */
-    Map<Expression, Expression> buildElementMap(Collection<Criteria> crits, List<Criteria> newJoinCrits, Set<Criteria> allCriteria, QueryMetadataInterface metadata) {
+    Map<Expression, Expression> buildElementMap(Collection<Criteria> crits, List<Criteria> newJoinCrits, Set<Criteria> allCriteria, QueryMetadataInterface metadata, boolean underAccess) {
         Map<Expression, Expression> srcToTgt = null;
         for (Iterator<Criteria> iter = crits.iterator(); iter.hasNext();) {
         	Criteria theCrit = iter.next();
@@ -405,12 +405,12 @@ public final class RuleCopyCriteria implements OptimizerRule {
             	}
                 Expression oldValue = srcToTgt.put(crit.getLeftExpression(), crit.getRightExpression());
                 boolean removed = false;
-                if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getRightExpression(), metadata)) {
+                if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getRightExpression(), metadata, underAccess)) {
                 	iter.remove();
                 	removed = true;
                 }
                 oldValue = srcToTgt.put(crit.getRightExpression(), crit.getLeftExpression());
-                if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getLeftExpression(), metadata) && !removed) {
+                if (checkWithinJoin(crit, newJoinCrits, allCriteria, oldValue, crit.getLeftExpression(), metadata, underAccess) && !removed) {
                 	iter.remove();
                 }
             }
@@ -425,7 +425,7 @@ public final class RuleCopyCriteria implements OptimizerRule {
      * @return true if the original crit can be removed
      */
 	private boolean checkWithinJoin(CompareCriteria crit, List<Criteria> newJoinCrits, Set<Criteria> allCriteria,
-			Expression oldValue, Expression left, QueryMetadataInterface metadata) {
+			Expression oldValue, Expression left, QueryMetadataInterface metadata, boolean underAccess) {
 		if (newJoinCrits == null || oldValue == null) {
 			return false;
 		}
@@ -440,6 +440,12 @@ public final class RuleCopyCriteria implements OptimizerRule {
 			return false;
 		}
 		if (allCriteria.add(newCrit)) {
+			if (underAccess && GroupsUsedByElementsVisitor.getGroups(newCrit).size() > 1) {
+				return false;
+			}
+			if (newCrit instanceof CompareCriteria) {
+				((CompareCriteria)newCrit).setOptional(true);
+			}
 			newJoinCrits.add(newCrit);
 		}
 		if (!GroupsUsedByElementsVisitor.getGroups(crit.getLeftExpression()).isEmpty() && !GroupsUsedByElementsVisitor.getGroups(crit.getRightExpression()).isEmpty()
