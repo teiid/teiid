@@ -40,6 +40,7 @@ import org.teiid.dqp.internal.process.CachedResults;
 import org.teiid.dqp.internal.process.QueryProcessorFactoryImpl;
 import org.teiid.dqp.internal.process.SessionAwareCache;
 import org.teiid.query.metadata.TempMetadataAdapter;
+import org.teiid.query.metadata.TempMetadataID;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
@@ -168,6 +169,11 @@ public class TestMaterialization {
 	
 	@Test public void testPrimaryKeyOnOtherColumn() throws Exception {
 		execute("SELECT * from vgroup7 where y is null", Arrays.asList("1", null, 1));
+	}
+	
+	@Test public void testFunctionBasedIndexQuery() throws Exception {
+		TempMetadataID id = this.globalStore.getGlobalTempTableMetadataId(metadata.getGroupID("MatView.vgroup2a"));
+		assertEquals("SELECT MatView.VGroup2a.*, ucase(x) FROM MatView.VGroup2a option nocache MatView.VGroup2a", id.getQueryNode().getQuery());
 	}
     
 }

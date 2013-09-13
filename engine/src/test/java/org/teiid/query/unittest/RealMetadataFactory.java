@@ -455,6 +455,20 @@ public class RealMetadataFactory {
                                       new String[] { "x" }, //$NON-NLS-1$
                                       new String[] { DataTypeManager.DefaultDataTypes.STRING});
         
+        QueryNode vTrans2a = new QueryNode("SELECT x FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
+        Table vGroup2a = createVirtualGroup("VGroup2a", virtModel, vTrans2a); //$NON-NLS-1$
+        KeyRecord fbi = new KeyRecord(KeyRecord.Type.Index);
+        Column c = new Column();
+        c.setParent(fbi);
+        c.setName("upper(x)");
+        c.setNameInSource("upper(x)");
+        fbi.addColumn(c);
+        vGroup2a.getFunctionBasedIndexes().add(fbi);
+        vGroup2.setMaterialized(true);
+        createElements(vGroup2a,
+                                      new String[] { "x" }, //$NON-NLS-1$
+                                      new String[] { DataTypeManager.DefaultDataTypes.STRING});
+        
         //covering index
         QueryNode vTrans3 = new QueryNode("SELECT x, 'z' || substring(x, 2) as y FROM matsrc");         //$NON-NLS-1$ //$NON-NLS-2$
         Table vGroup3 = createVirtualGroup("VGroup3", virtModel, vTrans3); //$NON-NLS-1$
