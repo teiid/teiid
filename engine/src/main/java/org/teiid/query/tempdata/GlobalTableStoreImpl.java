@@ -288,14 +288,15 @@ public class GlobalTableStoreImpl implements GlobalTableStore, ReplicatedObject<
 		    					}
 		    				}
 		    				ResolverUtil.clearGroupInfo(group, metadata);
-		    				StringBuilder query = new StringBuilder("SELECT x.*, "); //$NON-NLS-1$
+		    				StringBuilder query = new StringBuilder("SELECT "); //$NON-NLS-1$
+		    				query.append(group).append(".*, "); //$NON-NLS-1$
 		    				for (Iterator<Expression> iter = newExprs.keySet().iterator(); iter.hasNext();) {
 		    					query.append(iter.next());
 		    					if (iter.hasNext()) {
 		    						query.append(", "); //$NON-NLS-1$
 		    					}
 		    				}
-		    				query.append(" FROM ").append(group).append(" as x option nocache " + group); //$NON-NLS-1$ //$NON-NLS-2$
+		    				query.append(" FROM ").append(group).append(" option nocache ").append(group); //$NON-NLS-1$ //$NON-NLS-2$
 		    				qnode = new QueryNode(query.toString());
 						}
 					}
