@@ -97,7 +97,7 @@ public class ODataEntitySchemaBuilder {
 		}
 		return null;
 	}	
-
+	
 	private static void buildEntityTypes(MetadataStore metadataStore, List<EdmSchema.Builder> edmSchemas) {
 		for (Schema schema:metadataStore.getSchemaList()) {
 			
@@ -106,6 +106,7 @@ public class ODataEntitySchemaBuilder {
 		    
 			for (Table table: schema.getTables().values()) {
 				
+				// skip if the table does not have the PK or unique
 				KeyRecord primaryKey = table.getPrimaryKey();
 				List<KeyRecord> uniques = table.getUniqueKeys();
 				if (primaryKey == null && uniques.isEmpty()) {
@@ -179,13 +180,23 @@ public class ODataEntitySchemaBuilder {
 			List<EdmAssociation.Builder> assosiations = new ArrayList<EdmAssociation.Builder>();
 			
 			for (Table table: schema.getTables().values()) {
+				
+				// skip if the table does not have the PK or unique
+				KeyRecord primaryKey = table.getPrimaryKey();
+				List<KeyRecord> uniques = table.getUniqueKeys();				
+				if (primaryKey == null && uniques.isEmpty()) {
+					continue;
+				}
+				
 				// build Associations
 				for (ForeignKey fk:table.getForeignKeys()) {
-					
+					if (!fk.getPrimaryKey().getParent().getParent().equals(table.getParent())) {
+						continue;
+					}
 					EdmEntitySet.Builder entitySet = findEntitySet(edmSchemas,schema.getName(), table.getName());
-					EdmEntitySet.Builder refEntitySet = findEntitySet(edmSchemas, schema.getName(),fk.getReferenceTableName());
+					EdmEntitySet.Builder refEntitySet = findEntitySet(edmSchemas, fk.getParent().getParent().getName(),fk.getParent().getName());
 					EdmEntityType.Builder entityType = findEntityType(edmSchemas, schema.getName(), table.getName());
-					EdmEntityType.Builder refEntityType = findEntityType(edmSchemas, schema.getName(), fk.getReferenceTableName());
+					EdmEntityType.Builder refEntityType = findEntityType(edmSchemas, fk.getParent().getParent().getName(),fk.getParent().getName());
 					
 					// check to see if fk is part of this table's pk, then it is 1 to 1 relation
 					boolean onetoone = sameColumnSet(table.getPrimaryKey(), fk);
@@ -334,25 +345,18 @@ public class ODataEntitySchemaBuilder {
 		return names;
 	}
 	
-	static boolean sameColumnSet(KeyRecord recordOne, KeyRecord recordTwo) {
+	static boolean sameColumnSet(KeyRecord recordOne, ForeignKey recordTwo) {
 		
 		if (recordOne == null || recordTwo == null) {
 			return false;
 		}
 		
-		List<Column> setOne = recordOne.getColumns();
-		List<Column> setTwo = recordTwo.getColumns();
-		
-		if (setOne.size() != setTwo.size()) {
-			return false;
-		}
-		for (int i = 0; i < setOne.size(); i++) {
-			Column one = setOne.get(i);
-			Column two = setTwo.get(i);
-			if (!one.getName().equals(two.getName())) {
-				return false;
+		KeyRecord pk = recordTwo.getPrimaryKey();
+		for (ForeignKey fk : pk.getParent().getForeignKeys()) {
+			if (fk.getPrimaryKey().equals(recordOne)) {
+				return true;
 			}
 		}
-		return true;
+		return false;
 	}
 }

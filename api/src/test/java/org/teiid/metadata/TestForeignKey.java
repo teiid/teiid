@@ -19,34 +19,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.odata;
 
-import java.util.List;
-import java.util.Map;
+package org.teiid.metadata;
 
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.edm.EdmType;
-import org.odata4j.producer.BaseResponse;
-import org.odata4j.producer.CountResponse;
-import org.teiid.metadata.MetadataStore;
-import org.teiid.query.sql.lang.Command;
-import org.teiid.query.sql.lang.Query;
+import static org.junit.Assert.assertEquals;
 
-public interface Client {
-	String getVDBName();
-	
-	int getVDBVersion();
-	
-	MetadataStore getMetadataStore();
-	
-	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, EdmType returnType);
+import org.junit.Test;
+import org.mockito.Mockito;
 
-	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount);
+public class TestForeignKey {
 	
-	CountResponse executeCount(Query query, List<SQLParam> parameters);
-	
-	int executeUpdate(Command command, List<SQLParam> parameters);	
-	
-	EdmDataServices getMetadata();
+	@Test
+	public void testReferenceTableName() {
+		Table table = Mockito.mock(Table.class);
+		Mockito.stub(table.getName()).toReturn("table"); //$NON-NLS-1$
+		
+		KeyRecord pk = Mockito.mock(KeyRecord.class);
+		Mockito.stub(pk.getParent()).toReturn(table);
+		
+		ForeignKey fk = new ForeignKey();
+		fk.setPrimaryKey(pk);
+		
+		assertEquals("table", fk.getReferenceTableName()); //$NON-NLS-1$
+	}
 }

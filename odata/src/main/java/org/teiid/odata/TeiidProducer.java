@@ -21,6 +21,7 @@
  */
 package org.teiid.odata;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -29,15 +30,18 @@ import org.odata4j.core.OEntityId;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OExtension;
 import org.odata4j.core.OFunctionParameter;
+import org.odata4j.core.OSimpleObject;
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntityContainer;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmFunctionImport;
+import org.odata4j.edm.EdmFunctionParameter;
 import org.odata4j.edm.EdmSchema;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.exceptions.NotImplementedException;
 import org.odata4j.producer.*;
 import org.odata4j.producer.edm.MetadataProducer;
+import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
@@ -45,6 +49,8 @@ import org.teiid.query.sql.lang.Delete;
 import org.teiid.query.sql.lang.Insert;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.sql.lang.Update;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
+import org.teiid.translator.odata.ODataTypeManager;
 
 public class TeiidProducer implements ODataProducer {
 	private Client client;
@@ -252,7 +258,6 @@ public class TeiidProducer implements ODataProducer {
 	public BaseResponse callFunction(ODataContext context,
 			EdmFunctionImport function, Map<String, OFunctionParameter> params,
 			QueryInfo queryInfo) {
-
 		EdmEntityContainer eec = findEntityContainer(function);
 		StringBuilder sql = new StringBuilder();
 		// fully qualify the procedure name
@@ -262,20 +267,31 @@ public class TeiidProducer implements ODataProducer {
 		else {
 			sql.append("{"); //$NON-NLS-1$
 		}
-		sql.append("call ").append(eec.getName()+"."+function.getName()); //$NON-NLS-1$ //$NON-NLS-2$
+		sql.append("call ").append(eec.getName()+"."+SQLStringVisitor.escapeSinglePart(function.getName())); //$NON-NLS-1$ //$NON-NLS-2$
 		sql.append("("); //$NON-NLS-1$
+		List<SQLParam> sqlParams = new ArrayList<SQLParam>();
 		if (!params.isEmpty()) {
-			for (int i = 0; i < params.size()-1; i++) {
-				sql.append("?, "); //$NON-NLS-1$
+			List<EdmFunctionParameter> metadataParams = function.getParameters();
+			boolean first = true;
+			for (EdmFunctionParameter edmFunctionParameter : metadataParams) {
+				OFunctionParameter param = params.get(edmFunctionParameter.getName());
+				if (param == null) {
+					continue;
+				}
+				if (!first) {
+					sql.append(","); //$NON-NLS-1$
+				}
+				sql.append(SQLStringVisitor.escapeSinglePart(edmFunctionParameter.getName())).append("=>?"); //$NON-NLS-1$
+				first = false;
+				Object value = ((OSimpleObject<?>)(param.getValue())).getValue();
+				Integer sqlType = JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(param.getType().getFullyQualifiedTypeName()));
+				sqlParams.add(new SQLParam(ODataTypeManager.convertToTeiidRuntimeType(value), sqlType));
 			}
-			sql.append("?"); //$NON-NLS-1$
 		}
 		sql.append(")"); //$NON-NLS-1$
 		sql.append("}"); //$NON-NLS-1$
-		return this.client.executeCall(sql.toString(), params, function.getReturnType());
+		return this.client.executeCall(sql.toString(), sqlParams, function.getReturnType());
 	}
-
-
 
 	EdmEntityContainer findEntityContainer(EdmFunctionImport function) {
 		EdmDataServices eds = getMetadata();

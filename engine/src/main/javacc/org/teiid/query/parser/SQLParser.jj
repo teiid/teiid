@@ -1524,7 +1524,11 @@ StoredProcedure callableStatement(ParseInfo info) :
 	//parameters
 		
 	[<LPAREN>
-	 [values = expressionList(info) { convertToParameters(values, storedProcedure, parameterIndex); }]
+	  (LOOKAHEAD(2)
+        executeNamedParams(info, storedProcedure, parameterIndex)
+        |      
+        [values = expressionList(info) { convertToParameters(values, storedProcedure, parameterIndex); }]
+      )
 	 <RPAREN>
 	]
 	<RBRACE>			

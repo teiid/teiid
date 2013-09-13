@@ -21,13 +21,17 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.CONVERT;
+import static org.teiid.language.SQLConstants.Reserved.*;
 
-import java.math.BigDecimal;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.odata4j.core.NamedValue;
@@ -36,17 +40,27 @@ import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmProperty;
-import org.odata4j.exceptions.NotAcceptableException;
 import org.odata4j.exceptions.NotFoundException;
 import org.odata4j.expression.*;
 import org.odata4j.expression.OrderByExpression.Direction;
 import org.odata4j.producer.QueryInfo;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
+import org.teiid.metadata.MetadataStore;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.query.sql.lang.*;
-import org.teiid.query.sql.symbol.*;
+import org.teiid.query.sql.symbol.AggregateSymbol;
+import org.teiid.query.sql.symbol.Constant;
+import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.symbol.Function;
+import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.Reference;
+import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.odata.ODataTypeManager;
 
 public class ODataSQLBuilder extends ODataHierarchyVisitor {
@@ -63,7 +77,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	private HashMap<String, GroupSymbol> assosiatedTables = new HashMap<String, GroupSymbol>();
 	private HashMap<String, Boolean> projectedColumns = new HashMap<String, Boolean>();
 	private HashMap<String, String> aliasTableNames = new HashMap<String, String>();
-	private boolean negitive = false;
 	private AtomicInteger groupCount = new AtomicInteger(1);
 	private boolean distinct = false;
 
@@ -121,7 +134,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	String aliasGroup = "g"+this.groupCount.getAndIncrement();
 	        	
 	        	for (ForeignKey fk:joinTable.getForeignKeys()) {
-	        		if (fk.getReferenceTableName().equals(entityTable.getName())) {
+	        		if (fk.getPrimaryKey().getParent().equals(entityTable)) {
 
 	        			if(this.assosiatedTables.get(joinTable.getName()) == null) {
 		        			List<String> refColumns = fk.getReferenceColumns();
@@ -138,7 +151,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	        	// if association not found; see at the other end of the reference
 	        	if (!associationFound) {
 	            	for (ForeignKey fk:entityTable.getForeignKeys()) {
-	            		if (fk.getReferenceTableName().equals(joinTable.getName())) {
+	            		if (fk.getPrimaryKey().getParent().equals(joinTable)) {
 	            			if(this.assosiatedTables.get(joinTable.getName()) == null) {
 	            				List<String> refColumns = fk.getReferenceColumns();
 	            				if (refColumns == null) {
@@ -235,7 +248,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	String aliasGroup = (alias == null)?"g"+this.groupCount.getAndIncrement():alias;
     	
     	for (ForeignKey fk:this.resultEntityTable.getForeignKeys()) {
-    		if (fk.getReferenceTableName().equals(joinTable.getName())) {
+    		if (fk.getPrimaryKey().getParent().equals(joinTable)) {
     			if(this.assosiatedTables.get(joinKey) == null) {
     				List<String> refColumns = fk.getReferenceColumns();
     				if (refColumns == null) {
@@ -249,7 +262,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
     	
     	// if join direction is other way
     	for (ForeignKey fk:joinTable.getForeignKeys()) {
-    		if (fk.getReferenceTableName().equals(this.resultEntityTable.getName())) {
+    		if (fk.getPrimaryKey().getParent().equals(this.resultEntityTable)) {
     			if(this.assosiatedTables.get(joinKey) == null) {
     				List<String> refColumns = fk.getReferenceColumns();
     				if (refColumns == null) {
@@ -401,11 +414,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	@Override
 	public void visit(BooleanLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.BOOLEAN));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
@@ -414,7 +427,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		visitNode(expr.getExpression());
 		Expression rhs = new Constant(ODataTypeManager.teiidType(expr.getType()));
 		Expression lhs = stack.pop();
-		stack.push(new Function(CONVERT, new Expression[] {lhs, rhs})); //$NON-NLS-1$		
+		stack.push(new Function(CONVERT, new Expression[] {lhs, rhs})); 
 	}
 
 	@Override
@@ -428,12 +441,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(DateTimeLiteral expr) {
+		Timestamp timestamp = new Timestamp(expr.getValue().toDateTime().getMillis());
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
-			this.params.add(new SQLParam(expr.getValue(), Types.TIMESTAMP));
+			stack.add(new Reference(this.params.size())); 
+			this.params.add(new SQLParam(timestamp, Types.TIMESTAMP));
 		}
 		else {
-			stack.add(new Constant(new Timestamp(expr.getValue().toDateTime().getMillis()))); //$NON-NLS-1$
+			stack.add(new Constant(timestamp)); 
 		}
 	}
 
@@ -446,17 +460,11 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	@Override
 	public void visit(DecimalLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.DECIMAL));
 		}
 		else {
-			if (this.negitive) {
-				this.negitive = false;
-				stack.add(new Constant(expr.getValue().multiply(new BigDecimal(-1)))); //$NON-NLS-1$
-			}
-			else {
-				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-			}
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
@@ -484,10 +492,6 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 		String property = expr.getPropertyName();
 		
 		if (property.indexOf('/') == -1) {
-			if (this.negitive) {
-				this.negitive = false;
-				throw new NotAcceptableException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16006, property));
-			}
 			stack.push(new ElementSymbol(property, this.resultEntityGroup));
 			return;
 		}
@@ -544,44 +548,44 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	@Override
 	public void visit(GuidLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
-			this.params.add(new SQLParam(expr.getValue(), Types.BINARY));
+			stack.add(new Reference(this.params.size())); 
+			this.params.add(new SQLParam(expr.getValue().toString(), Types.VARCHAR));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			stack.add(new Constant(expr.getValue().toString())); 
 		}
 	}
 
 	@Override
 	public void visit(BinaryLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.BINARY));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
 	@Override
 	public void visit(ByteLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.TINYINT));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
 	@Override
 	public void visit(SByteLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.TINYINT));
 		}
 		else {
-			stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
@@ -597,68 +601,44 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	@Override
 	public void visit(SingleLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.FLOAT));
 		}
 		else {
-			if (this.negitive) {
-				this.negitive = false;
-				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
-			}
-			else {
-				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-			}
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
 	@Override
 	public void visit(DoubleLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.DOUBLE));
 		}
 		else {
-			if (this.negitive) {
-				this.negitive = false;
-				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
-			}
-			else {
-				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-			}
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
 	@Override
 	public void visit(IntegralLiteral expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.INTEGER));
 		}
 		else {
-			if (this.negitive) {
-				this.negitive = false;
-				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
-			}
-			else {
-				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-			}
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
 	@Override
 	public void visit(Int64Literal expr) {
 		if (this.prepared) {
-			stack.add(new Reference(this.params.size())); //$NON-NLS-1$ 
+			stack.add(new Reference(this.params.size())); 
 			this.params.add(new SQLParam(expr.getValue(), Types.BIGINT));
 		}
 		else {
-			if (this.negitive) {
-				this.negitive = false;
-				stack.add(new Constant(-1*expr.getValue())); //$NON-NLS-1$
-			}
-			else {
-				stack.add(new Constant(expr.getValue())); //$NON-NLS-1$
-			}
+			stack.add(new Constant(expr.getValue())); 
 		}
 	}
 
@@ -730,8 +710,9 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(NegateExpression expr) {
-		this.negitive = true;
 		visitNode(expr.getExpression());
+		Expression ex = stack.pop();
+		stack.push(new Function(SourceSystemFunctions.MULTIPLY_OP, new Expression[] {new Constant(-1), ex})); 
 	}
 
 	@Override
@@ -831,12 +812,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 
 	@Override
 	public void visit(TimeLiteral expr) {
+		Time time = new Time(expr.getValue().toDateTimeToday().getMillis());
 		if (this.prepared) {
 			stack.push(new Reference(this.params.size()));
-			this.params.add(new SQLParam(new Time(expr.getValue().toDateTimeToday().getMillis()), Types.TIME));
+			this.params.add(new SQLParam(time, Types.TIME));
 		}
 		else {
-			stack.push(new Constant(new Time(expr.getValue().toDateTimeToday().getMillis())));
+			stack.push(new Constant(time));
 		}		
 	}
 
@@ -1002,7 +984,7 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 	      insert.addVariable(new ElementSymbol(column.getName(), this.resultEntityGroup));
 	        
 	      values.add(new Reference(i++));
-	      this.params.add(new SQLParam(prop.getValue(), JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(edmProp.getType().getFullyQualifiedTypeName()))));
+	      this.params.add(asParam(prop, edmProp));
 	    }
 	    
 	    insert.setValues(values);
@@ -1054,10 +1036,14 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			}
 			if (add) {
 				update.addChange(new ElementSymbol(column.getName(),this.resultEntityGroup), new Reference(i++));
-				this.params.add(new SQLParam(prop.getValue(), JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(edmProp.getType().getFullyQualifiedTypeName()))));
+				this.params.add(asParam(prop, edmProp));
 			}
 		}
 		return update;
+	}
+
+	private SQLParam asParam(OProperty<?> prop, EdmProperty edmProp) {
+		return new SQLParam(ODataTypeManager.convertToTeiidRuntimeType(prop.getValue()), JDBCSQLTypeInfo.getSQLType(ODataTypeManager.teiidType(edmProp.getType().getFullyQualifiedTypeName())));
 	}
 	
 	static List<String> getColumnNames(List<Column> columns){

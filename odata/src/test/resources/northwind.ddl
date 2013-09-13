@@ -118,5 +118,10 @@ CREATE FOREIGN TABLE OrderDetails (
   PRIMARY KEY (OrderID,ProductID)
 );
 
+CREATE FOREIGN TABLE NoPKTable (
+  OrderID integer NOT NULL,
+  ProductID integer NOT NULL
+);
+
 CREATE FOREIGN PROCEDURE getUnit() RETURNS varchar(10);
-CREATE FOREIGN PROCEDURE getCustomers(OUT p1 boolean, p2 varchar, INOUT p3 decimal) RETURNS (r1 varchar(20), r2 decimal)
+CREATE FOREIGN PROCEDURE getCustomers(OUT p1 boolean, p2 timestamp, INOUT p3 decimal) RETURNS integer;

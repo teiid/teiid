@@ -2697,6 +2697,15 @@ public class TestOptimizer {
         checkNodeTypes(plan, FULL_PUSHDOWN);         
     }
     
+    @Test public void testCopyCriteriaWithTransitivePushdown3() throws TeiidComponentException, TeiidProcessingException{
+    	BasicSourceCapabilities caps = getTypicalCapabilities();
+    	caps.setFunctionSupport(SourceSystemFunctions.CONVERT, true);
+        ProcessorPlan plan = helpPlan("select pm1.g1.e1 from pm1.g1, pm1.g2, pm1.g3 where pm1.g1.e1 = pm1.g2.e1 and pm1.g1.e1 = pm1.g3.e2 and pm1.g3.e2 = pm1.g2.e1", RealMetadataFactory.example1Cached(), //$NON-NLS-1$
+            new String[] { "SELECT g_0.e1 FROM pm1.g1 AS g_0, pm1.g2 AS g_1, pm1.g3 AS g_2 WHERE (g_0.e1 = g_1.e1) AND (g_0.e1 = convert(g_2.e2, string)) AND (convert(g_2.e2, string) = g_1.e1)" }
+        , new DefaultCapabilitiesFinder(caps), ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        checkNodeTypes(plan, FULL_PUSHDOWN);         
+    }
+    
     @Test public void testCleanCriteria(){
         
         ProcessorPlan plan = helpPlan("select pm2.g1.e1, pm2.g2.e1 from pm2.g1, pm2.g2 where pm2.g1.e1=pm2.g2.e1 and pm2.g1.e2 IN (1, 2)", example1(), //$NON-NLS-1$
