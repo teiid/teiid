@@ -44,6 +44,7 @@ import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
 import org.teiid.query.metadata.TransformationMetadata;
+import org.teiid.query.parser.QueryParser;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.processor.TestProcessor;
@@ -181,6 +182,7 @@ public class TestProcErrors {
     	helpTestProcess(plan, new List[] {Arrays.asList(5)}, dataManager, tm);
     }
     
+
     @Test public void testDynamicAnon() throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
 		String query = "BEGIN atomic\n"
@@ -198,17 +200,20 @@ public class TestProcErrors {
 		helpTestProcess(plan, expected, new HardcodedDataManager(), metadata);
     }
     
+
     /**
      * Ensures that values in the block are not resolvable
      */
     @Test(expected=QueryResolverException.class) public void testErrorResolving() throws Exception {
 		TransformationMetadata metadata = RealMetadataFactory.example1Cached();
+
 		String query = "BEGIN atomic\n"
 				+ " declare string VARIABLES.RESULT = 1/0;\n"
 				+ " select VARIABLES.RESULT;" +
 				"exception e " +
 				"execute immediate 'select \"ERRORCODE\"' || VARIABLES.RESULT as x string into #temp;" +
 				" select x from #temp; end";
+
 
 		getProcedurePlan(query, metadata);
     }

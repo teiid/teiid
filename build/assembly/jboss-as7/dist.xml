@@ -147,6 +147,9 @@
                         <exclude>org.jboss.teiid:teiid-common-core</exclude>
                         <exclude>org.jboss.teiid:teiid-api</exclude>
                         <exclude>org.jboss.teiid:teiid-client</exclude>                        
+                        <exclude>org.jboss.teiid:teiid-client</exclude>
+                        <exclude>xom:xom</exclude>                        
+                        <exclude>jaxen:jaxen</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>

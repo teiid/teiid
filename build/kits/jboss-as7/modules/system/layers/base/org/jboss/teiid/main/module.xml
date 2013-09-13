@@ -5,9 +5,7 @@
         <resource-root path="teiid-jboss-integration-${project.version}.jar" />
         <resource-root path="teiid-metadata-${project.version}.jar" />
         <resource-root path="teiid-runtime-${project.version}.jar" />
-        <resource-root path="teiid-engine-${project.version}.jar" />
         <resource-root path="saxonhe-9.2.1.5.jar" />
-        <resource-root path="xom-1.2.jar" />
         <resource-root path="nux-1.6.jar" />
         
         <resource-root path="deployments" />
@@ -47,6 +45,8 @@
         <module name="org.jboss.ironjacamar.api"/>
         <module name="org.jboss.ironjacamar.impl"/>
         <module name="org.jgroups"/>
+        <module name="nu.xom" />
+        <module name="org.jaxen" />        
     </dependencies>
 
 </module>

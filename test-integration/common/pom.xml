@@ -49,6 +49,7 @@
             <artifactId>hibernate-core</artifactId>
             <scope>test</scope>
         </dependency>
+      
 	</dependencies>
     
     <profiles>
