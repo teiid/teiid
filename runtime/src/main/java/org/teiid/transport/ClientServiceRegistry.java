@@ -23,6 +23,7 @@
 package org.teiid.transport;
 
 import org.teiid.core.ComponentNotFoundException;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
 import org.teiid.security.SecurityHelper;
@@ -43,5 +44,7 @@ public interface ClientServiceRegistry {
 	void waitForFinished(String vdbName, int vdbVersion, int timeOutMillis) throws ConnectionException;
 	
 	ClassLoader getCallerClassloader();
+	
+	VDBRepository getVDBRepository();
 
 }

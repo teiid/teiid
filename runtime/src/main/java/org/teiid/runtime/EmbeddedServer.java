@@ -338,6 +338,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
+		this.services.setVDBRepository(this.repo);
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
@@ -358,15 +359,6 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 						protected ClientServiceRegistry getClientServiceRegistry(String name) {
 							return services;
 						}
-						
-						@Override
-						public void addListener(VDBLifeCycleListener listener) {
-							EmbeddedServer.this.repo.addListener(listener);
-						}
-						@Override
-						public void removeListener(VDBLifeCycleListener listener) {
-							EmbeddedServer.this.repo.removeListener(listener);
-						}						
 					};
 				} catch (CommunicationException e) {
 					throw TeiidSQLException.create(e);
