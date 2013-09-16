@@ -49,7 +49,6 @@ import org.teiid.client.DQP;
 import org.teiid.client.security.ILogon;
 import org.teiid.client.util.ExceptionUtil;
 import org.teiid.common.buffer.BufferManager;
-import org.teiid.core.ComponentNotFoundException;
 import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPCore;
 import org.teiid.dqp.internal.process.DQPWorkContext;
@@ -64,7 +63,6 @@ import org.teiid.logging.MessageLevel;
 import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.socket.AuthenticationType;
-import org.teiid.security.SecurityHelper;
 import org.teiid.services.SessionServiceImpl;
 import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
@@ -74,9 +72,8 @@ import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
 
-public class TransportService implements Service<ClientServiceRegistry>, ClientServiceRegistry {
+public class TransportService extends ClientServiceRegistryImpl implements Service<ClientServiceRegistry> {
 	private enum Protocol {teiid, pg};
-	private ClientServiceRegistryImpl csr;
 	private transient ILogon logon;
 	private SocketConfiguration socketConfig;
 	final ConcurrentMap<String, SecurityDomainContext> securityDomains = new ConcurrentHashMap<String, SecurityDomainContext>();
@@ -102,16 +99,6 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	}
 	
 	@Override
-	public <T> T getClientService(Class<T> iface) throws ComponentNotFoundException {
-		return csr.getClientService(iface);
-	}
-
-	@Override
-	public SecurityHelper getSecurityHelper() {
-		return csr.getSecurityHelper();
-	}
-	
-	@Override
 	public ClientServiceRegistry getValue() throws IllegalStateException, IllegalArgumentException {
 		return this;
 	}
@@ -125,19 +112,13 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 	
 	@Override
 	public ClassLoader getCallerClassloader() {
-		return csr.getCallerClassloader();
-	}	
-
+		return Module.getCallerModule().getClassLoader();
+	}
+	
 	@Override
 	public void start(StartContext context) throws StartException {
-		this.csr = new ClientServiceRegistryImpl() {
-			@Override
-			public ClassLoader getCallerClassloader() {
-				return Module.getCallerModule().getClassLoader();
-			}
-		};
-		this.csr.setSecurityHelper(new JBossSecurityHelper());
-		
+		this.setSecurityHelper(new JBossSecurityHelper());
+		this.setVDBRepository(this.getVdbRepository());
 		this.sessionService = new JBossSessionService(this.securityDomains);
 		if (this.authenticationDomains != null && !this.authenticationDomains.isEmpty()) {
 			this.sessionService.setSecurityDomains(this.authenticationDomains);			
@@ -146,11 +127,11 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 		this.sessionService.setSessionMaxLimit(this.sessionMaxLimit);
 		this.sessionService.setDqp(getDQP());
 		this.sessionService.setVDBRepository(getVdbRepository());
-		this.sessionService.setSecurityHelper(this.csr.getSecurityHelper());
+		this.sessionService.setSecurityHelper(this.getSecurityHelper());
 		this.sessionService.setAuthenticationType(getAuthenticationType());
 		this.sessionService.setGssSecurityDomain(this.krb5Domain);
 		this.sessionService.start();
-		this.csr.setAuthenticationType(this.sessionService.getAuthenticationType());
+		this.setAuthenticationType(this.sessionService.getAuthenticationType());
 		
     	// create the necessary services
 		this.logon = new LogonImpl(this.sessionService, "teiid-cluster"); //$NON-NLS-1$
@@ -173,7 +154,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     			sslEnabled = this.socketConfig.getSSLConfiguration().isSslEnabled();
     		}
     		if (protocol == Protocol.teiid) {
-    	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue());
+    	    	this.socketListener = new SocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue());
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
     		else if (protocol == Protocol.pg) {
@@ -186,7 +167,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 							LocalServerConnection sc = new LocalServerConnection(info, true){
 								@Override
 								protected ClientServiceRegistry getClientServiceRegistry(String name) {
-									return csr;
+									return TransportService.this;
 								}
 							};
 							return new ConnectionImpl(sc, info, url);
@@ -197,7 +178,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 						}
 					}
 				});
-        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
+        		ODBCSocketListener odbc = new ODBCSocketListener(address, this.socketConfig, this, getBufferManagerInjector().getValue(), getMaxODBCLobSizeAllowed(), this.logon, driver);
         		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
         		this.socketListener = odbc;
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50037, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$
@@ -211,9 +192,8 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     	}
     			
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
-    	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
-	 	this.csr.registerClientService(VDBRepository.class, getVdbRepository(), LogConstants.CTX_DQP);    	
+    	this.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
+    	this.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
 	}
 
 	@Override
