@@ -106,11 +106,15 @@
             <version>1.6</version>
         </dependency>
 
-        <dependency>
-            <groupId>xom</groupId>
-            <artifactId>xom</artifactId>
-            <version>1.2</version>
-        </dependency>
+            <dependency>
+                  <groupId>xom</groupId>
+                  <artifactId>xom</artifactId>
+            </dependency>
+
+            <dependency>
+                  <groupId>jaxen</groupId>
+                  <artifactId>jaxen</artifactId>    
+            </dependency>         
 	</dependencies>
 
 </project>

@@ -26,24 +26,6 @@
 </UL>
 <H2><A NAME="Highlights"></A>Highlights</H2>
 <ul>
-<li>TEIID-2528 <b>Encrypted Buffer Files</b> - the buffer manager now supports an option to encrypt Teiid temp data files using 128-bit AES.</li>
-<li>TEIID-2249 <b>Dependent Join Enhancements</b> -
-  <ul>
-    <li>TEIID-2559</li> greater control over full depdendent join pushdown has been added including make dep hint options max/join to control the extent of depdendent join pushdown.
-    <li>TEIID-2555</li> the join hint enables the pushdown the entire dependent join when supported by the source.
-    <li>TEIID-2558</li> JDBC translator support to dependent join pushdown for a broad set of sources including Oracle, PostgreSQL, MySQL, SQLServer, Sybase, etc.
-    use the enableDependentJoins translator property.
-  </ul>
-  See the Reference for more.
-</li>
-<li>TEIID-2527 <b>Configurable Runtime Multisource</b> - the server will now allow multisource models to have sources added and removed at runtime.  See the admin addSource and removeSource methods.
-<li>TEIID-2571 <b>Broader Must Pushdown</b> - must pushdown functions tied to a particular model that supports selects without from can now be called without at any time.
-<li>TEIID-2572 <b>Function native-query</b> - source functions for most translators now support the native-query extension metadata property to specify alternative syntax.
-<li>TEIID-2067 <b>Global temporary tables</b> - may now be declared that are backed by Teiid session specific instance tables.  See the Reference for more.
-<li>TEIID-2443 <b>Simple aggregate rollup</b> - added support for a single ROLLUP grouping element to produce multiple levels of aggregation.  See the Reference for more.
-<li>TEIID-2614 <b>Anonymous procedure blocks</b> - anonymous procedure blocks may be used as statements.  See the Reference for more.
-<li>TEIID-247 <b>Expanded array support</b> - adding parsing and JDBC and other support for arrays.  See the Reference for more.  Note that this support should be considered a tech preview and will be expanded/refined over subsequent releases.
-<li>TEIID-2584 <b>Materialization management</b> - added a tech preview of management routines for external materialized views including scheduled refresh via extension metadata properties. 
 </ul>
 
 <h2><a name="Compatibility">Compatibility Issues</a></h2>
@@ -314,6 +296,10 @@ temporary table access.
 
 The following components have been updated:
 
+<h4>From 8.5</h4>
+<ul>
+    <li>the engine xom and the embedded jaxen dependency were replaced with module dependencies
+</ul>
 <h4>From 8.2</h4>
 <ul>
     <li>json-simple was removed.
