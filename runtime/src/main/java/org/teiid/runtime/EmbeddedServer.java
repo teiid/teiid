@@ -338,6 +338,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		this.dqp.start(config);
 		this.sessionService.setDqp(this.dqp);
 		this.services.setSecurityHelper(this.sessionService.getSecurityHelper());
+		this.services.setVDBRepository(this.repo);
 		this.logon = new LogonImpl(sessionService, null);
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
