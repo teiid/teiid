@@ -131,18 +131,14 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VD
 	
 	@Override
 	public void removed(String name, int version, CompositeVDB vdb) {
-	}
-	
-	@Override
-	public void finishedDeployment(String name, int version, CompositeVDB vdb,boolean reloading) {
-	}
-	
-	@Override
-	public void beforeRemove(String name, int version, CompositeVDB vdb) {
 		this.clientMap.remove(new VDBKey(name, version));
 	}
 	
 	@Override
-	public void added(String name, int version, CompositeVDB vdb,boolean reloading) {
+	public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+	}
+	
+	@Override
+	public void added(String name, int version, CompositeVDB vdb) {
 	}
 }
