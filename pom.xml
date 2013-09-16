@@ -299,18 +299,6 @@
 			</dependency>
 			<dependency>
 				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-console</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
-				<artifactId>teiid-console</artifactId>
-				<type>test-jar</type>
-				<version>${project.version}</version>
-				<scope>test</scope>
-			</dependency>
-			<dependency>
-				<groupId>org.jboss.teiid</groupId>
 				<artifactId>teiid-client</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -789,9 +777,6 @@
 		<module>client</module>
 		<module>engine</module>
 		<module>connectors</module>
-        <!-- 
-		<module>console</module>
-         -->
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
