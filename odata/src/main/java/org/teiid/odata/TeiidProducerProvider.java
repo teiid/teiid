@@ -21,8 +21,11 @@
  */
 package org.teiid.odata;
 
+import java.lang.ref.SoftReference;
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.ws.rs.core.Context;
@@ -32,17 +35,25 @@ import javax.ws.rs.ext.Provider;
 
 import org.odata4j.producer.ODataProducer;
 import org.teiid.core.TeiidRuntimeException;
+import org.teiid.core.util.LRUCache;
+import org.teiid.deployers.CompositeVDB;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.logging.LogConstants;
+import org.teiid.logging.LogManager;
+import org.teiid.transport.LocalServerConnection;
 import org.teiid.vdb.runtime.VDBKey;
 
 @Provider
-public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
+public class TeiidProducerProvider implements ContextResolver<ODataProducer>, VDBLifeCycleListener {
 
 	@Context
 	protected UriInfo uriInfo;	
 	@Context
 	protected javax.servlet.ServletContext context;
-	protected HashMap<VDBKey, LocalClient> clientMap = new HashMap<VDBKey, LocalClient>();
-	
+	protected Map<VDBKey, SoftReference<LocalClient>> clientMap = Collections.synchronizedMap(new LRUCache<VDBKey, SoftReference<LocalClient>>());
+	private volatile boolean listenerRegistered = false;
+		
 	@Override
 	public ODataProducer getContext(Class<?> arg0) {
 		if (!arg0.equals(ODataProducer.class)) {
@@ -52,7 +63,7 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 		String vdbName = null;
 		int version = 1;
 		String uri = uriInfo.getBaseUri().getRawPath();
-		int idx = uri.indexOf("/odata/");
+		int idx = uri.indexOf("/odata/"); //$NON-NLS-1$
 		int endIdx = uri.indexOf('/', idx+7);
 		if (endIdx == -1) {
 			vdbName = uri.substring(idx+7);
@@ -73,10 +84,37 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 		}
 		
 		VDBKey key = new VDBKey(vdbName, version);
-		LocalClient client = this.clientMap.get(key);
+		SoftReference<LocalClient> ref = this.clientMap.get(key);
+		LocalClient client = null;
+		if (ref != null) {
+			client = ref.get();
+		}
 		if (client == null) {
 			client = new LocalClient(vdbName, version, getInitParameters());
-			this.clientMap.put(key, client);
+			if (!this.listenerRegistered) {
+				synchronized(this) {
+					if (!this.listenerRegistered) {
+						ConnectionImpl connection = null;
+						try {
+							connection = client.getConnection();
+							LocalServerConnection lsc = (LocalServerConnection)connection.getServerConnection();
+							lsc.addListener(this);
+							this.listenerRegistered = true;
+						} catch (SQLException e) {
+							LogManager.logWarning(LogConstants.CTX_ODATA, ODataPlugin.Util.gs(ODataPlugin.Event.TEIID16014)); 
+						} finally {
+							if (connection != null) {
+								try {
+									connection.close();
+								} catch (SQLException e) {
+								}
+							}
+						}
+					}
+				}
+			}
+			ref = new SoftReference<LocalClient>(client);
+			this.clientMap.put(key, ref);
 		}		
 		return new TeiidProducer(client);
 	}
@@ -89,5 +127,18 @@ public class TeiidProducerProvider implements ContextResolver<ODataProducer> {
 			props.setProperty(key, this.context.getInitParameter(key));
 		}
 		return props;
+	}
+	
+	@Override
+	public void removed(String name, int version, CompositeVDB vdb) {
+		this.clientMap.remove(new VDBKey(name, version));
+	}
+	
+	@Override
+	public void finishedDeployment(String name, int version, CompositeVDB vdb) {
+	}
+	
+	@Override
+	public void added(String name, int version, CompositeVDB vdb) {
 	}
 }
