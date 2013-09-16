@@ -38,9 +38,12 @@ import org.teiid.client.security.ILogon;
 import org.teiid.client.security.LogonException;
 import org.teiid.client.security.LogonResult;
 import org.teiid.client.util.ExceptionUtil;
+import org.teiid.core.ComponentNotFoundException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.PropertiesUtils;
+import org.teiid.deployers.VDBLifeCycleListener;
+import org.teiid.deployers.VDBRepository;
 import org.teiid.dqp.internal.process.DQPWorkContext;
 import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.net.CommunicationException;
@@ -205,5 +208,27 @@ public class LocalServerConnection implements ServerConnection {
 	@Override
 	public boolean isLocal() {
 		return true;
+	}
+	
+	public void addListener(VDBLifeCycleListener listener) {
+		try {
+			VDBRepository repo = csr.getClientService(VDBRepository.class);
+			if (repo != null) {
+				repo.addListener(listener);
+			}
+		} catch (ComponentNotFoundException e) {
+			throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
+		}
+	}
+	
+	public void removeListener(VDBLifeCycleListener listener) {
+		try {
+			VDBRepository repo = csr.getClientService(VDBRepository.class);
+			if (repo != null) {
+				repo.removeListener(listener);
+			}
+		} catch (ComponentNotFoundException e) {
+			throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
+		}
 	}
 }
