@@ -212,7 +212,8 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     			
 		DQP dqpProxy = proxyService(DQP.class, getDQP(), LogConstants.CTX_DQP);
     	this.csr.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
-    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);
+    	this.csr.registerClientService(DQP.class, dqpProxy, LogConstants.CTX_DQP);    	
+	 	this.csr.registerClientService(VDBRepository.class, getVdbRepository(), LogConstants.CTX_DQP);    	
 	}
 
 	@Override
@@ -245,6 +246,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new LogManager.LoggingProxy(instance, context, MessageLevel.TRACE) {
 
+			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Throwable exception = null;
 				try {
