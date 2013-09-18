@@ -70,7 +70,7 @@ public class JDBCMetdataProcessor {
 	}
 	
 	private boolean importProcedures;
-	private boolean importKeys;
+	private boolean importKeys = true;
 	private boolean importIndexes;
 	private String procedureNamePattern;
 	protected boolean useFullSchemaName = true;	
