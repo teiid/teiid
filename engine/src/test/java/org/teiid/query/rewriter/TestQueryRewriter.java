@@ -22,9 +22,7 @@
 
 package org.teiid.query.rewriter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -241,13 +239,17 @@ public class TestQueryRewriter {
     @Test public void testRewriteInCriteriaWithNoValues() throws Exception {
     	ElementSymbol e1 = new ElementSymbol("e1");
     	e1.setGroupSymbol(new GroupSymbol("g1"));
-        Criteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
+    	SetCriteria crit = new SetCriteria(e1, Collections.EMPTY_LIST); //$NON-NLS-1$
         
         Criteria actual = QueryRewriter.rewriteCriteria(crit, null, null);
         
-        IsNullCriteria inc = new IsNullCriteria(e1);
-        inc.setNegated(true);
-        assertEquals(inc, actual);
+        assertEquals(QueryRewriter.FALSE_CRITERIA, actual);
+        
+        crit.setNegated(true);
+        
+        actual = QueryRewriter.rewriteCriteria(crit, null, null);
+        
+        assertEquals(QueryRewriter.TRUE_CRITERIA, actual);
     }
         
     @Test public void testRewriteBetweenCriteria1() {
@@ -1617,11 +1619,15 @@ public class TestQueryRewriter {
     }
     
     @Test public void testRewriteCritSubqueryFalse1() {
-        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("not(pm1.g1.e1 > SOME (select 'a' from pm1.g1 where 1=0))", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
     @Test public void testRewriteCritSubqueryFalse2() {
-        helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "pm1.g1.e1 IS NOT NULL"); //$NON-NLS-1$ //$NON-NLS-2$
+        helpTestRewriteCriteria("pm1.g1.e1 < ALL (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
+    }
+    
+    @Test public void testRewriteCritSubqueryFalse3() {
+        helpTestRewriteCriteria("pm1.g1.e1 not in (select 'a' from pm1.g1 where 1=0)", "1 = 1"); //$NON-NLS-1$ //$NON-NLS-2$
     }
     
 	@Test public void testUDFParse() throws Exception {     
