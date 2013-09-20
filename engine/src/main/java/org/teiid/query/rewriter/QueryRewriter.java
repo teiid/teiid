@@ -847,7 +847,7 @@ public class QueryRewriter {
 		    }
 		    rewriteSubqueryContainer(sub, true);
 		    if (!RelationalNodeUtil.shouldExecute(sub.getCommand(), false, true)) {
-		    	return getSimpliedCriteria(criteria, sub.getExpression(), !sub.isNegated(), true);
+		    	return sub.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
 		    }
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteDependentSetCriteria((DependentSetCriteria)criteria);
@@ -1320,7 +1320,12 @@ public class QueryRewriter {
         rewriteSubqueryContainer(criteria, true);
         
         if (!RelationalNodeUtil.shouldExecute(criteria.getCommand(), false, true)) {
-	    	return getSimpliedCriteria(criteria, criteria.getLeftExpression(), criteria.getPredicateQuantifier()==SubqueryCompareCriteria.ALL, true);
+        	//TODO: this is not interpretted the same way in all databases
+        	//for example H2 treat both cases as false - however the spec and all major vendors support the following: 
+        	if (criteria.getPredicateQuantifier()==SubqueryCompareCriteria.SOME) {
+        		return FALSE_CRITERIA;
+        	}
+        	return TRUE_CRITERIA;
 	    }
 
         return criteria;
@@ -1591,9 +1596,6 @@ public class QueryRewriter {
         		return crit; //just return as is
         	}
         } else {
-        	if (newValues.isEmpty()) {
-        		return getSimpliedCriteria(crit, leftExpr, !crit.isNegated(), true);
-        	}
 	        crit.setExpression(leftExpr);
 	        crit.setValues(newValues);
         }
@@ -1918,7 +1920,7 @@ public class QueryRewriter {
         	if (hasNull) {
         		return UNKNOWN_CRITERIA;
         	}
-        	return getSimpliedCriteria(criteria, criteria.getExpression(), !criteria.isNegated(), true);
+        	return criteria.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
         }
         
         if(criteria.getExpression() instanceof Function ) {
