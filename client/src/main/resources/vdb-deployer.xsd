@@ -7,6 +7,7 @@
 		<xs:complexType>
 			<xs:sequence>
 				<xs:element name="description" type="xs:string" minOccurs="0"/>
+                <xs:element name="connection-type" type="xs:string" minOccurs="0" default="BY_VERSION"/>
 				<xs:element name="property" type="property" minOccurs="0" maxOccurs="unbounded"/>
 				<xs:element name="import-vdb" maxOccurs="unbounded" minOccurs="0">
 					<xs:annotation>
