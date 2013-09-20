@@ -10,7 +10,7 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>MongoDB Translator</name>
     <description>This translator provides access to MongoDB</description>
-
+    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>

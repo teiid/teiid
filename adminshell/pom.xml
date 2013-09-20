@@ -9,6 +9,7 @@
 	<artifactId>teiid-adminshell</artifactId>
 	<name>Adminshell</name>
 	<description>Adminshell for Teiid</description>
+    <packaging>bundle</packaging>
 	<dependencies>
 		<dependency>
 			<groupId>org.jboss.teiid</groupId>

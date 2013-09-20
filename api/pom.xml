@@ -9,7 +9,7 @@
   <artifactId>teiid-api</artifactId>
   <name>Teiid API</name>
   <description>API for creating Translators and other extensions to Teiid</description>
-  
+  <packaging>bundle</packaging>
   <dependencies>
     <dependency>
       <groupId>org.jboss.teiid</groupId>

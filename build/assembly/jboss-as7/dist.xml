@@ -183,7 +183,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
         
         <includes>
-            <include>org.jboss.teiid.connectors:connector-file:rar</include>
+            <include>org.jboss.teiid.connectors:connector-file</include>
         </includes>
 
         <binaries>   
@@ -208,7 +208,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:connector-ldap:rar</include>
+            <include>org.jboss.teiid.connectors:connector-ldap</include>
         </includes>
 
         <binaries>   
@@ -233,7 +233,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:connector-salesforce:rar</include>
+            <include>org.jboss.teiid.connectors:connector-salesforce</include>
         </includes>
 
         <binaries>   
@@ -258,7 +258,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:connector-google:rar</include>
+            <include>org.jboss.teiid.connectors:connector-google</include>
         </includes>
 
         <binaries>   
@@ -283,7 +283,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:connector-mongodb:rar</include>
+            <include>org.jboss.teiid.connectors:connector-mongodb</include>
         </includes>
 
         <binaries>   
@@ -308,7 +308,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:connector-ws:rar</include>
+            <include>org.jboss.teiid.connectors:connector-ws</include>
         </includes>
 
         <binaries>   
@@ -333,7 +333,7 @@
         <useAllReactorProjects>true</useAllReactorProjects>
 
         <includes>
-            <include>org.jboss.teiid.connectors:connector-infinispan:rar</include>
+            <include>org.jboss.teiid.connectors:connector-infinispan</include>
         </includes>
 
         <binaries>   
@@ -731,23 +731,5 @@
       
     </moduleSet>
       
-    <!-- Include the JOPR plugin     
-    <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid:teiid-console</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>false</includeDependencies>
-          <unpack>false</unpack>
-          <outputDirectory>deploy/admin-console.war/plugins</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-    </moduleSet>
-    -->        
     </moduleSets>  
 </assembly>

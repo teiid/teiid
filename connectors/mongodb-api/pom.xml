@@ -9,6 +9,7 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>Salesforce API</name>
     <description>The java API for the MongoDB</description>
+    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>javax.resource</groupId>
@@ -18,7 +19,7 @@
         <dependency>
           <groupId>org.mongodb</groupId>
           <artifactId>mongo-java-driver</artifactId>
-          <version>2.11.1</version>
+          <version>${version.mongo-java-driver}</version>
         </dependency>
     </dependencies>
 </project>

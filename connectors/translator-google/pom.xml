@@ -10,6 +10,7 @@
 	<groupId>org.jboss.teiid.connectors</groupId>
 	<name>Google APIs Translator</name>
 	<description>Integrates the query engine with various Google APIs</description>
+    <packaging>bundle</packaging>
 	<dependencies>
         <dependency>
           <groupId>org.jboss.teiid</groupId>
