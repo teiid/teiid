@@ -9,34 +9,35 @@
   <groupId>org.jboss.teiid.connectors</groupId>
   <name>Gogole API</name>
   <description>The java API for connecting Google services</description>
-   <dependencies>     
+  <packaging>bundle</packaging>
+  
+  <dependencies>     
         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
         </dependency>  
-        
         <dependency>
 		  <groupId>com.google.guava</groupId>
 		  <artifactId>guava</artifactId>
-		  <version>11.0.2</version>
+		  <version>${version.guava}</version>
 		  <scope>provided</scope>
 		</dependency>
 		<dependency>
 		  <groupId>org.apache.httpcomponents</groupId>
 		  <artifactId>httpclient</artifactId>
-		  <version>4.1.2</version>
+		  <version>${version.httpclient}</version>
 		  <scope>provided</scope>
 		</dependency>
        <dependency>
 		  <groupId>org.jboss.teiid.connectors.google</groupId>
 		  <artifactId>gdata-spreadsheet</artifactId>
-		  <version>3.0</version>
+		  <version>${version.gdata-spreadsheet}</version>
 		</dependency>
        <dependency>
 		  <groupId>org.jboss.teiid.connectors.google</groupId>
 		  <artifactId>gdata-core</artifactId>
-		  <version>1.0</version>
+		  <version>${version.gdata-core}</version>
 		</dependency>
 		<dependency>
 		  <groupId>org.jboss.teiid</groupId>

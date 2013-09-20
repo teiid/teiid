@@ -9,8 +9,9 @@
   <groupId>org.jboss.teiid.connectors</groupId>
   <name>LDAP Translator</name>
   <description>LDAP Translator</description>
-
-    <dependencies>
+  <packaging>bundle</packaging>
+  
+  <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>

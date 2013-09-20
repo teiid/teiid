@@ -10,7 +10,7 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>Loopback Translator</name>
     <description>Loopback Translator</description>
-
+    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
