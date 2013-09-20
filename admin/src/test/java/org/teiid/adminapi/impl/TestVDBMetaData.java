@@ -21,7 +21,12 @@
  */
 package org.teiid.adminapi.impl;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -65,6 +70,7 @@ public class TestVDBMetaData {
 		ModelMetaData modelTwo;
 		assertEquals("myVDB", vdb.getName()); //$NON-NLS-1$
 		assertEquals("vdb description", vdb.getDescription()); //$NON-NLS-1$
+		assertEquals("connection-type", "NONE", vdb.getConnectionType().name());
 		assertEquals(1, vdb.getVersion());
 		assertEquals("vdb-value", vdb.getPropertyValue("vdb-property")); //$NON-NLS-1$ //$NON-NLS-2$
 		assertEquals("vdb-value2", vdb.getPropertyValue("vdb-property2")); //$NON-NLS-1$ //$NON-NLS-2$
@@ -150,6 +156,7 @@ public class TestVDBMetaData {
 		VDBMetaData vdb = new VDBMetaData();
 		vdb.setName("myVDB"); //$NON-NLS-1$
 		vdb.setDescription("vdb description"); //$NON-NLS-1$
+		vdb.setConnectionType("NONE");
 		vdb.setVersion(1);
 		vdb.addProperty("vdb-property", "vdb-value"); //$NON-NLS-1$ //$NON-NLS-2$
 		vdb.addProperty("vdb-property2", "vdb-value2"); //$NON-NLS-1$ //$NON-NLS-2$
