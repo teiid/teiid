@@ -104,6 +104,9 @@ public class VDBMetadataParser {
 			case DESCRIPTION:
 				vdb.setDescription(reader.getElementText());
 				break;
+			case CONNECTION_TYPE:
+				vdb.setConnectionType(reader.getElementText());
+				break;
 			case PROPERTY:
 		    	parseProperty(reader, vdb);
 				break;
@@ -149,7 +152,9 @@ public class VDBMetadataParser {
 
 	private static void ignoreTillEnd(XMLStreamReader reader)
 			throws XMLStreamException {
-		while(reader.nextTag() != XMLStreamConstants.END_ELEMENT);
+		while(reader.nextTag() != XMLStreamConstants.END_ELEMENT) {
+			;
+		}
 	}
 
 	private static void parseProperty(XMLStreamReader reader, AdminObjectImpl anObj)
@@ -371,6 +376,7 @@ public class VDBMetadataParser {
 	    NAME("name"),
 	    VERSION("version"),
 	    DESCRIPTION("description"),
+	    CONNECTION_TYPE("connection-type"),
 	    PROPERTY("property"),
 	    VALUE("value"),
 	    MODEL("model"),
@@ -426,7 +432,9 @@ public class VDBMetadataParser {
 	        final Map<String, Element> map = new HashMap<String, Element>();
 	        for (Element element : values()) {
 	            final String name = element.getLocalName();
-	            if (name != null) map.put(name, element);
+	            if (name != null) {
+					map.put(name, element);
+				}
 	        }
 	        elements = map;
 	    }
@@ -453,6 +461,7 @@ public class VDBMetadataParser {
 		if (vdb.getDescription() != null) {
 			writeElement(writer, Element.DESCRIPTION, vdb.getDescription());
 		}
+		writeElement(writer, Element.CONNECTION_TYPE, vdb.getConnectionType().name());
 		writeProperties(writer, vdb.getPropertiesMap());
 
 		for (VDBImport vdbImport : vdb.getVDBImports()) {
