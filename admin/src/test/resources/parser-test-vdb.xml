@@ -1,5 +1,6 @@
 <vdb name="myVDB" version="1">
     <description>vdb description</description>
+    <connection-type>NONE</connection-type>
     <property name="vdb-property2">vdb-value2</property>
     <property name="vdb-property" value="vdb-value"></property>
     <import-vdb name="x" version="2"/>
