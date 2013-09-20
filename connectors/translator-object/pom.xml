@@ -10,7 +10,8 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>Object Translator</name>
     <description>This is the tranlator for API interfaces</description>
-
+    <packaging>bundle</packaging>
+    
      <properties>
         <version.hibernate.search>4.1.1.Final</version.hibernate.search>
        <mockito.all.version>1.8.4</mockito.all.version>

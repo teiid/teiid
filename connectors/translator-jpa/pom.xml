@@ -10,10 +10,8 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>JPA2 Translator</name>
     <description>This translator provides access to any JPA based entities</description>
-    <properties>
-        <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
-    </properties>
-
+    <packaging>bundle</packaging>
+    
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>

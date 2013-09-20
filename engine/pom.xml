@@ -9,7 +9,7 @@
 	<artifactId>teiid-engine</artifactId>
 	<name>Engine</name>
 	<description>Relational, procedural, and xml core engine.</description>
-
+    <packaging>bundle</packaging>
     <build>
         <plugins>
 	        <plugin>
@@ -42,6 +42,16 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>   
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <configuration>
+               <instructions>
+                <Import-Package>!org.jboss.*,*</Import-Package>
+                <Export-Package>org.teiid.*</Export-Package>
+               </instructions>
+              </configuration>
+            </plugin>            
         </plugins>
     </build>
 
@@ -103,18 +113,17 @@
 		<dependency>
             <groupId>nux</groupId>
             <artifactId>nux</artifactId>
-            <version>1.6</version>
         </dependency>
 
-            <dependency>
-                  <groupId>xom</groupId>
-                  <artifactId>xom</artifactId>
-            </dependency>
+        <dependency>
+              <groupId>xom</groupId>
+              <artifactId>xom</artifactId>
+        </dependency>
 
-            <dependency>
-                  <groupId>jaxen</groupId>
-                  <artifactId>jaxen</artifactId>    
-            </dependency>         
+        <dependency>
+              <groupId>jaxen</groupId>
+              <artifactId>jaxen</artifactId>    
+        </dependency>         
 	</dependencies>
 
 </project>

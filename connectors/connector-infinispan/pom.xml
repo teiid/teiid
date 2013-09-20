@@ -8,14 +8,11 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <packaging>rar</packaging>
+    <packaging>bundle</packaging>
     <name>Infinispan Connector</name>
     <description>This connector creates the connection to the Infinispan Cache</description>
-    <properties>
-       <version.infinispan>5.1.2.FINAL</version.infinispan>
-    </properties>
+
     <dependencies>
- 
         <dependency>
             <groupId>org.jboss.teiid</groupId>
             <artifactId>teiid-api</artifactId>
@@ -42,13 +39,12 @@
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${version.infinispan}</version>
             <scope>provided</scope>
         </dependency> 
         <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-client-hotrod</artifactId>
-          <version>${version.infinispan}</version>
+          <version>${version.org.infinispan}</version>
           <scope>provided</scope>
         </dependency>  
         
@@ -66,9 +62,9 @@
         </dependency>	    
 	         
  		<dependency>
-              <groupId>org.jgroups</groupId>
-              <artifactId>jgroups</artifactId>
-              <scope>test</scope>
+          <groupId>org.jgroups</groupId>
+          <artifactId>jgroups</artifactId>
+          <scope>test</scope>
      	</dependency>
                   
         <dependency>
@@ -87,33 +83,41 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-rar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build_jar</id>
-                        <phase>process-classes</phase>
+                        <id>build_rar</id>
+                        <phase>install</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>rar</goal>
                         </goals>
                         <configuration>
-                            <archive>
-                                <manifestFile>src/main/rar/META-INF/MANIFEST.MF</manifestFile>
-                            </archive>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>deploy_jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>lib</classifier>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install_rar</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file> ${project.build.directory}/${project.artifactId}-${project.version}.rar</file>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <groupId>${project.groupId}</groupId>
+                            <packaging>rar</packaging>
+                            <version>${project.version}</version>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
         </plugins>
-    </build>   
+    </build> 
 </project>
  

@@ -9,7 +9,7 @@
     <artifactId>connector-file</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>File Connector</name>
-    <packaging>rar</packaging>
+    <packaging>bundle</packaging>
     <description>This connector reads data from files.</description>
 
     <dependencies>
@@ -32,32 +32,40 @@
     <build>
         <plugins>
             <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-rar-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>build_jar</id>
-                        <phase>process-classes</phase>
+                        <id>build_rar</id>
+                        <phase>install</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>rar</goal>
                         </goals>
                         <configuration>
-                          <archive>
-                            <manifestFile>src/main/rar/META-INF/MANIFEST.MF</manifestFile>
-                          </archive>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>deploy_jar</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                        <configuration>
-                            <classifier>lib</classifier>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>install_rar</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <file> ${project.build.directory}/${project.artifactId}-${project.version}.rar</file>
+                            <artifactId>${project.artifactId}</artifactId>
+                            <groupId>${project.groupId}</groupId>
+                            <packaging>rar</packaging>
+                            <version>${project.version}</version>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
         </plugins>
     </build>
 </project>

@@ -10,6 +10,7 @@
 	<groupId>org.jboss.teiid.connectors</groupId>
 	<name>Salesforce Translator</name>
 	<description>Integrates the query engine with Salesforce.com.</description>
+    <packaging>bundle</packaging>
 	<dependencies>
         <dependency>
           <groupId>org.jboss.teiid</groupId>

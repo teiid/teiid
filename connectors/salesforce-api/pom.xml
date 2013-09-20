@@ -9,6 +9,7 @@
     <groupId>org.jboss.teiid.connectors</groupId>
     <name>Salesforce API</name>
     <description>The java API for the Salesforce.com partner web service API</description>
+    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
             <groupId>com.force.api</groupId>

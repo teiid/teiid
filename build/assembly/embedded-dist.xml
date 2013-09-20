@@ -92,7 +92,7 @@
             <include>org.jboss.teiid.connectors:translator-object</include>
             <include>org.jboss.teiid.connectors:translator-google</include>
             <include>org.jboss.teiid.connectors:google-api</include>
-            <include>org.jboss.teiid.connectors:mongodb</include>
+            <include>org.jboss.teiid.connectors:translator-mongodb</include>
             <include>org.jboss.teiid.connectors:mongodb-api</include>
         </includes>
 
@@ -128,7 +128,6 @@
 
         <binaries>        
           <includeDependencies>true</includeDependencies>
-          <attachmentClassifier>lib</attachmentClassifier>
           <unpack>false</unpack>
           <outputDirectory>optional</outputDirectory>
           <fileMode>0644</fileMode>
