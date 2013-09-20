@@ -487,11 +487,6 @@ public class Evaluator {
              throw new ExpressionEvaluationException(QueryPlugin.Event.TEIID30323, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30323, criteria));
         }
 
-        // Shortcut if null
-        if(leftValue == null) {
-            return null;
-        }
-
         // Need to be careful to initialize this variable carefully for the case
         // where valueIterator has no values, and the block below is not entered.
         // If there are no rows, and ALL is the predicate quantifier, the result
@@ -510,6 +505,11 @@ public class Evaluator {
 		}
         while(valueIter.hasNext()) {
             Object value = valueIter.next();
+            
+            // Shortcut if null
+            if(leftValue == null) {
+                return null;
+            }
 
             if(value != null) {
             	result = compare(criteria, leftValue, value);
