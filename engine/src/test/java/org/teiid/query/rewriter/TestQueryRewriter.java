@@ -821,7 +821,7 @@ public class TestQueryRewriter {
     
     @Test public void testCompareSubqueryUnknown() {
         helpTestRewriteCommand("SELECT e1 FROM pm1.g1 WHERE null = SOME (SELECT e1 FROM pm1.g2)", //$NON-NLS-1$
-                                "SELECT e1 FROM pm1.g1 WHERE 1 = 0"); //$NON-NLS-1$
+                                "SELECT e1 FROM pm1.g1 WHERE null IN (SELECT e1 FROM pm1.g2 LIMIT 1)"); //$NON-NLS-1$
     }
 
     @Test public void testINClauseSubquery() {

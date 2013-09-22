@@ -2801,6 +2801,7 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[] {
+            Arrays.asList(new Object[] { null }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$
@@ -2999,6 +3000,7 @@ public class TestProcessor {
 
         // Create expected results
         List[] expected = new List[]{
+        	Arrays.asList(new Object[] { null }), //$NON-NLS-1$	
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "0" }), //$NON-NLS-1$
             Arrays.asList(new Object[] { "1" }), //$NON-NLS-1$

@@ -842,12 +842,12 @@ public class QueryRewriter {
 		    }
 		} else if (criteria instanceof SubquerySetCriteria) {
 		    SubquerySetCriteria sub = (SubquerySetCriteria)criteria;
-		    if (rewriteLeftExpression(sub)) {
-		    	return UNKNOWN_CRITERIA;
-		    }
 		    rewriteSubqueryContainer(sub, true);
 		    if (!RelationalNodeUtil.shouldExecute(sub.getCommand(), false, true)) {
 		    	return sub.isNegated()?TRUE_CRITERIA:FALSE_CRITERIA;
+		    }
+		    if (rewriteLeftExpression(sub)) {
+		    	addImplicitLimit(sub, 1);
 		    }
         } else if (criteria instanceof DependentSetCriteria) {
             criteria = rewriteDependentSetCriteria((DependentSetCriteria)criteria);
@@ -1308,7 +1308,7 @@ public class QueryRewriter {
         Expression leftExpr = rewriteExpressionDirect(criteria.getLeftExpression());
         
         if (isNull(leftExpr)) {
-            return UNKNOWN_CRITERIA;
+            addImplicitLimit(criteria, 1);
         }
         
         criteria.setLeftExpression(leftExpr);
@@ -1885,7 +1885,7 @@ public class QueryRewriter {
 		
 		criteria.setExpression(rewriteExpressionDirect(criteria.getExpression()));
         
-        if (rewriteLeftExpression(criteria)) {
+        if (rewriteLeftExpression(criteria) && !criteria.getValues().isEmpty()) {
             return UNKNOWN_CRITERIA;
         }
 
