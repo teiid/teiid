@@ -65,7 +65,6 @@ public class ResultSetInfo {
     
     private ElementSymbol mappingClassSymbol;
 	private boolean inputSet;
-	private boolean isCritNullDependent;
 
 	//auto-staging related info
 	private String stagingRoot;
@@ -180,14 +179,6 @@ public class ResultSetInfo {
 
 	public void setInputSet(boolean inputSet) {
 		this.inputSet = inputSet;
-	}
-	
-	public void setCritNullDependent(boolean isCritNullDependent) {
-		this.isCritNullDependent = isCritNullDependent;
-	}
-	
-	public boolean isCritNullDependent(){
-		return this.isCritNullDependent;
 	}
 	
 	public String getStagingRoot() {
