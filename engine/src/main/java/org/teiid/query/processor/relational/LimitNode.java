@@ -190,13 +190,13 @@ public class LimitNode extends RelationalNode {
 	}
 	
 	@Override
-	public boolean hasFinalBuffer() {
+	public boolean hasBuffer(boolean requireFinal) {
 		//TODO: support offset
-		return offsetExpr == null && this.getChildren()[0].hasFinalBuffer();
+		return offsetExpr == null && this.getChildren()[0].hasBuffer(requireFinal);
 	}
 	
 	@Override
-	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException,
 			TeiidComponentException, TeiidProcessingException {
 		if (maxRows >= 0) {
 			if (limit >= 0) {
@@ -205,7 +205,7 @@ public class LimitNode extends RelationalNode {
 		} else {
 			maxRows = limit;
 		}
-		return this.getChildren()[0].getFinalBuffer(maxRows);
+		return this.getChildren()[0].getBuffer(maxRows);
 	}
 
 }

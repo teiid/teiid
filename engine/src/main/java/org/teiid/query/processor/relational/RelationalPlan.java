@@ -260,13 +260,13 @@ public class RelationalPlan extends ProcessorPlan {
     }
     
     @Override
-    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
-    	return root.getFinalBuffer(maxRows);
+    public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    	return root.getBuffer(maxRows);
     }
     
     @Override
-    public boolean hasFinalBuffer() {
-    	return root.hasFinalBuffer();
+    public boolean hasBuffer(boolean requireFinal) {
+    	return root.hasBuffer(requireFinal);
     }
 	
 }

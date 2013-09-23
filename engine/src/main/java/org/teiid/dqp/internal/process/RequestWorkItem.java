@@ -635,14 +635,14 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 					}
 					super.flushBatchDirect(batch, add);
 					if (!add) {
-						if (!processor.hasFinalBuffer()) {
+						if (!processor.hasBuffer(false)) {
 							resultsBuffer.setRowCount(batch.getEndRow());
 						}
 						if ((requestMsg.getRequestOptions().isContinuous() || useCallingThread) && resultsReceiver == null) {
 				        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
 				        }
 					} else if (isForwardOnly() && add 
-							&& !processor.hasFinalBuffer() //restrict the buffer size for forward only results
+							&& !processor.hasBuffer(false) //restrict the buffer size for forward only results
 							&& !batch.getTerminationFlag() 
 							&& transactionState != TransactionState.ACTIVE
 							&& resultsBuffer.getManagedRowCount() >= maxRows) {

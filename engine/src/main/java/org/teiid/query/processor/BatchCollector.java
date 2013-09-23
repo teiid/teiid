@@ -64,9 +64,9 @@ public class BatchCollector {
 	     * @throws TeiidComponentException 
 	     * @throws BlockedException 
 	     */
-	    TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException;
+	    TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException;
 	    
-	    boolean hasFinalBuffer();
+	    boolean hasBuffer(boolean requireFinal);
 	    
 	    void close() throws TeiidComponentException;
 	}
@@ -128,7 +128,7 @@ public class BatchCollector {
     public BatchCollector(BatchProducer sourceNode, BufferManager bm, CommandContext context, boolean forwardOnly) throws TeiidComponentException {
         this.sourceNode = sourceNode;
         this.forwardOnly = forwardOnly;
-        this.hasFinalBuffer = this.sourceNode.hasFinalBuffer();
+        this.hasFinalBuffer = this.sourceNode.hasBuffer(false);
         if (!this.hasFinalBuffer) {
             this.buffer = bm.createTupleBuffer(sourceNode.getOutputElements(), context.getConnectionId(), TupleSourceType.PROCESSOR);
             this.buffer.setForwardOnly(forwardOnly);
@@ -140,7 +140,7 @@ public class BatchCollector {
     	while(!done) {
     		if (this.hasFinalBuffer) {
 	    		if (this.buffer == null) {
-	    			TupleBuffer finalBuffer = this.sourceNode.getFinalBuffer(rowLimit);
+	    			TupleBuffer finalBuffer = this.sourceNode.getBuffer(rowLimit);
 	    			Assertion.isNotNull(finalBuffer);
 					this.buffer = finalBuffer;
 	    		}
@@ -168,7 +168,7 @@ public class BatchCollector {
             // Check for termination condition
             if(batch.getTerminationFlag()) {
             	done = true;
-            	if (!this.sourceNode.hasFinalBuffer()) {
+            	if (!this.sourceNode.hasBuffer(false)) {
             		buffer.close();
             	}
                 break;
