@@ -603,7 +603,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 		return processingState;
 	}
 	
-	public boolean hasFinalBuffer() {
+	public boolean hasBuffer(boolean requireFinal) {
 		return false;
 	}
 	
@@ -614,7 +614,7 @@ public abstract class RelationalNode implements Cloneable, BatchProducer {
 	 * @throws TeiidComponentException 
 	 * @throws BlockedException 
      */
-	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		return null;
 	}
 	

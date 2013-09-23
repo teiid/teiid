@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleBatch;
+import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
@@ -179,7 +180,18 @@ public class TestJoinNode {
         
         List rightElements = new ArrayList();
         rightElements.add(es2);
-        rightNode = new FakeRelationalNode(2, rightTuples);
+        rightNode = new FakeRelationalNode(2, rightTuples) {
+        	@Override
+        	public boolean hasBuffer(boolean requireFinal) {
+        		return !requireFinal;
+        	}
+
+        	@Override
+        	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        		fail();
+        		throw new AssertionError();
+        	};
+        };
         rightNode.setElements(rightElements);
         
         List joinElements = new ArrayList();
@@ -945,5 +957,5 @@ public class TestJoinNode {
         this.join.setJoinStrategy(joinStrategy);
         helpTestJoinDirect(expected, 4, 1000);
     }
-
+    
 }
