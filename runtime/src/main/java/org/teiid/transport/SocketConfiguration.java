@@ -38,7 +38,7 @@ public class SocketConfiguration {
 	private SSLConfiguration sslConfiguration;
 	private String hostName;
 	private String name;
-	private String protocol = "teiid"; //$NON-NLS-1$
+	private WireProtocol protocol = WireProtocol.teiid;
 	
 	public String getName() {
 		return name;
@@ -135,11 +135,15 @@ public class SocketConfiguration {
 		return this.sslConfiguration != null && this.sslConfiguration.isSslEnabled();
 	}
 
-	public String getProtocol() {
+	public WireProtocol getProtocol() {
 		return protocol;
 	}
 
 	public void setProtocol(String protocol) {
-		this.protocol = protocol;
+		this.protocol = WireProtocol.valueOf(protocol);
 	}
+	
+	public void setProtocol(WireProtocol protocol) {
+		this.protocol = protocol;
+	}	
 }
