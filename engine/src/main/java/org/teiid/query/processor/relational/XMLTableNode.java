@@ -329,6 +329,29 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 	}
 	
 	@Override
+	public boolean hasBuffer(boolean requireFinal) {
+		if (this.table.getXQueryExpression().isStreaming()) {
+			return !requireFinal;
+		}
+		return false;
+	}
+	
+	@Override
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException,
+			TeiidComponentException, TeiidProcessingException {
+		this.rowLimit = maxRows;
+		evaluate(true);
+		usingOutput = true;
+    	TupleBuffer finalBuffer = this.buffer;
+    	synchronized (this) {
+        	if (finalBuffer.isFinal()) {
+        		close();
+        	}
+		}
+		return finalBuffer;
+	}
+	
+	@Override
 	public synchronized void processRow(NodeInfo row) {
 		if (isClosed()) {
 			throw EARLY_TERMINATION;

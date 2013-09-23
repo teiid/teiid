@@ -192,9 +192,9 @@ class SourceState {
     			sortUtility.sort();
     			return;
     		}
-    		if (this.source.hasFinalBuffer()) {
-    			this.buffer = this.source.getFinalBuffer(-1);
-    			Assertion.assertTrue(this.buffer.isFinal());
+    		if (this.source.hasBuffer(true)) {
+    			this.buffer = this.source.getBuffer(-1);
+				Assertion.assertTrue(this.buffer.isFinal());
     			return;
     		}
 			createPrefetch();
@@ -256,8 +256,8 @@ class SourceState {
         	if (this.iterator instanceof BatchIterator) {
         		throw new AssertionError("cannot buffer the source"); //$NON-NLS-1$
         	}
-    		if (source.hasFinalBuffer()) {
-    			this.buffer = source.getFinalBuffer(-1);
+    		if (source.hasBuffer(true)) {
+    			this.buffer = source.getBuffer(-1);
     			Assertion.assertTrue(this.buffer.isFinal());
     			return this.buffer;
     		}

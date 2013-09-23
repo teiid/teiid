@@ -223,14 +223,14 @@ public class ProjectNode extends SubqueryAwareRelationalNode {
     }
     
     @Override
-    public boolean hasFinalBuffer() {
-    	return !needsProject && this.getChildren()[0].hasFinalBuffer();
+    public boolean hasBuffer(boolean requireFinal) {
+    	return !needsProject && this.getChildren()[0].hasBuffer(requireFinal);
     }
     
     @Override
-    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException,
+    public TupleBuffer getBuffer(int maxRows) throws BlockedException,
     		TeiidComponentException, TeiidProcessingException {
-    	return this.getChildren()[0].getFinalBuffer(maxRows);
+    	return this.getChildren()[0].getBuffer(maxRows);
     }
     
 }

@@ -97,14 +97,14 @@ public class SortNode extends RelationalNode {
     private void sortPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
-    		if (getChildren()[0].hasFinalBuffer()) {
-    			ts = getChildren()[0].getFinalBuffer(-1).createIndexedTupleSource(true);
-    		} else {
+    		if (!getChildren()[0].hasBuffer(true)) {
     			ts = new BatchIterator(getChildren()[0]);
     		}
 	        this.sortUtility = new SortUtility(ts, items, this.mode, getBufferManager(),
                     getConnectionID(), getChildren()[0].getElements());
-
+	        if (ts == null) {
+	        	this.sortUtility.setWorkingBuffer(getChildren()[0].getBuffer(-1));
+	        }
 		}
 		this.output = this.sortUtility.sort();
 		if (this.outputTs == null) {
@@ -195,7 +195,7 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+    public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	this.rowLimit = maxRows;
     	//TODO: push limiting into the sort logic
     	if (this.output == null) {
@@ -211,8 +211,11 @@ public class SortNode extends RelationalNode {
     }
     
     @Override
-    public boolean hasFinalBuffer() {
-    	return this.getElements().size() == this.getChildren()[0].getElements().size();
+    public boolean hasBuffer(boolean requireFinal) {
+    	if (this.getElements().size() == this.getChildren()[0].getElements().size()) {
+    		return !requireFinal || mode != Mode.DUP_REMOVE;
+    	}
+    	return false;
     }
     
 }

@@ -281,12 +281,12 @@ public class QueryProcessor implements BatchProducer {
 	}
 
 	@Override
-	public TupleBuffer getFinalBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
 		while (true) {
 	    	long wait = DEFAULT_WAIT;
 	    	try {
 	    		init();
-	    		return this.processPlan.getFinalBuffer(maxRows);
+	    		return this.processPlan.getBuffer(maxRows);
 	    	} catch (BlockedException e) {
 	    		if (!this.context.isNonBlocking()) {
 	    			throw e;
@@ -310,8 +310,8 @@ public class QueryProcessor implements BatchProducer {
 	}
 
 	@Override
-	public boolean hasFinalBuffer() {
-		return !continuous && this.processPlan.hasFinalBuffer();
+	public boolean hasBuffer(boolean requireFinal) {
+		return !continuous && this.processPlan.hasBuffer(false);
 	}
 	
 	public BufferManager getBufferManager() {

@@ -70,7 +70,11 @@ public class TestSortNode {
         sortNode.initialize(context, mgr, null);    
         
         sortNode.open();
-        
+        if (mode == Mode.DUP_REMOVE) {
+        	assertFalse(sortNode.hasBuffer(true));
+        } else {
+        	assertTrue(sortNode.hasBuffer(true));
+        }
         int currentRow = 1;
         while(true) {
         	try {
