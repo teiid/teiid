@@ -22,11 +22,17 @@
 
 package org.teiid.runtime;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.net.InetSocketAddress;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,6 +42,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -46,6 +53,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.postgresql.Driver;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -70,6 +78,8 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.TypeFacility;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.WireProtocol;
 
 @SuppressWarnings("nls")
 public class TestEmbeddedServer {
@@ -323,6 +333,56 @@ public class TestEmbeddedServer {
 		rs.next();
 		assertEquals("HELLO WORLD", rs.getString(1));
 	}
+	
+	@Test public void testRemoteJDBCTrasport() throws Exception {
+		SocketConfiguration s = new SocketConfiguration();
+		InetSocketAddress addr = new InetSocketAddress(0);
+		s.setBindAddress(addr.getHostName());
+		s.setPortNumber(addr.getPort());
+		s.setProtocol(WireProtocol.teiid);
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.addTransport(s);
+		es.start(config);
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model></vdb>".getBytes()));
+		Connection conn = null;
+		try {
+			TeiidDriver driver = new TeiidDriver();
+			conn = driver.connect("jdbc:teiid:test@mm://"+addr.getHostName()+":"+es.transports.get(0).getPort(), null);
+			ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
+			rs.next();
+			assertEquals("HELLO WORLD", rs.getString(1));
+		} finally {
+			conn.close();
+		}
+	}	
+	
+	@Test public void testRemoteODBCTrasport() throws Exception {
+		SocketConfiguration s = new SocketConfiguration();
+		InetSocketAddress addr = new InetSocketAddress(0);
+		s.setBindAddress(addr.getHostName());
+		s.setPortNumber(addr.getPort());
+		s.setProtocol(WireProtocol.pg);
+		EmbeddedConfiguration config = new EmbeddedConfiguration();
+		config.addTransport(s);
+		es.start(config);
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\" type=\"VIRTUAL\"><metadata type=\"DDL\"><![CDATA[CREATE VIEW helloworld as SELECT 'HELLO WORLD';]]> </metadata></model></vdb>".getBytes()));
+		Connection conn = null;
+		try {
+			Driver d = new Driver();
+			Properties p = new Properties();
+			p.setProperty("user", "testuser");
+			p.setProperty("password", "testpassword");
+			
+			conn = d.connect("jdbc:postgresql://"+addr.getHostName()+":"+es.transports.get(0).getPort()+"/test", p);
+			ResultSet rs = conn.createStatement().executeQuery("select * from helloworld");
+			rs.next();
+			assertEquals("HELLO WORLD", rs.getString(1));
+		} finally {
+			if (conn != null) {
+				conn.close();
+			}
+		}
+	}	
 	
 	@Test(expected=VirtualDatabaseException.class) public void testXMLDeployFails() throws Exception {
 		es.start(new EmbeddedConfiguration());

@@ -29,14 +29,17 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.InetSocketAddress;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -111,6 +114,10 @@ import org.teiid.transport.ClientServiceRegistry;
 import org.teiid.transport.ClientServiceRegistryImpl;
 import org.teiid.transport.LocalServerConnection;
 import org.teiid.transport.LogonImpl;
+import org.teiid.transport.ODBCSocketListener;
+import org.teiid.transport.SocketConfiguration;
+import org.teiid.transport.SocketListener;
+import org.teiid.transport.WireProtocol;
 import org.teiid.vdb.runtime.VDBKey;
 import org.xml.sax.SAXException;
 
@@ -255,6 +262,7 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	private EmbeddedConfiguration config;
 	private SessionAwareCache<CachedResults> rs;
 	private SessionAwareCache<PreparedPlan> ppc;
+	protected ArrayList<SocketListener> transports = new ArrayList<SocketListener>();
 	
 	public EmbeddedServer() {
 
@@ -343,6 +351,15 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		services.registerClientService(ILogon.class, logon, LogConstants.CTX_SECURITY);
 		services.registerClientService(DQP.class, dqp, LogConstants.CTX_DQP);
 		initDriver();
+		List<SocketConfiguration> transports = config.getTransports();
+		if ( transports != null && !transports.isEmpty()) {
+			for (SocketConfiguration socketConfig:transports) {
+				SocketListener socketConnection = startTransport(socketConfig, bs.getBufferManager(), config.getMaxODBCLobSizeAllowed());
+				if (socketConnection != null) {
+					this.transports.add(socketConnection);
+				}
+			}
+		}
 		running = true;
 	}
 
@@ -368,6 +385,20 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 				return new EmbeddedConnectionImpl(conn, info, url);
 			}
 		});
+	}
+	
+	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
+		InetSocketAddress address = new InetSocketAddress(socketConfig.getHostAddress(), socketConfig.getPortNumber());
+		if (socketConfig.getProtocol() == WireProtocol.teiid) {
+			return new SocketListener(address, socketConfig, this.services, bm);
+		}
+		else if (socketConfig.getProtocol() == WireProtocol.pg) {
+    		this.repo.odbcEnabled();
+    		ODBCSocketListener odbc = new ODBCSocketListener(address, socketConfig, this.services, bm, maxODBCLobSize, this.logon, driver);
+    		odbc.setAuthenticationType(this.sessionService.getAuthenticationType());
+    		return odbc;
+		}
+		return null;
 	}
 
 	private void startVDBRepository() {
@@ -629,6 +660,10 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		if (running == null || !running) {
 			return;
 		}
+		for (SocketListener socket:this.transports) {
+			socket.stop();
+		}
+		this.transports.clear();
 		dqp.stop();
 		eventDistributorFactoryService.stop();
 		config.getCacheFactory().destroy();

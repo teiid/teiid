@@ -46,6 +46,7 @@ import org.teiid.query.ObjectReplicator;
 import org.teiid.replication.jgroups.ChannelFactory;
 import org.teiid.replication.jgroups.JGroupsObjectReplicator;
 import org.teiid.security.SecurityHelper;
+import org.teiid.transport.SocketConfiguration;
 
 public class EmbeddedConfiguration extends DQPConfiguration {
 	
@@ -91,6 +92,8 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private int maxResultSetCacheStaleness = 60;
 	private String infinispanConfigFile = "infinispan-config.xml"; //$NON-NLS-1$
 	private String jgroupsConfigFile;
+	private List<SocketConfiguration> transports;
+	private int maxODBCLobSizeAllowed = 5*1024*1024; // 5 MB
 	
 	private DefaultCacheManager manager;
 	private SimpleChannelFactory channelFactory;
@@ -223,4 +226,23 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 			channelFactory.stop();
 		}
 	}
+	
+	public void addTransport(SocketConfiguration configuration) {
+		if (this.transports == null) {
+			this.transports = new ArrayList<SocketConfiguration>();
+		}
+		this.transports.add(configuration);
+	}
+	
+	public List<SocketConfiguration> getTransports(){
+		return this.transports;
+	}
+	
+	public int getMaxODBCLobSizeAllowed() {
+		return this.maxODBCLobSizeAllowed;
+	}
+	
+	public void setMaxODBCLobSizeAllowed(int lobSize) {
+		this.maxODBCLobSizeAllowed = lobSize;
+	}	
 }
