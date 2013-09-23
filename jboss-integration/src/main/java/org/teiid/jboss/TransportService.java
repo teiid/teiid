@@ -73,9 +73,9 @@ import org.teiid.transport.LogonImpl;
 import org.teiid.transport.ODBCSocketListener;
 import org.teiid.transport.SocketConfiguration;
 import org.teiid.transport.SocketListener;
+import org.teiid.transport.WireProtocol;
 
 public class TransportService implements Service<ClientServiceRegistry>, ClientServiceRegistry {
-	private enum Protocol {teiid, pg};
 	private ClientServiceRegistryImpl csr;
 	private transient ILogon logon;
 	private SocketConfiguration socketConfig;
@@ -167,16 +167,15 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 			}
     		*/
     		this.address = getSocketBindingInjector().getValue().getSocketAddress();
-    		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
     		boolean sslEnabled = false;
     		if (this.socketConfig.getSSLConfiguration() != null) {
     			sslEnabled = this.socketConfig.getSSLConfiguration().isSslEnabled();
     		}
-    		if (protocol == Protocol.teiid) {
+    		if (socketConfig.getProtocol() == WireProtocol.teiid) {
     	    	this.socketListener = new SocketListener(address, this.socketConfig, this.csr, getBufferManagerInjector().getValue());
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50012, this.transportName, address.getHostName(), String.valueOf(address.getPort()), (sslEnabled?"ON":"OFF"), authenticationDomains)); //$NON-NLS-1$ //$NON-NLS-2$ 
     		}
-    		else if (protocol == Protocol.pg) {
+    		else if (socketConfig.getProtocol() == WireProtocol.pg) {
         		getVdbRepository().odbcEnabled();
         		TeiidDriver driver = new TeiidDriver();
         		driver.setEmbeddedProfile(new ConnectionProfile() {
@@ -225,11 +224,10 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
     	this.sessionService.stop();
     	
     	if (this.socketConfig != null) {
-    		Protocol protocol = Protocol.valueOf(socketConfig.getProtocol());
-    		if (protocol == Protocol.teiid) {
+    		if (socketConfig.getProtocol() == WireProtocol.teiid) {
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50039, this.transportName, this.address.getHostName(), String.valueOf(this.address.getPort()))); 
     		}
-    		else if (protocol == Protocol.pg) {
+    		else if (socketConfig.getProtocol() == WireProtocol.pg) {
     	    	LogManager.logInfo(LogConstants.CTX_RUNTIME, IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50040, this.address.getHostName(), String.valueOf(this.address.getPort())));
     		}
     	}
@@ -245,6 +243,7 @@ public class TransportService implements Service<ClientServiceRegistry>, ClientS
 
 		return iface.cast(Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[] {iface}, new LogManager.LoggingProxy(instance, context, MessageLevel.TRACE) {
 
+			@Override
 			public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 				Throwable exception = null;
 				try {

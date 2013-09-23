@@ -100,5 +100,11 @@
         <groupId>org.jboss</groupId>
         <artifactId>staxmapper</artifactId>
     </dependency>    
+    <dependency>
+        <groupId>postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>9.1-901.jdbc4</version>
+        <scope>test</scope>
+    </dependency>    
   </dependencies>
 </project>
