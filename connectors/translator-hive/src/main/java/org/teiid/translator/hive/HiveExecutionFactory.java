@@ -28,6 +28,8 @@ import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -329,4 +331,12 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     	return new HiveMetadataProcessor();
     }
 
+    @Override
+    public Object retrieveValue(ResultSet results, int columnIndex, Class<?> expectedType) throws SQLException {
+    	if (expectedType.equals(Timestamp.class)) {
+    		// Calendar based getTimestamp not supported by Hive
+    		return results.getTimestamp(columnIndex);
+    	}
+    	return super.retrieveValue(results, columnIndex, expectedType);
+    }
 }
