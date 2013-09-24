@@ -107,6 +107,9 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 				name = name.trim();
 			}
 			String type = rs.getString(2);
+			if (type != null) {
+				type = type.trim();
+			}
 			String runtimeType = getRuntimeType(type);
 
 			Column column = metadataFactory.addColumn(name, runtimeType, table);
