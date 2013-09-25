@@ -71,12 +71,12 @@ public final class NodeConstants {
     public enum Info {
         ATOMIC_REQUEST,      // Command
         MODEL_ID,            // Object (model ID)
-        IS_COMMON_TABLE,
         PROCEDURE_CRITERIA,
         PROCEDURE_INPUTS,
         PROCEDURE_DEFAULTS,
         IS_MULTI_SOURCE,
         SOURCE_NAME,
+        CONFORMED_SOURCES, //Set <model id>
         
         // Set operation properties 
         SET_OPERATION,      // SetOperation

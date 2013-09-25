@@ -823,7 +823,9 @@ public class TempMetadataAdapter extends BasicQueryMetadataWrapper {
     @Override
     public String getExtensionProperty(Object metadataID, String key,
     		boolean checkUnqualified) {
-    	// TODO Auto-generated method stub
+    	if (metadataID instanceof TempMetadataID) {
+    		return null;
+    	}
     	return super.getExtensionProperty(metadataID, key, checkUnqualified);
     }
 

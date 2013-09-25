@@ -200,6 +200,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             			continue;
             		}
                     combineSourceHints(accessNode, node);
+                    combineConformedSources(accessNode, node);
         			NodeEditor.removeChildNode(parentNode, node);
             	}
             	accessNode.getGroups().clear();
@@ -732,8 +733,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				modelID = accessModelID;
 				multiSource = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
 				
-			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder)) { 
-				return null;							
+			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder) 
+					&& !isConformed(metadata, capFinder, childNode, modelID, children.get(0), accessModelID)) { 
+				return null;
 			} else if ((multiSource || childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) && !context.getOptions().isImplicitMultiSourceJoin()) {
 				//only allow raise if partitioned
 				boolean multiSourceOther = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
@@ -787,6 +789,24 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		
 		return modelID;
     }
+
+	static boolean isConformed(QueryMetadataInterface metadata,
+			CapabilitiesFinder capFinder, PlanNode childNode, Object id, PlanNode childNode1, Object id1)
+			throws QueryMetadataException, TeiidComponentException,
+			AssertionError {
+		Set<Object> sources = (Set<Object>) childNode.getProperty(Info.CONFORMED_SOURCES);
+		Set<Object> sources1 = (Set<Object>) childNode1.getProperty(Info.CONFORMED_SOURCES);
+		if (sources == null) {
+			if (sources1 == null) {
+				return false;
+			}
+			return sources1.contains(id);
+		} else if (sources1 == null) {
+			return sources.contains(id1);
+		}
+		//TODO we could use the isSameConnector logic
+		return !Collections.disjoint(sources, sources1);
+	}
     
     /**
      * Checks criteria one predicate at a time.  Only tests up to the equi restriction.
@@ -859,6 +879,8 @@ public final class RuleRaiseAccess implements OptimizerRule {
 		// Remove old access nodes - this will automatically add children of access nodes to join node
 		NodeEditor.removeChildNode(joinNode, leftAccess);
 		NodeEditor.removeChildNode(joinNode, rightAccess);
+		
+		combineConformedSources(accessNode, other);
         
         //Set for later possible use, even though this isn't an access node
         joinNode.setProperty(NodeConstants.Info.MODEL_ID, modelID);
@@ -892,7 +914,18 @@ public final class RuleRaiseAccess implements OptimizerRule {
         return accessNode;
 	}
 
-    /**
+    private static void combineConformedSources(PlanNode accessNode,
+			PlanNode other) {
+    	Set<Object> conformedSources = (Set<Object>)accessNode.getProperty(Info.CONFORMED_SOURCES);
+    	Set<Object> conformedSourcesOther = (Set<Object>)other.getProperty(Info.CONFORMED_SOURCES);
+    	if (conformedSources == null || conformedSources.isEmpty() || conformedSourcesOther == null || conformedSourcesOther.isEmpty()) {
+    		accessNode.setProperty(Info.CONFORMED_SOURCES, null);
+    		return;
+    	}
+    	conformedSources.retainAll(conformedSourcesOther);
+	}
+
+	/**
      * Get modelID for Access node and cache the result in the Access node.
      * @param accessNode Access node
      * @param metadata Metadata access

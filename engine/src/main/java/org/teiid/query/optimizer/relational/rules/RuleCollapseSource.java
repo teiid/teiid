@@ -83,8 +83,7 @@ public final class RuleCollapseSource implements OptimizerRule {
             if(nonRelationalPlan != null) {
                 accessNode.setProperty(NodeConstants.Info.PROCESSOR_PLAN, nonRelationalPlan);
             } else if (RuleRaiseAccess.getModelIDFromAccess(accessNode, metadata) == null) {
-            	//with query
-            	accessNode.setProperty(NodeConstants.Info.IS_COMMON_TABLE, Boolean.TRUE);
+            	//with query or processor plan alreay set
             } else if(command == null) {
             	PlanNode commandRoot = accessNode;
             	GroupSymbol intoGroup = (GroupSymbol)accessNode.getFirstChild().getProperty(NodeConstants.Info.INTO_GROUP);
