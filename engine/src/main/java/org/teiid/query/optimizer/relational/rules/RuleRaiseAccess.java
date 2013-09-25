@@ -568,7 +568,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 	    	}
 		}
 		if (updateConformed) {
-			accessNode.setProperty(Info.CONFORMED_SOURCES, conformedSources);
+			updateConformed(accessNode, conformedSources);
 		}
 		return true;
 	}
@@ -966,6 +966,21 @@ public final class RuleRaiseAccess implements OptimizerRule {
     		return;
     	}
     	conformedSources.retainAll(conformedSourcesOther);
+    	updateConformed(accessNode, conformedSources);
+	}
+
+	private static void updateConformed(PlanNode accessNode,
+			Set<Object> conformedSources) throws AssertionError {
+		if (conformedSources.isEmpty()) {
+    		throw new AssertionError("Planning error, no conformed sources in common."); //$NON-NLS-1$
+    	}
+    	if (!conformedSources.contains(accessNode.getProperty(Info.MODEL_ID))) {
+    		//switch to another id - TODO: make a better selection
+    		accessNode.setProperty(Info.MODEL_ID, conformedSources.iterator().next());
+    	}
+    	if (conformedSources.size() == 1) {
+    		accessNode.setProperty(Info.CONFORMED_SOURCES, null);
+    	}
 	}
 
 	/**

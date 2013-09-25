@@ -46,6 +46,8 @@ public class TestConformedTables {
 		t.setProperty(RulePlaceAccess.CONFORMED_SOURCES, "pm2");
 		t = tm.getGroupID("pm2.g3");
 		t.setProperty(RulePlaceAccess.CONFORMED_SOURCES, "pm1");
+		t = tm.getGroupID("pm2.g1");
+		t.setProperty(RulePlaceAccess.CONFORMED_SOURCES, "pm3");
 	}
 	
 	@Test public void testConformedJoin() throws Exception {
@@ -57,6 +59,12 @@ public class TestConformedTables {
 		sql = "select pm1.g1.e1 from pm1.g2, pm1.g1 where g1.e1=g2.e1";
 		
 		helpPlan(sql, tm, new String[] {"SELECT g_1.e1 FROM pm1.g2 AS g_0, pm1.g1 AS g_1 WHERE g_1.e1 = g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testConformedJoin1() throws Exception {
+		String sql = "select pm1.g1.e1 from pm1.g1, pm2.g1 where pm1.g1.e1=pm2.g1.e1";
+		
+		helpPlan(sql, tm, new String[] {"SELECT g_0.e1 FROM pm1.g1 AS g_0, pm2.g1 AS g_1 WHERE g_0.e1 = g_1.e1"}, ComparisonMode.EXACT_COMMAND_STRING);
 	}
 	
 	@Test public void testConformedSubquery() throws Exception {

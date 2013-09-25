@@ -35,6 +35,7 @@ import org.teiid.api.exception.query.QueryResolverException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.util.StringUtil;
 import org.teiid.metadata.AbstractMetadataRecord;
+import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -171,7 +172,7 @@ public final class RulePlaceAccess implements
             			Object mid = metadata.getModelID(source.trim());
             			if (metadata.isVirtualModel(mid)) {
             				//TODO: could validate this up-front
-            				throw new QueryMetadataException();
+            				throw new QueryMetadataException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31148, metadata.getName(mid), group));
             			}
             			conformed.add(mid);
             		}
