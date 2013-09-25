@@ -24,15 +24,7 @@ package org.teiid.query.processor.relational;
 
 import static org.teiid.query.analysis.AnalysisRecord.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.VDBMetaData;
@@ -85,6 +77,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
     private boolean shouldEvaluate = false;
 	private boolean multiSource;
 	private Object modelId;
+	private Set<Object> conformedTo;
 
     // Processing state
 	private ArrayList<TupleSource> tupleSources = new ArrayList<TupleSource>();
@@ -546,6 +539,7 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 		target.connectorBindingExpression = this.connectorBindingExpression;
 		target.multiSource = multiSource;
 		target.sourceNames = sourceNames;
+		target.conformedTo = this.conformedTo;
 		if (this.subPlans != null) {
 			target.subPlans = new HashMap<GroupSymbol, RelationalPlan>();
 			for (Map.Entry<GroupSymbol, RelationalPlan> entry : this.subPlans.entrySet()) {
@@ -716,6 +710,14 @@ public class AccessNode extends SubqueryAwareRelationalNode {
 	
 	public Map<GroupSymbol, RelationalPlan> getSubPlans() {
 		return subPlans;
+	}
+	
+	public Set<Object> getConformedTo() {
+		return conformedTo;
+	}
+	
+	public void setConformedTo(Set<Object> conformedTo) {
+		this.conformedTo = conformedTo;
 	}
 	
 }

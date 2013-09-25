@@ -723,6 +723,7 @@ public class PlanToProcessConverter {
 			String cbName = metadata.getFullName(modelID);
 			accessNode.setModelName(cbName);
 			accessNode.setModelId(modelID);
+			accessNode.setConformedTo((Set<Object>) node.getProperty(Info.CONFORMED_SOURCES));
 		} catch(QueryMetadataException e) {
              throw new QueryPlannerException(QueryPlugin.Event.TEIID30251, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30251));
 		}

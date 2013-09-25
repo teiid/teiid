@@ -47,17 +47,22 @@ import org.teiid.query.optimizer.relational.plantree.NodeConstants;
 import org.teiid.query.optimizer.relational.plantree.NodeConstants.Info;
 import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.relational.AccessNode;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.Criteria;
+import org.teiid.query.sql.lang.ExistsCriteria;
 import org.teiid.query.sql.lang.JoinType;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.lang.OrderByItem;
 import org.teiid.query.sql.lang.SetQuery.Operation;
 import org.teiid.query.sql.lang.SourceHint;
+import org.teiid.query.sql.lang.SubqueryContainer;
 import org.teiid.query.sql.symbol.AggregateSymbol;
 import org.teiid.query.sql.symbol.ElementSymbol;
 import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.sql.symbol.GroupSymbol;
+import org.teiid.query.sql.symbol.ScalarSubquery;
 import org.teiid.query.sql.symbol.WindowFunction;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.AggregateSymbolCollectorVisitor;
@@ -107,7 +112,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
             case NodeConstants.Types.JOIN:
             {
                 modelID = canRaiseOverJoin(modelID, parentNode, metadata, capFinder, afterJoinPlanning, record, context);
-                if(modelID != null) {
+                if(modelID != null && checkConformedSubqueries(accessNode, parentNode, true)) {
                     raiseAccessOverJoin(parentNode, accessNode, modelID, capFinder, metadata, true);                    
                     return rootNode;
                 }
@@ -517,6 +522,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
     }
     
     static PlanNode performRaise(PlanNode rootNode, PlanNode accessNode, PlanNode parentNode) {
+    	if (!checkConformedSubqueries(accessNode, parentNode, true)) {
+    		return rootNode;
+    	}
     	accessNode.removeProperty(NodeConstants.Info.EST_CARDINALITY);
     	combineSourceHints(accessNode, parentNode);
         NodeEditor.removeChildNode(parentNode, accessNode);
@@ -527,6 +535,43 @@ public final class RuleRaiseAccess implements OptimizerRule {
         }
         return accessNode;
     }
+
+	static boolean checkConformedSubqueries(PlanNode accessNode, PlanNode parentNode, boolean updateConformed) {
+		Set<Object> conformedSources = (Set<Object>)accessNode.getProperty(Info.CONFORMED_SOURCES);
+    	if (conformedSources == null) {
+    		return true;
+    	}
+    	conformedSources = new HashSet<Object>(conformedSources);
+		for (SubqueryContainer<?> container : parentNode.getSubqueryContainers()) {
+    		if (container instanceof ExistsCriteria && ((ExistsCriteria) container).shouldEvaluate()) {
+    			continue;
+    		}
+    		if (container instanceof ScalarSubquery && ((ScalarSubquery) container).shouldEvaluate()) {
+    			continue;
+    		}
+			ProcessorPlan plan = container.getCommand().getProcessorPlan();
+	    	if (plan == null) {
+	    		continue;
+	    	}
+	    	AccessNode aNode = CriteriaCapabilityValidatorVisitor.getAccessNode(plan);
+	    	if (aNode == null) {
+	    		continue;
+	    	}
+	    	Set<Object> conformedTo = aNode.getConformedTo();
+	    	if (conformedTo == null) {
+	    		conformedSources.retainAll(Collections.singletonList(aNode.getModelId()));
+	    	} else {
+	    		conformedSources.retainAll(conformedTo);
+	    	}
+	    	if (conformedSources.isEmpty()) {
+	    		return false;
+	    	}
+		}
+		if (updateConformed) {
+			accessNode.setProperty(Info.CONFORMED_SOURCES, conformedSources);
+		}
+		return true;
+	}
 
     /**
      * Determine whether an access node can be raised over the specified join node.
@@ -734,7 +779,7 @@ public final class RuleRaiseAccess implements OptimizerRule {
 				multiSource = childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE);
 				
 			} else if(!CapabilitiesUtil.isSameConnector(modelID, accessModelID, metadata, capFinder) 
-					&& !isConformed(metadata, capFinder, childNode, modelID, children.get(0), accessModelID)) { 
+					&& !isConformed(metadata, capFinder, (Set<Object>) childNode.getProperty(Info.CONFORMED_SOURCES), modelID, (Set<Object>) children.get(0).getProperty(Info.CONFORMED_SOURCES), accessModelID)) { 
 				return null;
 			} else if ((multiSource || childNode.hasBooleanProperty(Info.IS_MULTI_SOURCE)) && !context.getOptions().isImplicitMultiSourceJoin()) {
 				//only allow raise if partitioned
@@ -791,11 +836,9 @@ public final class RuleRaiseAccess implements OptimizerRule {
     }
 
 	static boolean isConformed(QueryMetadataInterface metadata,
-			CapabilitiesFinder capFinder, PlanNode childNode, Object id, PlanNode childNode1, Object id1)
+			CapabilitiesFinder capFinder, Set<Object> sources, Object id, Set<Object> sources1, Object id1)
 			throws QueryMetadataException, TeiidComponentException,
 			AssertionError {
-		Set<Object> sources = (Set<Object>) childNode.getProperty(Info.CONFORMED_SOURCES);
-		Set<Object> sources1 = (Set<Object>) childNode1.getProperty(Info.CONFORMED_SOURCES);
 		if (sources == null) {
 			if (sources1 == null) {
 				return false;

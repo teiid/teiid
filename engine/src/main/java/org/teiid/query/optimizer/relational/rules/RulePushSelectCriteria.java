@@ -447,6 +447,9 @@ public final class RulePushSelectCriteria implements OptimizerRule {
                     if (!RuleRaiseAccess.canRaiseOverSelect(currentNode, metadata, capFinder, critNode, null)) {
                         return currentNode;
                     }
+                    if (!RuleRaiseAccess.checkConformedSubqueries(currentNode, critNode, this.createdNodes == null)) {
+                    	return currentNode;
+                    }
                     if (this.createdNodes == null) {
                     	satisfyConditions(critNode, currentNode, metadata);
                     }

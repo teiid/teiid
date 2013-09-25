@@ -568,7 +568,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     			return null;
     		}
     		
-    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	aNode);  
+    		critNodeModelID = validateCommandPushdown(critNodeModelID, metadata, capFinder,	aNode, true);  
     	}
     	if (critNodeModelID == null) {
     		return null;
@@ -598,7 +598,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 
 	public static Object validateCommandPushdown(Object critNodeModelID,
 			QueryMetadataInterface metadata, CapabilitiesFinder capFinder,
-			AccessNode aNode) throws TeiidComponentException {
+			AccessNode aNode, boolean considerConformed) throws TeiidComponentException {
 		// Check that query in access node is for the same model as current node
 		try {                
 			if (!(aNode.getCommand() instanceof QueryCommand)) {
@@ -607,7 +607,8 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
 		    Object modelID = aNode.getModelId();
 		    if (critNodeModelID == null) {
 		    	critNodeModelID = modelID;
-		    } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder)) {
+		    } else if(!CapabilitiesUtil.isSameConnector(critNodeModelID, modelID, metadata, capFinder) 
+		    		&& (!considerConformed || !RuleRaiseAccess.isConformed(metadata, capFinder, aNode.getConformedTo(), modelID, null, critNodeModelID))) {
 		        return null;
 		    }
 		} catch(QueryMetadataException e) {

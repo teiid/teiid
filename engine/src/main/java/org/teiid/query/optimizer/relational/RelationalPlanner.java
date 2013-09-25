@@ -206,7 +206,7 @@ public class RelationalPlanner {
 	                if (aNode == null) {
 	                	continue;
 	                }
-                	Object modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode);
+                	Object modelID = CriteriaCapabilityValidatorVisitor.validateCommandPushdown(null, metadata, capFinder, aNode, false);
                 	QueryCommand withCommand = CriteriaCapabilityValidatorVisitor.getQueryCommand(aNode);
 	                if (modelID == null || withCommand == null) {
 	                	continue;
