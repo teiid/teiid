@@ -3959,9 +3959,13 @@ Expression windowSpecification(Expression agg, ParseInfo info) :
 }
 {
 	<OVER> { 
-	if (!(agg instanceof AggregateSymbol)) {
-	   		throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
-    	}
+	  if (!(agg instanceof AggregateSymbol)) {
+	    if (!(agg instanceof Function)) {
+	      throw new ParseException(QueryPlugin.Util.getString("SQLParser.invalid_window", agg)); //$NON-NLS-1$
+	    }
+	    Function f = (Function)agg;
+	    agg = new AggregateSymbol(f.getName(), false, f.getArgs(), null);
+	  }
     }
     <LPAREN> 
     [<PARTITION> <BY> partitionList = expressionList(info)]

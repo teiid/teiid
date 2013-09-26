@@ -49,6 +49,7 @@ import org.teiid.query.optimizer.TestAggregatePushdown;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.resolver.TestResolver;
@@ -573,7 +574,7 @@ public class TestAggregateProcessing {
 		assertEquals(DataTypeManager.DefaultDataClasses.LONG, c.getProjectedSymbols().get(0).getType());
 		
 		//must be in agg form
-		TestValidator.helpValidate("SELECT myagg(e2) from pm1.g1", new String[] {"myagg(e2)"}, metadata);
+		TestValidator.helpValidate("SELECT myagg(e2) from pm1.g1", new String[] {}, metadata);
 
 		//run validations over default AggregateAttributes
 		TestValidator.helpValidate("SELECT myagg(distinct e2) from pm1.g1", new String[] {"myagg(DISTINCT e2)"}, metadata);
@@ -589,7 +590,7 @@ public class TestAggregateProcessing {
 		aa.setAnalytic(true);
 
 		TestValidator.helpValidate("SELECT myagg(distinct e2) from pm1.g1", new String[] {"myagg(DISTINCT e2)"}, metadata);
-		TestValidator.helpValidate("SELECT myagg(ALL e2, e2) over () from pm1.g1", new String[] {}, metadata);
+		TestValidator.helpValidate("SELECT myagg(e2, e2) over () from pm1.g1", new String[] {}, metadata);
 		
 		aa.setAnalytic(false);
 
@@ -603,7 +604,7 @@ public class TestAggregateProcessing {
 		FakeDataManager dataManager = new FakeDataManager();
 		sampleData1(dataManager);
 		
-		ProcessorPlan plan = helpGetPlan("select myagg(all e2, e2 order by e1), myagg(all e2, e2) from pm1.g1 group by e3", metadata);
+		ProcessorPlan plan = helpGetPlan("select myagg(all e2, e2 order by e1), myagg(e2, e2) from pm1.g1 group by e3", metadata);
 		helpProcess(plan, dataManager, expected);
 	}
 
@@ -874,6 +875,27 @@ public class TestAggregateProcessing {
 		HardcodedDataManager hdm = new HardcodedDataManager();
 		hdm.addData("SELECT pm1.g1.e1, pm1.g1.e2, pm1.g1.e3, pm1.g1.e4 FROM pm1.g1", Arrays.asList("a", 1, Boolean.TRUE, 1.0), Arrays.asList("a", 1, Boolean.TRUE, 2.0), Arrays.asList("b", 2, Boolean.FALSE, 3.0), Arrays.asList("b", 2, Boolean.FALSE, 4.0));
 		helpProcess(plan, hdm, expected);
+	}
+	
+	@Test public void testAggregateNVL() throws Exception {
+        String sql = "select count(x.e2), nvl(x.e1, '') from pm1.g1 x makedep, pm2.g2 where x.e3 = pm2.g2.e3 group by nvl(x.e1, '')"; //$NON-NLS-1$
+
+        List[] expected = new List[] {
+        		Arrays.asList(1, "a"),
+		};
+
+		HardcodedDataManager dataManager = new HardcodedDataManager();
+		dataManager.addData("SELECT g_0.e3 AS c_0 FROM pm2.g2 AS g_0 ORDER BY c_0", new List[] {
+				Arrays.asList(1.0),
+		});
+		dataManager.addData("SELECT v_0.c_2, v_0.c_1, COUNT(v_0.c_0) FROM (SELECT g_0.e2 AS c_0, ifnull(g_0.e1, '') AS c_1, g_0.e3 AS c_2 FROM pm1.g1 AS g_0 WHERE g_0.e3 IN (<dependent values>)) AS v_0 GROUP BY v_0.c_2, v_0.c_1", new List[] {
+				Arrays.asList(1.0, "a", 1)
+		});
+		BasicSourceCapabilities capabilities = TestAggregatePushdown.getAggregateCapabilities();
+		capabilities.setFunctionSupport("ifnull", true);
+		CommandContext cc = createCommandContext();
+		ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(capabilities), cc);
+		helpProcess(plan, cc, dataManager, expected);
 	}
 	
 }

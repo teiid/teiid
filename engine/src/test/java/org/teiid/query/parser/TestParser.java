@@ -5211,7 +5211,7 @@ public class TestParser {
 		assertEquals("SELECT foo(ALL x, y ORDER BY e1)", actualCommand.toString());
     }
 
-    @Test(expected=QueryParserException.class) public void testWindowedExpression() throws QueryParserException {
+    @Test public void testWindowedExpression() throws QueryParserException {
 		QueryParser.getQueryParser().parseCommand("SELECT foo(x, y) over ()", new ParseInfo());
     }
     

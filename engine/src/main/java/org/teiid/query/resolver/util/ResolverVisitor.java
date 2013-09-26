@@ -70,6 +70,7 @@ public class ResolverVisitor extends LanguageVisitor {
     private boolean findShortName;
     private List<ElementSymbol> matches = new ArrayList<ElementSymbol>(2);
     private List<GroupSymbol> groupMatches = new ArrayList<GroupSymbol>(2);
+	private boolean hasUserDefinedAggregate;
     
     /**
      * Constructor for ResolveElementsVisitor.
@@ -293,6 +294,9 @@ public class ResolverVisitor extends LanguageVisitor {
     public void visit(Function obj) {
         try {
             resolveFunction(obj, this.metadata.getFunctionLibrary());
+            if (obj.isAggregate()) {
+            	hasUserDefinedAggregate = true;
+            }
         } catch(QueryResolverException e) {
         	if (QueryPlugin.Event.TEIID30069.name().equals(e.getCode()) || QueryPlugin.Event.TEIID30067.name().equals(e.getCode())) {
 	        	if (unresolvedFunctions == null) {
@@ -1104,6 +1108,10 @@ public class ResolverVisitor extends LanguageVisitor {
 	    ResolverVisitor elementsVisitor = new ResolverVisitor(metadata, groups, externalContext);
 	    PostOrderNavigator.doVisit(obj, elementsVisitor);
 	    elementsVisitor.throwException(true);
+	}
+	
+	public boolean hasUserDefinedAggregate() {
+		return hasUserDefinedAggregate;
 	}
     
 }

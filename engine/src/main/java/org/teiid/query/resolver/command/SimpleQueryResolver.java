@@ -45,16 +45,10 @@ import org.teiid.query.resolver.util.ResolverVisitor;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.*;
 import org.teiid.query.sql.navigator.PostOrderNavigator;
-import org.teiid.query.sql.symbol.AliasSymbol;
-import org.teiid.query.sql.symbol.ElementSymbol;
-import org.teiid.query.sql.symbol.Expression;
-import org.teiid.query.sql.symbol.ExpressionSymbol;
-import org.teiid.query.sql.symbol.GroupSymbol;
-import org.teiid.query.sql.symbol.MultipleElementSymbol;
-import org.teiid.query.sql.symbol.Reference;
-import org.teiid.query.sql.symbol.ScalarSubquery;
-import org.teiid.query.sql.symbol.Symbol;
+import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
+import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.visitor.ElementCollectorVisitor;
+import org.teiid.query.sql.visitor.ExpressionMappingVisitor;
 
 public class SimpleQueryResolver implements CommandResolver {
 
@@ -73,6 +67,21 @@ public class SimpleQueryResolver implements CommandResolver {
             qrv.visit(query);
             ResolverVisitor visitor = (ResolverVisitor)qrv.getVisitor();
 			visitor.throwException(true);
+			if (visitor.hasUserDefinedAggregate()) {
+				ExpressionMappingVisitor emv = new ExpressionMappingVisitor(null) {
+					public Expression replaceExpression(Expression element) {
+						if (element instanceof Function && !(element instanceof AggregateSymbol) && ((Function) element).isAggregate()) {
+							Function f = (Function)element;
+							AggregateSymbol as = new AggregateSymbol(f.getName(), false, f.getArgs(), null);
+							as.setType(f.getType());
+							as.setFunctionDescriptor(f.getFunctionDescriptor());
+							return as;
+						}
+						return element;
+					}
+				};
+				PreOrPostOrderNavigator.doVisit(query, emv, PreOrPostOrderNavigator.POST_ORDER);
+			}
         } catch (TeiidRuntimeException e) {
             if (e.getCause() instanceof QueryMetadataException) {
                 throw (QueryMetadataException)e.getCause();
