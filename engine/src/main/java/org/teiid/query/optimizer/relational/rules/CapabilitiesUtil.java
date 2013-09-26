@@ -200,6 +200,11 @@ public class CapabilitiesUtil {
         		return false;
         	}
         	break;
+        case USER_DEFINED:
+        	if (!supportsScalarFunction(modelID, aggregate, metadata, capFinder)) {
+        		return false;
+        	}
+        	break;
         default:
         	if (aggregate.isEnhancedNumeric()) { 
         		if (!caps.supportsCapability(Capability.QUERY_AGGREGATES_ENHANCED_NUMERIC)) {
