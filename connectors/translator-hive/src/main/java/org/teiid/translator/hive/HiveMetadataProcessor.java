@@ -88,8 +88,14 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 		else if (type.equalsIgnoreCase("timestamp")) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 		}
+		else if (type.equalsIgnoreCase("date")) { //$NON-NLS-1$
+			return TypeFacility.RUNTIME_NAMES.DATE;
+		}
 		else if (type.equalsIgnoreCase("BINARY")) { //$NON-NLS-1$
 			return TypeFacility.RUNTIME_NAMES.VARBINARY;
+		}
+		else if (type.equalsIgnoreCase("varchar")) { //$NON-NLS-1$
+			return TypeFacility.RUNTIME_NAMES.STRING;
 		}
 		return TypeFacility.RUNTIME_NAMES.STRING;
 	}
