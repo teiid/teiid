@@ -200,7 +200,7 @@ public class SocketServerConnectionFactory implements ServerConnectionFactory, S
 					try {
 						instance = getServerInstance(entry.getKey());
 						ILogon logon = instance.getService(ILogon.class);
-						if ("7.1.1".compareTo(instance.getServerVersion()) > 0) { //$NON-NLS-1$
+						if ("07.01.01".compareTo(instance.getServerVersion()) > 0) { //$NON-NLS-1$
 							for (SessionToken session : entries) {
 								try {
 									logon.assertIdentity(session);

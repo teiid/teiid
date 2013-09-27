@@ -63,12 +63,12 @@ public class DQPWorkContext implements Serializable {
 	private static final boolean longDatesTimes = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.longDatesTimes", false); //$NON-NLS-1$
 	
 	public enum Version {
-		SEVEN_1("7.1", (byte)0), //$NON-NLS-1$
-		SEVEN_3("7.3", (byte)0), //$NON-NLS-1$
-		SEVEN_4("7.4", (byte)0), //$NON-NLS-1$
-		EIGHT_0("8.0", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
-		EIGHT_2("8.2", (byte)2), //$NON-NLS-1$
-		EIGHT_4("8.4.0.CR3", (byte)2); //$NON-NLS-1$
+		SEVEN_1("07.01", (byte)0), //$NON-NLS-1$
+		SEVEN_3("07.03", (byte)0), //$NON-NLS-1$
+		SEVEN_4("07.04", (byte)0), //$NON-NLS-1$
+		EIGHT_0("08.00", (byte)(longDatesTimes?0:1)), //$NON-NLS-1$
+		EIGHT_2("08.02", (byte)2), //$NON-NLS-1$
+		EIGHT_4("08.04.00.CR3", (byte)2); //$NON-NLS-1$
 		
 		private String string;
 		private byte clientSerializationVersion;

@@ -27,8 +27,10 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.List;
 
 import org.teiid.core.util.ApplicationInfo;
+import org.teiid.core.util.StringUtil;
 
 
 /**
@@ -42,10 +44,34 @@ public class Handshake implements Externalizable {
     private byte[] publicKey;
     private AuthenticationType authType = AuthenticationType.CLEARTEXT;
     
+    public Handshake() {
+    	
+    }
+    
+    Handshake(String version) {
+    	this.version = version;
+    }
+    
     /** 
      * @return Returns the version.
      */
     public String getVersion() {
+    	if (this.version != null) {
+    		//normalize to allow for more increments
+    		StringBuilder builder = new StringBuilder();
+    		List<String> parts = StringUtil.split(this.version, "."); //$NON-NLS-1$
+    		for (int i = 0; i < parts.size(); i++) { 
+    			if (i > 0) {
+        			builder.append('.');
+    			}
+    			String part = parts.get(i);
+    			if (part.length() < 2 && Character.isDigit(part.charAt(0))) {
+    				builder.append('0');
+    			}
+    			builder.append(part);
+    		}
+    		return builder.toString();
+    	}
         return this.version;
     }
     

@@ -163,7 +163,7 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
             }
             
             try {
-				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "8.3".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader()); //$NON-NLS-1$
+				this.cryptor = keyGen.getSymmetricCryptor(returnedPublicKey, "08.03".compareTo(clientVersion) > 0, SocketClientInstance.class.getClassLoader()); //$NON-NLS-1$
 			} catch (CryptoException e) {
 				 throw new CommunicationException(RuntimePlugin.Event.TEIID40053, e);
 			}

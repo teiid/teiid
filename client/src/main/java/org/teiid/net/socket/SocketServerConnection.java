@@ -177,7 +177,7 @@ public class SocketServerConnection implements ServerConnection {
 		}
 		
 		if (logoff) {
-			if ("7.3".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
+			if ("07.03".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
 				//just remove the current instance - the server has already logged off the current user
 				LogonResult old = this.logonResults.remove(this.serverInstance.getHostInfo());
 				this.connectionFactory.disconnected(this.serverInstance, old.getSessionToken());
@@ -335,7 +335,7 @@ public class SocketServerConnection implements ServerConnection {
 	}
 	
 	public void cleanUp() {
-		if (this.serverInstance != null && this.logonResult != null && "8.2".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
+		if (this.serverInstance != null && this.logonResult != null && "08.02".compareTo(this.serverInstance.getServerVersion()) <= 0) { //$NON-NLS-1$
 			ILogon newLogon = this.serverInstance.getService(ILogon.class);
 			try {
 				newLogon.assertIdentity(null);
