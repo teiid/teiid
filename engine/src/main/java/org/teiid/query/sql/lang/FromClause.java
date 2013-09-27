@@ -99,7 +99,9 @@ public abstract class FromClause implements LanguageObject {
 
     public void setMakeDep(boolean makeDep) {
     	if (makeDep) {
-    		this.makeDep = new MakeDep();
+    		if (this.makeDep == null) {
+    			this.makeDep = new MakeDep();
+    		}
     	} else {
     		this.makeDep = null;
     	}
@@ -126,7 +128,7 @@ public abstract class FromClause implements LanguageObject {
 	}
     
     public boolean hasHint() {
-        return optional || makeDep != null || makeNotDep || makeInd || noUnnest || preserve;
+        return optional || (makeDep != null && makeDep.isSimple()) || makeNotDep || makeInd || noUnnest || preserve;
     }
     
     public boolean equals(Object obj) {

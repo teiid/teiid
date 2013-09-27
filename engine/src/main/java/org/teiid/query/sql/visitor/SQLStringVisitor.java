@@ -474,6 +474,8 @@ public class SQLStringVisitor extends LanguageVisitor {
         if (obj.hasHint()) {
             append(")"); //$NON-NLS-1$
         }
+        
+        addMakeDep(obj);
     }
 
     private void addHintComment( FromClause obj ) {
@@ -484,10 +486,8 @@ public class SQLStringVisitor extends LanguageVisitor {
                 append(Option.OPTIONAL);
                 append(SPACE);
             }
-            if (obj.isMakeDep()) {
+            if (obj.getMakeDep() != null && obj.getMakeDep().isSimple()) {
                 append(Option.MAKEDEP);
-                MakeDep makedep = obj.getMakeDep();
-                appendMakeDepOptions(makedep);
                 append(SPACE);
             }
             if (obj.isMakeNotDep()) {
@@ -1144,6 +1144,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(")");//$NON-NLS-1$
         append(" AS ");//$NON-NLS-1$
         append(escapeSinglePart(obj.getOutputName()));
+        addMakeDep(obj);
     }
 
     public void visit( SubquerySetCriteria obj ) {
@@ -1166,6 +1167,7 @@ public class SQLStringVisitor extends LanguageVisitor {
     public void visit( UnaryFromClause obj ) {
         addHintComment(obj);
         visitNode(obj.getGroup());
+        addMakeDep(obj);
     }
 
     public void visit( Update obj ) {
@@ -1209,6 +1211,7 @@ public class SQLStringVisitor extends LanguageVisitor {
             append(DISTINCT);
             append(" "); //$NON-NLS-1$
         } else if (obj.getAggregateFunction() == Type.USER_DEFINED) {
+        	//TODO: left in to help the parser, but can be removed
         	append(ALL);
         	append(" "); //$NON-NLS-1$
         }
@@ -1960,6 +1963,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(AS);
         append(SPACE);
         outputDisplayName(obj.getName());
+        addMakeDep(obj);
     }
 
     @Override
@@ -2015,6 +2019,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(AS);
         append(SPACE);
         outputDisplayName(obj.getName());
+        addMakeDep(obj);
     }
 
     @Override
@@ -2059,6 +2064,7 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(AS);
         append(SPACE);
         outputDisplayName(obj.getName());
+        addMakeDep(obj);
     }
     
     @Override
@@ -2218,9 +2224,19 @@ public class SQLStringVisitor extends LanguageVisitor {
         append(AS);
         append(SPACE);
         outputDisplayName(obj.getName());
+        addMakeDep(obj);
     }
     
-    @Override
+    private void addMakeDep(FromClause obj) {
+		MakeDep makeDep = obj.getMakeDep();
+		if (makeDep != null && !makeDep.isSimple()) {
+			append(SPACE);
+			append(MAKEDEP);
+			appendMakeDepOptions(makeDep);
+		}
+	}
+
+	@Override
     public void visit(AlterProcedure alterProcedure) {
     	append(ALTER);
     	append(SPACE);

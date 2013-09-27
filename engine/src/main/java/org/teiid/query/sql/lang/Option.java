@@ -93,6 +93,10 @@ public class Option implements LanguageObject {
 		public void setJoin(boolean join) {
 			this.join = join;
 		}
+		
+		public boolean isSimple() {
+			return max == null && !join;
+		}
     }
     
     private List<String> makeDependentGroups;
