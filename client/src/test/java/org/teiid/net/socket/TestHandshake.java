@@ -39,4 +39,9 @@ public class TestHandshake {
 		assertEquals(AuthenticationType.CLEARTEXT, hs.getAuthType());
 	}
 	
+	@Test public void testVersionNormalization() throws Exception {
+		Handshake hs = new Handshake("11.2.3.a");
+		assertEquals("11.02.03.a", hs.getVersion());
+	}
+	
 }
