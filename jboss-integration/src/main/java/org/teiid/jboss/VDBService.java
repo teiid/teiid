@@ -337,8 +337,8 @@ class VDBService extends AbstractVDBDeployer implements Service<RuntimeVDB> {
 				String delegateName = delegator.getDelegateName();
 				if (delegateName != null) {
 					ExecutionFactory<Object, Object> delegate = getExecutionFactory(delegateName, vdbRepo, repo, deployment, map, building);
-					if (translator == null) {
-						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), name));
+					if (delegate == null) {
+						throw new ConnectorManagerException(QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31146, deployment.getName(), deployment.getVersion(), delegateName));
 					}
 					((DelegatingExecutionFactory<Object, Object>) ef).setDelegate(delegate);
 				}
