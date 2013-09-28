@@ -41,6 +41,7 @@ import org.odata4j.format.Settings;
 import org.teiid.language.Call;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Schema;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ProcedureExecution;
@@ -56,11 +57,15 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	private Object returnValue;
 	private ODataEntitiesResponse response;
 
-	public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection, EdmDataServices edsMetadata) throws TranslatorException {
-		super(translator, executionContext, metadata, connection, edsMetadata);
+	public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
+		super(translator, executionContext, metadata, connection);
 
 		this.visitor = new ODataProcedureVisitor(translator, metadata);
 		this.visitor.visitNode(command);
+		
+		if (!this.visitor.exceptions.isEmpty()) {
+			throw this.visitor.exceptions.get(0);
+		}
 
 		if (this.visitor.hasCollectionReturn()) {
 			List<Column> columns = command.getMetadataObject().getResultSet().getColumns();
@@ -90,14 +95,16 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	@Override
 	public void execute() throws TranslatorException {
 		String URI = this.visitor.buildURL();
+		Schema schema = visitor.getProcedure().getParent();
+		EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
 		if (this.visitor.hasCollectionReturn()) {
-			// entity type return
-			if (this.edsMetadata.findEdmEntitySet(this.visitor.getEntityName()) != null) {
-				this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(), null, Status.OK, Status.NO_CONTENT);
+			if (this.visitor.isReturnComplexType()) {
+				// complex return
+				this.response = executeWithComplexReturn(this.visitor.getMethod(), URI, null, this.visitor.getReturnEntityTypeName(), edm, null, Status.OK, Status.NO_CONTENT);
 			}
 			else {
-				// complex return
-				this.response = executeWithComplexReturn(this.visitor.getMethod(), URI, null, this.visitor.getEntityName(), null, Status.OK, Status.NO_CONTENT);
+				// entity type return
+				this.response = executeWithReturnEntity(this.visitor.getMethod(), URI, null, this.visitor.getTable().getName(), edm, null, Status.OK, Status.NO_CONTENT);
 			}
 			if (this.response != null && this.response.hasError()) {
 				throw this.response.getError();
@@ -116,7 +123,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 				// if the procedure is not void
 				if (this.visitor.getReturnType() != null) {
 					FormatParser<? extends OObject> parser = FormatParserFactory.getParser(OSimpleObject.class,
-							FormatType.ATOM, new Settings(version, this.edsMetadata, this.visitor.getProcedureName(),
+							FormatType.ATOM, new Settings(version, edm, this.visitor.getProcedure().getName(),
 					            null, // entitykey
 					            true, // isResponse
 					            ODataTypeManager.odataType(this.visitor.getReturnType())));

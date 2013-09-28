@@ -37,12 +37,10 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
 public class ODataMetadataProcessor {
-	//public static final String PARENT_TABLE = "ParentTable"; //$NON-NLS-1$
-	public static final String LINK_TABLES = "LinkTables"; //$NON-NLS-1$
-	public static final String HTTP_METHOD = "HttpMethod"; //$NON-NLS-1$
-	public static final String JOIN_COLUMN = "JoinColumn"; //$NON-NLS-1$
-	public static final String ENTITY_TYPE = "EntityType"; //$NON-NLS-1$
-	public static final String ENTITY_ALIAS = "EntityAlias"; //$NON-NLS-1$
+	public static final String LINK_TABLES = MetadataFactory.ODATA_URI+"LinkTables"; //$NON-NLS-1$
+	public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
+	public static final String JOIN_COLUMN = MetadataFactory.ODATA_URI+"JoinColumn"; //$NON-NLS-1$
+	public static final String ENTITY_TYPE = MetadataFactory.ODATA_URI+"EntityType"; //$NON-NLS-1$
 
 	private String entityContainer;
 	private String schemaNamespace;
@@ -135,7 +133,6 @@ public class ODataMetadataProcessor {
 				// if the table not found; then navigation name may be an alias name
 				// find by the entity type
 				toTable = getEntityTable(mf, toEntity);
-				toTable.setProperty(ENTITY_ALIAS, nav.getName());
 			}
 
 			if (isMultiplicityMany(fromEnd) && isMultiplicityMany(toEnd)) {
@@ -353,10 +350,8 @@ public class ODataMetadataProcessor {
 	}
 
 	private void addProcedureTableReturn(MetadataFactory mf, Procedure procedure, EdmType type, String enitySetName) throws TranslatorException {
-		// if the procedure is returns and entity or collection of entities, instead of complex type
-		// this needs to set to correct entity.
 		if (enitySetName != null) {
-			procedure.setProperty(ENTITY_TYPE, enitySetName);
+			// when this is true, the proc returns collection; in teiid we do not have to any different
 		}
 		if (type.isSimple()) {
 			mf.addProcedureResultSetColumn("return", ODataTypeManager.teiidType(((EdmSimpleType)type).getFullyQualifiedTypeName()), procedure); //$NON-NLS-1$

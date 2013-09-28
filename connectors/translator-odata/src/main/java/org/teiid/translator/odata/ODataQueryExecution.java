@@ -36,6 +36,7 @@ import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.QueryExpression;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Schema;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -54,8 +55,8 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 	
 	public ODataQueryExecution(ODataExecutionFactory translator,
 			QueryExpression command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, WSConnection connection, EdmDataServices edsMetadata) throws TranslatorException {
-		super(translator, executionContext, metadata, connection, edsMetadata);
+			RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
+		super(translator, executionContext, metadata, connection);
 		
 		this.visitor = new ODataSQLVisitor(this.translator, metadata);
     	this.visitor.visitNode(command);
@@ -105,7 +106,9 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			}			
 		}
 		else {
-			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), null, Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
+			Schema schema = visitor.getEnityTable().getParent();
+			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
+			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), edm, null, Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
 			if (this.response != null && this.response.hasError()) {
 				this.executionContext.addWarning(this.response.getError());
 			}

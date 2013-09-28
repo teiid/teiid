@@ -61,6 +61,7 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 
 @SuppressWarnings("nls")
 public class TestODataIntegration extends BaseResourceTest {

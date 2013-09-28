@@ -21,7 +21,8 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -209,10 +210,8 @@ public class TestODataSQLVistor {
     
     private void helpUpdateExecute(String query, String expected, String expectedMethod, boolean checkPayload) throws Exception {
     	Command cmd = this.utility.parseCommand(query);
-		String csdl = ObjectConverterUtil.convertFileToString(UnitTestUtil.getTestDataFile("northwind.xml"));
-		EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(new ByteArrayInputStream(csdl.getBytes()))));
     	
-		ODataUpdateVisitor visitor = new ODataUpdateVisitor(translator, utility.createRuntimeMetadata(), eds);
+		ODataUpdateVisitor visitor = new ODataUpdateVisitor(translator, utility.createRuntimeMetadata());
     	visitor.visitNode(cmd); 
     	
 		if (!visitor.exceptions.isEmpty()) {

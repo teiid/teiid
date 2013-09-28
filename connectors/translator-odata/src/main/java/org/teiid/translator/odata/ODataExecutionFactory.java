@@ -73,7 +73,6 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
 	static final String INVOKE_HTTP = "invokeHttp"; //$NON-NLS-1$
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
-	private EdmDataServices eds;
 	private String databaseTimeZone;
 	private TimeZone timeZone = DEFAULT_TIME_ZONE;
 
@@ -112,7 +111,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, WSConnection conn) throws TranslatorException {
-		BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn, null);
+		BaseQueryExecution execution = new BaseQueryExecution(this, null, null, conn);
 		BinaryWSProcedureExecution call = execution.executeDirect("GET", "$metadata", null, execution.getDefaultHeaders()); //$NON-NLS-1$ //$NON-NLS-2$
 		if (call.getResponseCode() != Status.OK.getStatusCode()) {
 			throw execution.buildError(call);
@@ -121,10 +120,10 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		Blob out = (Blob)call.getOutputParameterValues().get(0);
 
 		try {
-			this.eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
+			EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
 			ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
-			metadataProcessor.getMetadata(metadataFactory, this.eds);
+			metadataProcessor.getMetadata(metadataFactory, eds);
 		} catch (SQLException e) {
 			throw new TranslatorException(e, e.getMessage());
 		}
@@ -133,7 +132,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		return new ODataQueryExecution(this, command, executionContext, metadata, connection, this.eds);
+		return new ODataQueryExecution(this, command, executionContext, metadata, connection);
 	}
 
 	@Override
@@ -142,12 +141,12 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		if (nativeQuery != null) {
 			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17014));
 		}
-		return new ODataProcedureExecution(command, this, executionContext, metadata, connection, this.eds);
+		return new ODataProcedureExecution(command, this, executionContext, metadata, connection);
 	}
 
 	@Override
 	public UpdateExecution createUpdateExecution(Command command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
-		return new ODataUpdateExecution(command, this, executionContext, metadata, connection, this.eds);
+		return new ODataUpdateExecution(command, this, executionContext, metadata, connection);
 	}
 
 	@Override
