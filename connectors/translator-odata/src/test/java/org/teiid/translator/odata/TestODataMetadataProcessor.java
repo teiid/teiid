@@ -21,7 +21,9 @@
  */
 package org.teiid.translator.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -30,15 +32,26 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.odata4j.edm.*;
+import org.odata4j.edm.EdmAssociation;
+import org.odata4j.edm.EdmAssociationEnd;
+import org.odata4j.edm.EdmComplexType;
+import org.odata4j.edm.EdmEntityType;
+import org.odata4j.edm.EdmMultiplicity;
+import org.odata4j.edm.EdmNavigationProperty;
+import org.odata4j.edm.EdmProperty;
+import org.odata4j.edm.EdmReferentialConstraint;
+import org.odata4j.edm.EdmSimpleType;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
-import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.*;
+import org.teiid.metadata.Column;
+import org.teiid.metadata.ForeignKey;
+import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.KeyRecord.Type;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.metadata.Table;
 import org.teiid.query.function.FunctionTree;
 import org.teiid.query.function.UDFSource;
 import org.teiid.query.metadata.DDLStringVisitor;
@@ -49,10 +62,9 @@ import org.teiid.query.parser.QueryParser;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.validator.ValidatorReport;
 
-@SuppressWarnings("nls")
+@SuppressWarnings({"nls", "unused"})
 public class TestODataMetadataProcessor {
 	private ODataExecutionFactory translator;
-	private TranslationUtility utility;
 
 	@Test
 	public void testSchema() throws Exception {
@@ -162,7 +174,7 @@ public class TestODataMetadataProcessor {
 		assertNotNull(personTable.getColumnByName("address_street"));
 		assertNotNull(businessTable.getColumnByName("address_street"));
 	}
-	
+		
 	@Test
 	public void testOneToOneAssosiation() throws Exception {
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
