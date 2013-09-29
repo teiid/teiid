@@ -243,7 +243,6 @@ public class TestDataEntitySchemaBuilder {
 		metadataProcessor.getMetadata(mf, edm);
 		
 		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
-		System.out.println(ddl);
 		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
     	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
     	if (report.hasItems()) {

@@ -61,6 +61,7 @@ import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -263,16 +264,22 @@ public class BaseQueryExecution {
 			return this.exception;
 		}
 
-		public List<?> getNextRow(String[] columnNames, String[] embeddedColumnName, Class<?>[] expectedType) throws TranslatorException {
+		public List<?> getNextRow(Column[] columns, Class<?>[] expectedType) throws TranslatorException {
 			if (this.rowIter != null && this.rowIter.hasNext()) {
 				OEntity entity = this.rowIter.next().getEntity();
 				ArrayList results = new ArrayList();
-				for (int i = 0; i < columnNames.length; i++) {
-					Object value = entity.getProperty(columnNames[i]).getValue();
-					if (embeddedColumnName[i] != null) {
+				for (int i = 0; i < columns.length; i++) {
+					boolean isComplex = true;
+					String colName = columns[i].getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
+					if (colName == null) {
+						colName = columns[i].getName();
+						isComplex = false;
+					}
+					Object value = entity.getProperty(colName).getValue();
+					if (isComplex) {
 						List<OProperty<?>> embeddedProperties = (List<OProperty<?>>)value;
 						for (OProperty prop:embeddedProperties) {
-							if (prop.getName().equals(embeddedColumnName[i])) {
+							if (prop.getName().equals(columns[i].getNameInSource())) {
 								value = prop.getValue();
 								break;
 							}
@@ -290,8 +297,8 @@ public class BaseQueryExecution {
 					values.put(prop.getName(), prop.getValue());
 				}
 				ArrayList results = new ArrayList();
-				for (int i = 0; i < columnNames.length; i++) {
-					results.add(BaseQueryExecution.this.translator.retrieveValue(values.get(columnNames[i]), expectedType[i]));
+				for (int i = 0; i < columns.length; i++) {
+					results.add(BaseQueryExecution.this.translator.retrieveValue(values.get(columns[i].getName()), expectedType[i]));
 				}
 				this.complexValues = null;
 				return results;

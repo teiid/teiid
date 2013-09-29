@@ -141,7 +141,7 @@ public class TestODataQueryExecution {
 	@Test
 	public void testSimpleSelectEmbedded() throws Exception {
 		String query = "SELECT * FROM Customers";
-		String expectedURL = "Customers?$select=Picture,Description,CategoryName,CategoryID";
+		String expectedURL = "Customers?$select=Mailing,ContactName,CustomerID,Shipping,CompanyName,ContactTitle";
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
