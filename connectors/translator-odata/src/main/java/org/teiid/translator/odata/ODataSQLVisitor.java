@@ -393,12 +393,9 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 		String columnName = column.getName();
 		// Check if this is a embedded column, if it is then only
 		// add the parent type
-		String entityType = column.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-		if (entityType != null) {
-			String parentEntityType = column.getParent().getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-			if (!entityType.equals(parentEntityType)) {
-				columnName = entityType;
-			}
+		String columnGroup = column.getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
+		if (columnGroup != null) {
+			columnName = columnGroup;
 		}
 		return columnName;
 	}

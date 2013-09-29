@@ -29,6 +29,7 @@ import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
@@ -49,6 +50,7 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 	private Class<?> returnTypeClass;
 	private boolean isComplexReturnType;
 	private Table entity;
+	private List<Column> returnColumns;
 
 	public ODataProcedureVisitor(ODataExecutionFactory executionFactory,
 			RuntimeMetadata metadata) {
@@ -86,6 +88,7 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
         	this.returnEntityTypeName = proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
         	this.entity = getTableWithEntityType(proc.getParent(), returnEntityTypeName);
        		this.isComplexReturnType = ( this.entity == null);
+       		this.returnColumns = proc.getResultSet().getColumns();
         }
         else {
         	for (ProcedureParameter param:proc.getParameters()) {
@@ -126,6 +129,10 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 		return this.returnsTable;
 	}
 	
+	public Column[] getReturnColumns() {
+		return this.returnColumns.toArray(new Column[this.returnColumns.size()]);
+	}
+
 	public boolean isReturnComplexType() {
 		return this.isComplexReturnType;
 	}	

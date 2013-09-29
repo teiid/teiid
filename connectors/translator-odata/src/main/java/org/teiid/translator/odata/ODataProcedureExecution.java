@@ -39,7 +39,6 @@ import org.odata4j.format.FormatParserFactory;
 import org.odata4j.format.FormatType;
 import org.odata4j.format.Settings;
 import org.teiid.language.Call;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.metadata.Schema;
 import org.teiid.translator.DataNotAvailableException;
@@ -51,11 +50,9 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 
 public class ODataProcedureExecution extends BaseQueryExecution implements ProcedureExecution {
 	private ODataProcedureVisitor visitor;
-	private Class<?>[] expectedColumnTypes;
-	private String[] columnNames;
-	private String[] embeddedColumnNames;
 	private Object returnValue;
 	private ODataEntitiesResponse response;
+	private Class<?>[] expectedColumnTypes;
 
 	public ODataProcedureExecution(Call command, ODataExecutionFactory translator,  ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
 		super(translator, executionContext, metadata, connection);
@@ -66,30 +63,8 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 		if (!this.visitor.exceptions.isEmpty()) {
 			throw this.visitor.exceptions.get(0);
 		}
-
-		if (this.visitor.hasCollectionReturn()) {
-			List<Column> columns = command.getMetadataObject().getResultSet().getColumns();
-			int colCount = columns.size();
-			this.expectedColumnTypes = new Class[colCount];
-			this.columnNames = new String[colCount];
-			this.embeddedColumnNames = new String[colCount];
-
-			for (int i = 0; i < colCount; i++) {
-				Column column = columns.get(i);
-	    		this.columnNames[i] = column.getName();
-	    		this.embeddedColumnNames[i] = null;
-	    		this.expectedColumnTypes[i] = column.getJavaType();
-	    		String entityType = column.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-	    		if (entityType != null) {
-	    			String parentEntityType = column.getParent().getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-	    			if (!parentEntityType.equals(entityType)) {
-	    				// this is embedded column
-	    				this.columnNames[i] = entityType;
-	    				this.embeddedColumnNames[i] = column.getNameInSource();
-	    			}
-	    		}
-			}
-		}
+		
+		this.expectedColumnTypes = command.getResultSetColumnTypes();
 	}
 
 	@Override
@@ -141,7 +116,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
 		// Feed based response
 		if (this.visitor.hasCollectionReturn() && this.response != null ) {
-			return this.response.getNextRow(this.columnNames, this.embeddedColumnNames, this.expectedColumnTypes);
+			return this.response.getNextRow(this.visitor.getReturnColumns(), this.expectedColumnTypes);
 		}
 		return null;
 	}

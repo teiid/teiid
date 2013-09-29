@@ -485,8 +485,8 @@
     </Schema>
     <Schema Namespace="ODataWeb.Northwind.Model" xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
       <EntityContainer Name="NorthwindEntities" p7:LazyLoadingEnabled="true" m:IsDefaultEntityContainer="true" xmlns:p7="http://schemas.microsoft.com/ado/2009/02/edm/annotation">
-        <FunctionImport Name="TopCustomers" EntitySet="Customers" ReturnType="NorthwindModel.Customer" m:HttpMethod="GET">
-        <Parameter Name="city" Type="Edm.String" Mode="In" />
+        <FunctionImport Name="TopCustomers" EntitySet="Customers" ReturnType="Collection(NorthwindModel.Customer)" m:HttpMethod="GET">
+          <Parameter Name="city" Type="Edm.String" Mode="In" />
         </FunctionImport>
         <EntitySet Name="Categories" EntityType="NorthwindModel.Category" />
         <EntitySet Name="CustomerDemographics" EntityType="NorthwindModel.CustomerDemographic" />
