@@ -91,7 +91,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
 			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), edm, null, Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
 			if (this.response != null && this.response.hasError()) {
-				this.executionContext.addWarning(this.response.getError());
+				throw this.response.getError();
 			}
 		}
 	}

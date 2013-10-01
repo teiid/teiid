@@ -395,4 +395,21 @@ public class TestODataMetadataProcessor {
 		return EdmComplexType.newBuilder().setName("Address")
 				.setNamespace("namespace").addProperties(addressProperties);
 	}	
+	
+	@Test
+	public void testKeyMaytches() {
+		Column c1 = new Column();
+		c1.setName("one");
+
+		Column c2 = new Column();
+		c2.setName("two");
+		
+		KeyRecord record = new KeyRecord(Type.Primary);		
+		record.addColumn(c1);
+		record.addColumn(c2);
+		
+		ODataMetadataProcessor p = new ODataMetadataProcessor();
+		assertTrue(p.keyMatches(Arrays.asList("one", "one"), record));
+		assertTrue(p.keyMatches(Arrays.asList("two", "one"), record));
+	}
 }
