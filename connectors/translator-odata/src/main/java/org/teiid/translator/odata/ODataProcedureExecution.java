@@ -29,7 +29,6 @@ import java.util.List;
 
 import javax.ws.rs.core.Response.Status;
 
-import org.odata4j.core.ODataConstants;
 import org.odata4j.core.ODataVersion;
 import org.odata4j.core.OObject;
 import org.odata4j.core.OSimpleObject;
@@ -93,7 +92,7 @@ public class ODataProcedureExecution extends BaseQueryExecution implements Proce
 				}
 
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-				ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
+				ODataVersion version = getODataVersion(execution);
 
 				// if the procedure is not void
 				if (this.visitor.getReturnType() != null) {

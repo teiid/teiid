@@ -23,6 +23,7 @@ package org.teiid.translator.odata;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -131,6 +132,7 @@ public class TestODataQueryExecution {
 		assertArrayEquals(new Object[] {1, "Beverages", "Soft drinks, coffees, teas, beers, and ales"}, excution.next().toArray(new Object[3]));
 		assertArrayEquals(new Object[] {2, "Condiments", "Sweet and savory sauces, relishes, spreads, and seasonings"}, excution.next().toArray(new Object[3]));
 		assertArrayEquals(new Object[] {3, "Confections", "Desserts, candies, and sweet breads"}, excution.next().toArray(new Object[3]));
+		reader.close();
 	}
 	
 	@Test
@@ -140,6 +142,7 @@ public class TestODataQueryExecution {
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+		reader.close();
 	}	
 
 	@Test
@@ -149,6 +152,7 @@ public class TestODataQueryExecution {
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+		reader.close();
 	}	
 	
 	@Test
@@ -158,6 +162,7 @@ public class TestODataQueryExecution {
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+		reader.close();
 	}	
 
 	@Test
@@ -167,6 +172,7 @@ public class TestODataQueryExecution {
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
+		reader.close();
 	}
 	
 	@Test(expected=TranslatorException.class)
@@ -182,4 +188,21 @@ public class TestODataQueryExecution {
 		ResultSetExecution excution = helpExecute(query, error, expectedURL, 400);
 		excution.next();
 	}		
+	
+	@Test
+	public void testNoResults() throws Exception {
+		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
+		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=Picture,Description,CategoryName,CategoryID";
+		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 404);
+		excution.execute();
+		assertNull(excution.next());
+		reader.close();
+		
+		reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
+		excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL, 204);
+		excution.execute();
+		assertNull(excution.next());
+		reader.close();
+	}	
 }
