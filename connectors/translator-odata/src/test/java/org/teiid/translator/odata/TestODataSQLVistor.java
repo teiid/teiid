@@ -110,17 +110,17 @@ public class TestODataSQLVistor {
     
     @Test
     public void testAddFilter() throws Exception {
-    	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and (Quantity+2) > OrderID", "Order_Details?$filter=OrderID eq 1 AND (cast(Quantity,'integer') add 2) gt OrderID&$select=UnitPrice");
+    	helpExecute("select UnitPrice from Order_Details where OrderID = 1 and (Quantity+2) > OrderID", "Order_Details?$filter=OrderID eq 1 and (cast(Quantity,'integer') add 2) gt OrderID&$select=UnitPrice");
     } 
     
     @Test
     public void testMultiKeyKeyBasedFilterOr() throws Exception {
-    	helpExecute("select UnitPrice from Order_Details where (OrderID = 1 and ProductID = 12) or Quantity = 2", "Order_Details?$filter=(OrderID eq 1 AND ProductID eq 12) OR Quantity eq 2&$select=UnitPrice");
+    	helpExecute("select UnitPrice from Order_Details where (OrderID = 1 and ProductID = 12) or Quantity = 2", "Order_Details?$filter=(OrderID eq 1 and ProductID eq 12) or Quantity eq 2&$select=UnitPrice");
     }   
     
     @Test
     public void testPartialPK() throws Exception {
-    	helpExecute("select UnitPrice from Order_Details where Quantity >= 2 and ProductID = 12", "Order_Details?$filter=Quantity ge 2 AND ProductID eq 12&$select=UnitPrice");
+    	helpExecute("select UnitPrice from Order_Details where Quantity >= 2 and ProductID = 12", "Order_Details?$filter=Quantity ge 2 and ProductID eq 12&$select=UnitPrice");
     }    
     
     @Test
@@ -170,22 +170,22 @@ public class TestODataSQLVistor {
     
     @Test
     public void testOrderByDESC() throws Exception {
-    	helpExecute("SELECT LastName FROM Employees Order By LastName DESC", "Employees?$orderby=LastName DESC&$select=LastName");
+    	helpExecute("SELECT LastName FROM Employees Order By LastName DESC", "Employees?$orderby=LastName desc&$select=LastName");
     }    
     
     @Test
     public void testOrderByMultiple() throws Exception {
-    	helpExecute("SELECT LastName FROM Employees Order By LastName DESC, EmployeeId", "Employees?$orderby=LastName DESC,EmployeeID&$select=LastName");
+    	helpExecute("SELECT LastName FROM Employees Order By LastName DESC, EmployeeId", "Employees?$orderby=LastName desc,EmployeeID&$select=LastName");
     }     
     
     @Test
     public void testisNotNull() throws Exception {
-    	helpExecute("SELECT LastName FROM Employees WHERE LastName is NOT NULL", "Employees?$filter=NOT(LastName eq NULL)&$select=LastName");
+    	helpExecute("SELECT LastName FROM Employees WHERE LastName is NOT NULL", "Employees?$filter=not(LastName eq null)&$select=LastName");
     }    
     
     @Test
     public void testisNull() throws Exception {
-    	helpExecute("SELECT LastName FROM Employees WHERE LastName is NULL", "Employees?$filter=LastName eq NULL&$select=LastName");
+    	helpExecute("SELECT LastName FROM Employees WHERE LastName is NULL", "Employees?$filter=LastName eq null&$select=LastName");
     }     
     
     @Test

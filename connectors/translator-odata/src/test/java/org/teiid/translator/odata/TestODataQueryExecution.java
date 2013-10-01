@@ -53,6 +53,7 @@ import org.teiid.language.QueryExpression;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
+import org.teiid.translator.TranslatorException;
 import org.teiid.translator.WSConnection;
 
 @SuppressWarnings({"nls", "unused"})
@@ -70,13 +71,16 @@ public class TestODataQueryExecution {
     }
 
 	private ResultSetExecution helpExecute(String query, final String resultXML, String expectedURL) throws Exception {
+		return helpExecute(query, resultXML, expectedURL, 200);
+	}    
+	private ResultSetExecution helpExecute(String query, final String resultXML, String expectedURL, int responseCode) throws Exception {
 		Command cmd = this.utility.parseCommand(query);
 		ExecutionContext context = Mockito.mock(ExecutionContext.class);
 		WSConnection connection = Mockito.mock(WSConnection.class);
 		
 		Map<String, Object> headers = new HashMap<String, Object>();
 		headers.put(MessageContext.HTTP_REQUEST_HEADERS, new HashMap<String, List<String>>());
-		headers.put(WSConnection.STATUS_CODE, new Integer(200));
+		headers.put(WSConnection.STATUS_CODE, new Integer(responseCode));
 		
 		Dispatch<DataSource> dispatch = Mockito.mock(Dispatch.class);
 		Mockito.stub(dispatch.getRequestContext()).toReturn(headers);
@@ -163,5 +167,19 @@ public class TestODataQueryExecution {
 		
 		FileReader reader = new FileReader(UnitTestUtil.getTestDataFile("categories.xml"));
 		ResultSetExecution excution = helpExecute(query, ObjectConverterUtil.convertToString(reader), expectedURL);
-	}	
+	}
+	
+	@Test(expected=TranslatorException.class)
+	public void testError() throws Exception {
+		String query = "SELECT * FROM Categories Where CategoryName = 'Beverages'";
+		String expectedURL = "Categories?$filter=CategoryName eq 'Beverages'&$select=Picture,Description,CategoryName,CategoryID";
+		String error = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">\n" + 
+				"<code>005056A509B11EE1BB8AF4A65EC3CA20</code>\n" + 
+				"<message xml:lang=\"en\">\n" + 
+				"Invalid parametertype used at function '' (Position: 16)\n" + 
+				"</message>\n" + 
+				"</error>";
+		ResultSetExecution excution = helpExecute(query, error, expectedURL, 400);
+		excution.next();
+	}		
 }

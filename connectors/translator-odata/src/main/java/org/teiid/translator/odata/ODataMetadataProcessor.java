@@ -23,6 +23,8 @@ package org.teiid.translator.odata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.odata4j.edm.*;
 import org.teiid.logging.LogConstants;
@@ -268,12 +270,16 @@ public class ODataMetadataProcessor {
 		return true;
 	}
 
-	private boolean keyMatches(List<String> names, KeyRecord record) {
+	boolean keyMatches(List<String> names, KeyRecord record) {
 		if (names.size() != record.getColumns().size()) {
 			return false;
 		}
+		Set<String> keyNames = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		for (Column c: record.getColumns()) {
+			keyNames.add(c.getName());
+		}
 		for (int i = 0; i < names.size(); i++) {
-			if (!names.get(i).equalsIgnoreCase(record.getColumns().get(i).getName())) {
+			if (!keyNames.contains(names.get(i))) {
 				return false;
 			}
 		}
