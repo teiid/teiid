@@ -150,6 +150,7 @@
                         <exclude>xom:xom</exclude>                        
                         <exclude>jaxen:jaxen</exclude>
                         <exclude>org.jboss:staxmapper</exclude>
+                        <exclude>io.netty:netty</exclude>
                     </excludes>
                     <useProjectArtifact>true</useProjectArtifact>
                     <unpack>false</unpack>
@@ -349,6 +350,31 @@
                 </dependencySet>
             </dependencySets>          
           <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/infinispan/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
+    
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-cassandra</include>
+        </includes>
+
+        <binaries>   
+          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
+          <includeDependencies>true</includeDependencies>
+          <unpack>true</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/cassandra/main</outputDirectory>
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
@@ -730,6 +756,54 @@
         </binaries>
       
     </moduleSet>
+    
+      <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-cassandra</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+          <dependencySets>
+             <dependencySet>
+               <outputDirectory>modules/system/layers/base/com/datastax/cassandra/driver/core/main</outputDirectory>
+               <excludes>
+                 <exclude>org.slf4j:slf4j-api</exclude>
+               </excludes>
+               <useProjectArtifact>false</useProjectArtifact>
+               <unpack>false</unpack>
+               <useTransitiveDependencies>true</useTransitiveDependencies>
+               <useDefaultExcludes>true</useDefaultExcludes>
+             </dependencySet>
+          </dependencySets>  
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/cassandra/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+      
+      </moduleSet>
+      
+<!--       <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-cassandra</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+                    
+          <outputDirectory>modules/system/layers/base/com/datastax/cassandra/driver/core/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+      
+      </moduleSet> -->
       
     </moduleSets>  
+    
 </assembly>

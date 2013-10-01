@@ -114,5 +114,7 @@
     <module>mongodb-api</module>
     <module>connector-mongodb</module>
     <module>translator-mongodb</module>
+    <module>connector-cassandra</module>
+    <module>translator-cassandra</module>
   </modules>
 </project>
