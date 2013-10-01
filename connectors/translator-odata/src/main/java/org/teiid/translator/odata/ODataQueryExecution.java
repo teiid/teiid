@@ -89,7 +89,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 		else {
 			Schema schema = visitor.getEnityTable().getParent();
 			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
-			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), edm, null, Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
+			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), edm, null, Status.OK, Status.NO_CONTENT, Status.NOT_FOUND); //$NON-NLS-1$
 			if (this.response != null && this.response.hasError()) {
 				throw this.response.getError();
 			}

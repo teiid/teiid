@@ -87,7 +87,7 @@ public class ODataUpdateExecution extends BaseQueryExecution implements UpdateEx
 			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
 			BinaryWSProcedureExecution execution = executeDirect("GET", this.visitor.buildURL(), null, getDefaultHeaders()); //$NON-NLS-1$
 			if (execution.getResponseCode() == Status.OK.getStatusCode()) {
-				String etag = (String)execution.getResponseHeader("ETag"); //$NON-NLS-1$
+				String etag = getHeader(execution, "ETag"); //$NON-NLS-1$
 				String payload = buildPayload(this.visitor.getTable().getName(), this.visitor.getPayload(), edm);
 				this.response = executeWithReturnEntity(this.visitor.getMethod(), this.visitor.buildURL(), payload, this.visitor.getTable().getName(), edm, etag, Status.OK, Status.NO_CONTENT);
 				if (this.response != null) {

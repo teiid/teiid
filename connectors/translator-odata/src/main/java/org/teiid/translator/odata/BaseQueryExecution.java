@@ -116,9 +116,10 @@ public class BaseQueryExecution {
 		BinaryWSProcedureExecution execution = executeDirect(method, uri, payload, headers);
 		for (Status status:expectedStatus) {
 			if (status.getStatusCode() == execution.getResponseCode()) {
-				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode()) {
+				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode() 
+						&& execution.getResponseCode() != Status.NOT_FOUND.getStatusCode()) {
 					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-					ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
+					ODataVersion version = getODataVersion(execution);
 					Feed feed = parse(blob, version, entityTable, edsMetadata);
 					return new ODataEntitiesResponse(uri, feed, entityTable, edsMetadata);
 				}
@@ -129,6 +130,18 @@ public class BaseQueryExecution {
 		// throw an error
 		return new ODataEntitiesResponse(buildError(execution));
 	}
+
+	ODataVersion getODataVersion(BinaryWSProcedureExecution execution) {
+		return getDataServiceVersion(getHeader(execution, ODataConstants.Headers.DATA_SERVICE_VERSION));
+	}
+	
+	String getHeader(BinaryWSProcedureExecution execution, String header) {
+		Object value = execution.getResponseHeader(header);
+		if (value instanceof List) {
+			return (String)((List)value).get(0);
+		}
+		return (String)value;
+	}	
 
 	protected ODataEntitiesResponse executeWithComplexReturn(String method, String uri, String payload, String complexTypeName, EdmDataServices edsMetadata, String eTag, Status... expectedStatus) throws TranslatorException {
 		Map<String, List<String>> headers = getDefaultHeaders();
@@ -340,7 +353,7 @@ public class BaseQueryExecution {
 				BinaryWSProcedureExecution execution = executeDirect("GET", nextUri, null, getDefaultHeaders()); //$NON-NLS-1$
 				validateResponse(execution);
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			    ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
+			    ODataVersion version = getODataVersion(execution);
 
 				this.feed = parse(blob, version, this.entityTypeName, edsMetadata);
 				this.rowIter = this.feed.getEntries().iterator();
