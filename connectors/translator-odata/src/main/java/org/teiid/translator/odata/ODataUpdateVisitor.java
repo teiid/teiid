@@ -21,22 +21,20 @@
  */
 package org.teiid.translator.odata;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.odata4j.core.OEntities;
-import org.odata4j.core.OEntity;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
-import org.odata4j.edm.EdmDataServices;
-import org.odata4j.edm.EdmEntitySet;
-import org.odata4j.format.Entry;
-import org.odata4j.format.FormatWriter;
-import org.odata4j.format.FormatWriterFactory;
-import org.teiid.language.*;
+import org.teiid.language.Delete;
+import org.teiid.language.Expression;
+import org.teiid.language.ExpressionValueSource;
+import org.teiid.language.Insert;
+import org.teiid.language.Literal;
+import org.teiid.language.Update;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
 public class ODataUpdateVisitor extends ODataSQLVisitor {
@@ -44,22 +42,19 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 	protected RuntimeMetadata metadata;
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 	private String method = "POST"; //$NON-NLS-1$
-	private String entityName;
-	private EdmDataServices edmDataSerices;
-	private String payload;
+	private Table entity;
+	private List<OProperty<?>> payload;
 	private String uri;
 	
-	public ODataUpdateVisitor(ODataExecutionFactory executionFactory,
-			RuntimeMetadata metadata, EdmDataServices edmDataSerices) {
+	public ODataUpdateVisitor(ODataExecutionFactory executionFactory, RuntimeMetadata metadata) {
 		super(executionFactory, metadata);
-		this.edmDataSerices = edmDataSerices;
 	}
 	
 	@Override
     public void visit(Insert obj) {
 		this.method = "POST"; //$NON-NLS-1$
-		this.entityName = obj.getTable().getMetadataObject().getName();
-		this.uri = this.entityName;
+		this.entity = obj.getTable().getMetadataObject();
+		this.uri = this.entity.getName();
 		
 		final List<OProperty<?>> props = new ArrayList<OProperty<?>>();
 		int elementCount = obj.getColumns().size();
@@ -69,13 +64,13 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 			OProperty<?> property = OProperties.simple(column.getName(), ((Literal)values.get(i)).getValue());
 			props.add(property);
 		}
-		this.payload = buildPayload(this.entityName, props);	
+		this.payload = props;	
 	}	
 	
 	@Override
     public void visit(Update obj) {
 		this.method = "PUT"; //$NON-NLS-1$
-		this.entityName = obj.getTable().getMetadataObject().getName();
+		this.entity = obj.getTable().getMetadataObject();
 		visitNode(obj.getTable());
 		
 		// only pk are allowed, no other criteria not allowed
@@ -100,33 +95,13 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 			OProperty<?> property = OProperties.simple(column.getName(), value.getValue());
 			props.add(property);
 		}
-
-		this.payload = buildPayload(this.entityName, props);
-                
+		this.payload = props;
 	}
 
-	private String buildPayload(String entitySet, final List<OProperty<?>> props) {
-		final EdmEntitySet ees = this.edmDataSerices.getEdmEntitySet(entitySet);
-		
-	    Entry entry =  new Entry() {
-	        public String getUri() {
-	          return null;
-	        }
-	        public OEntity getEntity() {
-	          return OEntities.createRequest(ees, props, null);
-	        }
-	      };		
-		
-		StringWriter sw = new StringWriter();
-		FormatWriter<Entry> fw = FormatWriterFactory.getFormatWriter(Entry.class, null, "ATOM", null); //$NON-NLS-1$
-		fw.write(null, sw, entry);
-		return sw.toString();
-	}	
-	
 	@Override
     public void visit(Delete obj) {
 		this.method = "DELETE"; //$NON-NLS-1$
-		this.entityName = obj.getTable().getMetadataObject().getName();
+		this.entity = obj.getTable().getMetadataObject();
 		visitNode(obj.getTable());
 		
 		// only pk are allowed, no other criteria not allowed
@@ -143,8 +118,8 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
         }
 	}
 	
-	public String getEntityName() {
-		return this.entityName;
+	public Table getTable() {
+		return this.entity;
 	}
 	
 	@Override
@@ -156,7 +131,7 @@ public class ODataUpdateVisitor extends ODataSQLVisitor {
 		return this.method;
 	}
 	
-	public String getPayload() {
+	public List<OProperty<?>> getPayload() {
 		return this.payload;
 	}
 }

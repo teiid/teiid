@@ -61,6 +61,7 @@ import org.teiid.language.Literal;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.logging.MessageLevel;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
@@ -73,23 +74,20 @@ public class BaseQueryExecution {
 	protected ODataExecutionFactory translator;
 	protected RuntimeMetadata metadata;
 	protected ExecutionContext executionContext;
-	protected EdmDataServices edsMetadata;
 
-	public BaseQueryExecution(ODataExecutionFactory translator, ExecutionContext executionContext,
-			RuntimeMetadata metadata, WSConnection connection, EdmDataServices edsMetadata) {
+	public BaseQueryExecution(ODataExecutionFactory translator, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) {
 		this.metadata = metadata;
 		this.executionContext = executionContext;
 		this.translator = translator;
 		this.connection = connection;
-		this.edsMetadata = edsMetadata;
 	}
-
-	protected Feed parse(Blob blob, ODataVersion version, String entityTable) throws TranslatorException {
+	
+	protected Feed parse(Blob blob, ODataVersion version, String entityTable, EdmDataServices edsMetadata) throws TranslatorException {
 		try {
 			// if parser is written to return raw objects; then we can avoid some un-necessary object creation
 			// due to time, I am not pursuing that now.
 			FormatParser<Feed> parser = FormatParserFactory.getParser(
-					Feed.class, FormatType.ATOM, new Settings(version, this.edsMetadata, entityTable, null));
+					Feed.class, FormatType.ATOM, new Settings(version, edsMetadata, entityTable, null));
 			return parser.parse(new InputStreamReader(blob.getBinaryStream()));
 		} catch (SQLException e) {
 			throw new TranslatorException(ODataPlugin.Event.TEIID17010, e, e.getMessage());
@@ -105,7 +103,7 @@ public class BaseQueryExecution {
 		return version;
 	}
 
-	protected ODataEntitiesResponse executeWithReturnEntity(String method, String uri, String payload, String entityTable, String eTag, Status... expectedStatus) throws TranslatorException {
+	protected ODataEntitiesResponse executeWithReturnEntity(String method, String uri, String payload, String entityTable, EdmDataServices edsMetadata, String eTag, Status... expectedStatus) throws TranslatorException {
 		Map<String, List<String>> headers = getDefaultHeaders();
 		if (eTag != null) {
 			headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
@@ -118,11 +116,12 @@ public class BaseQueryExecution {
 		BinaryWSProcedureExecution execution = executeDirect(method, uri, payload, headers);
 		for (Status status:expectedStatus) {
 			if (status.getStatusCode() == execution.getResponseCode()) {
-				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode()) {
+				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode() 
+						&& execution.getResponseCode() != Status.NOT_FOUND.getStatusCode()) {
 					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-					ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
-					Feed feed = parse(blob, version, entityTable);
-					return new ODataEntitiesResponse(uri, feed, entityTable);
+					ODataVersion version = getODataVersion(execution);
+					Feed feed = parse(blob, version, entityTable, edsMetadata);
+					return new ODataEntitiesResponse(uri, feed, entityTable, edsMetadata);
 				}
 				// this is success with no-data
 				return new ODataEntitiesResponse();
@@ -132,7 +131,19 @@ public class BaseQueryExecution {
 		return new ODataEntitiesResponse(buildError(execution));
 	}
 
-	protected ODataEntitiesResponse executeWithComplexReturn(String method, String uri, String payload, String complexTypeName, String eTag, Status... expectedStatus) throws TranslatorException {
+	ODataVersion getODataVersion(BinaryWSProcedureExecution execution) {
+		return getDataServiceVersion(getHeader(execution, ODataConstants.Headers.DATA_SERVICE_VERSION));
+	}
+	
+	String getHeader(BinaryWSProcedureExecution execution, String header) {
+		Object value = execution.getResponseHeader(header);
+		if (value instanceof List) {
+			return (String)((List)value).get(0);
+		}
+		return (String)value;
+	}	
+
+	protected ODataEntitiesResponse executeWithComplexReturn(String method, String uri, String payload, String complexTypeName, EdmDataServices edsMetadata, String eTag, Status... expectedStatus) throws TranslatorException {
 		Map<String, List<String>> headers = getDefaultHeaders();
 		if (eTag != null) {
 			headers.put("If-Match", Arrays.asList(eTag)); //$NON-NLS-1$
@@ -147,20 +158,14 @@ public class BaseQueryExecution {
 			if (status.getStatusCode() == execution.getResponseCode()) {
 				if (execution.getResponseCode() != Status.NO_CONTENT.getStatusCode()) {
 					Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-					ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
+					//ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
 
-					EdmComplexType complexType = null;
-					for (EdmComplexType ct:this.edsMetadata.getComplexTypes()) {
-						if (ct.getFullyQualifiedTypeName().equals(complexTypeName)) {
-							complexType = ct;
-							break;
-						}
-					}
+					EdmComplexType complexType = edsMetadata.findEdmComplexType(complexTypeName);
 					if (complexType == null) {
-						throw new RuntimeException("Could not derive the complex name " + complexType);
+						throw new RuntimeException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17016, complexType));
 					}
 					try {
-						return parserComplex(StaxUtil.newXMLEventReader(new InputStreamReader(blob.getBinaryStream())), complexType);
+						return parserComplex(StaxUtil.newXMLEventReader(new InputStreamReader(blob.getBinaryStream())), complexType, edsMetadata);
 					} catch (SQLException e) {
 						throw new TranslatorException(ODataPlugin.Event.TEIID17010, e, e.getMessage());
 					}
@@ -173,12 +178,12 @@ public class BaseQueryExecution {
 		return new ODataEntitiesResponse(buildError(execution));
 	}
 
-	private ODataEntitiesResponse parserComplex(XMLEventReader2 reader, EdmComplexType complexType) {
+	private ODataEntitiesResponse parserComplex(XMLEventReader2 reader, EdmComplexType complexType, EdmDataServices edsMetadata) {
 		XMLEvent2 event = reader.nextEvent();
 		while (!event.isStartElement()) {
 			event = reader.nextEvent();
 		}
-		return new ODataEntitiesResponse(AtomFeedFormatParser.parseProperties(reader, event.asStartElement(), this.edsMetadata, complexType).iterator());
+		return new ODataEntitiesResponse(AtomFeedFormatParser.parseProperties(reader, event.asStartElement(), edsMetadata, complexType).iterator());
 	}
 
 	protected TranslatorException buildError(BinaryWSProcedureExecution execution) {
@@ -238,13 +243,15 @@ public class BaseQueryExecution {
 		private TranslatorException exception;
 		private Status[] acceptedStatus;
 		private Iterator<OProperty<?>> complexValues;
+		private EdmDataServices edsMetadata;
 
-		public ODataEntitiesResponse(String uri, Feed feed, String entityTypeName, Status... accptedStatus) {
+		public ODataEntitiesResponse(String uri, Feed feed, String entityTypeName, EdmDataServices edsMetadata, Status... accptedStatus) {
 			this.uri = uri;
 			this.feed = feed;
 			this.entityTypeName = entityTypeName;
 			this.rowIter = this.feed.getEntries().iterator();
 			this.acceptedStatus = accptedStatus;
+			this.edsMetadata = edsMetadata;
 		}
 
 		public ODataEntitiesResponse(TranslatorException ex) {
@@ -270,16 +277,22 @@ public class BaseQueryExecution {
 			return this.exception;
 		}
 
-		public List<?> getNextRow(String[] columnNames, String[] embeddedColumnName, Class<?>[] expectedType) throws TranslatorException {
+		public List<?> getNextRow(Column[] columns, Class<?>[] expectedType) throws TranslatorException {
 			if (this.rowIter != null && this.rowIter.hasNext()) {
 				OEntity entity = this.rowIter.next().getEntity();
 				ArrayList results = new ArrayList();
-				for (int i = 0; i < columnNames.length; i++) {
-					Object value = entity.getProperty(columnNames[i]).getValue();
-					if (embeddedColumnName[i] != null) {
+				for (int i = 0; i < columns.length; i++) {
+					boolean isComplex = true;
+					String colName = columns[i].getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
+					if (colName == null) {
+						colName = columns[i].getName();
+						isComplex = false;
+					}
+					Object value = entity.getProperty(colName).getValue();
+					if (isComplex) {
 						List<OProperty<?>> embeddedProperties = (List<OProperty<?>>)value;
 						for (OProperty prop:embeddedProperties) {
-							if (prop.getName().equals(embeddedColumnName[i])) {
+							if (prop.getName().equals(columns[i].getNameInSource())) {
 								value = prop.getValue();
 								break;
 							}
@@ -287,7 +300,7 @@ public class BaseQueryExecution {
 					}
 					results.add(BaseQueryExecution.this.translator.retrieveValue(value, expectedType[i]));
 				}
-				fetchNextBatch(!this.rowIter.hasNext());
+				fetchNextBatch(!this.rowIter.hasNext(), this.edsMetadata);
 				return results;
 			}
 			else if (this.complexValues != null) {
@@ -297,8 +310,8 @@ public class BaseQueryExecution {
 					values.put(prop.getName(), prop.getValue());
 				}
 				ArrayList results = new ArrayList();
-				for (int i = 0; i < columnNames.length; i++) {
-					results.add(BaseQueryExecution.this.translator.retrieveValue(values.get(columnNames[i]), expectedType[i]));
+				for (int i = 0; i < columns.length; i++) {
+					results.add(BaseQueryExecution.this.translator.retrieveValue(values.get(columns[i].getName()), expectedType[i]));
 				}
 				this.complexValues = null;
 				return results;
@@ -307,7 +320,7 @@ public class BaseQueryExecution {
 		}
 
 		// TODO:there is possibility here to async execute this feed
-		private void fetchNextBatch(boolean fetch) throws TranslatorException {
+		private void fetchNextBatch(boolean fetch, EdmDataServices edsMetadata) throws TranslatorException {
 			if (!fetch) {
 				return;
 			}
@@ -340,9 +353,9 @@ public class BaseQueryExecution {
 				BinaryWSProcedureExecution execution = executeDirect("GET", nextUri, null, getDefaultHeaders()); //$NON-NLS-1$
 				validateResponse(execution);
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			    ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
+			    ODataVersion version = getODataVersion(execution);
 
-				this.feed = parse(blob, version, this.entityTypeName);
+				this.feed = parse(blob, version, this.entityTypeName, edsMetadata);
 				this.rowIter = this.feed.getEntries().iterator();
 
 			} else if (next.toLowerCase().startsWith("http")) { //$NON-NLS-1$
@@ -351,7 +364,7 @@ public class BaseQueryExecution {
 				Blob blob = (Blob)execution.getOutputParameterValues().get(0);
 			    ODataVersion version = getDataServiceVersion((String)execution.getResponseHeader(ODataConstants.Headers.DATA_SERVICE_VERSION));
 
-				this.feed = parse(blob, version, this.entityTypeName);
+				this.feed = parse(blob, version, this.entityTypeName, edsMetadata);
 				this.rowIter = this.feed.getEntries().iterator();
 			} else {
 				throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17001, next));

@@ -19,10 +19,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.odata;
+package org.teiid.translator.odata;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
+import java.io.FileReader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -34,10 +37,18 @@ import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.format.xml.EdmxFormatWriter;
 import org.odata4j.stax2.util.StaxUtil;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.metadata.MetadataFactory;
+import org.teiid.query.metadata.DDLStringVisitor;
+import org.teiid.query.metadata.MetadataValidator;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.validator.ValidatorReport;
 
 @SuppressWarnings("nls")
 public class TestDataEntitySchemaBuilder {
@@ -180,4 +191,63 @@ public class TestDataEntitySchemaBuilder {
 	public void testUnquieTreatedAsKey() {
 		// test that unique key is treated as key, when pk is absent.
 	}
+	
+	@Test
+	public void testEntityTypeName() throws Exception{
+		String ddl = "CREATE FOREIGN TABLE BookingCollection (\n" + 
+				"	carrid bigdecimal NOT NULL,\n" + 
+				"	connid string(5) NOT NULL,\n" + 
+				"	bookid bigdecimal NOT NULL,\n" + 
+				"	LOCCURKEY string(5) NOT NULL,\n" + 
+				"	fldate timestamp NOT NULL,\n" + 
+				"	PRIMARY KEY(carrid, connid, fldate, bookid)\n" + 
+				") OPTIONS (UPDATABLE TRUE, " +
+				" \"teiid_odata:EntityType\" 'RMTSAMPLEFLIGHT.Booking');";
+		
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");		
+		EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore());
+		assertTrue(edm.findEdmEntitySet("nw.BookingCollection")!=null);
+		assertTrue(edm.findEdmEntityType("nw.RMTSAMPLEFLIGHT.Booking")!=null);
+	}
+	
+	@Test
+	public void testEntityTypeName2() throws Exception{
+		TransformationMetadata metadata = getNorthwindMetadataFromODataXML();		
+		
+		EdmDataServices edm = ODataEntitySchemaBuilder.buildMetadata(metadata.getMetadataStore().getSchema("nw"));
+		assertTrue(edm.findEdmEntitySet("nw.Categories")!=null);
+		assertEquals("NorthwindModel.Category", edm.findEdmEntitySet("nw.Categories").getType().getName());
+		assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
+		assertTrue(edm.findEdmFunctionImport("nw.TopCustomers")!=null);
+		assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("nw.TopCustomers").getReturnType().getFullyQualifiedTypeName());
+		assertTrue(edm.findEdmEntityType("nw.NorthwindModel.Category")!=null);
+		
+		edm = new TeiidEdmMetadata("nw", edm);
+		assertTrue(edm.findEdmEntitySet("Categories")!=null);
+		assertEquals("NorthwindModel.Category", edm.findEdmEntitySet("Categories").getType().getName());
+		assertTrue(edm.findEdmEntityType("NorthwindModel.Category")!=null);
+		assertTrue(edm.findEdmFunctionImport("TopCustomers")!=null);
+		assertEquals("Collection(nw.NorthwindModel.Customer)", edm.findEdmFunctionImport("TopCustomers").getReturnType().getFullyQualifiedTypeName());
+		assertTrue(edm.findEdmEntityType("NorthwindModel.Category")!=null);
+	}
+
+	static TransformationMetadata getNorthwindMetadataFromODataXML() throws Exception {
+		ModelMetaData model = new ModelMetaData();
+		model.setName("nw");
+		model.setModelType(Type.PHYSICAL);
+		MetadataFactory mf = new MetadataFactory("northwind", 1, SystemMetadata.getInstance().getRuntimeTypeMap(), model);
+		
+		EdmDataServices edm = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new FileReader(UnitTestUtil.getTestDataFile("northwind.xml"))));
+		ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
+		PropertiesUtils.setBeanProperties(metadataProcessor, mf.getModelProperties(), "importer"); //$NON-NLS-1$
+		metadataProcessor.getMetadata(mf, edm);
+		
+		String ddl = DDLStringVisitor.getDDLString(mf.getSchema(), null, null);
+		TransformationMetadata metadata = RealMetadataFactory.fromDDL(ddl, "northwind", "nw");
+    	ValidatorReport report = new MetadataValidator().validate(metadata.getVdbMetaData(), metadata.getMetadataStore());
+    	if (report.hasItems()) {
+    		throw new RuntimeException(report.getFailureMessage());
+    	}		
+		return metadata;
+	}	
 }
