@@ -12,7 +12,6 @@
         
         <!-- version mismatch -->
         <resource-root path="guava-14.0.1.jar"/>
-        <resource-root path="netty-3.6.3.Final.jar"/>
         
         <!-- classloading or other issue -->
         <resource-root path="jackson-core-asl-1.9.2.jar"/>
@@ -22,6 +21,7 @@
     <dependencies>
         <module name="javax.api" />
         <module name="org.slf4j" />
+        <module name="org.jboss.netty"/>
     </dependencies>
 
 </module>

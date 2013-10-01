@@ -1,3 +1,27 @@
-If you are not using XQuery, there is no need to include "saxonhe-9.2.1.5.jar" jar file in the class path. All other files need 
-to be included in your applications's classpath. Depending upon which sources you use with the Teiid embedded, you also need 
+If you are not using XQuery, XPath, nor SQL/XML, there is no need to include saxonhe, xom, nux, and jaxen jars in the class path. All other files need 
+to be included in your applications's classpath. 
+
+Depending upon which sources you use with the Teiid embedded, you also need 
 to add translators jar files from the optional directory. 
+
+netty is required to enable a JDBC/ODBC socket transport and by cassandra.
+
+Third-party cassandra dependencies:
+cassandra*
+concurrentlinkedhashmap-lru
+guava
+jackson*
+libthrift
+metrics-core
+netty
+slf4j-api
+snappy-java
+
+Third-party salesforce depenendencies:
+force-wsc
+
+Third-party google dependencies:
+gdata*
+
+Third-party mongo dependencies:
+mongo-java-driver

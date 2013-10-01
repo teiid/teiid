@@ -65,6 +65,7 @@ connect
 /subsystem=teiid/translator=google-spreadsheet:add(module=org.jboss.teiid.translator.google)
 /subsystem=teiid/translator=odata:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=mongodb:add(module=org.jboss.teiid.translator.mongodb)
+/subsystem=teiid/translator=cassandra:add(module=org.jboss.teiid.translator.cassandra)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)

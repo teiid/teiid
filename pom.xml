@@ -33,7 +33,7 @@
         <version.asm>3.3.1</version.asm>
         <version.org.jboss.arquillian.core>1.0.0.Final</version.org.jboss.arquillian.core>
         <version.javax.enterprise>1.0-SP4</version.javax.enterprise>
-        <version.org.jboss.netty>3.2.6.Final</version.org.jboss.netty>
+        <version.org.jboss.netty>3.6.2.Final</version.org.jboss.netty>
         <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
         <version.json-simple>1.1</version.json-simple>
         <version.org.jgroups>3.2.7.Final</version.org.jgroups>
@@ -589,7 +589,7 @@
 				<version>${version.net.sourceforge.saxon}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.jboss.netty</groupId>
+				<groupId>io.netty</groupId>
 				<artifactId>netty</artifactId>
 				<version>${version.org.jboss.netty}</version>
 			</dependency>

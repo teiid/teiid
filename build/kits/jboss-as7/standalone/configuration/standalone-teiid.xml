@@ -355,7 +355,7 @@
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="odata" module="org.jboss.teiid.translator.odata"/>
             <translator name="mongodb" module="org.jboss.teiid.translator.mongodb"/>
-            
+            <translator name="cassandra" module="org.jboss.teiid.translator.cassandra"/>
         </subsystem>        
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <bounded-queue-thread-pool name="teiid-async">
