@@ -30,9 +30,11 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import org.junit.Test;
 import org.teiid.api.exception.query.FunctionExecutionException;
+import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.language.SQLConstants.NonReserved;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.unittest.TimestampUtil;
@@ -956,10 +958,20 @@ public class TestFunction {
     }
 
     @Test public void testTimestampDiffTimeStamp_Hour_1() throws Exception {
-        helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
+    	helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
+                TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
+                TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
+                new Long(0));
+    	//ensure that we get the same answer in a tz with an non-hour aligned offset and no dst
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("Pacific/Marquesas")); //$NON-NLS-1$ 
+    	try {
+    		helpTestTimestampDiff(NonReserved.SQL_TSI_HOUR,
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 0, 0, 0),
                               TimestampUtil.createTimestamp((2004-1900), 8, 26, 12, 59, 59, 999999999),
                               new Long(0));
+    	} finally {
+    		TimestampWithTimezone.resetCalendar(null);
+    	}
     }
 
     @Test public void testTimestampDiffTimeStamp_Week_1() throws Exception {

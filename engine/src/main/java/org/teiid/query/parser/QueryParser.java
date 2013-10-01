@@ -35,7 +35,6 @@ import java.util.TreeSet;
 
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.connector.DataPlugin;
-import org.teiid.core.util.StringUtil;
 import org.teiid.language.SQLConstants;
 import org.teiid.metadata.DuplicateRecordException;
 import org.teiid.metadata.FunctionMethod;
@@ -320,7 +319,7 @@ public class QueryParser implements Parser {
 			currentToken = currentToken.next; //move to the error token
 		}
 		retval.append("\" at line ").append(currentToken.beginLine).append(", column ").append(currentToken.beginColumn); //$NON-NLS-1$ //$NON-NLS-2$
-		retval.append(".").append(StringUtil.LINE_SEPARATOR); //$NON-NLS-1$
+		retval.append(".\n"); //$NON-NLS-1$
 		return retval;
 	}
 

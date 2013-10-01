@@ -590,18 +590,18 @@ public final class FunctionMethods {
             		count = ts2 / 60 - ts1 / 60;
             	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_HOUR)) {
             		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
-            		if (tz.getDSTSavings() > 0) {
+            		if (tz.getDSTSavings() > 0 || tz.getRawOffset() % 3600000 != 0) {
             			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
             			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
             		}
             		count = ts2 / (60*60) - ts1 / (60*60);	
             	} else if(intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_DAY) || intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
             		TimeZone tz = TimestampWithTimezone.getCalendar().getTimeZone();
-            		if (tz.getDSTSavings() > 0) {
+            		if (tz.getDSTSavings() > 0 || tz.getRawOffset() % 3600000 != 0) {
             			ts1 += tz.getOffset(ts1Obj.getTime())/1000;
             			ts2 += tz.getOffset(ts2Obj.getTime())/1000;
             		}
-            		//since we are no effectively using GMT we can simply divide since the unix epoch starts at midnight.
+            		//since we are now effectively using GMT we can simply divide since the unix epoch starts at midnight.
             		count = ts2 / (60*60*24) - ts1 / (60*60*24);
                 	if (intervalType.equalsIgnoreCase(NonReserved.SQL_TSI_WEEK)) {
                     	//TODO:  this behavior matches SQL Server - but not Derby which expects only whole week
