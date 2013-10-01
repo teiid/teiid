@@ -69,6 +69,7 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.CacheDirective;
+import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 import org.teiid.translator.odata.ODataTypeManager;
 import org.teiid.transport.LocalServerConnection;
 
