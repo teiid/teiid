@@ -34,8 +34,8 @@ import javax.ws.rs.core.Response.Status;
 import org.odata4j.edm.EdmDataServices;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.language.QueryExpression;
-import org.teiid.metadata.Column;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Schema;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ResultSetExecution;
@@ -48,38 +48,20 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 	private ODataSQLVisitor visitor;
 	private int countResponse = -1;
 	private Class<?>[] expectedColumnTypes;
-	private String[] columnNames;
-	private String[] embeddedColumnNames;
 	private ODataEntitiesResponse response;
 	
 	public ODataQueryExecution(ODataExecutionFactory translator,
 			QueryExpression command, ExecutionContext executionContext,
-			RuntimeMetadata metadata, WSConnection connection, EdmDataServices edsMetadata) throws TranslatorException {
-		super(translator, executionContext, metadata, connection, edsMetadata);
+			RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
+		super(translator, executionContext, metadata, connection);
 		
 		this.visitor = new ODataSQLVisitor(this.translator, metadata);
     	this.visitor.visitNode(command);
     	if (!this.visitor.exceptions.isEmpty()) {
     		throw visitor.exceptions.get(0);
-    	}  
-    	this.expectedColumnTypes = command.getColumnTypes();
-    	int colCount = this.visitor.getSelect().length;
-    	this.columnNames = new String[colCount];
-    	this.embeddedColumnNames = new String[colCount];
-    	for (int i = 0; i < colCount; i++) {
-    		Column column = this.visitor.getSelect()[i];
-    		this.columnNames[i] = column.getName();
-    		this.embeddedColumnNames[i] = null;
-    		String entityType = column.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-    		if (entityType != null) {
-    			String parentEntityType = column.getParent().getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-    			if (!parentEntityType.equals(entityType)) {
-    				// this is embedded column
-    				this.columnNames[i] = entityType;
-    				this.embeddedColumnNames[i] = column.getNameInSource();
-    			}
-    		}
     	}
+    	
+    	this.expectedColumnTypes = command.getColumnTypes();
 	}
 
 	@Override
@@ -105,9 +87,11 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 			}			
 		}
 		else {
-			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), null, Status.OK, Status.NO_CONTENT); //$NON-NLS-1$
+			Schema schema = visitor.getEnityTable().getParent();
+			EdmDataServices edm = new TeiidEdmMetadata(schema.getName(), ODataEntitySchemaBuilder.buildMetadata( schema));
+			this.response = executeWithReturnEntity("GET", URI, null, visitor.getEnityTable().getName(), edm, null, Status.OK, Status.NO_CONTENT, Status.NOT_FOUND); //$NON-NLS-1$
 			if (this.response != null && this.response.hasError()) {
-				this.executionContext.addWarning(this.response.getError());
+				throw this.response.getError();
 			}
 		}
 	}
@@ -122,7 +106,7 @@ public class ODataQueryExecution extends BaseQueryExecution implements ResultSet
 
 		// Feed based response
 		if (this.response != null && !this.response.hasError()) {
-			return this.response.getNextRow(this.columnNames, this.embeddedColumnNames, this.expectedColumnTypes);
+			return this.response.getNextRow(visitor.getSelect(), this.expectedColumnTypes);
 		}
 		return null;
 	}
