@@ -267,8 +267,11 @@
                 <resource-adapter id="webservice">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.webservice"/>
                 </resource-adapter>
-               <resource-adapter id="mongodb">
+                <resource-adapter id="mongodb">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.mongodb"/>
+                </resource-adapter>
+                <resource-adapter id="cassandra">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.cassandra"/>
                 </resource-adapter>
             </resource-adapters>        
         </subsystem>

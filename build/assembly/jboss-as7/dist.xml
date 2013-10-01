@@ -785,25 +785,7 @@
         </binaries>
       
       </moduleSet>
-      
-<!--       <moduleSet>
-        <includeSubModules>true</includeSubModules>
-        <useAllReactorProjects>true</useAllReactorProjects>
-
-        <includes>
-            <include>org.jboss.teiid.connectors:translator-cassandra</include>
-        </includes>
-
-        <binaries>        
-          <includeDependencies>true</includeDependencies>
-          <unpack>false</unpack>
-                    
-          <outputDirectory>modules/system/layers/base/com/datastax/cassandra/driver/core/main</outputDirectory>
-          <fileMode>0644</fileMode>
-        </binaries>
-      
-      </moduleSet> -->
-      
+            
     </moduleSets>  
     
 </assembly>

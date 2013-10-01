@@ -22,9 +22,8 @@
 
 package org.teiid.translator.cassandra.execution;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.language.Select;
@@ -149,7 +148,11 @@ public class CassandraQueryExecution implements ResultSetExecution {
 				values.add(row.getVarint(i));
 				break;
 			default:
-				values.add(row.getBytesUnsafe(i));
+				//read as a varbinary
+				ByteBuffer bytesUnsafe = row.getBytesUnsafe(i);
+				byte[] b = new byte[bytesUnsafe.remaining()];
+				bytesUnsafe.get(b);
+				values.add(b);
 				break;
 			}
 			

@@ -8,7 +8,7 @@
 	</parent>
 	<groupId>org.jboss.teiid.connectors</groupId>
 	<artifactId>connector-cassandra</artifactId>
-	<packaging>rar</packaging>
+	<packaging>bundle</packaging>
 	<name>Cassandra connector</name>
 	<description>Cassandra connector</description>
 
