@@ -29,9 +29,12 @@ import org.teiid.language.Argument.Direction;
 import org.teiid.language.Call;
 import org.teiid.language.SQLConstants.Tokens;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.metadata.Column;
 import org.teiid.metadata.Procedure;
 import org.teiid.metadata.ProcedureParameter;
 import org.teiid.metadata.RuntimeMetadata;
+import org.teiid.metadata.Schema;
+import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
 public class ODataProcedureVisitor extends HierarchyVisitor {
@@ -40,11 +43,14 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 	private StringBuilder buffer = new StringBuilder();
 	private String method = "GET"; //$NON-NLS-1$
-	private String entityName;
+	private String returnEntityTypeName;
 	private boolean returnsTable;
-	private String procedureName;
+	private Procedure procedure;
 	private String returnType;
 	private Class<?> returnTypeClass;
+	private boolean isComplexReturnType;
+	private Table entity;
+	private List<Column> returnColumns;
 
 	public ODataProcedureVisitor(ODataExecutionFactory executionFactory,
 			RuntimeMetadata metadata) {
@@ -57,7 +63,7 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 		Procedure proc = obj.getMetadataObject();
 		this.method = proc.getProperty(ODataMetadataProcessor.HTTP_METHOD, false);
 
-		this.procedureName = obj.getProcedureName();
+		this.procedure = proc;
 		this.buffer.append(obj.getProcedureName());
         final List<Argument> params = obj.getArguments();
         if (params != null && params.size() != 0) {
@@ -79,7 +85,10 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
         // this is collection based result
         if(proc.getResultSet() != null) {
         	this.returnsTable = true;
-        	this.entityName = proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
+        	this.returnEntityTypeName = proc.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
+        	this.entity = getTableWithEntityType(proc.getParent(), returnEntityTypeName);
+       		this.isComplexReturnType = ( this.entity == null);
+       		this.returnColumns = proc.getResultSet().getColumns();
         }
         else {
         	for (ProcedureParameter param:proc.getParameters()) {
@@ -90,6 +99,15 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
         	}
         }
 	}
+	
+	Table getTableWithEntityType(Schema schema, String entityType) {
+		for (Table t:schema.getTables().values()) {
+			if (entityType.equals(t.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false))) {
+				return t;
+			}
+		}
+		return null;
+	}
 
 	public String buildURL() {
 		return this.buffer.toString();
@@ -99,16 +117,28 @@ public class ODataProcedureVisitor extends HierarchyVisitor {
 		return this.method;
 	}
 
-	public String getEntityName() {
-		return this.entityName;
+	public String getReturnEntityTypeName() {
+		return this.returnEntityTypeName;
 	}
 
+	public Table getTable() {
+		return this.entity;
+	}
+	
 	public boolean hasCollectionReturn() {
 		return this.returnsTable;
 	}
+	
+	public Column[] getReturnColumns() {
+		return this.returnColumns.toArray(new Column[this.returnColumns.size()]);
+	}
 
-	public String getProcedureName() {
-		return this.procedureName;
+	public boolean isReturnComplexType() {
+		return this.isComplexReturnType;
+	}	
+
+	public Procedure getProcedure() {
+		return this.procedure;
 	}
 
 	public String getReturnType() {
