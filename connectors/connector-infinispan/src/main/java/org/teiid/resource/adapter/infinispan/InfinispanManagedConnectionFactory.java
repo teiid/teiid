@@ -25,9 +25,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.naming.Context;
@@ -95,13 +97,15 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		pkMap = new HashMap<String, String>();
 		ClassLoader cl = null;
 		if (module != null) {
-			Module m;
-			try {
-				m = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(module));
-			} catch (ModuleLoadException e) {
-				throw new ResourceException(e);
-			}
-			cl = m.getClassLoader();
+  
+                Module m;
+                try {
+                    m = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(module));
+                } catch (ModuleLoadException e) {
+                    throw new ResourceException(e);
+                }
+                cl = m.getClassLoader();
+
 		} else {
 			cl = Thread.currentThread().getContextClassLoader();
 		}
@@ -127,6 +131,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		}
 		
 		typeMap = Collections.unmodifiableMap(tm);
+        
+        InfinispanManagedConnectionFactory.this.createCacheContainer();
 
 		return new BasicConnectionFactory<InfinispanConnectionImpl>() {
 			
@@ -134,8 +140,6 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
 			@Override
 			public InfinispanConnectionImpl getConnection() throws ResourceException {
-
-				InfinispanManagedConnectionFactory.this.createCacheContainer();
 				
 				return new InfinispanConnectionImpl(InfinispanManagedConnectionFactory.this);
 			}
@@ -364,7 +368,15 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 				
 		Properties props = new Properties();
 		props.put("infinispan.client.hotrod.server_list", this.getRemoteServerList()); //$NON-NLS-1$
-		RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
+        
+        Collection args = new ArrayList();
+        args.add((Object)props);
+        
+        RemoteCacheManager remoteCacheManager = BasicManagedConnectionFactory.getInstance(RemoteCacheManager.class, RemoteCacheManager.class.getName(), args, RemoteCacheManager.class);
+        
+ //       Object entity = ReflectionHelper.create(RemoteCacheManager.getClass.getName(), args, this.executionContext.getCommandContext().getVDBClassLoader());
+		//RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
+ //       RemoteCacheManager remoteCacheManager = (RemoteCacheManager) entity;
 		remoteCacheManager.start();
 		
 		LogManager
