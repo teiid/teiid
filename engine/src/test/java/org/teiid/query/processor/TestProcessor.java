@@ -7768,5 +7768,5 @@ public class TestProcessor {
         helpProcess(plan, fdm, new List[] {Arrays.asList(11)});
     }
     
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 }
