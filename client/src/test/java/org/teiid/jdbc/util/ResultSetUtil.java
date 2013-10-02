@@ -22,8 +22,9 @@
 
 package org.teiid.jdbc.util;
 
-import java.io.PrintStream;
+import java.io.IOException;
 import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Method;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -52,9 +53,10 @@ public class ResultSetUtil {
      * @param printMetadata
      * @param out
      * @throws SQLException
+     * @throws IOException 
      * @since 4.2
      */
-    public static void printResultSet(ResultSet rs, int maxColWidth, boolean printMetadata, PrintStream out) throws SQLException {
+    public static void printResultSet(ResultSet rs, int maxColWidth, boolean printMetadata, Writer out) throws SQLException, IOException {
         if (maxColWidth < 0) {
             maxColWidth = DEFAULT_MAX_COL_WIDTH;
         }
@@ -81,8 +83,8 @@ public class ResultSetUtil {
                 columns.write(SPACER);
             }
         }
-        out.println(types.toString());
-        out.println(columns.toString());
+        out.append(types.toString()).append("\n");
+        out.append(columns.toString()).append("\n");
         int totalRows = 0;
         while (rs.next()) {
             for (int j = 1; j <= count; j++) {
@@ -95,20 +97,20 @@ public class ResultSetUtil {
                 	obj = "Blob[" + ((Blob)obj).length() + "]"; //$NON-NLS-1$ //$NON-NLS-2$
                 }
                 if (maxColWidth == 0) {
-                    out.print(obj == null ? NULL : obj); 
-                    if (j != count) out.print(SPACER);
+                    out.append(obj == null ? NULL : obj.toString()); 
+                    if (j != count) out.append(SPACER);
                 } else {
                     String resizedString = resizeString(obj, sizes[j-1]);
-                    out.print(resizedString);
+                    out.append(resizedString);
                     if (j != count && resizedString.length() <= sizes[j-1]) {
-                        out.print(SPACER);
+                        out.append(SPACER);
                     }
                 }
             }
-            out.println();
+            out.append("\n");
             totalRows++;
         }
-        out.println("Row Count : " + totalRows); //$NON-NLS-1$
+        out.append("Row Count : " + totalRows).append("\n"); //$NON-NLS-1$
         if (printMetadata) printResultSetMetadata(rsmd, out);
     }
     
@@ -140,9 +142,10 @@ public class ResultSetUtil {
      * @param rsmd
      * @param out
      * @throws SQLException
+     * @throws IOException 
      * @since 4.2
      */
-    public static void printResultSetMetadata(ResultSetMetaData rsmd, PrintStream out) throws SQLException {
+    public static void printResultSetMetadata(ResultSetMetaData rsmd, Writer out) throws SQLException, IOException {
         int columns = rsmd.getColumnCount();
         Class RSMD = ResultSetMetaData.class;
         Class[] params = {int.class};
@@ -172,21 +175,21 @@ public class ResultSetUtil {
         }
         // Print the header
         for (int i = 0; i < numMethods; i++) {
-            out.print(resizeString(METADATA_METHODS[i], maxColWidths[i]));
+            out.append(resizeString(METADATA_METHODS[i], maxColWidths[i]));
             if (i != numMethods) {
-                out.print(SPACER);
+                out.append(SPACER);
             }
         }
-        out.println();
+        out.append("\n");
         // Print the metadata from the buffer
         for (int col = 0; col < columns; col++) {
             for (int i = 0; i < numMethods; i++) {
-                out.print(resizeString(metadataStrings[col][i], maxColWidths[i]));
+                out.append(resizeString(metadataStrings[col][i], maxColWidths[i]));
                 if (i != numMethods) {
-                    out.print(SPACER);
+                    out.append(SPACER);
                 }
             }
-            out.println();
+            out.append("\n");
         }
     }
 
