@@ -819,7 +819,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 		TupleBuffer tb = null;
         if (cid != null) {
         	tb = getBufferManager().createTupleBuffer(aqr.getCommand().getProjectedSymbols(), aqr.getCommandContext().getConnectionId(), TupleSourceType.PROCESSOR);
-        	result = new CachingTupleSource(this, tb, (DataTierTupleSource)result, cid, parameterObject, cd, accessedGroups);
+        	result = new CachingTupleSource(this, tb, (DataTierTupleSource)result, cid, parameterObject, cd, accessedGroups, workItem);
         }
         if (work.isThreadBound()) {
         	result = handleThreadBound(workItem, aqr, work, cid, result, dtts, tb);

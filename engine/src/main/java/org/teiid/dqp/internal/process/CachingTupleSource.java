@@ -50,11 +50,12 @@ final class CachingTupleSource extends
 	private final RegisterRequestParameter parameterObject;
 	private final CacheDirective cd;
 	private final Collection<GroupSymbol> accessedGroups;
-	DataTierTupleSource dtts;
+	final DataTierTupleSource dtts;
+	final RequestWorkItem item;
 
 	CachingTupleSource(DataTierManagerImpl dataTierManagerImpl, TupleBuffer tb, DataTierTupleSource ts, CacheID cid,
 			RegisterRequestParameter parameterObject, CacheDirective cd,
-			Collection<GroupSymbol> accessedGroups) {
+			Collection<GroupSymbol> accessedGroups, RequestWorkItem item) {
 		super(tb, ts);
 		this.dataTierManagerImpl = dataTierManagerImpl;
 		this.dtts = ts;
@@ -62,6 +63,7 @@ final class CachingTupleSource extends
 		this.parameterObject = parameterObject;
 		this.cd = cd;
 		this.accessedGroups = accessedGroups;
+		this.item = item;
 	}
 
 	@Override
@@ -137,7 +139,11 @@ final class CachingTupleSource extends
 					//we should also shut off any warnings, since the plan isn't consuming these tuples
 					//the approach would probably be to do more read-ahead
 					dtts.getAtomicRequestMessage().setSerial(true);
-					while (dtts.scope != Scope.NONE) { 
+					while (dtts.scope != Scope.NONE) {
+						if (item.isCanceled()) {
+							LogManager.logDetail(LogConstants.CTX_DQP, dtts.getAtomicRequestMessage().getAtomicRequestID(), "Not using full results due to cancellation."); //$NON-NLS-1$
+							break;
+						}
 						try {
 							List<?> tuple = nextTuple();
 							if (tuple == null) {

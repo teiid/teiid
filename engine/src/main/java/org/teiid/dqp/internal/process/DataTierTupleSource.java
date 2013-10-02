@@ -28,6 +28,7 @@ import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -410,6 +411,8 @@ public class DataTierTupleSource implements TupleSource, CompletionListener<Atom
 			if (results.getFinalRow() < 0) {
 				addWork();
 			}
+		} catch (CancellationException e) {
+			throw new TeiidProcessingException(e);
 		} catch (InterruptedException e) {
 			 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30503, e);
 		} catch (ExecutionException e) {

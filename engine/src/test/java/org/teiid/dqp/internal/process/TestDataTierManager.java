@@ -368,6 +368,28 @@ public class TestDataTierManager {
     	assertFalse(rrp.doNotCache);
     }
     
+    @Test public void testCancelWithCaching() throws Exception {
+    	QueryMetadataInterface metadata = RealMetadataFactory.exampleBQTCached();
+    	CacheDirective cd = new CacheDirective();
+    	this.connectorManager.cacheDirective = cd;
+    	helpSetupDataTierManager();
+    	Command command = helpSetupRequest("SELECT stringkey from bqt1.smalla", 1, metadata).getCommand();
+    	this.context.getSession().setSessionId("different");
+    	RegisterRequestParameter rrp = new RegisterRequestParameter();
+    	rrp.connectorBindingId = "x";
+    	TupleSource ts = dtm.registerRequest(context, command, "foo", rrp);
+    	assertTrue(ts instanceof CachingTupleSource);
+    	assertEquals(4, pullTuples(ts, 4));
+    	((CachingTupleSource)ts).item.requestCancel();
+    	assertEquals(1, connectorManager.getExecuteCount().get());
+    	assertFalse(rrp.doNotCache);
+    	ts.closeSource(); //should force read all
+    	assertFalse(((CachingTupleSource)ts).dtts.errored);
+    	assertNull(((CachingTupleSource)ts).dtts.scope);
+    	
+    	assertEquals(0, this.rm.getRsCache().getCachePutCount());
+    }
+    
     @Test public void testTypeConversion() throws Exception {
     	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
     	
