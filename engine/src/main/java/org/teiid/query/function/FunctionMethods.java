@@ -44,6 +44,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -1500,18 +1501,9 @@ public final class FunctionMethods {
 	}	
 	
 	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
-	public static String token_get(String str, char delimiter, int index) {
-		if (str == null) {
-			return null;
-		}
-		return StringUtil.tokenize(str, delimiter).get(index-1);
+	public static String[] tokenize(String str, char delimiter) {
+		List<String> tokens = StringUtil.tokenize(str, delimiter);
+		return tokens.toArray(new String[tokens.size()]);
 	}
 	
-	@TeiidFunction(category=FunctionCategoryConstants.SYSTEM)
-	public static int token_length(String str, char delimiter) {
-		if (str == null) {
-			return 0;
-		}
-		return StringUtil.tokenize(str, delimiter).size();
-	}	
 }

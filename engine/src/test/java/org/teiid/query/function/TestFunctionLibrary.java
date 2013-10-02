@@ -22,12 +22,7 @@
 
 package org.teiid.query.function;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -53,6 +48,7 @@ import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.api.exception.query.InvalidFunctionException;
 import org.teiid.common.buffer.BlockedException;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobType;
 import org.teiid.core.types.DataTypeManager;
@@ -1471,5 +1467,9 @@ public class TestFunctionLibrary {
         result = helpInvokeMethod("teiid_session_get", new Class<?>[] {DataTypeManager.DefaultDataClasses.STRING}, new Object[] {"key"}, c);
         assertEquals("value1", result);
     }
+	
+	@Test() public void testTokenize() throws Exception {
+		helpInvokeMethod("tokenize", new Object[] {"bxaxxc", 'x'}, new ArrayImpl("b", "axc")); //$NON-NLS-1$
+	}
 
 }

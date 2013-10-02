@@ -181,19 +181,21 @@ BEGIN
     	IF (VARIABLES.beforeLoadScript IS NOT null)
     	BEGIN
     	   VARIABLES.index = 1;
-    	   VARIABLES.lineCount = convert(token_length(VARIABLES.beforeLoadScript, ';'), integer);
+    	   declare string[] strings = tokenize(VARIABLES.beforeLoadScript, ';');
+    	   VARIABLES.lineCount = array_length(strings);
     	    WHILE (index <= lineCount)
     	    BEGIN 
-        	   EXECUTE IMMEDIATE token_get(VARIABLES.beforeLoadScript, ';', index);
+        	   EXECUTE IMMEDIATE array_get(strings, index);
         	   index = index +1;
         	END
         END
 
         VARIABLES.index = 1;
-        VARIABLES.lineCount = convert(token_length(VARIABLES.loadScript, ';'), integer);
+        declare string[] strings = tokenize(VARIABLES.loadScript, ';');
+        VARIABLES.lineCount = array_length(strings);
         WHILE (index <= lineCount)
         BEGIN 
-           EXECUTE IMMEDIATE token_get(VARIABLES.loadScript, ';', index);
+           EXECUTE IMMEDIATE array_get(strings, index);
            index = index +1;
         END        
         
@@ -210,10 +212,11 @@ BEGIN
     	IF (VARIABLES.afterLoadScript IS NOT null)
     	BEGIN
             VARIABLES.index = 1;
-            VARIABLES.lineCount = convert(token_length(VARIABLES.afterLoadScript, ';'), integer);
+            strings = tokenize(VARIABLES.afterLoadScript, ';');
+            VARIABLES.lineCount = array_length(strings);
             WHILE (index <= lineCount)
             BEGIN 
-               EXECUTE IMMEDIATE token_get(VARIABLES.afterLoadScript, ';', index);
+               EXECUTE IMMEDIATE array_get(strings, index);
                index = index +1;
             END        
         END
