@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.AfterClass;
@@ -59,7 +60,7 @@ public class TestAsynch {
 	private static FakeServer server;
 	private ConnectionImpl internalConnection;
 	private static HardCodedExecutionFactory ef;
-	private static List<String> partIds = new ArrayList<String>();
+	private static List<String> partIds = Collections.synchronizedList(new ArrayList<String>());
     
     @BeforeClass public static void oneTimeSetup() throws Exception {
     	server = new FakeServer(true);

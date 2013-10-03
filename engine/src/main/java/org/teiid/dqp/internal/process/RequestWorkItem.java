@@ -635,13 +635,20 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						return;
 					}
 					super.flushBatchDirect(batch, add);
+					if (transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
+			        	synchronized (this) {
+							if (resultsReceiver == null) {
+					        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
+							}
+						}
+			        	if (add) {
+			        		throw new AssertionError("Should not add batch to buffer"); //$NON-NLS-1$
+			        	}
+			        }
 					if (!add) {
 						if (!processor.hasBuffer(false)) {
 							resultsBuffer.setRowCount(batch.getEndRow());
 						}
-						if ((requestMsg.getRequestOptions().isContinuous() || useCallingThread) && resultsReceiver == null) {
-				        	throw BlockedException.block(requestID, "Blocking to allow asynch processing"); //$NON-NLS-1$            	
-				        }
 					} else if (isForwardOnly() && add 
 							&& !processor.hasBuffer(false) //restrict the buffer size for forward only results
 							&& !batch.getTerminationFlag() 
@@ -767,6 +774,12 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 		boolean result = true;
 		synchronized (this) {
 			if (this.resultsReceiver == null) {
+				if (this.transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
+					if (batch != null) {
+						throw new AssertionError("batch has no handler"); //$NON-NLS-1$
+					}
+		        	throw BlockedException.block(requestID, "Blocking until client is ready"); //$NON-NLS-1$            	
+		        }
 				return result;
 			}
 			if (!this.requestMsg.getRequestOptions().isContinuous()) {
