@@ -114,6 +114,8 @@ public class TeiidDataSource extends BaseDataSource {
      */
     private boolean encryptRequests;
     
+    private final TeiidDriver driver = new TeiidDriver();
+    
 	public TeiidDataSource() {
     }
 
@@ -239,8 +241,7 @@ public class TeiidDataSource extends BaseDataSource {
      * @see javax.sql.DataSource#getConnection(java.lang.String, java.lang.String)
      */
     public Connection getConnection(String userName, String password) throws java.sql.SQLException {
-    	final TeiidDriver driver = new TeiidDriver();
-
+    	
     	// check if this is embedded connection 
     	if (getServerName() == null) {
     		super.validateProperties(userName, password);

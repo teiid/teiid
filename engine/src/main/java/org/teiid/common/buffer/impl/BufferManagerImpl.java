@@ -87,7 +87,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	 * Asynch cleaner attempts to age out old entries and to reduce the memory size when 
 	 * little is reserved.
 	 */
-	private static final int MAX_READ_AGE = 1<<18;
+	private static final int MAX_READ_AGE = 1<<17;
 	private static final class Cleaner extends TimerTask {
 		WeakReference<BufferManagerImpl> bufferRef;
 		
@@ -105,7 +105,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 				}
 				impl.cleaning.set(true);
 				try {
-					long evicted = impl.doEvictions(0, false, impl.initialEvictionQueue);
+					long evicted = impl.doEvictions(impl.maxProcessingBytes, false, impl.initialEvictionQueue);
 					if (evicted != 0) {
 						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.TRACE)) {
 							LogManager.logTrace(LogConstants.CTX_BUFFER_MGR, "Asynch eviction run", evicted, impl.reserveBatchBytes.get(), impl.maxReserveBytes, impl.activeBatchBytes.get()); //$NON-NLS-1$
@@ -842,22 +842,25 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 		long freed = 0;
 		while (freed <= maxToFree && (
 				!checkActiveBatch //age out 
-				|| queue == evictionQueue && activeBatchBytes.get() + overheadBytes.get() + this.maxReserveBytes/2 > reserveBatchBytes.get() //nominal cleaning criterion 
-				|| queue != evictionQueue && activeBatchBytes.get() > 0)) { //assume that basically all initial batches will need to be written out at some point
+				|| (queue == evictionQueue && activeBatchBytes.get() + overheadBytes.get() + this.maxReserveBytes/2 > reserveBatchBytes.get()) //nominal cleaning criterion 
+				|| (queue != evictionQueue && activeBatchBytes.get() + overheadBytes.get() + 3*this.maxReserveBytes/4 > reserveBatchBytes.get()))) { //assume that basically all initial batches will need to be written out at some point
 			CacheEntry ce = queue.firstEntry(checkActiveBatch);
 			if (ce == null) {
 				break;
 			}
 			synchronized (ce) {
 				if (!memoryEntries.containsKey(ce.getId())) {
-					checkActiveBatch = true;
+					if (!checkActiveBatch) {
+						queue.remove(ce);
+					}
 					continue; //not currently a valid eviction
 				}
 			}
 			if (!checkActiveBatch) {
 				long lastAccess = ce.getKey().getLastAccess();
 				long currentTime = readAttempts.get();
-				if (currentTime - lastAccess < MAX_READ_AGE) {
+				long age = currentTime - lastAccess;
+				if (age < MAX_READ_AGE) {
 					checkActiveBatch = true;
 					continue;
 				}
@@ -870,12 +873,9 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 			} finally {
 				synchronized (ce) {
 					if (evicted && memoryEntries.remove(ce.getId()) != null) {
-						if (maxToFree > 0) {
-							freed += ce.getSizeEstimate();
-						}
+						freed += ce.getSizeEstimate();
 						activeBatchBytes.addAndGet(-ce.getSizeEstimate());
 						queue.remove(ce); //ensures that an intervening get will still be cleaned
-						checkActiveBatch = true;
 					}
 				}
 			}
