@@ -174,7 +174,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 
 	@Override
     public void visit(AndOr obj) {
-        String opString = obj.getOperator().toString();
+        String opString = obj.getOperator().name().toLowerCase();
         appendNestedCondition(obj, obj.getLeftCondition());
 	    this.filter.append(Tokens.SPACE)
 	          .append(opString)
@@ -253,12 +253,12 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 	@Override
     public void visit(IsNull obj) {
         if (obj.isNegated()) {
-            this.filter.append(NOT).append(Tokens.LPAREN);
+            this.filter.append(NOT.toLowerCase()).append(Tokens.LPAREN);
         }
     	appendNested(obj.getExpression());
         this.filter.append(Tokens.SPACE);
         this.filter.append("eq").append(Tokens.SPACE); //$NON-NLS-1$
-        this.filter.append(NULL);
+        this.filter.append(NULL.toLowerCase());
         if (obj.isNegated()) {
             this.filter.append(Tokens.RPAREN);
         }
@@ -329,7 +329,7 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 		this.orderBy.append(column.getMetadataObject().getName());
 		// default is ascending
         if (obj.getOrdering() == Ordering.DESC) {
-        	this.orderBy.append(Tokens.SPACE).append(DESC);
+        	this.orderBy.append(Tokens.SPACE).append(DESC.toLowerCase());
         }
 	}
 
@@ -393,12 +393,9 @@ public class ODataSQLVisitor extends HierarchyVisitor {
 		String columnName = column.getName();
 		// Check if this is a embedded column, if it is then only
 		// add the parent type
-		String entityType = column.getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-		if (entityType != null) {
-			String parentEntityType = column.getParent().getProperty(ODataMetadataProcessor.ENTITY_TYPE, false);
-			if (!entityType.equals(parentEntityType)) {
-				columnName = entityType;
-			}
+		String columnGroup = column.getProperty(ODataMetadataProcessor.COLUMN_GROUP, false);
+		if (columnGroup != null) {
+			columnName = columnGroup;
 		}
 		return columnName;
 	}

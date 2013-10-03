@@ -23,6 +23,8 @@ package org.teiid.translator.odata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import org.odata4j.edm.*;
 import org.teiid.logging.LogConstants;
@@ -37,12 +39,12 @@ import org.teiid.metadata.Table;
 import org.teiid.translator.TranslatorException;
 
 public class ODataMetadataProcessor {
-	//public static final String PARENT_TABLE = "ParentTable"; //$NON-NLS-1$
-	public static final String LINK_TABLES = "LinkTables"; //$NON-NLS-1$
-	public static final String HTTP_METHOD = "HttpMethod"; //$NON-NLS-1$
-	public static final String JOIN_COLUMN = "JoinColumn"; //$NON-NLS-1$
-	public static final String ENTITY_TYPE = "EntityType"; //$NON-NLS-1$
-	public static final String ENTITY_ALIAS = "EntityAlias"; //$NON-NLS-1$
+	public static final String LINK_TABLES = MetadataFactory.ODATA_URI+"LinkTables"; //$NON-NLS-1$
+	public static final String HTTP_METHOD = MetadataFactory.ODATA_URI+"HttpMethod"; //$NON-NLS-1$
+	public static final String JOIN_COLUMN = MetadataFactory.ODATA_URI+"JoinColumn"; //$NON-NLS-1$
+	public static final String ENTITY_TYPE = MetadataFactory.ODATA_URI+"EntityType"; //$NON-NLS-1$
+	public static final String COMPLEX_TYPE = MetadataFactory.ODATA_URI+"ComplexType"; //$NON-NLS-1$
+	public static final String COLUMN_GROUP = MetadataFactory.ODATA_URI+"ColumnGroup"; //$NON-NLS-1$
 
 	private String entityContainer;
 	private String schemaNamespace;
@@ -98,8 +100,8 @@ public class ODataMetadataProcessor {
 				for (EdmProperty property:embedded.getProperties().toList()) {
 					if (property.getType().isSimple()) {
 						Column column = addPropertyAsColumn(mf, table, property, ep.getName());
-						column.setProperty(ENTITY_TYPE, ep.getName());
-						column.setNameInSource(property.getName());
+						column.setProperty(COMPLEX_TYPE, embedded.getName()); // complex type
+						column.setProperty(COLUMN_GROUP, ep.getName()); // name of parent column
 					}
 					else {
 						throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17002, name, ep.getName()));
@@ -135,7 +137,6 @@ public class ODataMetadataProcessor {
 				// if the table not found; then navigation name may be an alias name
 				// find by the entity type
 				toTable = getEntityTable(mf, toEntity);
-				toTable.setProperty(ENTITY_ALIAS, nav.getName());
 			}
 
 			if (isMultiplicityMany(fromEnd) && isMultiplicityMany(toEnd)) {
@@ -269,12 +270,16 @@ public class ODataMetadataProcessor {
 		return true;
 	}
 
-	private boolean keyMatches(List<String> names, KeyRecord record) {
+	boolean keyMatches(List<String> names, KeyRecord record) {
 		if (names.size() != record.getColumns().size()) {
 			return false;
 		}
+		Set<String> keyNames = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+		for (Column c: record.getColumns()) {
+			keyNames.add(c.getName());
+		}
 		for (int i = 0; i < names.size(); i++) {
-			if (!names.get(i).equalsIgnoreCase(record.getColumns().get(i).getName())) {
+			if (!keyNames.contains(names.get(i))) {
 				return false;
 			}
 		}
@@ -304,6 +309,7 @@ public class ODataMetadataProcessor {
 			columnName = prefix+"_"+columnName; //$NON-NLS-1$
 		}
 		Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), table);
+		c.setNameInSource(ep.getName());
 		if (ep.getFixedLength() != null) {
 			c.setFixedLength(ep.getFixedLength());
 		}
@@ -318,7 +324,6 @@ public class ODataMetadataProcessor {
 
 	void addFunctionImportAsProcedure(MetadataFactory mf, EdmFunctionImport function) throws TranslatorException {
 		Procedure procedure = mf.addProcedure(function.getName());
-		procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
 		procedure.setProperty(HTTP_METHOD, function.getHttpMethod());
 
 		// add parameters
@@ -339,25 +344,23 @@ public class ODataMetadataProcessor {
 			mf.addProcedureParameter("return", ODataTypeManager.teiidType(((EdmSimpleType)returnType).getFullyQualifiedTypeName()), ProcedureParameter.Type.ReturnValue, procedure); //$NON-NLS-1$
 		}
 		else if (returnType instanceof EdmComplexType) {
-			addProcedureTableReturn(mf, procedure, returnType, null);
+			procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
+			addProcedureTableReturn(mf, procedure, returnType);
 		}
 		else if (returnType instanceof EdmEntityType) {
-			addProcedureTableReturn(mf, procedure, returnType, function.getEntitySet().getName());
+			procedure.setProperty(ENTITY_TYPE, function.getReturnType().getFullyQualifiedTypeName());
+			addProcedureTableReturn(mf, procedure, returnType);
 		}
 		else if (returnType instanceof EdmCollectionType) {
-			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType(), function.getEntitySet().getName());
+			procedure.setProperty(ENTITY_TYPE, ((EdmCollectionType)returnType).getItemType().getFullyQualifiedTypeName());
+			addProcedureTableReturn(mf, procedure, ((EdmCollectionType)returnType).getItemType());
 		}
 		else {
 			throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17005, function.getName(), returnType.getFullyQualifiedTypeName()));
 		}
 	}
 
-	private void addProcedureTableReturn(MetadataFactory mf, Procedure procedure, EdmType type, String enitySetName) throws TranslatorException {
-		// if the procedure is returns and entity or collection of entities, instead of complex type
-		// this needs to set to correct entity.
-		if (enitySetName != null) {
-			procedure.setProperty(ENTITY_TYPE, enitySetName);
-		}
+	private void addProcedureTableReturn(MetadataFactory mf, Procedure procedure, EdmType type) throws TranslatorException {
 		if (type.isSimple()) {
 			mf.addProcedureResultSetColumn("return", ODataTypeManager.teiidType(((EdmSimpleType)type).getFullyQualifiedTypeName()), procedure); //$NON-NLS-1$
 		}
@@ -368,12 +371,12 @@ public class ODataMetadataProcessor {
 					mf.addProcedureResultSetColumn(ep.getName(), ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), procedure);
 				}
 				else {
-					addProcedureTableReturn(mf, procedure, ep.getType(), enitySetName);
+					addProcedureTableReturn(mf, procedure, ep.getType());
 				}
 			}
 		}
 		else if (type instanceof EdmEntityType) {
-			Table table = mf.getSchema().getTable(enitySetName);
+			Table table = getEntityTable(mf, (EdmEntityType)type);
 			for (Column column:table.getColumns()) {
 				mf.addProcedureResultSetColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), procedure);
 			}

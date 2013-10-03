@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.adminapi.impl.ModelMetaData.Message.Severity;
@@ -187,6 +188,7 @@ public class MetadataValidator {
 				}
 				ModelMetaData model = vdb.getModel(schema.getName());
 				MetadataFactory mf = new MetadataFactory(vdb.getName(), vdb.getVersion(), metadataValidator.typeMap, model) {
+					@Override
 					protected void setUUID(AbstractMetadataRecord record) {
 						if (count >= 0) {
 							count = Integer.MIN_VALUE;
@@ -334,13 +336,18 @@ public class MetadataValidator {
 			if (names.size() != record.getColumns().size()) {
 				return false;
 			}
+			Set<String> keyNames = new TreeSet<String>(String.CASE_INSENSITIVE_ORDER);
+			for (Column c: record.getColumns()) {
+				keyNames.add(c.getName());
+			}
 			for (int i = 0; i < names.size(); i++) {
-				if (!names.get(i).equals(record.getColumns().get(i).getName())) {
+				if (!keyNames.contains(names.get(i))) {
 					return false;
 				}
 			}
 			return true;
 		}
+
 		
 		@Override
 		public void execute(VDBMetaData vdb, MetadataStore store, ValidatorReport report, MetadataValidator metadataValidator) {
