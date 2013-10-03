@@ -63,7 +63,7 @@ public class ODataMetadataProcessor {
 
 					// add entity sets as tables
 					for (EdmEntitySet entitySet:container.getEntitySets()) {
-						addEntitySetAsTable(mf, entitySet.getName(), entitySet.getType());
+						addEntitySetAsTable(mf, entitySet);
 					}
 
 					// build relations ships among tables
@@ -80,16 +80,20 @@ public class ODataMetadataProcessor {
 		}
 	}
 
-
-	Table addEntitySetAsTable(MetadataFactory mf, String name, EdmEntityType entity) throws TranslatorException {
-		Table table = mf.addTable(name);
-		table.setProperty(ENTITY_TYPE, entity.getFullyQualifiedTypeName());
+	protected Table buildTable(MetadataFactory mf, EdmEntitySet entitySet) {
+		Table table = mf.addTable(entitySet.getName());
 		table.setSupportsUpdate(true);
+		return table;
+	}
+
+	protected Table addEntitySetAsTable(MetadataFactory mf, EdmEntitySet entitySet) throws TranslatorException {
+		Table table = buildTable(mf, entitySet);
+		table.setProperty(ENTITY_TYPE, entitySet.getType().getFullyQualifiedTypeName());
 
 		// add columns
-		for (EdmProperty ep:entity.getProperties().toList()) {
+		for (EdmProperty ep:entitySet.getType().getProperties().toList()) {
 			if (ep.getType().isSimple()) {
-				addPropertyAsColumn(mf, table, ep);
+				addPropertyAsColumn(mf, table, ep, entitySet);
 			}
 			else {
 				// this is complex type, i.e treat them as embeddable in the same table add all columns.
@@ -99,19 +103,19 @@ public class ODataMetadataProcessor {
 				EdmComplexType embedded = (EdmComplexType)ep.getType();
 				for (EdmProperty property:embedded.getProperties().toList()) {
 					if (property.getType().isSimple()) {
-						Column column = addPropertyAsColumn(mf, table, property, ep.getName());
+						Column column = addPropertyAsColumn(mf, table, property, entitySet, ep.getName());
 						column.setProperty(COMPLEX_TYPE, embedded.getName()); // complex type
 						column.setProperty(COLUMN_GROUP, ep.getName()); // name of parent column
 					}
 					else {
-						throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17002, name, ep.getName()));
+						throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17002, entitySet.getName(), ep.getName()));
 					}
 				}
 			}
 		}
 
 		// add PK
-		mf.addPrimaryKey("PK", entity.getKeys(), table); //$NON-NLS-1$
+		mf.addPrimaryKey("PK", entitySet.getType().getKeys(), table); //$NON-NLS-1$
 		return table;
 	}
 
@@ -299,17 +303,12 @@ public class ODataMetadataProcessor {
 		return false;
 	}
 
-	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep) {
-		return addPropertyAsColumn(mf, table, ep, null);
+	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep, EdmEntitySet entitySet) {
+		return addPropertyAsColumn(mf, table, ep, entitySet, null);
 	}
 
-	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep, String prefix) {
-		String columnName = ep.getName();
-		if (prefix != null) {
-			columnName = prefix+"_"+columnName; //$NON-NLS-1$
-		}
-		Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), table);
-		c.setNameInSource(ep.getName());
+	private Column addPropertyAsColumn(MetadataFactory mf, Table table, EdmProperty ep, EdmEntitySet entitySet, String prefix) {
+		Column c = buildColumn(mf, table, ep, entitySet, prefix);
 		if (ep.getFixedLength() != null) {
 			c.setFixedLength(ep.getFixedLength());
 		}
@@ -317,10 +316,21 @@ public class ODataMetadataProcessor {
 		if (ep.getMaxLength() != null) {
 			c.setLength(ep.getMaxLength());
 		}
-		c.setUpdatable(true);
+		
 		return c;
 	}
 
+	@SuppressWarnings("unused")
+	protected Column buildColumn(MetadataFactory mf, Table table, EdmProperty ep, EdmEntitySet entitySet, String prefix) {
+		String columnName = ep.getName();
+		if (prefix != null) {
+			columnName = prefix+"_"+columnName; //$NON-NLS-1$
+		}
+		Column c = mf.addColumn(columnName, ODataTypeManager.teiidType(ep.getType().getFullyQualifiedTypeName()), table);
+		c.setNameInSource(ep.getName());
+		c.setUpdatable(true);
+		return c;
+	}
 
 	void addFunctionImportAsProcedure(MetadataFactory mf, EdmFunctionImport function) throws TranslatorException {
 		Procedure procedure = mf.addProcedure(function.getName());

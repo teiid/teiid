@@ -1,0 +1,24 @@
+<edmx:Edmx xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:gp="http://www.sap.com/Protocols/SAPData/GenericPlayer" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData" xmlns:ux="http://www.sap.com/Protocols/OData4SAP/UX" Version="1.0">
+    <edmx:DataServices m:DataServiceVersion="2.0">
+        <Schema xmlns="http://schemas.microsoft.com/ado/2008/09/edm" Namespace="RMTSAMPLEFLIGHT" xml:lang="en">
+            <EntityType Name="Subscription" sap:semantics="subscriptions" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="ID" />
+                </Key>
+                <Property Name="ID" Type="Edm.String" Nullable="false" MaxLength="32" sap:creatable="false" sap:updatable="false" sap:filterable="false" />
+                <Property Name="user" Type="Edm.String" MaxLength="12" m:FC_TargetPath="SyndicationAuthorName" m:FC_KeepInContent="false" sap:label="User Name" sap:creatable="false" sap:filterable="false" />
+                <Property Name="updated" Type="Edm.DateTime" m:FC_TargetPath="SyndicationUpdated" m:FC_KeepInContent="false" sap:label="Time Stamp" sap:creatable="false" sap:filterable="false" />
+                <Property Name="title" Type="Edm.String" MaxLength="255" m:FC_TargetPath="SyndicationTitle" m:FC_KeepInContent="false" sap:filterable="false" />
+                <Property Name="deliveryAddress" Type="Edm.String" sap:filterable="false" />
+                <Property Name="persistNotifications" Type="Edm.Boolean" sap:label="Persist Notification" sap:filterable="false" />
+                <Property Name="collection" Type="Edm.String" MaxLength="40" sap:filterable="false" />
+                <Property Name="filter" Type="Edm.String" sap:sortable="false" sap:visible="false"/>
+                <Property Name="select" Type="Edm.String" MaxLength="255" sap:required-in-filter="true"/>
+                <Property Name="changeType" Type="Edm.String" MaxLength="30" sap:label="Change Type" sap:required-in-filter="true" />
+            </EntityType>
+            <EntityContainer Name="RMTSAMPLEFLIGHT" m:IsDefaultEntityContainer="true">
+                <EntitySet Name="SubscriptionCollection" EntityType="RMTSAMPLEFLIGHT.Subscription" sap:content-version="1" />
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>

@@ -75,11 +75,22 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 	private String databaseTimeZone;
 	private TimeZone timeZone = DEFAULT_TIME_ZONE;
+	private boolean supportsOdataFilter;
+	private boolean supportsOdataOrderBy;
+	private boolean supportsOdataCount;
+	private boolean supportsOdataSkip;
+	private boolean supportsOdataTop;
 
 	public ODataExecutionFactory() {
 		setSourceRequiredForMetadata(true);
 		setSupportsOrderBy(true);
-
+		
+		setSupportsOdataCount(true);
+		setSupportsOdataFilter(true);
+		setSupportsOdataOrderBy(true);
+		setSupportsOdataSkip(true);
+		setSupportsOdataTop(true);
+		
 		registerFunctionModifier(SourceSystemFunctions.CONVERT, new AliasModifier("cast")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LOCATE, new AliasModifier("indexof")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.LCASE, new AliasModifier("tolower")); //$NON-NLS-1$
@@ -121,7 +132,7 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 
 		try {
 			EdmDataServices eds = new EdmxFormatParser().parseMetadata(StaxUtil.newXMLEventReader(new InputStreamReader(out.getBinaryStream())));
-			ODataMetadataProcessor metadataProcessor = new ODataMetadataProcessor();
+			ODataMetadataProcessor metadataProcessor = getMetadataProcessor();
 			PropertiesUtils.setBeanProperties(metadataProcessor, metadataFactory.getModelProperties(), "importer"); //$NON-NLS-1$
 			metadataProcessor.getMetadata(metadataFactory, eds);
 		} catch (SQLException e) {
@@ -129,6 +140,9 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		}
 	}
 
+	protected ODataMetadataProcessor getMetadataProcessor() {
+		return new ODataMetadataProcessor();
+	}
 
 	@Override
 	public ResultSetExecution createResultSetExecution(QueryExpression command, ExecutionContext executionContext, RuntimeMetadata metadata, WSConnection connection) throws TranslatorException {
@@ -199,29 +213,74 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
 		return Arrays.asList(new String[] { "+", "-", "*", "/" }); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 	}
 
+	@TranslatorProperty(display="Supports $Filter", description="True, $filter is supported", advanced=true)
+    public boolean supportsOdataFilter() {
+    	return supportsOdataFilter;
+    }
+	
+	public void setSupportsOdataFilter(boolean supports) {
+		this.supportsOdataFilter = supports;
+	}	
+	
+	@TranslatorProperty(display="Supports $OrderBy", description="True, $orderby is supported", advanced=true)
+    public boolean supportsOdataOrderBy() {
+    	return supportsOdataOrderBy;
+    }
+	
+	public void setSupportsOdataOrderBy(boolean supports) {
+		this.supportsOdataOrderBy = supports;
+	}
+	
+	@TranslatorProperty(display="Supports $count", description="True, $count is supported", advanced=true)
+    public boolean supportsOdataCount() {
+    	return supportsOdataCount;
+    }
+	
+	public void setSupportsOdataCount(boolean supports) {
+		this.supportsOdataCount = supports;
+	}	
+	
+	@TranslatorProperty(display="Supports $skip", description="True, $skip is supported", advanced=true)
+    public boolean supportsOdataSkip() {
+    	return supportsOdataSkip;
+    }
+	
+	public void setSupportsOdataSkip(boolean supports) {
+		this.supportsOdataSkip = supports;
+	}
+	
+	@TranslatorProperty(display="Supports $top", description="True, $top is supported", advanced=true)
+    public boolean supportsOdataTop() {
+    	return supportsOdataTop;
+    }
+	
+	public void setSupportsOdataTop(boolean supports) {
+		this.supportsOdataTop = supports;
+	}	
+	
 	@Override
     public boolean supportsCompareCriteriaEquals() {
-    	return true;
+    	return this.supportsOdataFilter;
     }
 
 	@Override
     public boolean supportsCompareCriteriaOrdered() {
-    	return true;
+    	return supportsOdataFilter;
     }
 
 	@Override
     public boolean supportsIsNullCriteria() {
-    	return true;
+    	return supportsOdataFilter;
     }
 
 	@Override
 	public boolean supportsOrCriteria() {
-    	return true;
+    	return supportsOdataFilter;
     }
 
 	@Override
     public boolean supportsNotCriteria() {
-    	return true;
+    	return supportsOdataFilter;
     }
 
 	@Override
@@ -234,29 +293,35 @@ public class ODataExecutionFactory extends ExecutionFactory<ConnectionFactory, W
     	return false; // TODO:FOR ALL
     }
 
+    @Override
+	@TranslatorProperty(display="Supports ORDER BY", description="True, if this connector supports ORDER BY", advanced=true)
+    public boolean supportsOrderBy() {
+    	return supportsOdataOrderBy;
+    }
+	
 	@Override
     public boolean supportsOrderByUnrelated() {
-    	return true;
+    	return this.supportsOdataOrderBy;
     }
 
 	@Override
     public boolean supportsAggregatesCount() {
-    	return true;
+    	return supportsOdataCount;
     }
 
 	@Override
 	public boolean supportsAggregatesCountStar() {
-    	return true;
+    	return supportsOdataCount;
     }
 
 	@Override
     public boolean supportsRowLimit() {
-    	return true;
+    	return supportsOdataTop;
     }
 
 	@Override
     public boolean supportsRowOffset() {
-    	return true;
+    	return supportsOdataSkip;
     }
 
 	@Override
