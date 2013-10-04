@@ -72,7 +72,14 @@ public class TestHiveExecutionFactory {
     	helpTest(LANG_FACTORY.createLiteral(new BigInteger("123451266182"), BigInteger.class), TypeFacility.RUNTIME_NAMES.BIG_INTEGER, "cast(123451266182 AS bigint)");
     	helpTest(LANG_FACTORY.createLiteral(new String("foo-bar"), String.class), TypeFacility.RUNTIME_NAMES.STRING, "cast('foo-bar' AS string)");
     	helpTest(LANG_FACTORY.createLiteral(Boolean.TRUE, Boolean.class), TypeFacility.RUNTIME_NAMES.STRING, "cast(true AS string)");
-    	//helpTest(LANG_FACTORY.createLiteral(new Timestamp(1320883518391L), Timestamp.class), TypeFacility.RUNTIME_NAMES.STRING, "cast('2011-11-09 18:05:18.391' AS string)");
+    	helpTest(LANG_FACTORY.createLiteral(new Integer(12345), Integer.class), TypeFacility.RUNTIME_NAMES.BOOLEAN, "cast(12345 AS boolean)");
+    }
+    
+    @Test
+    public void testFunction() throws Exception {
+        String input = "SELECT MOD(A.intkey,2) FROM BQT1.SMALLA A"; 
+        String output = "SELECT (A.IntKey % 2) FROM SmallA A"; 
+        helpTestVisitor(bqt, input, output);
     }
     
     @Test
@@ -85,7 +92,7 @@ public class TestHiveExecutionFactory {
     @Test
     public void testCrossJoinCriteria() throws Exception {
         String input = "SELECT A.intkey FROM BQT1.SMALLA A Cross join BQT1.SmallB B"; 
-        String output = "SELECT A.IntKey FROM SmallA A  JOIN SmallB B"; 
+        String output = "SELECT A.IntKey FROM SmallA A CROSS JOIN SmallB B"; 
         helpTestVisitor(bqt, input, output);
     }
     

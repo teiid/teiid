@@ -160,7 +160,9 @@ public class LanguageBridgeFactory {
 
     public org.teiid.language.Command translate(Command command) {
     	try {
-	        if (command == null) return null;
+	        if (command == null) {
+				return null;
+			}
 	        if (command instanceof Query) {
 	            Select result = translate((Query)command);
 	            result.setDependentValues(this.dependentSets);
@@ -289,7 +291,9 @@ public class LanguageBridgeFactory {
     }
 
     public TableReference translate(FromClause clause) {
-        if (clause == null) return null;
+        if (clause == null) {
+			return null;
+		}
         if (clause instanceof JoinPredicate) {
             return translate((JoinPredicate)clause);
         } else if (clause instanceof SubqueryFromClause) {
@@ -337,7 +341,9 @@ public class LanguageBridgeFactory {
     }
 
     public Condition translate(Criteria criteria) {
-        if (criteria == null) return null;
+        if (criteria == null) {
+			return null;
+		}
         if (criteria instanceof CompareCriteria) {
             return translate((CompareCriteria)criteria);
         } else if (criteria instanceof CompoundCriteria) {
@@ -576,7 +582,9 @@ public class LanguageBridgeFactory {
 
     /* Expressions */
     public org.teiid.language.Expression translate(Expression expr) {
-        if (expr == null) return null;
+        if (expr == null) {
+			return null;
+		}
         if (expr instanceof Constant) {
             return translate((Constant)expr);
         } else if (expr instanceof AggregateSymbol) {
@@ -770,7 +778,12 @@ public class LanguageBridgeFactory {
     	for (Expression expression : symbol.getArgs()) {
 			params.add(translate(expression));
 		}
-    	AggregateFunction af = new AggregateFunction(symbol.getAggregateFunction().name(), 
+    	String name = symbol.getAggregateFunction().name();
+    	if (symbol.getAggregateFunction() == AggregateSymbol.Type.USER_DEFINED) {
+    		name = symbol.getName();
+    	}
+    	
+    	AggregateFunction af = new AggregateFunction(name, 
                                 symbol.isDistinct(), 
                                 params,
                                 symbol.getType());
