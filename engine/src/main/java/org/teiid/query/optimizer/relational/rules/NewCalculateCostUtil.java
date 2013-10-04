@@ -1306,9 +1306,20 @@ public class NewCalculateCostUtil {
 				continue;
 			}
 			PlanNode sourceNode = FrameUtil.findOriginatingNode(initial, critNode.getGroups());
+			if (sourceNode == null) {
+				continue;
+			}
 			PlanNode target = sourceNode;
 			if (initial != sourceNode) {
-				target = rpsc.examinePath(initial, sourceNode, metadata, capFinder);					
+				//pretend the criteria starts at the initial location
+				//either above or below depending upon the node type
+				if (initial.getChildCount() > 1) {
+					initial.addAsParent(critNode);
+				} else {
+					initial.getFirstChild().addAsParent(critNode);
+				}
+				target = rpsc.examinePath(critNode, sourceNode, metadata, capFinder);
+				critNode.getParent().replaceChild(critNode, critNode.getFirstChild());
 			}
 			if (target != sourceNode || (sourceNode.getType() == NodeConstants.Types.SOURCE && sourceNode.getChildCount() == 0)) {
 				targets.add(target);

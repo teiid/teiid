@@ -865,4 +865,41 @@ public class TestDependentJoins {
             }); 
     }
     
+    @Test public void testPlanningOverJoin() throws Exception {
+        // Create query
+        String sql = "SELECT pm1.g1.e1 FROM pm1.g1, (select pm2.g2.e1, pm2.g3.e2 from pm2.g2 left outer join pm2.g3 on pm2.g2.e1 = pm2.g3.e1) as x where pm1.g1.e1 = x.e1";//$NON-NLS-1$
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", TestOptimizer.getTypicalCapabilities()); //$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.example1();
+        RealMetadataFactory.setCardinality("pm1.g1", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY, metadata);
+        RealMetadataFactory.setCardinality("pm2.g2", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+        RealMetadataFactory.setCardinality("pm2.g3", RuleChooseDependent.DEFAULT_INDEPENDENT_CARDINALITY + 1, metadata);
+    
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
+            null, capFinder,
+            new String[] { "SELECT g_0.e1 AS c_0 FROM pm2.g2 AS g_0 LEFT OUTER JOIN pm2.g3 AS g_1 ON g_0.e1 = g_1.e1 WHERE g_0.e1 IN (<dependent values>) ORDER BY c_0", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });         
+    }
+    
 }
