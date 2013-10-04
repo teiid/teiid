@@ -29,6 +29,7 @@ import org.teiid.api.exception.query.ExpressionEvaluationException;
 import org.teiid.api.exception.query.FunctionExecutionException;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.FunctionDescriptor;
 import org.teiid.query.util.CommandContext;
 
@@ -40,7 +41,9 @@ public class UserDefined extends AggregateFunction {
 	
 	public UserDefined(FunctionDescriptor functionDescriptor) {
 		this.fd = functionDescriptor;
-		this.instance = (UserDefinedAggregate<?>) fd.newInstance();
+		if (this.fd.getPushdown() == PushDown.CAN_PUSHDOWN || this.fd.getPushdown() == PushDown.CANNOT_PUSHDOWN) {
+			this.instance = (UserDefinedAggregate<?>) fd.newInstance();
+		}
 	}
 
 	@Override
@@ -55,19 +58,26 @@ public class UserDefined extends AggregateFunction {
 		for (int i = 0; i < argIndexes.length; i++) {
 			values[i + (fd.requiresContext()?1:0)] = tuple.get(argIndexes[i]);
 		}
-		fd.invokeFunction(values, commandContext, instance);
+		if (this.fd.getPushdown() == PushDown.CAN_PUSHDOWN || this.fd.getPushdown() == PushDown.CANNOT_PUSHDOWN) {		
+			fd.invokeFunction(values, commandContext, instance);
+		}
 	}
 	
 	@Override
 	public void reset() {
-		instance.reset();
+		if (this.fd.getPushdown() == PushDown.CAN_PUSHDOWN || this.fd.getPushdown() == PushDown.CANNOT_PUSHDOWN) {
+			instance.reset();
+		}
 	}
 	
 	@Override
 	public Object getResult(CommandContext commandContext) throws FunctionExecutionException,
 			ExpressionEvaluationException, TeiidComponentException,
 			TeiidProcessingException {
-		return instance.getResult(commandContext);
+		if (this.fd.getPushdown() == PushDown.CAN_PUSHDOWN || this.fd.getPushdown() == PushDown.CANNOT_PUSHDOWN) {
+			return instance.getResult(commandContext);
+		}
+		return values[0];
 	}
 	
 	@Override

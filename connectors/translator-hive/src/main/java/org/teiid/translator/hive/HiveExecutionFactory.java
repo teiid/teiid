@@ -24,9 +24,11 @@ package org.teiid.translator.hive;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.BIG_INTEGER;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DATE;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.DOUBLE;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.FLOAT;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.INTEGER;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.OBJECT;
 import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.STRING;
+import static org.teiid.translator.TypeFacility.RUNTIME_NAMES.TIMESTAMP;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,6 +41,8 @@ import java.util.List;
 import org.teiid.language.Command;
 import org.teiid.language.Function;
 import org.teiid.language.Limit;
+import org.teiid.metadata.AggregateAttributes;
+import org.teiid.metadata.FunctionMethod;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
@@ -58,7 +62,6 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 	public static String HIVE = "hive"; //$NON-NLS-1$
 	protected ConvertModifier convert = new ConvertModifier();
 
-
 	public HiveExecutionFactory() {
 		setSupportedJoinCriteria(SupportedJoinCriteria.EQUI);
 	}
@@ -71,15 +74,16 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 		this.convert.addTypeMapping("int", FunctionModifier.INTEGER); //$NON-NLS-1$
 		this.convert.addTypeMapping("bigint", FunctionModifier.BIGINTEGER, FunctionModifier.LONG); //$NON-NLS-1$
 		this.convert.addTypeMapping("boolean", FunctionModifier.BOOLEAN); //$NON-NLS-1$
-		this.convert.addTypeMapping("double", FunctionModifier.DOUBLE, FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+		this.convert.addTypeMapping("double", FunctionModifier.DOUBLE); //$NON-NLS-1$
+		this.convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
 		this.convert.addTypeMapping("float", FunctionModifier.FLOAT); //$NON-NLS-1$
 		this.convert.addTypeMapping("string", FunctionModifier.STRING); //$NON-NLS-1$
 		this.convert.addTypeMapping("timestamp", FunctionModifier.TIMESTAMP); //$NON-NLS-1$
 		this.convert.addTypeMapping("binary", FunctionModifier.BLOB); //$NON-NLS-1$
 		this.convert.addTypeMapping("decimal", FunctionModifier.BIGDECIMAL); //$NON-NLS-1$
+		this.convert.addTypeMapping("date", FunctionModifier.DATE); //$NON-NLS-1$
 
 		// unsupported types
-		//FunctionModifier.DATE,
 		//FunctionModifier.TIME,
 		//FunctionModifier.CHAR,
 		//FunctionModifier.CLOB,
@@ -89,8 +93,8 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 
 		registerFunctionModifier(SourceSystemFunctions.BITAND, new AliasModifier("&")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.BITNOT, new AliasModifier("~")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("&")); //$NON-NLS-1$
-		registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("|")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.BITOR, new AliasModifier("|")); //$NON-NLS-1$
+		registerFunctionModifier(SourceSystemFunctions.BITXOR, new AliasModifier("^")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.CURDATE, new AliasModifier("unix_timestamp")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.IFNULL, new AliasModifier("coalesce")); //$NON-NLS-1$
 		registerFunctionModifier(SourceSystemFunctions.MOD, new ModFunctionModifier("%", getLanguageFactory(), Arrays.asList(TypeFacility.RUNTIME_TYPES.BIG_INTEGER, TypeFacility.RUNTIME_TYPES.BIG_DECIMAL))); //$NON-NLS-1$
@@ -101,7 +105,6 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 				return Arrays.asList(function.getParameters().get(0), '[', function.getParameters().get(1), ']');
 			}
 		});
-
 
 		addPushDownFunction(HIVE, "lower", STRING, STRING); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "upper", STRING, STRING); //$NON-NLS-1$
@@ -117,9 +120,29 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 		addPushDownFunction(HIVE, "unhex", STRING, STRING); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "bin", STRING, BIG_INTEGER); //$NON-NLS-1$
 		addPushDownFunction(HIVE, "day", INTEGER, DATE); //$NON-NLS-1$
-		addPushDownFunction(HIVE, "datediff", INTEGER, DATE, DATE); //$NON-NLS-1$
-		addPushDownFunction(HIVE, "date_add", INTEGER, DATE, INTEGER); //$NON-NLS-1$
-		addPushDownFunction(HIVE, "date_sub", INTEGER, DATE, INTEGER); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "datediff", INTEGER, STRING, STRING); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "date_add", INTEGER, STRING, INTEGER); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "date_sub", INTEGER, STRING, INTEGER); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "from_unixtime", STRING, BIG_INTEGER); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "from_unixtime", STRING, BIG_INTEGER, STRING); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "unix_timestamp", BIG_INTEGER, STRING); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "unix_timestamp", BIG_INTEGER, STRING, STRING); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "to_date", STRING, STRING); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "from_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
+		addPushDownFunction(HIVE, "to_utc_timestamp", TIMESTAMP, TIMESTAMP, STRING); //$NON-NLS-1$
+		
+		addAggregatePushDownFunction(HIVE, "LEAD", OBJECT, OBJECT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "LEAD", OBJECT, OBJECT, INTEGER); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "LEAD", OBJECT, OBJECT, INTEGER, OBJECT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "LAG", OBJECT, OBJECT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "LAG", OBJECT, OBJECT, INTEGER); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "LAG", OBJECT, OBJECT, INTEGER, OBJECT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "FIRST_VALUE", OBJECT, OBJECT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "LAST_VALUE", OBJECT, OBJECT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "PERCENT_RANK", FLOAT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "CUME_DIST", FLOAT); //$NON-NLS-1$
+		addAggregatePushDownFunction(HIVE, "NTILE", BIG_INTEGER, INTEGER); //$NON-NLS-1$
+		
 	}
 
 	@Override
@@ -246,6 +269,22 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     public boolean supportsCommonTableExpressions() {
     	return false;
     }
+    
+    @Override
+	public boolean supportsElementaryOlapOperations() {
+    	return true;
+    }
+
+	@Override
+	public boolean supportsRowLimit() {
+		return true;
+	}
+	
+    @Override
+	public boolean supportsGroupByRollup() {
+    	//https://cwiki.apache.org/confluence/display/Hive/Enhanced+Aggregation,+Cube,+Grouping+and+Rollup
+		return true;
+	}
 
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
@@ -313,6 +352,7 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.POWER);
         supportedFunctions.add(SourceSystemFunctions.SECOND);
         supportedFunctions.add(SourceSystemFunctions.SQRT);
+        supportedFunctions.add(SourceSystemFunctions.RADIANS);
         supportedFunctions.add(SourceSystemFunctions.ROUND);
         supportedFunctions.add(SourceSystemFunctions.RTRIM);
         supportedFunctions.add(SourceSystemFunctions.RPAD);
@@ -320,6 +360,7 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
         supportedFunctions.add(SourceSystemFunctions.PI);
         supportedFunctions.add(SourceSystemFunctions.SIN);
         supportedFunctions.add(SourceSystemFunctions.SUBSTRING);
+        supportedFunctions.add(SourceSystemFunctions.TAN);
         supportedFunctions.add(SourceSystemFunctions.TRIM);
         supportedFunctions.add(SourceSystemFunctions.UCASE);
         supportedFunctions.add(SourceSystemFunctions.YEAR);
@@ -338,5 +379,13 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
     		return results.getTimestamp(columnIndex);
     	}
     	return super.retrieveValue(results, columnIndex, expectedType);
+    }
+    
+    protected FunctionMethod addAggregatePushDownFunction(String qualifier, String name, String returnType, String...paramTypes) {
+    	FunctionMethod method = addPushDownFunction(qualifier, name, returnType, paramTypes);
+    	AggregateAttributes attr = new AggregateAttributes();
+    	attr.setAnalytic(true);
+    	method.setAggregateAttributes(attr);
+    	return method;
     }
 }
