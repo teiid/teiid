@@ -352,16 +352,6 @@ public class TestCapabilitiesUtil {
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
-
-    // Test where capabilities support for user defined aggregate pushdown
-    @Test public void testSupportsAggregate17() throws Exception {        
-        BasicSourceCapabilities caps = new BasicSourceCapabilities();
-        caps.setFunctionSupport("FIRST_VALUE", true);
-        
-        AggregateSymbol aggregate = new AggregateSymbol("FIRST_VALUE", false, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
-        
-        helpTestSupportsAggregateFunction(caps, aggregate, true); 
-    }  
     
     @Test public void testSupportsAggregate16() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
