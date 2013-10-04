@@ -32,15 +32,7 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import org.junit.Test;
-import org.odata4j.edm.EdmAssociation;
-import org.odata4j.edm.EdmAssociationEnd;
-import org.odata4j.edm.EdmComplexType;
-import org.odata4j.edm.EdmEntityType;
-import org.odata4j.edm.EdmMultiplicity;
-import org.odata4j.edm.EdmNavigationProperty;
-import org.odata4j.edm.EdmProperty;
-import org.odata4j.edm.EdmReferentialConstraint;
-import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.*;
 import org.odata4j.format.xml.EdmxFormatParser;
 import org.odata4j.stax2.util.StaxUtil;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -102,8 +94,9 @@ public class TestODataMetadataProcessor {
 		props.add(EdmProperty.newBuilder("dob").setType(EdmSimpleType.DATETIME).setNullable(true));
 		props.add(EdmProperty.newBuilder("ssn").setType(EdmSimpleType.INT64).setNullable(false));
 		
-		EdmEntityType entity = EdmEntityType.newBuilder().addProperties(props).addKeys("ssn").build();
-		processor.addEntitySetAsTable(mf, "Person", entity);
+		EdmEntityType.Builder entity = EdmEntityType.newBuilder().addProperties(props).addKeys("ssn");
+		EdmEntitySet es = EdmEntitySet.newBuilder().setName("Person").setEntityType(entity).build();
+		processor.addEntitySetAsTable(mf, es);
 		
 		assertNotNull(mf.getSchema().getTable("Person"));
 		
@@ -141,7 +134,8 @@ public class TestODataMetadataProcessor {
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
 		
-		processor.addEntitySetAsTable(mf, "Person", buildPersonEntity(buildAddressEntity().build()).build());
+		EdmEntitySet es = EdmEntitySet.newBuilder().setName("Person").setEntityType(buildPersonEntity(buildAddressEntity().build())).build();
+		processor.addEntitySetAsTable(mf, es);
 		
 		assertEquals(1, mf.getSchema().getTables().size());
 		assertNotNull(mf.getSchema().getTable("Person"));
@@ -157,10 +151,13 @@ public class TestODataMetadataProcessor {
 	public void testMultipleEnititySetWithSameComplexType() throws Exception {
 		ODataMetadataProcessor processor = new ODataMetadataProcessor();
 		MetadataFactory mf = new MetadataFactory("vdb", 1, "northwind", SystemMetadata.getInstance().getRuntimeTypeMap(), new Properties(), null);
-		
-		processor.addEntitySetAsTable(mf, "Person", buildPersonEntity(buildAddressEntity().build()).build());
-		processor.addEntitySetAsTable(mf, "Business", buildBusinessEntity(buildAddressEntity().build()).build());
-		
+
+		EdmEntitySet es = EdmEntitySet.newBuilder().setName("Person").setEntityType(buildPersonEntity(buildAddressEntity().build())).build();
+		processor.addEntitySetAsTable(mf, es);
+
+		es = EdmEntitySet.newBuilder().setName("Business").setEntityType(buildBusinessEntity(buildAddressEntity().build())).build();
+		processor.addEntitySetAsTable(mf, es);
+
 		assertEquals(2, mf.getSchema().getTables().size());
 		assertNotNull(mf.getSchema().getTable("Person"));
 		assertNotNull(mf.getSchema().getTable("Business"));
@@ -199,8 +196,12 @@ public class TestODataMetadataProcessor {
 				.newBuilder("g1").setFromTo(aend2, aend1).setFromToName("source", "target").setRelationship(assocition);
 		g2Entity.addNavigationProperties(navigation);
 		
-		processor.addEntitySetAsTable(mf, "G1", g1Entity.build());
-		processor.addEntitySetAsTable(mf, "G2", g2Entity.build());
+		EdmEntitySet g1Set = EdmEntitySet.newBuilder().setName("G1").setEntityType(g1Entity).build();
+		processor.addEntitySetAsTable(mf, g1Set);
+		
+		EdmEntitySet g2Set = EdmEntitySet.newBuilder().setName("G2").setEntityType(g2Entity).build();
+		processor.addEntitySetAsTable(mf, g2Set);
+		
 		processor.addNavigationRelations(mf, "G2", g2Entity.build());
 		
 		Table g1 = mf.getSchema().getTable("G1");
@@ -242,8 +243,11 @@ public class TestODataMetadataProcessor {
 		
 		g2Entity.addNavigationProperties(navigation);
 		
-		Table t1 = processor.addEntitySetAsTable(mf, "G1", g1Entity.build());
-		Table t2 = processor.addEntitySetAsTable(mf, "G2", g2Entity.build());
+		EdmEntitySet g1Set = EdmEntitySet.newBuilder().setName("G1").setEntityType(g1Entity).build();
+		EdmEntitySet g2Set = EdmEntitySet.newBuilder().setName("G2").setEntityType(g2Entity).build();
+
+		Table t1 = processor.addEntitySetAsTable(mf, g1Set);
+		Table t2 = processor.addEntitySetAsTable(mf, g2Set);
 		
 		KeyRecord record = new KeyRecord(Type.Unique);
 		record.addColumn(t1.getColumnByName("g2e2"));
@@ -288,8 +292,11 @@ public class TestODataMetadataProcessor {
 				.newBuilder("g1").setFromTo(aend2, aend1).setFromToName("source", "target").setRelationship(assocition);
 		g2Entity.addNavigationProperties(navigation);
 		
-		processor.addEntitySetAsTable(mf, "G1", g1Entity.build());
-		processor.addEntitySetAsTable(mf, "G2", g2Entity.build());
+		EdmEntitySet g1Set = EdmEntitySet.newBuilder().setName("G1").setEntityType(g1Entity).build();
+		EdmEntitySet g2Set = EdmEntitySet.newBuilder().setName("G2").setEntityType(g2Entity).build();
+		
+		processor.addEntitySetAsTable(mf, g1Set);
+		processor.addEntitySetAsTable(mf, g2Set);
 		processor.addNavigationRelations(mf, "G2", g2Entity.build());
 		
 		Table g1 = mf.getSchema().getTable("G1");
@@ -340,8 +347,11 @@ public class TestODataMetadataProcessor {
 				.newBuilder("g1").setFromTo(aend2, aend1).setFromToName("source", "target").setRelationship(assocition);
 		g2Entity.addNavigationProperties(navigation);
 		
-		processor.addEntitySetAsTable(mf, "G1", g1Entity.build());
-		processor.addEntitySetAsTable(mf, "G2", g2Entity.build());
+		EdmEntitySet g1Set = EdmEntitySet.newBuilder().setName("G1").setEntityType(g1Entity).build();
+		EdmEntitySet g2Set = EdmEntitySet.newBuilder().setName("G2").setEntityType(g2Entity).build();
+		
+		processor.addEntitySetAsTable(mf, g1Set);
+		processor.addEntitySetAsTable(mf, g2Set);
 		processor.addNavigationRelations(mf, "G2", g2Entity.build());
 		
 		Table g1 = mf.getSchema().getTable("G1");
