@@ -33,6 +33,8 @@ import java.util.Collection;
 import javax.xml.stream.XMLStreamException;
 
 import org.jboss.vfs.VirtualFile;
+import org.teiid.adminapi.impl.VDBMetaData;
+import org.teiid.adminapi.impl.VDBMetadataParser;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.FileUtils;
 import org.teiid.core.util.LRUCache;
@@ -47,6 +49,7 @@ import org.teiid.query.metadata.PureZipFileSystem;
 import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.metadata.VDBResources;
+import org.teiid.query.metadata.VDBResources.Resource;
 
 
 public class VDBMetadataFactory {
@@ -75,7 +78,11 @@ public class VDBMetadataFactory {
 
 		try {
 			IndexVDB imf = loadMetadata(vdbName, vdbURL);
-			
+			Resource r = imf.resources.getEntriesPlusVisibilities().get("/META-INF/vdb.xml");
+			VDBMetaData vdb = null;
+			if (r != null) {
+				vdb = VDBMetadataParser.unmarshell(r.openStream());
+			}
 			Collection <FunctionMethod> methods = null;
 			Collection<FunctionTree> trees = null;
 			if (udfFile != null) {
@@ -84,7 +91,7 @@ public class VDBMetadataFactory {
 				trees = Arrays.asList(new FunctionTree(schema, new UDFSource(methods), true));
 			}
 			SystemFunctionManager sfm = new SystemFunctionManager();
-			vdbmetadata = new TransformationMetadata(null, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
+			vdbmetadata = new TransformationMetadata(vdb, new CompositeMetadataStore(Arrays.asList(SystemMetadata.getInstance().getSystemStore(), imf.store)), imf.resources.getEntriesPlusVisibilities(), sfm.getSystemFunctions(), trees); 
 			VDB_CACHE.put(vdbURL, vdbmetadata);
 			return vdbmetadata;
 		} catch (XMLStreamException e) {
