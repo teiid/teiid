@@ -188,7 +188,6 @@
         </includes>
 
         <binaries>   
-          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
           <includeDependencies>true</includeDependencies>
           <unpack>true</unpack>
             <dependencySets>
