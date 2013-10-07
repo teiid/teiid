@@ -89,11 +89,13 @@ public class TempTableStore {
     public static class TableProcessor {
 		QueryProcessor queryProcessor;
     	List<ElementSymbol> columns;
+    	BatchIterator iterator;
 
     	public TableProcessor(QueryProcessor queryProcessor,
 				List<ElementSymbol> columns) {
 			this.queryProcessor = queryProcessor;
 			this.columns = columns;
+			this.iterator = new BatchIterator(queryProcessor);
 		}
     	
     	public QueryProcessor getQueryProcessor() {
@@ -381,7 +383,7 @@ public class TempTableStore {
 			TableProcessor withProcessor, TempTable tempTable)
 			throws TeiidComponentException, ExpressionEvaluationException,
 			TeiidProcessingException {
-		tempTable.insert(new BatchIterator(withProcessor.queryProcessor), withProcessor.columns, false, null);
+		tempTable.insert(withProcessor.iterator, withProcessor.columns, false, null);
 		tempTable.setUpdatable(false);
 		processors.remove(tempTableID);
 	}
