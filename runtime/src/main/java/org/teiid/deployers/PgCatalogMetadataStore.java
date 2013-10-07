@@ -429,8 +429,9 @@ public class PgCatalogMetadataStore extends MetadataFactory {
 		addColumn("typdelim", DataTypeManager.DefaultDataTypes.CHAR, t); //$NON-NLS-1$
 		addColumn("typrelid", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$ 
 		addColumn("typelem", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
+		addColumn("typinput", DataTypeManager.DefaultDataTypes.INTEGER, t); //$NON-NLS-1$
 		String transformation =
-			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem from texttable('" + //$NON-NLS-1$
+			"select oid, typname, (SELECT pg_catalog.getOid(uid) FROM SYS.Schemas where Name = 'SYS') as typnamespace, typlen, typtype, false as typnotnull, typbasetype, typtypmod, cast(',' as char) as typdelim, typrelid, typelem, null as typeinput from texttable('" + //$NON-NLS-1$
 			"16,boolean,1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"1043,string,-1,b,0,-1,0,0\n" + //$NON-NLS-1$
 			"25,text,-1,b,0,-1,0,0\n" + //$NON-NLS-1$

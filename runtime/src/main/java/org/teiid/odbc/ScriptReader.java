@@ -203,6 +203,18 @@ public class ScriptReader {
                         				}
                             			builder.insert(expressionStart, "(SELECT oid FROM pg_class WHERE upper(relname) = "); //$NON-NLS-1$
                             			builder.append(")"); //$NON-NLS-1$ 
+                            		} else if ("regproc".equalsIgnoreCase(type)) {
+                            			String name = builder.substring(expressionStart);
+                        				if (name.startsWith("'\"") && name.length() > 4) { //$NON-NLS-1$ 
+                            				name = name.substring(2, name.length()-2);
+                            				name = '\''+ name + '\'';
+                            			}
+                        				if (name.startsWith("'")) { //$NON-NLS-1$ 
+                        					builder.setLength(expressionStart);
+                            				builder.append(name.toUpperCase());
+                        				}
+                            			builder.insert(expressionStart, "(SELECT oid FROM pg_proc WHERE upper(proname) = "); //$NON-NLS-1$
+                            			builder.append(")"); //$NON-NLS-1$
                             		} else {
 	                            		builder.insert(expressionStart, "cast("); //$NON-NLS-1$
 	                                	builder.append(" AS ").append(type).append(")"); //$NON-NLS-1$ //$NON-NLS-2$

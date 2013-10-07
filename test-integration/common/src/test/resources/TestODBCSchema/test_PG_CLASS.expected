@@ -66,7 +66,7 @@ oid          relname                                                            
 517          pk_pg_proc                                                         414           i        0            0.0        0            false        false     
 519          pg_trigger                                                         414           v        0            0.0        0            false        false     
 529          pg_type                                                            414           v        0            0.0        0            false        false     
-541          pg_user                                                            414           v        0            0.0        0            false        false     
+542          pg_user                                                            414           v        0            0.0        0            false        false     
 Row Count : 67
 getColumnName  getColumnType  getCatalogName  getColumnClassName  getColumnLabel  getColumnTypeName  getSchemaName  getTableName  getColumnDisplaySize  getPrecision  getScale  isAutoIncrement  isCaseSensitive  isCurrency  isDefinitelyWritable  isNullable  isReadOnly  isSearchable  isSigned  isWritable  
 oid            4              PartsSupplier   java.lang.Integer   oid             integer            pg_catalog     pg_class      11                    10            0         false            false            false       false                 1           true        true          true      false       
