@@ -6,14 +6,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.junit.Test;
+import org.teiid.common.buffer.BlockedException;
+import org.teiid.common.buffer.TupleSource;
+import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidException;
+import org.teiid.core.TeiidProcessingException;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
+import org.teiid.query.sql.lang.Command;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.query.util.CommandContext;
 
 @SuppressWarnings({"nls", "unchecked"})
 public class TestWithClauseProcessing {
@@ -211,6 +218,59 @@ public class TestWithClauseProcessing {
 	    String sql = "with a (x) as (select e1 from pm1.g1) SELECT a.x from pm1.g2, a where (pm1.g2.e1 = a.x)"; //$NON-NLS-1$
 	    
 	    TestOptimizer.helpPlan(sql, metadata, null, TestOptimizer.getGenericFinder(false), new String[] {"SELECT g_0.e1 FROM pm1.g2 AS g_0 WHERE g_0.e1 IN (<dependent values>)", "SELECT a.x FROM a ORDER BY a.x"}, ComparisonMode.EXACT_COMMAND_STRING);
+	}
+	
+	@Test public void testWithBlockingJoin() throws TeiidException {
+	      
+	    String sql = "with a (x, y) as (select e1, e2 from pm1.g1) SELECT a.x, a.y, pm1.g2.e1 from a left outer join pm1.g2 makenotdep on (rtrim(a.x) = pm1.g2.e1) order by a.y"; //$NON-NLS-1$
+	    
+	    HardcodedDataManager dataManager = new HardcodedDataManager() {
+	    	@Override
+	    	public TupleSource registerRequest(CommandContext context,
+	    			Command command, String modelName,
+	    			RegisterRequestParameter parameterObject)
+	    			throws TeiidComponentException {
+	    		final TupleSource ts = super.registerRequest(context, command, modelName, parameterObject);
+	    		return new TupleSource() {
+	    			int i = 0;
+					
+					@Override
+					public List<?> nextTuple() throws TeiidComponentException,
+							TeiidProcessingException {
+						if ((i++ % 100)<3) {
+							throw BlockedException.INSTANCE;
+						}
+						return ts.nextTuple();
+					}
+					
+					@Override
+					public void closeSource() {
+						ts.closeSource();
+					}
+				};
+	    	}
+	    };
+	    List<?>[] rows = new List[10];
+	    for (int i = 0; i < rows.length; i++) {
+	    	rows[i] = Arrays.asList(String.valueOf(i));
+	    }
+	    dataManager.addData("SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0", rows);
+	    rows = new List[100];
+	    for (int i = 0; i < rows.length; i++) {
+	    	rows[i] = Arrays.asList(String.valueOf(i), i);
+	    }
+	    dataManager.addData("SELECT g_0.e1, g_0.e2 FROM pm1.g1 AS g_0", rows);
+	    
+	    dataManager.addData("WITH a (x, y) AS (SELECT 1, 2 FROM g1 AS g_0) SELECT g_0.x AS c_0 FROM a AS g_0, a AS g_1 ORDER BY c_0", new List[0]);
+	    ProcessorPlan plan = TestOptimizer.helpPlan(sql, RealMetadataFactory.example1Cached(), null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()), new String[] {"SELECT a.x, a.y FROM a", "SELECT g_0.e1 AS c_0 FROM pm1.g2 AS g_0 ORDER BY c_0"}, ComparisonMode.EXACT_COMMAND_STRING);
+	    //check the full pushdown command
+	    
+	    List<?>[] result = new List[100];
+	    for (int i = 0; i < result.length; i++) {
+	    	result[i] = Arrays.asList(String.valueOf(i), i, i < 10?String.valueOf(i):null);
+	    }
+	    
+	    helpProcess(plan, dataManager, result);
 	}
 
 }
