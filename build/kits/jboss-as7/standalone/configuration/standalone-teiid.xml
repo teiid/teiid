@@ -354,6 +354,7 @@
             <translator name="infinispan-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="map-cache" module="org.jboss.teiid.translator.object"/>
             <translator name="odata" module="org.jboss.teiid.translator.odata"/>
+            <translator name="sap-nw-gateway" module="org.jboss.teiid.translator.odata"/>
             <translator name="mongodb" module="org.jboss.teiid.translator.mongodb"/>
             
         </subsystem>        
