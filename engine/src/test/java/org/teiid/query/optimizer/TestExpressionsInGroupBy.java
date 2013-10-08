@@ -29,6 +29,7 @@ import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.ProcessorPlan;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.SourceSystemFunctions;
 
 
 /**
@@ -305,6 +306,31 @@ public class TestExpressionsInGroupBy {
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
     }
 
+    @Test public void testFunctionInGroupByWithSameName() {
+        String sql = "SELECT sum(a.floatnum), a.intkey, b.intkey, a.intkey + b.intkey" + //$NON-NLS-1$
+            " FROM BQT1.SmallA a, BQT1.SmallB b where a.stringkey = b.stringkey GROUP BY a.intkey + b.intkey, a.intkey, b.intkey"; //$NON-NLS-1$
+
+        // Plan query
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_SELECT_EXPRESSION, true);
+        caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_SUM, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_INLINE_VIEWS, true);
+        caps.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        caps.setCapabilitySupport(Capability.QUERY_FROM_GROUP_ALIAS, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_ORDERED, true);
+        caps.setCapabilitySupport(Capability.CRITERIA_COMPARE_EQ, true);
+        caps.setFunctionSupport(SourceSystemFunctions.ADD_OP, true);
+        capFinder.addCapabilities("BQT1", caps); //$NON-NLS-1$
+
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql,  
+                                      RealMetadataFactory.exampleBQTCached(),
+                                      null, capFinder,
+                                      new String[] {"SELECT SUM(v_0.c_3), v_0.c_1, v_0.c_2, v_0.c_0 FROM (SELECT (g_0.IntKey + g_1.IntKey) AS c_0, g_0.IntKey AS c_1, g_1.IntKey AS c_2, g_0.FloatNum AS c_3 FROM BQT1.SmallA AS g_0, BQT1.SmallB AS g_1 WHERE g_0.StringKey = g_1.StringKey) AS v_0 GROUP BY v_0.c_0, v_0.c_1, v_0.c_2"}, //$NON-NLS-1$ 
+                                      TestOptimizer.SHOULD_SUCCEED );
+
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN);        
+    }
     
     /**
      * Test what happens when we have a CASE in the GROUP BY and source has aggregate capability but 

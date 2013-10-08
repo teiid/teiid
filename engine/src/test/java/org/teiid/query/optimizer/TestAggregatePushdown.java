@@ -22,10 +22,7 @@
 
 package org.teiid.query.optimizer;
 
-import static org.teiid.query.optimizer.TestOptimizer.SHOULD_SUCCEED;
-import static org.teiid.query.optimizer.TestOptimizer.checkNodeTypes;
-import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
-import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
+import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import org.junit.Test;
 import org.teiid.query.function.FunctionTree;
@@ -1136,7 +1133,7 @@ public class TestAggregatePushdown {
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select max(e2), case when e1 is null then 0 else 1 end from (select e1, e2, 1 as part from pm1.g1 union all select e1, e2, 2 as part from pm1.g2) z group by case when e1 is null then 0 else 1 end, part", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
-            new String[]{"SELECT MAX(v_0.c_2), v_0.c_1 FROM (SELECT 1 AS c_0, CASE WHEN g_0.e1 IS NULL THEN 0 ELSE 1 END AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_1, v_0.c_0", "SELECT MAX(v_0.c_2), v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 IS NULL THEN 0 ELSE 1 END AS c_0, 2 AS c_1, g_0.e2 AS c_2 FROM pm1.g2 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+            new String[]{"SELECT MAX(v_0.c_2), v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 IS NULL THEN 0 ELSE 1 END AS c_0, 1 AS c_1, g_0.e2 AS c_2 FROM pm1.g1 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1", "SELECT MAX(v_0.c_2), v_0.c_0 FROM (SELECT CASE WHEN g_0.e1 IS NULL THEN 0 ELSE 1 END AS c_0, 2 AS c_1, g_0.e2 AS c_2 FROM pm1.g2 AS g_0) AS v_0 GROUP BY v_0.c_0, v_0.c_1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, new int[] {
             2,      // Access
             0,      // DependentAccess

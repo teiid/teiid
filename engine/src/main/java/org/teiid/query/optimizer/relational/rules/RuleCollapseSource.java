@@ -701,7 +701,7 @@ public final class RuleCollapseSource implements OptimizerRule {
 	    query.setOrderBy(null);
 	    Limit limit = query.getLimit();
 	    query.setLimit(null);
-	    Set<Expression> newSelectColumns = new HashSet<Expression>();
+	    Set<Expression> newSelectColumns = new LinkedHashSet<Expression>();
 	    for (final Iterator<Expression> iterator = groupBy.getSymbols().iterator(); iterator.hasNext();) {
 	        newSelectColumns.add(iterator.next());
 	    }
@@ -729,7 +729,9 @@ public final class RuleCollapseSource implements OptimizerRule {
 	    Iterator<Expression> iter = outerQuery.getSelect().getProjectedSymbols().iterator();
 	    HashMap<Expression, Expression> expressionMap = new HashMap<Expression, Expression>();
 	    for (Expression symbol : query.getSelect().getProjectedSymbols()) {
-	        expressionMap.put(SymbolMap.getExpression(symbol), iter.next());
+	    	//need to unwrap on both sides as the select expression could be aliased
+	    	//TODO: could add an option to createInlineViewQuery to disable alias creation
+	        expressionMap.put(SymbolMap.getExpression(symbol), SymbolMap.getExpression(iter.next()));
 	    }
 	    if (!addViewForOrderBy) {
 		    ExpressionMappingVisitor.mapExpressions(groupBy, expressionMap);

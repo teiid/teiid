@@ -155,4 +155,9 @@ public class MySQL5ExecutionFactory extends MySQLExecutionFactory {
     	return false;
     }
     
+    @Override
+    public boolean supportsFunctionsInGroupBy() {
+    	return true;
+    }
+    
 }
