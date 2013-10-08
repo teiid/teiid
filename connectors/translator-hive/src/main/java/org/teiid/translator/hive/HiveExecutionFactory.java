@@ -280,12 +280,14 @@ public class HiveExecutionFactory extends JDBCExecutionFactory {
 		return true;
 	}
 	
+	/*
     @Override
 	public boolean supportsGroupByRollup() {
     	//https://cwiki.apache.org/confluence/display/Hive/Enhanced+Aggregation,+Cube,+Grouping+and+Rollup
 		return true;
 	}
-
+	*/
+	
     @Override
     public String translateLiteralBoolean(Boolean booleanValue) {
         if(booleanValue.booleanValue()) {
