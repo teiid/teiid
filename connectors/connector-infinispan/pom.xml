@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-        <artifactId>connectors</artifactId>
+        <artifactId>resource-adapters</artifactId>
         <groupId>org.jboss.teiid</groupId>
         <version>8.6.0.Alpha2-SNAPSHOT</version>
+        <relativePath>../ra-parent-pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>connector-infinispan</artifactId>
     <groupId>org.jboss.teiid.connectors</groupId>
-    <packaging>bundle</packaging>
-    <name>Infinispan Connector</name>
-    <description>This connector creates the connection to the Infinispan Cache</description>
-
+    <name>Infinispan Resource Adapter</name>
+    <description>This resource adapter creates the connection to the Infinispan Cache</description>
+    
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -24,18 +24,17 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+            <scope>provided</scope>
+        </dependency>    
+        <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
             <artifactId>translator-object</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>        
-         
-        <dependency>
-            <groupId>javax.resource</groupId>
-            <artifactId>connector-api</artifactId>
-              <scope>provided</scope>
-        </dependency>   
- 
+          
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
@@ -79,45 +78,5 @@
             <scope>provided</scope>
         </dependency>    
     </dependencies>
-    
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-rar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>build_rar</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>rar</goal>
-                        </goals>
-                        <configuration>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>install_rar</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>install-file</goal>
-                        </goals>
-                        <configuration>
-                            <file> ${project.build.directory}/${project.artifactId}-${project.version}.rar</file>
-                            <artifactId>${project.artifactId}</artifactId>
-                            <groupId>${project.groupId}</groupId>
-                            <packaging>rar</packaging>
-                            <version>${project.version}</version>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>            
-        </plugins>
-    </build> 
 </project>
  

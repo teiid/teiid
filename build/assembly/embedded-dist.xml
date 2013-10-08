@@ -166,6 +166,7 @@
 
         <binaries>        
           <includeDependencies>true</includeDependencies>
+          <attachmentClassifier>lib</attachmentClassifier>
           <unpack>false</unpack>
           <outputDirectory>optional</outputDirectory>
           <fileMode>0644</fileMode>
