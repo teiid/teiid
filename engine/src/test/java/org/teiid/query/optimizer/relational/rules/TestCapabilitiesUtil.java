@@ -22,7 +22,8 @@
 
 package org.teiid.query.optimizer.relational.rules;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -351,8 +352,7 @@ public class TestCapabilitiesUtil {
         
         helpTestSupportsAggregateFunction(caps, aggregate, false); 
     }    
-
-    // Test where capabilities support DISTINCT
+    
     @Test public void testSupportsAggregate16() throws Exception {        
         BasicSourceCapabilities caps = new BasicSourceCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES, true);
@@ -362,7 +362,7 @@ public class TestCapabilitiesUtil {
         AggregateSymbol aggregate = new AggregateSymbol(NonReserved.MAX, true, new ElementSymbol("x")); //$NON-NLS-1$ //$NON-NLS-2$
         
         helpTestSupportsAggregateFunction(caps, aggregate, true); 
-    }    
+    }     
 
     public void helpTestSupportsScalar(SourceCapabilities caps, Function function, boolean expectedValue) throws QueryMetadataException, TeiidComponentException, QueryResolverException {
         // Set up metadata

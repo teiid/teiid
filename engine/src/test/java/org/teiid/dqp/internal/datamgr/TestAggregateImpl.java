@@ -54,6 +54,10 @@ public class TestAggregateImpl extends TestCase {
         assertEquals(AggregateFunction.COUNT, example("testName", NonReserved.COUNT, true, 42).getName()); //$NON-NLS-1$ 
     }
 
+    public void testUserDefinedName() throws Exception {
+        assertEquals("FIRST_VALUE", example("testName", "FIRST_VALUE", true, 42).getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+    }
+    
     public void testIsDistinct() throws Exception {
         assertTrue(example("testName", NonReserved.COUNT, true, 42).isDistinct()); //$NON-NLS-1$
         assertFalse(example("testName", NonReserved.COUNT, false, 42).isDistinct()); //$NON-NLS-1$

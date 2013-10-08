@@ -42,9 +42,9 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.AbstractMetadataRecord;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.MetadataException;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.query.util.CommandContext;
@@ -360,7 +360,7 @@ public class FunctionTree {
         }
 
         FunctionDescriptor result = new FunctionDescriptor(method, types, outputType, invocationMethod, requiresContext);
-        if (method.getAggregateAttributes() != null) {
+        if (method.getAggregateAttributes() != null && (method.getPushdown() == PushDown.CAN_PUSHDOWN || method.getPushdown() == PushDown.CANNOT_PUSHDOWN)) {
         	result.newInstance();
         }
         result.setHasWrappedArgs(hasWrappedArg);
