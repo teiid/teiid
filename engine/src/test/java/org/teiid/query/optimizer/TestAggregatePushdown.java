@@ -22,9 +22,13 @@
 
 package org.teiid.query.optimizer;
 
-import static org.teiid.query.optimizer.TestOptimizer.*;
+import static org.teiid.query.optimizer.TestOptimizer.SHOULD_SUCCEED;
+import static org.teiid.query.optimizer.TestOptimizer.checkNodeTypes;
+import static org.teiid.query.optimizer.TestOptimizer.getTypicalCapabilities;
+import static org.teiid.query.optimizer.TestOptimizer.helpPlan;
 
 import org.junit.Test;
+import org.teiid.query.function.FunctionTree;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
@@ -1242,11 +1246,27 @@ public class TestAggregatePushdown {
         FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
         BasicSourceCapabilities caps = getAggregateCapabilities();
         caps.setCapabilitySupport(Capability.QUERY_AGGREGATES_STRING, true);
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
         capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
         ProcessorPlan plan = TestOptimizer.helpPlan("select string_agg(e1, ',') from pm1.g2 group by e1", RealMetadataFactory.example1Cached(), null, capFinder,  //$NON-NLS-1$
             new String[]{"SELECT string_agg(g_0.e1, ',') FROM pm1.g2 AS g_0 GROUP BY g_0.e1"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
         TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
     }
+
+    @Test public void testUserDefinedAggPushdown() throws Exception {
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = getAggregateCapabilities();
+        caps.setCapabilitySupport(Capability.ELEMENTARY_OLAP, true);
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_DISTINCT_AGGREGATES, true);
+        caps.setCapabilitySupport(Capability.WINDOW_FUNCTION_ORDER_BY_AGGREGATES, true);
+        caps.setFunctionSupport("FIRST_VALUE", true);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
         
+        QueryMetadataInterface metadata = RealMetadataFactory.createTransformationMetadata(RealMetadataFactory.example1Cached().getMetadataStore(), "example1", new FunctionTree("foo", new FakeFunctionMetadataSource(), true));
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select FIRST_VALUE(ALL e1) OVER (ORDER BY e2) from pm1.g2", metadata, null, capFinder,  //$NON-NLS-1$
+            new String[]{"SELECT FIRST_VALUE(ALL g_0.e1) OVER (ORDER BY g_0.e2) FROM pm1.g2 AS g_0"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        TestOptimizer.checkNodeTypes(plan, TestOptimizer.FULL_PUSHDOWN); 
+    }    
 }
