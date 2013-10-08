@@ -31,7 +31,7 @@
         
         <!-- optional ones depending upon what sources in use most of them may not be needed -->
         <!-- Connectors -->
-        <bundle>mvn:org.jboss.teiid.connectors/connector-file/${project.version}</bundle>
+        <bundle>mvn:org.jboss.teiid.connectors/connector-file/${project.version}/jar/lib</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/translator-file/${project.version}</bundle>
         
         <!-- webservice 
@@ -62,7 +62,7 @@
             # javax.xml.ws.soap, \
             # javax.xml.ws.spi, \            
         -->        
-        <bundle>mvn:org.jboss.teiid.connectors/connector-ws/${project.version}</bundle>
+        <bundle>mvn:org.jboss.teiid.connectors/connector-ws/${project.version}/jar/lib</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/translator-ws/${project.version}</bundle>
         
         <!-- goggle -->        
@@ -72,7 +72,7 @@
         <bundle dependency="true">wrap:mvn:org.jboss.teiid.connectors.google/gdata-spreadsheet/${version.gdata-spreadsheet}</bundle>
         <bundle dependency="true">wrap:mvn:org.jboss.teiid.connectors.google/gdata-core/${version.gdata-core}</bundle>
         <bundle dependency="true">mvn:org.jboss.teiid.connectors/google-api/${project.version}</bundle>
-        <bundle>mvn:org.jboss.teiid.connectors/connector-google/${project.version}</bundle>
+        <bundle>mvn:org.jboss.teiid.connectors/connector-google/${project.version}/jar/lib</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/translator-google/${project.version}</bundle>
         
         <!-- infinispan 
@@ -90,19 +90,19 @@
         -->
         
         <!-- ldap -->
-        <bundle>mvn:org.jboss.teiid.connectors/connector-ldap/${project.version}</bundle>
+        <bundle>mvn:org.jboss.teiid.connectors/connector-ldap/${project.version}/jar/lib</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/translator-ldap/${project.version}</bundle>
         
         <!-- mongodb -->
         <bundle dependency="true">wrap:mvn:org.mongodb/mongo-java-driver/${version.mongo-java-driver}</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/mongodb-api/${project.version}</bundle>
-        <bundle>mvn:org.jboss.teiid.connectors/connector-mongodb/${project.version}</bundle>
+        <bundle>mvn:org.jboss.teiid.connectors/connector-mongodb/${project.version}/jar/lib</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/translator-mongodb/${project.version}</bundle>
         
         <!-- salesforce -->
         <bundle dependency="true">wrap:mvn:com.force.api/force-wsc/${version.com.force.api}</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/salesforce-api/${project.version}</bundle>
-        <bundle>mvn:org.jboss.teiid.connectors/connector-salesforce/${project.version}</bundle>
+        <bundle>mvn:org.jboss.teiid.connectors/connector-salesforce/${project.version}/jar/lib</bundle>
         <bundle>mvn:org.jboss.teiid.connectors/translator-salesforce/${project.version}</bundle>
         
         <!-- jpa -->
