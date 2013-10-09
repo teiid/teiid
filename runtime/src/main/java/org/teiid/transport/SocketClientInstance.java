@@ -105,18 +105,24 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 					exception.setContents(m.getMessageKey());
 					exception.setMessageKey(new ExceptionHolder(fwe.getCause()));
 					objectSocket.write(exception);
-					LogManager.log(isDetailLevel(t)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, aborting operation"); //$NON-NLS-1$
+					LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, "Unhandled exception, aborting operation"); //$NON-NLS-1$
 					return;
 				}
 			}
 		}
-		LogManager.log(isDetailLevel(t)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_TRANSPORT, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		int level = getLevel(t);
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, "Unhandled exception, closing client instance"); //$NON-NLS-1$
 		objectSocket.close();
 	}
 
-	static boolean isDetailLevel(Throwable t) {
-		return t instanceof IOException &&
-				(ExceptionUtil.getExceptionOfType(t, ClosedChannelException.class) != null || ExceptionUtil.getExceptionOfType(t, SocketException.class) != null || t.getCause() == t || t.getCause() == null);
+	static int getLevel(Throwable t) {
+		if (!(t instanceof IOException)) {
+			return MessageLevel.ERROR;
+		}
+		if (ExceptionUtil.getExceptionOfType(t, ClosedChannelException.class) != null || ExceptionUtil.getExceptionOfType(t, SocketException.class) != null) {
+			return MessageLevel.DETAIL;
+		}
+		return MessageLevel.WARNING;
 	}
 
 	public void onConnection() throws CommunicationException {

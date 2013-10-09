@@ -115,8 +115,6 @@ public class JDBCQueryExecution extends JDBCBaseExecution implements ResultSetEx
 	
 	        String sql = translatedComm.getSql();
 	        
-	        LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Source sql", sql); //$NON-NLS-1$
-
             if (!translatedComm.isPrepared()) {
                 results = getStatement().executeQuery(sql);
             } else {

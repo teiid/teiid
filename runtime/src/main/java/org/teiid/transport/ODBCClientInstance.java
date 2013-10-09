@@ -90,7 +90,8 @@ public class ODBCClientInstance implements ChannelListener{
 
 	@Override
 	public void exceptionOccurred(Throwable t) {
-		LogManager.log(SocketClientInstance.isDetailLevel(t)?MessageLevel.DETAIL:MessageLevel.ERROR, LogConstants.CTX_ODBC, t, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		int level = SocketClientInstance.getLevel(t);
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, "Unhandled exception, closing client instance"); //$NON-NLS-1$
 		server.terminate();
 	}
 	
