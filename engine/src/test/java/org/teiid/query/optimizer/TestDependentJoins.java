@@ -902,4 +902,34 @@ public class TestDependentJoins {
         });         
     }
     
+    /**
+     * Makes sure that hints are considered after rule push aggregates
+     * @throws Exception
+     */
+    @Test public void testMakedepWithAggregatePushdown() throws Exception {
+        String sql = "select count(x.e2), pm2.g2.e1 from pm1.g1 x makedep, pm2.g2 where x.e3 = pm2.g2.e3 group by pm2.g2.e1";//$NON-NLS-1$
+
+        QueryMetadataInterface metadata = RealMetadataFactory.example1Cached();
+    
+        ProcessorPlan plan = TestOptimizer.helpPlan(sql, metadata,  
+            null, new DefaultCapabilitiesFinder(TestOptimizer.getTypicalCapabilities()),
+            new String[] { "SELECT g_0.e3, g_0.e2 FROM pm1.g1 AS g_0 WHERE g_0.e3 IN (<dependent values>)", "SELECT g_0.e3 AS c_0, g_0.e1 AS c_1 FROM pm2.g2 AS g_0 ORDER BY c_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            2,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });         
+    }
+    
 }

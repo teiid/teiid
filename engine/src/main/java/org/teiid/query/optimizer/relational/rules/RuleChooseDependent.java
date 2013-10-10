@@ -252,10 +252,18 @@ public final class RuleChooseDependent implements OptimizerRule {
     
     PlanNode chooseDepWithoutCosting(PlanNode rootNode1, PlanNode rootNode2, AnalysisRecord analysisRecord) throws QueryMetadataException, TeiidComponentException  {
     	PlanNode sourceNode1 = FrameUtil.findJoinSourceNode(rootNode1);
+    	if (sourceNode1.getType() == NodeConstants.Types.GROUP) {
+    		//after push aggregates it's possible that the source is a grouping node
+    		sourceNode1 = FrameUtil.findJoinSourceNode(sourceNode1.getFirstChild());
+    	}
         PlanNode sourceNode2 = null;
         
         if (rootNode2 != null) {
             sourceNode2 = FrameUtil.findJoinSourceNode(rootNode2);
+        	if (sourceNode2.getType() == NodeConstants.Types.GROUP) {
+        		//after push aggregates it's possible that the source is a grouping node
+        		sourceNode2 = FrameUtil.findJoinSourceNode(sourceNode2.getFirstChild());
+        	}
         }
         if(sourceNode1.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
             if (sourceNode2 != null && sourceNode2.hasCollectionProperty(NodeConstants.Info.ACCESS_PATTERNS) ) {
