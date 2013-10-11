@@ -51,7 +51,7 @@ public class TeiidException extends Exception {
     
     public TeiidException(BundleUtil.Event code, Throwable t, final String message) {
         super(message, t);
-        if (message != null && message.equals(t.getMessage())) {
+        if (message != null && t != null && message.equals(t.getMessage())) {
         	setCode(code, t);
         } else {
         	setCode(code.toString());

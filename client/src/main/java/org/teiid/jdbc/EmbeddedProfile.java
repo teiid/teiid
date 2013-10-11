@@ -43,6 +43,7 @@ public class EmbeddedProfile implements ConnectionProfile {
     public static final String USE_CALLING_THREAD = "useCallingThread"; //$NON-NLS-1$
 	public static final String WAIT_FOR_LOAD = "waitForLoad"; //$NON-NLS-1$
 	public static final String TRANSPORT_NAME = "transportName"; //$NON-NLS-1$
+	public static final Object DQP_WORK_CONTEXT = "dqpWorkContext"; //$NON-NLS-1$
 
 	/**
      * This method tries to make a connection to the given URL. This class
@@ -63,12 +64,12 @@ public class EmbeddedProfile implements ConnectionProfile {
 		}
     }
 
-	protected ServerConnection createServerConnection(Properties info) throws TeiidException {
+	public ServerConnection createServerConnection(Properties info) throws TeiidException {
 		ClassLoader tccl = Thread.currentThread().getContextClassLoader();
         try {
         	ModuleLoader callerModuleLoader = Module.getCallerModuleLoader();
         	if (callerModuleLoader == null) {
-        		throw new ConnectionException(JDBCPlugin.Event.TEIID20032, null, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20032));
+        		throw new ConnectionException(JDBCPlugin.Event.TEIID20033, null, JDBCPlugin.Util.gs(JDBCPlugin.Event.TEIID20033));
         	}
 			final Module module = callerModuleLoader.loadModule(ModuleIdentifier.create("org.jboss.teiid")); //$NON-NLS-1$
         	Thread.currentThread().setContextClassLoader(module.getClassLoader());
