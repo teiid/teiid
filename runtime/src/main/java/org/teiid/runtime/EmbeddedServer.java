@@ -57,6 +57,7 @@ import org.teiid.client.security.ILogon;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleBufferCache;
 import org.teiid.core.BundleUtil.Event;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.deployers.CompositeGlobalTableStore;
@@ -79,7 +80,7 @@ import org.teiid.events.EventDistributor;
 import org.teiid.events.EventDistributorFactory;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
-import org.teiid.jdbc.ConnectionProfile;
+import org.teiid.jdbc.EmbeddedProfile;
 import org.teiid.jdbc.PreparedStatementImpl;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.jdbc.TeiidPreparedStatement;
@@ -91,9 +92,9 @@ import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.MetadataRepository;
 import org.teiid.metadata.MetadataStore;
 import org.teiid.metadata.Schema;
-import org.teiid.net.CommunicationException;
 import org.teiid.net.ConnectionException;
 import org.teiid.net.ServerConnection;
+import org.teiid.net.socket.ObjectChannel;
 import org.teiid.query.ObjectReplicator;
 import org.teiid.query.function.SystemFunctionManager;
 import org.teiid.query.metadata.DDLStringVisitor;
@@ -110,14 +111,7 @@ import org.teiid.services.SessionServiceImpl;
 import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
-import org.teiid.transport.ClientServiceRegistry;
-import org.teiid.transport.ClientServiceRegistryImpl;
-import org.teiid.transport.LocalServerConnection;
-import org.teiid.transport.LogonImpl;
-import org.teiid.transport.ODBCSocketListener;
-import org.teiid.transport.SocketConfiguration;
-import org.teiid.transport.SocketListener;
-import org.teiid.transport.WireProtocol;
+import org.teiid.transport.*;
 import org.teiid.vdb.runtime.VDBKey;
 import org.xml.sax.SAXException;
 
@@ -128,6 +122,33 @@ import org.xml.sax.SAXException;
  */
 @SuppressWarnings("serial")
 public class EmbeddedServer extends AbstractVDBDeployer implements EventDistributorFactory, ExecutionFactoryProvider {
+
+	private EmbeddedProfile embeddedProfile = new EmbeddedProfile() {
+		@Override
+		public ConnectionImpl connect(String url, Properties info)
+				throws TeiidSQLException {
+			ServerConnection conn;
+			try {
+				conn = createServerConnection(info);
+			} catch (TeiidException e) {
+				throw TeiidSQLException.create(e);
+			}
+			return new EmbeddedConnectionImpl(conn, info, url);
+		}
+
+		@Override
+		public ServerConnection createServerConnection(Properties info)
+				throws TeiidException {
+			LocalServerConnection conn = new LocalServerConnection(info, useCallingThread) {
+				@Override
+				protected ClientServiceRegistry getClientServiceRegistry(String name) {
+					return services;
+				}
+			};
+			conn.getWorkContext().setConnectionProfile(this);
+			return conn;
+		}
+	};
 
 	private final class EmbeddedConnectionImpl extends ConnectionImpl implements EmbeddedConnection {
 
@@ -364,33 +385,20 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 	}
 
 	private void initDriver() {
-		driver.setEmbeddedProfile(new ConnectionProfile() {
-
-			@Override
-			public ConnectionImpl connect(String url, Properties info)
-					throws TeiidSQLException {
-				LocalServerConnection conn;
-				try {
-					conn = new LocalServerConnection(info, useCallingThread) {
-						@Override
-						protected ClientServiceRegistry getClientServiceRegistry(String name) {
-							return services;
-						}
-					};
-				} catch (CommunicationException e) {
-					throw TeiidSQLException.create(e);
-				} catch (ConnectionException e) {
-					throw TeiidSQLException.create(e);
-				}
-				return new EmbeddedConnectionImpl(conn, info, url);
-			}
-		});
+		driver.setEmbeddedProfile(embeddedProfile);
 	}
 	
 	private SocketListener startTransport(SocketConfiguration socketConfig, BufferManager bm, int maxODBCLobSize) {
 		InetSocketAddress address = new InetSocketAddress(socketConfig.getHostAddress(), socketConfig.getPortNumber());
 		if (socketConfig.getProtocol() == WireProtocol.teiid) {
-			return new SocketListener(address, socketConfig, this.services, bm);
+			return new SocketListener(address, socketConfig, this.services, bm) {
+				public ChannelListener createChannelListener(ObjectChannel channel) {
+					//TODO: this is a little dirty, but allows us to inject the appropriate connection profile
+					SocketClientInstance instance = (SocketClientInstance) super.createChannelListener(channel);
+					instance.getWorkContext().setConnectionProfile(embeddedProfile);
+					return instance;
+				}
+			};
 		}
 		else if (socketConfig.getProtocol() == WireProtocol.pg) {
     		this.repo.odbcEnabled();
@@ -722,6 +730,15 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 			return null;
 		}
 		return DDLStringVisitor.getDDLString(schema, null, null); 
+	}
+	
+	/**
+	 * Return the bound port for the transport number
+	 * @param transport
+	 * @return
+	 */
+	public int getPort(int transport) {
+		return this.transports.get(transport).getPort();
 	}
 	
 }

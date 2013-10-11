@@ -24,6 +24,7 @@ package org.teiid.query.util;
 
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -40,6 +41,7 @@ import org.teiid.api.exception.query.QueryProcessingException;
 import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.util.ArgCheck;
 import org.teiid.core.util.ExecutorUtils;
 import org.teiid.core.util.LRUCache;
@@ -53,9 +55,14 @@ import org.teiid.dqp.internal.process.TupleSourceCache;
 import org.teiid.dqp.message.RequestID;
 import org.teiid.dqp.service.TransactionContext;
 import org.teiid.dqp.service.TransactionService;
+import org.teiid.jdbc.ConnectionImpl;
+import org.teiid.jdbc.EmbeddedProfile;
+import org.teiid.jdbc.TeiidConnection;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.FunctionMethod.Determinism;
+import org.teiid.net.ServerConnection;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
@@ -985,6 +992,49 @@ public class CommandContext implements Cloneable, org.teiid.CommandContext {
 	
 	public static GlobalTableStoreImpl removeSessionScopedStore(SessionMetadata session) {
 		return session.removeAttachment(GlobalTableStoreImpl.class);
+	}
+	
+	@Override
+	public TeiidConnection getConnection() throws TeiidSQLException {
+		EmbeddedProfile ep = getDQPWorkContext().getConnectionProfile();
+		//TODO: this is problematic as the client properties are not conveyed
+		Properties info = new Properties();
+		info.put(EmbeddedProfile.DQP_WORK_CONTEXT, getDQPWorkContext());
+		String url = "jdbc:teiid:" + getVdbName() + "." + getVdbVersion(); //$NON-NLS-1$ //$NON-NLS-2$
+		ServerConnection sc;
+		try {
+			sc = ep.createServerConnection(info);
+		} catch (TeiidException e) {
+			throw TeiidSQLException.create(e);
+		}
+		return new ConnectionImpl(sc, info, url) {
+			@Override
+			public void close() throws SQLException {
+				//just ignore
+			}
+			
+			@Override
+			public void rollback() throws SQLException {
+				//just ignore
+			}
+			
+			@Override
+			public void setAutoCommit(boolean autoCommit) throws SQLException {
+				//TODO: detect if attempted set conflicts with current txn state
+				throw new TeiidSQLException();
+			}
+			
+			@Override
+			public void commit() throws SQLException {
+				throw new TeiidSQLException();
+			}
+
+			@Override
+			public void changeUser(String userName, String newPassword)
+					throws SQLException {
+				throw new TeiidSQLException();
+			}
+		};
 	}
 	
 }

@@ -59,6 +59,7 @@ public class LocalServerConnection implements ServerConnection {
     private DQPWorkContext workContext = new DQPWorkContext();
     private Properties connectionProperties;
     private boolean passthrough;
+    private boolean derived;
     
     public static String jndiNameForRuntime(String embeddedTransportName) {
     	return TEIID_RUNTIME_CONTEXT+"/"+embeddedTransportName; //$NON-NLS-1$
@@ -68,26 +69,34 @@ public class LocalServerConnection implements ServerConnection {
 		this.connectionProperties = connectionProperties;
 		this.csr = getClientServiceRegistry(connectionProperties.getProperty(EmbeddedProfile.TRANSPORT_NAME, "embedded")); //$NON-NLS-1$
 		
-		String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
-		String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
-		int firstIndex = vdbName.indexOf('.');
-		int lastIndex = vdbName.lastIndexOf('.');
-		if (firstIndex != -1 && firstIndex == lastIndex) {
-			vdbVersion = vdbName.substring(firstIndex+1);
-			vdbName = vdbName.substring(0, firstIndex);
-		}
-		if (vdbVersion != null) {
-			int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, EmbeddedProfile.WAIT_FOR_LOAD, -1);
-			if (waitForLoad != 0) {
-				this.csr.waitForFinished(vdbName, Integer.valueOf(vdbVersion), waitForLoad);
+		DQPWorkContext context = (DQPWorkContext)connectionProperties.get(EmbeddedProfile.DQP_WORK_CONTEXT);
+		if (context == null) {
+			String vdbVersion = connectionProperties.getProperty(TeiidURL.JDBC.VDB_VERSION);
+			String vdbName = connectionProperties.getProperty(TeiidURL.JDBC.VDB_NAME);
+			int firstIndex = vdbName.indexOf('.');
+			int lastIndex = vdbName.lastIndexOf('.');
+			if (firstIndex != -1 && firstIndex == lastIndex) {
+				vdbVersion = vdbName.substring(firstIndex+1);
+				vdbName = vdbName.substring(0, firstIndex);
 			}
+			if (vdbVersion != null) {
+				int waitForLoad = PropertiesUtils.getIntProperty(connectionProperties, EmbeddedProfile.WAIT_FOR_LOAD, -1);
+				if (waitForLoad != 0) {
+					this.csr.waitForFinished(vdbName, Integer.valueOf(vdbVersion), waitForLoad);
+				}
+			}
+			
+			workContext.setSecurityHelper(csr.getSecurityHelper());
+			workContext.setUseCallingThread(useCallingThread);
+			workContext.setSecurityContext(csr.getSecurityHelper().getSecurityContext());
+			authenticate();
+			passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
+		} else {
+			derived = true;
+			workContext = context;
+			this.result = new LogonResult(context.getSessionToken(), context.getVdbName(), context.getVdbVersion(), null);
+			passthrough = true;
 		}
-		
-		workContext.setSecurityHelper(csr.getSecurityHelper());
-		workContext.setUseCallingThread(useCallingThread);
-		workContext.setSecurityContext(csr.getSecurityHelper().getSecurityContext());
-		authenticate();
-		passthrough = Boolean.valueOf(connectionProperties.getProperty(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION, "false")); //$NON-NLS-1$
 	}
 
 	protected ClientServiceRegistry getClientServiceRegistry(String transport) {
@@ -168,6 +177,9 @@ public class LocalServerConnection implements ServerConnection {
 	}
 
 	private void logoff() {
+		if (derived) {
+			return; //not the right place to kill the session
+		}
 		try {
 			//make a best effort to send the logoff
 			Future<?> writeFuture = this.getService(ILogon.class).logoff();

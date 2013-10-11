@@ -32,6 +32,8 @@ import javax.security.auth.Subject;
 import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.Session;
 import org.teiid.adminapi.VDB;
+import org.teiid.jdbc.TeiidConnection;
+import org.teiid.jdbc.TeiidSQLException;
 import org.teiid.jdbc.TeiidSQLWarning;
 
 /**
@@ -207,4 +209,17 @@ public interface CommandContext {
 	 * @return
 	 */
 	Object getSessionVariable(String key);
+	
+	/**
+	 * Gets a connection to the current session.
+	 * <br/><b>WARNING</b> be careful with blocking/recursive operations.
+	 * <br/>The returned connection is considered to be derived and is not allowed
+	 * to alter the transaction state or close the session.
+	 * <br/>Each call to this method will return a new connection.
+	 * <br/>Client side execution/connection properties are specfic to 
+	 * each connection instance 
+	 * @return a Connection to the current session
+	 * @throws TeiidSQLException 
+	 */
+	TeiidConnection getConnection() throws TeiidSQLException;
 }
