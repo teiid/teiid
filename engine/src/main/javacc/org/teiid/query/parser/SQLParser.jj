@@ -1651,22 +1651,10 @@ Insert insert(ParseInfo info) :
 	  insert.setVariables(columns);
 	}]
 
-	(
-		( <VALUES> <LPAREN>
-		  values = expressionList(info)
-		  <RPAREN>
-		  {
-		    // Store each row of values
-		    insert.setValues(values);
-		  }
-		)
-		|
-		( query = queryExpression(info)
-		  {
-		    insert.setQueryExpression(query);
-		  }
-		)
-	)
+    query = queryExpression(info)
+	{
+	  insert.setQueryExpression(query);
+    }
 	
 	[ option = option(info)
 	  {
@@ -1899,10 +1887,21 @@ QueryCommand queryPrimary(ParseInfo info) :
 {
     QueryCommand query = null;
     String name = null;
+    List<Expression> expr = null;
 }
 {
     (
-        query=query(info) | 
+        query=query(info) |
+        (<VALUES> <LPAREN> expr = expressionList(info) 
+         {
+           query = Query.rowConstructor(expr);
+         } 
+         <RPAREN> 
+          (<COMMA> <LPAREN> expr = expressionList(info) 
+           { 
+             query = new SetQuery(SetQuery.Operation.UNION, true, query, Query.rowConstructor(expr));
+           } 
+          <RPAREN>)*) | 
         (<TABLE> name=id(null) {
            Query q = new Query();
            q.setSelect(new Select(Arrays.asList(new MultipleElementSymbol())));
