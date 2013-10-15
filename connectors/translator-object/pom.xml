@@ -59,6 +59,7 @@
 		<dependency>
 	        <groupId>org.infinispan</groupId>
     	    <artifactId>infinispan-core</artifactId>
+            <version>${version.org.infinispan}</version>
        		<scope>provided</scope>
 		</dependency>	 
 	 	<dependency>
@@ -87,7 +88,7 @@
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-server-hotrod</artifactId>
-            <version>${version.org.infinispan}</version>
+           <version>${version.org.infinispan}</version>
 	      <type>test-jar</type>
 	      <scope>test</scope>
 	    </dependency>
@@ -97,11 +98,6 @@
 	      <version>${version.org.infinispan}</version>
 	      <scope>test</scope>
 	    </dependency>	     		
-     	<dependency>
-              <groupId>org.jgroups</groupId>
-              <artifactId>jgroups</artifactId>
-              <scope>test</scope>
-     	</dependency>
         <dependency>
             <groupId>org.jboss.marshalling</groupId>
             <artifactId>jboss-marshalling-river</artifactId>
