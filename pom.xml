@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
-  <parent>
-    <groupId>org.jboss</groupId>
-    <artifactId>jboss-parent</artifactId>
-    <version>10</version>
-  </parent>   
+    <parent>
+      <groupId>org.jboss.integration-platform</groupId>
+      <artifactId>jboss-integration-platform-bom</artifactId>
+      <version>6.0.0-SNAPSHOT</version>
+    </parent>    
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
 	<artifactId>teiid-parent</artifactId>
@@ -15,27 +14,40 @@
 	<description>Federated SQL and XML query engine.</description>
 	<properties>
 		<site.url>http://www.jboss.org/teiid</site.url>
+        <version.org.jboss.integration-platform>6.0.0-SNAPSHOT</version.org.jboss.integration-platform>
+        <version.org.jboss.as>7.2.1.Final-redhat-10</version.org.jboss.as>
         <jbossas-test-version>jboss-eap-6.1</jbossas-test-version>
-        <version.jbossas>7.2.0.Alpha1-redhat-4</version.jbossas>
+        <!--arquillian-container-version>7.2.0.Final</arquillian-container-version-->
+        <version.ant.plugin>1.7.0</version.ant.plugin>
         <version.org.jboss.common-core>2.2.17.GA</version.org.jboss.common-core>
+        <!--version.org.jboss.staxmapper>1.1.0.Final</version.org.jboss.staxmapper-->
+        <version.org.jboss.jboss-dmr>1.1.6.Final</version.org.jboss.jboss-dmr>
+        <version.org.jboss.msc.jboss-msc>1.0.4.GA</version.org.jboss.msc.jboss-msc>
+        <version.org.jboss.modules.jboss-modules>1.2.0.CR1</version.org.jboss.modules.jboss-modules>
         <version.org.jboss.jboss-vfs>3.1.0.Final</version.org.jboss.jboss-vfs>
+        <version.org.picketbox>4.0.15.Final</version.org.picketbox>
+        <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
         <version.org.jboss.logging.jboss-logging>3.1.2.GA</version.org.jboss.logging.jboss-logging>
-        <version.org.infinispan>5.2.1.Final</version.org.infinispan>
+        <!--version.org.infinispan>5.2.1.Final</version.org.infinispan-->
+        <!--version.org.jboss.marshalling.jboss-marshalling>1.3.16.GA</version.org.jboss.marshalling.jboss-marshalling-->
+        <version.org.jboss.marshalling.jboss-marshalling-river>1.3.16.GA</version.org.jboss.marshalling.jboss-marshalling-river>
         <version.asm>3.3.1</version.asm>
         <version.org.jboss.arquillian.core>1.0.0.Final</version.org.jboss.arquillian.core>
+        <version.javax.enterprise>1.0-SP4</version.javax.enterprise>
+        <!--version.org.jboss.netty>3.2.6.Final</version.org.jboss.netty-->
         <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
         <version.json-simple>1.1</version.json-simple>
+        <!--version.org.jgroups>3.2.7.Final</version.org.jgroups-->
         <version.connector-api>1.5</version.connector-api>
         <version.jta>1.1</version.jta>
         <version.sun.jaxb>2.2.5.jboss-1</version.sun.jaxb>
         <version.javax.wsdl4j>1.6.2</version.javax.wsdl4j>
-        <version.javax.ws.rs>1.1</version.javax.ws.rs>
+        <!--version.junit>4.10</version.junit-->
+        <!--version.javax.ws.rs>1.1</version.javax.ws.rs-->
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
         <version.core4j>0.5</version.core4j>
-        <version.resteasy-jaxrs>2.3.6.Final</version.resteasy-jaxrs>
-        <version.com.force.api>26.0.0</version.com.force.api>
-        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
-        <cxf.version>2.6.6</cxf.version>
+        <!--version.org.jboss.resteasy>2.3.6.Final</version.org.jboss.resteasy-->
+        <version.com.force.api>26.0.0</version.com.force.api>        
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -61,7 +73,7 @@
 			<roles>
 				<role>Project Lead</role>
 			</roles>
-			<timezone>-6</timezone>
+			<timezone>-5</timezone>
 		</developer>
 		<developer>
 			<name>Ramesh Reddy</name>
@@ -240,35 +252,22 @@
             </plugin>
 		</plugins>
 	</build>
-	<dependencies>      
+	<dependencies>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>${version.junit}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-all</artifactId>
+			<version>${version.org.mockito}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
-		<dependencies>    
-           <dependency>
-            <groupId>org.jboss.integration-platform</groupId>
-            <artifactId>jboss-integration-platform-bom</artifactId>
-            <version>6.0.0-SNAPSHOT</version>
-            <scope>import</scope>
-            <type>pom</type>
-          </dependency>    
-      
-         <dependency>
-             <groupId>org.jboss.as</groupId>
-             <artifactId>jboss-as-parent</artifactId>
-             <version>${version.jbossas}</version>
-             <type>pom</type>
-             <scope>import</scope>
-         </dependency>                    
+		<dependencies>      
       <!--
       Declare all dependency versions and default scopes here, but not optional.
       Each module should declare it's direct dependency and possibily overwrite scope/optional.
@@ -369,6 +368,7 @@
             </dependency>    
       
       <!-- External dependencies -->
+                  
 			<dependency>
 				<groupId>javax.resource</groupId>
 				<artifactId>connector-api</artifactId>
@@ -408,8 +408,45 @@
                         <artifactId>jboss-logging-spi</artifactId>
                     </exclusion>
                 </exclusions>
+            </dependency>            
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-controller</artifactId>
+                <version>${version.org.jboss.as}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.jboss.as</groupId>
+              <artifactId>jboss-as-clustering</artifactId>
+              <version>${version.org.jboss.as}</version>
+            </dependency>            
+            <dependency>
+                <groupId>org.jboss</groupId>
+                <artifactId>staxmapper</artifactId>
+                <version>${version.org.jboss.staxmapper}</version>
+            </dependency>
+            <!-- 
+            <dependency>
+                <groupId>org.picketbox</groupId>
+                <artifactId>jbosssx-client</artifactId>
+                <version>${version.org.picketbox.jbosssx-client}</version>
+            </dependency>
+     -->
+            <dependency>
+                <groupId>org.jboss</groupId>
+                <artifactId>jboss-dmr</artifactId>
+                <version>${version.org.jboss.jboss-dmr}</version>
+            </dependency>
+            
+            <dependency>
+                <groupId>org.jboss.msc</groupId>
+                <artifactId>jboss-msc</artifactId>
+                <version>${version.org.jboss.msc.jboss-msc}</version>
             </dependency> 
-
+            <dependency>
+                <groupId>org.jboss.modules</groupId>
+                <artifactId>jboss-modules</artifactId>
+                <version>${version.org.jboss.modules.jboss-modules}</version>
+            </dependency>             
             <dependency>
                 <groupId>org.jboss</groupId>
                 <artifactId>jboss-vfs</artifactId>
@@ -425,11 +462,15 @@
                     </exclusion>
                 </exclusions>                
             </dependency>    
-        
+            <dependency>
+                <groupId>org.picketbox</groupId>
+                <artifactId>picketbox</artifactId>
+                <version>${version.org.picketbox}</version>
+            </dependency>           
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-server</artifactId>
-                <version>${version.jbossas}</version>
+                <version>${version.org.jboss.as}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.as</groupId>
@@ -440,7 +481,7 @@
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-connector</artifactId>
-                <version>${version.jbossas}</version>
+                <version>${version.org.jboss.as}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.as</groupId>
@@ -455,7 +496,7 @@
             <dependency>
                 <groupId>org.jboss.as</groupId>
                 <artifactId>jboss-as-security</artifactId>
-                <version>${version.jbossas}</version>
+                <version>${version.org.jboss.as}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.jboss.as</groupId>
@@ -467,7 +508,21 @@
                     </exclusion>                    
                 </exclusions>                                                
             </dependency>  
-  
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-controller-client</artifactId>   
+                <version>${version.org.jboss.as}</version>         
+            </dependency>    
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-cli</artifactId>  
+                <version>${version.org.jboss.as}</version>          
+            </dependency>   
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>${version.org.jboss.logging.jboss-logging}</version>
+            </dependency>   
             <dependency>
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging-generator</artifactId>
@@ -476,7 +531,7 @@
             <dependency>
               <groupId>org.jboss.as</groupId>
               <artifactId>jboss-as-clustering-infinispan</artifactId>
-              <version>${version.jbossas}</version>
+              <version>${version.org.jboss.as}</version>
               <exclusions>
                     <exclusion>
                         <groupId>org.jboss.logging</groupId>
@@ -490,6 +545,21 @@
                 <version>2.2.0.CR1</version>
             </dependency>         
             <dependency>
+              <groupId>org.jboss.as</groupId>
+              <artifactId>jboss-as-clustering-jgroups</artifactId>
+              <version>${version.org.jboss.as}</version>
+            </dependency> 
+            <dependency>
+              <groupId>org.jgroups</groupId>
+              <artifactId>jgroups</artifactId>
+              <version>${version.org.jgroups}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-subsystem-test</artifactId>
+                <version>${version.org.jboss.as}</version>
+            </dependency>
+            <dependency>
               <groupId>org.jboss.arquillian.junit</groupId>
               <artifactId>arquillian-junit-container</artifactId>
               <version>${version.org.jboss.arquillian.core}</version>
@@ -500,19 +570,38 @@
                 </exclusion>
               </exclusions>
             </dependency>
-        
+            <dependency>
+                <groupId>org.jboss.as</groupId>
+                <artifactId>jboss-as-arquillian-container-managed</artifactId>
+                <version>${version.org.jboss.as}</version>
+            </dependency>            
 			<dependency>
 				<groupId>net.sourceforge.saxon</groupId>
 				<artifactId>saxonhe</artifactId>
 				<version>${version.net.sourceforge.saxon}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>org.jboss.netty</groupId>
+				<artifactId>netty</artifactId>
+				<version>${version.org.jboss.netty}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.ant</groupId>
+				<artifactId>ant</artifactId>
+				<version>${version.ant.plugin}</version>
+			</dependency>
 			<dependency>
   				<groupId>com.googlecode.json-simple</groupId>
 				<artifactId>json-simple</artifactId>
   				<version>${version.json-simple}</version>
 			</dependency>
-
+			<!-- 
+            <dependency>
+               <groupId>javax.enterprise</groupId>
+               <artifactId>cdi-api</artifactId>
+               <version>${version.javax.enterprise.cdi-api}</version>
+            </dependency>
+             -->
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-xjc</artifactId>
@@ -524,6 +613,11 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${version.junit}</version>
+            </dependency> 
             <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
@@ -569,10 +663,6 @@
                         <groupId>org.jboss</groupId>
                         <artifactId>staxmapper</artifactId>
                     </exclusion>
-                    <exclusion>
-                      <groupId>org.jboss.spec.javax.transaction</groupId>
-                      <artifactId>jboss-transaction-api_1.1_spec</artifactId>
-                    </exclusion>                    
                 </exclusions>
             </dependency>     
             <dependency>
@@ -580,7 +670,17 @@
                 <artifactId>asm</artifactId>
                 <version>${version.asm}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.jboss.marshalling</groupId>
+                <artifactId>jboss-marshalling-river</artifactId>
+                <version>${version.org.jboss.marshalling.jboss-marshalling-river}</version>
+            </dependency>
+        
+            <dependency>
+                <groupId>org.jboss.marshalling</groupId>
+                <artifactId>jboss-marshalling</artifactId>
+                <version>${version.org.jboss.marshalling.jboss-marshalling}</version>
+            </dependency>
             <dependency>
                 <groupId>wsdl4j</groupId>
                 <artifactId>wsdl4j</artifactId>
@@ -622,16 +722,20 @@
                 <groupId>org.core4j</groupId>
                 <version>${version.core4j}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.jboss.resteasy</groupId>
+                <artifactId>resteasy-jaxrs</artifactId>
+                <version>${version.org.jboss.resteasy}</version>
+            </dependency>
             <dependency>
                 <groupId>org.jboss.resteasy</groupId>
                 <artifactId>tjws</artifactId>
-                <version>${version.resteasy-jaxrs}</version>
+                <version>${version.org.jboss.resteasy}</version>
             </dependency>             
             <dependency>
                 <groupId>org.jboss.spec.javax.servlet</groupId>
                 <artifactId>jboss-servlet-api_3.0_spec</artifactId>
-                <version>1.0.0.Final</version>
+                <version>${version.org.jboss.spec.javax.servlet.3.0}</version>
             </dependency>     
             <dependency>
                 <groupId>com.force.api</groupId>
@@ -647,19 +751,7 @@
                         <artifactId>js</artifactId>
                     </exclusion>
                </exclusions>                
-            </dependency>   
-            <dependency>
-                <groupId>org.apache.lucene</groupId>
-                <artifactId>lucene-core</artifactId>
-                <version>${version.org.apache.lucene}</version>
-            </dependency>   
-            
-            <dependency>
-                <groupId>org.apache.cxf</groupId>
-                <artifactId>cxf-rt-ws-security</artifactId>
-                <version>${cxf.version}</version>
-                <!--scope>provided</scope-->        
-            </dependency>                                
+            </dependency>                         
 		</dependencies>
 	</dependencyManagement>
 	<modules>
@@ -668,6 +760,9 @@
 		<module>client</module>
 		<module>engine</module>
 		<module>connectors</module>
+        <!-- 
+		<module>console</module>
+         -->
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
