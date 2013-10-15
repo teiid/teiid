@@ -13,7 +13,6 @@
     <packaging>bundle</packaging>
     
      <properties>
-        <version.hibernate.search>4.1.1.Final</version.hibernate.search>
        <mockito.all.version>1.8.4</mockito.all.version>
   	</properties>
     
@@ -71,10 +70,14 @@
 		<dependency>
 		   <groupId>org.hibernate</groupId>
 		   <artifactId>hibernate-search</artifactId>
-		   <version>${version.hibernate.search}</version>
+		   <version>${version.org.hibernate}</version>
 		   <scope>provided</scope>
 		</dependency>
-		
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <scope>provided</scope>
+        </dependency> 		
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-client-hotrod</artifactId>
@@ -84,7 +87,7 @@
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-server-hotrod</artifactId>
-            <version>${version.org.infinispan}</version>
+           <version>${version.org.infinispan}</version>
 	      <type>test-jar</type>
 	      <scope>test</scope>
 	    </dependency>
@@ -94,11 +97,6 @@
 	      <version>${version.org.infinispan}</version>
 	      <scope>test</scope>
 	    </dependency>	     		
-     	<dependency>
-              <groupId>org.jgroups</groupId>
-              <artifactId>jgroups</artifactId>
-              <scope>test</scope>
-     	</dependency>
         <dependency>
             <groupId>org.jboss.marshalling</groupId>
             <artifactId>jboss-marshalling-river</artifactId>

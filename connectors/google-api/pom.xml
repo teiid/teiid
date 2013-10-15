@@ -20,7 +20,6 @@
         <dependency>
 		  <groupId>com.google.guava</groupId>
 		  <artifactId>guava</artifactId>
-		  <version>${version.guava}</version>
 		  <scope>provided</scope>
 		</dependency>
 		<dependency>

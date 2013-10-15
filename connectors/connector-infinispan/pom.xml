@@ -27,6 +27,11 @@
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>jta</artifactId>
+            <scope>provided</scope>
         </dependency>    
         <dependency>
             <groupId>org.jboss.teiid.connectors</groupId>
