@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-    <parent>
-      <groupId>org.jboss</groupId>
-      <artifactId>jboss-parent</artifactId>
-      <version>10</version>
-    </parent>    
+
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>10</version>
+  </parent>   
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
 	<artifactId>teiid-parent</artifactId>
@@ -16,7 +17,6 @@
 		<site.url>http://www.jboss.org/teiid</site.url>
         <jbossas-version>7.2.0.Alpha1-redhat-4</jbossas-version>
         <jbossas-test-version>jboss-eap-6.1</jbossas-test-version>
-        <arquillian-container-version>7.2.0.Final</arquillian-container-version>
         <version.ant.plugin>1.7.0</version.ant.plugin>
         <version.org.jboss.common-core>2.2.17.GA</version.org.jboss.common-core>
         <version.org.jboss.staxmapper>1.1.0.Final</version.org.jboss.staxmapper>
@@ -41,12 +41,13 @@
         <version.jta>1.1</version.jta>
         <version.sun.jaxb>2.2.5.jboss-1</version.sun.jaxb>
         <version.javax.wsdl4j>1.6.2</version.javax.wsdl4j>
-        <version.junit>4.10</version.junit>
         <version.javax.ws.rs>1.1</version.javax.ws.rs>
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
         <version.core4j>0.5</version.core4j>
         <version.resteasy-jaxrs>2.3.6.Final</version.resteasy-jaxrs>
         <version.com.force.api>26.0.0</version.com.force.api>
+        <version.org.hibernate>4.1.1.Final</version.org.hibernate>
+        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -72,7 +73,7 @@
 			<roles>
 				<role>Project Lead</role>
 			</roles>
-			<timezone>-5</timezone>
+			<timezone>-6</timezone>
 		</developer>
 		<developer>
 			<name>Ramesh Reddy</name>
@@ -251,11 +252,11 @@
             </plugin>
 		</plugins>
 	</build>
-	<dependencies>
+	<dependencies>      
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>${version.junit}</version>
+			<!--version>${version.junit}</version-->
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -266,7 +267,14 @@
 		</dependency>
 	</dependencies>
 	<dependencyManagement>
-		<dependencies>
+		<dependencies>    
+           <dependency>
+            <groupId>org.jboss.integration-platform</groupId>
+            <artifactId>jboss-integration-platform-bom</artifactId>
+            <version>6.0.0-SNAPSHOT</version>
+            <scope>import</scope>
+            <type>pom</type>
+          </dependency>         
       <!--
       Declare all dependency versions and default scopes here, but not optional.
       Each module should declare it's direct dependency and possibily overwrite scope/optional.
@@ -612,11 +620,6 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${version.junit}</version>
-            </dependency> 
-            <dependency>
                 <groupId>org.infinispan</groupId>
                 <artifactId>infinispan-core</artifactId>
                 <version>${version.org.infinispan}</version>
@@ -661,6 +664,10 @@
                         <groupId>org.jboss</groupId>
                         <artifactId>staxmapper</artifactId>
                     </exclusion>
+                    <exclusion>
+                      <groupId>org.jboss.spec.javax.transaction</groupId>
+                      <artifactId>jboss-transaction-api_1.1_spec</artifactId>
+                    </exclusion>                    
                 </exclusions>
             </dependency>     
             <dependency>
@@ -749,7 +756,12 @@
                         <artifactId>js</artifactId>
                     </exclusion>
                </exclusions>                
-            </dependency>                         
+            </dependency>   
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${version.org.apache.lucene}</version>
+            </dependency>                                   
 		</dependencies>
 	</dependencyManagement>
 	<modules>
@@ -758,9 +770,6 @@
 		<module>client</module>
 		<module>engine</module>
 		<module>connectors</module>
-        <!-- 
-		<module>console</module>
-         -->
 		<module>metadata</module>
 		<module>runtime</module>
 		<module>adminshell</module>
