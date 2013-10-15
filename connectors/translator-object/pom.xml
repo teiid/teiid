@@ -12,7 +12,7 @@
     <description>This is the tranlator for API interfaces</description>
 
      <properties>
-        <version.hibernate.search>4.1.1.Final</version.hibernate.search>
+        <!--version.hibernate.search>4.1.1.Final</version.hibernate.search-->
        <mockito.all.version>1.8.4</mockito.all.version>
   	</properties>
     
@@ -70,10 +70,14 @@
 		<dependency>
 		   <groupId>org.hibernate</groupId>
 		   <artifactId>hibernate-search</artifactId>
-		   <version>${version.hibernate.search}</version>
+		   <version>${version.org.hibernate}</version>
 		   <scope>provided</scope>
 		</dependency>
-		
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-core</artifactId>
+            <scope>provided</scope>
+        </dependency> 		
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
 	      <artifactId>infinispan-client-hotrod</artifactId>
