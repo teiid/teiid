@@ -36,19 +36,21 @@
         <dependency>
             <groupId>javax.resource</groupId>
             <artifactId>connector-api</artifactId>
-              <scope>provided</scope>
+            <scope>provided</scope>
         </dependency>   
- 
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>jta</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${version.infinispan}</version>
             <scope>provided</scope>
         </dependency> 
         <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-client-hotrod</artifactId>
-          <version>${version.infinispan}</version>
           <scope>provided</scope>
         </dependency>  
         
