@@ -27,6 +27,8 @@ import static org.junit.Assert.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -38,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -51,6 +54,9 @@ import org.mockito.Mockito;
 import org.postgresql.Driver;
 import org.teiid.adminapi.Model.Type;
 import org.teiid.adminapi.impl.ModelMetaData;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
 import org.teiid.deployers.VirtualDatabaseException;
@@ -813,6 +819,85 @@ public class TestEmbeddedServer {
 		assertTrue(rs.next());
 		assertFalse(rs.next());
 		assertEquals("a", cs.getString(1));
+	}
+	
+	@Test public void testSourceLobUnderTxn() throws Exception {
+		EmbeddedConfiguration ec = new EmbeddedConfiguration();
+		ec.setMaxResultSetCacheStaleness(0);
+		MockTransactionManager tm = new MockTransactionManager();
+		ec.setTransactionManager(tm);
+		ec.setUseDisk(false);
+		es.start(ec);
+		
+		final AtomicBoolean closed = new AtomicBoolean();
+		es.addTranslator("foo", new ExecutionFactory() {
+			
+			@Override
+			public boolean isSourceRequired() {
+				return false;
+			}
+			
+			@Override
+			public ResultSetExecution createResultSetExecution(
+					QueryExpression command, ExecutionContext executionContext,
+					RuntimeMetadata metadata, Object connection)
+					throws TranslatorException {
+				return new ResultSetExecution() {
+					
+					private boolean returned;
+
+					@Override
+					public void execute() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public void close() {
+						closed.set(true);
+					}
+					
+					@Override
+					public void cancel() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public List<?> next() throws TranslatorException, DataNotAvailableException {
+						if (returned) {
+							return null;
+						}
+						returned = true;
+						ArrayList<Object> result = new ArrayList<Object>(1);
+						result.add(new SQLXMLImpl(new InputStreamFactory() {
+							
+							@Override
+							public InputStream getInputStream() throws IOException {
+								//need to make it of a sufficient size to not be inlined
+								return new ByteArrayInputStream(new byte[DataTypeManager.MAX_LOB_MEMORY_BYTES + 1]);
+							}
+						}));
+						return result;
+					}
+				};
+			}
+		});
+		es.deployVDB(new ByteArrayInputStream("<vdb name=\"test\" version=\"1\"><model name=\"test\"><source name=\"foo\" translator-name=\"foo\"/><metadata type=\"DDL\"><![CDATA[CREATE foreign table x (y xml);]]> </metadata></model></vdb>".getBytes()));
+		
+		Connection c = es.getDriver().connect("jdbc:teiid:test", null);
+		
+		c.setAutoCommit(false);
+		
+		Statement s = c.createStatement();
+		
+		ResultSet rs = s.executeQuery("select * from x");
+		
+		rs.next();
+		
+		assertFalse(closed.get());
+		
+		s.close();
+		
+		assertTrue(closed.get());
 	}
 
 }

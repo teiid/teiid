@@ -441,19 +441,19 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			}
 		}
 		if (this.transactionState == TransactionState.ACTIVE) {
-			/*
-			 * TEIID-14 if we are done producing batches, then proactively close transactional 
-			 * executions even ones that were intentionally kept alive. this may 
-			 * break the read of a lob from a transactional source under a transaction 
-			 * if the source does not support holding the clob open after commit
-			 */
-        	for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
-        		if (connectorRequest.isTransactional()) {
-        			connectorRequest.fullyCloseSource();
-        		}
-            }
 			this.transactionState = TransactionState.DONE;
 			if (transactionContext.getTransactionType() == TransactionContext.Scope.REQUEST) {
+				/*
+				 * TEIID-14 if we are done producing batches, then proactively close transactional 
+				 * executions even ones that were intentionally kept alive. this may 
+				 * break the read of a lob from a transactional source under a transaction 
+				 * if the source does not support holding the clob open after commit
+				 */
+	        	for (DataTierTupleSource connectorRequest : getConnectorRequests()) {
+	        		if (connectorRequest.isTransactional()) {
+	        			connectorRequest.fullyCloseSource();
+	        		}
+	            }
 				this.transactionService.commit(transactionContext);
 			} else {
 				suspend();
