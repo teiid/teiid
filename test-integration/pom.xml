@@ -94,27 +94,28 @@
 			<groupId>javax.transaction</groupId>
                 <artifactId>jta</artifactId>
 		</dependency>
-    <dependency>
-        <groupId>org.jboss</groupId>
-        <artifactId>jboss-vfs</artifactId>
-        <scope>test</scope>
-    </dependency> 
-    <dependency>
-        <groupId>org.jboss.logging</groupId>
-        <artifactId>jboss-logging</artifactId>
-        <scope>test</scope>        
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.as</groupId>
-      <artifactId>jboss-as-clustering-jgroups</artifactId>
-      <scope>test</scope> 
-    </dependency> 
-    <dependency>
-        <groupId>org.jboss.netty</groupId>
-        <artifactId>netty</artifactId>
-        <scope>test</scope> 
-    </dependency>
-     
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jboss-vfs</artifactId>
+            <scope>test</scope>
+        </dependency> 
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging</artifactId>
+            <scope>test</scope>        
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss.netty</groupId>
+            <artifactId>netty</artifactId>
+            <scope>test</scope> 
+        </dependency>
+           
+        <dependency>
+            <groupId>org.jgroups</groupId>
+            <artifactId>jgroups</artifactId>
+            <scope>provided</scope>
+        </dependency>     
 	</dependencies>
 
   <modules>

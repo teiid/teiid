@@ -11,9 +11,6 @@
     <name>Web Service Connector</name>
     <packaging>rar</packaging>
     <description>This connector reads data from Web Services</description>
-	<properties>
-		<cxf.version>2.6.6</cxf.version>
-	</properties>
     <dependencies>
         <dependency>
             <groupId>org.jboss.teiid</groupId>
@@ -45,7 +42,6 @@
         <dependency>
             <groupId>org.apache.cxf</groupId>
   			<artifactId>cxf-rt-ws-security</artifactId>
-  			<version>${cxf.version}</version>
             <scope>provided</scope>        
         </dependency>
         <dependency>

@@ -11,9 +11,6 @@
     <packaging>rar</packaging>
     <name>Infinispan Connector</name>
     <description>This connector creates the connection to the Infinispan Cache</description>
-    <properties>
-       <version.infinispan>5.1.2.FINAL</version.infinispan>
-    </properties>
     <dependencies>
  
         <dependency>
@@ -38,17 +35,19 @@
             <artifactId>connector-api</artifactId>
               <scope>provided</scope>
         </dependency>   
- 
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>jta</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.infinispan</groupId>
             <artifactId>infinispan-core</artifactId>
-            <version>${version.infinispan}</version>
             <scope>provided</scope>
         </dependency> 
         <dependency>
           <groupId>org.infinispan</groupId>
           <artifactId>infinispan-client-hotrod</artifactId>
-          <version>${version.infinispan}</version>
           <scope>provided</scope>
         </dependency>  
         
@@ -64,18 +63,6 @@
             <artifactId>jboss-marshalling-river</artifactId>
             <scope>test</scope>
         </dependency>	    
-	         
- 		<dependency>
-              <groupId>org.jgroups</groupId>
-              <artifactId>jgroups</artifactId>
-              <scope>test</scope>
-     	</dependency>
-                  
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>      
-            <scope>test</scope>
-        </dependency> 
         
         <dependency>
             <groupId>org.jboss.modules</groupId>
