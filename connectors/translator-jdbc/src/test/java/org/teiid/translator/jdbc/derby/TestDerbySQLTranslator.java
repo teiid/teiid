@@ -84,4 +84,20 @@ public class TestDerbySQLTranslator {
     	assertEquals("declare global temporary table foo (COL1 integer, COL2 varchar(100)) not logged", TranslationHelper.helpTestTempTable(TRANSLATOR, true));
     }
     
+    @Test public void testXmlSelect() throws Exception {
+        String input = "SELECT col as x, col1 as y from test"; //$NON-NLS-1$
+        String output = "SELECT XMLSERIALIZE(test.col AS CLOB) AS x, test.col1 AS y FROM test";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table test (col xml, col1 integer);",
+                input, output, 
+                TRANSLATOR);
+        
+        input = "SELECT * from test"; //$NON-NLS-1$
+        output = "SELECT XMLSERIALIZE(test.col AS CLOB), test.col1 FROM test";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor("create foreign table test (col xml, col1 integer);",
+                input, output, 
+                TRANSLATOR);
+    }
+    
 }

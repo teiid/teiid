@@ -22,14 +22,10 @@
 
 package org.teiid.translator.jdbc.db2;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.core.types.XMLType;
 import org.teiid.language.Expression;
 import org.teiid.language.Function;
 import org.teiid.language.Literal;
@@ -193,24 +189,6 @@ public class DB2ExecutionFactory extends BaseDB2ExecutionFactory {
 	@Override
 	public boolean supportsGroupByRollup() {
 		return true;
-	}
-	
-	@Override
-	public Object retrieveValue(ResultSet results, int columnIndex,
-			Class<?> expectedType) throws SQLException {
-		if (expectedType == XMLType.class) {
-			return results.getString(columnIndex);
-		}
-		return super.retrieveValue(results, columnIndex, expectedType);
-	}
-	
-	@Override
-	public Object retrieveValue(CallableStatement results, int parameterIndex,
-			Class<?> expectedType) throws SQLException {
-		if (expectedType == XMLType.class) {
-			return results.getString(parameterIndex);
-		}
-		return super.retrieveValue(results, parameterIndex, expectedType);
 	}
 	
 }
