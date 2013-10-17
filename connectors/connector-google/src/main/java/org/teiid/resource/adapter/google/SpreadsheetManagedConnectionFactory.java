@@ -32,7 +32,7 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 	private static final long serialVersionUID = -1832915223199053471L;
 	public static final String CLIENT_LOGIN = "ClientLogin"; //$NON-NLS-1$
 	public static final String OAUTH2_LOGIN = "OAuth2"; //$NON-NLS-1$
-	private long batchSize;
+	private Integer batchSize = 4096;
 	public static final BundleUtil UTIL = BundleUtil.getBundleUtil(SpreadsheetManagedConnectionFactory.class);
 	public static final String SPREADSHEET_NAME = "SpreadsheetName"; //$NON-NLS-1$
 
@@ -116,11 +116,11 @@ public class SpreadsheetManagedConnectionFactory extends BasicManagedConnectionF
 		this.password = googlePassword;
 	}
 
-	public long getBatchSize() {
+	public Integer getBatchSize() {
 		return batchSize;
 	}
 
-	public void setBatchSize(long batchSize) {
+	public void setBatchSize(Integer batchSize) {
 		this.batchSize = batchSize;
 	}
 

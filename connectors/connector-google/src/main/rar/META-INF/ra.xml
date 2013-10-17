@@ -56,7 +56,7 @@
             <config-property>
                <description>{$display:"Max result batch size",$description:""}</description>
                <config-property-name>BatchSize</config-property-name>
-               <config-property-type>java.lang.Long</config-property-type>
+               <config-property-type>java.lang.Integer</config-property-type>
                <config-property-value>4096</config-property-value>
             </config-property>       
                     
