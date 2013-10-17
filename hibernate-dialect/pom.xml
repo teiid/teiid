@@ -12,7 +12,8 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>4.1.6.Final</version>
+			<version>${version.org.hibernate}</version>
 		</dependency>
 	</dependencies>
 </project>
+
