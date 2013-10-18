@@ -15,3 +15,11 @@ The CacheTypeMap config property must also be set with additional metadata
 about the cache classes.  It provides a mapping from cache name to cache
 class.  When using a dynamic vdb, it should also specify the pk field
 name for each of the cache classes. 
+
+To install the infinispan connector, choose 1 of the 2 following options:
+
+1.  edit the "standalone-teiid.xml" file or "doamin-teiid.xml" file and add 
+the contents of the infinispan.xml under "resource-adapters" subsystem section.
+
+2.  edit the create-ldap-ds.properties to set accordingly, and then  
+run the following CLI script in the JBOSS_HOME/bin/jboss-cli.sh -c --file=create-infinspan-ds.cli   --properties=create-infinispan-ds.properties

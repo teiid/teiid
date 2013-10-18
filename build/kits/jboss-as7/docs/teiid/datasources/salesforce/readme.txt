@@ -11,5 +11,5 @@ the contents of the salesforce.xml under "resource-adapters" subsystem section.
 
 Option 2:
 
-Take a look at create-salesforce-ds.cli script, and modify and execute using JBoss CLI tool as below  
-./Jboss-admin.sh --file create-salesforce-ds.cli
+edit the create-salesforce-ds.properties to set accordingly, and then run the following CLI script
+ in the JBOSS_HOME/bin/jboss-cli.sh -c --file=create-salesforce-ds.cli   --properties=create-salesforce-ds.properties
