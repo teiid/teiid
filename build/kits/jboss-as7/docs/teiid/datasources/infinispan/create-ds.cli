@@ -1,5 +1,0 @@
-/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS:add(jndi-name=java:/infinispanDS, class-name=org.teiid.resource.adapter.infinispan.InfinispanManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS/config-properties=CacheTypeMap:add(value=trades:org.somewhere.Trade;tradeId)
-/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS/config-properties=Module:add(value=org.somewhere)
-/subsystem=resource-adapters/resource-adapter=infinispan/connection-definitions=infinispanDS/config-properties=CacheJndiName:add(value=java:/myCache)
-/subsystem=resource-adapters/resource-adapter=infinispan:activate
