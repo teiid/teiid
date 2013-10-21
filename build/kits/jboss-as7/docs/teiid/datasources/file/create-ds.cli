@@ -1,4 +1,0 @@
-/subsystem=resource-adapters/resource-adapter=file/connection-definitions=fileDS:add(jndi-name=java:/fileDS, class-name=org.teiid.resource.adapter.file.FileManagedConnectionFactory, enabled=true, use-java-context=true)
-/subsystem=resource-adapters/resource-adapter=file/connection-definitions=fileDS/config-properties=ParentDirectory:add(value=/home/rareddy/testing/)
-/subsystem=resource-adapters/resource-adapter=file/connection-definitions=fileDS/config-properties=AllowParentPaths:add(value=true)
-/subsystem=resource-adapters/resource-adapter=file:activate
