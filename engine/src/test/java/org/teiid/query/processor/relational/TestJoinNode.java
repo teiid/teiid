@@ -180,10 +180,10 @@ public class TestJoinNode {
         
         List rightElements = new ArrayList();
         rightElements.add(es2);
-        rightNode = new FakeRelationalNode(2, rightTuples) {
+        rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
         	@Override
         	public boolean hasBuffer(boolean requireFinal) {
-        		return !requireFinal;
+        		return false;
         	}
 
         	@Override
@@ -782,6 +782,10 @@ public class TestJoinNode {
     
     @Test public void testMergeJoinOptimizationMultiBatch() throws Exception {
     	helpTestEnhancedSortMergeJoin(10);
+    }
+    
+    @Test public void testMergeJoinOptimizationMultiBatch1() throws Exception {
+    	helpTestEnhancedSortMergeJoin(1);
     }
     
     @Test public void testMergeJoinOptimizationNoRows() throws Exception {

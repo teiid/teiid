@@ -161,5 +161,28 @@ public class BatchIterator extends AbstractTupleSource {
 			}
 		}
 	}
+	
+	public void readAhead(long limit) throws TeiidComponentException, TeiidProcessingException {
+		if (buffer == null || done) {
+			return;
+		}
+		if (this.buffer.getManagedRowCount() > limit) {
+			return;
+		}
+		if (this.batch != null && this.buffer.getRowCount() < this.batch.getEndRow()) {
+			//haven't saved already
+			this.buffer.addTupleBatch(this.batch, true);
+		}
+		TupleBatch tb = source.nextBatch();
+		done = tb.getTerminationFlag();
+		this.buffer.addTupleBatch(tb, true);
+		if (done) {
+			this.buffer.close();
+		}
+	}
+	
+	public TupleBuffer getBuffer() {
+		return buffer;
+	}
     
 }
