@@ -22,18 +22,14 @@
 
 package org.teiid.translator.jdbc.db2;
 
+import java.sql.CallableStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.teiid.language.DerivedColumn;
-import org.teiid.language.Expression;
-import org.teiid.language.Function;
-import org.teiid.language.Join;
-import org.teiid.language.LanguageFactory;
-import org.teiid.language.LanguageObject;
-import org.teiid.language.Limit;
-import org.teiid.language.Literal;
 import org.teiid.language.Comparison.Operator;
+import org.teiid.language.*;
 import org.teiid.language.Join.JoinType;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
@@ -176,6 +172,24 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 	@Override
 	public boolean supportsSubqueryInOn() {
 		return false;
+	}
+	
+	@Override
+	public Object retrieveValue(ResultSet results, int columnIndex,
+			Class<?> expectedType) throws SQLException {
+		if (expectedType == TypeFacility.RUNTIME_TYPES.XML) {
+			return results.getString(columnIndex);
+		}
+		return super.retrieveValue(results, columnIndex, expectedType);
+	}
+	
+	@Override
+	public Object retrieveValue(CallableStatement results, int parameterIndex,
+			Class<?> expectedType) throws SQLException {
+		if (expectedType == TypeFacility.RUNTIME_TYPES.XML) {
+			return results.getString(parameterIndex);
+		}
+		return super.retrieveValue(results, parameterIndex, expectedType);
 	}
 	
 }

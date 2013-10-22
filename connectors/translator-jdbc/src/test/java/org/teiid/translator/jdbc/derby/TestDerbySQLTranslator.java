@@ -72,4 +72,13 @@ public class TestDerbySQLTranslator {
         TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB, input, output, TRANSLATOR);
     }    
     
+    @Test public void testXmlSelect() throws Exception {
+        String input = "SELECT cast(stringkey as xml) as x, intkey as y from bqt1.smalla"; //$NON-NLS-1$
+        String output = "SELECT XMLSERIALIZE(cast(SmallA.StringKey AS clob) AS CLOB) AS x, SmallA.IntKey AS y FROM SmallA";  //$NON-NLS-1$
+
+        TranslationHelper.helpTestVisitor(TranslationHelper.BQT_VDB,
+                input, output, 
+                TRANSLATOR);
+    }
+    
 }

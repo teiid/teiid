@@ -23,11 +23,16 @@
 package org.teiid.translator.jdbc.derby;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.teiid.language.DerivedColumn;
+import org.teiid.language.LanguageObject;
+import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.SourceSystemFunctions;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.TypeFacility;
 import org.teiid.translator.jdbc.EscapeSyntaxModifier;
 import org.teiid.translator.jdbc.Version;
 import org.teiid.translator.jdbc.db2.BaseDB2ExecutionFactory;
@@ -179,6 +184,22 @@ public class DerbyExecutionFactory extends BaseDB2ExecutionFactory {
 	@Override
 	protected boolean usesDatabaseVersion() {
 		return true;
+	}
+	
+	@Override
+	public List<?> translate(LanguageObject obj, ExecutionContext context) {
+		if (obj instanceof DerivedColumn) {
+			DerivedColumn selectSymbol = (DerivedColumn)obj;
+			
+			if (selectSymbol.getExpression().getType() == TypeFacility.RUNTIME_TYPES.XML) {
+				if (selectSymbol.getAlias() == null) {
+					return Arrays.asList("XMLSERIALIZE(", selectSymbol.getExpression(), " AS CLOB)"); //$NON-NLS-1$//$NON-NLS-2$
+				}
+				//we're assuming that alias quoting shouldn't be needed
+				return Arrays.asList("XMLSERIALIZE(", selectSymbol.getExpression(), " AS CLOB) AS ", selectSymbol.getAlias());  //$NON-NLS-1$//$NON-NLS-2$
+			}
+		}
+		return super.translate(obj, context);
 	}
     
 }
