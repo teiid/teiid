@@ -32,6 +32,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.query.processor.BatchCollector;
 import org.teiid.query.processor.BatchIterator;
 import org.teiid.query.processor.relational.MergeJoinStrategy.SortOption;
 import org.teiid.query.processor.relational.SortUtility.Mode;
@@ -46,6 +47,7 @@ class SourceState {
 	
     private RelationalNode source;
     private List expressions;
+    private BatchCollector collector;
     private TupleBuffer buffer;
     private List<TupleBuffer> buffers;
     private List<Object> outerVals;
@@ -56,7 +58,6 @@ class SourceState {
     private boolean distinct;
     private ImplicitBuffer implicitBuffer = ImplicitBuffer.FULL;
     boolean open;
-    private BatchIterator prefetch;
     
     private SortUtility sortUtility;
     
@@ -74,6 +75,10 @@ class SourceState {
     
     public void setImplicitBuffer(ImplicitBuffer implicitBuffer) {
 		this.implicitBuffer = implicitBuffer;
+	}
+    
+    public ImplicitBuffer getImplicitBuffer() {
+		return implicitBuffer;
 	}
     
     static int[] getExpressionIndecies(List expressions,
@@ -124,7 +129,6 @@ class SourceState {
 			this.iterator.closeSource();
         	this.iterator = null;
         }
-        this.prefetch = null;
         this.currentTuple = null;
 	}
 
@@ -135,95 +139,68 @@ class SourceState {
     /**
      * Uses the prefetch logic to determine an incremental row count
      */
-    public boolean rowCountLE(int count) throws TeiidComponentException, TeiidProcessingException {
-    	if (buffer == null) {
-    		prefetch(false);
+    public boolean rowCountLE(long count) throws TeiidComponentException, TeiidProcessingException {
+    	if (buffer != null) {
+    		return buffer.getRowCount() <= count;
     	}
-    	while (buffer.getRowCount() <= count) {
-    		if (prefetch == null) {
-    			return true;
+    	if (iterator != null || this.sortUtility != null) {
+    		throw new IllegalStateException();
+    	}
+    	while (buffer == null) {
+    		if (getIncrementalRowCount(true) > count) {
+    			return false;
     		}
-    		prefetch(false);
+    		prefetch(Long.MAX_VALUE);
     	}
-    	return false;
+		return buffer.getRowCount() <= count;
     }
 
     IndexedTupleSource getIterator() throws TeiidComponentException, TeiidProcessingException {
         if (this.iterator == null) {
-            if (this.buffer == null) {
-            	getTupleBuffer(false);
-            }
-            if (this.prefetch != null) {
-        		this.iterator = this.prefetch;
+        	if (this.buffer != null) {
+                iterator = buffer.createIndexedTupleSource();
             } else {
-            	iterator = buffer.createIndexedTupleSource(implicitBuffer == ImplicitBuffer.NONE);
+                // return a TupleBatch tuplesource iterator
+                BatchIterator bi = new BatchIterator(this.source);
+                if (this.collector != null) {
+                	bi.setBuffer(this.collector.getTupleBuffer(), implicitBuffer == ImplicitBuffer.ON_MARK);
+                	this.collector = null;
+                } else if (implicitBuffer != ImplicitBuffer.NONE) {
+                	bi.setBuffer(createSourceTupleBuffer(), implicitBuffer == ImplicitBuffer.ON_MARK);
+                }
+                this.iterator = bi;
             }
         }
         return this.iterator;
     }
-
-    /**
-     * Create a batch iterator to perform basic prefetching
-     * @throws TeiidComponentException
-     */
-	private void createPrefetch() throws TeiidComponentException {
-		this.prefetch = new BatchIterator(this.source);
-		boolean useMark = implicitBuffer != ImplicitBuffer.FULL;
-		this.buffer = createSourceTupleBuffer();
-		this.prefetch.setBuffer(this.buffer, useMark);
-		if (useMark) {
-			this.prefetch.mark();
-		}
-	}
     
     /**
      * Pro-actively pull batches for later use.
      * There are unfortunately quite a few cases to cover here.
      */
-    protected void prefetch(boolean limit) throws TeiidComponentException, TeiidProcessingException {
+    protected void prefetch(long limit) throws TeiidComponentException, TeiidProcessingException {
     	if (!open) {
     		return;
     	}
-    	if (this.prefetch == null) {
-    		if (this.buffer != null) {
-    			return;
-    		}
+    	if (this.buffer == null) {
     		if (this.sortUtility != null) {
-    			sortUtility.sort();
     			return;
     		}
-    		if (this.source.hasBuffer(true)) {
-    			this.buffer = this.source.getBuffer(-1);
-				Assertion.assertTrue(this.buffer.isFinal());
+    		if (this.iterator != null) {
+    			((BatchIterator)this.iterator).readAhead(limit);
     			return;
     		}
-			createPrefetch();
-    	}
-    	if (limit && this.buffer.getManagedRowCount() >= this.source.getBatchSize() * this.source.getContext().getOptions().getJoinPrefetchBatches()) {
-    		return;
-    	}
-    	int curIndex = this.prefetch.getCurrentIndex();
-    	boolean marked = false;
-    	if (this.prefetch.ensureSave()) {
-    		marked = true;
-    	}
-    	this.prefetch.setPosition(this.buffer.getRowCount() + 1);
-    	BatchIterator bi = this.prefetch; //even if we clear the prefetch, we may already be using it as the iterator
-    	try {
-	    	if (!this.prefetch.hasNext()) {
-	    		this.prefetch = null;
-	    		if (this.iterator != bi) {
-	    			bi = null;
-	    		}
+    		if (source.hasBuffer(true)) {
+    			this.buffer = source.getBuffer(-1);
+    			return;
+    		}
+	    	if (collector == null) {
+	            collector = new BatchCollector(source, source.getBufferManager(), source.getContext(), false);
 	    	}
-    	} finally {
-    		if (bi != null) {
-	    		if (marked) {
-	    			bi.reset();
-	    		} else {
-	    			bi.setPosition(curIndex);
-	    		}
-    		}
+	    	if (collector.getTupleBuffer().getManagedRowCount() >= limit) {
+	    		return;
+	    	}
+	        this.buffer = collector.collectTuples();
     	}
     }
 
@@ -248,10 +225,6 @@ class SourceState {
     }
 
     public TupleBuffer getTupleBuffer() throws TeiidComponentException, TeiidProcessingException {
-    	return getTupleBuffer(true);
-    }
-    
-    private TupleBuffer getTupleBuffer(boolean full) throws TeiidComponentException, TeiidProcessingException {
         if (this.buffer == null) {
         	if (this.iterator instanceof BatchIterator) {
         		throw new AssertionError("cannot buffer the source"); //$NON-NLS-1$
@@ -261,15 +234,11 @@ class SourceState {
     			Assertion.assertTrue(this.buffer.isFinal());
     			return this.buffer;
     		}
-    		this.implicitBuffer = ImplicitBuffer.FULL;
-    		createPrefetch();
+        	if (collector == null) {
+                collector = new BatchCollector(source, source.getBufferManager(), source.getContext(), false);
+            }
+            this.buffer = collector.collectTuples();
         } 
-        if (full && this.prefetch != null) {
-        	while (this.prefetch.hasNext()) {
-        		this.prefetch.setPosition(this.prefetch.getCurrentIndex() + this.source.getBatchSize());
-        	}
-        	this.prefetch = null; //fully buffered
-        }
         return this.buffer;
     }
 
@@ -287,13 +256,13 @@ class SourceState {
     	}
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
+    		if (source.hasBuffer(true)) {
+    			this.buffer = source.getBuffer(-1);
+    		} else if (this.buffer == null && this.collector != null) {
+    			this.buffer = this.collector.collectTuples();
+    		}
     		if (this.buffer != null) {
     			this.buffer.setForwardOnly(true);
-    			if (this.prefetch != null) {
-    				this.prefetch.setPosition(1);
-    				this.prefetch.disableSave();
-    				ts = this.prefetch;
-    			}
     		} else {
     			ts = new BatchIterator(this.source);
     		}
@@ -317,13 +286,12 @@ class SourceState {
     	if (this.buffer != null && this.buffer != sorted) {
     		this.buffer.remove();
     	}
-    	this.prefetch = null;
 		this.buffer = sorted;
         this.markDistinct(sortUtility.isDistinct());
     }
     
     public boolean hasBuffer() {
-    	return this.buffer != null && this.prefetch == null;
+    	return this.buffer != null || this.source.hasBuffer(true);
     }
     
     public boolean nextBuffer() {
@@ -333,7 +301,6 @@ class SourceState {
     	}
     	this.buffer = this.buffers.remove(this.buffers.size() - 1);
     	this.buffer.setForwardOnly(false);
-    	this.prefetch = null;
     	this.resetState();
     	return true;
     }
@@ -353,6 +320,26 @@ class SourceState {
 	public void setMaxProbePosition() throws TeiidComponentException, TeiidProcessingException {
 		this.getIterator().setPosition(this.getMaxProbeMatch());
 		this.currentTuple = null;
+	}
+
+	public int getIncrementalRowCount(boolean low) {
+		if (this.buffer != null) {
+			return this.buffer.getRowCount();
+		}
+		if (this.collector != null) {
+			return this.collector.getTupleBuffer().getRowCount();
+		}
+		if (sortUtility == null) {
+			if (this.iterator instanceof BatchIterator) {
+				TupleBuffer tb = ((BatchIterator)this.iterator).getBuffer();
+				if (tb != null) {
+					return tb.getRowCount();
+				}
+				//TODO: should estimate the rows
+			}
+			//TODO: should estimate the rows based upon what is being fed into the sort
+		}
+		return low?0:Integer.MAX_VALUE;
 	}
     
 }

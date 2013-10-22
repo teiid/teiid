@@ -198,7 +198,7 @@ public class JoinNode extends SubqueryAwareRelationalNode {
     		if (!isDependent()) {
     			this.joinStrategy.openRight();
                 this.joinStrategy.loadRight();
-                this.joinStrategy.rightSource.prefetch(true);
+                prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
     		}
     		throw e;
     	}
@@ -216,15 +216,20 @@ public class JoinNode extends SubqueryAwareRelationalNode {
         	//TODO: this leads to duplicate exceptions, we 
         	//could track which side is blocking
         	try {
-        		this.joinStrategy.leftSource.prefetch(true);
+        		prefetch(this.joinStrategy.leftSource, this.joinStrategy.rightSource);
         	} catch (BlockedException e1) {
         		
         	}
-        	this.joinStrategy.rightSource.prefetch(true);
+        	prefetch(this.joinStrategy.rightSource, this.joinStrategy.leftSource);
         	throw e;
         }
         return pullBatch();
     }
+
+	private void prefetch(SourceState toFetch, SourceState other) throws TeiidComponentException,
+			TeiidProcessingException {
+		toFetch.prefetch(Math.max(1l, other.getIncrementalRowCount(false)/other.getSource().getBatchSize())*toFetch.getSource().getBatchSize());
+	}
 
     /** 
      * @see org.teiid.query.processor.relational.RelationalNode#getDescriptionProperties()
