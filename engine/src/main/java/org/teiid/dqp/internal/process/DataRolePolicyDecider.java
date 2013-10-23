@@ -36,11 +36,12 @@ import org.teiid.adminapi.DataPolicy;
 import org.teiid.adminapi.DataPolicy.Context;
 import org.teiid.adminapi.DataPolicy.PermissionType;
 import org.teiid.adminapi.impl.DataPolicyMetadata;
+import org.teiid.core.util.PropertiesUtils;
 
 public class DataRolePolicyDecider implements PolicyDecider {
 
-    private boolean allowCreateTemporaryTablesByDefault = false;
-    private boolean allowFunctionCallsByDefault = false;
+    private boolean allowCreateTemporaryTablesByDefault = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowCreateTemporaryTablesByDefault", false); //$NON-NLS-1$
+    private boolean allowFunctionCallsByDefault = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.allowFunctionCallsByDefault", false); //$NON-NLS-1$
 
 	@Override
 	public Set<String> getInaccessibleResources(PermissionType action,
