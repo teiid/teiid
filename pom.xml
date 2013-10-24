@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <parent>
-      <groupId>org.jboss</groupId>
-      <artifactId>jboss-parent</artifactId>
-      <version>10</version>
+        <groupId>org.jboss</groupId>
+        <artifactId>jboss-parent</artifactId>
+        <version>10</version>
     </parent>    
     <modelVersion>4.0.0</modelVersion>
 	<groupId>org.jboss.teiid</groupId>
@@ -18,45 +18,45 @@
         <jbossas-version>7.2.0.Alpha1-redhat-4</jbossas-version>
         <jbossas-test-version>jboss-eap-6.1</jbossas-test-version>
         <version.ant.plugin>1.7.0</version.ant.plugin>
+        <version.asm>3.3.1</version.asm>
+        <version.com.force.api>26.0.0</version.com.force.api>
+        <version.connector-api>1.5</version.connector-api>
+        <version.core4j>0.5</version.core4j>
+        <version.cxf>2.6.6</version.cxf>
+        <version.gdata-core>1.0</version.gdata-core>
+        <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
+        <version.guava>14.0.1</version.guava>
+        <version.hibernate-core>4.1.6.Final</version.hibernate-core>
+        <version.httpclient>4.1.2</version.httpclient>
+        <version.javax.enterprise>1.0-SP4</version.javax.enterprise>
+        <version.javax.ws.rs>1.1</version.javax.ws.rs>
+        <version.javax.wsdl4j>1.6.2</version.javax.wsdl4j>
+        <version.jaxen>1.1.4</version.jaxen>
+        <version.json-simple>1.1</version.json-simple>
+        <version.jta>1.1</version.jta>
+        <version.mongo-java-driver>2.11.1</version.mongo-java-driver>
+        <version.olap4j>1.1.0</version.olap4j>
+        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
+        <version.org.hibernate>4.1.1.Final</version.org.hibernate>
+        <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
+        <version.org.infinispan>5.2.7.Final</version.org.infinispan>
+        <version.org.jboss.arquillian.core>1.0.0.Final</version.org.jboss.arquillian.core>
         <version.org.jboss.common-core>2.2.17.GA</version.org.jboss.common-core>
         <version.org.jboss.jboss-dmr>1.1.6.Final</version.org.jboss.jboss-dmr>
-        <version.org.jboss.msc.jboss-msc>1.0.4.GA</version.org.jboss.msc.jboss-msc>
         <version.org.jboss.jboss-vfs>3.1.0.Final</version.org.jboss.jboss-vfs>
-        <version.org.picketbox>4.0.15.Final</version.org.picketbox>
-        <version.org.infinispan>5.2.7.Final</version.org.infinispan>
-        <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
         <version.org.jboss.logging.jboss-logging>3.1.2.GA</version.org.jboss.logging.jboss-logging>
         <version.org.jboss.marshalling.jboss-marshalling-river>1.3.16.GA</version.org.jboss.marshalling.jboss-marshalling-river>
-        <version.asm>3.3.1</version.asm>
-        <version.org.jboss.arquillian.core>1.0.0.Final</version.org.jboss.arquillian.core>
-        <version.javax.enterprise>1.0-SP4</version.javax.enterprise>
         <version.org.jboss.netty>3.6.2.Final</version.org.jboss.netty>
-        <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
-        <version.json-simple>1.1</version.json-simple>
-        <version.connector-api>1.5</version.connector-api>
-        <version.jta>1.1</version.jta>
-        <version.sun.jaxb>2.2.5.jboss-1</version.sun.jaxb>
-        <version.javax.wsdl4j>1.6.2</version.javax.wsdl4j>
-        <version.javax.ws.rs>1.1</version.javax.ws.rs>
+        <version.org.jboss.msc.jboss-msc>1.0.4.GA</version.org.jboss.msc.jboss-msc>
         <version.org.odata4j>0.8.0-SNAPSHOT-redhat</version.org.odata4j>
-        <version.core4j>0.5</version.core4j>
-        <version.resteasy-jaxrs>2.3.6.Final</version.resteasy-jaxrs>
-        <version.com.force.api>26.0.0</version.com.force.api>
-        <version.jaxen>1.1.4</version.jaxen>
-        <version.xom>1.2.5</version.xom>
+        <version.org.picketbox>4.0.15.Final</version.org.picketbox>        
+        <version.org.picketbox.jbosssx-client>3.0.0.CR2</version.org.picketbox.jbosssx-client>
+        <version.net.sourceforge.saxon>9.2.1.5</version.net.sourceforge.saxon>
         <version.nux>1.6</version.nux>
-        <version.hibernate-core>4.1.6.Final</version.hibernate-core>
-        <version.guava>14.0.1</version.guava>
-        <version.httpclient>4.1.2</version.httpclient>
-        <version.gdata-spreadsheet>3.0</version.gdata-spreadsheet>
-        <version.gdata-core>1.0</version.gdata-core>
-        <version.mongo-java-driver>2.11.1</version.mongo-java-driver>
-        <version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>1.0.1.Final</version.org.hibernate.javax.persistence.hibernate-jpa-2.0-api>
-        <version.olap4j>1.1.0</version.olap4j>
-        <version.cxf>2.6.6</version.cxf>
-        <version.org.hibernate>4.1.1.Final</version.org.hibernate>
-        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>
-        <cxf.version>2.6.6</cxf.version>
+        <version.resteasy-jaxrs>2.3.6.Final</version.resteasy-jaxrs>
+        <version.source.plugin>2.1.1</version.source.plugin>
+        <version.sun.jaxb>2.2.5.jboss-1</version.sun.jaxb>
+        <version.xom>1.2.5</version.xom>
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>
@@ -267,6 +267,7 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
+                    <version>${version.bundle.plugin}</version>
                     <extensions>true</extensions>
                 </plugin>             
 		</plugins>
@@ -707,7 +708,7 @@
             <dependency>
                 <groupId>org.apache.cxf</groupId>
                 <artifactId>cxf-rt-ws-security</artifactId>
-                <version>${cxf.version}</version>
+                <version>${version.cxf}</version>
             </dependency>                                                
 		</dependencies>
 	</dependencyManagement>
