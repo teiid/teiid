@@ -136,4 +136,62 @@ public class TestBatchIterator {
 		assertEquals(0, tb.getManagedRowCount());
 	}
 	
+	@Test public void testReadAhead() throws Exception {
+		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+		}, 2));
+		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR);
+		bi.setBuffer(tb, false);  //$NON-NLS-1$
+		bi.nextTuple();
+		assertEquals(1, bi.available());
+		assertEquals(2, bi.getBuffer().getRowCount());
+		bi.readAhead(100);
+		assertEquals(4, bi.getBuffer().getRowCount());
+		//shouldn't keep reading
+		bi.readAhead(3);
+		assertEquals(4, bi.getBuffer().getRowCount());
+		bi.readAhead(5);
+		assertEquals(6, bi.getBuffer().getRowCount());
+		bi.readAhead(8); //does nothing
+		for (int i = 0; i < 5; i++) {
+			assertNotNull(bi.nextTuple());
+		}
+		assertNull(bi.nextTuple());
+	}
+	
+	@Test public void testReadAheadMark() throws Exception {
+		BatchIterator bi = new BatchIterator(new FakeRelationalNode(1, new List[] {
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+				Arrays.asList(1),
+		}, 2));
+		BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+		TupleBuffer tb = bm.createTupleBuffer(Arrays.asList(new ElementSymbol("x", null, DataTypeManager.DefaultDataClasses.INTEGER)), "test", TupleSourceType.PROCESSOR);
+		bi.setBuffer(tb, true);  //$NON-NLS-1$
+		bi.nextTuple();
+		assertEquals(1, bi.available());
+		assertEquals(0, bi.getBuffer().getRowCount());
+		bi.readAhead(100);
+		assertEquals(4, bi.getBuffer().getRowCount());
+		//shouldn't keep reading
+		bi.readAhead(3);
+		assertEquals(4, bi.getBuffer().getRowCount());
+		bi.readAhead(5);
+		assertEquals(6, bi.getBuffer().getRowCount());
+		bi.readAhead(8); //does nothing
+		for (int i = 0; i < 5; i++) {
+			assertNotNull(bi.nextTuple());
+		}
+		assertNull(bi.nextTuple());
+	}
+	
 }
