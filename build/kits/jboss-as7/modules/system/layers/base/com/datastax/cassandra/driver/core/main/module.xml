@@ -14,8 +14,8 @@
         <resource-root path="guava-14.0.1.jar"/>
         
         <!-- classloading or other issue -->
-        <resource-root path="jackson-core-asl-1.9.2.jar"/>
-        <resource-root path="jackson-mapper-asl-1.9.2.jar"/>
+        <resource-root path="jackson-core-asl-1.9.9.jar"/>
+        <resource-root path="jackson-mapper-asl-1.9.9.jar"/>
     </resources>
 
     <dependencies>
