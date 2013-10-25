@@ -22,7 +22,13 @@
 
 package org.teiid.arquillian;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -160,7 +166,7 @@ public class IntegrationTestDeployment {
 	@Test
 	public void testTraslators() throws Exception {
 		Collection<? extends Translator> translators = admin.getTranslators();
-		assertEquals(35, translators.size());
+		assertEquals(36, translators.size());
 
 		JavaArchive jar = getLoopyArchive();
 		
@@ -377,6 +383,33 @@ public class IntegrationTestDeployment {
 		assertTrue(rar_props.contains("managedconnectionfactory-class"));
 		assertTrue(rar_props.contains("max-pool-size"));
 	}
+	
+	@Test
+	public void getTranslatorPropertyDefinitions() throws Exception{
+		HashSet<String> props = new HashSet<String>();			
+		
+		Collection<? extends PropertyDefinition> pds = admin.getTranslatorPropertyDefinitions("ws");
+		for(PropertyDefinition pd:pds) {
+			props.add(pd.getName());
+		}
+		assertTrue(props.contains("DefaultBinding"));
+		assertTrue(props.contains("DefaultServiceMode"));
+		assertTrue(props.contains("MaxDependentInPredicates"));
+		
+		for(PropertyDefinition pd:pds) {
+			if (pd.getName().equals("DefaultBinding")) {
+				assertEquals("java.lang.String", pd.getPropertyTypeClassName());
+				assertFalse(pd.isRequired());
+				assertEquals("Contols what SOAP or HTTP type of invocation will be used if none is specified.", pd.getDescription());
+				assertEquals("Default Binding", pd.getDisplayName());
+				assertTrue(pd.isModifiable());
+				assertFalse(pd.isAdvanced());
+				assertFalse(pd.isMasked());
+				assertEquals("SOAP12", pd.getDefaultValue());
+				assertNotNull(pd.getAllowedValues());
+			}
+		}
+	}	
 	
 	@Test
 	public void getWorkerPoolStats() throws Exception{

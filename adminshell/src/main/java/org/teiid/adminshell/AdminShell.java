@@ -211,6 +211,12 @@ public class AdminShell {
 			@Doc(text = "template name") String templateName) throws AdminException {
 		return getAdmin().getTemplatePropertyDefinitions(templateName);
 	}
+	
+	@Doc(text = "Get all PropertyDefinitions for the given translator")
+	public static Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(
+			@Doc(text = "translator name") String translatorName) throws AdminException {
+		return getAdmin().getTranslatorPropertyDefinitions(translatorName);
+    }
 
 	@Doc(text = "Get all Request instances")
 	public static Collection<? extends Request> getRequests() throws AdminException {

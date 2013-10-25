@@ -21,7 +21,7 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
 
 import org.jboss.as.controller.PathElement;
 import org.jboss.as.controller.SimpleResourceDefinition;
@@ -75,7 +75,8 @@ public class TeiidSubsytemResourceDefinition extends SimpleResourceDefinition {
 		new MarkDataSourceAvailable().register(resourceRegistration);
 		new ReadRARDescription().register(resourceRegistration);
 		new GetSchema().register(resourceRegistration);
-		new EngineStatistics().register(resourceRegistration);        
+		new EngineStatistics().register(resourceRegistration);
+		new ReadTranslatorProperties().register(resourceRegistration);
     }
 
     @Override

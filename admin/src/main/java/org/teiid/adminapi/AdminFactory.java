@@ -1167,6 +1167,20 @@ public class AdminFactory {
 	        props.add(cp);
 	        return props;
 		}
+		
+		@Override
+	    public Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException{
+			BuildPropertyDefinitions builder = new BuildPropertyDefinitions();
+			Collection<? extends Translator> translators = getTranslators();
+			for (Translator t:translators) {
+				if (t.getName().equalsIgnoreCase(translatorName)) {
+	        		cliCall("read-translator-properties", new String[] {"subsystem", "teiid"}, new String[] {"translator-name", translatorName}, builder);
+	        		return builder.getPropertyDefinitions();
+				}
+			}
+			throw new AdminProcessingException(AdminPlugin.Event.TEIID70055, AdminPlugin.Util.gs(AdminPlugin.Event.TEIID70055, translatorName));
+	    }
+		
 
 		private class BuildPropertyDefinitions extends ResultCallback{
 			private ArrayList<PropertyDefinition> propDefinitions = new ArrayList<PropertyDefinition>();

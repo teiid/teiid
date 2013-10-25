@@ -24,6 +24,7 @@ package org.teiid.deployers;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.TreeMap;
@@ -194,6 +195,7 @@ public class TranslatorUtil {
 		metadata.setDescription(translator.description());
 		metadata.setExecutionFactoryClass(factory.getClass());
 		metadata.setModuleName(moduleName);
+		ExtendedPropertyMetadataList propertyDefns = new ExtendedPropertyMetadataList();
 		
 		try {
 			Object instance = factory.getClass().newInstance();
@@ -203,6 +205,30 @@ public class TranslatorUtil {
 				if (defaultValue != null) {
 					metadata.addProperty(getPropertyName(m), defaultValue.toString());
 				}
+				
+				TranslatorProperty tp = tps.get(m);
+				ExtendedPropertyMetadata epm = new ExtendedPropertyMetadata();
+				epm.name = getPropertyName(m);
+				epm.description = tp.description();
+				epm.advanced = tp.advanced();
+				if (defaultValue != null) {
+					epm.defaultValue = defaultValue.toString();
+				}
+				epm.displayName = tp.display();
+				epm.masked = tp.masked();
+				epm.required = tp.required();
+				epm.type = m.getReturnType().getCanonicalName();
+				
+				// allowed values
+				if (m.getReturnType().isEnum()) {
+					epm.allowed = new ArrayList<String>();
+					Object[] constants = m.getReturnType().getEnumConstants();
+					for( int i=0; i<constants.length; i++ ) {
+		                epm.allowed.add(((Enum<?>)constants[i]).name());
+		            }
+					epm.type = "java.lang.String"; //$NON-NLS-1$
+				}
+				propertyDefns.add(epm);
 			}
 		} catch (InstantiationException e) {
 			// ignore
@@ -210,6 +236,7 @@ public class TranslatorUtil {
 			// ignore
 		}
 		
+		metadata.addAttchment(ExtendedPropertyMetadataList.class, propertyDefns);
 		return metadata;
 	}
 	

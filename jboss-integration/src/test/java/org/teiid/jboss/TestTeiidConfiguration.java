@@ -22,8 +22,15 @@
 
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
-import static org.junit.Assert.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ADD;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.CHILD_TYPE;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OP_ADDR;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.OUTCOME;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUBSYSTEM;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.SUCCESS;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileReader;
@@ -71,7 +78,8 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     	standardSubsystemTest(null, true);
     }
     
-    protected String readResource(final String name) throws IOException {
+    @Override
+	protected String readResource(final String name) throws IOException {
     	String minimum = "<subsystem xmlns=\"urn:jboss:domain:teiid:1.0\"> \n" + 
     			"   <async-thread-pool>teiid-async</async-thread-pool>\n" + 
     			"</subsystem>";
@@ -155,8 +163,9 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 			
 			@Override
 			public void error(SAXParseException exception) throws SAXException {
-				if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type"))
+				if (!exception.getMessage().contains("cvc-enumeration-valid") && !exception.getMessage().contains("cvc-type")) {
 					fail(exception.getMessage());
+				}
 			}
 		});
 		
@@ -204,7 +213,7 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
 				"list-vdbs","mark-datasource-available","read-attribute",
 				"read-children-names","read-children-resources","read-children-types",
 				"read-operation-description","read-operation-names","read-rar-description",
-				"read-resource","read-resource-description","remove","remove-anyauthenticated-role",
+				"read-resource","read-resource-description","read-translator-properties", "remove","remove-anyauthenticated-role",
 				"remove-data-role","remove-source","restart-vdb","terminate-session","terminate-transaction",
 				"undefine-attribute","update-source","workerpool-statistics","write-attribute"};
 		Assert.assertArrayEquals(ops, opNames.toArray(new String[opNames.size()]));
@@ -264,12 +273,14 @@ public class TestTeiidConfiguration extends AbstractSubsystemBaseTest {
     }    
 
     private static List<String> getList(ModelNode operationResult) {
-        if(!operationResult.hasDefined("result"))
-            return Collections.emptyList();
+        if(!operationResult.hasDefined("result")) {
+			return Collections.emptyList();
+		}
 
         List<ModelNode> nodeList = operationResult.get("result").asList();
-        if(nodeList.isEmpty())
-            return Collections.emptyList();
+        if(nodeList.isEmpty()) {
+			return Collections.emptyList();
+		}
 
         List<String> list = new ArrayList<String>(nodeList.size());
         for(ModelNode node : nodeList) {
