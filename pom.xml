@@ -17,6 +17,7 @@
         <version.org.jboss.integration-platform>6.0.0-SNAPSHOT</version.org.jboss.integration-platform>
         <jbossas-version>7.2.0.Alpha1-redhat-4</jbossas-version>
         <jbossas-test-version>jboss-eap-6.1</jbossas-test-version>
+        <arquillian-container-version>7.2.0.Final</arquillian-container-version>
         <version.ant.plugin>1.7.0</version.ant.plugin>
         <version.org.jboss.common-core>2.2.17.GA</version.org.jboss.common-core>
         <version.org.jboss.jboss-dmr>1.1.6.Final</version.org.jboss.jboss-dmr>
