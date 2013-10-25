@@ -119,9 +119,14 @@ public class IntegrationTestRestWebserviceGeneration extends AbstractMMQueryTest
 		
 		String params = URLEncoder.encode("p1", "UTF-8") + "=" + URLEncoder.encode("456", "UTF-8");
 		
-		// post based call
+		// post based call with default
 		String response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
-		assertEquals("response did not match expected", "<rows p1=\"456\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"1\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
+
+		// post based call
+		params += "&" + URLEncoder.encode("p2", "UTF-8") + "=" + URLEncoder.encode("2", "UTF-8");
+		response = httpCall("http://localhost:8080/sample_1/view/g1post", "POST", params);
+		assertEquals("response did not match expected", "<rows p1=\"456\" p2=\"2\"><row><e1>ABCDEFGHIJ</e1><e2>0</e2></row></rows>", response);
 		
 		// ad-hoc procedure
 		params = URLEncoder.encode("sql", "UTF-8") + "=" + URLEncoder.encode("SELECT XMLELEMENT(NAME \"rows\", XMLAGG(XMLELEMENT(NAME \"row\", XMLFOREST(e1, e2)))) AS xml_out FROM Txns.G1", "UTF-8");

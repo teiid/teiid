@@ -229,7 +229,7 @@ public class RestASMBasedWebArchiveBuilder {
     }
     
     private byte[] getViewClass(String vdbName, int vdbVersion, String modelName, Schema schema, boolean passthroughAuth) {
-    	ClassWriter cw = new ClassWriter(0);
+    	ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
     	FieldVisitor fv;
     	MethodVisitor mv;
     	AnnotationVisitor av0;
@@ -409,32 +409,16 @@ public class RestASMBasedWebArchiveBuilder {
     	
     	mv.visitVarInsn(ALOAD, 0);
     	
-    	// send parametr type information the procedure name
-    	StringBuilder sb = new StringBuilder();
-    	sb.append("{ ");
-    	if (usingReturn) {
-    		sb.append("? = ");
-    	}
-    	sb.append("CALL ");
-    	procedure.getSQLString(sb);
-    	sb.append("(");
-    	for (int i = 0; i < paramsSize; i++) {
-    		if (i > 0) {
-    			sb.append(", ");
-    		}
-    		sb.append("?");
-    	}
-    	sb.append(") }");
-    	
     	mv.visitLdcInsn(vdbName);
     	mv.visitIntInsn(BIPUSH, vdbVersion);
     	
-    	mv.visitLdcInsn(sb.toString());
+    	mv.visitLdcInsn(procedure.getSQLString());
     	
     	mv.visitVarInsn(ALOAD, paramsSize+1);
     	mv.visitLdcInsn(charSet==null?"":charSet);
     	mv.visitInsn(passthroughAuth?ICONST_1:ICONST_0);
-    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;Z)Ljava/io/InputStream;");
+    	mv.visitInsn(usingReturn?ICONST_1:ICONST_0);
+    	mv.visitMethodInsn(INVOKEVIRTUAL, "org/teiid/jboss/rest/"+modelName, "execute", "(Ljava/lang/String;ILjava/lang/String;Ljava/util/LinkedHashMap;Ljava/lang/String;ZZ)Ljava/io/InputStream;");
     	mv.visitLabel(l1);
     	mv.visitInsn(ARETURN);
     	mv.visitLabel(l2);

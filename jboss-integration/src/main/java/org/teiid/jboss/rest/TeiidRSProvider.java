@@ -33,6 +33,7 @@ import java.sql.SQLException;
 import java.sql.SQLXML;
 import java.sql.Statement;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.TransformationException;
@@ -42,29 +43,46 @@ import org.teiid.jboss.IntegrationPlugin;
 import org.teiid.jdbc.TeiidDriver;
 import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.sql.symbol.XMLSerialize;
+import org.teiid.query.sql.visitor.SQLStringVisitor;
 
 public abstract class TeiidRSProvider {
 
-	public InputStream execute(String vdbName, int version,	String procedureSignature,
-			LinkedHashMap<String, String> parameters, String charSet, boolean passthroughAuth) throws SQLException {
+	public InputStream execute(String vdbName, int version,	String procedureName, 
+			LinkedHashMap<String, String> parameters, String charSet, boolean passthroughAuth, boolean usingReturn) throws SQLException {
         Object result = null;
-        
         //the generated code sends a empty string rather than null.
         if (charSet != null && charSet.trim().isEmpty()) {
         	charSet = null;
         }
         
         Connection conn = getConnection(vdbName, version, passthroughAuth);
-        boolean usingReturn = procedureSignature.startsWith("{ ?"); //$NON-NLS-1$
         try {
-        	//TODO: an alternative strategy would be to set the parameters based upon name
-        	// which would also allow for less parameters to be passed than the procedure requires
-        	// however an enhancement would be needed to support named parameters with callable syntax
-        	// alternatively if the end parameters are defaultable, then they can be omitted.
-            CallableStatement statement = conn.prepareCall(procedureSignature);
+        	StringBuilder sb = new StringBuilder();
+        	sb.append("{ "); //$NON-NLS-1$
+        	if (usingReturn) {
+        		sb.append("? = "); //$NON-NLS-1$
+        	}
+        	sb.append("CALL ").append(procedureName); //$NON-NLS-1$
+        	sb.append("("); //$NON-NLS-1$
+        	boolean first = true;
+        	for (Map.Entry<String, String> entry : parameters.entrySet()) {
+        		if (entry.getValue() == null) {
+        			continue;
+        		}
+        		if (!first) {
+        			sb.append(", "); //$NON-NLS-1$
+        		}
+        		first = false;
+        		sb.append(SQLStringVisitor.escapeSinglePart(entry.getKey())).append("=>?"); //$NON-NLS-1$
+        	}
+        	sb.append(") }"); //$NON-NLS-1$
+            CallableStatement statement = conn.prepareCall(sb.toString());
             if (!parameters.isEmpty()) {
                 int i = usingReturn?2:1;
                 for (String value : parameters.values()) {
+                	if (value == null) {
+                		continue;
+                	}
 					statement.setString(i++, value);
                 }
             }
