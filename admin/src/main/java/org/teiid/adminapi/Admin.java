@@ -48,7 +48,8 @@ public interface Admin {
      * @throws AdminException
      * @deprecated
      */
-    void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException;
+    @Deprecated
+	void assignToModel(String vdbName, int vdbVersion, String modelName, String sourceName, String translatorName, String dsName) throws AdminException;
     
     /**
      * Removes a {@link Translator} and Data source from a {@link VDB}'s Model
@@ -205,6 +206,14 @@ public interface Admin {
      */
     Collection<? extends PropertyDefinition> getTemplatePropertyDefinitions(String templateName) throws AdminException;
 
+    /**
+     * Get all of the available configuration Properties for the specified translator
+     * @param translatorName - Name of the translator
+     * @return
+     * @throws AdminException
+     */
+    Collection<? extends PropertyDefinition> getTranslatorPropertyDefinitions(String translatorName) throws AdminException;
+    
 
     /**
      * Get all transaction matching the identifier.

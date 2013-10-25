@@ -31,18 +31,20 @@ import org.teiid.runtime.RuntimePlugin;
  * This is used with ra.xml properties file to extend the metadata on the properties.
  */
 public class ExtendedPropertyMetadata {
-	private String displayName;
-	private String description;
-	private boolean advanced;
-	private boolean masked;
-	private boolean editable = true;
-	private boolean required;
-	private ArrayList<String> allowed;
-	private String name;
-	private String type;
-	private String defaultValue;
+	String displayName;
+	String description;
+	boolean advanced;
+	boolean masked;
+	boolean editable = true;
+	boolean required;
+	ArrayList<String> allowed;
+	String name;
+	String type;
+	String defaultValue;
 	
-
+	public ExtendedPropertyMetadata() {
+	}
+	
 	public ExtendedPropertyMetadata(String name, String type, String encodedData, String defaultValue) {
 		this.name = name;
 		this.type = type;

@@ -21,7 +21,12 @@
  */
 package org.teiid.jboss;
 
-import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.*;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.ALLOWED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DEFAULT;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.DESCRIPTION;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.READ_ONLY;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.REQUIRED;
+import static org.jboss.as.controller.descriptions.ModelDescriptionConstants.TYPE;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -80,6 +85,7 @@ import org.teiid.client.plan.PlanNode;
 import org.teiid.client.util.ResultsFuture;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.deployers.ExtendedPropertyMetadata;
+import org.teiid.deployers.ExtendedPropertyMetadataList;
 import org.teiid.deployers.RuntimeVDB;
 import org.teiid.deployers.RuntimeVDB.ReplaceResult;
 import org.teiid.deployers.VDBRepository;
@@ -113,7 +119,7 @@ abstract class TeiidOperationHandler extends BaseOperationHandler<DQPCore> {
 	    VDBRepository repo = VDBRepository.class.cast(sc.getValue());	
 		VDBMetaData vdb = repo.getLiveVDB(vdbName, vdbVersion);
 		if (vdb == null) {
-        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50102, vdb, vdbVersion)));//$NON-NLS-1$
+        	throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.gs(IntegrationPlugin.Event.TEIID50102, vdb, vdbVersion)));
 		}
 		Status status = vdb.getStatus();
 		if (status != VDB.Status.ACTIVE) {
@@ -1480,6 +1486,81 @@ class RemoveSource extends VDBOperations {
 	}
 }
 
+class ReadTranslatorProperties extends TranslatorOperationHandler {
+	protected ReadTranslatorProperties() {
+		super("read-translator-properties"); //$NON-NLS-1$
+	}
+	
+	@Override
+	protected void executeOperation(OperationContext context, TranslatorRepository repo, ModelNode operation) throws OperationFailedException {
+
+		if (!operation.hasDefined(OperationsConstants.TRANSLATOR_NAME.getName())) {
+			throw new OperationFailedException(new ModelNode().set(IntegrationPlugin.Util.getString(OperationsConstants.TRANSLATOR_NAME.getName()+MISSING)));
+		}
+
+		ModelNode result = context.getResult();
+		String translatorName = operation.get(OperationsConstants.TRANSLATOR_NAME.getName()).asString();
+		VDBTranslatorMetaData translator = repo.getTranslatorMetaData(translatorName);
+		if (translator != null) {
+			ExtendedPropertyMetadataList properties = translator.getAttachment(ExtendedPropertyMetadataList.class);
+			for (ExtendedPropertyMetadata epm:properties) {
+				result.add(buildNode(epm));
+			}
+		}
+	}
+	
+	static ModelNode buildNode(ExtendedPropertyMetadata prop) {
+		ModelNode node = new ModelNode();
+		String name = prop.name();
+		String type = prop.type();
+
+		if ("java.lang.String".equals(type)) { //$NON-NLS-1$
+			node.get(name, TYPE).set(ModelType.STRING);
+		}
+		else if ("java.lang.Integer".equals(type) || "int".equals(type)) { //$NON-NLS-1$ //$NON-NLS-2$
+			node.get(name, TYPE).set(ModelType.INT);
+		}
+		else if ("java.lang.Long".equals(type) || "long".equals(type)) { //$NON-NLS-1$ //$NON-NLS-2$
+			node.get(name, TYPE).set(ModelType.LONG);
+		}
+		else if ("java.lang.Boolean".equals(type) || "boolean".equals(type)) { //$NON-NLS-1$ //$NON-NLS-2$
+			node.get(name, TYPE).set(ModelType.BOOLEAN);
+		}
+
+		node.get(name, REQUIRED).set(prop.required());
+
+		if (prop.description() != null) {
+			node.get(name, DESCRIPTION).set(prop.description());
+		}
+		if (prop.display() != null) {
+			node.get(name, "display").set(prop.display()); //$NON-NLS-1$
+		}
+        
+        node.get(name, READ_ONLY).set(prop.readOnly());
+        node.get(name, "advanced").set(prop.advanced()); //$NON-NLS-1$
+        
+        if (prop.allowed() != null) {
+        	for (String s:prop.allowed()) {
+        		node.get(name, ALLOWED).add(s);
+        	}
+        }
+        
+        node.get(name, "masked").set(prop.masked()); //$NON-NLS-1$
+
+        if (prop.defaultValue() != null) {
+        	node.get(name, DEFAULT).set(prop.defaultValue());
+        }
+		return node;
+	}	
+	
+	@Override
+	protected void describeParameters(SimpleOperationDefinitionBuilder builder) {
+		builder.addParameter(OperationsConstants.TRANSLATOR_NAME);
+		builder.setReplyType(ModelType.LIST);
+		builder.setReplyValueType(ModelType.PROPERTY);
+	}
+}
+
 class ReadRARDescription extends TeiidOperationHandler {
 
 	protected ReadRARDescription() {
@@ -1537,7 +1618,6 @@ class ReadRARDescription extends TeiidOperationHandler {
 	}
 
 	private ModelNode buildNode(ConfigProperty prop) {
-		ModelNode node = new ModelNode();
 		String name = prop.getConfigPropertyName().getValue();
 		String type = prop.getConfigPropertyType().getValue();
 
@@ -1552,41 +1632,7 @@ class ReadRARDescription extends TeiidOperationHandler {
 		}
 
 		ExtendedPropertyMetadata extended = new ExtendedPropertyMetadata(name, type, description, defaltValue);
-
-		if ("java.lang.String".equals(type)) { //$NON-NLS-1$
-			node.get(name, TYPE).set(ModelType.STRING);
-		}
-		else if ("java.lang.Integer".equals(type)) { //$NON-NLS-1$
-			node.get(name, TYPE).set(ModelType.INT);
-		}
-		else if ("java.lang.Long".equals(type)) { //$NON-NLS-1$
-			node.get(name, TYPE).set(ModelType.LONG);
-		}
-		else if ("java.lang.Boolean".equals(type)) { //$NON-NLS-1$
-			node.get(name, TYPE).set(ModelType.BOOLEAN);
-		}
-
-		node.get(name, REQUIRED).set(extended.required());
-
-		if (extended.description() != null) {
-			node.get(name, DESCRIPTION).set(extended.description());
-		}
-		node.get(name, "display").set(extended.display()); //$NON-NLS-1$
-        node.get(name, READ_ONLY).set(extended.readOnly());
-        node.get(name, "advanced").set(extended.advanced()); //$NON-NLS-1$
-
-        if (extended.allowed() != null) {
-        	for (String s:extended.allowed()) {
-        		node.get(name, ALLOWED).add(s);
-        	}
-        }
-
-        node.get(name, "masked").set(extended.masked()); //$NON-NLS-1$
-
-        if (extended.defaultValue() != null) {
-        	node.get(name, DEFAULT).set(extended.defaultValue());
-        }
-		return node;
+		return ReadTranslatorProperties.buildNode(extended);
 	}
 
 	@Override

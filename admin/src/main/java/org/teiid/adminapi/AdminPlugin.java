@@ -79,6 +79,7 @@ public class AdminPlugin {
 		TEIID70051,
 		TEIID70052, 
 		TEIID70053, 
-		TEIID70054
+		TEIID70054,
+		TEIID70055
 	}
 }
