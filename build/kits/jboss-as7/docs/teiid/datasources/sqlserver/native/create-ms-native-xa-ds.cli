@@ -1,0 +1,13 @@
+/subsystem=datasources/jdbc-driver=sqlserverXA:add(driver-name=sqlserverXA,driver-module-name=com.microsoft.sqlserver,driver-xa-datasource-class-name="${db.driver}")
+
+# XA Data source
+/subsystem=datasources/xa-data-source=sqlserverXADS:add(jndi-name="${db.jndi_name}",  driver-name=sqlserverXA, user-name="${db.user}", password="${db.password}", use-java-context=true)
+/subsystem=datasources/xa-data-source=sqlserverXADS/xa-datasource-properties=DatabaseName:add(value="${db.database_name}")
+/subsystem=datasources/xa-data-source=sqlserverXADS/xa-datasource-properties=PortNumber:add(value="${db.port}")
+/subsystem=datasources/xa-data-source=sqlserverXADS/xa-datasource-properties=ServerName:add(value="${db.host}")
+/subsystem=datasources/xa-data-source=sqlserverXADS:enable
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
+
+

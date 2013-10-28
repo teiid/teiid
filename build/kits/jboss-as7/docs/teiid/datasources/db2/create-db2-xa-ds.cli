@@ -1,0 +1,12 @@
+/subsystem=datasources/jdbc-driver=db2XA:add(driver-name=db2XA,driver-module-name=com.ibm.db2,driver-xa-datasource-class-name="${db.driver}")
+
+# XA Data source
+/subsystem=datasources/xa-data-source=db2XADS:add(jndi-name="${db.jndi_name}",  driver-name=db2XA, user-name="${db.user}", password="${db.password}", use-java-context=true)
+/subsystem=datasources/xa-data-source=db2XADS/xa-datasource-properties=DatabaseName:add(value="${db.database_name}")
+/subsystem=datasources/xa-data-source=db2XADS/xa-datasource-properties=PortNumber:add(value="${db.port}")
+/subsystem=datasources/xa-data-source=db2XADS/xa-datasource-properties=ServerName:add(value="${db.host}")
+/subsystem=datasources/xa-data-source=db2XADS:enable
+
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

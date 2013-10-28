@@ -1,7 +1,7 @@
 <!-- Add the below contents under "datasources" subsystem in the standalone-teiid.xml or deploy as -ds.xml file -->
 <datasources>
     <datasource jndi-name="java:/sqlserverDS" pool-name="sqlserverDS">
-        <driver-class>com.microsoft.jdbc.sqlserver.SQLServerDriver</driver-class>
+        <driver-class>com.microsoft.sqlserver.jdbc.SQLServerDriver</driver-class>
         <connection-url>jdbc:microsoft:sqlserver://{host}:1433</connection-url>
         <driver>sqljdbc4.jar</driver>
         <pool>

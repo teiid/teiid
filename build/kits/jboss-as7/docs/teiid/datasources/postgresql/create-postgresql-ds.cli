@@ -1,14 +1,7 @@
 # note that driver-name could be driver's module name if you went module approach.
-/subsystem=datasources/data-source=postgresDS:add(jndi-name=java:/postgresDS,  driver-name=postgresql-8.3-603.jdbc3.jar, driver-class=org.postgresql.Driver, connection-url=jdbc:postgresql://{host}:5432/{database}, user-name={user}, password={password})
+/subsystem=datasources/jdbc-driver=postgres:add(driver-name=postgres,driver-module-name=org.postgresql,driver-class-name="${db.driver}")
 
-# XA Data source
-#batch
-#/subsystem=datasources/xa-data-source=postgresDS:add(jndi-name=java:/postgresDS,  driver-name=postgresql-8.3-603.jdbc3.jar, xa-datasource-class=org.postgresql.xa.PGXADataSource, user-name={user}, password={password})
-#/subsystem=datasources/xa-data-source=postgresDS/xa-datasource-properties=DatabaseName:add(value={database_name})
-#/subsystem=datasources/xa-data-source=postgresDS/xa-datasource-properties=PortNumber:add(value=5432)
-#/subsystem=datasources/xa-data-source=postgresDS/xa-datasource-properties=ServerName:add(value={host})
-#/subsystem=datasources/xa-data-source=postgresDS:enable
-#run-batch
+/subsystem=datasources/data-source=postgresDS:add(jndi-name="${db.jndi_name}",  driver-name=postgres,  connection-url="${db.url}", user-name="${db.user}", password="${db.password}", enabled=true, use-java-context=true )
 
 
 ## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

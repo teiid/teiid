@@ -1,0 +1,7 @@
+# The creation of the driver has been commented out, because it should have already been created when the configuration cli script was run
+#/subsystem=datasources/jdbc-driver=teiid-local:add(driver-name=teiid-local,driver-module-name=org.jboss.teiid,driver-class-name="${db.driver}")
+
+/subsystem=datasources/data-source=teiidLocalDS:add(jndi-name="${db.jndi_name}",  driver-name=teiid-local,  connection-url="${db.url}", user-name="${db.user}", password="${db.password}", enabled=true, use-java-context=true )
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
