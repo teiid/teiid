@@ -1,27 +1,59 @@
-There are two parts to creating a datasource, depending upon whether this is the first time you are doing this, 
-you can skip the deploying JDBC driver for the database, if you have previously already done this.
+There are two parts to configuring a datasource, the driver and the datasource.   And you can skip the
+deploying the JDBC driver if its already installed.  
+
 
 Step 1: Deploying the JDBC Driver
+
+	Option 1: (recommended and requires server restart)
+
+		1) Overlay the "modules" directory to the "<jboss-as>/modules" directory 
+
+		3) Then copy the db2 database JDBC driver jar file (i.e., "postgresql-8.3-603.jdbc3.jar") into
+			"<jboss-as>/modules/org/postgresql/main" directory.
+
  
-	Option 1: use the JBoss CLI tool, and deploy the "postgresql-8.3-603.jdbc3.jar" or later jar by issuing the command
-		deploy postgresql-8.3-603.jdbc3.jar
-	 
-	Option 2: (recommended)
+	Option 2: use the JBoss CLI tool, and deploy the "postgresql-8.3-603.jdbc3.jar" or later jar by issuing the command:  deploy postgresql-8.3-603.jdbc3.jar
+		
 
-		1) Stop the server if it is running.
+Step 2:  Configuring the Driver and Datasource (CLI or Edit configuration)
 
-		2) Overlay the "modules" directory on the "<jboss-as>/modules" directory 
 
-		3) Then copy the postgres database JDBC driver jar file "postgresql-8.3-603.jdbc3.jar" into
-			"<jboss-as>/modules/org/postgres/main" directory.
-		4) start server
+	Option 1 - Run CLI Script (recommended and server must be started and driver deployed)
 
-Step 2: Creating the datasource 
+	-	edit the create-postgresql-ds.properties or create-postgresql-xa-ds.properties to set accordingly
+	-	run the CLI script:   
+		a.   non-XA - JBOSS_HOME/bin/jboss-cli.sh -c --file={path}/create-postgresql-ds.cli   --properties={path}/create-postgresql-ds.properties
+		b.   XA - JBOSS_HOME/bin/jboss-cli.sh -c --file={path}/create-postgresql-xa-ds.cli   --properties={path}/create-postgresql-xa-ds.properties
 
-	Option 1: Edit the standalone-teiid.xml or domain-teiid.xml file and add contents of the "postgresql.xml" 
-	or "postgresql-xa.xml" file under the "datasources" subsystem. You may have to edit contents according 
-	to where your postgresql server is located and credentials you need to use to access it.
-	
-	Option 2: Take a look at create-postgresql-ds.cli script, and modify and execute using JBoss CLI tool.
 
- 	./Jboss-admin.sh --file create-postgresql-ds.cli
+	Option 2 - Edit configuration file standalone-teiid.xml or domain-teiid.xml
+
+	-	Configure datasource and add contents from one of the following files, based on use, under the "datasources" subsystem:
+
+		a.  non-XA - postgresql-ds.xml
+		b.  XA - postgresql-xa-ds.xml
+
+
+	-	Configure driver (if the driver has not already been configured) by copying one of the following under "datasources" subsystem under <drivers> element:
+
+
+		a.  non-XA
+
+                    <driver name="postgres" module="org.postgresql">
+                        <driver-class>org.postgresql.Driver</driver-class>
+                    </driver>	
+
+
+		b.  XA
+
+                    <driver name="postgresXA" module="org.postgresql">
+                        <xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                    </driver>
+
+		
+		c.  or configure both, non-XA and XA within the same <driver> element, but if used, may need to map the correct driver_name in the datasource:
+
+		    <driver name="postgres" module="org.postgresql">
+                        <driver-class>org.postgresql.Driver</driver-class>
+ 			<xa-datasource-class>org.postgresql.xa.PGXADataSource</xa-datasource-class>
+                    </driver>

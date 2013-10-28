@@ -1,0 +1,12 @@
+/subsystem=datasources/jdbc-driver=mysqlXA:add(driver-name=mysqlXA,driver-module-name=com.mysql,driver-xa-datasource-class-name="${db.driver}")
+
+# XA Data source
+/subsystem=datasources/xa-data-source=mysqlXADS:add(jndi-name="${db.jndi_name}",  driver-name=mysqlXA, user-name="${db.user}", password="${db.password}", use-java-context=true)
+/subsystem=datasources/xa-data-source=mysqlXADS/xa-datasource-properties=DatabaseName:add(value="${db.database_name}")
+/subsystem=datasources/xa-data-source=mysqlXADS/xa-datasource-properties=PortNumber:add(value="${db.port}")
+/subsystem=datasources/xa-data-source=mysqlXADS/xa-datasource-properties=ServerName:add(value="${db.host}")
+/subsystem=datasources/xa-data-source=mysqlXADS:enable
+
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
