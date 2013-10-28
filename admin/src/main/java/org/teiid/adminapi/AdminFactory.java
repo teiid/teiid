@@ -584,7 +584,9 @@ public class AdminFactory {
         				org.jboss.dmr.Property p = prop.asProperty();
         				ModelType type = p.getValue().getType();
         				if (p.getValue().isDefined() && !type.equals(ModelType.LIST) && !type.equals(ModelType.OBJECT)) {
-        					if (!excludeProperty(p.getName()) || p.getName().equals("driver-name")) {
+							if (p.getName().equals("driver-name")
+									|| p.getName().equals("jndi-name")
+									|| !excludeProperty(p.getName())) {
         						this.dsProperties.setProperty(p.getName(), p.getValue().asString());
         					}
         				}
@@ -617,6 +619,9 @@ public class AdminFactory {
         				continue;
         			}
     				org.jboss.dmr.Property p = prop.asProperty();
+					if (p.getName().equals("jndi-name")) {
+						this.dsProperties.setProperty("jndi-name", p.getValue().asString());
+					}
     				if (!p.getValue().isDefined() || excludeProperty(p.getName())) {
     					continue;
     				}
