@@ -635,6 +635,9 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 						return;
 					}
 					super.flushBatchDirect(batch, add);
+					if (!add && !processor.hasBuffer(false)) {
+						resultsBuffer.setRowCount(batch.getEndRow());
+					}
 					if (transactionState != TransactionState.ACTIVE && (requestMsg.getRequestOptions().isContinuous() || (useCallingThread && isForwardOnly()))) {
 			        	synchronized (this) {
 							if (resultsReceiver == null) {
@@ -645,11 +648,7 @@ public class RequestWorkItem extends AbstractWorkItem implements PrioritizedRunn
 			        		throw new AssertionError("Should not add batch to buffer"); //$NON-NLS-1$
 			        	}
 			        }
-					if (!add) {
-						if (!processor.hasBuffer(false)) {
-							resultsBuffer.setRowCount(batch.getEndRow());
-						}
-					} else if (isForwardOnly() && add 
+					if (isForwardOnly() && add 
 							&& !processor.hasBuffer(false) //restrict the buffer size for forward only results
 							&& !batch.getTerminationFlag() 
 							&& transactionState != TransactionState.ACTIVE

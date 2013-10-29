@@ -359,6 +359,7 @@ public class TestDQPCore {
         
         item = core.getRequestWorkItem(DQPWorkContext.getWorkContext().getRequestID(reqMsg.getExecutionId()));
         assertEquals(0, item.resultsBuffer.getManagedRowCount());
+        assertEquals(8, item.resultsBuffer.getRowCount());
     }
     
     @Test public void testBufferReuse() throws Exception {
