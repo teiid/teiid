@@ -22,7 +22,6 @@
 
 package org.teiid.common.buffer.impl;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInput;
@@ -104,7 +103,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	
 	private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(120);
 	private static final int DEFAULT_MIN_DEFRAG = 1 << 26;
-	private static final byte[] HEADER_SKIP_BUFFER = new byte[16];
+	private static final int HEADER_BYTES = 16;
 	private static final int EVICTION_SCANS = 2;
 
 	public static final int DEFAuLT_MAX_OBJECT_SIZE = 1 << 23;
@@ -377,8 +376,11 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 
 	private ExecutorService asynchPool = ExecutorUtils.newFixedThreadPool(2, "FileStore Worker"); //$NON-NLS-1$
 	private AtomicBoolean defragRunning = new AtomicBoolean();
+	
+	private int truncateInterval = 10;
 	//defrag to release freespace held by storage files
-	private final Runnable defragTask = new Runnable() {
+	final Runnable defragTask = new Runnable() {
+		private int runs;
 		
 		@Override
 		public void run() {
@@ -392,30 +394,26 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 						if (!shouldDefrag(blockStore, segment)) {
 							continue;
 						}
+						if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+							LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Defraging store", i, "segment", segment, "length", blockStore.stores[segment].getLength()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ 
+						}
 						try {
-							boolean sleep = false;
-							do {
-								if (sleep) {
-									Thread.sleep(100); //let the file activity quite down
-								}
-								sleep = true;
+							for (int retries = 0; retries < 10; retries++) {
 								int relativeBlockToMove = blockStore.blocksInUse.compactHighestBitSet(segment);
-								if (!shouldDefrag(blockStore, segment)) {
-									truncate(blockStore, segment);
+								if (!shouldDefrag(blockStore, segment) || relativeBlockToMove == -1) {
 									break;
 								}
 								//move the block if possible
 								InputStream is = blockStore.stores[segment].createInputStream(relativeBlockToMove * blockStore.blockSize, blockStore.blockSize);
-								DataInputStream dis = new DataInputStream(is);
 								Long gid = null;
 								Long oid = null;
 								try {
-									gid = dis.readLong();
-									oid = dis.readLong();
+									gid = readLong(is);
+									oid = readLong(is);
 								} catch (IOException e) {
 									continue; //can happen the bit was set and no data exists
 								}
-								dis.reset(); //move back to the beginning
+								is.reset(); //move back to the beginning
 								Map<Long, PhysicalInfo> map = physicalMapping.get(gid);
 								if (map == null) {
 									continue;
@@ -435,7 +433,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 										continue;
 									}
 								}
-								int newBlock = blockStore.writeToStorageBlock(info, dis);
+								int newBlock = blockStore.writeToStorageBlock(info, is);
 								synchronized (info) {
 									info.await(true, true);
 									if (info.block == EMPTY_ADDRESS) {
@@ -448,12 +446,18 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 									info.block = newBlock;
 									blockStore.blocksInUse.clear(bitIndex);
 								}
-								sleep = false;
-							} while (shouldDefrag(blockStore, segment));
+							}
 						} catch (IOException e) {
 							LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30022));
-						} catch (InterruptedException e) {
-							 throw new TeiidRuntimeException(QueryPlugin.Event.TEIID30046, e);
+						}
+					}
+				}
+				runs++;
+				if ((runs%truncateInterval)==0) {
+					for (int i = 0; i < sizeBasedStores.length; i++) {
+						BlockStore blockStore = sizeBasedStores[i];
+						for (int segment = 0; segment < blockStore.stores.length; segment++) {
+							truncate(blockStore, segment);
 						}
 					}
 				}
@@ -462,13 +466,28 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			}
 		}
 
+		private long readLong(InputStream is) throws IOException {
+			long val = 0;
+			for (int k = 0; k < 8; k++) {
+				val += ((is.read() & 255) << (56-k*8));
+			}
+			return val;
+		}
+
 		private void truncate(BlockStore blockStore, int segment) {
 			//truncate the file
 			blockStore.locks[segment].writeLock().lock();
 			try {
-				int endBlock = blockStore.blocksInUse.getHighestBitSet(segment);
-				long newLength = (endBlock + 1) * blockStore.blockSize; 
-				blockStore.stores[segment].setLength(newLength);
+				int endBlock = blockStore.blocksInUse.compactHighestBitSet(segment);
+				long newLength = (endBlock + 1) * blockStore.blockSize;
+				long oldLength = blockStore.stores[segment].getLength();
+				long desiredLength = ((oldLength/blockStore.blockSize)/2)*blockStore.blockSize;
+				if (newLength < oldLength && newLength <= desiredLength && oldLength - desiredLength >= 2*minDefrag) {
+					blockStore.stores[segment].setLength(desiredLength);
+					if (LogManager.isMessageToBeRecorded(LogConstants.CTX_BUFFER_MGR, MessageLevel.DETAIL)) {
+						LogManager.logDetail(LogConstants.CTX_BUFFER_MGR, "Truncating segment", segment, "to", desiredLength); //$NON-NLS-1$ //$NON-NLS-2$ 
+					}
+				}
 			} catch (IOException e) {
 				LogManager.logWarning(LogConstants.CTX_BUFFER_MGR, e, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID30023));
 			} finally {
@@ -476,7 +495,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			}
 		}
 	};
-	private AtomicBoolean cleanerRunning = new AtomicBoolean();
+	AtomicBoolean cleanerRunning = new AtomicBoolean();
 	private final Runnable cleaningTask = new Runnable() {
 		
 		@Override
@@ -598,9 +617,9 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			hasPermit = true;
 			blockManager = getBlockManager(s.getId(), entry.getId(), EMPTY_ADDRESS);
 			BlockOutputStream bos = new BlockOutputStream(blockManager, memoryBlocks);
+			bos.writeLong(s.getId());
+			bos.writeLong(entry.getId());
 			ObjectOutput dos = new ObjectOutputStream(bos);
-			dos.writeLong(s.getId());
-			dos.writeLong(entry.getId());
 			dos.writeInt(entry.getSizeEstimate());
             s.serialize(entry.getObject(), dos);
             dos.close();
@@ -727,8 +746,10 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			if (lock != null) {
 				is = readIntoMemory(info, eis, lock, memoryBlocks);
 			}
+			for (int i = 0; i < HEADER_BYTES; i++) {
+				is.read();
+			}
 			ObjectInput dis = new ObjectInputStream(is);
-			dis.readFully(HEADER_SKIP_BUFFER);
 			int sizeEstimate = dis.readInt();
 			CacheEntry ce = new CacheEntry(new CacheKey(oid, 1, 1), sizeEstimate, serializer.deserialize(dis), ref, true);
 			return ce;
@@ -981,7 +1002,7 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 			return false;
 		}
 		int freeBlocks = highestBitSet-bitsSet;
-		return freeBlocks > (highestBitSet>>2) && freeBlocks*blockStore.blockSize > minDefrag;
+		return freeBlocks > (highestBitSet>>1) && freeBlocks*blockStore.blockSize > minDefrag;
 	}
 
 	/**
@@ -1115,5 +1136,25 @@ public class BufferFrontedFileStoreCache implements Cache<PhysicalInfo> {
 	public void setBufferManager(BufferManagerImpl bufferManager) {
 		this.bufferManager = bufferManager;
 	}
+	
+	public void setTruncateInterval(int truncateInterval) {
+		this.truncateInterval = truncateInterval;
+	}
 
+	public long getDiskUsage() {
+		long result = 0;
+		for (int i = 0; i < sizeBasedStores.length; i++) {
+			BlockStore blockStore = sizeBasedStores[i];
+			for (int segment = 0; segment < blockStore.stores.length; segment++) {
+				result += blockStore.stores[segment].getLength();
+			}
+		}
+		return result;
+	}
+
+	@Override
+	public void shutdown() {
+		this.asynchPool.shutdownNow();
+	}
+	
 }

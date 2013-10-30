@@ -237,8 +237,8 @@ public class ConcurrentBitSet {
 		int highestBitSet = 0;
 		synchronized (s) {
 			highestBitSet = s.highestBitSet;
-			if (highestBitSet <= 0) {
-				return 0;
+			if (highestBitSet < 0) {
+				return -1;
 			}
 			if (s.bitSet.get(highestBitSet)) {
 				return highestBitSet;

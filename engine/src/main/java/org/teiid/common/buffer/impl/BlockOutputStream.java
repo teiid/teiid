@@ -59,4 +59,15 @@ final class BlockOutputStream extends
 	protected int flushDirect(int i) throws IOException {
 		return i;
 	}
+
+	public void writeLong(long v) throws IOException {
+		write((byte)(v >>> 56));
+		write((byte)(v >>> 48));
+		write((byte)(v >>> 40));
+		write((byte)(v >>> 32));
+		write((byte)(v >>> 24));
+		write((byte)(v >>> 16));
+		write((byte)(v >>> 8));
+		write((byte)(v >>> 0));
+	}
 }

@@ -1094,6 +1094,7 @@ public class BufferManagerImpl implements BufferManager, ReplicatedObject<String
 	}
 
 	public void shutdown() {
+		this.cache.shutdown();
 		this.cache = null;
 		this.memoryEntries.clear();
 		this.evictionQueue.getEvictionQueue().clear();
