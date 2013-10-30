@@ -68,12 +68,16 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	public void execute() throws TranslatorException {
 		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
 		visitor.translateSQL(query);
-		resultSet = connection.executeQuery(visitor.getTranslatedSQL());
+		try {
+			resultSet = connection.executeQuery(visitor.getTranslatedSQL());
+		} catch(Throwable t) {
+			throw new TranslatorException(t);
+		}
 	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
-			return getRow(resultSet.one());
+		return getRow(resultSet.one());
 	}
 	
 	/**

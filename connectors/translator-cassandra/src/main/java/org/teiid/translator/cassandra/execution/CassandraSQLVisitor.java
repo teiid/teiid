@@ -54,11 +54,7 @@ public class CassandraSQLVisitor extends SQLStringVisitor {
 			NamedTable table = (NamedTable)obj.getFrom().get(0);
 		
 			if(table.getMetadataObject().getColumns() !=  null){
-				if (obj.getDerivedColumns().size() == table.getMetadataObject().getColumns().size()){
-					buffer.append("*");
-				}else{
-					append(obj.getDerivedColumns());
-				}
+				append(obj.getDerivedColumns());
 			}
 			buffer.append(Tokens.SPACE).append(FROM).append(Tokens.SPACE);
 			append(obj.getFrom());

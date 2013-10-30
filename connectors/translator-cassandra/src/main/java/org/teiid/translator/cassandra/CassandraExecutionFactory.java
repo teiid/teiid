@@ -25,6 +25,7 @@ package org.teiid.translator.cassandra;
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
@@ -36,7 +37,9 @@ import org.teiid.translator.ExecutionFactory;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.UpdateExecution;
 import org.teiid.translator.cassandra.execution.CassandraQueryExecution;
+import org.teiid.translator.cassandra.execution.CassandraUpdateExecution;
 import org.teiid.translator.cassandra.metadata.CassandraMetadataProcessor;
 
 
@@ -56,6 +59,13 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 			CassandraConnection connection) throws TranslatorException {
 		return new CassandraQueryExecution((Select) command, connection, executionContext);
 	}
+
+	@Override
+	public UpdateExecution createUpdateExecution(Command command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			CassandraConnection connection) throws TranslatorException {
+		return new CassandraUpdateExecution(command, executionContext, metadata, connection);
+	} 	
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory,
