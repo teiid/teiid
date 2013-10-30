@@ -1127,7 +1127,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         aqr.setPartialResults(request.supportsPartialResults());
         aqr.setSerial(requestMgr.getUserRequestSourceConcurrency() == 1);
     	aqr.setTransactionContext(workItem.getTransactionContext());
-        
+        aqr.setBufferManager(this.getBufferManager());
         if (connectorBindingId == null) {
         	VDBMetaData vdb = workItem.getDqpWorkContext().getVDB();
         	ModelMetaData model = vdb.getModel(modelName);

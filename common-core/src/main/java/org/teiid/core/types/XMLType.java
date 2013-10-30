@@ -41,6 +41,7 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 
+import org.teiid.core.types.InputStreamFactory.StorageMode;
 import org.teiid.core.util.ExternalizeUtil;
 
 /**
@@ -257,5 +258,17 @@ public final class XMLType extends Streamable<SQLXML> implements SQLXML {
 		} catch (SQLException e) {
 			throw new IOException();
 		}
+	}
+	
+	@Override
+	public long length() throws SQLException {
+		if (this.length != -1) {
+			return length;
+		}
+		StorageMode storageMode = InputStreamFactory.getStorageMode(this);
+		if (storageMode != StorageMode.OTHER) {
+			return super.length();
+		}
+		throw new SQLException("Computing the length may leave the XML value unreadable"); //$NON-NLS-1$
 	}
 }

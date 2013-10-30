@@ -22,17 +22,39 @@
 
 package org.teiid.dqp.internal.datamgr;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.activation.DataSource;
 import javax.resource.ResourceException;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.transform.Source;
+import javax.xml.transform.stax.StAXSource;
+import javax.xml.transform.stream.StreamSource;
 
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.client.ResizingArrayList;
+import org.teiid.common.buffer.BufferManager;
+import org.teiid.common.buffer.FileStore;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
+import org.teiid.core.types.BlobImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.DataTypeManager;
+import org.teiid.core.types.InputStreamFactory;
+import org.teiid.core.types.SQLXMLImpl;
+import org.teiid.core.types.StandardXMLTranslator;
+import org.teiid.core.types.Streamable;
+import org.teiid.core.types.TransformationException;
+import org.teiid.core.types.XMLType;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.ReaderInputStream;
+import org.teiid.dqp.internal.process.SaveOnReadInputStream;
 import org.teiid.dqp.message.AtomicRequestID;
 import org.teiid.dqp.message.AtomicRequestMessage;
 import org.teiid.dqp.message.AtomicResultsMessage;
@@ -41,6 +63,7 @@ import org.teiid.logging.CommandLogMessage.Event;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.query.QueryPlugin;
+import org.teiid.query.function.source.XMLSystemFunctions;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TempMetadataAdapter;
 import org.teiid.query.metadata.TempMetadataStore;
@@ -48,8 +71,10 @@ import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.QueryCommand;
 import org.teiid.query.sql.lang.SourceHint;
 import org.teiid.query.sql.lang.StoredProcedure;
+import org.teiid.query.sql.symbol.Expression;
 import org.teiid.resource.spi.WrappedConnection;
 import org.teiid.translator.*;
+import org.teiid.util.XMLInputStream;
 
 public class ConnectorWorkItem implements ConnectorWork {
 	
@@ -77,6 +102,17 @@ public class ConnectorWorkItem implements ConnectorWork {
 	private org.teiid.language.Command translatedCommand;
 	
 	private DataNotAvailableException dnae;
+	
+    private FileStore lobStore;
+    private byte[] lobBuffer;
+    private boolean[] convertToRuntimeType;
+    private boolean[] convertToDesiredRuntimeType;
+    private boolean[] isLob;
+    private Class<?>[] schema;
+	private boolean explicitClose;
+	
+	private boolean copyLobs;
+	private boolean areLobsUsableAfterClose;
     
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
@@ -111,6 +147,20 @@ public class ConnectorWorkItem implements ConnectorWork {
 			throw new TeiidComponentException(e);
 		}
         translatedCommand = factory.translate(message.getCommand());
+        List<Expression> symbols = this.requestMsg.getCommand().getProjectedSymbols();
+		this.schema = new Class[symbols.size()];
+        this.convertToDesiredRuntimeType = new boolean[symbols.size()];
+		this.convertToRuntimeType = new boolean[symbols.size()];
+		this.isLob = new boolean[symbols.size()];
+		for (int i = 0; i < symbols.size(); i++) {
+			Expression symbol = symbols.get(i);
+			this.schema[i] = symbol.getType();
+			this.convertToDesiredRuntimeType[i] = true;
+			this.convertToRuntimeType[i] = true;
+			this.isLob[i] = DataTypeManager.isLOB(this.schema[i]);
+		}
+		this.areLobsUsableAfterClose = this.connector.areLobsUsableAfterClose();
+		this.copyLobs = this.connector.isCopyLobs();
     }
     
     public AtomicRequestID getId() {
@@ -148,6 +198,8 @@ public class ConnectorWorkItem implements ConnectorWork {
     }
     
     public synchronized void close() {
+    	lobBuffer = null;
+    	lobStore = null; //can still be referenced by lobs and will be cleaned-up by reference
     	if (!manager.removeState(this.id)) {
     		return; //already closed
     	}
@@ -306,7 +358,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		}
 	}
     
-    protected AtomicResultsMessage handleBatch() throws TranslatorException {
+    protected AtomicResultsMessage handleBatch() throws TranslatorException, TransformationException, TeiidComponentException {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Getting results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
@@ -325,6 +377,7 @@ public class ConnectorWorkItem implements ConnectorWork {
         		}
             	this.rowCount += 1;
             	batchSize++;
+            	correctTypes(row);
             	if (this.procedureBatchHandler != null) {
             		row = this.procedureBatchHandler.padRow(row);
             	}
@@ -341,6 +394,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 	                     throw new TranslatorException(QueryPlugin.Event.TEIID30478, msg);
 	                }
 	            }
+	            
 	        }
     	} catch (DataNotAvailableException e) {
     		if (rows.size() == 0) {
@@ -357,8 +411,8 @@ public class ConnectorWorkItem implements ConnectorWork {
         	if (this.procedureBatchHandler != null) {
         		List<?> row = this.procedureBatchHandler.getParameterRow();
         		if (row != null) {
+        			correctTypes(row);
         			rows.add(row);
-        			this.rowCount++;
         		}
         	}
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$\
@@ -376,7 +430,7 @@ public class ConnectorWorkItem implements ConnectorWork {
 		AtomicResultsMessage response = createResultsMessage(rows.toArray(new List[currentRowCount]));
 		
 		// if we need to keep the execution alive, then we can not support implicit close.
-		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive());
+		response.setSupportsImplicitClose(!this.securityContext.keepExecutionAlive() && !explicitClose);
 		response.setWarnings(this.securityContext.getWarnings());
 		if (this.securityContext.getCacheDirective() != null) {
 			response.setScope(this.securityContext.getCacheDirective().getScope());
@@ -388,11 +442,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 		return response;
 	}
     
-    @Override
-    public boolean areLobsUsableAfterClose() {
-    	return this.connector.areLobsUsableAfterClose();
-    }
-
     public static AtomicResultsMessage createResultsMessage(List<?>[] batch) {
         return new AtomicResultsMessage(batch);
     }    
@@ -412,11 +461,6 @@ public class ConnectorWorkItem implements ConnectorWork {
 	}
 	
 	@Override
-	public boolean copyLobs() {
-		return this.connector.isCopyLobs();
-	}
-	
-	@Override
 	public CacheDirective getCacheDirective() throws TranslatorException {
 		CacheDirective cd = connector.getCacheDirective(this.translatedCommand, this.securityContext, this.queryMetadata);
 		this.securityContext.setCacheDirective(cd);
@@ -431,6 +475,109 @@ public class ConnectorWorkItem implements ConnectorWork {
 	@Override
 	public boolean isThreadBound() {
 		return this.connector.isThreadBound();
+	}
+	
+	private List<?> correctTypes(List row) throws TransformationException, TeiidComponentException {
+		//TODO: add a proper intermediate schema
+		for (int i = 0; i < row.size(); i++) {
+			Object value = row.get(i);
+			if (value == null) {
+				continue;
+			}
+			if (convertToRuntimeType[i]) {
+				Object result = convertToRuntimeType(requestMsg.getBufferManager(), value, this.schema[i]);
+				if (value == result && !DataTypeManager.DefaultDataClasses.OBJECT.equals(this.schema[i])) {
+					convertToRuntimeType[i] = false;
+				} else {
+					if (!explicitClose && isLob[i] && !copyLobs && !areLobsUsableAfterClose && DataTypeManager.isLOB(result.getClass()) 
+							&& DataTypeManager.isLOB(DataTypeManager.convertToRuntimeType(value, false).getClass())) {
+						explicitClose = true;
+					}				
+					row.set(i, result);
+					value = result;
+				}
+			}
+			if (convertToDesiredRuntimeType[i]) {
+				if (value != null) {
+					Object result = DataTypeManager.transformValue(value, value.getClass(), this.schema[i]);
+					if (isLob[i] && copyLobs) {
+						if (lobStore == null) {
+							lobStore = requestMsg.getBufferManager().createFileStore("lobs"); //$NON-NLS-1$
+							lobBuffer = new byte[1 << 14];
+						}
+						result = requestMsg.getBufferManager().persistLob((Streamable<?>) result, lobStore, lobBuffer);
+					} else if (value == result) {
+						convertToDesiredRuntimeType[i] = false;
+						continue;
+					}
+					row.set(i, result);
+				}
+			} else if (DataTypeManager.isValueCacheEnabled()) {
+				row.set(i, DataTypeManager.getCanonicalValue(value));
+			}
+		}
+		return row;
+	}
+	
+	static Object convertToRuntimeType(BufferManager bm, Object value, Class<?> desiredType) throws TransformationException {
+		if (desiredType != DataTypeManager.DefaultDataClasses.XML || !(value instanceof Source)) {
+			if (value instanceof InputStreamFactory) {
+				return new BlobType(new BlobImpl((InputStreamFactory)value));
+			}
+			if (value instanceof DataSource) {
+				FileStore fs = bm.createFileStore("bytes"); //$NON-NLS-1$
+				//TODO: guess at the encoding from the content type
+				FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+	
+				try {
+					SaveOnReadInputStream is = new SaveOnReadInputStream(((DataSource)value).getInputStream(), fsisf);
+					return new BlobType(new BlobImpl(is.getInputStreamFactory()));
+				} catch (IOException e) {
+					throw new TransformationException(QueryPlugin.Event.TEIID30500, e, e.getMessage());
+				}
+			}
+		}
+		if (value instanceof Source) {
+			if (!(value instanceof InputStreamFactory)) {
+				if (value instanceof StreamSource) {
+					StreamSource ss = (StreamSource)value;
+					InputStream is = ss.getInputStream();
+					Reader r = ss.getReader();
+					if (is == null && r != null) {
+						is = new ReaderInputStream(r, Streamable.CHARSET);
+					}
+					final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
+					final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+
+					value = new SaveOnReadInputStream(is, fsisf).getInputStreamFactory();
+				} else if (value instanceof StAXSource) {
+					//TODO: do this lazily.  if the first access to get the STaXSource, then 
+					//it's more efficient to let the processing happen against STaX
+					StAXSource ss = (StAXSource)value;
+					try {
+						final FileStore fs = bm.createFileStore("xml"); //$NON-NLS-1$
+						final FileStoreInputStreamFactory fsisf = new FileStoreInputStreamFactory(fs, Streamable.ENCODING);
+						value = new SaveOnReadInputStream(new XMLInputStream(ss, XMLSystemFunctions.getOutputFactory()), fsisf).getInputStreamFactory();
+					} catch (XMLStreamException e) {
+						throw new TransformationException(e);
+					}
+				} else {
+					//maybe dom or some other source we want to get out of memory
+					StandardXMLTranslator sxt = new StandardXMLTranslator((Source)value);
+					SQLXMLImpl sqlxml;
+					try {
+						sqlxml = XMLSystemFunctions.saveToBufferManager(bm, sxt);
+					} catch (TeiidComponentException e) {
+						 throw new TransformationException(e);
+					} catch (TeiidProcessingException e) {
+						 throw new TransformationException(e);
+					}
+					return new XMLType(sqlxml);	
+				}
+			}
+			return new XMLType(new SQLXMLImpl((InputStreamFactory)value));
+		}
+		return DataTypeManager.convertToRuntimeType(value, desiredType != DataTypeManager.DefaultDataClasses.OBJECT);
 	}
 
 }

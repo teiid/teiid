@@ -22,14 +22,20 @@
 
 package org.teiid.core.types;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.*;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.SQLException;
+
+import org.junit.Test;
 import org.teiid.core.util.UnitTestUtil;
 
+@SuppressWarnings("nls")
+public class TestXMLValue {
 
-public class TestXMLValue extends TestCase {
-
-    public void testXMLValue() throws Exception {
+    @Test public void testXMLValue() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
         SQLXMLImpl xml = new SQLXMLImpl(testString); 
         
@@ -38,7 +44,7 @@ public class TestXMLValue extends TestCase {
     }
 
     
-    public void testXMLValuePersistence() throws Exception {
+    @Test public void testXMLValuePersistence() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
         SQLXMLImpl xml = new SQLXMLImpl(testString); 
         
@@ -55,7 +61,7 @@ public class TestXMLValue extends TestCase {
         assertNull(read.getReference());
     }
     
-    public void testReferencePersistence() throws Exception {
+    @Test public void testReferencePersistence() throws Exception {
         String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
         SQLXMLImpl xml = new SQLXMLImpl(testString); 
         
@@ -68,4 +74,27 @@ public class TestXMLValue extends TestCase {
         assertEquals(testString, read.getString());
     }
     
+    
+    @Test public void testLength() throws Exception {
+        String testString = "<foo>this is an xml value test</foo>"; //$NON-NLS-1$
+        SQLXMLImpl xml = new SQLXMLImpl(testString); 
+        
+        XMLType xv = new XMLType(xml);
+        assertEquals(36, xv.length());
+        
+        xml = new SQLXMLImpl(new InputStreamFactory() {
+        	@Override
+        	public InputStream getInputStream() throws IOException {
+        		return new ByteArrayInputStream("<bar/>".getBytes(Streamable.CHARSET));
+        	}
+        }); 
+        
+        xv = new XMLType(xml);
+        try {
+        	xv.length();        
+        	fail();
+        } catch (SQLException e) {
+        	
+        }
+    }
 }

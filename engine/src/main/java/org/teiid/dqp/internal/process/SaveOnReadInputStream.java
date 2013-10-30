@@ -26,14 +26,14 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.common.buffer.FileStore.FileStoreOutputStream;
+import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.types.InputStreamFactory;
 
 /**
  * An {@link InputStream} wrapper that saves the input on read and provides a {@link InputStreamFactory}.
  */
-final class SaveOnReadInputStream extends FilterInputStream {
+public final class SaveOnReadInputStream extends FilterInputStream {
 	
 	class SwitchingInputStream extends FilterInputStream {
 
@@ -86,7 +86,7 @@ final class SaveOnReadInputStream extends FilterInputStream {
 		}
 	};
 
-	SaveOnReadInputStream(InputStream in,
+	public SaveOnReadInputStream(InputStream in,
 			FileStoreInputStreamFactory fsisf) {
 		super(in);
 		this.fsisf = fsisf;
@@ -139,7 +139,7 @@ final class SaveOnReadInputStream extends FilterInputStream {
 		}
 	}
 	
-	InputStreamFactory getInputStreamFactory() {
+	public InputStreamFactory getInputStreamFactory() {
 		return inputStreamFactory;
 	}
 }
