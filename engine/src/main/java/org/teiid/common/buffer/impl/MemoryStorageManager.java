@@ -179,5 +179,10 @@ public class MemoryStorageManager implements Cache<Long> {
 			return new ArrayList<Long>(group.keySet());
 		}
 	}
+
+	@Override
+	public void shutdown() {
+		
+	}
 	
 }

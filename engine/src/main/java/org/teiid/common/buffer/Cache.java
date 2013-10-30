@@ -92,5 +92,7 @@ public interface Cache<T> extends StorageManager {
 	 * @param id
 	 */
 	boolean remove(Long gid, Long id);
+
+	void shutdown();
 	
 }
