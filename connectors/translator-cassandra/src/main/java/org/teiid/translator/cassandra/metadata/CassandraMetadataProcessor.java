@@ -25,6 +25,8 @@ package org.teiid.translator.cassandra.metadata;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.teiid.metadata.Column;
+import org.teiid.metadata.Column.SearchType;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.Table;
 import org.teiid.translator.TypeFacility;
@@ -49,7 +51,6 @@ public class CassandraMetadataProcessor {
 		for (TableMetadata columnFamily : keyspaceMetadata.getTables()){
 			addTable(columnFamily);
 		}
-		
 	}
 
 	/**
@@ -60,6 +61,7 @@ public class CassandraMetadataProcessor {
 		Table table = metadataFactory.addTable(columnFamily.getName());
 		addColumnsToTable(table, columnFamily);
 		addPrimaryKey(table, columnFamily);
+		table.setSupportsUpdate(true);
 	}
 
 	/**
@@ -74,10 +76,9 @@ public class CassandraMetadataProcessor {
 		
 		for (ColumnMetadata columnName : primaryKeys){
 			PKNames.add(columnName.getName());
+			table.getColumnByName(columnName.getName()).setSearchType(SearchType.Searchable);
 		}
-		
-		metadataFactory.addPrimaryKey("PK_" + columnFamily.getName(), PKNames, table);
-		
+		metadataFactory.addPrimaryKey("PK_" + columnFamily.getName(), PKNames, table); //$NON-NLS-1$
 	}
 
 	/**
@@ -92,9 +93,9 @@ public class CassandraMetadataProcessor {
 			Class<?> teiidRuntimeTypeFromJavaClass = TypeFacility.getRuntimeType(cqlTypeToJavaClass);
 			String type = TypeFacility.getDataTypeName(teiidRuntimeTypeFromJavaClass);
 			
-			metadataFactory.addColumn(column.getName(), type, table);
+			Column c = metadataFactory.addColumn(column.getName(), type, table);
+			c.setUpdatable(true);
+			c.setSearchType(SearchType.Unsearchable);
 		}
-		
 	}
-
 }
