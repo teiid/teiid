@@ -97,13 +97,16 @@ public class SortNode extends RelationalNode {
     private void sortPhase() throws BlockedException, TeiidComponentException, TeiidProcessingException {
     	if (this.sortUtility == null) {
     		TupleSource ts = null;
+    		TupleBuffer working = null;
     		if (!getChildren()[0].hasBuffer(true)) {
     			ts = new BatchIterator(getChildren()[0]);
+    		} else {
+    			working = getChildren()[0].getBuffer(-1);
     		}
 	        this.sortUtility = new SortUtility(ts, items, this.mode, getBufferManager(),
                     getConnectionID(), getChildren()[0].getElements());
 	        if (ts == null) {
-	        	this.sortUtility.setWorkingBuffer(getChildren()[0].getBuffer(-1));
+	        	this.sortUtility.setWorkingBuffer(working);
 	        }
 		}
 		this.output = this.sortUtility.sort();

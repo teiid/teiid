@@ -23,9 +23,11 @@
 package org.teiid.query.processor.relational;
 
 import static org.junit.Assert.*;
+import static org.teiid.query.optimizer.TestOptimizer.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
 
@@ -39,15 +41,25 @@ import org.teiid.common.buffer.TupleBuffer;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.language.SortSpecification.NullOrdering;
+import org.teiid.query.optimizer.TestOptimizer.ComparisonMode;
+import org.teiid.query.optimizer.TestOptimizer.DupRemoveSortNode;
+import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
+import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.processor.FakeDataManager;
+import org.teiid.query.processor.FakeDataStore;
+import org.teiid.query.processor.ProcessorPlan;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.processor.relational.SortUtility.Mode;
 import org.teiid.query.sql.lang.OrderBy;
 import org.teiid.query.sql.symbol.ElementSymbol;
+import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "nls"})
 public class TestSortNode {
     
     public static final int BATCH_SIZE = 100;
@@ -351,6 +363,26 @@ public class TestSortNode {
 		assertNotNull(ts.nextTuple());
 		assertNotNull(ts.nextTuple());
 		assertNull(ts.nextTuple());
+    }
+    
+    @Test public void testSortUsingWorkingBuffer() throws TeiidException { 
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = new BasicSourceCapabilities();
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+
+        // Create query 
+        String sql = "select e1 from (select e1, e2 from pm1.g1 union select e1, e2 from pm1.g2 limit 1) as x order by e2"; //$NON-NLS-1$
+
+        ProcessorPlan plan = helpPlan(sql, RealMetadataFactory.example1Cached(), null, capFinder, 
+                                      new String[] {"SELECT pm1.g1.e1, pm1.g1.e2 FROM pm1.g1", "SELECT pm1.g2.e1, pm1.g2.e2 FROM pm1.g2"}, ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$
+        
+        checkNodeTypes(plan, new int[] {1}, new Class[] {DupRemoveSortNode.class});
+        checkNodeTypes(plan, new int[] {1}, new Class[] {SortNode.class});
+        
+        FakeDataManager dataMgr = new FakeDataManager();
+        dataMgr.setBlockOnce();
+        FakeDataStore.sampleData1(dataMgr, RealMetadataFactory.example1Cached());
+        TestProcessor.helpProcess(plan, dataMgr, new List[]{Collections.singletonList(null)});
     }
 
 }
