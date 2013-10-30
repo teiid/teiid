@@ -1,14 +1,6 @@
-# note that driver-name could be driver's module name if you went module approach.
-/subsystem=datasources/data-source=db2DS:add(jndi-name=java:/db2DS,  driver-name=db2jcc4.jar, driver-class=com.ibm.db2.jcc.DB2Driver, connection-url=jdbc:db2://{host}:{port}/{database_name},user-name={user}, password={password})
+/subsystem=datasources/jdbc-driver=db2:add(driver-name=db2,driver-module-name=com.ibm.db2,driver-class-name="${db.driver}")
 
-# XA Data source
-#batch
-#/subsystem=datasources/xa-data-source=db2DS:add(jndi-name=java:/db2DS,  driver-name=db2jcc4.jar, xa-datasource-class=com.ibm.db2.jcc.DB2XADataSource, user-name={user}, password={password})
-#/subsystem=datasources/xa-data-source=db2DS/xa-datasource-properties=DatabaseName:add(value={database_name})
-#/subsystem=datasources/xa-data-source=db2DS/xa-datasource-properties=PortNumber:add(value=50000)
-#/subsystem=datasources/xa-data-source=db2DS/xa-datasource-properties=ServerName:add(value={host})
-#/subsystem=datasources/xa-data-source=db2DS:enable
-#run-batch
+/subsystem=datasources/data-source=db2DS:add(jndi-name="${db.jndi_name}",  driver-name=db2,  connection-url="${db.url}", user-name="${db.user}", password="${db.password}", enabled=true, use-java-context=true )
 
 
 ## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 

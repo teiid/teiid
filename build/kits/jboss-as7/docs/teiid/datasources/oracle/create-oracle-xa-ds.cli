@@ -1,0 +1,11 @@
+/subsystem=datasources/jdbc-driver=oracleXA:add(driver-name=oracleXA,driver-module-name=com.oracle,driver-xa-datasource-class-name="${db.driver}")
+
+# XA Data source
+/subsystem=datasources/xa-data-source=oracleXADS:add(jndi-name="${db.jndi_name}",  driver-name=oracleXA, user-name="${db.user}", password="${db.password}", use-java-context=true)
+/subsystem=datasources/xa-data-source=oracleXADS/xa-datasource-properties=URL:add(value="${db.url}")
+/subsystem=datasources/xa-data-source=oracleXADS:enable
+
+
+## If you are working in a clustered environment, prepend "/profile=ha" to all the above commands that start with "/subsystem=.." 
+
+
