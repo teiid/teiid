@@ -27,7 +27,7 @@
         <dependency>
 			<groupId>com.datastax.cassandra</groupId>
 			<artifactId>cassandra-driver-core</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.4</version>
 			<exclusions>
 			     <exclusion>
 			     	<artifactId>cassandra-thrift</artifactId>
@@ -115,6 +115,14 @@
 			     	<artifactId>slf4j-log4j12</artifactId>
 			     	<groupId>org.slf4j</groupId>
 			     </exclusion>
+                 <exclusion>
+                    <artifactId>org.codehaus.jackson</artifactId>
+                    <groupId>jackson-core-asl</groupId>
+                 </exclusion>
+                 <exclusion>
+                    <artifactId>org.codehaus.jackson</artifactId>
+                    <groupId>jackson-mapper-asl</groupId>
+                 </exclusion>                 
 			</exclusions>
 		</dependency>     
     </dependencies>
