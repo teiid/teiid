@@ -1,8 +1,8 @@
 package org.teiid.translator.cassandra;
 
-import java.util.Properties;
+import static org.junit.Assert.*;
 
-import junit.framework.Assert;
+import java.util.Properties;
 
 import org.junit.Test;
 import org.teiid.cdk.CommandBuilder;
@@ -42,7 +42,7 @@ public class TestTeiidLanguageToCQL {
 		
 		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
 		visitor.translateSQL(select);
-		Assert.assertEquals(expectedCQL, visitor.getTranslatedSQL());
+		assertEquals(expectedCQL, visitor.getTranslatedSQL());
 	}
 	
 	public Command getCommand(String sql){
@@ -54,10 +54,10 @@ public class TestTeiidLanguageToCQL {
 	public void testSelect() throws Exception{
 		testTranslation("select id from Person", "SELECT id FROM Person");
 		testTranslation("select name,age from Person", "SELECT name, age FROM Person");
-		testTranslation("select * from Person", "SELECT * FROM Person");
+		testTranslation("select * from Person", "SELECT id, name, age FROM Person");
 		testTranslation("select count(*) from Person limit 10", "SELECT COUNT(*) FROM Person LIMIT 10");
-		testTranslation("select * from Person where id=1 and age>=18 and age<=100", "SELECT * FROM Person WHERE id = 1 AND age >= 18 AND age <= 100");
-		testTranslation("select * from Person where id in(1,2,3)", "SELECT * FROM Person WHERE id IN (1, 2, 3)");
+		testTranslation("select * from Person where id=1 and age>=18 and age<=100", "SELECT id, name, age FROM Person WHERE id = 1 AND age >= 18 AND age <= 100");
+		testTranslation("select * from Person where id in(1,2,3)", "SELECT id, name, age FROM Person WHERE id IN (1, 2, 3)");
 		
 	}
 	
