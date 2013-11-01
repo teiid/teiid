@@ -47,7 +47,9 @@ import javax.xml.stream.XMLStreamWriter;
 
 import org.junit.After;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.client.BatchSerializer;
 import org.teiid.common.buffer.BlockedException;
@@ -81,6 +83,7 @@ import org.teiid.query.sql.symbol.Expression;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.util.CommandContext;
 
+@FixMethodOrder(MethodSorters.JVM)
 @SuppressWarnings("nls")
 public class TestEnginePerformance {
 	

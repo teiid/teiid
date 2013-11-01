@@ -159,8 +159,7 @@ public class FileStorageManager implements StorageManager {
 				//this is a weak check, concurrent access may push us over the max.  we are just trying to prevent large overage allocations
 				long used = usedBufferSpace.get() + bytesUsed;
 				if (used > maxBufferSpace) {
-					//TODO: trigger a compaction before this is thrown
-					throw new IOException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
+					throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
 				}
 			}
 			fileAccess.setLength(newLength);
@@ -171,8 +170,7 @@ public class FileStorageManager implements StorageManager {
 			if (bytesUsed > 0 && used > maxBufferSpace) {
 				fileAccess.setLength(currentLength);
 				usedBufferSpace.addAndGet(-bytesUsed);
-				//TODO: trigger a compaction before this is thrown
-				throw new IOException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
+				throw new OutOfDiskException(QueryPlugin.Util.getString("FileStoreageManager.space_exhausted", bytesUsed, used, maxBufferSpace)); //$NON-NLS-1$
 			}
 		}
 	    
@@ -205,7 +203,6 @@ public class FileStorageManager implements StorageManager {
     //use subdirectories to hold the files since we may create a relatively unbounded amount of lob files and 
     //fs performance will typically degrade if a single directory is too large
     private File[] subDirectories = new File[256];
-    private boolean logDetail;
 
     // State
     private Map<File, RandomAccessFile> fileCache = Collections.synchronizedMap(new LinkedHashMap<File, RandomAccessFile>() {
