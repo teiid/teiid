@@ -40,7 +40,7 @@ import org.teiid.core.util.UnitTestUtil;
 @SuppressWarnings("nls")
 public class TestFileStorageManager {
 		
-	public FileStorageManager getStorageManager(Integer openFiles, String dir) throws TeiidComponentException {
+	public static FileStorageManager getStorageManager(Integer openFiles, String dir) throws TeiidComponentException {
         FileStorageManager sm = new FileStorageManager();
         sm.setStorageDirectory(UnitTestUtil.getTestScratchPath() + (dir != null ? File.separator + dir : "")); //$NON-NLS-1$
         if (openFiles != null) {

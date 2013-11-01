@@ -237,7 +237,7 @@ public class TestBufferFrontedFileStoreCache {
 						
 						@Override
 						public void setLength(long length) throws IOException {
-							throw new IOException();
+							throw new OutOfDiskException(null);
 						}
 						
 						@Override
