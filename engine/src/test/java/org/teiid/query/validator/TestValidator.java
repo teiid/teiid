@@ -59,6 +59,7 @@ import org.teiid.query.mapping.xml.MappingElement;
 import org.teiid.query.metadata.QueryMetadataInterface;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.parser.QueryParser;
+import org.teiid.query.processor.TestProcessor;
 import org.teiid.query.resolver.QueryResolver;
 import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.Command;
@@ -1814,6 +1815,20 @@ public class TestValidator {
         String sql = "with a as (select jsonObject(to_bytes('hello', 'us-ascii')) as x) select a.x from a"; //$NON-NLS-1$
         
         helpValidate(sql, new String[]{"JSONOBJECT(to_bytes('hello', 'us-ascii'))"}, RealMetadataFactory.example1Cached()); //$NON-NLS-1$
+    }
+    
+    @Test public void testInsertIntoVirtualWithQueryExpression() { 
+        
+        QueryMetadataInterface qmi = RealMetadataFactory.example1(); 
+
+        String sql = "select * from vm1.g1 as x"; //$NON-NLS-1$
+        
+        TestProcessor.helpGetPlan(sql, qmi);
+        
+        sql = "insert into vm1.g1 (e1, e2, e3, e4) select * from pm1.g1"; //$NON-NLS-1$
+        
+        helpValidate(sql, new String[] {}, qmi);
+
     }
 	
 }
