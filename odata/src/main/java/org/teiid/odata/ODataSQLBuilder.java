@@ -21,7 +21,7 @@
  */
 package org.teiid.odata;
 
-import static org.teiid.language.SQLConstants.Reserved.*;
+import static org.teiid.language.SQLConstants.Reserved.CONVERT;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -206,8 +206,13 @@ public class ODataSQLBuilder extends ODataHierarchyVisitor {
 			query.setOrderBy(this.orderBy);
 		}
 		else {
+			KeyRecord record = resultEntityTable.getPrimaryKey();
+			if (record == null) {
+				// if PK is not available there MUST at least one unique key
+				record = resultEntityTable.getUniqueKeys().get(0);
+			}
 			// provide implicit ordering for cursor logic
-			for (Column column:resultEntityTable.getPrimaryKey().getColumns()) {
+			for (Column column:record.getColumns()) {
 				OrderByExpression expr = org.odata4j.expression.Expression.orderBy(org.odata4j.expression.Expression.simpleProperty(column.getName()), Direction.ASCENDING);
 				visitNode(expr);
 			}
