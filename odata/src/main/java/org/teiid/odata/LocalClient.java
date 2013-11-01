@@ -51,7 +51,6 @@ import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.Responses;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
-import org.teiid.core.TeiidRuntimeException;
 import org.teiid.core.types.JDBCSQLTypeInfo;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.CallableStatementImpl;
@@ -67,7 +66,6 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.CacheHint;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.lang.Query;
-import org.teiid.runtime.RuntimePlugin;
 import org.teiid.translator.CacheDirective;
 import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 import org.teiid.translator.odata.ODataTypeManager;
@@ -97,6 +95,7 @@ public class LocalClient implements Client {
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		sb.append(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION+"=true;"); //$NON-NLS-1$
 		sb.append(EmbeddedProfile.TRANSPORT_NAME).append("=").append(this.transportName).append(";"); //$NON-NLS-1$ //$NON-NLS-2$
+		sb.append(EmbeddedProfile.WAIT_FOR_LOAD).append("=").append("0;"); //$NON-NLS-1$ //$NON-NLS-2$
 		this.connectionString = sb.toString();
 	}
 
@@ -191,7 +190,7 @@ public class LocalClient implements Client {
 				}
 				this.metadataStore = vdb.getAttachment(TransformationMetadata.class).getMetadataStore();
 			} catch (SQLException e) {
-				throw new TeiidRuntimeException(RuntimePlugin.Event.TEIID40067, e);
+				throw new ServerErrorException(e.getMessage(),e);
 			} finally {
 				if (connection != null) {
 					try {
