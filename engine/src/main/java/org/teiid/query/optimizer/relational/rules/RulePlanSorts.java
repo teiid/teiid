@@ -199,8 +199,9 @@ public class RulePlanSorts implements OptimizerRule {
 			if (node.getProperty(NodeConstants.Info.SET_OPERATION) != SetQuery.Operation.UNION) {
 				parentBlocking = true;
 			} else if (!node.hasBooleanProperty(NodeConstants.Info.USE_ALL) && !parentBlocking) {
-				node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
-			}
+				//do the incremental dup removal for lower latency
+			    node.setProperty(NodeConstants.Info.IS_DUP_REMOVAL, true);
+		    }
 			break;
 		}
 		for (PlanNode child : node.getChildren()) {
@@ -327,6 +328,16 @@ public class RulePlanSorts implements OptimizerRule {
 		case NodeConstants.Types.DUP_REMOVE:
 			NodeEditor.removeChildNode(node, node.getFirstChild());
 			return true;
+		}
+		if (node.hasBooleanProperty(Info.UNRELATED_SORT)) {
+			PlanNode source = NodeEditor.findNodePreOrder(node, NodeConstants.Types.SOURCE);
+			if (source != null) {
+				PlanNode parentProject = NodeEditor.findParent(source, NodeConstants.Types.PROJECT);
+				if (parentProject != null && parentProject.getProperty(Info.PROJECT_COLS).equals(source.getProperty(Info.OUTPUT_COLS))) {
+					//can't sort on a derived expression
+					return mergeSortWithDupRemoval(source);
+				}
+			}
 		}
 		return false;
 	}
