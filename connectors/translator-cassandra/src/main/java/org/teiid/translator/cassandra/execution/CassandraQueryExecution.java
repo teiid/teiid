@@ -68,8 +68,10 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	public void execute() throws TranslatorException {
 		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
 		visitor.translateSQL(query);
+		String cql = visitor.getTranslatedSQL();
+		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
 		try {
-			resultSet = connection.executeQuery(visitor.getTranslatedSQL());
+			resultSet = connection.executeQuery(cql);
 		} catch(Throwable t) {
 			throw new TranslatorException(t);
 		}

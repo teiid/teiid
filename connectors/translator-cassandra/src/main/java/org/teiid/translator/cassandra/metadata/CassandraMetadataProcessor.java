@@ -22,6 +22,7 @@
 
 package org.teiid.translator.cassandra.metadata;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,14 +89,23 @@ public class CassandraMetadataProcessor {
 	 */
 	private void addColumnsToTable(Table table, TableMetadata columnFamily) {
 		for (ColumnMetadata column : columnFamily.getColumns()){
-			
+
 			Class<?> cqlTypeToJavaClass = column.getType().asJavaClass();
 			Class<?> teiidRuntimeTypeFromJavaClass = TypeFacility.getRuntimeType(cqlTypeToJavaClass);
 			String type = TypeFacility.getDataTypeName(teiidRuntimeTypeFromJavaClass);
 			
+			if (column.getType().getName().equals(com.datastax.driver.core.DataType.Name.TIMESTAMP)) {
+				type = TypeFacility.getDataTypeName(Timestamp.class);
+			}
+			
 			Column c = metadataFactory.addColumn(column.getName(), type, table);
 			c.setUpdatable(true);
-			c.setSearchType(SearchType.Unsearchable);
+			if (column.getIndex() != null) {
+				c.setSearchType(SearchType.Searchable);
+			}
+			else {
+				c.setSearchType(SearchType.Unsearchable);
+			}
 		}
 	}
 }
