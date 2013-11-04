@@ -382,7 +382,7 @@ public class ConnectorWorkItem implements ConnectorWork {
             		throw new AssertionError("Inproper results returned.  Expected " + this.expectedColumns + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
         		}
             	try {
-					correctTypes(row);
+					row = correctTypes(row);
 				} catch (TeiidException e) {
 					conversionError = e;
 					break;
@@ -422,8 +422,9 @@ public class ConnectorWorkItem implements ConnectorWork {
         		List<?> row = this.procedureBatchHandler.getParameterRow();
         		if (row != null) {
         			try {
-						correctTypes(row);
+						row = correctTypes(row);
 	        			rows.add(row);
+	        			this.rowCount += 1;
 					} catch (TeiidException e) {
 						lastBatch = false;
 						conversionError = e;
