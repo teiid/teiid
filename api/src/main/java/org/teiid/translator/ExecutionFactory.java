@@ -736,6 +736,7 @@ public class ExecutionFactory<F, C> {
      * not all system functions are listed as some functions will use a common name
      * such as CONCAT vs. the || operator, and other functions will be rewritten and
      * not pushed down, such as SPACE.
+     * <br><b>Note:</b> User defined functions should be specified fully qualified. 
      * @since 3.1 SP3    
      */        
     public List<String> getSupportedFunctions() {
