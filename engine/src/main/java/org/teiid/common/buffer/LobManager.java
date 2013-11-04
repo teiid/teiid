@@ -203,9 +203,17 @@ public class LobManager {
 
 	public static Streamable<?> persistLob(final Streamable<?> lob,
 			final FileStore store, byte[] bytes, boolean inlineLobs, int maxMemoryBytes) throws TeiidComponentException {
+		long byteLength = Integer.MAX_VALUE;
+		
+		try {
+			byteLength = lob.length()*(lob instanceof ClobType?2:1);
+		} catch (SQLException e) {
+			//just ignore for now - for a single read resource computing the length invalidates
+			//TODO - inline small persisted lobs
+		}
+
 		try {
 			//inline
-			long byteLength = lob.length()*(lob instanceof ClobType?2:1);
 			if (lob.getReferenceStreamId() == null || (inlineLobs 
 					&& (byteLength <= maxMemoryBytes))) {
 				lob.setReferenceStreamId(null);

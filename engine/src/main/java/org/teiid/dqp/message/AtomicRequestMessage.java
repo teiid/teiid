@@ -86,6 +86,7 @@ public class AtomicRequestMessage {
     private String generalHint;
     private String hint;
     private CommandContext commandContext;
+    private BufferManager bufferManager;
     
     public AtomicRequestMessage(RequestMessage requestMessage, DQPWorkContext parent, int nodeId){
     	this.workContext = parent;
@@ -226,6 +227,14 @@ public class AtomicRequestMessage {
 	
 	public void setCommandContext(CommandContext commandContext) {
 		this.commandContext = commandContext;
+	}
+	
+	public BufferManager getBufferManager() {
+		return bufferManager;
+	}
+	
+	public void setBufferManager(BufferManager bufferManager) {
+		this.bufferManager = bufferManager;
 	}
 
 }

@@ -43,12 +43,8 @@ public interface ConnectorWork {
 	
 	boolean isDataAvailable();
 	
-	boolean copyLobs();
-
 	CacheDirective getCacheDirective() throws TranslatorException;
 
-	boolean areLobsUsableAfterClose();
-	
 	boolean isForkable();
 	
 }

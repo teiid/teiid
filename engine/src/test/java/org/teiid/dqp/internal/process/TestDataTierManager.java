@@ -24,14 +24,7 @@ package org.teiid.dqp.internal.process;
 
 import static org.junit.Assert.*;
 
-import java.io.StringReader;
 import java.util.List;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
-import javax.xml.stream.events.XMLEvent;
-import javax.xml.transform.stax.StAXSource;
-import javax.xml.transform.stream.StreamSource;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -42,19 +35,9 @@ import org.teiid.cache.DefaultCacheFactory;
 import org.teiid.client.RequestMessage;
 import org.teiid.client.SourceWarning;
 import org.teiid.common.buffer.BlockedException;
-import org.teiid.common.buffer.BufferManager;
-import org.teiid.common.buffer.BufferManagerFactory;
 import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.InputStreamFactory;
-import org.teiid.core.types.InputStreamFactory.StorageMode;
-import org.teiid.core.types.Streamable;
-import org.teiid.core.types.XMLType;
-import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.dqp.internal.datamgr.FakeTransactionService;
 import org.teiid.dqp.message.AtomicRequestMessage;
@@ -147,35 +130,6 @@ public class TestDataTierManager {
         
         dtm = new DataTierManagerImpl(rm,bs.getBufferManager(), true);
 	}
-    
-    @Test public void testLobs() throws Exception {
-    	connectorManager.copyLobs = true;
-    	DataTierTupleSource info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
-    	for (int i = 0; i < 10;) {
-	    	try {
-	    		List<?> tuple = info.nextTuple();
-	    		ClobType clob = (ClobType)tuple.get(0);
-	    		assertEquals(StorageMode.MEMORY, InputStreamFactory.getStorageMode(clob));
-	    		i++;
-	    		assertFalse(info.isExplicitClose());
-	    	} catch (BlockedException e) {
-	    		Thread.sleep(50);
-	    	}
-    	}
-    	connectorManager.copyLobs = false;
-    	info = helpSetup("SELECT cast(stringkey as clob) from bqt1.smalla", 1);
-    	for (int i = 0; i < 10;) {
-	    	try {
-	    		List<?> tuple = info.nextTuple();
-	    		ClobType clob = (ClobType)tuple.get(0);
-	    		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
-	    		i++;
-	    		assertTrue(info.isExplicitClose());
-	    	} catch (BlockedException e) {
-	    		Thread.sleep(50);
-	    	}
-    	}
-    }
     
     @Test public void testDataTierTupleSource() throws Exception {
     	DataTierTupleSource info = helpSetup(1);
@@ -354,31 +308,6 @@ public class TestDataTierManager {
     	
     	assertEquals(2, this.rm.getRsCache().getCachePutCount());
     	assertEquals(2, this.rm.getRsCache().getTotalCacheEntries());
-    }
-    
-    @Test public void testTypeConversion() throws Exception {
-    	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
-    	
-    	String str = "hello world";
-    	
-    	Object source = new StreamSource(new StringReader(str));
-    	XMLType xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
-    	assertEquals(str, xml.getString());
-    	
-    	source = new StAXSource(XMLType.getXmlInputFactory().createXMLEventReader(new StringReader("<a/>")));
-    	xml = (XMLType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.XML);
-    	XMLInputFactory in = XMLType.getXmlInputFactory();
-    	XMLStreamReader reader = in.createXMLStreamReader(new StringReader(xml.getString()));
-    	assertEquals(XMLEvent.START_DOCUMENT, reader.getEventType());
-    	assertEquals(XMLEvent.START_ELEMENT, reader.next());
-    	assertEquals("a", reader.getLocalName());
-    	assertEquals(XMLEvent.END_ELEMENT, reader.next());
-    	
-    	byte[] bytes = str.getBytes(Streamable.ENCODING);
-		source = new InputStreamFactory.BlobInputStreamFactory(BlobType.createBlob(bytes));
-    	BlobType blob = (BlobType) DataTierTupleSource.convertToRuntimeType(bm, source, DataTypeManager.DefaultDataClasses.BLOB);
-    	
-    	assertArrayEquals(bytes, ObjectConverterUtil.convertToByteArray(blob.getBinaryStream()));
     }
     
 }

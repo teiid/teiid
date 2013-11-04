@@ -22,9 +22,6 @@
 
 package org.teiid.translator.jdbc.db2;
 
-import java.sql.CallableStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -173,23 +170,5 @@ public class BaseDB2ExecutionFactory extends JDBCExecutionFactory {
 	public boolean supportsSubqueryInOn() {
 		return false;
 	}
-	
-	@Override
-	public Object retrieveValue(ResultSet results, int columnIndex,
-			Class<?> expectedType) throws SQLException {
-		if (expectedType == TypeFacility.RUNTIME_TYPES.XML) {
-			return results.getString(columnIndex);
-		}
-		return super.retrieveValue(results, columnIndex, expectedType);
-	}
-	
-	@Override
-	public Object retrieveValue(CallableStatement results, int parameterIndex,
-			Class<?> expectedType) throws SQLException {
-		if (expectedType == TypeFacility.RUNTIME_TYPES.XML) {
-			return results.getString(parameterIndex);
-		}
-		return super.retrieveValue(results, parameterIndex, expectedType);
-	}
-	
+		
 }

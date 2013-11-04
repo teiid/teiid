@@ -71,7 +71,6 @@ public class AutoGenDataService extends ConnectorManager{
     private final AtomicInteger closeCount = new AtomicInteger();
     private boolean useIntCounter;
 	public boolean addWarning;
-	public boolean copyLobs;
 	public CacheDirective cacheDirective;
 	public boolean dataAvailable;
 
@@ -120,11 +119,6 @@ public class AutoGenDataService extends ConnectorManager{
         		return dataAvailable;
         	}
         	
-        	@Override
-        	public boolean areLobsUsableAfterClose() {
-        		return false;
-        	}
-        	
 			@Override
 			public AtomicResultsMessage more() throws TranslatorException {
 				if (dataNotAvailable != null) {
@@ -169,11 +163,6 @@ public class AutoGenDataService extends ConnectorManager{
 				
 			}
 			
-			@Override
-			public boolean copyLobs() {
-				return copyLobs;
-			}
-
 			@Override
 			public CacheDirective getCacheDirective() {
 				return cacheDirective;
@@ -220,7 +209,7 @@ public class AutoGenDataService extends ConnectorManager{
     private static final Double DOUBLE_VAL = new Double(0.0);
     private static final Character CHAR_VAL = new Character('c');
     private static final Byte BYTE_VAL = new Byte((byte)0);
-    private static final Clob CLOB_VAL = new ClobImpl(new InputStreamFactory() {
+    public static final Clob CLOB_VAL = new ClobImpl(new InputStreamFactory() {
     	@Override
     	public InputStream getInputStream() throws IOException {
     		return new ByteArrayInputStream("hello world".getBytes(Streamable.CHARSET));
