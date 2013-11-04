@@ -61,7 +61,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	protected Stack<DBObject> onGoingPullCriteria = new Stack<DBObject>();
 	protected Stack<Object> onGoingExpression  = new Stack<Object>();
 	protected ConcurrentHashMap<Object, ColumnAlias> expressionMap = new ConcurrentHashMap<Object, ColumnAlias>();
-	private HashMap<String, Object> groupByProjections = new HashMap<String, Object>();
+	private HashMap<String, BasicDBObject> groupByProjections = new HashMap<String, BasicDBObject>();
 	protected ColumnAlias onGoingAlias;
 	protected MongoDocument mongoDoc;
 
@@ -72,7 +72,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	protected DBObject sort;
 	protected DBObject match;
 	protected DBObject having;
-	protected DBObject group;
+	protected BasicDBObject group = new BasicDBObject();
 	protected ArrayList<String> selectColumns = new ArrayList<String>();
 	protected ArrayList<String> selectColumnReferences = new ArrayList<String>();
 	protected boolean projectBeforeMatch = false;
@@ -154,30 +154,28 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			previousAlias = this.onGoingAlias;
 		}
 
-		if (this.command != null && this.command.isDistinct()) {
-			this.groupByProjections.put(previousAlias.projectedName, expr);
-		}
-
 		if (obj.getExpression() instanceof ColumnReference) {
 			String elementName = getColumnName((ColumnReference)obj.getExpression());
 			this.selectColumnReferences.add(elementName);
 			// the the expression is already part of group by then the projection should be $_id.{name}
-			Object id = this.groupByProjections.get("_id"); //$NON-NLS-1$
-			if (id == null && this.groupByProjections.get(previousAlias.projectedName) != null) {
-				// this is DISTINCT case
-				this.project.append(this.onGoingAlias.projectedName, "$_id."+previousAlias.projectedName); //$NON-NLS-1$
-				this.selectColumns.add(this.onGoingAlias.projectedName);
-			}
-			else if (id != null
-					&& ((id instanceof String) && id.equals(previousAlias.projectedName))
-					|| ((id instanceof BasicDBObject) && ((BasicDBObject) id).get(previousAlias.projectedName) != null)) {
-				this.project.append(this.onGoingAlias.projectedName, "$_id."+previousAlias.projectedName); //$NON-NLS-1$
-				this.selectColumns.add(this.onGoingAlias.projectedName);
+			BasicDBObject id = this.groupByProjections.get("_id"); //$NON-NLS-1$
+			if (id == null) {
+				if (this.command.isDistinct() || this.groupByProjections.get(previousAlias.projectedName) != null) {
+					// this is DISTINCT case
+					this.project.append(this.onGoingAlias.projectedName, "$_id."+previousAlias.projectedName); //$NON-NLS-1$
+					this.selectColumns.add(this.onGoingAlias.projectedName);
+					// if group by does not exist then build the group root id based on distinct
+					this.group.put(this.onGoingAlias.projectedName, expr);
+				}
+				else {
+					this.project.append(this.onGoingAlias.projectedName, expr);
+					this.selectColumns.add(this.onGoingAlias.projectedName);					
+				}
 			}
 			else {
-				this.project.append(this.onGoingAlias.projectedName, expr);
-				this.selectColumns.add(this.onGoingAlias.projectedName);
-			}
+				this.project.append(this.onGoingAlias.projectedName, id.get(previousAlias.projectedName)); 
+				this.selectColumns.add(this.onGoingAlias.projectedName);					
+			}			
 		}
 		else {
 			// what user sees as project
@@ -304,7 +302,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
     	else {
 			// this is only true for count(*) case, so we need implicit group id clause
     		this.onGoingExpression.push(new Integer(1));
-    		this.groupByProjections.put("_id", null); //$NON-NLS-1$
+   			this.group.put("_id", null); //$NON-NLS-1$
     	}
 
     	BasicDBObject expr = null;
@@ -329,8 +327,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 		if (expr != null) {
 			ColumnAlias alias = addToProject(expr, false);
-			if (!this.groupByProjections.values().contains(expr)) {
-				this.groupByProjections.put(alias.projectedName, expr);
+			if (!this.group.values().contains(expr)) {
+				this.group.put(alias.projectedName, expr);
 			}
 			this.onGoingExpression.push(expr);
 		}
@@ -488,13 +486,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
     	append(obj.getDerivedColumns());
 
-    	// if group by does not exist then build the group root id based on distinct
-		if (obj.getGroupBy() == null && obj.isDistinct() && this.groupByProjections != null
-				&& !this.groupByProjections.containsKey("_id")) { //$NON-NLS-1$
-			// in distinct since there may not be group by, but mongo requires a grouping clause.
-			BasicDBObject _id = new BasicDBObject(this.groupByProjections);
-			this.groupByProjections.clear();
-			this.groupByProjections.put("_id", _id); //$NON-NLS-1$
+    	// in distinct since there may not be group by, but mongo requires a grouping clause.
+		if (obj.getGroupBy() == null && obj.isDistinct() && !this.group.containsField("_id")) { //$NON-NLS-1$ 
+			BasicDBObject id = new BasicDBObject(this.group);
+			this.group.clear();
+			this.group.put("_id", id); //$NON-NLS-1$
 		}
 
         if (obj.getHaving() != null) {
@@ -505,11 +501,13 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         	this.having = this.onGoingCriteria.pop();
         }
 
-        if (!this.groupByProjections.isEmpty()) {
-            if (!this.groupByProjections.containsKey("_id")) { //$NON-NLS-1$
-            	this.groupByProjections.put("_id", null); //$NON-NLS-1$
+        if (!this.group.isEmpty()) {
+            if (this.group.get("_id") == null) { //$NON-NLS-1$
+            	this.group.put("_id", null); //$NON-NLS-1$
             }
-        	this.group = new BasicDBObject(this.groupByProjections);
+        }
+        else {
+        	this.group = null;
         }
 
         if (obj.getOrderBy() != null) {
@@ -745,18 +743,22 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		if (obj.getElements().size() == 1) {
 			append(obj.getElements().get(0));
 			Object mongoExpr = this.onGoingExpression.pop();
-			this.groupByProjections.put("_id", mongoExpr); //$NON-NLS-1$
+			ColumnAlias alias = this.expressionMap.get(mongoExpr);
+			this.group.put("_id", mongoExpr); //$NON-NLS-1$
+			this.groupByProjections.put("_id", new BasicDBObject(alias.projectedName, "$_id")); //$NON-NLS-1$ //$NON-NLS-2$
 		}
 		else {
 			BasicDBObject fields = new BasicDBObject();
+			BasicDBObject exprs = new BasicDBObject();
 			for (Expression expr : obj.getElements()) {
 				append(expr);
 				Object mongoExpr = this.onGoingExpression.pop();
 				ColumnAlias alias = this.expressionMap.get(mongoExpr);
-				fields.put(alias.projectedName, mongoExpr);
+				exprs.put(alias.projectedName, mongoExpr);
+				fields.put(alias.projectedName, "$_id."+alias.projectedName); //$NON-NLS-1$
 			}
+			this.group.put("_id", exprs); //$NON-NLS-1$
 			this.groupByProjections.put("_id", fields); //$NON-NLS-1$
-
 		}
 	}
 
