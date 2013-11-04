@@ -76,7 +76,9 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 
 	@Override
 	public boolean supportsOrderBy() {
-		return true;
+		// Order by is allowed in very restrictive case when this is used as 
+		// compound primary key's second column where it is defined partioned key
+		return false;
 	}
 
 	@Override
