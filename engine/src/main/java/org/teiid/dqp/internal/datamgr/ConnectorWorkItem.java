@@ -42,6 +42,7 @@ import org.teiid.common.buffer.BufferManager;
 import org.teiid.common.buffer.FileStore;
 import org.teiid.common.buffer.FileStoreInputStreamFactory;
 import org.teiid.core.TeiidComponentException;
+import org.teiid.core.TeiidException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
@@ -113,6 +114,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 	
 	private boolean copyLobs;
 	private boolean areLobsUsableAfterClose;
+	
+	private TeiidException conversionError;
     
     ConnectorWorkItem(AtomicRequestMessage message, ConnectorManager manager) throws TeiidComponentException {
         this.id = message.getAtomicRequestID();
@@ -188,6 +191,9 @@ public class ConnectorWorkItem implements ConnectorWork {
     		DataNotAvailableException e = this.dnae;
     		this.dnae = null;
     		throw e;
+    	}
+    	if (this.conversionError != null) {
+    		throw handleError(this.conversionError);
     	}
     	LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Processing MORE request"}); //$NON-NLS-1$
     	try {
@@ -357,8 +363,8 @@ public class ConnectorWorkItem implements ConnectorWork {
 			};
 		}
 	}
-    
-    protected AtomicResultsMessage handleBatch() throws TranslatorException, TransformationException, TeiidComponentException {
+	
+    protected AtomicResultsMessage handleBatch() throws TranslatorException {
     	Assertion.assertTrue(!this.lastBatch);
         LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Getting results from connector"}); //$NON-NLS-1$
         int batchSize = 0;
@@ -375,13 +381,17 @@ public class ConnectorWorkItem implements ConnectorWork {
             	if (row.size() != this.expectedColumns) {
             		throw new AssertionError("Inproper results returned.  Expected " + this.expectedColumns + " columns, but was " + row.size()); //$NON-NLS-1$ //$NON-NLS-2$
         		}
-            	this.rowCount += 1;
-            	batchSize++;
-            	correctTypes(row);
+            	try {
+					correctTypes(row);
+				} catch (TeiidException e) {
+					conversionError = e;
+					break;
+				}
             	if (this.procedureBatchHandler != null) {
             		row = this.procedureBatchHandler.padRow(row);
             	}
-            	
+            	this.rowCount += 1;
+            	batchSize++;
             	rows.add(row);
 	            // Check for max result rows exceeded
 	            if(this.requestMsg.getMaxResultRows() > -1 && this.rowCount >= this.requestMsg.getMaxResultRows()){
@@ -411,8 +421,13 @@ public class ConnectorWorkItem implements ConnectorWork {
         	if (this.procedureBatchHandler != null) {
         		List<?> row = this.procedureBatchHandler.getParameterRow();
         		if (row != null) {
-        			correctTypes(row);
-        			rows.add(row);
+        			try {
+						correctTypes(row);
+	        			rows.add(row);
+					} catch (TeiidException e) {
+						lastBatch = false;
+						conversionError = e;
+					}
         		}
         	}
             LogManager.logDetail(LogConstants.CTX_CONNECTOR, new Object[] {this.id, "Obtained last batch, total row count:", rowCount}); //$NON-NLS-1$\

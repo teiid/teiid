@@ -25,7 +25,9 @@ package org.teiid.dqp.internal.datamgr;
 import static org.junit.Assert.*;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.transaction.xa.Xid;
@@ -319,6 +321,79 @@ public class TestConnectorWorkItem {
 		clob = (ClobType)tuple.get(0);
 		assertEquals(StorageMode.OTHER, InputStreamFactory.getStorageMode(clob));
 		assertFalse(message.supportsImplicitClose());
+    }
+    
+    @Test public void testConversionError() throws Exception {
+    	BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+    	final ExecutionFactory<Object, Object> ef = new ExecutionFactory<Object, Object> () {
+    		@Override
+    		public boolean isSourceRequired() {
+    			return false;
+    		}
+    		@Override
+    		public ResultSetExecution createResultSetExecution(
+    				QueryExpression command, ExecutionContext executionContext,
+    				RuntimeMetadata metadata, Object connection)
+    				throws TranslatorException {
+    			List<String> list1 = new ArrayList<String>();
+    			list1.add("1");
+    			List<String> list2 = new ArrayList<String>();
+    			list2.add("a");
+    			final Iterator<List<String>> iter = Arrays.asList(list1, list2).iterator(); 
+    			return new ResultSetExecution() {
+					
+					@Override
+					public void execute() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public void close() {
+						
+					}
+					
+					@Override
+					public void cancel() throws TranslatorException {
+						
+					}
+					
+					@Override
+					public List<?> next() throws TranslatorException, DataNotAvailableException {
+						if (iter.hasNext()) {
+							return iter.next();
+						}
+						return null;
+					}
+				};
+    		}
+    	};
+		ConnectorManager cm = new ConnectorManager("FakeConnector","FakeConnector") { //$NON-NLS-1$ //$NON-NLS-2$
+			public ExecutionFactory getExecutionFactory() {
+				return ef;
+			}
+			public Object getConnectionFactory(){
+				return null;
+			}
+		};
+		cm.start();
+    	ef.setCopyLobs(true);
+    	AtomicRequestMessage requestMsg = createNewAtomicRequestMessage(1, 1);
+    	requestMsg.setCommand(helpGetCommand("SELECT intkey FROM bqt1.smalla", EXAMPLE_BQT)); //$NON-NLS-1$
+    	requestMsg.setBufferManager(bm);
+    	ConnectorWorkItem cwi = new ConnectorWorkItem(requestMsg, cm);
+    	cwi.execute();
+    	AtomicResultsMessage message = cwi.more();
+    	List[] results = message.getResults();
+    	assertEquals(1, results.length);
+		List<?> tuple = results[0];
+		assertEquals(1, tuple.get(0));
+		assertEquals(-1, message.getFinalRow());
+		try {
+			cwi.more();
+			fail();
+		} catch (TranslatorException e) {
+			//should throw the conversion error
+		}
     }
 
 }
