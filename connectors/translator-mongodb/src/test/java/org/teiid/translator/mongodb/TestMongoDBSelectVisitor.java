@@ -263,14 +263,14 @@ public class TestMongoDBSelectVisitor {
     public void testCountStarWithoutAlias() throws Exception {
     	String query = "SELECT COUNT(*) FROM users";
 		helpExecute(query, "users", "{ \"_m0\" : 1}", null,
-				"{ \"_m0\" : { \"$sum\" : 1} , \"_id\" :  null }", null);
+				"{ \"_id\" :  null  , \"_m0\" : { \"$sum\" : 1}}", null);
     }
 
     @Test
     public void testCountStarWithDistinct() throws Exception {
     	String query = "SELECT DISTINCT COUNT(*) FROM users";
 		helpExecute(query, "users", "{ \"_m0\" : 1}", null,
-				"{ \"_m0\" : { \"$sum\" : 1} , \"_id\" :  null }", null);
+				"{ \"_id\" :  null  , \"_m0\" : { \"$sum\" : 1}}", null);
     }
     @Test
     public void testDistinct() throws Exception {
@@ -311,9 +311,21 @@ public class TestMongoDBSelectVisitor {
 				"users",
 				"{ \"total\" : 1}",
 				null,
-				"{ \"total\" : { \"$sum\" : \"$age\"} , \"_id\" : \"$user_id\"}",
+				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
 				null);
     }
+    
+    @Test
+    public void testSumWithGroupBy3() throws Exception {
+    	String query = "SELECT user_id, SUM(age) as total FROM users GROUP BY user_id";
+		helpExecute(
+				query,
+				"users",
+				"{ \"_m0\" : \"$_id\" , \"total\" : 1}",
+				null,
+				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
+				null);
+    }    
 
     @Test
     public void testSumWithGroupBy2() throws Exception {
@@ -323,7 +335,7 @@ public class TestMongoDBSelectVisitor {
 				"users",
 				"{ \"_m0\" : \"$_id.user_id\" , \"_m1\" : \"$_id.status\" , \"total\" : 1}",
 				null,
-				"{ \"total\" : { \"$sum\" : \"$age\"} , \"_id\" : { \"user_id\" : \"$user_id\" , \"status\" : \"$status\"}}",
+				"{ \"_id\" : { \"user_id\" : \"$user_id\" , \"status\" : \"$status\"} , \"total\" : { \"$sum\" : \"$age\"}}",
 				null);
     }
 
@@ -335,17 +347,8 @@ public class TestMongoDBSelectVisitor {
 				"users",
 				"{ \"total\" : 1}",
 				null,
-				"{ \"total\" : { \"$sum\" : \"$age\"} , \"_id\" : \"$user_id\"}",
+				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
 				"{ \"total\" : { \"$gt\" : 250}}");
-    }
-
-    @Test
-    public void testAggregateWithHaving1() throws Exception {
-    	String query = "SELECT age FROM users GROUP BY user_id HAVING SUM(age) > 250";
-		helpExecute(query, "users", "{ \"_m0\" : \"$age\" , \"_m1\" : 1}",
-				null,
-				"{ \"_m1\" : { \"$sum\" : \"$age\"} , \"_id\" : \"$user_id\"}",
-				"{ \"_m1\" : { \"$gt\" : 250}}");
     }
 
     @Test
@@ -356,7 +359,7 @@ public class TestMongoDBSelectVisitor {
 				"users",
 				"{ \"total\" : 1}",
 				"{ \"age\" : { \"$gt\" : 45}}",
-				"{ \"total\" : { \"$sum\" : \"$age\"} , \"_id\" : \"$user_id\"}",
+				"{ \"_id\" : \"$user_id\" , \"total\" : { \"$sum\" : \"$age\"}}",
 				"{ \"total\" : { \"$gt\" : 250}}");
     }
 
