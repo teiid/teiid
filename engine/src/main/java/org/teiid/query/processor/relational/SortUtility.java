@@ -302,7 +302,7 @@ public class SortUtility {
 			 */
 			this.workingBuffer.close();
 			schemaSize = Math.max(1, this.workingBuffer.getRowSizeEstimate()*this.batchSize);
-			long memorySpaceNeeded = workingBuffer.getRowCount()*this.workingBuffer.getRowSizeEstimate();
+			long memorySpaceNeeded = workingBuffer.getRowCount()*(long)this.workingBuffer.getRowSizeEstimate();
 			if (onePass) {
 				//one pass just needs small sub-lists
 				memorySpaceNeeded = Math.min(memorySpaceNeeded, bufferManager.getMaxProcessingSize());
@@ -396,10 +396,16 @@ public class SortUtility {
 	        	if (twoPass < activeTupleBuffers.size()) {
 	        		//wait for 2-pass
 	    			int needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), .5));
+	    			while (activeTupleBuffers.size()/needed + activeTupleBuffers.size()%needed > needed) {
+	    				needed++;
+	    			}
 	    	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, false);
 	        		if (reserved == 0 && twoPass*subLists < activeTupleBuffers.size()) {
 	        			//force 3-pass
 	        			needed = (int)Math.ceil(Math.pow(activeTupleBuffers.size(), 1/3d));
+	        			while (activeTupleBuffers.size()/(needed*needed) + activeTupleBuffers.size()%needed > needed) {
+		    				needed++;
+		    			}	
 	        	        reserved += bufferManager.reserveBuffersBlocking(needed * schemaSize - toForce, attempts, true);
 	        		}
 	        	} else if (desiredSpace < Integer.MAX_VALUE) {
