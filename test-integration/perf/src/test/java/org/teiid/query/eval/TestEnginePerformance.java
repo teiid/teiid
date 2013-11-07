@@ -539,6 +539,11 @@ public class TestEnginePerformance {
 		helpTestLargeSort(4, 1, 100000);
 	}
 	
+	//tests a sort where the desired space is above 2 GB
+	@Test public void runWideSort_1_500000() throws Exception {
+		helpTestLargeSort(1, 1, 500000);
+	}
+	
 	@Test public void runWideSort_4_100000() throws Exception {
 		helpTestLargeSort(2, 4, 100000);
 	}
