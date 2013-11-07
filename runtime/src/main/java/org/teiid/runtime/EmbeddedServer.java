@@ -676,6 +676,9 @@ public class EmbeddedServer extends AbstractVDBDeployer implements EventDistribu
 		eventDistributorFactoryService.stop();
 		config.getCacheFactory().destroy();
 		config.setCacheFactory(null);
+		if (this.bufferService != null) {
+			this.bufferService.stop();
+		}
 		bufferService = null;
 		dqp = null;
 		running = false;

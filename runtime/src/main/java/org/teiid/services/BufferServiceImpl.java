@@ -146,7 +146,10 @@ public class BufferServiceImpl implements BufferService, Serializable {
    
     public void stop() {
     	LogManager.logDetail(LogConstants.CTX_DQP, "Stopping BufferManager using", bufferDir); //$NON-NLS-1$
-        bufferMgr.shutdown();
+    	if (bufferMgr != null) {
+    		bufferMgr.shutdown();
+    		bufferMgr = null;
+    	}
 
         // Delete the buffer directory
         if (bufferDir != null) {
