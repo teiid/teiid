@@ -200,7 +200,7 @@ class SourceState {
 	    	if (collector.getTupleBuffer().getManagedRowCount() >= limit) {
 	    		return;
 	    	}
-	        this.buffer = collector.collectTuples();
+	        this.buffer = collector.collectTuples(true);
     	}
     }
 
