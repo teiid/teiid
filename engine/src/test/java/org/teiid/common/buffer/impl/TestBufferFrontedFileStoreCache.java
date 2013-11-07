@@ -349,6 +349,38 @@ public class TestBufferFrontedFileStoreCache {
 		assertEquals(131072, cache.getDiskUsage());
 	}
 	
+	@Test public void testDefragTruncateCompact() throws Exception {
+		cache = createLayeredCache(1<<15, 1<<15, true);
+		cache.setCompactBufferFiles(true);
+		cache.setTruncateInterval(1);
+		cache.setMinDefrag(10000000);
+		Serializer<Integer> s = new SimpleSerializer();
+		WeakReference<? extends Serializer<?>> ref = new WeakReference<Serializer<?>>(s);
+		cache.createCacheGroup(s.getId());
+		Integer cacheObject = Integer.valueOf(5000);
+
+		for (int i = 0; i < 30; i++) {
+			CacheEntry ce = new CacheEntry((long)i);
+			ce.setSerializer(ref);
+			ce.setObject(cacheObject);
+
+			cache.addToCacheGroup(s.getId(), ce.getId());
+			cache.add(ce, s);
+		}
+		assertEquals(950272, cache.getDiskUsage());
+		for (int i = 0; i < 25; i++) {
+			cache.remove(1l, (long)i);
+		}
+		assertEquals(950272, cache.getDiskUsage());
+		cache.setMinDefrag(0);
+		cache.setTruncateInterval(1);
+		cache.defragTask.run();
+		assertEquals(131072, cache.getDiskUsage());
+		cache.defragTask.run();
+		//we've reached a stable size
+		assertEquals(131072, cache.getDiskUsage());
+	}
+	
 	@Test public void testDefragMin() throws Exception {
 		cache = createLayeredCache(1<<15, 1<<15, true);
 		cache.setMinDefrag(10000000);
