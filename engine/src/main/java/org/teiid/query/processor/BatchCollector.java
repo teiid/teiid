@@ -136,6 +136,10 @@ public class BatchCollector {
     }
 
     public TupleBuffer collectTuples() throws TeiidComponentException, TeiidProcessingException {
+    	return collectTuples(false);
+    }
+    
+    public TupleBuffer collectTuples(boolean singleBatch) throws TeiidComponentException, TeiidProcessingException {
         TupleBatch batch = null;
     	while(!done) {
     		if (this.hasFinalBuffer) {
@@ -172,6 +176,10 @@ public class BatchCollector {
             		buffer.close();
             	}
                 break;
+            }
+            
+            if (singleBatch) {
+            	return null;
             }
         }
         return buffer;
