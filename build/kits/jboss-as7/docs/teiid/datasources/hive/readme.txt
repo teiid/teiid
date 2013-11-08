@@ -1,4 +1,4 @@
-To configure the hive as datasource, 
+To configure the hive as datasource, note that the default version of Hive driver is 0.11 
 
 1) Stop the server if it is running.
 
@@ -11,3 +11,9 @@ To configure the hive as datasource,
 you may have edit these contents according to where your hadoop/hive server is located.
 
 5) restart  
+
+*****************************************
+Note: 0.12 version of Hive Driver 
+*****************************************
+- In step (2) above, replace the "<jboss-as>/modules/system/layers/base/org/apache/hadoop/hive/main/modules.xml" file with "0.12/modules.xml" file
+- then copy the 0.12 specific driver files in that directory
