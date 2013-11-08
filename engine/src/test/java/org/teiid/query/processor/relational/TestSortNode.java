@@ -384,5 +384,25 @@ public class TestSortNode {
         FakeDataStore.sampleData1(dataMgr, RealMetadataFactory.example1Cached());
         TestProcessor.helpProcess(plan, dataMgr, new List[]{Collections.singletonList(null)});
     }
+    
+    @Test public void testStableSort() throws Exception {
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        BufferManager bm = BufferManagerFactory.getStandaloneBufferManager();
+        TupleBuffer tsid = bm.createTupleBuffer(Arrays.asList(es1, es1), "test", TupleSourceType.PROCESSOR); //$NON-NLS-1$
+        tsid.addTuple(Arrays.asList(1, 1));
+    	tsid.addTuple(Arrays.asList(1, 2));
+    	tsid.addTuple(Arrays.asList(1, 3));
+    	tsid.close();
+    	SortUtility su = new SortUtility(tsid.createIndexedTupleSource(), Arrays.asList(es1), Arrays.asList(Boolean.TRUE), Mode.SORT, bm, "test", tsid.getSchema()); //$NON-NLS-1$
+    	su.setBatchSize(1);
+    	su.setStableSort(true);
+    	TupleBuffer out = su.sort();
+    	TupleSource ts = out.createIndexedTupleSource();
+    	assertEquals(Arrays.asList(1,1), ts.nextTuple());
+    	assertEquals(Arrays.asList(1,2), ts.nextTuple());
+    	assertEquals(Arrays.asList(1,3), ts.nextTuple());
+    	assertNull(ts.nextTuple());
+    }
 
 }

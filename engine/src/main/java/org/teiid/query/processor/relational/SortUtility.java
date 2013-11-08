@@ -39,6 +39,7 @@ import org.teiid.common.buffer.TupleSource;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.TeiidProcessingException;
 import org.teiid.core.util.Assertion;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.language.SortSpecification.NullOrdering;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
@@ -114,6 +115,10 @@ public class SortUtility {
 	private TupleBuffer workingBuffer;
 	private long[] attempts = new long[2];
 	private boolean nonBlocking;
+	
+	private static boolean STABLE_SORT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid.requireStableSort", false); //$NON-NLS-1$
+	
+	private boolean stableSort = STABLE_SORT;
     
     public SortUtility(TupleSource sourceID, List<OrderByItem> items, Mode mode, BufferManager bufferMgr,
                         String groupName, List<? extends Expression> schema) {
@@ -325,7 +330,7 @@ public class SortUtility {
 				}
 			}
 			TupleBufferTupleSource ts = workingBuffer.createIndexedTupleSource(source != null);
-			ts.setReverse(workingBuffer.getRowCount() > this.batchSize);
+			ts.setReverse((!stableSort || mode == Mode.DUP_REMOVE) && workingBuffer.getRowCount() > this.batchSize);
 			processed+=this.workingBuffer.getRowCount();
 			maxRows = Math.max(1, (totalReservedBuffers/schemaSize))*batchSize;
             if (mode == Mode.SORT) {
@@ -559,6 +564,14 @@ public class SortUtility {
 
 	public void setNonBlocking(boolean b) {
 		this.nonBlocking = b;
+	}
+	
+	public void setStableSort(boolean stableSort) {
+		this.stableSort = stableSort;
+	}
+	
+	void setBatchSize(int batchSize) {
+		this.batchSize = batchSize;
 	}
     
 }
