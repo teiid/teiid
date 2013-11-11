@@ -169,6 +169,10 @@ public class BatchIterator extends AbstractTupleSource {
 		if (this.buffer.getManagedRowCount() >= limit) {
 			return;
 		}
+		if (this.batch != null && this.buffer.getRowCount() < this.batch.getEndRow() && !this.buffer.isForwardOnly()) {
+			//haven't saved already
+			this.buffer.addTupleBatch(this.batch, true);
+		}
 		TupleBatch tb = source.nextBatch();
 		done = tb.getTerminationFlag();
 		this.buffer.addTupleBatch(tb, true);

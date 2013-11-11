@@ -187,14 +187,12 @@ public class TestBatchIterator {
 		assertEquals(0, bi.getBuffer().getRowCount());
 		bi.readAhead(100);
 		assertEquals(4, bi.getBuffer().getRowCount());
-		bi.readAhead(3);
-		assertEquals(6, bi.getBuffer().getRowCount());
 		//shouldn't keep reading
 		bi.readAhead(2);
-		assertEquals(6, bi.getBuffer().getRowCount());
+		assertEquals(4, bi.getBuffer().getRowCount());
 		
 		bi.readAhead(5);
-		assertEquals(7, bi.getBuffer().getRowCount());
+		assertEquals(6, bi.getBuffer().getRowCount());
 		bi.readAhead(8); //does nothing
 		for (int i = 0; i < 6; i++) {
 			assertNotNull(bi.nextTuple());
