@@ -41,12 +41,13 @@ public class TestInfinispanConfigFileLocalCache {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setConfigurationFileNameForLocalCache("./src/test/resources/infinispan_persistent_config.xml");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.CACHE_NAME + ":" + "java.lang.Long;longValue");
+		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "java.lang.Long;longValue");
 		
 	}
 	
     @AfterClass
     public static void closeConnection() throws Exception {
+    	factory.cleanUp();
         RemoteInfinispanTestHelper.releaseServer();
     }
 	
@@ -54,15 +55,15 @@ public class TestInfinispanConfigFileLocalCache {
     public void testConnection() throws Exception {
     	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-    		Map<?, ?> m = conn.getMap(RemoteInfinispanTestHelper.CACHE_NAME);
+    		Map<?, ?> m = conn.getMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
     	
     		assertNotNull(m);
     		
-    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.CACHE_NAME);
+    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
     		
     		assertEquals(Long.class, t);
     		
-    		assertEquals("longValue", conn.getPkField(RemoteInfinispanTestHelper.CACHE_NAME));
+    		assertEquals("longValue", conn.getPkField(RemoteInfinispanTestHelper.TEST_CACHE_NAME));
 
     }
 }

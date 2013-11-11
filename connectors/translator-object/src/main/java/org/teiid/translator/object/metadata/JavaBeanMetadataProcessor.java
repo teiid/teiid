@@ -58,7 +58,7 @@ public class JavaBeanMetadataProcessor {
 
 	public void getMetadata(MetadataFactory mf, ObjectConnection conn, ObjectExecutionFactory env) {
 		
-		Map<String, Class<?>> cacheTypes = conn.getMapOfCacheTypes();
+		Map<String, Class<?>> cacheTypes = conn.getCacheNameClassTypeMapping();
 		for (String cacheName : cacheTypes.keySet()) {
 			Class<?> type = cacheTypes.get(cacheName);
 			String pkField = conn.getPkField(cacheName);

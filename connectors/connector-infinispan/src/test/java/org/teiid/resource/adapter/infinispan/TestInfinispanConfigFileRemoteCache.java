@@ -44,7 +44,7 @@ public class TestInfinispanConfigFileRemoteCache {
 
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
-		RemoteInfinispanTestHelper.createServer();
+		RemoteInfinispanTestHelper.loadCacheSimple();
 		
   		System.out.println("Hostaddress " + RemoteInfinispanTestHelper.hostAddress());
   		
@@ -59,12 +59,13 @@ public class TestInfinispanConfigFileRemoteCache {
 		factory = new InfinispanManagedConnectionFactory();
 
 		factory.setHotRodClientPropertiesFile("./target/hotrod-client.properties");
-		factory.setCacheTypeMap(RemoteInfinispanTestHelper.CACHE_NAME + ":" + "java.lang.String");
+		factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "java.lang.String");
 
 	}
 	
     @AfterClass
     public static void closeConnection() throws Exception {
+    	factory.cleanUp();
         RemoteInfinispanTestHelper.releaseServer();
     }
 
@@ -73,11 +74,11 @@ public class TestInfinispanConfigFileRemoteCache {
     public void testConnection() throws Exception {
     	
     		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-    		Map<?, ?> m = conn.getMap(RemoteInfinispanTestHelper.CACHE_NAME);
+    		Map<?, ?> m = conn.getMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
     	
     		assertNotNull(m);
     		
-    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.CACHE_NAME);
+    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
     		
     		assertEquals(String.class, t);
     }

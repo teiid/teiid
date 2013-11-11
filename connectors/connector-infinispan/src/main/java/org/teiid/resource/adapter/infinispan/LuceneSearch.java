@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.translator.object.infinispan;
+package org.teiid.resource.adapter.infinispan;
 
 import java.util.Collections;
 import java.util.List;

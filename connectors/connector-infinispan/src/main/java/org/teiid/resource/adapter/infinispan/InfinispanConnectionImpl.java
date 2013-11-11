@@ -23,16 +23,23 @@
 package org.teiid.resource.adapter.infinispan;
 
 import java.util.Map;
+import java.util.List;
 
+import org.teiid.language.Select;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.spi.BasicConnection;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.ObjectExecutionFactory;
+import org.teiid.translator.object.SearchByKey;
 
+import org.teiid.translator.object.infinispan.InfinispanExecutionFactory;
 
 /** 
- * Represents a connection to an Infinispan cache. 
+ * Represents a connection to an Infinispan cache container. The <code>cacheName</code> that is specified will dictate the
+ * cache to be accessed in the container.
+ * 
  */
 public class InfinispanConnectionImpl extends BasicConnection implements ObjectConnection { 
 
@@ -64,14 +71,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	}	
 	
     @Override
-	public Map<?, ?> getMap(String name) throws TranslatorException {
+	public Map<?, ?> getMap(String cacheName) throws TranslatorException {
     	Map<?,?> m = null;
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap:", (name != null ? name : "Default"), "==="); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetMap for cache:", (cacheName != null ? cacheName : "Default"), "==="); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
-		m = config.getCache(name);
+		m = config.getCache(cacheName);
    		
 		if (m == null) {
-            final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
+            final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.cacheNotDefined", (cacheName != null ? cacheName : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
             throw new TranslatorException(msg);
 		}
 		
@@ -79,14 +86,14 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	}
 
 	@Override
-	public Class<?> getType(String name) throws TranslatorException {		
-		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType :", name,  "==="); //$NON-NLS-1$ //$NON-NLS-2$
+	public Class<?> getType(String cacheName) throws TranslatorException {		
+		LogManager.logTrace(LogConstants.CTX_CONNECTOR, "=== GetType for cache :", cacheName,  "==="); //$NON-NLS-1$ //$NON-NLS-2$
 
-		Class<?> type = config.getCacheType(name);
+		Class<?> type = config.getCacheType(cacheName);
 		if (type != null) {
 			return type;
 		}
-        final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.typeNotFound", (name != null ? name : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
+        final String msg = InfinispanPlugin.Util.getString("InfinispanConnection.typeNotFound", (cacheName != null ? cacheName : "Default") ); //$NON-NLS-1$ //$NON-NLS-2$
         throw new TranslatorException(msg);
 	}
 	
@@ -96,13 +103,22 @@ public class InfinispanConnectionImpl extends BasicConnection implements ObjectC
 	 * @return Map<String, Class>
 	 */
 	@Override
-	public Map<String, Class<?>> getMapOfCacheTypes() {
-		return this.config.getMapOfCacheTypes();
+	public Map<String, Class<?>> getCacheNameClassTypeMapping() {
+		return this.config.getCacheNameClassTypeMapping();
 	}
 	
 	@Override
-	public String getPkField(String name) {
-		return this.config.getPkMap().get(name);
+	public String getPkField(String cacheName) {
+		return this.config.getPkMap(cacheName);
+	}
+	
+	@Override
+	public List<Object> search(Select command, String cacheName, ObjectExecutionFactory factory) throws TranslatorException {
+		
+		if (  ( (InfinispanExecutionFactory)factory).supportsLuceneSearching()) {
+			return LuceneSearch.performSearch(command, getMap(cacheName), getType(cacheName));
+		}
+		return SearchByKey.get(command.getWhere(), getMap(cacheName), getType(cacheName));
 	}
 
 }

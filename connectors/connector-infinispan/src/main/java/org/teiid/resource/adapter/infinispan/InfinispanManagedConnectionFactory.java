@@ -38,10 +38,7 @@ import javax.naming.NamingException;
 import javax.resource.ResourceException;
 import javax.resource.spi.InvalidPropertyException;
 
-import org.infinispan.Cache;
-import org.infinispan.api.BasicCacheContainer;
 import org.infinispan.client.hotrod.RemoteCacheManager;
-import org.infinispan.manager.CacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.jboss.modules.Module;
@@ -69,10 +66,11 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 	private String configurationFileNameForLocalCache = null;
 	private String hotrodClientPropertiesFile = null;
 	private String cacheJndiName=null;
-	private Map<String, Class<?>> typeMap = null;
+	private Map<String, Class<?>> typeMap = null;  // cacheName ==> ClassType
 	private String cacheTypes = null;
-	private BasicCacheContainer cacheContainer = null;
-	private Map<String, String> pkMap;
+	
+	private ContainerWrapper cacheContainer = null;
+	private Map<String, String> pkMap; //  cacheName ==> pkey name
 	private String module;
 	private CACHE_TYPE cacheType;
 	
@@ -93,47 +91,8 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		if (cacheType == null) {
 			throw new InvalidPropertyException(InfinispanPlugin.Util.getString("InfinispanManagedConnectionFactory.invalidServerConfiguration")); //$NON-NLS-1$			
 		}
-		
-		pkMap = new HashMap<String, String>();
-		ClassLoader cl = null;
-		if (module != null) {
-  
-                Module m;
-                try {
-                    m = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(module));
-                } catch (ModuleLoadException e) {
-                    throw new ResourceException(e);
-                }
-                cl = m.getClassLoader();
-
-		} else {
-			cl = Thread.currentThread().getContextClassLoader();
-		}
-		List<String> types = StringUtil.getTokens(this.cacheTypes, ","); //$NON-NLS-1$
-		Map<String, Class<?>> tm = new HashMap<String, Class<?>>();
-		for (String type : types) {
-			List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
-			if (mapped.size() != 2) {
-				throw new InvalidPropertyException();
-			}
-			final String cacheName = mapped.get(0);
-			String className = mapped.get(1);
-			mapped = StringUtil.getTokens(className, ";"); //$NON-NLS-1$
-			if (mapped.size() > 1) {
-				className = mapped.get(0);
-				pkMap.put(cacheName, mapped.get(1));
-			}
-			try {
-				tm.put(cacheName, Class.forName(className, true, cl));
-			} catch (ClassNotFoundException e) {
-				throw new ResourceException(e);
-			}
-		}
-		
-		typeMap = Collections.unmodifiableMap(tm);
         
-        InfinispanManagedConnectionFactory.this.createCacheContainer();
-
+        
 		return new BasicConnectionFactory<InfinispanConnectionImpl>() {
 			
 			private static final long serialVersionUID = 2579916624625349535L;
@@ -141,15 +100,20 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			@Override
 			public InfinispanConnectionImpl getConnection() throws ResourceException {
 				
+				if (InfinispanManagedConnectionFactory.this.getCacheNameClassTypeMapping() == null) {
+				
+					InfinispanManagedConnectionFactory.this.loadClasses();
+				}
+				
+				InfinispanManagedConnectionFactory.this.createCacheContainer();
+				
 				return new InfinispanConnectionImpl(InfinispanManagedConnectionFactory.this);
 			}
 		};
+			
+
 	}	
-	
-	public Map<String, String> getPkMap() {
-		return pkMap;
-	}
-	
+
 	/**
 	 * Get the <code>cacheName:ClassName[,cacheName:ClassName...]</code> cache type mappings.
 	 * 
@@ -172,21 +136,43 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 			String cacheTypeMap) {
 		this.cacheTypes = cacheTypeMap;
 	}  
-	
+
+	/**
+	 * Sets the (optional) module(s) where the ClassName class is defined, that will be loaded <code> (module,[module,..])</code>
+	 * @param module
+	 * @see #getModule
+	 */
 	public void setModule(String module) {
 		this.module = module;
 	}
 	
+	/**
+	 * Called to get the module(s) that are to be loaded
+	 * @see #setModule
+	 * @return
+	 */
 	public String getModule() {
 		return module;
 	}
 	
-	public Class<?> getCacheType(String cacheName) {
-		return typeMap.get(cacheName);
+	public String getPkMap(String cacheName) {
+		return pkMap.get(cacheName);
+	}
+
+	public void setPkMap(Map<String, String> mapOfPKs) {
+		pkMap = mapOfPKs;
+	}	
+	
+	public Map<String, Class<?>> getCacheNameClassTypeMapping() {
+		return this.typeMap;
 	}
 	
-	public Map<String, Class<?>> getMapOfCacheTypes() {
-		return this.typeMap;
+	public void setCacheNameClassTypeMapping(Map<String, Class<?>> cacheType) {
+		this.typeMap = cacheType;
+	}
+	
+	public Class<?> getCacheType(String cacheName) {
+		return this.typeMap.get(cacheName);
 	}
     
 	/**
@@ -211,10 +197,10 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     
 	/**
 	 * Get the name of the configuration resource or file that should be used to
-	 * configure a local {@link CacheContainer} using {@link DefaultCacheManager}.
+	 * configure a local {@link EmbeddedCacheManager} using {@link DefaultCacheManager}.
 	 * 
 	 * @return the name of the resource or file configuration that should be
-	 *         passed to the {@link CacheContainer}
+	 *         passed to the cache container
 	 * @see #setConfigurationFileNameForLocalCache(String)
 	 */
 	public String getConfigurationFileNameForLocalCache() {
@@ -223,11 +209,11 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
 	/**
 	 * Set the name of the configuration that should be used to configure a
-	 * local {@link Cache cache} using the {@link DefaultCacheManager}.
+	 * local cache .
 	 * 
 	 * @param configurationFileName
 	 *            the name of the configuration file that should be used to load
-	 *            the {@link CacheContainer}
+	 *            the cacheContainer
 	 * @see #getConfigurationFileNameForLocalCache()
 	 */
 	public void setConfigurationFileNameForLocalCache(
@@ -281,10 +267,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     
     protected Map<Object,Object> getCache(String cacheName) {
     	if (cacheContainer != null) {
-    		if (cacheName == null) {
-    			return cacheContainer.getCache();
-    		}
-			return cacheContainer.getCache(cacheName);
+    		return cacheContainer.getCache(cacheName);
     	}
     	return null;
     }
@@ -298,27 +281,88 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     	return false;
     }
     
+	protected synchronized void loadClasses()  throws ResourceException {
+		
+		ClassLoader cl = null;
+		if (getModule() != null) {
+  
+                Module m = null;
+                try {
+            		List<String> mods = StringUtil.getTokens(getModule(), ","); //$NON-NLS-1$
+            		for (String mod : mods) {   	
+            			Module x = Module.getCallerModuleLoader().loadModule(ModuleIdentifier.create(mod));
+            			// the first entry must be the module associated with the cache
+            			if (m == null) m = x;
+            		}
+                } catch (ModuleLoadException e) {
+                    throw new ResourceException(e);
+                }
+                cl = m.getClassLoader();
+
+		} else {
+			cl = Thread.currentThread().getContextClassLoader();
+		}
+	
+		List<String> types = StringUtil.getTokens(getCacheTypeMap(), ","); //$NON-NLS-1$
+
+		Map<String, String> pkMap = new HashMap<String, String>(types.size());
+		Map<String, Class<?>> tm = new HashMap<String, Class<?>>(types.size());
+
+		for (String type : types) {
+			List<String> mapped = StringUtil.getTokens(type, ":"); //$NON-NLS-1$
+			if (mapped.size() != 2) {
+				throw new InvalidPropertyException(InfinispanPlugin.Util.getString("InfinispanManagedConnectionFactory.invalidServerConfiguration"));
+			}
+			final String cacheName = mapped.get(0);
+			String className = mapped.get(1);
+			mapped = StringUtil.getTokens(className, ";"); //$NON-NLS-1$
+			if (mapped.size() > 1) {
+				className = mapped.get(0);
+				pkMap.put(cacheName, mapped.get(1));
+			}
+			try {
+				tm.put(cacheName, Class.forName(className, true, cl));
+			} catch (ClassNotFoundException e) {
+				throw new ResourceException(e);
+			}
+		}
+		
+		setCacheNameClassTypeMapping(Collections.unmodifiableMap(tm));
+		setPkMap(Collections.unmodifiableMap(pkMap));
+
+	}
+   
+    
     protected synchronized void createCacheContainer() throws ResourceException {
     	if (this.cacheContainer != null) return;
     	
-    	switch (cacheType) {
-		case LOCAL_JNDI:
-			this.cacheContainer = createLocalCacheViaJNDI();
-			break;
-			
-		case LOCAL_CONFIG_FILE:
-			this.cacheContainer = createLocalCacheFromConfigFile();
-			break;
-			
-		case REMOTE_HOT_ROD_PROPERTIES:
-			this.cacheContainer = createRemoteCacheUsingHotRodClient();
-			break;
-			
-		case REMOTE_SERVER_LISTS:
-			this.cacheContainer = createRemoteCacheFromServerList();
-			break;
-			
+		ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+		try {
+			Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
+    	
+	    	switch (cacheType) {
+			case LOCAL_JNDI:
+				this.cacheContainer = createLocalCacheViaJNDI();
+				break;
+				
+			case LOCAL_CONFIG_FILE:
+				this.cacheContainer = createLocalCacheFromConfigFile();
+				break;
+				
+			case REMOTE_HOT_ROD_PROPERTIES:
+				this.cacheContainer = createRemoteCacheUsingHotRodClient();
+				break;
+				
+			case REMOTE_SERVER_LISTS:
+				this.cacheContainer = createRemoteCacheFromServerList();
+				break;
+				
+			}
+    	
+    	} finally {
+			Thread.currentThread().setContextClassLoader(contextClassLoader);
 		}
+
 
     }
     
@@ -338,7 +382,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
     	}
     }
     
-	private BasicCacheContainer createRemoteCacheUsingHotRodClient() throws ResourceException {
+	private ContainerWrapper createRemoteCacheUsingHotRodClient() throws ResourceException {
 		
 		File f = new File(this.getHotRodClientPropertiesFile());
 		if (! f.exists()) {
@@ -347,15 +391,27 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		}
 		try {
 			Properties props = PropertiesUtils.load(f.getAbsolutePath());
-			RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
+			final RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
 			remoteCacheManager.start();
 			remoteCacheManager.getCache();
 			
 			LogManager
 			.logInfo(LogConstants.CTX_CONNECTOR,
 					"=== Using RemoteCacheManager (loaded by configuration) ==="); //$NON-NLS-1$
-
-			return remoteCacheManager;
+			
+			return new ContainerWrapper() {
+				
+				@Override
+				public Map<Object,Object> getCache(String cacheName) {
+			   		if (cacheName == null) {
+		    			return remoteCacheManager.getCache();
+		    		}
+					return remoteCacheManager.getCache(cacheName);		
+				}	
+				public void cleanUp() {
+					remoteCacheManager.stop();
+				}
+			};
 		} catch (MalformedURLException e) {
 			throw new ResourceException(e);
 		} catch (IOException e) {
@@ -364,7 +420,7 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 		
     }
 	
-	private BasicCacheContainer createRemoteCacheFromServerList() throws ResourceException {
+	private ContainerWrapper createRemoteCacheFromServerList() throws ResourceException {
 				
 		Properties props = new Properties();
 		props.put("infinispan.client.hotrod.server_list", this.getRemoteServerList()); //$NON-NLS-1$
@@ -372,59 +428,99 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
         Collection args = new ArrayList();
         args.add((Object)props);
         
-        RemoteCacheManager remoteCacheManager = BasicManagedConnectionFactory.getInstance(RemoteCacheManager.class, RemoteCacheManager.class.getName(), args, RemoteCacheManager.class);
+        final RemoteCacheManager remoteCacheManager = BasicManagedConnectionFactory.getInstance(RemoteCacheManager.class, RemoteCacheManager.class.getName(), args, RemoteCacheManager.class);
         
- //       Object entity = ReflectionHelper.create(RemoteCacheManager.getClass.getName(), args, this.executionContext.getCommandContext().getVDBClassLoader());
-		//RemoteCacheManager remoteCacheManager = new RemoteCacheManager(props);
- //       RemoteCacheManager remoteCacheManager = (RemoteCacheManager) entity;
-		remoteCacheManager.start();
+ 		remoteCacheManager.start();
 		
 		LogManager
 		.logInfo(LogConstants.CTX_CONNECTOR,
 				"=== Using RemoteCacheManager (loaded by serverlist) ==="); //$NON-NLS-1$
-
-		return remoteCacheManager;
+		
+		return new ContainerWrapper() {
+			
+			@Override
+			public Map<Object,Object> getCache(String cacheName) {
+		   		if (cacheName == null) {
+	    			return remoteCacheManager.getCache();
+	    		}
+				return remoteCacheManager.getCache(cacheName);		
+			}	
+			public void cleanUp() {
+				remoteCacheManager.stop();
+			}
+		};
     }	
 	
-	private  BasicCacheContainer createLocalCacheViaJNDI() throws ResourceException {
-		
-	    Object cache = null;
-		
-	    String jndiName = getCacheJndiName();
-        try {
-            Context context = null;
-            try {
-                context = new InitialContext();
-                cache = context.lookup(jndiName);
-                
-            } catch (NamingException err) {
-            	throw new ResourceException(err);
-            }          
+	private  ContainerWrapper createLocalCacheViaJNDI() throws ResourceException {
 
-            if (cache == null) {
-				throw new ResourceException(InfinispanPlugin.Util.getString("InfinispanManagedConnectionFactory.unableToFindCacheUsingJNDI", jndiName)); //$NON-NLS-1$
-            } 	
-            
-			LogManager
-			.logDetail(LogConstants.CTX_CONNECTOR,
-					"=== Using CacheContainer (obtained by JNDI:", jndiName, "==="); //$NON-NLS-1 //$NON-NLS-2
+	    String jndiName = getCacheJndiName();
+        try {                
+                final Object cache = performJNDICacheLookup(jndiName);
+                
+    			LogManager
+    			.logDetail(LogConstants.CTX_CONNECTOR,
+    					"=== Using CacheContainer (obtained by JNDI:", jndiName, "==="); //$NON-NLS-1 //$NON-NLS-2
+
+    			return new ContainerWrapper() {
+    				
+    				@Override
+    				public Map<Object,Object> getCache(String cacheName) {
+    			   		if (cacheName == null) {
+    		    			return ((EmbeddedCacheManager) cache).getCache();
+    		    		}
+    					return ((EmbeddedCacheManager) cache).getCache(cacheName);		
+    				}	
+    				public void cleanUp() {
+    					((EmbeddedCacheManager) cache).stop();
+    				}
+    			};   			        
+
+        } catch (ResourceException re) {
+        	throw re;
         } catch (Exception err) {
             if (err instanceof RuntimeException) throw (RuntimeException)err;
             throw new ResourceException(err);
         }
-        return (EmbeddedCacheManager) cache;
+        
     }	
 	
-	private  BasicCacheContainer createLocalCacheFromConfigFile() throws ResourceException {
+	/* split out for testing purposes */
+	Object performJNDICacheLookup(String jndiName) throws Exception {
+        Context context = null;
+
+        context = new InitialContext();
+        final Object cache = context.lookup(jndiName);        
+
+        if (cache == null) {
+			throw new ResourceException(InfinispanPlugin.Util.getString("InfinispanManagedConnectionFactory.unableToFindCacheUsingJNDI", jndiName)); //$NON-NLS-1$
+        } 	
+
+        return cache;
+	}
+	
+	private  ContainerWrapper createLocalCacheFromConfigFile() throws ResourceException {
 		try {
-			BasicCacheContainer cc = new DefaultCacheManager(
+			final DefaultCacheManager cc = new DefaultCacheManager(
 					this.getConfigurationFileNameForLocalCache());
 
 			LogManager
 			.logInfo(LogConstants.CTX_CONNECTOR,
 					"=== Using DefaultCacheManager (loaded by configuration) ==="); //$NON-NLS-1$
 			
-			return cc;
+			return new ContainerWrapper() {
+				
+				@Override
+				public Map<Object,Object> getCache(String cacheName) {
+			   		if (cacheName == null) {
+		    			return cc.getCache();
+		    		}
+					return cc.getCache(cacheName);		
+				}		
+				public void cleanUp() {
+					cc.stop();
+				}
+			};
+			
 		} catch (IOException e) {
 			throw new ResourceException(e);
 		}
@@ -467,4 +563,22 @@ public class InfinispanManagedConnectionFactory extends BasicManagedConnectionFa
 
 	}	
 	
-}
+	
+	public void cleanUp() {
+		
+		typeMap = null;		
+		if (cacheContainer != null) cacheContainer.cleanUp();
+		pkMap = null;
+
+	}
+
+	
+}	
+	
+	interface ContainerWrapper {
+		public Map<Object,Object> getCache(String cacheName);
+		public void cleanUp();
+	}
+	
+
+

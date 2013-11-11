@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.infinispan.client.hotrod.RemoteCache;
 import org.teiid.core.util.Assertion;
 import org.teiid.language.Comparison;
 import org.teiid.language.Condition;
@@ -53,10 +52,6 @@ public final class SearchByKey  {
 
 		if (criterion == null) {
 			Map<?, ?> map = cache;
-			if (cache instanceof RemoteCache<?, ?>) {
-				RemoteCache<?, ?> rc = (RemoteCache<?, ?>) cache;
-		  		map = (Map<Object, Object>) rc.getBulk();
-			}
 			Set<?> keys = map.keySet();
 			results = new ArrayList<Object>();
 			for (Iterator<?> it = keys.iterator(); it.hasNext();) {
@@ -64,26 +59,29 @@ public final class SearchByKey  {
 				addValue(v, results, rootClass);
 			}
 			return results;
+			
 		}
 
 		results = new ArrayList<Object>();
 	
-		if (criterion instanceof Comparison) {
+		if (criterion instanceof Comparison && ((Comparison)criterion).getOperator() == Operator.EQ) {
+			
 			Comparison obj = (Comparison)criterion;
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR,
 			"Parsing Comparison criteria."); //$NON-NLS-1$
 			Comparison.Operator op = obj.getOperator();
 		
-			Assertion.assertTrue(op == Operator.EQ);
 			Expression rhs = obj.getRightExpression();
 		
 			Literal literal = (Literal)rhs;
 
 			Object v = cache.get(literal.getValue());
+			
 			if (v != null) {
 				addValue(v, results, rootClass);
 			}
 		} else {
+
 			Assertion.assertTrue(criterion instanceof In, "unexpected condition " + criterion); //$NON-NLS-1$
 			In obj = (In)criterion;
 			Assertion.assertTrue(!obj.isNegated());

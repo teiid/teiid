@@ -28,9 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.infinispan.api.BasicCache;
+import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.ObjectConnection;
+import org.teiid.translator.object.*;
 import org.teiid.translator.object.testdata.Leg;
 import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.testdata.Transaction;
@@ -43,7 +43,7 @@ import org.teiid.translator.object.testdata.Transaction;
  *
  */
 @SuppressWarnings("nls")
-public class TradesCacheSource extends HashMap <Object, Object> implements ObjectConnection {
+public class TradesCacheSource extends HashMap <Object, Object> {
 	
 	/**
 	 * 
@@ -67,43 +67,49 @@ public class TradesCacheSource extends HashMap <Object, Object> implements Objec
 		mapOfCaches.put(TradesCacheSource.TRADES_CACHE_NAME, Trade.class);
 	}
 	
-	public static void loadCache( BasicCache<String, Object> cache) {
-
-			for (int i = 1; i <= NUMTRADES; i++) {
-				
-				List<Leg> legs = new ArrayList<Leg>();
-				double d = 0;
-				for (int j = 1; j <= NUMLEGS; j++) {
-					
-					Leg leg = new Leg(j, "LegName " + j, d * j * 3.14, new Date());
-					
-					List<Transaction> trans = new ArrayList<Transaction>(NUMTRANSACTIONS);
-					for (int x = 1; x <= NUMTRANSACTIONS; x++) {
-						Transaction t = new Transaction();
-						t.setLineItem("Leg " + j + ", transaction line item " + x);
-						trans.add(t);
-					}
-					
-					leg.setTransations(trans);
-					leg.setNotational(i * 7 / 3.14);
-					
-					legs.add(leg);
-				}
-				
-				Trade trade = new Trade(i, "TradeName " + i, legs, new Date());
-				
-				// even trades set settled to true
-				if ( i % 2 == 0) {
-					trade.setSettled(true);
-				}
-				
-				cache.put(String.valueOf(trade.getTradeId()), trade);
-
-			}		
+	public static ObjectConnection createConnection() {
+		return new ObjectConnection() {
 			
-		
-	}
+			Map <Object, Object> objects = TradesCacheSource.loadCache();
 
+			@Override
+			public Map<?, ?> getMap(String cacheName) throws TranslatorException {
+				return objects;
+			}
+
+			@Override
+			public Class<?> getType(String cacheName) throws TranslatorException {
+				return Trade.class;
+			}
+
+
+			@Override
+			public Map<String, Class<?>> getCacheNameClassTypeMapping() {
+				return mapOfCaches;
+			}
+			
+			@Override
+			public String getPkField(String cacheName) {
+				return "tradeId";
+			}
+			
+			
+			/**
+			 * Called to perform a search on the named cache and return the list of object results
+			 * @param command is the SQL query that was submitted and may contain a condition clause for object filtering
+			 * @param cacheName
+			 * @param factory provides the capabilities enabled for searching 
+			 * @return List<Object> of objects
+			 */
+			@Override
+			public List<Object> search(Select command, String cacheName, ObjectExecutionFactory factory) throws TranslatorException {
+				Map<?, ?> map = getMap(cacheName);
+				Class<?> type = getType(cacheName);
+				return SearchByKey.get(command.getWhere(), map, type);
+			}
+		};
+	}
+	
 	public static void loadCache(Map<Object, Object> cache) {
 		for (int i = 1; i <= NUMTRADES; i++) {
 			
@@ -140,7 +146,7 @@ public class TradesCacheSource extends HashMap <Object, Object> implements Objec
 
 	public static TradesCacheSource loadCache() {
 		TradesCacheSource tcs = new TradesCacheSource();
-		loadCache(tcs);
+		TradesCacheSource.loadCache(tcs);
 		return tcs;		
 	}
 	
@@ -154,25 +160,6 @@ public class TradesCacheSource extends HashMap <Object, Object> implements Objec
 		return objs;
 	}
 
-	@Override
-	public Map<?, ?> getMap(String name) throws TranslatorException {
-		return this;
-	}
-
-	@Override
-	public Class<?> getType(String name) throws TranslatorException {
-		return Trade.class;
-	}
-
-	@Override
-	public Map<String, Class<?>> getMapOfCacheTypes() {
-		return mapOfCaches;
-	}
-	
-	@Override
-	public String getPkField(String name) {
-		return "tradeId";
-	}
 	
 	
 }

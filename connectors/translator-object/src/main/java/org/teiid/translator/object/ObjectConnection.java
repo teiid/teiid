@@ -22,11 +22,12 @@
 package org.teiid.translator.object;
 
 import java.util.Map;
-
+import java.util.List;
+import org.teiid.language.Select;
 import org.teiid.translator.TranslatorException;
 
 /**
- * Each ObjectConnection implementation represents a connection to a set of maps or caches
+ * Each ObjectConnection implementation represents a connection to maps or caches to be searched
  * 
  * @author vhalbert
  *
@@ -34,29 +35,38 @@ import org.teiid.translator.TranslatorException;
 public interface ObjectConnection  {
 	
 	/**
-	 * Return the map containing the desired objects
+	 * Return the map cache based on the specified className
 	 * @throws TranslatorException
 	 */
-	public Map<?, ?> getMap(String name) throws TranslatorException;
+	Map<?, ?> getMap(String cacheName) throws TranslatorException;
 	
 	/**
-	 * Return the type of the desired objects
+	 * Return the root class type stored in the specified cache
 	 * @throws TranslatorException
 	 */
-	public Class<?> getType(String name) throws TranslatorException;
+	Class<?> getType(String cacheName) throws TranslatorException;
 	
 	/**
-	 * Returns the type of the primary key
-	 * @param name
-	 * @return
+	 * Returns the name of the primary key to the cache
+	 * @param cacheName
+	 * @return String key name
 	 */
-	public String getPkField(String name);
-	
+	String getPkField(String cacheName);
+		
 	/**
 	 * Returns a map of all defined caches, and their respective root object class type,
 	 * that are accessible using this connection.
-	 * @return Map<String, Class>
+	 * @return Map<String, Class>  --> CacheName, ClassType
 	 */
-	public Map<String, Class<?>> getMapOfCacheTypes();
+	Map<String, Class<?>> getCacheNameClassTypeMapping();
+	
+	/**
+	 * Called to perform a search on the named class and return the list of object results
+	 * @param command is the SQL query that was submitted to the source and may contain a condition clause for object filtering
+	 * @param cacheName, is the name of the cache to search,  if null will use default cache
+	 * @param factory provides the capabilities enabled for searching 
+	 * @return List<Object> of objects
+	 */
+	List<Object> search(Select command, String cacheName, ObjectExecutionFactory factory) throws TranslatorException;
 
 }

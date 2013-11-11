@@ -98,10 +98,6 @@ public class ObjectExecutionFactory extends
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
-
-	public List<Object> search(Select query, Map<?, ?> map, Class<?> type) throws TranslatorException {
-		return SearchByKey.get(query.getWhere(), map, type);
-	}
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, ObjectConnection connection) throws TranslatorException {

@@ -38,11 +38,11 @@ import org.teiid.translator.object.ObjectConnection;
 @SuppressWarnings("nls")
 @Ignore
 public class TestInfinispanServerList {
-	    private InfinispanManagedConnectionFactory factory = null;
+	    private static InfinispanManagedConnectionFactory factory = null;
 			
 		@BeforeClass
 	    public static void beforeEachClass() throws Exception { 
-			RemoteInfinispanTestHelper.createServer();
+			RemoteInfinispanTestHelper.loadCacheSimple();
 	
 		}
 
@@ -51,11 +51,12 @@ public class TestInfinispanServerList {
 			factory = new InfinispanManagedConnectionFactory();
 
 			factory.setRemoteServerList(RemoteInfinispanTestHelper.hostAddress() + ":" + RemoteInfinispanTestHelper.hostPort());
-			factory.setCacheTypeMap(RemoteInfinispanTestHelper.CACHE_NAME + ":" + "java.lang.String");
+			factory.setCacheTypeMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME + ":" + "java.lang.String");
 	    }
 		
 	    @AfterClass
 	    public static void closeConnection() throws Exception {
+	    	factory.cleanUp();
 	        RemoteInfinispanTestHelper.releaseServer();
 	    }
 
@@ -63,11 +64,11 @@ public class TestInfinispanServerList {
 	    public void testRemoteConnection() throws Exception {
 	    	
 	    		ObjectConnection conn = factory.createConnectionFactory().getConnection();
-	    		Map<?, ?> m = conn.getMap(RemoteInfinispanTestHelper.CACHE_NAME);
+	    		Map<?, ?> m = conn.getMap(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
 	    	
 	    		assertNotNull(m);
 	    		
-	    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.CACHE_NAME);
+	    		Class<?> t = conn.getType(RemoteInfinispanTestHelper.TEST_CACHE_NAME);
 	    		
 	    		 assertEquals(String.class, t);
 	    }

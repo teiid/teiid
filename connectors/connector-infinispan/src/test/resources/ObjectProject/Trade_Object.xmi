@@ -325,5 +325,11 @@
     <columns xmi:uuid="mmuuid:7ad19ea9-1751-49e0-89c7-e759dd50ff46" name="TradeID" nameInSource="tradeId" selectable="false" updateable="false">
       <type href="http://www.w3.org/2001/XMLSchema#string"/>
     </columns>
+    <columns xmi:uuid="mmuuid:141d1959-a493-462a-a700-19db3e45c722" name="Settled" nameInSource="settled" selectable="false" updateable="false">
+      <type href="http://www.w3.org/2001/XMLSchema#boolean"/>
+    </columns>
+    <columns xmi:uuid="mmuuid:fe825bfa-7fb8-4f74-912a-888362f5e1ae" name="TradeName" nameInSource="name" selectable="false" updateable="false">
+      <type href="http://www.w3.org/2001/XMLSchema#string"/>
+    </columns>
   </relational:BaseTable>
 </xmi:XMI>

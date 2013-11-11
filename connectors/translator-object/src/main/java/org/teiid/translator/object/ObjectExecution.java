@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import javax.script.CompiledScript;
 import javax.script.ScriptContext;
@@ -66,19 +65,27 @@ public class ObjectExecution implements ResultSetExecution {
 		this.factory = factory;
 		this.query = query;
 		this.connection = connection;
+
 		projects = new ArrayList<CompiledScript>(query.getDerivedColumns().size());
 		for (DerivedColumn dc : query.getDerivedColumns()) {
-			Column c = ((ColumnReference) dc.getExpression()).getMetadataObject();
-			String name = getNameInSource(c);
-			if (name.equalsIgnoreCase("this")) { //$NON-NLS-1$
-				projects.add(null);
+			ColumnReference cr = (ColumnReference) dc.getExpression();
+			String name = null;
+			if (cr.getMetadataObject() != null) {
+//			Column c = ((ColumnReference) dc.getExpression()).getMetadataObject();
+				Column c = cr.getMetadataObject();
+				name = getNameInSource(c);
 			} else {
-				try {
-					projects.add(scriptEngine.compile(OBJECT_NAME + "." + name)); //$NON-NLS-1$
-				} catch (ScriptException e) {
-					throw new TranslatorException(e);
-				}
+				name = cr.getName();
 			}
+				if (name.equalsIgnoreCase("this")) { //$NON-NLS-1$
+					projects.add(null);
+				} else {
+					try {
+						projects.add(scriptEngine.compile(OBJECT_NAME + "." + name)); //$NON-NLS-1$
+					} catch (ScriptException e) {
+						throw new TranslatorException(e);
+					}
+				}
 		}
 	}
 
@@ -89,9 +96,7 @@ public class ObjectExecution implements ResultSetExecution {
 				"ObjectExecution command:", query.toString(), "using connection:", connection.getClass().getName()); //$NON-NLS-1$ //$NON-NLS-2$
 
 		String nameInSource = getNameInSource(((NamedTable)query.getFrom().get(0)).getMetadataObject());
-		Map<?, ?> map = this.connection.getMap(nameInSource);
-		Class<?> type = this.connection.getType(nameInSource);
-	    List<Object> results = factory.search(query, map, type); 	
+	    List<Object> results = connection.search(query, nameInSource, factory); 	
 
 		if (results != null && results.size() > 0) {
 			LogManager.logDetail(LogConstants.CTX_CONNECTOR,

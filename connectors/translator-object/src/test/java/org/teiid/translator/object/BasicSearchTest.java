@@ -38,34 +38,27 @@ import org.teiid.translator.object.util.VDBUtility;
  *
  */
 public abstract class BasicSearchTest {
+
+	@Test public void testQueryGetAllTrades() throws Exception {						
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache as T"); //$NON-NLS-1$
+		
 	
-	@Test public void testQueryGetAllTrades() throws Exception {		
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trade as T"); //$NON-NLS-1$		
-		
-		performTest(command, TradesCacheSource.NUMTRADES, 4);
-		
-	}		
-	
-	@Test public void testTradeProjection() throws Exception {		
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId From Trade_Object.Trade as T"); //$NON-NLS-1$		
-		
-		performTest(command, TradesCacheSource.NUMTRADES, 1);
-		
-	}		
-	
-	@Test public void testQueryGetOneTrade() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId = '1'"); //$NON-NLS-1$
-					
-		performTest(command, 1, 2);
-		
+		performTest(command, 3, 1);
 	}	
 	
-	@Test public void testQueryInCriteria() throws Exception {	
-		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select T.TradeId, T.Name as TradeName From Trade_Object.Trade as T WHERE T.TradeId in ('1', '3')"); //$NON-NLS-1$
-					
-		performTest(command, 2, 2);
+	@Test public void testQueryGetEQ1Trade() throws Exception {						
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache as T where TradeID = '1'"); //$NON-NLS-1$
 		
+	
+		performTest(command, 1, 1);
 	}	
+	
+	@Test public void testQueryGetIn1Trade() throws Exception {						
+		Select command = (Select)VDBUtility.TRANSLATION_UTILITY.parseCommand("select * From Trade_Object.Trades_Cache as T where TradeID in ('2', '3')"); //$NON-NLS-1$
+		
+	
+		performTest(command, 2, 1);
+	}		
 	
 	protected List<Object> performTest(Select command, int rowcnt, int colCount) throws Exception {
 
