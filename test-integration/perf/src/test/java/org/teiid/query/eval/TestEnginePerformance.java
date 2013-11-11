@@ -397,6 +397,17 @@ public class TestEnginePerformance {
 		helpTestBatchSerialization(types, batch, 50000, 2);
 	}
 	
+	@Test public void runBatchSerialization_StringRepeated() throws Exception {
+		String[] types = new String[] {DataTypeManager.DefaultDataTypes.STRING};
+		int size = 1024;
+		
+		final List<List<?>> batch = new ArrayList<List<?>>();
+		for (int i = 0; i < size; i++) {
+			batch.add(Arrays.asList("aaaaaaaa"));
+		}
+		helpTestBatchSerialization(types, batch, 50000, 2);
+	}
+	
 	@Test public void runBatchSerialization_Time() throws Exception {
 		final String[] types = new String[] {DataTypeManager.DefaultDataTypes.TIME};
 		int size = 1024;
