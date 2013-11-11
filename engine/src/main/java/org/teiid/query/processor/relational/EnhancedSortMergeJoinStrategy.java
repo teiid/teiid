@@ -381,6 +381,7 @@ public class EnhancedSortMergeJoinStrategy extends MergeJoinStrategy {
     	}
     	//else this is a single scan against the index
     	if (currentSource == null) {
+    		this.notSortedSource.setImplicitBuffer(ImplicitBuffer.NONE);
     		currentSource = this.notSortedSource.getIterator();
     	}
     	while (true) {
