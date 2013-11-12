@@ -200,7 +200,7 @@ public class TestMongoDBSelectVisitor {
 				"SELECT user_id, age, status FROM users WHERE user_id like '%bc%'",
 				"users",
 				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id.$id\" : \"/bc/\"}");
+				"{ \"user_id.$id\" : { \"$regex\" : \"bc\"}}");
     }
 
     @Test
@@ -209,7 +209,7 @@ public class TestMongoDBSelectVisitor {
 				"SELECT user_id, age, status FROM users WHERE user_id like 'bc%'",
 				"users",
 				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id.$id\" : \"/^bc/\"}");
+				"{ \"user_id.$id\" : { \"$regex\" : \"^bc\"}}");
     }
 
     @Test
@@ -218,7 +218,7 @@ public class TestMongoDBSelectVisitor {
 				"SELECT user_id, age, status FROM users WHERE user_id like 'b%c'",
 				"users",
 				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id.$id\" : \"/^b.*c$/\"}");
+				"{ \"user_id.$id\" : { \"$regex\" : \"^b.*c$\"}}");
     }
 
     @Test
@@ -227,7 +227,7 @@ public class TestMongoDBSelectVisitor {
 				"SELECT user_id, age, status FROM users WHERE user_id NOT LIKE 'b%c'",
 				"users",
 				"{ \"_m0\" : \"$user_id\" , \"_m1\" : \"$age\" , \"_m2\" : \"$status\"}",
-				"{ \"user_id.$id\" : { \"$not\" : \"/^b.*c$/\"}}");
+				"{ \"user_id.$id\" : { \"$not\" : { \"$regex\" : \"^b.*c$\"}}}");
     }
 
     @Test
