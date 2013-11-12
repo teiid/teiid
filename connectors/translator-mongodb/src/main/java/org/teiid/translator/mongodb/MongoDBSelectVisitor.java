@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Stack;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import org.teiid.language.*;
 import org.teiid.language.SortSpecification.Ordering;
@@ -706,9 +707,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			}
 
 			String regex = value.toString().replaceAll("%", ""); //$NON-NLS-1$ //$NON-NLS-2$
-			query.is("/"+regex+"/"); //$NON-NLS-1$ //$NON-NLS-2$
-			pullQuery.is("/"+regex+"/"); //$NON-NLS-1$ //$NON-NLS-2$
-			//query.regex(Pattern.compile(regex));
+			query.is(Pattern.compile(regex));
+			pullQuery.is(Pattern.compile(regex));
 			this.onGoingCriteria.push(query.get());
 			this.onGoingPullCriteria.push(pullQuery.get());
 		}
