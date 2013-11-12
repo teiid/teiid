@@ -48,6 +48,7 @@ import org.teiid.query.optimizer.relational.plantree.NodeEditor;
 import org.teiid.query.optimizer.relational.plantree.NodeFactory;
 import org.teiid.query.optimizer.relational.plantree.PlanNode;
 import org.teiid.query.resolver.util.AccessPattern;
+import org.teiid.query.sql.LanguageObject;
 import org.teiid.query.sql.lang.CompareCriteria;
 import org.teiid.query.sql.lang.CompoundCriteria;
 import org.teiid.query.sql.lang.Criteria;
@@ -507,6 +508,29 @@ public final class RulePushSelectCriteria implements OptimizerRule {
 			List<DependentSetCriteria> crits = splitDependentSetCriteria((DependentSetCriteria) crit);
 			critNode.setProperty(NodeConstants.Info.SELECT_CRITERIA, new CompoundCriteria(crits));
 		}
+		
+        Collection<ElementSymbol> elements = null;
+        for (PlanNode joinNode : NodeEditor.findAllNodes(accessNode, NodeConstants.Types.JOIN, NodeConstants.Types.SOURCE)) {
+        	List<Criteria> joinCriteria = (List<Criteria>) joinNode.getProperty(Info.JOIN_CRITERIA);
+            if (joinCriteria == null) {
+            	continue;
+            }
+            for (Criteria joinPredicate : joinCriteria) {
+            	if (!(joinPredicate instanceof CompareCriteria)) {
+            		continue;
+            	}
+        		CompareCriteria cc = (CompareCriteria)joinPredicate;
+        		if (!cc.isOptional()) {
+        			continue;
+        		}
+        		if (elements == null) {
+        			elements = ElementCollectorVisitor.getElements((LanguageObject)critNode.getProperty(Info.SELECT_CRITERIA), true);
+        		}
+        		if (!Collections.disjoint(elements, ElementCollectorVisitor.getElements(cc, false))) {
+        			cc.setOptional(false);
+        		}
+            }
+        }
 	}
 
 	private List<DependentSetCriteria> splitDependentSetCriteria(DependentSetCriteria dsc) {

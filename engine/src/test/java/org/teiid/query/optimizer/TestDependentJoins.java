@@ -864,5 +864,34 @@ public class TestDependentJoins {
                 0       // UnionAll
             }); 
     }
+        
+    @Test public void testKeepTransitiveWithDependentJoin() throws Exception {
+
+        FakeCapabilitiesFinder capFinder = new FakeCapabilitiesFinder();
+        BasicSourceCapabilities caps = TestOptimizer.getTypicalCapabilities();
+        caps.setCapabilitySupport(Capability.QUERY_ORDERBY, false);
+        capFinder.addCapabilities("pm1", caps); //$NON-NLS-1$
+        capFinder.addCapabilities("pm2", caps); //$NON-NLS-1$
+        
+        ProcessorPlan plan = TestOptimizer.helpPlan("select pm1.g1.e1 from pm1.g1, pm2.g1, pm2.g2 where pm1.g1.e1 = pm2.g1.e1 and pm1.g1.e1 = pm2.g2.e1 and pm2.g1.e2 = pm2.g2.e2 option makedep pm2.g1", RealMetadataFactory.example1Cached(), null, capFinder, //$NON-NLS-1$
+            new String[] { "SELECT g_1.e1, g_0.e1 FROM pm2.g1 AS g_0, pm2.g2 AS g_1 WHERE (g_0.e2 = g_1.e2) AND (g_1.e1 = g_0.e1) AND (g_1.e1 IN (<dependent values>)) AND (g_0.e1 IN (<dependent values>))", "SELECT g_0.e1 FROM pm1.g1 AS g_0" }, TestOptimizer.ComparisonMode.EXACT_COMMAND_STRING); //$NON-NLS-1$ //$NON-NLS-2$
+
+        TestOptimizer.checkNodeTypes(plan, new int[] {
+            1,      // Access
+            1,      // DependentAccess
+            0,      // DependentSelect
+            0,      // DependentProject
+            0,      // DupRemove
+            0,      // Grouping
+            0,      // NestedLoopJoinStrategy
+            1,      // MergeJoinStrategy
+            0,      // Null
+            0,      // PlanExecution
+            1,      // Project
+            0,      // Select
+            0,      // Sort
+            0       // UnionAll
+        });
+    }
     
 }
