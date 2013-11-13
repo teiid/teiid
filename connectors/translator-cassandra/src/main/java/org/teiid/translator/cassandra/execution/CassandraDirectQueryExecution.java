@@ -38,10 +38,11 @@ public class CassandraDirectQueryExecution extends CassandraQueryExecution imple
 	private String cql;
 	private List<Argument> arguments;
 
-	public CassandraDirectQueryExecution(String cql, List<Argument> arguments, Command command, CassandraConnection connection, ExecutionContext context){
+	public CassandraDirectQueryExecution(String cql, List<Argument> arguments, Command command, CassandraConnection connection, ExecutionContext context, boolean returnsArray){
 		super(command, connection, context);
 		this.arguments = arguments;
 		this.cql = cql;
+		this.returnsArray = returnsArray;
 	}
 
 	@Override

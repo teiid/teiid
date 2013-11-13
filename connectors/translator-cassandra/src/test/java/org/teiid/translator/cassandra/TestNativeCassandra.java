@@ -22,6 +22,10 @@
 
 package org.teiid.translator.cassandra;
 
+import static org.junit.Assert.*;
+
+import java.util.List;
+
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.cdk.api.TranslationUtility;
@@ -32,7 +36,12 @@ import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.translator.Execution;
 import org.teiid.translator.ExecutionContext;
+import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
+
+import com.datastax.driver.core.ColumnDefinitions;
+import com.datastax.driver.core.ResultSet;
+import com.datastax.driver.core.Row;
 
 @SuppressWarnings("nls")
 public class TestNativeCassandra {
@@ -49,10 +58,19 @@ public class TestNativeCassandra {
         RuntimeMetadata rm = Mockito.mock(RuntimeMetadata.class);
         CassandraConnection connection = Mockito.mock(CassandraConnection.class);
 
-		Execution execution = cef.createExecution(command, ec, rm, connection);
+        ResultSet rs = Mockito.mock(ResultSet.class);
+        Row row = Mockito.mock(Row.class);
+        ColumnDefinitions cd = Mockito.mock(ColumnDefinitions.class);
+        Mockito.stub(row.getColumnDefinitions()).toReturn(cd);
+        Mockito.stub(rs.one()).toReturn(row).toReturn(null);
+        
+        Mockito.stub(connection.executeQuery("select 'a'")).toReturn(rs);
+        
+		ResultSetExecution execution = (ResultSetExecution)cef.createExecution(command, ec, rm, connection);
         execution.execute();
 
-        Mockito.verify(connection).executeQuery("select 'a'");
+        List<?> vals = execution.next();
+        assertTrue(vals.get(0) instanceof Object[]);
 	}
 	
 	@Test public void testNativeQuery() throws Exception {

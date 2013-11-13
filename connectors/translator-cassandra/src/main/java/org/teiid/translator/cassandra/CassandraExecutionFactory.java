@@ -80,7 +80,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 			CassandraConnection connection) throws TranslatorException {
 		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
 		if (nativeQuery != null) {
-			return new CassandraDirectQueryExecution(nativeQuery, command.getArguments(), command, connection, executionContext);
+			return new CassandraDirectQueryExecution(nativeQuery, command.getArguments(), command, connection, executionContext, false);
 		}
 		throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
 	}
@@ -90,7 +90,7 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 			Command command, ExecutionContext executionContext,
 			RuntimeMetadata metadata, CassandraConnection connection)
 			throws TranslatorException {
-		return new CassandraDirectQueryExecution((String) arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), command, connection, executionContext);
+		return new CassandraDirectQueryExecution((String) arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), command, connection, executionContext, true);
 	}
 	
 	@Override

@@ -24,6 +24,7 @@ package org.teiid.translator.cassandra.execution;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.teiid.language.Command;
@@ -45,6 +46,7 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	private CassandraConnection connection;
 	private ResultSet resultSet = null;
 	private ExecutionContext executionContext;
+	protected boolean returnsArray;
 	
 	public CassandraQueryExecution(Command query, CassandraConnection connection, ExecutionContext context){
 		this.query = query;
@@ -93,10 +95,10 @@ public class CassandraQueryExecution implements ResultSetExecution {
 	 * @return list of values in {@code row}
 	 */
 	private List<Object> getRow(Row row) {
-		final List<Object> values = new ArrayList<Object>();
 		if(row == null){
 			return null;
 		}
+		final List<Object> values = new ArrayList<Object>(row.getColumnDefinitions().size());
 		for(int i = 0; i < row.getColumnDefinitions().size(); i++){
 			switch(row.getColumnDefinitions().getType(i).getName()){
 			case ASCII:
@@ -166,6 +168,9 @@ public class CassandraQueryExecution implements ResultSetExecution {
 				break;
 			}
 			
+		}
+		if (returnsArray) {
+			return Collections.singletonList((Object)values.toArray());
 		}
 		return values;
 	}
