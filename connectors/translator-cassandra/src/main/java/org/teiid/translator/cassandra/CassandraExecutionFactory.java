@@ -22,22 +22,29 @@
 
 package org.teiid.translator.cassandra;
 
+import java.util.List;
+
 import javax.resource.cci.ConnectionFactory;
 
 import org.teiid.core.BundleUtil;
+import org.teiid.language.Argument;
+import org.teiid.language.Call;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.MetadataFactory;
 import org.teiid.metadata.RuntimeMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.ExecutionFactory;
+import org.teiid.translator.ProcedureExecution;
 import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.Translator;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
+import org.teiid.translator.cassandra.execution.CassandraDirectQueryExecution;
 import org.teiid.translator.cassandra.execution.CassandraQueryExecution;
 import org.teiid.translator.cassandra.execution.CassandraUpdateExecution;
 import org.teiid.translator.cassandra.metadata.CassandraMetadataProcessor;
@@ -65,7 +72,26 @@ public class CassandraExecutionFactory extends ExecutionFactory<ConnectionFactor
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			CassandraConnection connection) throws TranslatorException {
 		return new CassandraUpdateExecution(command, executionContext, metadata, connection);
-	} 	
+	} 
+	
+	@Override
+	public ProcedureExecution createProcedureExecution(Call command,
+			ExecutionContext executionContext, RuntimeMetadata metadata,
+			CassandraConnection connection) throws TranslatorException {
+		String nativeQuery = command.getMetadataObject().getProperty(SQLStringVisitor.TEIID_NATIVE_QUERY, false);
+		if (nativeQuery != null) {
+			return new CassandraDirectQueryExecution(nativeQuery, command.getArguments(), command, connection, executionContext);
+		}
+		throw new TranslatorException("Missing native-query extension metadata."); //$NON-NLS-1$
+	}
+	
+	@Override
+	public ProcedureExecution createDirectExecution(List<Argument> arguments,
+			Command command, ExecutionContext executionContext,
+			RuntimeMetadata metadata, CassandraConnection connection)
+			throws TranslatorException {
+		return new CassandraDirectQueryExecution((String) arguments.get(0).getArgumentValue().getValue(), arguments.subList(1, arguments.size()), command, connection, executionContext);
+	}
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory,

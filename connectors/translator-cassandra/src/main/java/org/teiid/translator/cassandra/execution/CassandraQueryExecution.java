@@ -26,7 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.teiid.language.Select;
+import org.teiid.language.Command;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.translator.DataNotAvailableException;
@@ -41,12 +41,12 @@ import com.datastax.driver.core.Row;
 
 public class CassandraQueryExecution implements ResultSetExecution {
 
-	private Select query;
+	private Command query;
 	private CassandraConnection connection;
 	private ResultSet resultSet = null;
 	private ExecutionContext executionContext;
 	
-	public CassandraQueryExecution(Select query, CassandraConnection connection, ExecutionContext context){
+	public CassandraQueryExecution(Command query, CassandraConnection connection, ExecutionContext context){
 		this.query = query;
 		this.connection = connection;
 		this.executionContext = context;
@@ -69,6 +69,10 @@ public class CassandraQueryExecution implements ResultSetExecution {
 		CassandraSQLVisitor visitor = new CassandraSQLVisitor();
 		visitor.translateSQL(query);
 		String cql = visitor.getTranslatedSQL();
+		execute(cql);
+	}
+
+	protected void execute(String cql) throws TranslatorException {
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Source-Query:", cql); //$NON-NLS-1$
 		try {
 			resultSet = connection.executeQuery(cql);
