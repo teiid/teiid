@@ -42,6 +42,9 @@ public class HiveMetadataProcessor extends JDBCMetdataProcessor {
 	public void getConnectorMetadata(Connection conn, MetadataFactory metadataFactory)	throws SQLException {
 		List<String> tables = getTables(conn);
 		for (String table:tables) {
+			if (shouldExclude(table)) {
+				continue;
+			}
 			addTable(table, conn, metadataFactory);
 		}
 	}

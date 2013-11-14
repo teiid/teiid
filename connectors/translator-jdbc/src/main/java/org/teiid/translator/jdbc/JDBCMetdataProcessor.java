@@ -224,7 +224,7 @@ public class JDBCMetdataProcessor {
 			String tableName = tables.getString(3);
 			String remarks = tables.getString(5);
 			String fullName = getFullyQualifiedName(tableCatalog, tableSchema, tableName);
-			if (excludeTables != null && excludeTables.matcher(fullName).matches()) {
+			if (shouldExclude(fullName)) {
 				excludedTables++;
 				continue;
 			}
@@ -241,6 +241,11 @@ public class JDBCMetdataProcessor {
 		
 		getColumns(metadataFactory, metadata, tableMap);
 		return tableMap;
+	}
+	
+	
+	protected boolean shouldExclude(String fullName) {
+		return excludeTables != null && excludeTables.matcher(fullName).matches();
 	}
 
 	/**
