@@ -39,8 +39,8 @@ public class DirectQueryMetadataRepository extends MetadataRepository {
 	@Override
 	public void loadMetadata(MetadataFactory factory, ExecutionFactory executionFactory, Object connectionFactory) throws TranslatorException {
 
-		if (executionFactory != null && executionFactory.supportsNativeQueries()) {
-			Procedure p = factory.addProcedure(executionFactory.getNativeQueryProcedureName());
+		if (executionFactory != null && executionFactory.supportsDirectQueryProcedure()) {
+			Procedure p = factory.addProcedure(executionFactory.getDirectQueryProcedureName());
 			p.setAnnotation("Invokes translator with a native query that returns results in array of values"); //$NON-NLS-1$
 
 			ProcedureParameter param = factory.addProcedureParameter("request", TypeFacility.RUNTIME_NAMES.STRING, Type.In, p); //$NON-NLS-1$

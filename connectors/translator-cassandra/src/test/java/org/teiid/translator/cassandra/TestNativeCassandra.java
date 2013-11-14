@@ -48,7 +48,7 @@ public class TestNativeCassandra {
 
 	@Test public void testDirect() throws TranslatorException {
 		CassandraExecutionFactory cef = new CassandraExecutionFactory();
-		cef.setSupportsNativeQueries(true);
+		cef.setSupportsDirectQueryProcedure(true);
 		
 		String input = "call native('select $1', 'a')";
 		
@@ -75,7 +75,7 @@ public class TestNativeCassandra {
 	
 	@Test public void testNativeQuery() throws Exception {
 		CassandraExecutionFactory cef = new CassandraExecutionFactory();
-		cef.setSupportsNativeQueries(true);
+		cef.setSupportsDirectQueryProcedure(true);
 		
 		String input = "call proc('a', 1)";
 		

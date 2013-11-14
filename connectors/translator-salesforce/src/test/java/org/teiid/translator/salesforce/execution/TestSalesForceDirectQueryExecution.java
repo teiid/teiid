@@ -51,7 +51,7 @@ public class TestSalesForceDirectQueryExecution {
     @BeforeClass
     public static void setUp() throws TranslatorException {
         TRANSLATOR = new SalesForceExecutionFactory();
-        TRANSLATOR.setSupportsNativeQueries(true);
+        TRANSLATOR.setSupportsDirectQueryProcedure(true);
         TRANSLATOR.start();
     }	
     

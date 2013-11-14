@@ -99,7 +99,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 		super.start();
 		setSupportsOrderBy(true);
 		setSupportsSelectDistinct(true);
-		setSupportsNativeQueries(false);
+		setSupportsDirectQueryProcedure(false);
 		setSourceRequiredForMetadata(false);
 		//setSupportsInnerJoins(true);
 		setSupportsOuterJoins(true);

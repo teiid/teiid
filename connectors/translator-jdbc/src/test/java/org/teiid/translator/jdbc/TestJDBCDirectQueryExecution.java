@@ -61,7 +61,7 @@ public class TestJDBCDirectQueryExecution {
 		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
-		ef.setSupportsNativeQueries(true);
+		ef.setSupportsDirectQueryProcedure(true);
 		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  Mockito.mock(ExecutionContext.class), Mockito.mock(RuntimeMetadata.class), connection);
 		execution.execute();
 		assertArrayEquals(new Object[] {5, "five"}, (Object[])execution.next().get(0));
@@ -86,7 +86,7 @@ public class TestJDBCDirectQueryExecution {
 		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
-		ef.setSupportsNativeQueries(true);
+		ef.setSupportsDirectQueryProcedure(true);
 		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  new FakeExecutionContextImpl(), Mockito.mock(RuntimeMetadata.class), connection);
 		execution.execute();
 		assertArrayEquals(new Object[] {5, "five"}, (Object[])execution.next().get(0));
@@ -108,7 +108,7 @@ public class TestJDBCDirectQueryExecution {
 		Mockito.stub(connection.getMetaData()).toReturn(Mockito.mock(DatabaseMetaData.class));
 		
 		JDBCExecutionFactory ef = new JDBCExecutionFactory();
-		ef.setSupportsNativeQueries(true);
+		ef.setSupportsDirectQueryProcedure(true);
 		ResultSetExecution execution = (ResultSetExecution)ef.createExecution(command,  new FakeExecutionContextImpl(), Mockito.mock(RuntimeMetadata.class), connection);
 		execution.execute();
 		assertArrayEquals(new Object[] {5}, (Object[])execution.next().get(0));

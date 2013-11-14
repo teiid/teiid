@@ -296,7 +296,7 @@ public class ExecutionFactory<F, C> {
 			//to explicitly set this proc as direct.
 			//the other approach would be to addd a native system stored procedure, but that would require
 			//special security semantics, whereas this proc can be secured on a schema basis
-			if (supportsNativeQueries() && obj.getMetadataObject().getName().equals(getNativeQueryProcedureName())) {
+			if (supportsDirectQueryProcedure() && obj.getMetadataObject().getName().equals(getDirectQueryProcedureName())) {
 				List<Argument> arguments = obj.getArguments();
 	    		return createDirectExecution(arguments, command, executionContext, metadata, connection);
 			}
@@ -1102,31 +1102,70 @@ public class ExecutionFactory<F, C> {
 	}
 	
 	/**
-	 * True, if this translator supports execution of source specific commands unaltered through 'native' procedure.
+	 * True, if this translator supports execution of source specific commands unaltered through a direct procedure.
+ 	 * @deprecated
+	 * @see #supportsDirectQueryProcedure()
 	 * @return
 	 */
-	@TranslatorProperty(display="Supports Native Queries", description="True, if this translator supports execution of source specific commands unaltered through a 'native' procedure", advanced=true)
-	public boolean supportsNativeQueries() {
+	@TranslatorProperty(display="Supports direct query procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
+	final public boolean supportsNativeQueries() {
 		return this.supportsNativeQueries;
 	}
 	
-	public void setSupportsNativeQueries(boolean state) {
+	/**
+	 * @deprecated
+	 * @see #setSupportsDirectQueryProcedure(boolean)
+	 */
+	final public void setSupportsNativeQueries(boolean state) {
 		this.supportsNativeQueries = state;
 	}
 	
 	/**
-	 * Defines the name of the procedure that need to be treated as "native" query processing procedure. This metadata or signature
+	 * True, if this translator supports execution of source specific commands unaltered through a direct procedure.
+	 * @return
+	 */
+	@TranslatorProperty(display="Supports direct query procedure", description="True, if this translator supports execution of source specific commands unaltered through a direct procedure", advanced=true)
+	public boolean supportsDirectQueryProcedure() {
+		return this.supportsNativeQueries;
+	}
+	
+	public void setSupportsDirectQueryProcedure(boolean state) {
+		this.supportsNativeQueries = state;
+	}
+	
+	/**
+	 * Defines the name of the direct processing procedure. This metadata or signature
+	 * of the procedure is defined automatically.
+	 * @deprecated
+	 * @see #getDirectQueryProcedureName()
+	 * @return
+	 */
+	@TranslatorProperty(display="Name of the direct query procedure", description="The name of the direct query procedure", advanced=true)
+	final public String getNativeQueryProcedureName() {
+		return this.nativeProcedureName;
+	}
+
+	/**
+	 * @deprecated
+	 * @see #setDirectQueryProcedureName(String)
+	 */
+	final public void setNativeQueryProcedureName(String name) {
+		this.nativeProcedureName = name;
+	}
+	
+	/**
+	 * Defines the name of the direct processing procedure. This metadata or signature
 	 * of the procedure is defined automatically.
 	 * @return
 	 */
-	@TranslatorProperty(display="Name of the native query", description="The name of the direct query procedure", advanced=true)
-	public String getNativeQueryProcedureName() {
+	@TranslatorProperty(display="Name of the direct query procedure", description="The name of the direct query procedure", advanced=true)
+	public String getDirectQueryProcedureName() {
 		return this.nativeProcedureName;
 	}
 	
-	public void setNativeQueryProcedureName(String name) {
+	public void setDirectQueryProcedureName(String name) {
 		this.nativeProcedureName = name;
-	}	
+	}
 	
 	/**
 	 * @return true if only correlated subqueries are supported.
