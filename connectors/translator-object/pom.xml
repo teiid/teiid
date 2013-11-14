@@ -66,7 +66,7 @@
 		<dependency>
 		   <groupId>org.hibernate</groupId>
 		   <artifactId>hibernate-search</artifactId>
-		   <version>${version.org.hibernate}</version>
+		   <version>${version.org.hibernate.search}</version>
 		   <scope>provided</scope>
 		</dependency>
         <dependency>
