@@ -26,8 +26,6 @@ import static org.junit.Assert.*;
 
 import java.util.Properties;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 import org.teiid.api.exception.query.QueryParserException;
 import org.teiid.cdk.CommandBuilder;
@@ -78,7 +76,7 @@ public class TestSQLtoSpreadsheetQuery {
 		
 		SpreadsheetSQLVisitor spreadsheetVisitor = new SpreadsheetSQLVisitor();
 		spreadsheetVisitor.translateSQL(select);
-		Assert.assertEquals(expectedSpreadsheetQuery, spreadsheetVisitor.getTranslatedSQL());
+		assertEquals(expectedSpreadsheetQuery, spreadsheetVisitor.getTranslatedSQL());
 	}
 	private SpreadsheetSQLVisitor getVisitorAndTranslateSQL(String sql){
         Select select = (Select)getCommand(sql);		
@@ -87,9 +85,9 @@ public class TestSQLtoSpreadsheetQuery {
 		return spreadsheetVisitor;
 	}
 	private void testVisitorValues(SpreadsheetSQLVisitor visitor,String worksheetTitle, Integer limitValue, Integer offsetvalue) {
-		Assert.assertEquals(worksheetTitle, visitor.getWorksheetTitle());
-		Assert.assertEquals(limitValue, visitor.getLimitValue());
-		Assert.assertEquals(offsetvalue, visitor.getOffsetValue());
+		assertEquals(worksheetTitle, visitor.getWorksheetTitle());
+		assertEquals(limitValue, visitor.getLimitValue());
+		assertEquals(offsetvalue, visitor.getOffsetValue());
 	}
 		
 	@Test

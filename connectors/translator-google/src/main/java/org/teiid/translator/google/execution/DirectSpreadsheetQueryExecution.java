@@ -21,11 +21,14 @@
  */
 package org.teiid.translator.google.execution;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import org.teiid.core.util.StringUtil;
 import org.teiid.language.Argument;
+import org.teiid.language.Literal;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.resource.adapter.google.GoogleSpreadsheetConnection;
@@ -46,11 +49,16 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 	private Iterator<SheetRow> rowIterator;
 	private ExecutionContext executionContext;
 	private List<Argument> arguments;
+	
+	private String query;
+	private boolean returnsArray;
 
-	public DirectSpreadsheetQueryExecution(List<Argument> arguments, ExecutionContext executionContext, GoogleSpreadsheetConnection connection) {
+	public DirectSpreadsheetQueryExecution(String query, List<Argument> arguments, ExecutionContext executionContext, GoogleSpreadsheetConnection connection, boolean returnsArray) {
 		this.executionContext = executionContext;
 		this.connection = connection;
 		this.arguments = arguments;
+		this.query = query;
+		this.returnsArray = returnsArray;
 	}
 
 	@Override
@@ -67,13 +75,11 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 	@Override
 	public void execute() throws TranslatorException {
 		String worksheet = null;
-		String query = null;
 		Integer limit = null;
 		Integer offset = null;
+		String toQuery = query;
 		
-		String str = (String) this.arguments.get(0).getArgumentValue().getValue();
-		
-		List<String> parts = StringUtil.tokenize(str, ';');
+		List<String> parts = StringUtil.tokenize(query, ';');
 		for (String var : parts) {
 			int index = var.indexOf('=');
 			if (index == -1) {
@@ -86,7 +92,18 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 				worksheet = value;
 			}
 			else if (key.equalsIgnoreCase(QUERY)) {
-				query = value;
+				StringBuilder buffer = new StringBuilder();
+				SQLStringVisitor.parseNativeQueryParts(value, arguments, buffer, new SQLStringVisitor.Substitutor() {
+					
+					@Override
+					public void substitute(Argument arg, StringBuilder builder, int index) {
+						Literal argumentValue = arg.getArgumentValue();
+						SpreadsheetSQLVisitor visitor = new SpreadsheetSQLVisitor();
+						visitor.visit(argumentValue);
+						builder.append(visitor.getTranslatedSQL());
+					}
+				});
+				toQuery = buffer.toString();
 			}
 			else if (key.equalsIgnoreCase(LIMIT)) {
 				limit = Integer.parseInt(value);
@@ -96,13 +113,17 @@ public class DirectSpreadsheetQueryExecution implements ProcedureExecution {
 			}
 		}
 		
-		this.rowIterator = this.connection.executeQuery(worksheet, query, offset, limit, executionContext.getBatchSize()).iterator();
+		this.rowIterator = this.connection.executeQuery(worksheet, toQuery, offset, limit, executionContext.getBatchSize()).iterator();
 	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {	
 		if (this.rowIterator != null && this.rowIterator.hasNext()) {
-			return rowIterator.next().getRow();
+			List<?> result = rowIterator.next().getRow();
+			if (returnsArray) {
+				return Collections.singletonList((Object)result.toArray());
+			}
+			return result;
 		}
 		this.rowIterator = null;
 		return null;
