@@ -51,9 +51,9 @@ import org.teiid.dqp.internal.datamgr.ConnectorManagerRepository;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
 import org.teiid.language.Command;
 import org.teiid.metadata.FunctionMethod;
+import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.metadata.FunctionParameter;
 import org.teiid.metadata.RuntimeMetadata;
-import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.function.metadata.FunctionCategoryConstants;
 import org.teiid.translator.DataNotAvailableException;
 import org.teiid.translator.Execution;
@@ -127,7 +127,7 @@ public class TestLocalConnections {
 										lock.lock();
 										try {
 											sourceCounter.release();
-											if (!wait.await(2, TimeUnit.SECONDS)) {
+											if (!wait.await(5, TimeUnit.SECONDS)) {
 												throw new RuntimeException();
 											}
 										} catch (InterruptedException e) {
