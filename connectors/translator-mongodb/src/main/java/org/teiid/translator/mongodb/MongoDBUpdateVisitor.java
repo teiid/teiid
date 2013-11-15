@@ -110,8 +110,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 
         append(obj.getWhere());
 
-        if (!this.onGoingCriteria.isEmpty()) {
-        	this.match = this.onGoingCriteria.pop();
+        if (!this.onGoingExpression.isEmpty()) {
+        	this.match = (DBObject)this.onGoingExpression.pop();
         }
 	}
 
@@ -121,8 +121,8 @@ public class MongoDBUpdateVisitor extends MongoDBSelectVisitor {
 		append(obj.getTable());
         append(obj.getWhere());
 
-        if (!this.onGoingCriteria.isEmpty()) {
-        	this.match = this.onGoingCriteria.pop();
+        if (!this.onGoingExpression.isEmpty()) {
+        	this.match = (DBObject)this.onGoingExpression.pop();
         }
 	}
 

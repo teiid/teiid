@@ -281,6 +281,11 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
     	return true;
     }
 
+    @Override
+	public boolean supportsOnlyLiteralComparison() {
+		return true;
+	}
+
 	/**
 	 * @param field
 	 * @param expectedClass
