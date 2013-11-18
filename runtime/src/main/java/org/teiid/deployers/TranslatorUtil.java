@@ -99,6 +99,7 @@ public class TranslatorUtil {
 		Map<Method, TranslatorProperty> props = TranslatorUtil.getTranslatorProperties(ef.getClass());
 		Map p = data.getPropertiesMap();
 		TreeMap<String, String> caseInsensitiveProps = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
+		/*
 		VDBTranslatorMetaData parent = data.getParent();
 		while (parent != null) {
 			for (Map.Entry<String, String> entry : parent.getPropertiesMap().entrySet()) {
@@ -108,6 +109,7 @@ public class TranslatorUtil {
 			}
 			parent = parent.getParent();
 		}
+		*/
 		synchronized (p) {
 			caseInsensitiveProps.putAll(p);
 		}

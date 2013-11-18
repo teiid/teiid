@@ -56,7 +56,6 @@ public class MongoDBQueryExecution extends MongoDBBaseExecution implements Resul
 		this.command = (Select)command;
 		this.executionFactory = executionFactory;
 		this.expectedTypes = command.getColumnTypes();
-
 	}
 
 	@Override
