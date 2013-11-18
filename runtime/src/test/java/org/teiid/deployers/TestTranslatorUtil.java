@@ -21,7 +21,8 @@
  */
 package org.teiid.deployers;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBTranslatorMetaData;
@@ -32,6 +33,16 @@ import org.teiid.translator.TranslatorProperty;
 @SuppressWarnings("nls")
 public class TestTranslatorUtil {
 
+	@Test
+	public void testInitialSetValueExecutionFactory() throws Exception {
+		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
+		
+		tm.setExecutionFactoryClass(MyTranslator2.class);
+		MyTranslator2 my = (MyTranslator2)TranslatorUtil.buildExecutionFactory(tm);
+		
+		assertEquals("original-assigned", my.getSomeProperty());
+	}
+	
 	@Test
 	public void testBuildExecutionFactory() throws Exception {
 		VDBTranslatorMetaData tm = new VDBTranslatorMetaData();
@@ -106,6 +117,7 @@ public class TestTranslatorUtil {
 		
 		private String someProperty;
 		
+		@Override
 		@TranslatorProperty(display="my-property", required=false)
 		public String getMyProperty() {
 			return super.getMyProperty();
@@ -122,4 +134,11 @@ public class TestTranslatorUtil {
 		}
 		
 	}
+	
+	@Translator(name="my-translator2")
+	public static class MyTranslator2 extends MyTranslator1{
+		public MyTranslator2() {
+			setSomeProperty("original-assigned");
+		}
+	}	
 }
