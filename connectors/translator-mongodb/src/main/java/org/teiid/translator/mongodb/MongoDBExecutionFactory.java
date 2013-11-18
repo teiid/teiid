@@ -72,6 +72,14 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	protected Map<String, FunctionModifier> functionModifiers = new TreeMap<String, FunctionModifier>(String.CASE_INSENSITIVE_ORDER);
 
 	public MongoDBExecutionFactory() {
+		setSupportsOrderBy(true);
+		setSupportsSelectDistinct(true);
+		setSupportsNativeQueries(false);
+		setSourceRequiredForMetadata(false);
+		//setSupportsInnerJoins(true);
+		setSupportsOuterJoins(true);
+		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
+		
         registerFunctionModifier("%", new AliasModifier("$mod"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("+", new AliasModifier("$add"));//$NON-NLS-1$ //$NON-NLS-2$
         registerFunctionModifier("-", new AliasModifier("$subtract"));//$NON-NLS-1$ //$NON-NLS-2$
@@ -97,13 +105,6 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 	@Override
 	public void start() throws TranslatorException {
 		super.start();
-		setSupportsOrderBy(true);
-		setSupportsSelectDistinct(true);
-		setSupportsNativeQueries(false);
-		setSourceRequiredForMetadata(false);
-		//setSupportsInnerJoins(true);
-		setSupportsOuterJoins(true);
-		setSupportedJoinCriteria(SupportedJoinCriteria.KEY);
 	}
 
     public void registerFunctionModifier(String name, FunctionModifier modifier) {
@@ -135,7 +136,7 @@ public class MongoDBExecutionFactory extends ExecutionFactory<ConnectionFactory,
 
 	@Override
 	public ProcedureExecution createDirectExecution(List<Argument> arguments, Command command, ExecutionContext executionContext, RuntimeMetadata metadata, MongoDBConnection connection) throws TranslatorException {
-		 return new MongoDBDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
+		return new MongoDBDirectQueryExecution(arguments.subList(1, arguments.size()), command, executionContext, metadata, connection, (String)arguments.get(0).getArgumentValue().getValue(), true);
 	}
 
     @Override
