@@ -390,30 +390,34 @@ public class IQueryToLdapSearchParser {
 	}
 	
 	static String escapeReservedChars(String expr) {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
         for (int i = 0; i < expr.length(); i++) {
             char curChar = expr.charAt(i);
-            switch (curChar) {
-                case '\\':
-                    sb.append("\\5c"); //$NON-NLS-1$
-                    break;
-                case '*':
-                    sb.append("\\2a"); //$NON-NLS-1$
-                    break;
-                case '(':
-                    sb.append("\\28"); //$NON-NLS-1$
-                    break;
-                case ')':
-                    sb.append("\\29"); //$NON-NLS-1$
-                    break;
-                case '\u0000': 
-                    sb.append("\\00"); //$NON-NLS-1$
-                    break;
-                default:
-                    sb.append(curChar);
-            }
+            escapeReserved(sb, curChar);
         }
         return sb.toString();
+	}
+
+	static void escapeReserved(StringBuilder sb, char curChar) {
+		switch (curChar) {
+		    case '\\':
+		        sb.append("\\5c"); //$NON-NLS-1$
+		        break;
+		    case '*':
+		        sb.append("\\2a"); //$NON-NLS-1$
+		        break;
+		    case '(':
+		        sb.append("\\28"); //$NON-NLS-1$
+		        break;
+		    case ')':
+		        sb.append("\\29"); //$NON-NLS-1$
+		        break;
+		    case '\u0000': 
+		        sb.append("\\00"); //$NON-NLS-1$
+		        break;
+		    default:
+		        sb.append(curChar);
+		}
 	}
 
 	/** 
@@ -461,20 +465,55 @@ public class IQueryToLdapSearchParser {
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
 		// Base case
 		} else if(criteria instanceof Exists) {
-			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
+			throw new AssertionError("Parsing EXISTS criteria: NOT IMPLEMENTED YET"); //$NON-NLS-1$
 			// TODO Exists should be supported in a future release.
 		// Base case
 		} else if(criteria instanceof Like) {
 			LogManager.logTrace(LogConstants.CTX_CONNECTOR, "Parsing LIKE criteria."); //$NON-NLS-1$
-			isNegated = ((Like) criteria).isNegated();
+			Like like = (Like) criteria;
+			isNegated = like.isNegated();
 			// Convert LIKE to Equals, where any "%" symbol is replaced with "*".
 			Comparison.Operator op = Operator.EQ;
-			Expression lhs = ((Like) criteria).getLeftExpression();
-			Expression rhs = ((Like) criteria).getRightExpression();
+			Expression lhs = like.getLeftExpression();
+			Expression rhs = like.getRightExpression();
 		
 			String lhsString = getExpressionString(lhs);
-			String rhsString = getExpressionString(rhs);
-			rhsString = rhsString.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
+			String rhsString = getExpressionString((Literal)rhs);
+			if (like.getEscapeCharacter() != null) {
+				char escape = like.getEscapeCharacter();
+				boolean escaped = false;
+				StringBuilder result = new StringBuilder();
+				for (int i = 0; i < rhsString.length(); i++) {
+					char c = rhsString.charAt(i);
+					if (c == escape) {
+						if (escaped) {
+							escapeReserved(result, c);
+							escaped = false;
+						} else {
+							escaped = true;
+						}
+					} else {
+						if (escaped) {
+							escaped = false;
+						} else {
+							if (c == '%') {
+								result.append('*');
+								continue;
+							} else if (c == '_') {
+								throw new TranslatorException(LDAPPlugin.Util.getString("IQueryToLdapSearchParser.invalid_pattern")); //$NON-NLS-1$
+							}
+						}
+						escapeReserved(result, c);
+					}
+				}
+				rhsString = result.toString();
+			} else {
+				rhsString = escapeReservedChars(rhsString);
+				rhsString = rhsString.replace("%", "*"); //$NON-NLS-1$ //$NON-NLS-2$
+				if (rhsString.indexOf('_') >= 0) {
+					throw new TranslatorException(LDAPPlugin.Util.getString("IQueryToLdapSearchParser.invalid_pattern")); //$NON-NLS-1$
+				}
+			}
 			addCompareCriteriaToList(filterList, op, lhsString, rhsString);
 			
 		// Base case

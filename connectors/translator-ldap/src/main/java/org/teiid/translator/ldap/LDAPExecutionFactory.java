@@ -194,4 +194,14 @@ public class LDAPExecutionFactory extends ExecutionFactory<ConnectionFactory, Ld
 		this.exceptionOnSizeLimitExceeded = exceptionOnSizeLimitExceeded;
 	}
 	
+	@Override
+	public boolean supportsOnlyLiteralComparison() {
+		return true;
+	}
+	
+	@Override
+	public boolean supportsLikeCriteriaEscapeCharacter() {
+		return true;
+	}
+	
 }
