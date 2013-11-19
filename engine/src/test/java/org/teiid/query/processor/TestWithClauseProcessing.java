@@ -272,5 +272,37 @@ public class TestWithClauseProcessing {
 	    
 	    helpProcess(plan, dataManager, result);
 	}
+	
+	@Test public void testSingleItemInOn() {
+	    String sql = "with a (x, y, z) as (select e1, e2, e3 from pm1.g1 limit 1) SELECT pm2.g1.e1 from pm2.g1 left outer join pm2.g2 on (pm2.g1.e2 = pm2.g2.e2 and pm2.g1.e1 = (select a.x from a))"; //$NON-NLS-1$
+	    
+	    List[] expected = new List[] {Arrays.asList("a")};    
+	
+	    HardcodedDataManager dataManager = new HardcodedDataManager() {
+
+	    	boolean block = true;
+
+	    	@Override
+	    	public TupleSource registerRequest(CommandContext context,
+	    			Command command, String modelName,
+	    			RegisterRequestParameter parameterObject)
+	    			throws TeiidComponentException {
+	    		if (block) {
+	    			block = false;
+	    			throw BlockedException.INSTANCE;
+	    		}
+	    		return super.registerRequest(context, command, modelName, parameterObject);
+	    	}
+	    };
+	    dataManager.addData("SELECT g_0.e1, g_0.e2, g_0.e3 FROM pm1.g1 AS g_0", new List[] {Arrays.asList("a", 1, true)});
+	    dataManager.addData("SELECT g_0.e1 FROM pm2.g1 AS g_0 LEFT OUTER JOIN pm2.g2 AS g_1 ON g_0.e2 = g_1.e2 AND g_0.e1 = 'a'", new List[] {Arrays.asList("a")});
+	    
+	    BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+	    bsc.setCapabilitySupport(Capability.QUERY_FROM_JOIN_OUTER, true);
+	    bsc.setCapabilitySupport(Capability.CRITERIA_ON_SUBQUERY, true);
+	    ProcessorPlan plan = helpGetPlan(helpParse(sql), RealMetadataFactory.example1Cached(), new DefaultCapabilitiesFinder(bsc));
+	    
+	    helpProcess(plan, dataManager, expected);
+	}
 
 }

@@ -758,8 +758,8 @@ public class QueryRewriter {
 		if(joinCrits != null && joinCrits.size() > 0) {
 			//rewrite join crits by rewriting a compound criteria
 			Criteria criteria = new CompoundCriteria(new ArrayList(joinCrits));
-            joinCrits.clear();
             criteria = rewriteCriteria(criteria);
+            joinCrits.clear();
             if (criteria instanceof CompoundCriteria && ((CompoundCriteria)criteria).getOperator() == CompoundCriteria.AND) {
                 joinCrits.addAll(((CompoundCriteria)criteria).getCriteria());
             } else {
