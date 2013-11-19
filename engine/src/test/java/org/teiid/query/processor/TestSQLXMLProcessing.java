@@ -305,6 +305,21 @@ public class TestSQLXMLProcessing {
         process(sql, expected);
     }
     
+    @Test public void testXmlTableDateTimeInDST() throws Exception {
+    	TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("PST")); //$NON-NLS-1$
+    	try {
+	        String sql = "select * from xmltable('/a' passing convert('<a dt=\"2011-11-01T09:38:49\" dtz=\"2011-11-01T07:38:49Z\"/>', xml) columns x timestamp path '@dt', x1 timestamp path '@dtz') as x"; //$NON-NLS-1$
+	        
+	        List<?>[] expected = new List<?>[] {
+	        		Arrays.asList(TimestampUtil.createTimestamp(111, 10, 1, 9, 38, 49, 0), TimestampUtil.createTimestamp(111, 10, 1, 0, 38, 49, 0))
+	        };    
+	    
+	        process(sql, expected);
+    	} finally {
+    		TimestampWithTimezone.resetCalendar(TimeZone.getTimeZone("GMT-06:00")); //$NON-NLS-1$
+        }
+    }
+    
     @Test public void testXmlTablePassingSubquery() throws Exception {
         String sql = "select * from xmltable('/a/b' passing (SELECT xmlelement(name a, xmlAgg(xmlelement(name b, e1))) from pm1.g1) columns val string path '/.') as x"; //$NON-NLS-1$
         

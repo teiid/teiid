@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.NodeInfo;
@@ -319,7 +320,11 @@ public class XMLTableNode extends SubqueryAwareRelationalNode implements RowProc
 		if (value instanceof CalendarValue) {
 			CalendarValue cv = (CalendarValue)value;
 			if (!cv.hasTimezone()) {
-				int tzMin = getContext().getServerTimeZone().getRawOffset()/60000;
+				TimeZone tz = getContext().getServerTimeZone();
+				int tzMin = tz.getRawOffset()/60000;
+				if (tz.getDSTSavings() > 0) {
+					tzMin = tz.getOffset(cv.getCalendar().getTimeInMillis())/60000;
+				}
 				cv.setTimezoneInMinutes(tzMin);
 				Calendar cal = cv.getCalendar();
 				return new Timestamp(cal.getTime().getTime());
