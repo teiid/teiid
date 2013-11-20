@@ -962,4 +962,64 @@ public class TestJoinNode {
         helpTestJoinDirect(expected, 4, 1000);
     }
     
+    @Test public void testSortMergeWithDistinct() throws TeiidComponentException, TeiidProcessingException {
+    	this.leftTuples = new List[] {Arrays.asList(1, 2), Arrays.asList(1, 3)};
+        this.rightTuples = new List[] {Arrays.asList(1, 4), Arrays.asList(1, 5)};
+        
+        expected = new List[] {
+                Arrays.asList(1, 2, 1, 4),
+                Arrays.asList(1, 2, 1, 5),
+                Arrays.asList(1, 3, 1, 4),
+                Arrays.asList(1, 3, 1, 5),
+        };
+
+    	ElementSymbol es1 = new ElementSymbol("e1"); //$NON-NLS-1$
+        es1.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        ElementSymbol es2 = new ElementSymbol("e2"); //$NON-NLS-1$
+        es2.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        List leftElements = Arrays.asList(es1, es2);
+        leftNode = new BlockingFakeRelationalNode(1, leftTuples);
+        leftNode.setElements(leftElements);
+        
+        ElementSymbol es3 = new ElementSymbol("e3"); //$NON-NLS-1$
+        es3.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        ElementSymbol es4 = new ElementSymbol("e4"); //$NON-NLS-1$
+        es4.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+        
+        List rightElements = Arrays.asList(es3, es4);
+
+        rightNode = new BlockingFakeRelationalNode(2, rightTuples) {
+        	@Override
+        	public boolean hasBuffer(boolean requireFinal) {
+        		return false;
+        	}
+
+        	@Override
+        	public TupleBuffer getBuffer(int maxRows) throws BlockedException, TeiidComponentException, TeiidProcessingException {
+        		fail();
+        		throw new AssertionError();
+        	};
+        };
+        rightNode.setElements(rightElements);
+        
+        List joinElements = new ArrayList();
+        joinElements.addAll(leftElements);
+        joinElements.addAll(rightElements);
+        
+        joinType = JoinType.JOIN_INNER;
+        joinStrategy = new MergeJoinStrategy(SortOption.SORT_DISTINCT, SortOption.SORT_DISTINCT, false);
+        
+        join = new JoinNode(3);
+        join.setElements(joinElements);
+        join.setJoinType(joinType);
+        
+        join.setJoinExpressions(Arrays.asList(es1), Arrays.asList(es3));
+        join.setJoinStrategy(joinStrategy);
+        
+        helpTestJoinDirect(expected, 100, 100000);
+    }
+    
 }
