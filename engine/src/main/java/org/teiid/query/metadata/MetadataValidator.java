@@ -397,6 +397,12 @@ public class MetadataValidator {
 							}
 						}
 					}
+					
+					for (KeyRecord record : t.getAllKeys()) {
+						if (record.getColumns() == null || record.getColumns().isEmpty()) {
+							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31149, t.getFullName(), record.getName()));
+						}
+					}
 						
 					List<ForeignKey> fks = t.getForeignKeys();
 					if (fks == null || fks.isEmpty()) {
@@ -404,9 +410,9 @@ public class MetadataValidator {
 					}
 					
 					for (ForeignKey fk:fks) {
-						if (fk.getPrimaryKey() != null) {
+						if (fk.getReferenceKey() != null) {
 							//ensure derived fields are set
-							fk.setPrimaryKey(fk.getPrimaryKey());
+							fk.setReferenceKey(fk.getReferenceKey());
 							continue;
 						}
 						
@@ -463,7 +469,7 @@ public class MetadataValidator {
 							metadataValidator.log(report, model, QueryPlugin.Util.gs(QueryPlugin.Event.TEIID31095, t.getFullName(), referenceTableName.substring(index+1), referenceSchemaName, referenceColumns));
 						}
 						else {
-							fk.setPrimaryKey(uniqueKey);
+							fk.setReferenceKey(uniqueKey);
 						}
 					}
 				}						

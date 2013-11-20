@@ -56,17 +56,28 @@ public class ForeignKey extends KeyRecord {
     
     /**
      * @return the primary key or unique key referenced by this foreign key
+     * @deprecated
+     * @see #getReferenceKey()
      */
     public KeyRecord getPrimaryKey() {
     	return this.primaryKey;
     }
     
     /**
-     * 
+     * @return the primary or unique key referenced by this foreign key
+     */
+    public KeyRecord getReferenceKey() {
+    	return this.primaryKey;
+    }
+    
+    /**
+     * Note: does not need to be directly called.  The engine can resolve the
+     * referenced key if {@link #setReferenceColumns(List)} and {@link #setReferenceTableName(String)}
+     * are used.
      * @param primaryKey,  the primary key or unique key referenced by this foreign key
      */
-    public void setPrimaryKey(KeyRecord primaryKey) {
-		this.primaryKey = primaryKey;
+    public void setReferenceKey(KeyRecord primaryKey) {
+    	this.primaryKey = primaryKey;
 		if (this.primaryKey != null) {
 			this.referenceColumns = new ArrayList<String>();
 			for (Column c : primaryKey.getColumns()) {
@@ -81,6 +92,16 @@ public class ForeignKey extends KeyRecord {
 			this.referenceTableName = null;
 			this.uniqueKeyID = null;
 		}
+    }
+
+    /**
+     * 
+     * @param primaryKey,  the primary key or unique key referenced by this foreign key
+     * @deprecated
+     * @see #setReferenceKey(KeyRecord)
+     */
+    public void setPrimaryKey(KeyRecord primaryKey) {
+		this.setReferenceKey(primaryKey);
 	}
 
     /**

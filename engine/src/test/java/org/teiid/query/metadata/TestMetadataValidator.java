@@ -193,9 +193,24 @@ public class TestMetadataValidator {
 		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		
-		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey());
-		assertEquals(2, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey().getColumns().size());
-		assertEquals("g1e1", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey().getColumns().get(0).getName());
+		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey());
+		assertEquals(2, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().size());
+		assertEquals("g1e1", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().get(0).getName());
+	}
+	
+	@Test
+	public void testEmptyKey() throws Exception {
+		String ddl = "CREATE FOREIGN TABLE G1(g1e1 integer, g1e2 varchar, PRIMARY KEY(g1e1, g1e2));";
+		
+		buildModel("pm1", true, this.vdb, this.store, ddl);
+		
+		buildTransformationMetadata();
+		
+		this.store.getSchema("pm1").getTable("G1").getPrimaryKey().getColumns().clear();
+		
+		ValidatorReport report = new ValidatorReport();
+		report = new MetadataValidator().validate(this.vdb, this.store);
+		assertTrue(printError(report), report.hasItems());
 	}
 	
 	@Test
@@ -212,9 +227,9 @@ public class TestMetadataValidator {
 		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		
-		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey());
-		assertEquals(1, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey().getColumns().size());
-		assertEquals("g1e2", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey().getColumns().get(0).getName());
+		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey());
+		assertEquals(1, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().size());
+		assertEquals("g1e2", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().get(0).getName());
 	}	
 
 	@Test
@@ -231,9 +246,9 @@ public class TestMetadataValidator {
 		report = new MetadataValidator().validate(this.vdb, this.store);
 		assertFalse(printError(report), report.hasItems());
 		
-		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey());
-		assertEquals(2, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey().getColumns().size());
-		assertEquals("g1e1", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getPrimaryKey().getColumns().get(0).getName());
+		assertNotNull(this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey());
+		assertEquals(2, this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().size());
+		assertEquals("g1e1", this.store.getSchema("pm2").getTable("G2").getForeignKeys().get(0).getReferenceKey().getColumns().get(0).getName());
 	}
 	
 	@Test
