@@ -125,6 +125,7 @@ public class SortUtility {
         List<Expression> sortElements = null;
         List<Boolean> sortTypes = null;
         List<NullOrdering> nullOrderings = null;
+        int distinctIndex = -1;
         if (items == null) {
     		sortElements = (List<Expression>) schema;
     		sortTypes = Collections.nCopies(sortElements.size(), OrderBy.ASC);
@@ -143,6 +144,9 @@ public class SortUtility {
 	        	sortElements.addAll(toAdd);
 	        	sortTypes.addAll(Collections.nCopies(sortElements.size() - sortTypes.size(), OrderBy.ASC));
 	        	nullOrderings.addAll(Collections.nCopies(sortElements.size() - nullOrderings.size(), (NullOrdering)null));
+	        	//this path should be for join processing, which can check the isDistinct flag.
+	        	//that needs the proper index based upon the original sort columns, not based upon making the whole set distinct
+	        	distinctIndex = items.size() - 1;
             }
         }
         
@@ -155,6 +159,9 @@ public class SortUtility {
         }
         init(sourceID, mode, bufferMgr, groupName, schema, sortTypes,
 				nullOrderings, cols);
+        if (distinctIndex != -1) {
+        	this.comparator.setDistinctIndex(distinctIndex);
+        }
     }
     
     public SortUtility(TupleSource sourceID, Mode mode, BufferManager bufferMgr,
