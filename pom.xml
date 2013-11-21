@@ -269,7 +269,17 @@
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
                     <extensions>true</extensions>
-                </plugin>             
+                </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+				    <!--
+				      During release:perform, enable the "release" profile
+				    -->
+			        <releaseProfiles>release</releaseProfiles>
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>             
 		</plugins>
 	</build>
 	<dependencies>
