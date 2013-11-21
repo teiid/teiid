@@ -58,7 +58,6 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	private Select command;
 	protected ArrayList<TranslatorException> exceptions = new ArrayList<TranslatorException>();
 
-	protected Stack<DBObject> onGoingCriteria = new Stack<DBObject>();
 	protected Stack<DBObject> onGoingPullCriteria = new Stack<DBObject>();
 	protected Stack<Object> onGoingExpression  = new Stack<Object>();
 	protected ConcurrentHashMap<Object, ColumnAlias> expressionMap = new ConcurrentHashMap<Object, ColumnAlias>();
@@ -80,6 +79,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	protected LinkedList<String> unwindTables = new LinkedList<String>();
 	protected ArrayList<Condition> pendingConditions = new ArrayList<Condition>();
 	protected LinkedList<MongoDocument> joinedDocuments = new LinkedList<MongoDocument>();
+	private boolean processingDerivedColumn = false;
 
 	public MongoDBSelectVisitor(MongoDBExecutionFactory executionFactory, RuntimeMetadata metadata) {
 		this.executionFactory = executionFactory;
@@ -146,7 +146,12 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 	@Override
 	public void visit(DerivedColumn obj) {
 		this.onGoingAlias = buildAlias(obj.getAlias());
-		append(obj.getExpression());
+		
+		Expression originalExpr = obj.getExpression();
+		
+		this.processingDerivedColumn = true;
+		append(originalExpr);
+		this.processingDerivedColumn = false;
 
 		Object expr = this.onGoingExpression.pop();
 
@@ -155,7 +160,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			previousAlias = this.onGoingAlias;
 		}
 
-		if (obj.getExpression() instanceof ColumnReference) {
+		if (originalExpr instanceof ColumnReference) {
 			String elementName = getColumnName((ColumnReference)obj.getExpression());
 			this.selectColumnReferences.add(elementName);
 			// the the expression is already part of group by then the projection should be $_id.{name}
@@ -179,6 +184,23 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			}			
 		}
 		else {
+			if (originalExpr instanceof AggregateFunction) {
+				ColumnAlias alias = addToProject(expr, false);
+				if (!this.group.values().contains(expr)) {
+					this.group.put(alias.projectedName, expr);
+				}
+			}
+			else if (originalExpr instanceof Function) {
+				addToProject(expr, true);
+			}
+			else if (originalExpr instanceof Condition) {
+				// needs to be in the form "_mo: {$cond: [{$eq :["$city", "FREEDOM"]}, true, false]}}}"
+				BasicDBList values = new BasicDBList();
+				values.add(0, expr);
+				values.add(1, true);
+				values.add(2, false);
+				addToProject(new BasicDBObject("$cond", values), true); //$NON-NLS-1$
+			}
 			// what user sees as project
 			this.selectColumns.add(previousAlias.projectedName);
 			this.selectColumnReferences.add(previousAlias.projectedName);
@@ -327,15 +349,11 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		}
 
 		if (expr != null) {
-			ColumnAlias alias = addToProject(expr, false);
-			if (!this.group.values().contains(expr)) {
-				this.group.put(alias.projectedName, expr);
-			}
 			this.onGoingExpression.push(expr);
 		}
     }
 
-	private ColumnAlias addToProject(BasicDBObject expr, boolean addExprAsProject) {
+	private ColumnAlias addToProject(Object expr, boolean addExprAsProject) {
 		ColumnAlias previousAlias = this.expressionMap.get(expr);
 		if (previousAlias == null) {
 			// if expression is in having clause there is will be no alias; however mongo expects this
@@ -371,8 +389,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			expr = new BasicDBObject(obj.getName(), params);
 		}
 
-		if(expr != null) {
-			addToProject(expr, true);
+		if(expr != null) {			
 			this.onGoingExpression.push(expr);
 		}
 	}
@@ -472,12 +489,12 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             append(obj.getWhere());
         }
 
-        if (!this.onGoingCriteria.isEmpty()) {
+        if (!this.onGoingExpression.isEmpty()) {
         	if (this.match != null) {
-        		this.match = QueryBuilder.start().and(this.match, this.onGoingCriteria.pop()).get();
+        		this.match = QueryBuilder.start().and(this.match, (DBObject)this.onGoingExpression.pop()).get();
         	}
         	else {
-        		this.match = this.onGoingCriteria.pop();
+        		this.match = (DBObject)this.onGoingExpression.pop();
         	}
         }
 
@@ -498,8 +515,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
             append(obj.getHaving());
         }
 
-        if (!this.onGoingCriteria.isEmpty()) {
-        	this.having = this.onGoingCriteria.pop();
+        if (!this.onGoingExpression.isEmpty()) {
+        	this.having = (DBObject)this.onGoingExpression.pop();
         }
 
         if (!this.group.isEmpty()) {
@@ -522,9 +539,15 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 
 	@Override
 	public void visit(Comparison obj) {
+        
+		// this for $cond in the select statement, and formatting of command for $cond vs $match is different
+        if (this.processingDerivedColumn) {
+        	visitDerivedExpression(obj);
+        	return;
+        }
+        
+        // this for the normal where clause
 		ColumnAlias exprAlias = getExpressionAlias(obj.getLeftExpression());
-		QueryBuilder query = QueryBuilder.start(exprAlias.selectionName);
-		QueryBuilder pullQuery = QueryBuilder.start(exprAlias.pullColumnName);
 
         append(obj.getRightExpression());
 
@@ -532,36 +555,38 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
         if (this.expressionMap.get(rightExpr) != null) {
         	rightExpr = this.expressionMap.get(rightExpr).projectedName;
         }
-        if (query != null) {
-        	switch(obj.getOperator()) {
-	        case EQ:
-	        	query.is(rightExpr);
-	        	pullQuery.is(rightExpr);
-	        	break;
-	        case NE:
-	        	query.notEquals(rightExpr);
-	        	pullQuery.notEquals(rightExpr);
-	        	break;
-	        case LT:
-	        	query.lessThan(rightExpr);
-	        	pullQuery.lessThan(rightExpr);
-	        	break;
-	        case LE:
-	        	query.lessThanEquals(rightExpr);
-	        	pullQuery.lessThanEquals(rightExpr);
-	        	break;
-	        case GT:
-	        	query.greaterThan(rightExpr);
-	        	pullQuery.greaterThan(rightExpr);
-	        	break;
-	        case GE:
-	        	query.greaterThanEquals(rightExpr);
-	        	pullQuery.greaterThanEquals(rightExpr);
-	        	break;
-	        }
-        	this.onGoingCriteria.push(query.get());
+    	
+		QueryBuilder query = QueryBuilder.start(exprAlias.selectionName);
+		QueryBuilder pullQuery = QueryBuilder.start(exprAlias.pullColumnName);
+    	
+    	switch(obj.getOperator()) {
+        case EQ:
+        	query.is(rightExpr);
+        	pullQuery.is(rightExpr);
+        	break;
+        case NE:
+        	query.notEquals(rightExpr);
+        	pullQuery.notEquals(rightExpr);
+        	break;
+        case LT:
+        	query.lessThan(rightExpr);
+        	pullQuery.lessThan(rightExpr);
+        	break;
+        case LE:
+        	query.lessThanEquals(rightExpr);
+        	pullQuery.lessThanEquals(rightExpr);
+        	break;
+        case GT:
+        	query.greaterThan(rightExpr);
+        	pullQuery.greaterThan(rightExpr);
+        	break;
+        case GE:
+        	query.greaterThanEquals(rightExpr);
+        	pullQuery.greaterThanEquals(rightExpr);
+        	break;
         }
-
+    	this.onGoingExpression.push(query.get());
+    	
         if (obj.getLeftExpression() instanceof ColumnReference) {
         	ColumnReference colum = (ColumnReference)obj.getLeftExpression();
 			this.mongoDoc.updateReferenceColumnValue(colum.getTable().getName(), exprAlias.columnName, rightExpr);
@@ -571,23 +596,61 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
        	this.onGoingPullCriteria.push(pullQuery.get());
 	}
 
+	private void visitDerivedExpression(Comparison obj) {
+		append(obj.getLeftExpression());
+		Object leftExpr = this.onGoingExpression.pop();
+		append(obj.getRightExpression());
+		Object rightExpr = this.onGoingExpression.pop();
+		
+		BasicDBList values = new BasicDBList();
+		values.add(0, leftExpr);
+		values.add(1, rightExpr);
+
+		switch(obj.getOperator()) {
+		case EQ:
+			this.onGoingExpression.push(new BasicDBObject("$eq", values)); //$NON-NLS-1$
+			this.onGoingPullCriteria.push(new BasicDBObject("$eq", values)); //$NON-NLS-1$
+			break;
+		case NE:
+			this.onGoingExpression.push(new BasicDBObject("$ne", values)); //$NON-NLS-1$
+			this.onGoingPullCriteria.push(new BasicDBObject("$ne", values)); //$NON-NLS-1$
+			break;
+		case LT:
+			this.onGoingExpression.push(new BasicDBObject("$lt", values)); //$NON-NLS-1$
+			this.onGoingPullCriteria.push(new BasicDBObject("$lt", values)); //$NON-NLS-1$
+			break;
+		case LE:
+			this.onGoingExpression.push(new BasicDBObject("$lte", values)); //$NON-NLS-1$
+			this.onGoingPullCriteria.push(new BasicDBObject("$lte", values)); //$NON-NLS-1$
+			break;
+		case GT:
+			this.onGoingExpression.push(new BasicDBObject("$gt", values)); //$NON-NLS-1$
+			this.onGoingPullCriteria.push(new BasicDBObject("$gt", values)); //$NON-NLS-1$
+			break;
+		case GE:
+			this.onGoingExpression.push(new BasicDBObject("$gte", values)); //$NON-NLS-1$
+			this.onGoingPullCriteria.push(new BasicDBObject("$gte", values)); //$NON-NLS-1$
+			break;
+		}
+	}
+
 	@Override
     public void visit(AndOr obj) {
 		append(obj.getLeftCondition());
 		append(obj.getRightCondition());
-        DBObject right = this.onGoingCriteria.pop();
-        DBObject left = this.onGoingCriteria.pop();
+        DBObject right = (DBObject)this.onGoingExpression.pop();
+        DBObject left = (DBObject) this.onGoingExpression.pop();
 
         DBObject pullRight = this.onGoingPullCriteria.pop();
         DBObject pullLeft = this.onGoingPullCriteria.pop();
 
         switch(obj.getOperator()) {
         case AND:
-        	this.onGoingCriteria.push(QueryBuilder.start().and(left, right).get());
+        	this.onGoingExpression.push(QueryBuilder.start().and(left, right).get());
         	this.onGoingPullCriteria.push(QueryBuilder.start().and(pullLeft, pullRight).get());
         	break;
         case OR:
-        	this.onGoingCriteria.push(QueryBuilder.start().or(left, right).get());
+        	this.onGoingExpression.push(QueryBuilder.start().or(left, right).get());
         	this.onGoingPullCriteria.push(QueryBuilder.start().or(pullLeft, pullRight).get());
         	break;
         }
@@ -623,7 +686,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 				query.in(values);
 				pullQuery.in(values);
 			}
-			this.onGoingCriteria.push(query.get());
+			this.onGoingExpression.push(query.get());
 			this.onGoingPullCriteria.push(pullQuery.get());
 		}
 	}
@@ -637,8 +700,8 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 		Object expr = this.onGoingExpression.pop();
 		ColumnAlias exprAlias = this.expressionMap.get(expr);
 		if (exprAlias == null) {
-			//exprAlias = buildAlias(null);
-			//this.expressionMap.put(expr, exprAlias);
+			exprAlias = buildAlias(null);
+			this.expressionMap.put(expr, exprAlias);
 		}
 
 		// when expression shows up in a condition, but it is not a derived column
@@ -661,7 +724,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 				query.is(null);
 				pullQuery.is(null);
 			}
-			this.onGoingCriteria.push(query.get());
+			this.onGoingExpression.push(query.get());
 			this.onGoingPullCriteria.push(pullQuery.get());
 		}
 	}
@@ -709,7 +772,7 @@ public class MongoDBSelectVisitor extends HierarchyVisitor {
 			String regex = value.toString().replaceAll("%", ""); //$NON-NLS-1$ //$NON-NLS-2$
 			query.is(Pattern.compile(regex));
 			pullQuery.is(Pattern.compile(regex));
-			this.onGoingCriteria.push(query.get());
+			this.onGoingExpression.push(query.get());
 			this.onGoingPullCriteria.push(pullQuery.get());
 		}
 	}

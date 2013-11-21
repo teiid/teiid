@@ -375,20 +375,10 @@ public class TestMongoDBSelectVisitor {
     	helpExecute(query, "users", "{ \"_m0\" : { \"$add\" : [ \"$age\" , \"$age\"]}}", null, null, null);
     }
 
-    //TODO: fix this
-    public void testPlusOperatorInWhere() throws Exception {
-    	String query = "SELECT age FROM users WHERE age*2 > 2.5";
-    	helpExecute(query, "users", "{ \"_m0\" : \"$age\"}", "{ \"$divide\" : [ \"$age\" , 2]}");
-    }
-
     @Test
-    public void testPlusOperatorInWhere2() throws Exception {
-    	String query = "SELECT age FROM users WHERE age/2 > age*3";
-		helpExecute(
-				query,
-				"users",
-				"{ \"_m0\" : { \"$divide\" : [ \"$age\" , 2]} , \"_m1\" : { \"$multiply\" : [ \"$age\" , 3]} , \"_m2\" : \"$age\"}",
-				"{ \"_m0\" : { \"$gt\" : \"_m1\"}}");
+    public void testPlusOperatorInWhere() throws Exception {
+    	String query = "SELECT age FROM users WHERE age > 5.0";
+    	helpExecute(query, "users", "{ \"_m0\" : \"$age\"}", "{ \"age\" : { \"$gt\" : 5}}");
     }
 
     @Test
@@ -398,7 +388,47 @@ public class TestMongoDBSelectVisitor {
 				"{ \"_m0\" : { \"$concat\" : [ \"$user_id\" , \"$user_id\"]}}",
 				null);
     }
+    
+    @Test
+    public void testSelectBooleanExpression() throws Exception {
+    	String query = "SELECT (user_id = 'USER') as X1 FROM users";
+		helpExecute(query, "users",
+				"{ \"X1\" : { \"$cond\" : [ { \"$eq\" : [ \"$user_id\" , \"USER\"]} , true , false]}}",
+				null);
+    }    
+    
+    @Test
+    public void testSelectBooleanExpression2() throws Exception {
+    	String query = "SELECT (user_id > 'USER') as X1 FROM users";
+		helpExecute(query, "users",
+				"{ \"X1\" : { \"$cond\" : [ { \"$gt\" : [ \"$user_id\" , \"USER\"]} , true , false]}}",
+				null);
+    } 
+    
+    @Test
+    public void testSelectBooleanExpression3() throws Exception {
+    	String query = "SELECT (user_id = 'USER' OR user_id = 'user') as X1 FROM users";
+		helpExecute(query, "users",
+				"{ \"X1\" : { \"$cond\" : [ { \"_m0\" : { \"$in\" : [ \"user\" , \"USER\"]}} , true , false]}}",
+				null);
+    }    
+    
+    @Test
+    public void testSelectBooleanExpression4() throws Exception {
+    	String query = "SELECT (user_id = 'USER' AND age > 30) as X1 FROM users";
+		helpExecute(query, "users",
+				"{ \"X1\" : { \"$cond\" : [ { \"$and\" : [ { \"$eq\" : [ \"$user_id\" , \"USER\"]} , { \"$gt\" : [ \"$age\" , 30]}]} , true , false]}}",
+				null);
+    } 
 
+    @Test
+    public void testNestedFunction() throws Exception {
+    	String query = "SELECT concat(concat(user_id, user_id), user_id) FROM users";
+		helpExecute(query, "users",
+				"{ \"_m0\" : { \"$concat\" : [ { \"$concat\" : [ \"$user_id\" , \"$user_id\"]} , \"$user_id\"]}}",
+				null);
+    }    
+    
     @Test
     public void testWhereReference() throws Exception {
     	String query = "SELECT age FROM users WHERE user_id = 'bob'";
