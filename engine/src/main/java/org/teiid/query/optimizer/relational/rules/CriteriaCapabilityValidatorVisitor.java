@@ -31,6 +31,7 @@ import org.teiid.client.plan.Annotation;
 import org.teiid.client.plan.Annotation.Priority;
 import org.teiid.core.TeiidComponentException;
 import org.teiid.core.types.DataTypeManager;
+import org.teiid.metadata.FunctionMethod.Determinism;
 import org.teiid.metadata.FunctionMethod.PushDown;
 import org.teiid.query.QueryPlugin;
 import org.teiid.query.analysis.AnalysisRecord;
@@ -51,6 +52,7 @@ import org.teiid.query.sql.navigator.PreOrPostOrderNavigator;
 import org.teiid.query.sql.symbol.*;
 import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.sql.visitor.EvaluatableVisitor;
+import org.teiid.query.sql.visitor.EvaluatableVisitor.EvaluationLevel;
 import org.teiid.query.sql.visitor.FunctionCollectorVisitor;
 import org.teiid.translator.ExecutionFactory.Format;
 import org.teiid.translator.SourceSystemFunctions;
@@ -689,7 +691,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
     	return canPushLanguageObject(obj, modelID, metadata, capFinder, analysisRecord, false);
     }
     
-    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
+    public static boolean canPushLanguageObject(LanguageObject obj, Object modelID, final QueryMetadataInterface metadata, CapabilitiesFinder capFinder, AnalysisRecord analysisRecord, boolean isJoin) throws QueryMetadataException, TeiidComponentException {
         if(obj == null) {
             return true;
         }
@@ -712,6 +714,7 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         //we use an array to represent multiple comparision attributes,
         //but we don't want that to inhibit pushdown as we'll account for that later
         //in criteria processing
+        final EvaluatableVisitor ev = new EvaluatableVisitor(modelID, metadata);
         PreOrPostOrderNavigator nav = new PreOrPostOrderNavigator(visitor, PreOrPostOrderNavigator.POST_ORDER, false) {
         	@Override
         	public void visit(DependentSetCriteria obj1) {
@@ -722,6 +725,61 @@ public class CriteriaCapabilityValidatorVisitor extends LanguageVisitor {
         		} else {
         			super.visit(obj1);
         		}
+        	}
+        	
+        	@Override
+        	protected void visitNode(LanguageObject obj) {
+        		if (obj == null) {
+        			return;
+        		}
+        		Determinism d = ev.getDeterminismLevel();
+        		boolean pushDown = ev.requiresEvaluation(EvaluationLevel.PUSH_DOWN);
+        		//decend with clean state, then restore
+        		ev.reset();
+        		super.visitNode(obj);
+        		ev.setDeterminismLevel(d);
+        		if (pushDown) {
+        			ev.evaluationNotPossible(EvaluationLevel.PUSH_DOWN);
+        		}
+        	}
+        	
+        	@Override
+        	protected void visitVisitor(LanguageObject obj) {
+        		if (obj == null) {
+        			return;
+        		}
+        		if (!ev.requiresEvaluation(EvaluationLevel.PUSH_DOWN) 
+        				&& ev.getDeterminismLevel() != Determinism.NONDETERMINISTIC) {
+        			if (obj instanceof ElementSymbol) {
+        				ElementSymbol es = (ElementSymbol)obj;
+    	        		if (es.getMetadataID() != null) {
+    		        		try {
+    		        			if (metadata.isMultiSourceElement(es.getMetadataID())) {
+    		        				return;  //no need to visit
+    		        			}
+    		        		} catch (QueryMetadataException e) {
+    		        		} catch (TeiidComponentException e) {
+    		        		}
+    	        		}
+        			}
+	        		obj.acceptVisitor(ev);
+	        		if (obj instanceof Expression) {
+	        			if (obj instanceof Function) {
+	        				if (!(obj instanceof AggregateSymbol)) {
+		        				Function f = (Function)obj;
+		        				if (f.getFunctionDescriptor().getPushdown() != PushDown.MUST_PUSHDOWN
+		        						&& f.getFunctionDescriptor().getDeterministic() != Determinism.NONDETERMINISTIC) {
+		        					return; //don't need to consider
+		        				}
+	        				}
+	        			} else if (obj instanceof Criteria 
+	        					&& !(obj instanceof SubqueryContainer)
+	        					&& !(obj instanceof DependentSetCriteria)) {
+	        				return; //don't need to consider
+	        			} 
+	        		}
+        		}
+        		super.visitVisitor(obj);
         	}
         };
         obj.acceptVisitor(nav);

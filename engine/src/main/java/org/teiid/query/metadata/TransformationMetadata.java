@@ -289,6 +289,12 @@ public class TransformationMetadata extends BasicQueryMetadata implements Serial
             if (parent instanceof Table) {
             	return parent;
             }
+            if (parent instanceof ColumnSet) {
+            	parent = ((ColumnSet<?>)parent).getParent();
+            	if (parent instanceof Procedure) {
+            		return parent;
+            	}
+            }
         } 
         if(elementID instanceof ProcedureParameter) {
         	ProcedureParameter columnRecord = (ProcedureParameter) elementID;

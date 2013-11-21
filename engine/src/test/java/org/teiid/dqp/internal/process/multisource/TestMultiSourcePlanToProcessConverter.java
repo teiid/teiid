@@ -45,6 +45,7 @@ import org.teiid.query.optimizer.TestOptimizer;
 import org.teiid.query.optimizer.capabilities.BasicSourceCapabilities;
 import org.teiid.query.optimizer.capabilities.CapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.FakeCapabilitiesFinder;
+import org.teiid.query.optimizer.capabilities.SourceCapabilities;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.processor.HardcodedDataManager;
 import org.teiid.query.processor.ProcessorDataManager;
@@ -100,7 +101,18 @@ public class TestMultiSourcePlanToProcessConverter {
     	return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, null, null);
     }
     
+    
     public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb, List<?> params, Options options) throws Exception {
+        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
+        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
+        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
+        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
+        
+        bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
+        return helpTestMultiSourcePlan(metadata, userSql, multiModel, sourceCount, dataMgr, expectedResults, vdb, params, options, bsc);
+    }
+    
+    public ProcessorPlan helpTestMultiSourcePlan(QueryMetadataInterface metadata, String userSql, String multiModel, int sourceCount, ProcessorDataManager dataMgr, List<?>[] expectedResults, VDBMetaData vdb, List<?> params, Options options, SourceCapabilities bsc) throws Exception {
         Map<String, String> multiSourceModels = MultiSourceMetadataWrapper.getMultiSourceModels(vdb);
         for (String model:multiSourceModels.keySet()) {
             char sourceID = 'a';
@@ -125,12 +137,6 @@ public class TestMultiSourcePlanToProcessConverter {
         // Plan
         command = QueryRewriter.rewrite(command, wrapper, null);
         FakeCapabilitiesFinder fakeFinder = new FakeCapabilitiesFinder();
-        BasicSourceCapabilities bsc = TestOptimizer.getTypicalCapabilities();
-        bsc.setCapabilitySupport(Capability.QUERY_AGGREGATES_MAX, true);
-        bsc.setCapabilitySupport(Capability.ROW_LIMIT, true);
-        bsc.setCapabilitySupport(Capability.QUERY_GROUP_BY, true);
-        
-        bsc.setFunctionSupport(SourceSystemFunctions.CONCAT, true);
         fakeFinder.addCapabilities(multiModel, bsc); 
         
         CapabilitiesFinder finder = new TempCapabilitiesFinder(fakeFinder);
@@ -531,6 +537,23 @@ public class TestMultiSourcePlanToProcessConverter {
         dataMgr.setMustRegisterCommands(true);
         dataMgr.addData("SELECT g_0.a, g_0.b FROM MultiModel.Phys AS g_0", new List<?>[] {Arrays.asList("a", "b")}); //$NON-NLS-1$
         helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB());
+    }
+    
+    @Test public void testUnsupportedPredicate() throws Exception {
+        QueryMetadataInterface metadata = RealMetadataFactory.exampleMultiBinding();
+
+        final String userSql = "SELECT phys.a FROM MultiModel.Phys where Phys.source_name like 'a%'"; //$NON-NLS-1$
+        final String multiModel = "MultiModel"; //$NON-NLS-1$
+        final int sources = 2;
+        final List<?>[] expected = new List<?>[] {
+            Arrays.asList("a"),
+        };
+        final HardcodedDataManager dataMgr = new HardcodedDataManager();
+        dataMgr.addData("SELECT MultiModel.Phys.a FROM MultiModel.Phys", //$NON-NLS-1$
+                        new List<?>[] {
+                            Arrays.asList("a")}); 
+        helpTestMultiSourcePlan(metadata, userSql, multiModel, sources, dataMgr, expected, RealMetadataFactory.exampleMultiBindingVDB(), null, new Options().implicitMultiSourceJoin(false), new BasicSourceCapabilities());
+        assertEquals(3, dataMgr.getCommandHistory().size());
     }
 
 }

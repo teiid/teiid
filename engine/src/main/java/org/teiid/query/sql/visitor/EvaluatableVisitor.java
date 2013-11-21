@@ -73,6 +73,15 @@ public class EvaluatableVisitor extends LanguageVisitor {
 	private Object modelId;
 	private QueryMetadataInterface metadata;
 	private CapabilitiesFinder capFinder;
+	
+	public EvaluatableVisitor() {
+		
+	}
+	
+	public EvaluatableVisitor(Object modelId, QueryMetadataInterface metadata) {
+		this.modelId = modelId;
+		this.metadata = metadata;
+	}
 	    
     public void visit(Function obj) {
         FunctionDescriptor fd = obj.getFunctionDescriptor();
@@ -108,13 +117,13 @@ public class EvaluatableVisitor extends LanguageVisitor {
     	}
     }
     
-    private void setDeterminismLevel(Determinism value) {
+    public void setDeterminismLevel(Determinism value) {
     	if (determinismLevel == null || value.compareTo(determinismLevel) < 0) {
     		determinismLevel = value;
     	}
     }
     
-    private void evaluationNotPossible(EvaluationLevel newLevel) {
+    public void evaluationNotPossible(EvaluationLevel newLevel) {
     	levels.add(newLevel);
     	EvaluationLevel level = levels.last();
     	if (targetLevel != null && level.compareTo(targetLevel) > 0) {
@@ -123,6 +132,10 @@ public class EvaluatableVisitor extends LanguageVisitor {
     }
         
     public void visit(ElementSymbol obj) {
+    	if (obj.getGroupSymbol() == null) {
+    		evaluationNotPossible(EvaluationLevel.PROCESSING);
+    		return;
+    	}
     	//if the element is a variable, or an element that will have a value, it will be evaluatable at runtime
 		//begin hack for not having the metadata passed in
 		if (obj.getGroupSymbol().getMetadataID() instanceof TempMetadataID) {
@@ -269,4 +282,9 @@ public class EvaluatableVisitor extends LanguageVisitor {
         DeepPreOrderNavigator.doVisit(obj, visitor);
         return visitor;
     }
+
+	public void reset() {
+		this.determinismLevel = Determinism.DETERMINISTIC;
+		this.levels.clear();
+	}
 }
