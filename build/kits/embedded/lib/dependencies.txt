@@ -25,3 +25,6 @@ gdata*
 
 Third-party mongo dependencies:
 mongo-java-driver
+
+Third-party simpledb dependencies:
+aws-java-sdk

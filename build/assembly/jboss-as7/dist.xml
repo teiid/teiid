@@ -377,6 +377,30 @@
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-simpledb</include>
+        </includes>
+
+        <binaries>   
+          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
+          <includeDependencies>true</includeDependencies>
+          <unpack>true</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/simpledb/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
     
     <!-- **************************************************************************
                         These are built in translators  
@@ -755,8 +779,54 @@
         </binaries>
       
     </moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-simpledb</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/simpledb/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>
     
-      <moduleSet>
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:simpledb-api</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>true</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/simpledb/api/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>   
+    <moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
 
