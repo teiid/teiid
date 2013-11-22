@@ -217,6 +217,7 @@ public class LogonImpl implements ILogon {
 		DQPWorkContext workContext = DQPWorkContext.getWorkContext();
 		this.service.closeSession(workContext.getSessionId());
 		workContext.getSession().setSessionId(null);
+		workContext.getSession().setSecurityContext(null);
 		workContext.getSession().getSessionVariables().clear();
 		return ResultsFuture.NULL_FUTURE;
 	}
