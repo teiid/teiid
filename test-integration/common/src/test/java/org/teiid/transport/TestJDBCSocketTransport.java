@@ -42,6 +42,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.teiid.common.buffer.BufferManagerFactory;
+import org.teiid.common.buffer.StorageManager;
 import org.teiid.core.types.ArrayImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.util.ObjectConverterUtil;
@@ -65,6 +66,7 @@ import org.teiid.translator.ws.BinaryWSProcedureExecution;
 @SuppressWarnings("nls")
 public class TestJDBCSocketTransport {
 
+	private static final int MAX_MESSAGE = 100000;
 	static InetSocketAddress addr;
 	static SocketListener jdbcTransport;
 	static FakeServer server;
@@ -82,7 +84,15 @@ public class TestJDBCSocketTransport {
 		server.start(dqpConfig, false);
 		server.deployVDB("parts", UnitTestUtil.getTestDataPath() + "/PartsSupplier.vdb");
 		
-		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager());
+		jdbcTransport = new SocketListener(addr, config, server.getClientServiceRegistry(), BufferManagerFactory.getStandaloneBufferManager()) {
+			@Override
+			protected SSLAwareChannelHandler createChannelPipelineFactory(
+					SSLConfiguration config, StorageManager storageManager) {
+				SSLAwareChannelHandler result = super.createChannelPipelineFactory(config, storageManager);
+				result.setMaxMessageSize(MAX_MESSAGE);
+				return result;
+			}
+		};
 	}
 	
 	@AfterClass public static void oneTimeTearDown() throws Exception {
@@ -277,6 +287,25 @@ public class TestJDBCSocketTransport {
 		assertEquals("java.sql.Array", rs.getMetaData().getColumnClassName(1));
 		assertEquals(Types.ARRAY, rs.getMetaData().getColumnType(1));
 		assertEquals("object[]", rs.getMetaData().getColumnTypeName(1));
+	}
+	
+	@Test public void testLargeMessage() throws Exception {
+		Statement s = conn.createStatement();
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT '");
+		for (int i = 0; i < MAX_MESSAGE; i++) {
+			sb.append('a');
+		}
+		sb.append('\'');
+		try {
+			s.executeQuery(sb.toString());
+			fail();
+		} catch (SQLException e) {
+			
+		}
+		ResultSet rs = s.executeQuery("select 1");
+		rs.next();
+		assertEquals(1, rs.getInt(1));
 	}
 	
 }

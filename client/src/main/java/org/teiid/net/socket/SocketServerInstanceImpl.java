@@ -232,8 +232,23 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
         	if (messageKey instanceof ExceptionHolder) {
         		holder = (ExceptionHolder)messageKey;
         		messageKey = (Serializable) messagePacket.getContents();
+        		if (log.isLoggable(Level.FINE)) {
+        			log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$
+        		}
+                if (messageKey == null) {
+                	if (log.isLoggable(Level.FINE)) {
+                		log.log(Level.FINE, "protocol error aborting all listeners"); //$NON-NLS-1$
+                	}
+                	for (ResultsReceiver<Object> listener : asynchronousListeners.values()) {
+                		listener.exceptionOccurred(holder.getException());
+                	}
+                	asynchronousListeners.clear();
+                	return;
+                }
         	} 
-            log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$ 
+        	if (log.isLoggable(Level.FINE)) {
+        		log.log(Level.FINE, "read asynch message:" + messageKey); //$NON-NLS-1$
+        	}
             ResultsReceiver<Object> listener = asynchronousListeners.remove(messageKey);
             if (listener != null) {
             	if (holder != null) {
@@ -244,7 +259,9 @@ public class SocketServerInstanceImpl implements SocketServerInstance {
             }
         } else {
         	//TODO: could ping back
-        	log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$ 
+        	if (log.isLoggable(Level.FINE)) {
+        		log.log(Level.FINE, "packet ignored:" + packet); //$NON-NLS-1$
+        	}
         }
     }
     

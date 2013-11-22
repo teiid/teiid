@@ -42,6 +42,7 @@ import org.jboss.netty.channel.ChannelHandler.Sharable;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
 import org.teiid.common.buffer.StorageManager;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.net.socket.ObjectChannel;
@@ -55,6 +56,8 @@ import org.teiid.runtime.RuntimePlugin;
 @Sharable
 public class SSLAwareChannelHandler extends SimpleChannelHandler implements ChannelPipelineFactory {
 	
+	private static final int DEFAULT_MAX_MESSAGE_SIZE = 1 << 21;
+
 	public class ObjectChannelImpl implements ObjectChannel {
 		private final Channel channel;
 
@@ -134,6 +137,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	private AtomicLong objectsRead = new AtomicLong(0);
 	private AtomicLong objectsWritten = new AtomicLong(0);
 	private volatile int maxChannels;
+	private int maxMessageSize = PropertiesUtils.getIntProperty(System.getProperties(), "org.teiid.maxMessageSize", DEFAULT_MAX_MESSAGE_SIZE); //$NON-NLS-1$
 	
 	private ChannelFutureListener completionListener = new ChannelFutureListener() {
 
@@ -221,7 +225,7 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 		        pipeline.addLast("ssl", new SslHandler(engine)); //$NON-NLS-1$
 		    }
 		}
-	    pipeline.addLast("decoder", new ObjectDecoder(1 << 20, classLoader, storageManager)); //$NON-NLS-1$
+	    pipeline.addLast("decoder", new ObjectDecoder(maxMessageSize, classLoader, storageManager)); //$NON-NLS-1$
 	    pipeline.addLast("chunker", new ChunkedWriteHandler()); //$NON-NLS-1$
 	    pipeline.addLast("encoder", new ObjectEncoder()); //$NON-NLS-1$
 	    pipeline.addLast("handler", this); //$NON-NLS-1$
@@ -242,6 +246,14 @@ public class SSLAwareChannelHandler extends SimpleChannelHandler implements Chan
 	
 	public int getMaxConnectedChannels() {
 		return this.maxChannels;
+	}
+	
+	public int getMaxMessageSize() {
+		return maxMessageSize;
+	}
+	
+	public void setMaxMessageSize(int maxMessageSize) {
+		this.maxMessageSize = maxMessageSize;
 	}
 
 }

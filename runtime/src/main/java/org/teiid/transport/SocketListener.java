@@ -122,4 +122,8 @@ public class SocketListener implements ChannelListenerFactory {
 		return new SocketClientInstance(channel, csr, this.isClientEncryptionEnabled);
 	}
 	
+	SSLAwareChannelHandler getChannelHandler() {
+		return channelHandler;
+	}
+	
 }

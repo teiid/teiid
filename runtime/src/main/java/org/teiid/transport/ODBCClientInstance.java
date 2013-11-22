@@ -41,6 +41,7 @@ import org.teiid.net.socket.ServiceInvocationStruct;
 import org.teiid.odbc.ODBCClientRemote;
 import org.teiid.odbc.ODBCServerRemote;
 import org.teiid.odbc.ODBCServerRemoteImpl;
+import org.teiid.runtime.RuntimePlugin;
 import org.teiid.transport.PgFrontendProtocol.PGRequest;
 
 public class ODBCClientInstance implements ChannelListener{
@@ -91,7 +92,7 @@ public class ODBCClientInstance implements ChannelListener{
 	@Override
 	public void exceptionOccurred(Throwable t) {
 		int level = SocketClientInstance.getLevel(t);
-		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage()));
 		server.terminate();
 	}
 	

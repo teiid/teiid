@@ -96,22 +96,31 @@ public class SocketClientInstance implements ChannelListener, ClientInstance {
 
 	public void exceptionOccurred(Throwable t) {
 		//Object encoding may fail, so send a specific type of message to indicate there was a problem
-		if (objectSocket.isOpen() && workContext.getClientVersion().compareTo(Version.EIGHT_4) >= 0 && t instanceof FailedWriteException) {
-			FailedWriteException fwe = (FailedWriteException)t;
-			if (fwe.getObject() instanceof Message) {
-				Message m = (Message)fwe.getObject();
-				if (!(m.getMessageKey() instanceof ExceptionHolder)) {
-					Message exception = new Message();
-					exception.setContents(m.getMessageKey());
-					exception.setMessageKey(new ExceptionHolder(fwe.getCause()));
-					objectSocket.write(exception);
-					LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, "Unhandled exception, aborting operation"); //$NON-NLS-1$
-					return;
+		if (objectSocket.isOpen()) {
+			if (workContext.getClientVersion().compareTo(Version.EIGHT_4) >= 0 && t instanceof FailedWriteException) {
+				FailedWriteException fwe = (FailedWriteException)t;
+				if (fwe.getObject() instanceof Message) {
+					Message m = (Message)fwe.getObject();
+					if (!(m.getMessageKey() instanceof ExceptionHolder)) {
+						Message exception = new Message();
+						exception.setContents(m.getMessageKey());
+						exception.setMessageKey(new ExceptionHolder(fwe.getCause()));
+						objectSocket.write(exception);
+						LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113)); //$NON-NLS-1$
+						return;
+					}
 				}
+			}
+			if (workContext.getClientVersion().compareTo(Version.EIGHT_6) >= 0) {
+				Message exception = new Message();
+				exception.setMessageKey(new ExceptionHolder(t));
+				objectSocket.write(exception);
+				LogManager.log(getLevel(t), LogConstants.CTX_TRANSPORT, t, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40113)); //$NON-NLS-1$
+				return;
 			}
 		}
 		int level = getLevel(t);
-		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, "Unhandled exception, closing client instance"); //$NON-NLS-1$
+		LogManager.log(level, LogConstants.CTX_TRANSPORT, LogManager.isMessageToBeRecorded(LogConstants.CTX_TRANSPORT, MessageLevel.DETAIL)||level<MessageLevel.WARNING?t:null, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40114, t.getMessage())); 
 		objectSocket.close();
 	}
 
