@@ -28,12 +28,16 @@ import java.util.Properties;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.server.core.Main;
 import org.infinispan.server.hotrod.HotRodServer;
+import org.teiid.resource.adapter.infinispan.util.TradesCacheSource;
 
 /**
  */
 @SuppressWarnings("nls")
 public class RemoteInfinispanTestHelper {
-	protected static final String CACHE_NAME = "test";  //$NON-NLS-1$
+	protected static final String TEST_CACHE_NAME = "test";
+	protected static final String TRADE_CACHE_NAME = TradesCacheSource.TRADES_CACHE_NAME;
+	
+	protected static String CACHE_NAME = "NA";  //$NON-NLS-1$
     protected static final int PORT = 11311;
     protected static final int TIMEOUT = 0;
     protected static final String CONFIG_FILE = "src/test/resources/infinispan_remote_config.xml";
@@ -42,7 +46,7 @@ public class RemoteInfinispanTestHelper {
     private static int count = 0;
     private static  DefaultCacheManager CACHEMANAGER = null;
 
-    public static synchronized HotRodServer createServer() throws IOException {
+    private static synchronized HotRodServer createServer() throws IOException {
         count++;
         if (server == null) {        	
 			CACHEMANAGER = new DefaultCacheManager(CONFIG_FILE);
@@ -66,11 +70,26 @@ public class RemoteInfinispanTestHelper {
             
             server.cacheManager().startCaches(CACHE_NAME);
             
-            server.getCacheManager().getCache(CACHE_NAME).put("1",  new String("value1")); //$NON-NLS-1$  //$NON-NLS-2$
-            server.getCacheManager().getCache(CACHE_NAME).put("2",  new String("value2")); //$NON-NLS-1$  //$NON-NLS-2$
- 
         }
         return server;
+    }
+    
+    public static void loadCacheSimple() throws IOException {
+    	CACHE_NAME = TEST_CACHE_NAME;
+    	
+    	createServer();
+    	
+        server.getCacheManager().getCache(CACHE_NAME).put("1",  new String("value1")); //$NON-NLS-1$  //$NON-NLS-2$
+        server.getCacheManager().getCache(CACHE_NAME).put("2",  new String("value2")); //$NON-NLS-1$  //$NON-NLS-2$   	
+    }
+    
+    public static void loadCacheTrades() throws IOException {
+    	CACHE_NAME = TRADE_CACHE_NAME;
+    	
+    	createServer();
+    	
+    	TradesCacheSource.loadCache(  server.getCacheManager().getCache(CACHE_NAME) );
+    	
     }
     
     public static DefaultCacheManager getCacheManager() {
