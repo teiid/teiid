@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module xmlns="urn:jboss:module:1.0" name="org.jboss.teiid.translator.object">
     <resources>
-        <resource-root path="translator-object-8.4.1.jar" />
+        <resource-root path="translator-object-${project.version}.jar" />
         <!-- Insert resources here -->
     </resources>
 
