@@ -12,9 +12,7 @@
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid" />
         <module name="javax.persistence.api"/>
-        <module name="org.hibernate"/>
         <module name="org.infinispan"/>
-        <module name="org.infinispan.cachestore.remote"/>
-        <module name="org.infinispan.client.hotrod"/>
+        <!--module name="org.hibernate.search.engine"/-->   
     </dependencies>
 </module>
