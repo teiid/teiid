@@ -1027,4 +1027,8 @@ public class ConnectionImpl extends WrapperImpl implements TeiidConnection {
 		this.payload = payload;
 	}
 	
+	public Properties getConnectionProps() {
+		return connectionProps;
+	}
+	
 }

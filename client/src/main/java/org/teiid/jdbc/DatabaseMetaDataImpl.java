@@ -40,10 +40,13 @@ import org.teiid.client.metadata.ResultsMetadataConstants;
 import org.teiid.core.CoreConstants;
 import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.SqlUtil;
 
 
 public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaData {
+
+	public static final String REPORT_AS_VIEWS = "reportAsViews"; //$NON-NLS-1$
 
 	private static final String IS_NULLABLE = "CASE NullType WHEN 'Nullable' THEN 'YES' WHEN 'No Nulls' THEN 'NO' ELSE '' END AS IS_NULLABLE"; //$NON-NLS-1$
 
@@ -243,16 +246,9 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
         .append(" AND UCASE(Name)").append(LIKE_ESCAPE)//$NON-NLS-1$
         .append(" ORDER BY TABLE_SCHEM").toString(); //$NON-NLS-1$
     
-    private final static String TABLE_TYPE = "CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END"; //$NON-NLS-1$
+    private final String TABLE_TYPE;
     
-    private final static String QUERY_TABLES =
-      new StringBuffer("SELECT VDBName AS TABLE_CAT, SchemaName AS TABLE_SCHEM, Name AS TABLE_NAME") //$NON-NLS-1$
-        .append(", ").append(TABLE_TYPE).append(" AS TABLE_TYPE, Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM") //$NON-NLS-1$ //$NON-NLS-2$
-        .append(", NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL") //$NON-NLS-1$
-        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Tables g ")  //$NON-NLS-1$ //$NON-NLS-2$
-        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
-        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
-        .append(" AND UCASE(Name)") .append(LIKE_ESCAPE).toString(); //$NON-NLS-1$
+    private final String QUERY_TABLES;
     
 //    private static final String QUERY_UDT =
 //      new StringBuffer("SELECT NULL AS TYPE_CAT, v.Name AS TYPE_SCHEM, TypeName AS TYPE_NAME") //$NON-NLS-1$
@@ -276,6 +272,19 @@ public class DatabaseMetaDataImpl extends WrapperImpl implements DatabaseMetaDat
      */
     DatabaseMetaDataImpl(ConnectionImpl connection) {
         this.driverConnection = connection;
+        if (PropertiesUtils.getBooleanProperty(connection.getConnectionProps(), REPORT_AS_VIEWS, false)) {
+        	TABLE_TYPE = "CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' WHEN IsPhysical <> 'true' AND UCASE(Type) = 'TABLE' THEN 'VIEW' ELSE UCASE(Type) END"; //$NON-NLS-1$       	
+        } else {
+        	TABLE_TYPE = "CASE WHEN IsSystem = 'true' and UCASE(Type) = 'TABLE' THEN 'SYSTEM TABLE' ELSE UCASE(Type) END"; //$NON-NLS-1$
+        }
+        
+        QUERY_TABLES = new StringBuffer("SELECT VDBName AS TABLE_CAT, SchemaName AS TABLE_SCHEM, Name AS TABLE_NAME") //$NON-NLS-1$
+        .append(", ").append(TABLE_TYPE).append(" AS TABLE_TYPE, Description AS REMARKS, NULL AS TYPE_CAT, NULL AS TYPE_SCHEM") //$NON-NLS-1$ //$NON-NLS-2$
+        .append(", NULL AS TYPE_NAME, NULL AS SELF_REFERENCING_COL_NAME, NULL AS REF_GENERATION, IsPhysical AS ISPHYSICAL") //$NON-NLS-1$
+        .append(" FROM ").append(RUNTIME_MODEL.VIRTUAL_MODEL_NAME).append(".Tables g ")  //$NON-NLS-1$ //$NON-NLS-2$
+        .append(" WHERE UCASE(VDBName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(SchemaName)").append(LIKE_ESCAPE)//$NON-NLS-1$
+        .append(" AND UCASE(Name)") .append(LIKE_ESCAPE).toString(); //$NON-NLS-1$
     }
 
     /**
