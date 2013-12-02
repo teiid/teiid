@@ -21,58 +21,23 @@
  */
 package org.teiid.translator.object;
 
-import static org.junit.Assert.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
-import java.util.Map;
-import java.util.Properties;
-
-import javax.naming.Context;
-
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.mockito.Mock;
 import org.teiid.language.Select;
-import org.teiid.metadata.BaseColumn.NullType;
-import org.teiid.metadata.Datatype;
-import org.teiid.metadata.MetadataFactory;
-import org.teiid.metadata.Table;
-import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.ExecutionContext;
 import org.teiid.translator.TranslatorException;
-import org.teiid.translator.object.testdata.Trade;
 import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 
 @SuppressWarnings("nls")
 public class TestMapCacheKeySearch extends BasicSearchTest {	      
-
-	protected static final String JNDI_NAME = "java/MyCacheManager";
 	   
-	private static TradesCacheSource source  = TradesCacheSource.loadCache();
+	private static ObjectConnection conn = TradesCacheSource.createConnection(TradesCacheSource.MAP_CACHE_WRAPPER);
 	private static ExecutionContext context;
 	
 	private ObjectExecutionFactory factory = null;
-	
-	@Mock
-	private static Context jndi;
 
 	protected static boolean print = false;
-	
-	@BeforeClass
-    public static void beforeEachClass() throws Exception {  
-	    
-		context = mock(ExecutionContext.class);
-		
-        // Set up the mock JNDI ...
-		jndi = mock(Context.class);
-        when(jndi.lookup(anyString())).thenReturn(null);
-        when(jndi.lookup(JNDI_NAME)).thenReturn(source);
-
-	}
 	
 	@Before public void beforeEach() throws Exception{	
 		 
@@ -84,34 +49,8 @@ public class TestMapCacheKeySearch extends BasicSearchTest {
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {
-		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, source);
+		return (ObjectExecution) factory.createExecution(command, context, VDBUtility.RUNTIME_METADATA, conn);
 	}
 	
-	@Test public void testGetMetadata() throws Exception {
-		
-		Map<String, Datatype> dts = SystemMetadata.getInstance().getSystemStore().getDatatypes();
-
-		MetadataFactory mfactory = new MetadataFactory("TestVDB", 1, "Trade",  dts, new Properties(), null);
-		
-		factory.getMetadata(mfactory, source);
-		
-		assertEquals(mfactory.getSchema().getName(), "Trade");
-		
-		String clzName = Trade.class.getName();
-		clzName = clzName.substring(clzName.lastIndexOf(".") + 1);
-
-		Table physicalTable = mfactory.getSchema().getTable(clzName);
-		assertNotNull(physicalTable);
-		assertTrue(physicalTable.isPhysical());
-		assertTrue(!physicalTable.isVirtual());
-		assertEquals(5, physicalTable.getColumns().size());
-		//this
-		assertEquals("object", physicalTable.getColumns().get(0).getRuntimeType());
-		//trade id key
-		assertEquals("long", physicalTable.getColumns().get(1).getRuntimeType());
-		assertEquals(NullType.No_Nulls, physicalTable.getColumns().get(1).getNullType());
-		//name
-		assertEquals("string", physicalTable.getColumns().get(2).getRuntimeType());
-	}
 
 }

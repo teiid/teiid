@@ -1,0 +1,24 @@
+<module xmlns="urn:jboss:module:1.1" name="org.jboss.teiid.resource-adapter.infinispan" slot="6.2">
+   
+    <resources>
+        <resource-root path="connector-infinispan.6-${project.version}.jar"/>
+        <resource-root path="." />
+        <!-- Insert resources here -->
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="javax.resource.api"/>
+        <module name="org.jboss.teiid.common-core"/>
+        <module name="org.jboss.teiid.api"/>
+        <module name="org.jboss.teiid.translator.object"/>
+        
+        <!-- 
+            this module name is based on what the teiid infinispan-remote-cache
+            quickstart has defined as the location to put all the JDG 6.2 hotrod client jars.  
+            However, if you use a different module, be sure to update this
+        -->
+        <module name="org.jboss.infinispan.hotrod" slot="6.2" />
+        <module name="org.jboss.modules"/>
+    </dependencies>
+</module>

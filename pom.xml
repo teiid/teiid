@@ -37,6 +37,9 @@
         <version.resteasy-jaxrs>2.3.6.Final</version.resteasy-jaxrs>
         <version.com.force.api>26.0.0</version.com.force.api>
         <version.mongo-java-driver>2.11.1</version.mongo-java-driver> 
+        <version.org.infinispan.6>6.0.0.CR1</version.org.infinispan.6>
+        <version.org.hibernate>4.1.1.Final</version.org.hibernate>
+        <version.org.apache.lucene>3.6.2</version.org.apache.lucene>        
 	</properties>
 	<scm>
         <connection>scm:git:git://github.com/teiid/teiid.git</connection>

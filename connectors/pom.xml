@@ -114,5 +114,6 @@
     <module>mongodb-api</module>
     <module>connector-mongodb</module>
     <module>translator-mongodb</module>
+    <module>connector-infinispan.6</module>
   </modules>
 </project>

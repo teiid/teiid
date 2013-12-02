@@ -1,0 +1,4 @@
+<infinispan>
+  <namedCache name="Trades">
+  </namedCache>
+</infinispan>
