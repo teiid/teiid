@@ -14,14 +14,14 @@
 
 public class CacheStats {
         
-    public final VDB_NAME = "vdb_name"
+    public final VDB_NAME = "ModeShape"
     public final int VDB_VERSION = 1
     public final SERVER = "localhost"
 
     public final JDBC_USER = "user"
     public final JDBC_PWD = "user"
 
-    public final QUERY = "select * from tablename"
+    public final QUERY = "select * from sys.tables"
     
     public final int LOOP_COUNTER = 10
     
@@ -57,6 +57,12 @@ public class CacheStats {
         
     } 
     
+    void doQuery() {
+        def sql = connect(); // get an extended Groovy Sql connection using connection.properties file
+ 
+        sql.execute(QUERY);
+    }
+    
     void performTest () {    
         
         /* First - clear the QUERY_SERVICE_RESULT_SET_CACHE cache */         
@@ -71,7 +77,8 @@ public class CacheStats {
         /* Retrieve the cached values */ 
         CacheStatistics startCache
         try { 
-            startCache = getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
+            def rsc  = getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
+            startCache = (CacheStatistics) rsc.get(0);
         }
         catch ( Exception e ) {
             println( "Exception: " + e.printStackTrace() )
@@ -86,9 +93,11 @@ public class CacheStats {
             doQuery()                
         }
         
+        
         CacheStatistics endCache
         try {
-            endCache = getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
+            def rsc = getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
+            endCache = (CacheStatistics) rsc.get(0);
         } 
         catch ( Exception e ) {
             println( "getCacheStats.eachRow exception: " + e.getMessage() )
@@ -109,7 +118,8 @@ public class CacheStats {
         
         CacheStatistics resetCache
         try {
-            resetCache = getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
+            def rsc = getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
+            resetCache = (CacheStatistics) rsc.get(0);
             println "RESET: " + getCacheStats("QUERY_SERVICE_RESULT_SET_CACHE")
         } 
         catch ( Exception e ) {
