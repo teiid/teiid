@@ -23,7 +23,6 @@ package org.teiid.translator.object.infinispan;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.lucene.search.Query;
 import org.hibernate.search.query.dsl.BooleanJunction;
@@ -37,8 +36,11 @@ import org.teiid.logging.LogConstants;
 import org.teiid.logging.LogManager;
 import org.teiid.metadata.Column;
 import org.teiid.translator.TranslatorException;
+import org.teiid.translator.object.CacheContainerWrapper;
 import org.teiid.translator.object.ObjectExecution;
 import org.teiid.translator.object.ObjectPlugin;
+
+
 
 /**
  * LuceneSearch will parse the WHERE criteria and build the search query(s)
@@ -52,11 +54,11 @@ import org.teiid.translator.object.ObjectPlugin;
 public final class LuceneSearch   {
 
 
-	public static List<Object> performSearch(Select command, Map<?, ?> cache, Class<?> type)
+	public static List<Object> performSearch(Select command, Class<?> type, String cacheName, CacheContainerWrapper cache)
 			throws TranslatorException {
-		
+		//Map<?, ?> cache, 
 		SearchManager searchManager = Search
-				.getSearchManager((Cache<?, ?>) cache );
+				.getSearchManager((Cache<?, ?>) cache.getCache(cacheName) );
 
 		QueryBuilder queryBuilder = searchManager.buildQueryBuilderForClass(type).get();
 

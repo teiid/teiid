@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <parent>
+        <artifactId>connectors</artifactId>
+        <groupId>org.jboss.teiid</groupId>
+        <version>8.4.1</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>connector-infinispan.6</artifactId>
+    <groupId>org.jboss.teiid.connectors</groupId>
+    <packaging>rar</packaging>
+    <name>Infinispan Connector 6</name>
+    <description>This connector creates the connection to the Infinispan Cache</description>
+    <dependencies>
+ 
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-common-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>        
+         <dependency>
+            <groupId>org.jboss.teiid.connectors</groupId>
+            <artifactId>translator-object</artifactId>
+            <version>${project.version}</version>
+            <type>test-jar</type>
+            <scope>provided</scope>
+        </dependency>        
+         
+        <dependency>
+            <groupId>javax.resource</groupId>
+            <artifactId>connector-api</artifactId>
+              <scope>provided</scope>
+        </dependency>   
+
+		<dependency>
+		   <groupId>org.hibernate</groupId>
+		   <artifactId>hibernate-search</artifactId>
+		   <version>${version.org.hibernate}</version>
+		   <scope>provided</scope>
+		</dependency>
+		
+        <dependency>
+          <groupId>org.infinispan</groupId>
+          <artifactId>infinispan-client-hotrod</artifactId>
+          <version>${version.org.infinispan.6}</version>
+          <scope>provided</scope>
+        </dependency>  
+        
+	    <dependency>
+	      <groupId>org.infinispan</groupId>
+	      <artifactId>infinispan-server-hotrod</artifactId>
+          <version>${version.org.infinispan.6}</version>
+	      <scope>test</scope>
+	    </dependency>	   
+        <dependency>
+            <groupId>org.infinispan</groupId>
+            <artifactId>infinispan-core</artifactId>
+		   <version>${version.org.infinispan.6}</version>
+            <scope>provided</scope>
+        </dependency> 	
+    
+        <dependency>
+            <groupId>org.jboss.modules</groupId>
+            <artifactId>jboss-modules</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>build_jar</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <archive>
+                                <manifestFile>src/main/rar/META-INF/MANIFEST.MF</manifestFile>
+                            </archive>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>deploy_jar</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                        <configuration>
+                            <classifier>lib</classifier>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>   
+</project>
+ 
