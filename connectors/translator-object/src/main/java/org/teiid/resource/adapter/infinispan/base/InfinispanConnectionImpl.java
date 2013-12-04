@@ -20,7 +20,7 @@
  * 02110-1301 USA.
  */
 
-package org.teiid.resource.adapter.infinispan;
+package org.teiid.resource.adapter.infinispan.base;
 
 import java.util.Map;
 
@@ -38,9 +38,9 @@ import org.teiid.translator.object.ObjectConnection;
  */
 public class InfinispanConnectionImpl extends BasicConnection implements ObjectConnection { 
 
-	private InfinispanManagedConnectionFactory config;
+	private AbstractInfinispanManagedConnectionFactory config;
 	
-	public InfinispanConnectionImpl(InfinispanManagedConnectionFactory config)  {
+	public InfinispanConnectionImpl(AbstractInfinispanManagedConnectionFactory config)  {
 		this.config = config;		
 
 		LogManager.logDetail(LogConstants.CTX_CONNECTOR, "Infinispan Connection has been newly created."); //$NON-NLS-1$

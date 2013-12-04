@@ -19,16 +19,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301 USA.
  */
-package org.teiid.resource.adapter.infinispan;
+package org.teiid.resource.adapter.infinispan.base;
 
 import java.util.ResourceBundle;
 
 import org.teiid.core.BundleUtil;
 
-
-/**
- * LDAPPlugin
- */
 public class InfinispanPlugin { 
 
     public static final String PLUGIN_ID = InfinispanPlugin.class.getPackage().getName();
