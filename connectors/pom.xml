@@ -117,5 +117,8 @@
     <module>connector-cassandra</module>
     <module>translator-cassandra</module>
     <module>connector-infinispan.6</module>
+    <module>connector-simpledb</module>
+    <module>simpledb-api</module>
+    <module>translator-simpledb</module>
   </modules>
 </project>

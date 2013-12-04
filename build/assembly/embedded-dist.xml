@@ -104,6 +104,7 @@
             <include>org.jboss.teiid.connectors:translator-jpa</include>
             <include>org.jboss.teiid.connectors:translator-object</include>
             <include>org.jboss.teiid.connectors:translator-google</include>
+	        <include>org.jboss.teiid.connectors:translator-simpledb</include>
             <include>org.jboss.teiid.connectors:google-api</include>
             <include>org.jboss.teiid.connectors:translator-mongodb</include>
             <include>org.jboss.teiid.connectors:mongodb-api</include>
@@ -162,6 +163,7 @@
             <include>org.jboss.teiid.connectors:connector-google</include>
             <include>org.jboss.teiid.connectors:connector-mongodb</include>
             <include>org.jboss.teiid.connectors:connector-cassandra</include>
+    		<include>org.jboss.teiid.connectors:connector-simpledb</include>
         </includes>
 
         <binaries>        
