@@ -85,7 +85,9 @@ public class JDBCURL {
     	        TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION,
     	        TeiidURL.CONNECTION.JAAS_NAME,
     	        TeiidURL.CONNECTION.KERBEROS_SERVICE_PRINCIPLE_NAME,
-    	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS));
+    	        TeiidURL.CONNECTION.ENCRYPT_REQUESTS,
+    	        DatabaseMetaDataImpl.REPORT_AS_VIEWS,
+    	        ResultSetImpl.DISABLE_FETCH_SIZE));
     	props.addAll(EXECUTION_PROPERTIES.keySet());
     	Map<String, String> result = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
     	for (String string : props) {

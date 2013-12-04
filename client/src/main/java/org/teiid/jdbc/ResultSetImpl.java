@@ -55,6 +55,7 @@ import org.teiid.core.types.InputStreamFactory;
 import org.teiid.core.types.SQLXMLImpl;
 import org.teiid.core.types.Streamable;
 import org.teiid.core.types.XMLType;
+import org.teiid.core.util.PropertiesUtils;
 import org.teiid.core.util.SqlUtil;
 import org.teiid.core.util.TimestampWithTimezone;
 import org.teiid.jdbc.BatchResults.Batch;
@@ -64,6 +65,8 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	private static Logger logger = Logger.getLogger("org.teiid.jdbc"); //$NON-NLS-1$
 	
 	private static final int BEFORE_FIRST_ROW = 0;
+
+	public static final String DISABLE_FETCH_SIZE = "disableFetchSize"; //$NON-NLS-1$
 
 	// the object which was last read from Results
 	private Object currentValue;
@@ -100,6 +103,10 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
     private boolean usePrefetch;
 
 	private int skipTo;
+	
+	private static boolean DISABLE_FETCH_SIZE_DEFAULT = PropertiesUtils.getBooleanProperty(System.getProperties(), "org.teiid." + DISABLE_FETCH_SIZE, false); //$NON-NLS-1$
+	
+	private Boolean disableFetchSize;
 
 	/**
 	 * Constructor.
@@ -1363,7 +1370,12 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
         if (rows == 0) {
             this.fetchSize = BaseDataSource.DEFAULT_FETCH_SIZE;
         } else {
-            this.fetchSize = rows;
+        	if (disableFetchSize == null) {
+        		this.disableFetchSize = PropertiesUtils.getBooleanProperty(statement.getConnection().getConnectionProps(), DISABLE_FETCH_SIZE, DISABLE_FETCH_SIZE_DEFAULT);
+        	}
+        	if (disableFetchSize == null || !disableFetchSize) {
+        		this.fetchSize = rows;
+        	}
         }
 	}
 

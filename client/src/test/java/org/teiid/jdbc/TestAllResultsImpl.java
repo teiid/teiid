@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.junit.Before;
@@ -291,10 +292,21 @@ public class TestAllResultsImpl {
 	@Test public void testGetFetchSize() throws Exception {
 		StatementImpl s = mock(StatementImpl.class);
 		stub(s.getFetchSize()).toReturn(500);
+		ConnectionImpl c = mock(ConnectionImpl.class);
+		stub(s.getConnection()).toReturn(c);
+		Properties p = new Properties();
+		stub(c.getConnectionProps()).toReturn(p);
 		ResultSetImpl rs = new ResultSetImpl(exampleResultsMsg2(), s);
 		assertEquals(500, rs.getFetchSize()); 
 		rs.setFetchSize(100);
 		assertEquals(100, rs.getFetchSize());
+		
+		//ensure that disabling works as well
+		p.setProperty(ResultSetImpl.DISABLE_FETCH_SIZE, Boolean.TRUE.toString());
+		rs = new ResultSetImpl(exampleResultsMsg2(), s);
+		assertEquals(500, rs.getFetchSize()); 
+		rs.setFetchSize(100);
+		assertEquals(500, rs.getFetchSize());
 	}
 
 	// //////////////////////Functions refer to ResultSet's TYPE_FORWARD_ONLY///
