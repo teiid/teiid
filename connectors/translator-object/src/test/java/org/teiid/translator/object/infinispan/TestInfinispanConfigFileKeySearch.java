@@ -23,11 +23,8 @@ package org.teiid.translator.object.infinispan;
 
 import static org.mockito.Mockito.*;
 
-import java.util.Map;
-
-import org.infinispan.manager.CacheContainer;
-import org.infinispan.manager.DefaultCacheManager;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.teiid.language.Select;
 import org.teiid.translator.ExecutionContext;
@@ -35,45 +32,13 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.BasicSearchTest;
 import org.teiid.translator.object.ObjectConnection;
 import org.teiid.translator.object.ObjectExecution;
-import org.teiid.translator.object.testdata.Trade;
-import org.teiid.translator.object.util.TradesCacheSource;
 import org.teiid.translator.object.util.VDBUtility;
 
 @SuppressWarnings("nls")
 public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
-	private static DefaultCacheManager container;
-	static final class InfinispanConnection implements ObjectConnection {
-		private final CacheContainer container;
-
-		InfinispanConnection(CacheContainer container) {
-			this.container = container;
-		}
-
-		@Override
-		public Class<?> getType(String name) throws TranslatorException {
-			return Trade.class;
-		}
-
-		@Override
-		public Map<?, ?> getMap(String name) throws TranslatorException {
-			//the real connection should use the name in source to get the cache
-			return container.getCache(TradesCacheSource.TRADES_CACHE_NAME);
-		}
-
-		@Override
-		public Map<String, Class<?>> getMapOfCacheTypes() {
-			return null;
-		}
-		
-		@Override
-		public String getPkField(String name) {
-			return null;
-		}
-	}
 
 	private static ExecutionContext context;
 
-    
     private static InfinispanExecutionFactory factory = null;
     
     private static ObjectConnection conn;
@@ -82,24 +47,22 @@ public class TestInfinispanConfigFileKeySearch extends BasicSearchTest {
 	@BeforeClass
     public static void beforeEachClass() throws Exception {  
         // Set up the mock JNDI ...
-        
-		context = mock(ExecutionContext.class);
+   		context = mock(ExecutionContext.class);
 		
-		factory = new InfinispanExecutionFactory();
+		conn = TestInfinispanConnection.createConnection("./src/test/resources/infinispan_persistent_config.xml");
 
-		container = new DefaultCacheManager("./src/test/resources/infinispan_persistent_config.xml");
-
-		factory.start();
-		
-		TradesCacheSource.loadCache(container.getCache(TradesCacheSource.TRADES_CACHE_NAME));
-
-		conn = new InfinispanConnection(container);
 	}
 	
 	@AfterClass
 	public static void afterClass() {
-		container.stop();
+		
+		((TestInfinispanConnection) conn).cleanUp();
 	}	
+	
+	@Before public void beforeEachTest() throws Exception{	
+		factory = new InfinispanExecutionFactory();
+		factory.start();
+    }
 	
 	@Override
 	protected ObjectExecution createExecution(Select command) throws TranslatorException {

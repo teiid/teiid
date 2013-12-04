@@ -23,7 +23,6 @@
 package org.teiid.translator.object;
 
 import java.util.List;
-import java.util.Map;
 
 import javax.resource.cci.ConnectionFactory;
 
@@ -68,7 +67,7 @@ public class ObjectExecutionFactory extends
 	public ResultSetExecution createResultSetExecution(QueryExpression command,
 			ExecutionContext executionContext, RuntimeMetadata metadata,
 			ObjectConnection connection) throws TranslatorException {
-		return new ObjectExecution((Select) command, metadata, this, connection);
+		return new ObjectExecution((Select) command, metadata, this, connection, executionContext);
 	}
 
 	@Override
@@ -98,10 +97,12 @@ public class ObjectExecutionFactory extends
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
 	}
-
-	public List<Object> search(Select query, Map<?, ?> map, Class<?> type) throws TranslatorException {
-		return SearchByKey.get(query.getWhere(), map, type);
+	public  List<Object> search(Select command, String cacheName, ObjectConnection connection,ExecutionContext executionContext) throws TranslatorException {
+		  SearchByKey sbk = new SearchByKey();
+		  Class<?> type = connection.getType(cacheName);
+		  return sbk.search(command, type, cacheName, connection.getCacheContainer());		
 	}
+	
 	
 	@Override
 	public void getMetadata(MetadataFactory metadataFactory, ObjectConnection connection) throws TranslatorException {

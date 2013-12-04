@@ -116,5 +116,6 @@
     <module>translator-mongodb</module>
     <module>connector-cassandra</module>
     <module>translator-cassandra</module>
+    <module>connector-infinispan.6</module>
   </modules>
 </project>

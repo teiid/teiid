@@ -53,57 +53,33 @@
         </dependency>  
         
 		<dependency>
-	        <groupId>org.infinispan</groupId>
-    	    <artifactId>infinispan-core</artifactId>
-       		<scope>provided</scope>
-		</dependency>	 
-	 	<dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-query</artifactId>
-	      <version>${version.org.infinispan}</version>
-	      <scope>provided</scope>
-	 	</dependency>  
-		<dependency>
 		   <groupId>org.hibernate</groupId>
 		   <artifactId>hibernate-search</artifactId>
 		   <version>${version.org.hibernate}</version>
 		   <scope>provided</scope>
 		</dependency>
         <dependency>
-            <groupId>org.apache.lucene</groupId>
-            <artifactId>lucene-core</artifactId>
-            <scope>provided</scope>
+           <groupId>org.infinispan</groupId>
+           <artifactId>infinispan-core</artifactId>
+           <version>${version.org.infinispan}</version>
+           <scope>provided</scope>
         </dependency> 		
 	    <dependency>
 	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-client-hotrod</artifactId>
+	      <artifactId>infinispan-query</artifactId>
 	      <version>${version.org.infinispan}</version>
 	      <scope>provided</scope>
 	    </dependency> 
-	    <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-server-hotrod</artifactId>
-           <version>${version.org.infinispan}</version>
-	      <type>test-jar</type>
-	      <scope>test</scope>
-	    </dependency>
-	    <dependency>
-	      <groupId>org.infinispan</groupId>
-	      <artifactId>infinispan-server-hotrod</artifactId>
-	      <version>${version.org.infinispan}</version>
-	      <scope>test</scope>
-	    </dependency>	     		
-        <dependency>
-            <groupId>org.jboss.marshalling</groupId>
-            <artifactId>jboss-marshalling-river</artifactId>
-            <scope>test</scope>
-        </dependency>
 	    <dependency>
 		    <groupId>org.mockito</groupId>
 		    <artifactId>mockito-all</artifactId>
 			<scope>test</scope>	      
 	    </dependency>		
-                                        
+        <dependency>
+           <groupId>org.jboss.modules</groupId>
+           <artifactId>jboss-modules</artifactId>
+           <scope>provided</scope>
+        </dependency>                                                          
     </dependencies>
 
      <build>
