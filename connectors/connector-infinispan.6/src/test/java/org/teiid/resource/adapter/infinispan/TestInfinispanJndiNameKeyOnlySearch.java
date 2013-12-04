@@ -61,7 +61,7 @@ public class TestInfinispanJndiNameKeyOnlySearch extends BasicSearchTest {
   
 		factory = new InfinispanManagedConnectionFactory() {
 			@Override
-			Object performJNDICacheLookup(String jndiName) throws Exception {
+			protected Object performJNDICacheLookup(String jndiName) throws Exception {
 				return container;
 			}
 		};

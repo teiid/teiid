@@ -87,7 +87,7 @@ public class TradesCacheSource extends HashMap <Object, Object> {
 		}
 		
 		@Override 
-		public  Object getCache(String cacheName) {
+		public  Map getCache(String cacheName) {
 			return OBJECTS;
 		}
 

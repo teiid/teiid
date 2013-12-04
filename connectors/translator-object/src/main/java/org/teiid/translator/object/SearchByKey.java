@@ -90,11 +90,7 @@ public  class SearchByKey  {
 	}
 	
 	protected  void addAll(CacheContainerWrapper cache, String cacheName, Class<?> rootClass, List<Object> results) throws TranslatorException {
-		List<Object> all = cache.getAll(cacheName);
-		for (Object o : all) {
-			results.add(o);
-		}
-
+		results.addAll(cache.getAll(cacheName));
 	}
 
 }

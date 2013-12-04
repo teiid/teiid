@@ -2,6 +2,7 @@ package org.teiid.translator.object.infinispan;
 
 import java.util.Map;
 
+import org.infinispan.Cache;
 import org.infinispan.manager.DefaultCacheManager;
 import org.teiid.translator.TranslatorException;
 import org.teiid.translator.object.CacheContainerWrapper;
@@ -57,7 +58,7 @@ public class TestInfinispanConnection  implements ObjectConnection {
 		  
 }
 
-class TestInfinispanCacheWrapper extends InfinispanCacheWrapper {
+class TestInfinispanCacheWrapper extends CacheContainerWrapper {
 	DefaultCacheManager dcm = null;
 
 	public TestInfinispanCacheWrapper(DefaultCacheManager cacheMgr) {
@@ -65,7 +66,7 @@ class TestInfinispanCacheWrapper extends InfinispanCacheWrapper {
 	}
 
 	@Override
-	public Object getCache(String cacheName) {
+	public Cache getCache(String cacheName) {
 		return dcm.getCache(cacheName);
 	}
 }
