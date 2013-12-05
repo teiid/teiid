@@ -31,6 +31,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.StringReader;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.List;
@@ -46,6 +47,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.odata4j.core.OError;
+import org.odata4j.format.FormatParser;
 import org.teiid.cdk.api.TranslationUtility;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
@@ -204,5 +207,31 @@ public class TestODataQueryExecution {
 		excution.execute();
 		assertNull(excution.next());
 		reader.close();
+	}	
+	
+	
+	@Test
+	public void testErrorParsing() {
+		String innerError = "<innererror>\n" + 
+				"      <transactionid>529E9BFBEDA868F2E1000000AC140C37</transactionid>\n" + 
+				"      <errordetails>\n" + 
+				"         <errordetail>\n" + 
+				"             <code>/IWBEP/CX_MGW_TECH_EXCEPTION</code>\n" + 
+				"             <message>Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" + 
+				"              <propertyref></propertyref>\n" + 
+				"              <severity>error</severity>\n" + 
+				"        </errordetail>\n" + 
+				"     </errordetails>\n" + 
+				"   </innererror>";
+
+		String error = "<error xmlns=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\">\n" + 
+				"   <code>SY/530</code>\n" + 
+				"   <message xml:lang=\"en\"> Operation 'read feed' not supported for Entity Type 'Notification'.</message>\n" + 
+				innerError +
+				"</error>";
+		
+		FormatParser<OError> parser =  new AtomErrorFormatParser();
+		OError oerror = parser.parse(new StringReader(error)); //$NON-NLS-1$
+		assertEquals(innerError, oerror.getInnerError());
 	}	
 }

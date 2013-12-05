@@ -190,9 +190,10 @@ public class BaseQueryExecution {
 		// do some error handling
 		try {
 			Blob blob = (Blob)execution.getOutputParameterValues().get(0);
-			FormatParser<OError> parser = FormatParserFactory.getParser(OError.class, FormatType.ATOM, null);
+			//FormatParser<OError> parser = FormatParserFactory.getParser(OError.class, FormatType.ATOM, null);
+			FormatParser<OError> parser = new AtomErrorFormatParser();
 			OError error = parser.parse(new InputStreamReader(blob.getBinaryStream(), Charset.forName("UTF-8"))); //$NON-NLS-1$
-			return new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17013, execution.getResponseCode(), error.getCode(), error.getMessage()));
+			return new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17013, execution.getResponseCode(), error.getCode(), error.getMessage(), error.getInnerError()));
 		}
 		catch (Throwable t) {
 			return new TranslatorException(t);
