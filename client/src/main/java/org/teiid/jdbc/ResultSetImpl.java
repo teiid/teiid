@@ -66,7 +66,7 @@ public class ResultSetImpl extends WrapperImpl implements TeiidResultSet, BatchF
 	
 	private static final int BEFORE_FIRST_ROW = 0;
 
-	public static final String DISABLE_FETCH_SIZE = "disableFetchSize"; //$NON-NLS-1$
+	public static final String DISABLE_FETCH_SIZE = "disableResultSetFetchSize"; //$NON-NLS-1$
 
 	// the object which was last read from Results
 	private Object currentValue;
