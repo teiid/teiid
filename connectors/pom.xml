@@ -120,5 +120,7 @@
     <module>connector-simpledb</module>
     <module>simpledb-api</module>
     <module>translator-simpledb</module>
+    <module>translator-accumulo</module>
+    <module>connector-accumulo</module>
   </modules>
 </project>

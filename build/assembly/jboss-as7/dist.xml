@@ -377,6 +377,8 @@
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
+    
+    <!-- Apache SimpleDB -->
     <moduleSet>
         <includeSubModules>true</includeSubModules>
         <useAllReactorProjects>true</useAllReactorProjects>
@@ -426,6 +428,32 @@
           <fileMode>0644</fileMode>
         </binaries>
     </moduleSet>
+    
+    <!-- Apache Accumulo -->
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:connector-accumulo</include>
+        </includes>
+
+        <binaries>   
+          <outputFileNameMapping>teiid-${module.artifactId}.rar</outputFileNameMapping>     
+          <includeDependencies>true</includeDependencies>
+          <unpack>true</unpack>
+            <dependencySets>
+                <dependencySet>
+                    <useProjectArtifact>true</useProjectArtifact>
+                    <unpack>false</unpack>
+                    <useTransitiveDependencies>false</useTransitiveDependencies>
+                    <useDefaultExcludes>true</useDefaultExcludes>
+                </dependencySet>
+            </dependencySets>          
+            <outputDirectory>modules/system/layers/base/org/jboss/teiid/resource-adapter/accumulo/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+    </moduleSet>    
     
     <!-- **************************************************************************
                         These are built in translators  
@@ -881,6 +909,69 @@
           <fileMode>0644</fileMode>
         </binaries>
       </moduleSet>
+      
+    <moduleSet>
+        <includeSubModules>true</includeSubModules>
+        <useAllReactorProjects>true</useAllReactorProjects>
+
+        <includes>
+            <include>org.jboss.teiid.connectors:translator-accumulo</include>
+        </includes>
+
+        <binaries>        
+          <includeDependencies>false</includeDependencies>
+          <unpack>false</unpack>
+            <dependencySets>
+                
+             <dependencySet>
+               <outputDirectory>modules/system/layers/base/org/apache/hadoop/core/main</outputDirectory>
+               <includes>
+                 <include>org.apache.hadoop:hadoop-core</include>
+               </includes>
+               <useProjectArtifact>false</useProjectArtifact>
+               <unpack>false</unpack>
+               <useTransitiveDependencies>true</useTransitiveDependencies>
+               <useDefaultExcludes>true</useDefaultExcludes>
+             </dependencySet>
+             <dependencySet>
+               <outputDirectory>modules/system/layers/base/org/apache/zookeeper/main</outputDirectory>
+               <includes>
+                 <include>org.apache.zookeeper:zookeeper</include>
+               </includes>
+               <useProjectArtifact>false</useProjectArtifact>
+               <unpack>false</unpack>
+               <useTransitiveDependencies>true</useTransitiveDependencies>
+               <useDefaultExcludes>true</useDefaultExcludes>
+             </dependencySet>
+             <dependencySet>
+               <outputDirectory>modules/system/layers/base/org/apache/thrift/main</outputDirectory>
+               <includes>
+                 <include>org.apache.thrift:libthrift</include>
+               </includes>
+               <useProjectArtifact>false</useProjectArtifact>
+               <unpack>false</unpack>
+               <useTransitiveDependencies>true</useTransitiveDependencies>
+               <useDefaultExcludes>true</useDefaultExcludes>
+             </dependencySet>                          
+             <dependencySet>
+               <outputDirectory>modules/system/layers/base/org/apache/accumulo/main</outputDirectory>
+               <includes>
+                 <include>org.apache.accumulo:accumulo-core</include>
+                 <include>org.apache.accumulo:accumulo-fate</include>
+                 <include>org.apache.accumulo:accumulo-trace</include>
+               </includes>
+               <useProjectArtifact>false</useProjectArtifact>
+               <unpack>false</unpack>
+               <useTransitiveDependencies>true</useTransitiveDependencies>
+               <useDefaultExcludes>true</useDefaultExcludes>
+             </dependencySet>             
+                
+            </dependencySets>          
+          <outputDirectory>modules/system/layers/base/org/jboss/teiid/translator/accumulo/main</outputDirectory>
+          <fileMode>0644</fileMode>
+        </binaries>
+      
+    </moduleSet>      
             
     </moduleSets>  
     

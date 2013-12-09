@@ -1,0 +1,14 @@
+<module xmlns="urn:jboss:module:1.1" name="org.apache.hadoop.core">
+   
+    <resources>
+        <resource-root path="hadoop-core-${version.hadoop-core}.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.log4j"/>
+        <module name="org.apache.commons.configuration"/>
+        <module name="org.apache.commons.logging"/>
+    </dependencies>
+</module>

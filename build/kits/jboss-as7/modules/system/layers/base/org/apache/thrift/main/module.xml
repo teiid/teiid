@@ -1,0 +1,14 @@
+<module xmlns="urn:jboss:module:1.1" name="org.apache.thrift">
+   
+    <resources>
+        <resource-root path="libthrift-${version.thrift}.jar"/>
+    </resources>
+
+    <dependencies>
+        <module name="javax.api"/>
+        <module name="org.slf4j"/>
+        <module name="org.apache.log4j"/>
+        <module name="org.apache.commons.configuration"/>
+        <module name="org.apache.commons.logging"/>
+    </dependencies>
+</module>
