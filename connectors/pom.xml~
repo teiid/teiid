@@ -116,7 +116,7 @@
     <module>translator-mongodb</module>
     <module>connector-cassandra</module>
     <module>translator-cassandra</module>
-    <module>connector-solr</module>
-    <module>translator-solr</module>
+    <module>../../connector-solr</module>
+    <module>../../translator-solr</module>
   </modules>
 </project>
