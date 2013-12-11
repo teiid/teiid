@@ -21,8 +21,8 @@
  */
 package org.teiid.odata;
 
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmEntitySet;
@@ -42,7 +42,7 @@ public interface Client {
 	
 	BaseResponse executeCall(String sql, List<SQLParam> sqlParams, EdmType returnType);
 
-	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount);
+	EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount);
 	
 	CountResponse executeCount(Query query, List<SQLParam> parameters);
 	

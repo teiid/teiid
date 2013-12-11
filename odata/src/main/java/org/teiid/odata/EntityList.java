@@ -22,13 +22,12 @@
 package org.teiid.odata;
 
 import java.io.IOException;
-import java.sql.Clob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.odata4j.core.OEntities;
@@ -36,31 +35,27 @@ import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OLink;
 import org.odata4j.core.OLinks;
-import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmEntityType;
 import org.odata4j.edm.EdmNavigationProperty;
 import org.odata4j.edm.EdmProperty;
-import org.odata4j.edm.EdmSimpleType;
-import org.teiid.core.types.BlobType;
-import org.teiid.core.types.ClobType;
-import org.teiid.core.types.DataTypeManager;
-import org.teiid.core.types.Transform;
+import org.odata4j.edm.EdmType;
 import org.teiid.core.types.TransformationException;
-import org.teiid.translator.odata.ODataTypeManager;
 
 class EntityList extends ArrayList<OEntity>{
 	private int count = 0;
 	private int batchSize;
 	private int skipSize;
+	private String invalidCharacterReplacement;
 	
-	public EntityList(Map<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs, int skipSize, int batchSize, boolean getCount) throws SQLException, TransformationException, IOException {
+	public EntityList(LinkedHashMap<String, Boolean> columns, EdmEntitySet entitySet, ResultSet rs, int skipSize, int batchSize, boolean getCount, String invalidCharacterReplacement) throws SQLException, TransformationException, IOException {
 		this.batchSize = batchSize;
 		this.skipSize = skipSize;
+		this.invalidCharacterReplacement = invalidCharacterReplacement;
 		
 		if (columns == null) {
-			columns = new HashMap<String, Boolean>();
+			columns = new LinkedHashMap<String, Boolean>();
 			for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 				columns.put(rs.getMetaData().getColumnLabel(i+1), Boolean.TRUE);
 			}
@@ -85,33 +80,14 @@ class EntityList extends ArrayList<OEntity>{
 			this.add(getEntity(rs, propertyTypes, columns, entitySet));
 		}
 	}
-	
-	private OProperty<?> buildPropery(String propName, EdmSimpleType expectedType, Object value) throws TransformationException, SQLException, IOException {
-		if (value == null) {
-			return OProperties.null_(propName, expectedType);
-		}
-		Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
-		Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType.getFullyQualifiedTypeName()));
-		if (sourceType != targetType) {
-			Transform t = DataTypeManager.getTransform(sourceType,targetType);
-			if (t == null && BlobType.class == targetType && sourceType == ClobType.class) {
-				return OProperties.binary(propName, ClobType.getString((Clob)value).getBytes());
-			}
-			else if (t == null && BlobType.class == targetType && sourceType == SQLXML.class) {
-				return OProperties.binary(propName, ((SQLXML)value).getString().getBytes());
-			}			
-			return OProperties.simple(propName, expectedType, t!=null?t.transform(value, targetType):value);
-		}
-		return OProperties.simple(propName, expectedType,value);
-	}
 
 	private OEntity getEntity(ResultSet rs, Map<String, EdmProperty> propertyTypes, Map<String, Boolean> columns, EdmEntitySet entitySet) throws TransformationException, SQLException, IOException {
 		HashMap<String, OProperty<?>> properties = new HashMap<String, OProperty<?>>();
 		for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 			Object value = rs.getObject(i+1);
 			String propName = rs.getMetaData().getColumnLabel(i+1);
-			EdmSimpleType type = (EdmSimpleType)propertyTypes.get(propName).getType();
-			OProperty<?> property = buildPropery(propName, type, value);
+			EdmType type = propertyTypes.get(propName).getType();
+			OProperty<?> property = LocalClient.buildPropery(propName, type, value, invalidCharacterReplacement);
 			properties.put(rs.getMetaData().getColumnLabel(i+1), property);	
 		}			
 		
@@ -144,5 +120,5 @@ class EntityList extends ArrayList<OEntity>{
 		}
 		return String.valueOf(this.skipSize + size());
 	}
-
+	
 }

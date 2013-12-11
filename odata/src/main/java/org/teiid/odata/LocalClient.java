@@ -21,14 +21,17 @@
  */
 package org.teiid.odata;
 
+import java.io.IOException;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import org.odata4j.core.OCollection;
@@ -51,7 +54,12 @@ import org.odata4j.producer.CountResponse;
 import org.odata4j.producer.Responses;
 import org.teiid.adminapi.impl.VDBMetaData;
 import org.teiid.common.buffer.impl.BufferManagerImpl;
+import org.teiid.core.types.BlobType;
+import org.teiid.core.types.ClobType;
+import org.teiid.core.types.DataTypeManager;
 import org.teiid.core.types.JDBCSQLTypeInfo;
+import org.teiid.core.types.Transform;
+import org.teiid.core.types.TransformationException;
 import org.teiid.core.util.PropertiesUtils;
 import org.teiid.jdbc.CallableStatementImpl;
 import org.teiid.jdbc.ConnectionImpl;
@@ -74,6 +82,7 @@ import org.teiid.transport.LocalServerConnection;
 public class LocalClient implements Client {
 	private static final String BATCH_SIZE = "batch-size"; //$NON-NLS-1$
 	private static final String SKIPTOKEN_TIME = "skiptoken-cache-time"; //$NON-NLS-1$
+	static final String INVALID_CHARACTER_REPLACEMENT = "invalid-xml10-character-replacement"; //$NON-NLS-1$
 
 	private MetadataStore metadataStore;
 	private String vdbName;
@@ -85,6 +94,7 @@ public class LocalClient implements Client {
 	private EdmDataServices edmMetaData;
 	private long lastLookup = -1L;
 	private TeiidDriver driver = TeiidDriver.getInstance();
+	private String invalidCharacterReplacement;
 
 	public LocalClient(String vdbName, int vdbVersion, Properties props) {
 		this.vdbName = vdbName;
@@ -92,6 +102,7 @@ public class LocalClient implements Client {
 		this.batchSize = PropertiesUtils.getIntProperty(props, BATCH_SIZE, BufferManagerImpl.DEFAULT_PROCESSOR_BATCH_SIZE);
 		this.cacheTime = PropertiesUtils.getLongProperty(props, SKIPTOKEN_TIME, 300000L);
 		this.transportName = props.getProperty(EmbeddedProfile.TRANSPORT_NAME, "odata"); //$NON-NLS-1$
+		this.invalidCharacterReplacement = props.getProperty(INVALID_CHARACTER_REPLACEMENT);
 		StringBuilder sb = new StringBuilder();
 		sb.append("jdbc:teiid:").append(this.vdbName).append(".").append(this.vdbVersion).append(";"); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 		sb.append(TeiidURL.CONNECTION.PASSTHROUGH_AUTHENTICATION+"=true;"); //$NON-NLS-1$
@@ -147,7 +158,7 @@ public class LocalClient implements Client {
                 	Iterator<EdmProperty> props = ((EdmComplexType)((EdmCollectionType)returnType).getItemType()).getProperties().iterator();
                 	while (props.hasNext()) {
                 		EdmProperty prop = props.next();
-                		row.add(OProperties.simple(prop.getName(), rs.getObject(idx++)));
+                		row.add(buildPropery(prop.getName(), prop.getType(), rs.getObject(idx++), invalidCharacterReplacement));
                 	}
                 	OComplexObject erow = OComplexObjects.create((EdmComplexType)((EdmCollectionType)returnType).getItemType(), row);
                 	resultRows.add(erow);
@@ -163,7 +174,10 @@ public class LocalClient implements Client {
             	if (result == null) {
             		result = org.odata4j.expression.Expression.null_();
             	}
-            	return Responses.simple((EdmSimpleType)returnType, "return", result); //$NON-NLS-1$
+            	if (!(returnType instanceof EdmSimpleType)) {
+            		throw new AssertionError("non-simple types are not yet supported");
+            	}
+            	return Responses.simple((EdmSimpleType)returnType, "return", replaceInvalidCharacters((EdmSimpleType)returnType, result, invalidCharacterReplacement)); //$NON-NLS-1$
             }
 			return Responses.simple(EdmSimpleType.INT32, 1);
 		} catch (Exception e) {
@@ -216,7 +230,7 @@ public class LocalClient implements Client {
 
 
 	@Override
-	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, Map<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount) {
+	public EntityList executeSQL(Query query, List<SQLParam> parameters, EdmEntitySet entitySet, LinkedHashMap<String, Boolean> projectedColumns, boolean useSkipToken, String skipToken, boolean getCount) {
 		Connection connection = null;
 		try {
 			if (useSkipToken) {
@@ -243,7 +257,7 @@ public class LocalClient implements Client {
             if (skipToken != null) {
             	skipSize = Integer.parseInt(skipToken);
             }
-			return new EntityList(projectedColumns, entitySet, rs, skipSize, this.batchSize, getCount);
+			return new EntityList(projectedColumns, entitySet, rs, skipSize, this.batchSize, getCount, this.invalidCharacterReplacement);
 		} catch (Exception e) {
 			throw new ServerErrorException(e.getMessage(), e);
 		} finally {
@@ -321,5 +335,60 @@ public class LocalClient implements Client {
 			this.edmMetaData = ODataEntitySchemaBuilder.buildMetadata(getMetadataStore());
 		}
 		return this.edmMetaData;
+	}
+	
+	static OProperty<?> buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
+		if (!(type instanceof EdmSimpleType)) {
+			throw new AssertionError("non-simple types are not yet supported");
+		}
+		EdmSimpleType expectedType = (EdmSimpleType)type;
+		if (value == null) {
+			return OProperties.null_(propName, expectedType);
+		}
+		Class<?> sourceType = DataTypeManager.getRuntimeType(value.getClass());
+		Class<?> targetType = DataTypeManager.getDataTypeClass(ODataTypeManager.teiidType(expectedType.getFullyQualifiedTypeName()));
+		if (sourceType != targetType) {
+			Transform t = DataTypeManager.getTransform(sourceType,targetType);
+			if (t == null && BlobType.class == targetType) {
+				if (sourceType == ClobType.class) {
+					return OProperties.binary(propName, ClobType.getString((Clob)value).getBytes());
+				}
+				if (sourceType == SQLXML.class) {
+					return OProperties.binary(propName, ((SQLXML)value).getString().getBytes());
+				}
+			}
+			value = t!=null?t.transform(value, targetType):value;
+			value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+			return OProperties.simple(propName, expectedType, value);
+		}
+		value = replaceInvalidCharacters(expectedType, value, invalidCharacterReplacement);
+		return OProperties.simple(propName, expectedType,value);
+	}
+
+	static Object replaceInvalidCharacters(EdmSimpleType expectedType, Object value, String invalidCharacterReplacement) {
+		if (expectedType == EdmSimpleType.STRING && invalidCharacterReplacement == null) {
+			return value;
+		}
+		if (value instanceof Character) {
+			value = value.toString();
+		}
+		String s = (String)value;
+		StringBuilder result = null;
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c <= 0x0020 && c != ' ' && c != '\n' && c != '\t' && c != '\r') {
+				if (result == null) {
+					result = new StringBuilder();
+					result.append(s.substring(0, i));
+				}
+				result.append(invalidCharacterReplacement);
+			} else if (result != null) {
+				result.append(c);
+			}
+		}
+		if (result == null) {
+			return value;
+		}
+		return result.toString();
 	}
 }

@@ -21,13 +21,16 @@
  */
 package org.teiid.odata;
 
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
 import static org.mockito.Mockito.*;
 
 import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Properties;
 
 import org.jboss.resteasy.client.ClientRequest;
 import org.jboss.resteasy.client.ClientResponse;
@@ -55,12 +58,17 @@ import org.odata4j.producer.resources.EntityRequestResource;
 import org.odata4j.producer.resources.MetadataResource;
 import org.odata4j.producer.resources.ODataBatchProvider;
 import org.odata4j.producer.resources.ServiceDocumentResource;
+import org.teiid.adminapi.Model.Type;
+import org.teiid.adminapi.impl.ModelMetaData;
 import org.teiid.core.util.ObjectConverterUtil;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.jdbc.TeiidDriver;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.sql.lang.Query;
 import org.teiid.query.unittest.RealMetadataFactory;
 import org.teiid.query.unittest.TimestampUtil;
+import org.teiid.runtime.EmbeddedConfiguration;
+import org.teiid.runtime.EmbeddedServer;
 import org.teiid.translator.odata.ODataEntitySchemaBuilder;
 
 @SuppressWarnings("nls")
@@ -119,13 +127,13 @@ public class TestODataIntegration extends BaseResourceTest {
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class));
         
-        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
         //Assert.assertEquals("", response.getEntity());		
 	}	
@@ -172,7 +180,7 @@ public class TestODataIntegration extends BaseResourceTest {
 		stub(client.getMetadata()).toReturn(eds);
 		MockProvider.CLIENT = client;
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenThrow(new NullPointerException());
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
@@ -199,16 +207,44 @@ public class TestODataIntegration extends BaseResourceTest {
 		when(result.size()).thenReturn(1);
 		when(result.iterator()).thenReturn(list.iterator());
 		
-		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
+		when(client.executeSQL(any(Query.class), anyListOf(SQLParam.class), any(EdmEntitySet.class), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class))).thenReturn(result);
 		
         ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/Customers?$select=CustomerID,CompanyName,Address"));
         ClientResponse<String> response = request.get(String.class);
-        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), anyMapOf(String.class, Boolean.class), any(Boolean.class), any(String.class), any(Boolean.class));
+        verify(client).executeSQL(sql.capture(),  anyListOf(SQLParam.class), entitySet.capture(), (LinkedHashMap<String, Boolean>) any(), any(Boolean.class), any(String.class), any(Boolean.class));
         
-        Assert.assertEquals("SELECT g0.Address, g0.CustomerID, g0.CompanyName FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
+        Assert.assertEquals("SELECT g0.CustomerID, g0.CompanyName, g0.Address FROM Customers AS g0 ORDER BY g0.CustomerID", sql.getValue().toString());
         Assert.assertEquals(200, response.getStatus());
-        //Assert.assertEquals("", response.getEntity());		
+        //Assert.assertEquals("", response.getEntity());	
+        
 	}	
+	
+	@Test public void testInvalidCharacterReplacement() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b char) as select 'ab\u0000cd\u0001', char(22);");
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			props.setProperty(LocalClient.INVALID_CHARACTER_REPLACEMENT, " ");
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x"));
+	        ClientResponse<String> response = request.get(String.class);
+	        Assert.assertEquals(200, response.getStatus());
+	        assertTrue(response.getEntity().contains("ab cd "));
+		} finally {
+			es.stop();
+		}
+	}
 	
 	private OEntity createCustomersEntity(EdmDataServices metadata) {
 		EdmEntitySet entitySet = metadata.findEdmEntitySet("Customers");
