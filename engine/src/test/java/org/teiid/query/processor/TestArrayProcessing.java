@@ -42,10 +42,12 @@ import org.teiid.query.optimizer.capabilities.DefaultCapabilitiesFinder;
 import org.teiid.query.optimizer.capabilities.SourceCapabilities.Capability;
 import org.teiid.query.parser.TestParser;
 import org.teiid.query.resolver.QueryResolver;
+import org.teiid.query.rewriter.QueryRewriter;
 import org.teiid.query.sql.lang.Command;
 import org.teiid.query.sql.symbol.Array;
 import org.teiid.query.sql.symbol.Constant;
 import org.teiid.query.sql.symbol.Expression;
+import org.teiid.query.sql.util.SymbolMap;
 import org.teiid.query.unittest.RealMetadataFactory;
 
 @SuppressWarnings("nls")
@@ -151,10 +153,29 @@ public class TestArrayProcessing {
 		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
 	    assertEquals(Object[].class, command.getProjectedSymbols().get(0).getType());
 	    
+	    ProcessorPlan pp = TestProcessor.helpGetPlan(command, RealMetadataFactory.example1Cached(), TestOptimizer.getGenericFinder());
+	    HardcodedDataManager dataManager = new HardcodedDataManager();
+	    dataManager.addData("SELECT g_0.e2 FROM pm1.g1 AS g_0", Arrays.asList(1), Arrays.asList(2));
+		TestProcessor.helpProcess(pp, dataManager, new List[] {
+				Arrays.asList(new ArrayImpl((Object[])new Integer[][] {new Integer[] {1,1}, new Integer[] {1,1}})),
+				Arrays.asList(new ArrayImpl((Object[])new Integer[][] {new Integer[] {2,2}, new Integer[] {2,2}}))});
+	    
 	    sql = "select cast(cast( ((e2, e2), (e2, e2)) as object[]) as integer[][])  from pm1.g1"; //$NON-NLS-1$
 		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
 		command = helpResolve(sql, RealMetadataFactory.example1Cached());
 	    assertEquals(Integer[][].class, command.getProjectedSymbols().get(0).getType());
+	}
+	
+	@Test public void testMultiDimensionalArrayRewrite() throws Exception {
+		String sql = "select (('a', 'b'),('c','d'))"; //$NON-NLS-1$
+		QueryResolver.resolveCommand(helpParse(sql), RealMetadataFactory.example1Cached());
+		Command command = helpResolve(sql, RealMetadataFactory.example1Cached());
+	    assertEquals(String[][].class, command.getProjectedSymbols().get(0).getType());
+	    
+	    command = QueryRewriter.rewrite(command, RealMetadataFactory.example1Cached(), null);
+	    Expression ex = SymbolMap.getExpression(command.getProjectedSymbols().get(0));
+	    Constant c = (Constant)ex;
+	    assertTrue(c.getValue() instanceof ArrayImpl);
 	}
 	
 	/**
