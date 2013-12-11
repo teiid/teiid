@@ -687,7 +687,11 @@ public class Evaluator {
 		   List<Expression> exprs = array.getExpressions();
 		   Object[] result = (Object[]) java.lang.reflect.Array.newInstance(array.getComponentType(), exprs.size());
 		   for (int i = 0; i < exprs.size(); i++) {
-			   result[i] = internalEvaluate(exprs.get(i), tuple);
+			   Object eval = internalEvaluate(exprs.get(i), tuple);
+			   if (eval instanceof ArrayImpl) {
+				   eval = ((ArrayImpl)eval).getValues();
+			   }
+			   result[i] = eval;
 		   }
 		   return new ArrayImpl(result);
 	   } else if (expression instanceof ExceptionExpression) {

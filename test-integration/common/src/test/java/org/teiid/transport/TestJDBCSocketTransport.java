@@ -283,7 +283,7 @@ public class TestJDBCSocketTransport {
 		Statement s = conn.createStatement();
 		ResultSet rs = s.executeQuery("SELECT (1, (1,2))");
 		rs.next();
-		assertEquals(new ArrayImpl(new Object[] {1, new ArrayImpl(new Object[] {1, 2})}), rs.getArray(1));
+		assertEquals(new ArrayImpl(new Object[] {1, new Object[] {1, 2}}), rs.getArray(1));
 		assertEquals("java.sql.Array", rs.getMetaData().getColumnClassName(1));
 		assertEquals(Types.ARRAY, rs.getMetaData().getColumnType(1));
 		assertEquals("object[]", rs.getMetaData().getColumnTypeName(1));
