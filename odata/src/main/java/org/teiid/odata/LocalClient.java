@@ -366,7 +366,7 @@ public class LocalClient implements Client {
 	}
 
 	static Object replaceInvalidCharacters(EdmSimpleType expectedType, Object value, String invalidCharacterReplacement) {
-		if (expectedType == EdmSimpleType.STRING && invalidCharacterReplacement == null) {
+		if (expectedType != EdmSimpleType.STRING || invalidCharacterReplacement == null) {
 			return value;
 		}
 		if (value instanceof Character) {

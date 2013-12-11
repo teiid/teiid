@@ -227,7 +227,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			mmd.setName("vw");
 			mmd.setSchemaSourceType("ddl");
 			mmd.setModelType(Type.VIRTUAL);
-			mmd.setSchemaText("create view x (a string primary key, b char) as select 'ab\u0000cd\u0001', char(22);");
+			mmd.setSchemaText("create view x (a string primary key, b char, d integer) as select 'ab\u0000cd\u0001', char(22), 1;");
 			es.deployVDB("northwind", mmd);
 			
 			TeiidDriver td = es.getDriver();
