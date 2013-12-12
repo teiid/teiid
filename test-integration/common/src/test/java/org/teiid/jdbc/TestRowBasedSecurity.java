@@ -82,7 +82,7 @@ public class TestRowBasedSecurity {
 				Table t = metadataFactory.addTable("x");
 				Column col = metadataFactory.addColumn("col", TypeFacility.RUNTIME_NAMES.STRING, t);
 				metadataFactory.addColumn("col2", TypeFacility.RUNTIME_NAMES.STRING, t);
-				metadataFactory.addPermission("y", t, null, null, null, null, null, null, "col = 'a'", null);
+				metadataFactory.addPermission("y", t, null, null, Boolean.TRUE, null, null, null, "col = 'a'", null);
 				metadataFactory.addColumnPermission("y", col, null, null, null, null, "null", null);
 				
 				t = metadataFactory.addTable("y");
@@ -91,6 +91,7 @@ public class TestRowBasedSecurity {
 				metadataFactory.addPermission("z", t, null, null, null, null, null, null, "col = 'e'", null);
 				
 				Table v = metadataFactory.addTable("v");
+				metadataFactory.addPermission("y", v, null, null, Boolean.TRUE, null, null, null, null, null);
 				col = metadataFactory.addColumn("col", TypeFacility.RUNTIME_NAMES.STRING, v);
 				metadataFactory.addColumn("col2", TypeFacility.RUNTIME_NAMES.STRING, v);
 				v.setTableType(Type.View);

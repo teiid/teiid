@@ -40,6 +40,8 @@ import org.teiid.cache.CacheFactory;
 import org.teiid.cache.infinispan.InfinispanCacheFactory;
 import org.teiid.core.TeiidRuntimeException;
 import org.teiid.dqp.internal.process.DQPConfiguration;
+import org.teiid.dqp.internal.process.DataRolePolicyDecider;
+import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.dqp.internal.process.TeiidExecutor;
 import org.teiid.dqp.internal.process.ThreadReuseExecutor;
 import org.teiid.query.ObjectReplicator;
@@ -99,6 +101,9 @@ public class EmbeddedConfiguration extends DQPConfiguration {
 	private SimpleChannelFactory channelFactory;
 	
 	public EmbeddedConfiguration() {
+		DefaultAuthorizationValidator authorizationValidator = new DefaultAuthorizationValidator();
+		authorizationValidator.setPolicyDecider(new DataRolePolicyDecider());
+		this.setAuthorizationValidator(authorizationValidator);
 	}
 	
 	public SecurityHelper getSecurityHelper() {
