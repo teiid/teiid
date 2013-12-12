@@ -139,7 +139,7 @@ public class CompositeVDB {
 			
 			if (vdbImport.isImportDataPolicies()) {
 				for (DataPolicy role : importedVDB.getVDB().getDataPolicies()) {
-					if (vdb.addDataPolicy((DataPolicyMetadata)role) != null) {
+					if (newMergedVDB.addDataPolicy((DataPolicyMetadata)role) != null) {
 						throw new VirtualDatabaseException(RuntimePlugin.Event.TEIID40084, RuntimePlugin.Util.gs(RuntimePlugin.Event.TEIID40084, vdb.getName(), vdb.getVersion(), vdbImport.getName(), vdbImport.getVersion(), role.getName()));
 					}
 				}
