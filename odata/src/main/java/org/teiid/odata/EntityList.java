@@ -78,6 +78,9 @@ class EntityList extends ArrayList<OEntity>{
 		if (getCount && rs.last()) {
 			this.count = rs.getRow();
 		}
+		if (size == -1) {
+			size = Integer.MAX_VALUE;
+		}
 		for (int i = 1; i <= size; i++) {
 			if (!rs.absolute(i)) {
 				break;
