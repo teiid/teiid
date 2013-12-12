@@ -1,5 +1,9 @@
 package org.teiid.jdbc;
 
+import static org.junit.Assert.*;
+
+import java.io.ByteArrayInputStream;
+import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.junit.After;
@@ -76,5 +80,39 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
         this.internalConnection = server.createConnection("jdbc:teiid:empty");
         execute("select * from tables where schemaname='BQT1'"); //$NON-NLS-1$
         TestMMDatabaseMetaData.compareResultSet("TestVDBMerge/mergeEmpty.after", this.internalResultSet);
+    }
+    
+    @Test public void testMergeWithPolicies() throws Exception {
+		server.deployVDB(new ByteArrayInputStream(new String("<vdb name=\"role-1\" version=\"1\">"
+				+ "<model name=\"myschema\" type=\"virtual\">"
+				+ "<metadata type = \"DDL\"><![CDATA[CREATE VIEW vw as select 'a' as col;]]></metadata></model>"
+				+ "<data-role name=\"y\" any-authenticated=\"true\"/></vdb>").getBytes()));
+    	this.internalConnection = server.createConnection("jdbc:teiid:role-1");
+    	
+    	try {
+    		execute("select * from vw"); //$NON-NLS-1$
+    		fail("should not be authorized");
+    	} catch (SQLException e) {
+    		
+    	}
+    	
+    	server.deployVDB(new ByteArrayInputStream(new String("<vdb name=\"role-2\" version=\"1\">"
+				+ "<import-vdb name=\"role-1\" version=\"1\"/>"
+				+ "</vdb>").getBytes()));
+    	this.internalConnection = server.createConnection("jdbc:teiid:role-2");
+    	
+    	try {
+    		execute("select * from vw"); //$NON-NLS-1$
+    		fail("should not be authorized");
+    	} catch (SQLException e) {
+    		
+    	}
+    	
+    	server.deployVDB(new ByteArrayInputStream(new String("<vdb name=\"role-3\" version=\"1\">"
+				+ "<import-vdb name=\"role-1\" version=\"1\" import-data-policies=\"false\"/>"
+				+ "</vdb>").getBytes()));
+    	this.internalConnection = server.createConnection("jdbc:teiid:role-3");
+    	    	
+    	execute("select * from vw"); //$NON-NLS-1$
     }
 }

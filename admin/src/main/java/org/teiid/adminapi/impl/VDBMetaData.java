@@ -280,6 +280,7 @@ public class VDBMetaData extends AdminObjectImpl implements VDB, Cloneable {
 			clone.models = new LinkedHashMap<String, ModelMetaData>(this.models);
 			clone.attachments = new CopyOnWriteLinkedHashMap<Class<?>, Object>();
 			clone.attachments.putAll(attachments);
+			clone.dataPolicies = new LinkedHashMap<String, DataPolicyMetadata>(dataPolicies);
 			return clone;
 		} catch (CloneNotSupportedException e) {
 			throw new TeiidRuntimeException(e);
