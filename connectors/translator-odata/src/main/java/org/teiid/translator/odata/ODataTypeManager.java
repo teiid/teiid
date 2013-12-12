@@ -28,7 +28,10 @@ import java.util.HashMap;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.odata4j.core.Guid;
+import org.odata4j.edm.EdmCollectionType;
+import org.odata4j.edm.EdmProperty.CollectionKind;
 import org.odata4j.edm.EdmSimpleType;
+import org.odata4j.edm.EdmType;
 import org.teiid.core.types.DataTypeManager;
 
 public class ODataTypeManager {
@@ -78,7 +81,10 @@ public class ODataTypeManager {
 		return odatakeyed.get(odataType);
 	}
 	
-	public static EdmSimpleType odataType(String teiidType) {
+	public static EdmType odataType(String teiidType) {
+		if (DataTypeManager.isArrayType(teiidType)) {
+			return new EdmCollectionType(CollectionKind.List, odataType(DataTypeManager.getComponentType(teiidType)));
+		}
 		return teiidkeyed.get(teiidType);
 	}
 	
