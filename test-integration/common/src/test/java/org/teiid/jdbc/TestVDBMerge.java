@@ -11,7 +11,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.teiid.adminapi.impl.VDBImportMetadata;
 import org.teiid.core.util.UnitTestUtil;
+import org.teiid.dqp.internal.process.DataRolePolicyDecider;
+import org.teiid.dqp.internal.process.DefaultAuthorizationValidator;
 import org.teiid.jdbc.FakeServer.DeployVDBParameter;
+import org.teiid.runtime.EmbeddedConfiguration;
 
 
 @SuppressWarnings("nls")
@@ -23,7 +26,12 @@ public class TestVDBMerge extends AbstractMMQueryTestCase {
 	private FakeServer server;
     
     @Before public void setup() throws Exception {
-    	server = new FakeServer(true);
+    	server = new FakeServer(false);
+    	EmbeddedConfiguration ec = new EmbeddedConfiguration();
+    	DefaultAuthorizationValidator authorizationValidator = new DefaultAuthorizationValidator();
+    	authorizationValidator.setPolicyDecider(new DataRolePolicyDecider());
+    	ec.setAuthorizationValidator(authorizationValidator);
+    	server.start(ec);
     	server.setThrowMetadataErrors(false); //test vdb has errors
     }
     
