@@ -227,7 +227,7 @@ public class TestODataIntegration extends BaseResourceTest {
 			mmd.setName("vw");
 			mmd.setSchemaSourceType("ddl");
 			mmd.setModelType(Type.VIRTUAL);
-			mmd.setSchemaText("create view x (a string primary key, b char, d integer) as select 'ab\u0000cd\u0001', char(22), 1;");
+			mmd.setSchemaText("create view x (a string primary key, b char, c string[], d integer) as select 'ab\u0000cd\u0001', char(22), ('a\u00021','b1'), 1;");
 			es.deployVDB("northwind", mmd);
 			
 			TeiidDriver td = es.getDriver();
@@ -241,6 +241,37 @@ public class TestODataIntegration extends BaseResourceTest {
 	        ClientResponse<String> response = request.get(String.class);
 	        Assert.assertEquals(200, response.getStatus());
 	        assertTrue(response.getEntity().contains("ab cd "));
+	        assertTrue(response.getEntity().contains("a 1"));
+		} finally {
+			es.stop();
+		}
+	}
+	
+	@Test public void testArrayResults() throws Exception {
+		EmbeddedServer es = new EmbeddedServer();
+		es.start(new EmbeddedConfiguration());
+		try {
+			ModelMetaData mmd = new ModelMetaData();
+			mmd.setName("vw");
+			mmd.setSchemaSourceType("ddl");
+			mmd.setModelType(Type.VIRTUAL);
+			mmd.setSchemaText("create view x (a string primary key, b integer[], c string[][]) as select 'x', (1, 2, 3), (('a','b'),('c','d'));");
+			es.deployVDB("northwind", mmd);
+			
+			TeiidDriver td = es.getDriver();
+			Properties props = new Properties();
+			LocalClient lc = new LocalClient("northwind", 1, props);
+			lc.setDriver(td);
+			MockProvider.CLIENT = lc;
+			
+	        ClientRequest request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json&$select=a,b"));
+	        ClientResponse<String> response = request.get(String.class);
+	        assertEquals(200, response.getStatus());
+	        assertTrue(response.getEntity().contains("1, 2, 3"));
+	        
+	        request = new ClientRequest(TestPortProvider.generateURL("/odata/northwind/x?$format=json"));
+	        response = request.get(String.class);
+	        assertEquals(500, response.getStatus());
 		} finally {
 			es.stop();
 		}

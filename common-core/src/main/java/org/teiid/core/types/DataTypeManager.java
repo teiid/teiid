@@ -606,7 +606,7 @@ public class DataTypeManager {
 		return false;
 	}
 
-	private static String getComponentType(String srcType) {
+	public static String getComponentType(String srcType) {
 		return srcType.substring(0, srcType.length() - ARRAY_SUFFIX.length());
 	}
 
@@ -901,6 +901,12 @@ public class DataTypeManager {
 		if (SQLXML.class.isAssignableFrom(c)) {
 			return DefaultDataClasses.XML;
 		} 
+		if (c == ArrayImpl.class) {
+			return getArrayType(DefaultDataClasses.OBJECT); 
+		}
+		if (c.isArray()) {
+			return getDataTypeClass(getDataTypeName(c));
+		}
 		return DefaultDataClasses.OBJECT; // "object type"
 	}
 

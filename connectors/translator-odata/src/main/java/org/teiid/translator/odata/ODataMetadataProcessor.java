@@ -189,7 +189,7 @@ public class ODataMetadataProcessor {
 				if (column == null) {
 					throw new TranslatorException(ODataPlugin.Util.gs(ODataPlugin.Event.TEIID17003, columnName, table.getName()));
 				}
-				column = mf.addColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), linkTable);
+				column = mf.addColumn(column.getName(), column.getRuntimeType(), linkTable);
 				column.setProperty(JOIN_COLUMN, String.valueOf(true));
 			}
 		}
@@ -198,7 +198,7 @@ public class ODataMetadataProcessor {
 			for (Column column :table.getPrimaryKey().getColumns()) {
 				columnNames.add(column.getName());
 				if (linkTable.getColumnByName(column.getName()) == null) {
-					column = mf.addColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), linkTable);
+					column = mf.addColumn(column.getName(), column.getRuntimeType(), linkTable);
 				}
 				column.setProperty(JOIN_COLUMN, String.valueOf(true));
 			}
@@ -388,7 +388,7 @@ public class ODataMetadataProcessor {
 		else if (type instanceof EdmEntityType) {
 			Table table = getEntityTable(mf, (EdmEntityType)type);
 			for (Column column:table.getColumns()) {
-				mf.addProcedureResultSetColumn(column.getName(), column.getDatatype().getRuntimeTypeName(), procedure);
+				mf.addProcedureResultSetColumn(column.getName(), column.getRuntimeType(), procedure);
 			}
 		}
 		else {

@@ -22,6 +22,7 @@
 package org.teiid.odata;
 
 import java.io.IOException;
+import java.sql.Array;
 import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -35,11 +36,14 @@ import java.util.List;
 import java.util.Properties;
 
 import org.odata4j.core.OCollection;
+import org.odata4j.core.OCollection.Builder;
 import org.odata4j.core.OCollections;
 import org.odata4j.core.OComplexObject;
 import org.odata4j.core.OComplexObjects;
+import org.odata4j.core.OObject;
 import org.odata4j.core.OProperties;
 import org.odata4j.core.OProperty;
+import org.odata4j.core.OSimpleObjects;
 import org.odata4j.edm.EdmCollectionType;
 import org.odata4j.edm.EdmComplexType;
 import org.odata4j.edm.EdmDataServices;
@@ -169,15 +173,10 @@ public class LocalClient implements Client {
 				return Responses.collection(resultRows.build(), null, null, null, collectionName);
 			}
 
-            if (returnType != null && returnType.isSimple()) {
+            if (returnType != null) {
             	Object result = stmt.getObject(1);
-            	if (result == null) {
-            		result = org.odata4j.expression.Expression.null_();
-            	}
-            	if (!(returnType instanceof EdmSimpleType)) {
-            		throw new AssertionError("non-simple types are not yet supported");
-            	}
-            	return Responses.simple((EdmSimpleType)returnType, "return", replaceInvalidCharacters((EdmSimpleType)returnType, result, invalidCharacterReplacement)); //$NON-NLS-1$
+            	OProperty prop = buildPropery("return", returnType, result, invalidCharacterReplacement); //$NON-NLS-1$
+            	return Responses.property(prop); 
             }
 			return Responses.simple(EdmSimpleType.INT32, 1);
 		} catch (Exception e) {
@@ -339,6 +338,26 @@ public class LocalClient implements Client {
 	
 	static OProperty<?> buildPropery(String propName, EdmType type, Object value, String invalidCharacterReplacement) throws TransformationException, SQLException, IOException {
 		if (!(type instanceof EdmSimpleType)) {
+			if (type instanceof EdmCollectionType) {
+				EdmCollectionType collectionType = (EdmCollectionType)type;
+				Builder<OObject> b = OCollections.newBuilder(collectionType);
+				if (value instanceof Array) {
+					value = ((Array)value).getArray();
+				}
+				EdmType componentType = collectionType.getItemType();
+				int length = java.lang.reflect.Array.getLength(value);
+				for (int i = 0; i < length; i++) {
+					Object o = java.lang.reflect.Array.get(value, i);
+					OProperty p = buildPropery("x", componentType, o, invalidCharacterReplacement);
+					if (componentType instanceof EdmSimpleType) {
+						b.add(OSimpleObjects.create((EdmSimpleType) componentType, p.getValue()));
+					} else {
+						throw new AssertionError("Multi-dimensional arrays are not yet supported.");
+						//b.add((OCollection)p.getValue());
+					}
+				}
+				return OProperties.collection(propName, collectionType, b.build());
+			}
 			throw new AssertionError("non-simple types are not yet supported");
 		}
 		EdmSimpleType expectedType = (EdmSimpleType)type;

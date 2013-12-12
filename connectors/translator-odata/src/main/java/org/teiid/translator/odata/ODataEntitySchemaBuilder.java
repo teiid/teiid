@@ -152,9 +152,9 @@ public class ODataEntitySchemaBuilder {
 			// adding properties
 			for (Column c : table.getColumns()) {
 				EdmProperty.Builder property = EdmProperty.newBuilder(c.getName())
-						.setType(ODataTypeManager.odataType(c.getDatatype().getRuntimeTypeName()))
+						.setType(ODataTypeManager.odataType(c.getRuntimeType()))
 						.setNullable(c.getNullType() == NullType.Nullable);
-				if (c.getDatatype().getRuntimeTypeName().equals(DataTypeManager.DefaultDataTypes.STRING)) {
+				if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
 					property.setFixedLength(c.isFixedLength())
 						.setMaxLength(c.getLength())
 						.setUnicode(true);
@@ -306,13 +306,13 @@ public class ODataEntitySchemaBuilder {
 			for (ProcedureParameter pp:proc.getParameters()) {
 				if (pp.getName().equals("return")) { //$NON-NLS-1$
 					httpMethod = "GET"; //$NON-NLS-1$
-					edmProcedure.setReturnType(ODataTypeManager.odataType(pp.getDatatype().getRuntimeTypeName()));						
+					edmProcedure.setReturnType(ODataTypeManager.odataType(pp.getRuntimeType()));						
 					continue;
 				}
 				
 				EdmFunctionParameter.Builder param = EdmFunctionParameter.newBuilder();
 				param.setName(pp.getName());
-				param.setType(ODataTypeManager.odataType(pp.getDatatype().getRuntimeTypeName()));
+				param.setType(ODataTypeManager.odataType(pp.getRuntimeType()));
 
 				if (pp.getType() == ProcedureParameter.Type.In) {
 					param.setMode(Mode.In);
@@ -341,9 +341,9 @@ public class ODataEntitySchemaBuilder {
 				complexType.setNamespace(schema.getName());
 				for (Column c:returnColumns.getColumns()) {
 					EdmProperty.Builder property = EdmProperty.newBuilder(c.getName())
-							.setType(ODataTypeManager.odataType(c.getDatatype().getRuntimeTypeName()))
+							.setType(ODataTypeManager.odataType(c.getRuntimeType()))
 							.setNullable(c.getNullType() == NullType.Nullable);
-					if (c.getDatatype().getRuntimeTypeName().equals(DataTypeManager.DefaultDataTypes.STRING)) {
+					if (c.getRuntimeType().equals(DataTypeManager.DefaultDataTypes.STRING)) {
 						property.setFixedLength(c.isFixedLength())
 							.setMaxLength(c.getLength())
 							.setUnicode(true);
