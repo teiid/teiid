@@ -14,7 +14,8 @@
     <dependencies>
         <module name="javax.api" />
         <module name="javax.xml.bind.api" />
-        <module name="javax.resource.api"/>   
+        <module name="javax.resource.api"/>         
+        <module name="sun.jdk" optional="true"/> <!-- Kerberos -->          
         <module name="org.jboss.teiid.common-core" />
         <module name="org.jboss.teiid.api" />
         <module name="org.jboss.teiid.client" />
@@ -31,6 +32,7 @@
         <module name="org.jboss.as.security"/>
         <module name="org.jboss.as.server"/>
         <module name="org.jboss.as.naming"/>
+        <module name="org.jboss.security.negotiation"/> <!-- SPNEGO -->
         <module name="javax.xml.bind.api"/>
         <module name="javax.transaction.api"/>
         <module name="javax.activation.api"/>
@@ -39,7 +41,7 @@
         <module name="asm.asm"/>
         <module name="org.infinispan"/>
         <module name="org.jboss.marshalling"/>
-        <module name="org.jboss.marshalling.river"/>
+        <module name="org.jboss.marshalling.river"/>        
         <!-- These dependencies here for ra.xml description -->
         <module name="org.jboss.as.connector"/>
         <module name="org.jboss.ironjacamar.api"/>
