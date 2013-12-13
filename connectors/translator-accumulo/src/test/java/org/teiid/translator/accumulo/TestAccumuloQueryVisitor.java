@@ -25,8 +25,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.accumulo.core.data.Range;
 import org.junit.Before;
@@ -38,6 +38,7 @@ import org.teiid.language.Command;
 import org.teiid.metadata.Column;
 import org.teiid.query.metadata.TransformationMetadata;
 import org.teiid.query.unittest.RealMetadataFactory;
+import org.teiid.translator.TranslatorException;
 
 
 @SuppressWarnings("nls")
@@ -56,54 +57,60 @@ public class TestAccumuloQueryVisitor {
     }
 
 	@Test
-	public void testSelectStar() {
+	public void testSelectStar()  throws Exception {
 		Command cmd = this.utility.parseCommand("select * from Customer");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertTrue(visitor.getRanges().isEmpty());
 		assertNotNull(visitor.projectedColumns());
 		
-		ArrayList<Column> columns = visitor.projectedColumns();
+		List<Column> columns = visitor.projectedColumns();
 		assertEquals("customer", visitor.getScanTable().getName());
 		
-		assertEquals(2, columns.size());
+		assertEquals(3, columns.size());
 		Column rowid = columns.get(0);
-		Column name = columns.get(1);
+		Column firstName = columns.get(1);
 		
 		assertEquals("customer_id", rowid.getName());
 		assertEquals("rowid", rowid.getNameInSource());
 		
-		assertEquals("name", name.getName());
-		assertEquals("customer", name.getProperty(AccumuloMetadataProcessor.CF, false));
-		assertEquals("nameAttribute", name.getProperty(AccumuloMetadataProcessor.CQ, false));
+		assertEquals("firstName", firstName.getName());
+		assertEquals("customer", firstName.getProperty(AccumuloMetadataProcessor.CF, false));
+		assertEquals("firstNameAttribute", firstName.getProperty(AccumuloMetadataProcessor.CQ, false));
 		
 	}
 
 	
 	@Test
-	public void testSelectColumn() {
-		Command cmd = this.utility.parseCommand("select name from Customer");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testSelectColumn() throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertTrue(visitor.getRanges().isEmpty());
 		assertNotNull(visitor.projectedColumns());
-		ArrayList<Column> columns = visitor.projectedColumns();
+		List<Column> columns = visitor.projectedColumns();
 		assertEquals(1, columns.size());
 		Column name = columns.get(0);
-		assertEquals("name", name.getName());
+		assertEquals("firstName", name.getName());
 		assertEquals("customer", name.getProperty(AccumuloMetadataProcessor.CF, false));
-		assertEquals("nameAttribute", name.getProperty(AccumuloMetadataProcessor.CQ, false));
+		assertEquals("firstNameAttribute", name.getProperty(AccumuloMetadataProcessor.CQ, false));
+	}
+
+	private AccumuloQueryVisitor buildVisitor(Command cmd) throws TranslatorException {
+		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
+		visitor.visitNode(cmd);
+		if (!visitor.exceptions.isEmpty()) {
+			throw visitor.exceptions.get(0);
+		}		
+		return visitor;
 	}	
 	
 	@Test
-	public void testSelectEquality() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id = 1");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testSelectEquality()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id = 1");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
@@ -112,10 +119,9 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
-	public void testWhereIN() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id IN (1,2)");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereIN()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id IN (1,2)");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
@@ -124,10 +130,9 @@ public class TestAccumuloQueryVisitor {
 	}	
 	
 	@Test
-	public void testWhereNOT_IN() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id NOT IN (1,2)");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereNOT_IN()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id NOT IN (1,2)");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(3, visitor.getRanges().size());
@@ -137,10 +142,9 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
-	public void testWhereComapreLE() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id < 2");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreLE()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id < 2");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
@@ -148,10 +152,9 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
-	public void testWhereComapreLEEQ() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id <= 2");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreLEEQ()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id <= 2");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
@@ -160,10 +163,9 @@ public class TestAccumuloQueryVisitor {
 	
 
 	@Test
-	public void testWhereComapreGT() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id > 2");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreGT()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id > 2");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
@@ -171,10 +173,9 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
-	public void testWhereComapreGTEQ() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id >= 2");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreGTEQ()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id >= 2");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(1, visitor.getRanges().size());
@@ -182,10 +183,9 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
-	public void testWhereComapreNOTEQ() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id <> 2");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreNOTEQ()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id <> 2");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
@@ -194,10 +194,9 @@ public class TestAccumuloQueryVisitor {
 	}	
 
 	@Test
-	public void testWhereComapreAND1() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id < 2 and customer_id > 4");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreAND1()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id < 2 and customer_id > 4");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());
@@ -207,10 +206,9 @@ public class TestAccumuloQueryVisitor {
 	}
 	
 	@Test
-	public void testWhereComapreAND2() {
-		Command cmd = this.utility.parseCommand("select name from Customer where customer_id < 2 and customer_id != 4");
-		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
-		visitor.visitNode(cmd);
+	public void testWhereComapreAND2()  throws Exception {
+		Command cmd = this.utility.parseCommand("select firstname from Customer where customer_id < 2 and customer_id != 4");
+		AccumuloQueryVisitor visitor = buildVisitor(cmd);
 		
 		assertEquals("customer", visitor.getScanTable().getName());
 		assertEquals(2, visitor.getRanges().size());

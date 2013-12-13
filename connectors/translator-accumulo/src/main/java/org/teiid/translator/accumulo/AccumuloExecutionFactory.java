@@ -21,13 +21,8 @@
  */
 package org.teiid.translator.accumulo;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-
 import javax.resource.cci.ConnectionFactory;
 
-import org.apache.accumulo.core.data.Value;
-import org.apache.hadoop.io.Text;
 import org.teiid.language.Command;
 import org.teiid.language.QueryExpression;
 import org.teiid.language.Select;
@@ -109,158 +104,10 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 	@Override
 	public boolean supportsOnlyLiteralComparison() {
 		return true;
-	}
-	
-	public Object retrieveValue(Value value, Class<?> expectedType) {
-		if (value == null) {
-			return null;
-		}
-		
-		if (expectedType.isAssignableFrom(byte[].class)) {
-			return value.get();
-		}
-		
-		if (expectedType.isAssignableFrom(Integer.class)) {
-			return new BigInteger(value.get()).intValue();
-		}
-		else if (expectedType.isAssignableFrom(Short.class)) {
-			return new BigInteger(value.get()).shortValue();
-		}
-		else if (expectedType.isAssignableFrom(Byte.class)) {
-			return new BigInteger(value.get()).byteValue();
-		}
-		else if (expectedType.isAssignableFrom(Double.class)) {
-			return new BigInteger(value.get()).doubleValue();
-		}
-		else if (expectedType.isAssignableFrom(Float.class)) {
-			return new BigInteger(value.get()).floatValue();
-		}
-		else if (expectedType.isAssignableFrom(String.class)) {
-			return new String(value.get());
-		}
-		else if (expectedType.isAssignableFrom(Long.class)) {
-			return new BigInteger(value.get()).longValue();
-		}
-		else if (expectedType.isAssignableFrom(Boolean.class)) {
-			return new BigInteger(value.get()).byteValue() == 1;
-		}
-		else if (expectedType.isAssignableFrom(BigInteger.class)) {
-			return new BigInteger(value.get());
-		}
-		else if (expectedType.isAssignableFrom(BigDecimal.class)) {
-			return new BigDecimal(new BigInteger(value.get()));
-		}
-		else if (expectedType.isAssignableFrom(java.sql.Date.class)) {
-			return new java.sql.Date(new BigInteger(value.get()).longValue());
-		}
-		else if (expectedType.isAssignableFrom(java.sql.Time.class)) {
-			return new java.sql.Time(new BigInteger(value.get()).longValue());
-		}
-		else if (expectedType.isAssignableFrom(java.sql.Timestamp.class)) {
-			return new java.sql.Timestamp(new BigInteger(value.get()).longValue());
-		}
-		//LOBs? is streaming provided by Accumulo?
-		throw new RuntimeException("no lob support");
-	}
-	
-	public Object retrieveValue(Text textvalue, Class<?> expectedType) {
-		if (textvalue == null) {
-			return null;
-		}
-		String value = new String(textvalue.getBytes());
-		if (expectedType.isAssignableFrom(String.class)) {
-			return value;
-		}
-		
-		if (expectedType.isAssignableFrom(Integer.class)) {
-			return Integer.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(Short.class)) {
-			return Short.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(Byte.class)) {
-			return Byte.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(Double.class)) {
-			return Double.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(Float.class)) {
-			return Float.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(Long.class)) {
-			return Long.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(Boolean.class)) {
-			return Boolean.valueOf(value);
-		}
-		else if (expectedType.isAssignableFrom(BigInteger.class)) {
-			return new BigInteger(value);
-		}
-		else if (expectedType.isAssignableFrom(BigDecimal.class)) {
-			return new BigDecimal(value);
-		}
-		else if (expectedType.isAssignableFrom(java.sql.Date.class)) {
-			return new java.sql.Date(Long.valueOf(value));
-		}
-		else if (expectedType.isAssignableFrom(java.sql.Time.class)) {
-			return new java.sql.Time(Long.valueOf(value));
-		}
-		else if (expectedType.isAssignableFrom(java.sql.Timestamp.class)) {
-			return new java.sql.Timestamp(Long.valueOf(value));
-		}
-		//LOBs? is streaming provided by Accumulo?
-		throw new RuntimeException("no lob support");
 	}	
-	
-	public byte[] convertToAccumuloType(Object value, boolean charBinary) {
-		if (value == null) {
-			return null;
-		}
-		
-		if (charBinary) {
-			return value.toString().getBytes();
-		}
-		
-		if (value instanceof String) {
-			return ((String) value).getBytes();
-		}
-		else if (value instanceof Integer) {
-			return BigInteger.valueOf((Integer)value).toByteArray();
-		}
-		else if (value instanceof Short) {
-			return BigInteger.valueOf((Short)value).toByteArray();
-		}
-		else if (value instanceof Byte) {
-			return BigInteger.valueOf((Byte)value).toByteArray();
-		}
-		else if (value instanceof Double) {
-			return BigDecimal.valueOf((Double)value).toBigInteger().toByteArray();
-		}
-		else if (value instanceof Float) {
-			return BigDecimal.valueOf((Float)value).toBigInteger().toByteArray();
-		}
-		else if (value instanceof Long) {
-			return BigInteger.valueOf((Long)value).toByteArray();
-		}
-		else if (value instanceof Boolean) {
-			return new byte[]{(byte) ((Boolean)value?1:0)};
-		}
-		else if (value instanceof BigInteger) {
-			return ((BigInteger)value).toByteArray();
-		}
-		else if (value instanceof BigDecimal) {
-			return ((BigDecimal)value).toBigInteger().toByteArray();
-		}
-		else if (value instanceof java.sql.Date) {
-			return BigInteger.valueOf(((java.sql.Date)value).getTime()).toByteArray();
-		}
-		else if (value instanceof java.sql.Time) {
-			return BigInteger.valueOf(((java.sql.Time)value).getTime()).toByteArray();
-		}
-		else if (value instanceof java.sql.Timestamp) {
-			return BigInteger.valueOf(((java.sql.Timestamp)value).getTime()).toByteArray();
-		}
-		//LOBs? is streaming provided by Accumulo?
-		throw new RuntimeException("no lob support");
-	}	
+
+    @Override
+	public boolean supportsIsNullCriteria() {
+    	return false;
+    }	
 }

@@ -14,5 +14,6 @@ CREATE FOREIGN TABLE rental (
 
 CREATE FOREIGN TABLE customer (
     customer_id integer PRIMARY KEY OPTIONS(NAMEINSOURCE 'rowid'),
-    name varchar(25) OPTIONS("teiid_accumulo:CF" 'customer', "teiid_accumulo:CQ" 'nameAttribute')
+    firstName varchar(25) OPTIONS("teiid_accumulo:CF" 'customer', "teiid_accumulo:CQ" 'firstNameAttribute'),
+    lastName varchar(25) OPTIONS("teiid_accumulo:CF" 'customer', "teiid_accumulo:CQ" 'lastNameAttribute')
 ) OPTIONS(UPDATABLE 'TRUE');

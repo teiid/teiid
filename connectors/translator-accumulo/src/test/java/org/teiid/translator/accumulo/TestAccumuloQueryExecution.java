@@ -73,32 +73,41 @@ public class TestAccumuloQueryExecution {
 	
     @Test
     public void testExecution() throws Exception {
-    	executeCmd("insert into customer (customer_id, name) values (2, 'Joe')");
-    	executeCmd("insert into customer (customer_id, name) values (1, 'John')");
-    	executeCmd("insert into customer (customer_id, name) values (3, 'Jack')");
+    	executeCmd("delete from customer");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (2, 'Joe', 'A')");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (1, 'John', 'B')");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (3, 'Jack', 'C')");
     	
     	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select * from customer");
-    	assertEquals(Arrays.asList(1, "John"), exec.next());
-    	assertEquals(Arrays.asList(2, "Joe"), exec.next());
-    	assertEquals(Arrays.asList(3, "Jack"), exec.next());
+    	assertEquals(Arrays.asList(1, "John", "B"), exec.next());
+    	assertEquals(Arrays.asList(2, "Joe", "A"), exec.next());
+    	assertEquals(Arrays.asList(3, "Jack", "C"), exec.next());
     	assertNull(exec.next());
     	
     	
-    	executeCmd("Update Customer set name = 'Jill' where customer_id = 2");
-    	exec = (AccumuloQueryExecution)executeCmd("select * from customer where customer_id = 2");
-    	assertEquals(Arrays.asList(2, "Jill"), exec.next());
+    	executeCmd("Update Customer set firstname = 'Jill' where customer_id = 2");
+    	executeCmd("Update Customer set firstname = 'Jay' where customer_id = 2");
+    	exec = (AccumuloQueryExecution)executeCmd("select customer_id, firstname from customer");
+    	assertEquals(Arrays.asList(1, "John"), exec.next());
+    	assertEquals(Arrays.asList(2, "Jay"), exec.next());
+    	assertEquals(Arrays.asList(3, "Jack"), exec.next());
+    	assertNull(exec.next());   
+
+    	exec = (AccumuloQueryExecution)executeCmd("select customer_id, firstname from customer where customer_id = 2");
+    	assertEquals(Arrays.asList(2, "Jay"), exec.next());
     	assertNull(exec.next());
     	
     	executeCmd("delete from Customer where customer_id = 2");
 
     	exec = (AccumuloQueryExecution)executeCmd("select * from customer");
-    	assertEquals(Arrays.asList(1, "John"), exec.next());
-    	assertEquals(Arrays.asList(3, "Jack"), exec.next());
+    	assertEquals(Arrays.asList(1, "John", "B"), exec.next());
+    	assertEquals(Arrays.asList(3, "Jack", "C"), exec.next());
     	assertNull(exec.next());
     }
     
     @Test
     public void testValueInCQ() throws Exception {
+    	executeCmd("delete from rental");
     	executeCmd("insert into rental (rental_id, amount, customer_id) values (1, 3.99, 5)");
     	executeCmd("insert into rental (rental_id, amount, customer_id) values (2, 5.99, 2)");
     	executeCmd("insert into rental (rental_id, amount, customer_id) values (3, 11.99, 1)");
@@ -107,7 +116,66 @@ public class TestAccumuloQueryExecution {
     	assertEquals(Arrays.asList(1, new BigDecimal("3.99"), 5), exec.next());
     	assertEquals(Arrays.asList(2, new BigDecimal("5.99"), 2), exec.next());
     	assertEquals(Arrays.asList(3, new BigDecimal("11.99"), 1), exec.next());
-    	assertNull(exec.next());    	
+    	assertNull(exec.next());    
+    }
+
+    @Test
+    public void testCountStar() throws Exception {
+    	executeCmd("delete from rental");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (1, 3.99, 5)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (2, 5.99, 2)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (3, 11.99, 1)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (4, 12.99, 1)");
+    	
+    	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select count(*) from rental");
+    	assertEquals(Arrays.asList(4), exec.next());
+    	assertNull(exec.next());   
     }
     
+    @Test
+    public void testIsNULL() throws Exception {
+    	executeCmd("delete from customer");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (2, 'Joe', 'A')");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (1, null, 'B')");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (3, 'Jack', 'C')");
+
+    	
+    	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select * from customer where firstname IS NULL");
+    	assertEquals(Arrays.asList(1, null, "B"), exec.next());
+    	assertNull(exec.next());
+    	
+    	exec = (AccumuloQueryExecution)executeCmd("select * from customer where firstname IS NOT NULL");
+    	assertEquals(Arrays.asList(2, "Joe", "A"), exec.next());
+    	assertEquals(Arrays.asList(3, "Jack", "C"), exec.next());
+    	assertNull(exec.next());    
+    }    
+    
+    @Test
+    public void testINOnNonPKColumn() throws Exception {
+    	executeCmd("delete from customer");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (2, 'Joe', 'A')");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (1, 'John', 'B')");
+    	executeCmd("insert into customer (customer_id, firstname, lastname) values (3, 'Jack', 'C')");
+
+    	
+    	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select * from customer where firstname IN('Joe', 'Jack')");
+    	assertEquals(Arrays.asList(2, "Joe", "A"), exec.next());
+    	assertEquals(Arrays.asList(3, "Jack", "C"), exec.next());
+    	
+    	assertNull(exec.next());    
+    }     
+    
+    @Test
+    public void testComparisionOnNonPKColumn() throws Exception {
+    	executeCmd("delete from rental");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (1, 3.99, 5)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (2, 5.99, 2)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (3, 11.99, 1)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (4, 12.99, 1)");
+    	
+    	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select rental_id, amount, customer_id from rental where amount > 6.01");
+    	assertEquals(Arrays.asList(3, new BigDecimal("11.99"), 1), exec.next());
+    	assertEquals(Arrays.asList(4, new BigDecimal("12.99"), 1), exec.next());
+    	assertNull(exec.next());    
+    }    
 }

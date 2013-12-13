@@ -49,6 +49,7 @@ public class AccumuloMetadataProcessor {
 	public static final String DEFAULT_COLUMN_NAME_PATTERN = "{CF}:{CQ}"; //$NON-NLS-1$
 	public static final String DEFAULT_VALUE_PATTERN = "{VALUE}"; //$NON-NLS-1$
 	public static final String ROWID = "rowid"; //$NON-NLS-1$
+	public enum ValueIn{CQ,VALUE};
 	
 	private MetadataFactory mf;
 	private AccumuloConnection conn;
@@ -88,7 +89,7 @@ public class AccumuloMetadataProcessor {
 						mf.addPrimaryKey("PK0", Arrays.asList(AccumuloMetadataProcessor.ROWID), table); //$NON-NLS-1$
 					}
 					Column column = mf.addColumn(buildColumnName(cf, cq, row), TypeFacility.RUNTIME_NAMES.VARBINARY, table); 
-					column.setSearchType(SearchType.Unsearchable);
+					column.setSearchType(SearchType.All_Except_Like);
 					column.setProperty(CF, cf.toString());
 					column.setProperty(CQ, cq.toString());
 					column.setProperty(VALUE_IN, mf.getModelProperties().getProperty(COLUMN_VALUE_PATTERN, DEFAULT_VALUE_PATTERN));

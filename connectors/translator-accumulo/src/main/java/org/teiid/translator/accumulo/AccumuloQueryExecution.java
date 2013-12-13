@@ -21,15 +21,18 @@
  */
 package org.teiid.translator.accumulo;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
 
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.Connector;
+import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
@@ -48,11 +51,8 @@ import org.teiid.translator.ResultSetExecution;
 import org.teiid.translator.TranslatorException;
 
 public class AccumuloQueryExecution implements ResultSetExecution {
-	enum ValueIn{CQ,VALUE};
-	
 	private AccumuloConnection connection;	
 	private Iterator<Entry<Key,Value>> results;
-	private Entry<Key, Value> prevEntry;
 	private Class<?>[] expectedColumnTypes;
 	private AccumuloExecutionFactory aef;
 	private AccumuloQueryVisitor visitor;
@@ -60,12 +60,16 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 	public AccumuloQueryExecution(AccumuloExecutionFactory aef, Select command,
 			@SuppressWarnings("unused") ExecutionContext executionContext,
 			@SuppressWarnings("unused") RuntimeMetadata metadata,
-			AccumuloConnection connection) {
+			AccumuloConnection connection) throws TranslatorException {
 		this.aef = aef;
 		this.connection = connection;
 		this.expectedColumnTypes = command.getColumnTypes();
 		this.visitor = new AccumuloQueryVisitor();
 		this.visitor.visitNode(command);
+		
+		if (!visitor.exceptions.isEmpty()) {
+			throw visitor.exceptions.get(0);
+		}
 	}
 
 	@Override
@@ -78,7 +82,8 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 			}
 			List<Range> ranges = this.visitor.getRanges();
 			Table scanTable = this.visitor.getScanTable();			
-			this.results = runQuery(this.aef, connector, auths, ranges, scanTable);
+			List<IteratorSetting> scanIterators = visitor.scanIterators();
+			this.results = runQuery(this.aef, connector, auths, ranges, scanTable, scanIterators);
 		} catch (TableNotFoundException e) {
 			// Teiid will not let the query come this far with out validating metadata for given table
 			// so table in user's mind exists, it may be not be in the Accumulo, which should be treated as
@@ -87,14 +92,26 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 		}
 	}
 
-	static Iterator<Entry<Key,Value>> runQuery(AccumuloExecutionFactory aef, Connector connector, Authorizations auths, List<Range> ranges, Table scanTable) throws TableNotFoundException {
+	static Iterator<Entry<Key, Value>> runQuery(AccumuloExecutionFactory aef,
+			Connector connector, Authorizations auths, List<Range> ranges,
+			Table scanTable, List<IteratorSetting> scanIterators)
+			throws TableNotFoundException {
+		
 		if (ranges.size() <= 1) {
 			Scanner scanner = connector.createScanner(SQLStringVisitor.getRecordName(scanTable), auths);
 			if (!ranges.isEmpty()) {
 				scanner.setRange(ranges.get(0));
 			}
+			if (scanIterators != null && !scanIterators.isEmpty()) {
+				for (IteratorSetting it:scanIterators) {
+					scanner.addScanIterator(it);
+				}
+			}
+			scanner.enableIsolation();
 			return scanner.iterator();
 		}
+		
+		
 		// use batch scanner
 		BatchScanner scanner = connector.createBatchScanner(SQLStringVisitor.getRecordName(scanTable), auths, aef.getQueryThreadsCount());
 		scanner.setRanges(ranges);
@@ -103,49 +120,43 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		if (this.prevEntry != null || (this.results != null && this.results.hasNext())) {
-			Text previousRow = null;
-			LinkedHashMap<String, Object> values = new LinkedHashMap();
-			boolean rowIdAdded = false;
-
-			while(true) {
-				Entry<Key, Value> entry = this.prevEntry;
-				if (entry == null && this.results.hasNext()) {
-					entry = this.results.next();
-				}
-				if (entry == null) {
-					break;
-				}
-				this.prevEntry = null;
-				Key key = entry.getKey();
-				Text cf = key.getColumnFamily();
-				Text cq = key.getColumnQualifier();
-				Text row = key.getRow();
-				Value value = entry.getValue();
-				if (previousRow == null || previousRow.equals(row)) {
-					previousRow = row;
+		if (this.results != null && this.results.hasNext()) {
+			try {
+				Entry<Key, Value> entry = this.results.next();
+				SortedMap<Key, Value> rowItems = RowFilterIterator.decodeRow(entry.getKey(), entry.getValue());
+				boolean rowIdAdded = false;
+				LinkedHashMap<String, byte[]> values = new LinkedHashMap<String, byte[]>();
+				
+				for (Key key:rowItems.keySet()) {
+					Text cf = key.getColumnFamily();
+					Text cq = key.getColumnQualifier();
+					Text rowid = key.getRow();
+					Value value = rowItems.get(key);
+					
+					Column match = findMatchingColumn(cf, cq);
 					if (!rowIdAdded) {
-						values.put(AccumuloMetadataProcessor.ROWID, new Text(row.getBytes()));
+						values.put(AccumuloMetadataProcessor.ROWID, rowid.getBytes());
 						rowIdAdded = true;
 					}
-					Column column = getMatchingColumn(cf, cq);
-					if (column != null) {
-						String valueIn = column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
-						values.put(column.getName(), buildValue(valueIn, cq, value));
+					
+					if (match != null) {
+						String valueIn = match.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
+						// failed to use isolated scanner, but this if check will accomplish the same in getting the
+						// most top value
+						if (values.get(match.getName()) == null) {
+							values.put(match.getName(), buildValue(valueIn, cq, value));
+						}
 					}
 				}
-				else {
-					//done with row; but preserve what has been read..
-					this.prevEntry = entry;
-					return lastRow(values);
-				}
+				return nextRow(values);
+			} catch (IOException e) {
+				throw new TranslatorException(e);
 			}
-			return lastRow(values);
 		}
 		return null;
-	}
+	}	
 	
-	private Column getMatchingColumn(Text rowCF, Text rowCQ) {
+	private Column findMatchingColumn(Text rowCF, Text rowCQ) {
 		String CF = new String(rowCF.getBytes());
 		String CQ = new String(rowCQ.getBytes());
 		Column column = this.visitor.lookupColumn(CF+"/"+CQ); //$NON-NLS-1$
@@ -156,17 +167,18 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 		return column;
 	}
 	
-	private List<?> lastRow(Map<String, Object> values) {
+	private List<?> nextRow(Map<String, byte[]> values) {
 		if (!values.isEmpty()) {
 			ArrayList list = new ArrayList();
 			for(int i = 0; i < this.visitor.projectedColumns().size(); i++) {
 				Column column = this.visitor.projectedColumns().get(i);
-				Object value = values.get(SQLStringVisitor.getRecordName(column));
-				if (value instanceof Value) {
-					list.add(this.aef.retrieveValue((Value)value, this.expectedColumnTypes[i]));
+				String colName = SQLStringVisitor.getRecordName(column);
+				byte[] value = values.get(colName);
+				if (colName.equals(AccumuloMetadataProcessor.ROWID)) {
+					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i]));
 				}
 				else {
-					list.add(this.aef.retrieveValue((Text)value, this.expectedColumnTypes[i]));
+					list.add(AccumuloDataTypeManager.convertFromAccumuloType(value, this.expectedColumnTypes[i]));
 				}
 			}
 			return list;
@@ -174,17 +186,16 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 		return null;
 	}
 
-	private Object buildValue(String pattern, Text cq, Value value) {
+	private byte[] buildValue(String pattern, Text cq, Value value) {
 		if (pattern == null) {
-			pattern = AccumuloMetadataProcessor.DEFAULT_VALUE_PATTERN;
+			return value.get();
 		}
 		pattern = pattern.substring(1, pattern.length()-1); // remove the curleys
-		if (pattern.equals(ValueIn.VALUE.name())) {
-			return value;
+		if (pattern.equals(AccumuloMetadataProcessor.ValueIn.VALUE.name())) {
+			return value.get();
 		}
-		else if (pattern.equals(ValueIn.CQ.name())) {
-			// CQ is always stored in character based bytes
-			return cq;
+		else if (pattern.equals(AccumuloMetadataProcessor.ValueIn.CQ.name())) {
+			return cq.getBytes();
 		}
 		return null;
 	}

@@ -57,7 +57,6 @@ import org.teiid.translator.TranslatorException;
 import org.teiid.translator.UpdateExecution;
 
 public class AccumuloUpdateExecution implements UpdateExecution {
-
 	private Command command;
 	private AccumuloConnection connection;
 	private AccumuloExecutionFactory aef;
@@ -126,6 +125,10 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		
 		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
 		visitor.visitNode(update.getWhere());
+		if (!visitor.exceptions.isEmpty()) {
+			throw visitor.exceptions.get(0);
+		}
+		
 
 		Authorizations auths = new Authorizations();
 		if (this.connection.getAuthorizations() != null) {
@@ -136,7 +139,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		BatchWriter writer = createBatchWriter(table, connector);	        	
 		
 		Text prevRow = null;
-		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), auths, visitor.getRanges(), table);
+		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), auths, visitor.getRanges(), table, visitor.scanIterators());
 		while (results.hasNext()) {
 			Key key = results.next().getKey();
 			Text rowId = key.getRow();
@@ -188,6 +191,10 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		Table table = delete.getTable().getMetadataObject();
 		AccumuloQueryVisitor visitor = new AccumuloQueryVisitor();
 		visitor.visitNode(delete.getWhere());
+		if (!visitor.exceptions.isEmpty()) {
+			throw visitor.exceptions.get(0);
+		}
+		
 
 		Authorizations auths = new Authorizations();
 		if (this.connection.getAuthorizations() != null) {
@@ -206,7 +213,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		Text prevRow = null;
 		Connector connector = this.connection.getInstance();
 		BatchWriter writer = createBatchWriter(table, connector);
-		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), auths, visitor.getRanges(), table);
+		Iterator<Entry<Key,Value>> results = AccumuloQueryExecution.runQuery(this.aef, this.connection.getInstance(), auths, visitor.getRanges(), table, null);
 		while (results.hasNext()) {
 			Key key = results.next().getKey();
 			Text rowId = key.getRow();
@@ -229,7 +236,7 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 			if (rowId.equalsIgnoreCase(AccumuloMetadataProcessor.ROWID)) {
 				Object value = values.get(i);
 				if (value instanceof Literal) {
-					return this.aef.convertToAccumuloType(((Literal)value).getValue(), true);
+					return AccumuloDataTypeManager.convertToAccumuloType(((Literal)value).getValue());
 				}
 				throw new TranslatorException(AccumuloPlugin.Event.TEIID19001, AccumuloPlugin.Util.gs(AccumuloPlugin.Event.TEIID19001));
 			}
@@ -246,16 +253,16 @@ public class AccumuloUpdateExecution implements UpdateExecution {
 		}
 		
 		byte[] columnFamilty = CF.getBytes();
-		byte[] columnQualifier = (CQ == null)?null:CQ.getBytes();
-		byte[] columnValue = new byte[] {(byte)0};
+		byte[] columnQualifier = (CQ == null)?AccumuloDataTypeManager.EMPTY_BYTES:CQ.getBytes();
+		byte[] columnValue = AccumuloDataTypeManager.EMPTY_BYTES;
 		
 		Mutation mutation = new Mutation(rowid);
 		valuePattern = valuePattern.substring(1, valuePattern.length()-1); // remove the curleys
-		if (valuePattern.equals(AccumuloQueryExecution.ValueIn.VALUE.name())) {
-			columnValue = this.aef.convertToAccumuloType(value, false);
+		if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.VALUE.name())) {
+			columnValue = AccumuloDataTypeManager.convertToAccumuloType(value);
 		}
-		else if (valuePattern.equals(AccumuloQueryExecution.ValueIn.CQ.name())) {
-			columnQualifier = this.aef.convertToAccumuloType(value, true);
+		else if (valuePattern.equals(AccumuloMetadataProcessor.ValueIn.CQ.name())) {
+			columnQualifier = AccumuloDataTypeManager.convertToAccumuloType(value);
 		}
 		mutation.put(columnFamilty, columnQualifier, columnValue);
 		return mutation;

@@ -35,7 +35,7 @@ import org.apache.accumulo.core.client.mock.MockInstance;
 import org.apache.accumulo.core.client.security.tokens.PasswordToken;
 import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Value;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.teiid.metadata.Column;
@@ -50,13 +50,16 @@ public class TestAccumuloMetadataProcessor {
 	
 	private static Connector connector;
 	
-	@BeforeClass
-	public static void setup() throws Exception {
+	@Before
+	public void setup() throws Exception {
 		MockInstance instance = new MockInstance("teiid");
 		
 		connector = instance.getConnector("root", new PasswordToken(""));
-		connector.tableOperations().create("Customer");
-		connector.tableOperations().create("Category");
+		try {
+			connector.tableOperations().create("Customer");
+			connector.tableOperations().create("Category");
+		} catch (Exception e) {
+		}
 
 		BatchWriter writer = connector.createBatchWriter("Customer",new BatchWriterConfig());
 		Mutation m = new Mutation("1");
@@ -132,7 +135,7 @@ public class TestAccumuloMetadataProcessor {
 		assertEquals("Customer",column.getProperty(AccumuloMetadataProcessor.CF, false));
 		assertEquals("CompanyName",column.getProperty(AccumuloMetadataProcessor.CQ, false));
 		assertEquals("{ROWID}",column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false));
-		assertEquals(SearchType.Unsearchable,column.getSearchType());
+		assertEquals(SearchType.All_Except_Like, column.getSearchType());
 		
 		column = customer.getColumnByName("rowid");
 		assertEquals(SearchType.All_Except_Like, column.getSearchType());
