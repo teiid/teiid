@@ -450,7 +450,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
 				row.add(proc.getParent().getName());
 				row.add(proc.getName());
 				row.add(param.getName());
-				row.add(dt!=null?dt.getRuntimeTypeName():null);
+				row.add(param.getRuntimeType());
 				row.add(param.getPosition());
 				row.add(type);
 				row.add(isOptional);
@@ -576,7 +576,7 @@ public class DataTierManagerImpl implements ProcessorDataManager {
         		row.add(column.getName());
         		row.add(column.getPosition());
         		row.add(column.getNameInSource());
-        		row.add(dt!=null?dt.getRuntimeTypeName():null);
+        		row.add(column.getRuntimeType());
         		row.add(column.getScale());
         		row.add(column.getLength());
         		row.add(column.isFixedLength());
