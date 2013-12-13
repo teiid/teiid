@@ -69,7 +69,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 		@Override
 		public InputStream getBinaryStream() throws SQLException {
 			if (this.is == null) {
-				throw new SQLException("Already Freed."); //$NON-NLS-1$
+				throw new SQLException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15006));
 			}
 			InputStream result = this.is;
 			this.is = null;
