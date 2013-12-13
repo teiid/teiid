@@ -4185,6 +4185,7 @@ Expression function(ParseInfo info) :
 		{
 			args.add(new Constant(literal));
 		} 
+		[<COMMA> expression = expression(info) { args.add(expression); }]
 		<RPAREN>				
 	)
 	|

@@ -26,6 +26,7 @@ import static org.junit.Assert.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.sql.Clob;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -482,6 +483,21 @@ public class TestExpressionEvaluator {
     @Test public void testArrayEquality() throws Exception {
     	assertEquals(Boolean.TRUE, Evaluator.evaluate(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))))));
     	assertNull(new Evaluator(null, null, null).evaluateTVL(new CompareCriteria(new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(1))), CompareCriteria.EQ, new Array(DataTypeManager.DefaultDataClasses.INTEGER, Arrays.asList((Expression)new Constant(null)))), null));
+    }
+    
+    @Test public void testToCharsBytesWellformed() throws Exception {
+    	Expression ex = TestFunctionResolving.getExpression("to_chars(to_bytes('abc', 'utf-8', false), 'utf-8', true)");
+    	assertEquals("abc", ((Clob)Evaluator.evaluate(ex)).getSubString(1, 3));
+    	
+    	try {
+    		ex = TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
+    		Evaluator.evaluate(ex);
+    		fail("expected exception");
+    	} catch (ExpressionEvaluationException e) {
+    		
+    	}
+    	
+    	TestFunctionResolving.getExpression("to_bytes('\u00ff', 'ascii', false))");
     }
     
 }
