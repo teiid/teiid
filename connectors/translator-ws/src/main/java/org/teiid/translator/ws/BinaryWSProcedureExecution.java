@@ -41,6 +41,7 @@ import javax.xml.ws.WebServiceException;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.http.HTTPBinding;
 
+import org.teiid.connector.DataPlugin;
 import org.teiid.core.types.BlobImpl;
 import org.teiid.core.types.BlobType;
 import org.teiid.core.types.ClobImpl;
@@ -69,7 +70,7 @@ public class BinaryWSProcedureExecution implements ProcedureExecution {
 		@Override
 		public InputStream getBinaryStream() throws SQLException {
 			if (this.is == null) {
-				throw new SQLException(WSExecutionFactory.UTIL.gs(WSExecutionFactory.Event.TEIID15006));
+				throw new SQLException(DataPlugin.Util.gs(DataPlugin.Event.TEIID60019));
 			}
 			InputStream result = this.is;
 			this.is = null;

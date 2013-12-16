@@ -78,7 +78,6 @@ public class WSExecutionFactory extends ExecutionFactory<ConnectionFactory, WSCo
     	TEIID15003,
     	TEIID15004, 
     	TEIID15005,
-    	TEIID15006
     }	
 		
 	private Mode defaultServiceMode = Mode.PAYLOAD;
