@@ -273,6 +273,9 @@ public class STree implements Cloneable {
 	}
 	
 	public List insert(List tuple, InsertMode mode, int sizeHint) throws TeiidComponentException {
+		if (tuple.size() != this.leafManager.getTypes().length) {
+			throw new AssertionError("Invalid tuple."); //$NON-NLS-1$
+		}
 		LinkedList<SearchResult> places = new LinkedList<SearchResult>();
 		List match = null;
 		if (this.lobManager != null) {

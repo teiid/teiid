@@ -235,7 +235,7 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			}
 			while (outputTs.hasNext()) {
 				List<?> tuple = outputTs.nextTuple();
-				int rowId = (Integer)tuple.get(tuple.size() - 1);
+				Integer rowId = (Integer)tuple.get(tuple.size() - 1);
 				int size = getElements().size();
 				ArrayList<Object> outputRow = new ArrayList<Object>(size);
 				for (int i = 0; i < size; i++) {
@@ -403,6 +403,9 @@ public class WindowFunctionProjectNode extends SubqueryAwareRelationalNode {
 			return aggs;
 		}
 		List<ElementSymbol> elements = new ArrayList<ElementSymbol>(functions.size());
+		ElementSymbol key = new ElementSymbol("key"); //$NON-NLS-1$
+	    key.setType(DataTypeManager.DefaultDataClasses.INTEGER);
+	    elements.add(key);
 		for (WindowFunctionInfo wfi : functions) {
 			aggs.add(GroupingNode.initAccumulator(wfi.function.getFunction(), this, expressionIndexes));
 			Class<?> outputType = wfi.function.getType();
