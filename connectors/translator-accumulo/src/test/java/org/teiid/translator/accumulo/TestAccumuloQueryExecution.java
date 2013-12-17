@@ -126,7 +126,7 @@ public class TestAccumuloQueryExecution {
     	executeCmd("insert into rental (rental_id, amount, customer_id) values (2, 5.99, 2)");
     	executeCmd("insert into rental (rental_id, amount, customer_id) values (3, 11.99, 1)");
     	executeCmd("insert into rental (rental_id, amount, customer_id) values (4, 12.99, 1)");
-    	
+
     	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select count(*) from rental");
     	assertEquals(Arrays.asList(4), exec.next());
     	assertNull(exec.next());   
@@ -178,4 +178,30 @@ public class TestAccumuloQueryExecution {
     	assertEquals(Arrays.asList(4, new BigDecimal("12.99"), 1), exec.next());
     	assertNull(exec.next());    
     }    
+    
+    @Test
+    public void testANDOnNonPKColumn() throws Exception {
+    	executeCmd("delete from rental");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (1, 3.99, 5)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (2, 5.99, 2)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (3, 11.99, 1)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (4, 12.99, 1)");
+    	
+    	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select rental_id, amount, customer_id from rental where amount > 5.99 and amount < 12.99");
+    	assertEquals(Arrays.asList(3, new BigDecimal("11.99"), 1), exec.next());
+    	assertNull(exec.next());    
+    }  
+    @Test
+    public void testOROnNonPKColumn() throws Exception {
+    	executeCmd("delete from rental");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (1, 3.99, 5)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (2, 5.99, 2)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (3, 11.99, 1)");
+    	executeCmd("insert into rental (rental_id, amount, customer_id) values (4, 12.99, 1)");
+    	
+    	AccumuloQueryExecution exec = (AccumuloQueryExecution)executeCmd("select amount from rental where amount > 5.99 or customer_id = 1");
+    	assertEquals(Arrays.asList(new BigDecimal("11.99")), exec.next());
+    	assertEquals(Arrays.asList(new BigDecimal("12.99")), exec.next());
+    	assertNull(exec.next());    
+    }     
 }

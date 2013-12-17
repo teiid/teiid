@@ -28,13 +28,13 @@ import java.util.Stack;
 
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.data.Range;
-import org.teiid.core.types.TransformationException;
-import org.teiid.core.util.Base64;
 import org.teiid.language.*;
 import org.teiid.language.visitor.HierarchyVisitor;
+import org.teiid.language.visitor.SQLStringVisitor;
 import org.teiid.metadata.Column;
 import org.teiid.metadata.KeyRecord;
 import org.teiid.metadata.Table;
+import org.teiid.query.metadata.SystemMetadata;
 import org.teiid.translator.TranslatorException;
 
 public class AccumuloQueryVisitor extends HierarchyVisitor {
@@ -46,9 +46,10 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	private HashMap<String, Column> keybasedColumnMap = new HashMap<String, Column>();
 	private ArrayList<Column> selectColumns = new ArrayList<Column>();
 	private ArrayList<IteratorSetting>  scanIterators = new ArrayList<IteratorSetting>();
-	private String onGoingAlias;
+	private String currentAlias;
 	private int aliasIdx = 0;
-	private int iteratorPriority = 1;
+	private int iteratorPriority = 2;
+	private boolean doScanEvaluation = false;
     
 	public List<Range> getRanges(){
 		return this.ranges;
@@ -72,42 +73,48 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	
 	@Override
 	public void visit(Select obj) {
-		// this iterator will force the results to be bundled as single row
-		this.scanIterators.add(new IteratorSetting(this.iteratorPriority++, RowFilterIterator.class, new HashMap<String, String>()));
     	visitNodes(obj.getFrom());
-    	visitNodes(obj.getDerivedColumns());        
+    	visitNodes(obj.getDerivedColumns());
         visitNode(obj.getWhere());
         visitNode(obj.getGroupBy());
         visitNode(obj.getHaving());
         visitNode(obj.getOrderBy());
         visitNode(obj.getLimit());
+        
+        if (this.doScanEvaluation) {
+        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.scanTable.getColumns());
+        	options.put(EvaluatorIterator.QUERYSTRING, SQLStringVisitor.getSQLString(obj.getWhere()));
+        	IteratorSetting it = new IteratorSetting(1, EvaluatorIterator.class, options);
+        	this.scanIterators.add(it);
+        }
+        
+        if (this.selectColumns.size() < this.scanTable.getColumns().size()) {
+        	HashMap<String, String> options = buildTableMetadata(this.scanTable.getName(), this.selectColumns);
+        	IteratorSetting it = new IteratorSetting(iteratorPriority++, LimitProjectionIterator.class, options);
+        	this.scanIterators.add(it);
+        }
     }
 	
 	@Override
 	public void visit(DerivedColumn obj) {
-		this.onGoingAlias = buildAlias(obj.getAlias());
+		this.currentAlias = buildAlias(obj.getAlias());
 		visitNode(obj.getExpression());
 		
-		Object expr = this.onGoingExpression.pop();
+		Column column = (Column)this.onGoingExpression.pop();
 		
-		if (expr instanceof Column) {
-			Column column = (Column)expr;
-			String CF = column.getProperty(AccumuloMetadataProcessor.CF, false);
-			String CQ = column.getProperty(AccumuloMetadataProcessor.CQ, false);
-			if (CQ != null) {
-				this.keybasedColumnMap.put(CF+"/"+CQ, column); //$NON-NLS-1$
-			}
-			else {
-				this.keybasedColumnMap.put(CF, column);
-			}
-			
-			// no expressions in select are allowed.
-			this.selectColumns.add(column);
+		String CF = column.getProperty(AccumuloMetadataProcessor.CF, false);
+		String CQ = column.getProperty(AccumuloMetadataProcessor.CQ, false);
+		if (CQ != null) {
+			this.keybasedColumnMap.put(CF+"/"+CQ, column); //$NON-NLS-1$
 		}
-		else if (expr instanceof IteratorSetting) {
-			this.scanIterators.add((IteratorSetting)expr);
+		else {
+			this.keybasedColumnMap.put(CF, column);
 		}
-	}	
+		
+		// no expressions in select are allowed.
+		this.selectColumns.add(column);
+	}
+	
 	private String buildAlias(String alias) {
 		if (alias != null) {
 			return alias;
@@ -122,7 +129,6 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	
 	@Override
     public void visit(AndOr obj) {
-        // only AND is allowed through capabilities
         visitNode(obj.getLeftCondition());
         visitNode(obj.getRightCondition());
         
@@ -161,17 +167,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	        }
 		}
 		else {
-			try {
-				// insert iterarator here..
-				HashMap<String, String> options = buildColumnOptions(column);
-				options.put(ComparatorFilterIterator.OPERATOR, obj.getOperator().name());
-				options.put(ComparatorFilterIterator.VALUE, AccumuloDataTypeManager.convertToStringType(rightExpr));
-				options.put(ComparatorFilterIterator.VALUETYPE, column.getDatatype().getJavaClassName());
-				IteratorSetting it = new IteratorSetting(this.iteratorPriority++, ComparatorFilterIterator.class, options);
-				this.scanIterators.add(it);
-			} catch (TransformationException e) {
-				this.exceptions.add(new TranslatorException(e));
-			}			
+			this.doScanEvaluation = true;
 		}
 	}
 	
@@ -206,17 +202,7 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	        }
 		}
 		else {
-			// regular column
-	        HashMap<String, String> options = buildColumnOptions(column);
-	        options.put(InFilterIterator.VALUES_COUNT, Integer.toString(obj.getRightExpressions().size()));
-	        for (int i = 0; i < obj.getRightExpressions().size(); i++) {
-	        	Object rightExpr = this.onGoingExpression.pop();
-	        	byte[] value = AccumuloDataTypeManager.convertToAccumuloType(rightExpr);
-	        	options.put(InFilterIterator.VALUES+i, Base64.encodeBytes(value));
-	        }
-	        
-			IteratorSetting it = new IteratorSetting(this.iteratorPriority++, InFilterIterator.class, options);
-			this.scanIterators.add(it);
+			this.doScanEvaluation = true;
 		}
 	}
 	
@@ -240,13 +226,14 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 
 		if (obj.getName().equals(AggregateFunction.COUNT)) {
 			HashMap<String, String> options = new HashMap<String, String>();
-			options.put(CountStarIterator.ALIAS, this.onGoingAlias);
+			options.put(CountStarIterator.ALIAS, this.currentAlias);
 			IteratorSetting it = new IteratorSetting(this.iteratorPriority++, CountStarIterator.class, options);
 			
 			// expression expects a column
 			Column c = new Column();
-			c.setName(this.onGoingAlias);
-			c.setProperty(AccumuloMetadataProcessor.CF, this.onGoingAlias);
+			c.setName(this.currentAlias);
+			c.setDatatype(SystemMetadata.getInstance().getSystemStore().getDatatypes().get("integer"));//$NON-NLS-1$
+			c.setProperty(AccumuloMetadataProcessor.CF, this.currentAlias);
 			
 			this.scanIterators.add(it);
 			this.onGoingExpression.push(c) ;
@@ -267,30 +254,9 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	public void visit(IsNull obj) {
         visitNode(obj.getExpression());
         Column column = (Column)onGoingExpression.pop();
-		
-        HashMap<String, String> options = buildColumnOptions(column);
-        options.put(IsNullFilterIterator.NEGATE, Boolean.toString(obj.isNegated()));
-        
-		IteratorSetting it = new IteratorSetting(this.iteratorPriority++, IsNullFilterIterator.class, options);
-		this.scanIterators.add(it);
+        // this will never be part of the rowid, as it can never be null, so scan
+        this.doScanEvaluation = true;
     }
-
-	private HashMap<String, String> buildColumnOptions(Column column) {
-		HashMap<String, String> options = new HashMap<String, String>();
-		String CF = column.getProperty(AccumuloMetadataProcessor.CF, false);
-		String CQ = column.getProperty(AccumuloMetadataProcessor.CQ, false);
-		String valueIn = column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
-		if (CF != null) {
-			options.put(AccumuloMetadataProcessor.CF, CF);
-		}
-		if (CQ != null) {
-			options.put(AccumuloMetadataProcessor.CQ, CQ);
-		}
-		if (valueIn != null) {
-			options.put(AccumuloMetadataProcessor.VALUE_IN, valueIn);
-		}
-		return options;
-	}	
 	
 	@Override
 	public void visit(Literal obj) {
@@ -300,5 +266,27 @@ public class AccumuloQueryVisitor extends HierarchyVisitor {
 	@Override
 	public void visit(NamedTable obj) {
 		this.scanTable = obj.getMetadataObject();
-	}	
+	}
+	
+	private static HashMap<String, String> buildTableMetadata(String tableName, List<Column> columns) {
+        HashMap<String, String> options = new HashMap<String, String>();
+        options.put(EvaluatorIterator.COLUMNS_COUNT, String.valueOf(columns.size()));
+        options.put(EvaluatorIterator.TABLENAME, tableName);
+        
+        for (int i = 0; i < columns.size(); i++) {
+        	Column column = columns.get(i);
+        	options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.NAME, i), column.getName());
+        	if (!SQLStringVisitor.getRecordName(column).equals(AccumuloMetadataProcessor.ROWID)) {
+	        	options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.CF, i), column.getProperty(AccumuloMetadataProcessor.CF, false));
+	        	if (column.getProperty(AccumuloMetadataProcessor.CQ, false) != null) {
+	        		options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.CQ, i), column.getProperty(AccumuloMetadataProcessor.CQ, false));
+	        	}
+	        	if (column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false) != null) {
+	        		options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.VALUE_IN, i), column.getProperty(AccumuloMetadataProcessor.VALUE_IN, false));
+	        	}
+        	}
+        	options.put(EvaluatorIterator.createColumnName(EvaluatorIterator.DATA_TYPE, i), column.getDatatype().getJavaClassName());
+        }
+		return options;
+	}
 }

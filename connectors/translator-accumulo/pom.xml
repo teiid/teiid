@@ -22,6 +22,11 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>org.jboss.teiid</groupId>
+            <artifactId>teiid-engine</artifactId>
+            <scope>provided</scope>
+        </dependency>        
+        <dependency>
           <groupId>javax.resource</groupId>
           <artifactId>connector-api</artifactId>
           <scope>provided</scope>

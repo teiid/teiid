@@ -22,7 +22,6 @@
 package org.teiid.translator.accumulo;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
@@ -33,7 +32,6 @@ import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.WrappingIterator;
-import org.apache.accumulo.core.iterators.user.WholeRowIterator;
 /**
  * Implements aggregate function Count(*) over Accumulo
  */
@@ -73,12 +71,18 @@ public class CountStarIterator extends WrappingIterator {
 		
 		if (getSource().hasTop()) {
 			int count = 0;
+			ByteSequence prevRowId  = null; 
 			while (getSource().hasTop()) {
-				count++;
+				Key key = getSource().getTopKey();				
+				ByteSequence rowId = key.getRowData();
+				if (prevRowId == null || !prevRowId.equals(rowId)) {
+					count++;
+					prevRowId = rowId;
+				}
 				getSource().next();
 			}
 			this.topKey = new Key("1", this.alias, this.alias);//$NON-NLS-1$
-			this.topValue = WholeRowIterator.encodeRow(Arrays.asList(this.topKey), Arrays.asList(new Value(AccumuloDataTypeManager.convertToAccumuloType(Long.valueOf(count)))));
+			this.topValue = new Value(AccumuloDataTypeManager.convertToAccumuloType(Long.valueOf(count)));
 		}
 	}
 	

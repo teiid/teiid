@@ -24,23 +24,22 @@ package org.teiid.translator.accumulo;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.SortedMap;
 
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Value;
-import org.apache.accumulo.core.iterators.Filter;
 import org.apache.accumulo.core.iterators.IteratorEnvironment;
 import org.apache.accumulo.core.iterators.SortedKeyValueIterator;
 import org.apache.accumulo.core.iterators.conf.ColumnSet;
-import org.teiid.core.TeiidRuntimeException;
+import org.apache.accumulo.core.iterators.user.RowFilter;
 
 /**
  * Base class for Filters
  */
-public abstract class BaseFilterIterator extends Filter {
-	public static final String NEGATE = Filter.NEGATE;
+public abstract class BaseFilterIterator extends RowFilter {
+	public static final String NEGATE = "NEGATE"; //$NON-NLS-1$
 	protected AccumuloMetadataProcessor.ValueIn valueIn;
 	protected ColumnSet columnFilter;
+	private boolean negate = false; 
 
 	@Override
 	public void init(SortedKeyValueIterator<Key, Value> source,
@@ -63,6 +62,11 @@ public abstract class BaseFilterIterator extends Filter {
 		} else {
 			this.columnFilter = new ColumnSet(Arrays.asList(cf));
 		}
+
+		this.negate = false;
+	    if (options.get(NEGATE) != null) {
+	      this.negate = Boolean.parseBoolean(options.get(NEGATE));
+	    }
 	}
 
 	@Override
@@ -72,27 +76,30 @@ public abstract class BaseFilterIterator extends Filter {
 		instance.columnFilter = this.columnFilter;
 		return instance;
 	}
-	
+
 	@Override
-	public boolean accept(Key k, Value v) {
-		try {
-			SortedMap<Key, Value> rowItems = RowFilterIterator.decodeRow(k, v);
-			for (Key key:rowItems.keySet()) {
-				if (this.columnFilter.contains(key)) {
-					byte[] value;
-					if (this.valueIn.equals(AccumuloMetadataProcessor.ValueIn.VALUE)) {
-						value = rowItems.get(key).get();
-					}
-					else {
-						value = key.getColumnQualifier().getBytes();
-					}
-					return accept(value);
-				}
-			}
-			return true;
-		} catch (IOException e) {
-			throw new TeiidRuntimeException(e);
+	public boolean acceptRow(SortedKeyValueIterator<Key,Value> rowItem) throws IOException {
+		if (this.negate) {
+			return !accept(rowItem);
 		}
+		return accept(rowItem);
+	}
+	
+	private boolean accept(SortedKeyValueIterator<Key,Value> rowItem) {
+		while(rowItem.hasTop()) {
+			Key key = rowItem.getTopKey();
+			if (this.columnFilter.contains(key)) {
+				byte[] value;
+				if (this.valueIn.equals(AccumuloMetadataProcessor.ValueIn.VALUE)) {
+					value = rowItem.getTopValue().get();
+				}
+				else {
+					value = key.getColumnQualifier().getBytes();
+				}
+				return accept(value);
+			}
+		}
+		return true;
 	}
 
 	@SuppressWarnings("unused")

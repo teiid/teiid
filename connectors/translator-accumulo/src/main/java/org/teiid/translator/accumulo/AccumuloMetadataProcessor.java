@@ -78,21 +78,26 @@ public class AccumuloMetadataProcessor {
 					Text cf = key.getColumnFamily();
 					Text cq = key.getColumnQualifier();
 					Text row = key.getRow();
-					if (previousRow != null && !previousRow.equals(row)) {
+					if (previousRow == null || previousRow.equals(row)) {
+						previousRow = row;
+						if (mf.getSchema().getTable(tableName) == null) {
+							table = mf.addTable(tableName);
+							Column column = mf.addColumn(AccumuloMetadataProcessor.ROWID, TypeFacility.RUNTIME_NAMES.VARBINARY, table);
+							column.setSearchType(SearchType.All_Except_Like);
+							mf.addPrimaryKey("PK0", Arrays.asList(AccumuloMetadataProcessor.ROWID), table); //$NON-NLS-1$
+						}
+						else {
+							table = mf.getSchema().getTable(tableName);
+						}
+						Column column = mf.addColumn(buildColumnName(cf, cq, row), TypeFacility.RUNTIME_NAMES.VARBINARY, table); 
+						column.setSearchType(SearchType.All_Except_Like);
+						column.setProperty(CF, cf.toString());
+						column.setProperty(CQ, cq.toString());
+						column.setProperty(VALUE_IN, mf.getModelProperties().getProperty(COLUMN_VALUE_PATTERN, DEFAULT_VALUE_PATTERN));
+					}
+					else {
 						break;
 					}
-					previousRow = row;
-					if (table == null) {
-						table = mf.addTable(tableName);
-						Column column = mf.addColumn(AccumuloMetadataProcessor.ROWID, TypeFacility.RUNTIME_NAMES.VARBINARY, table);
-						column.setSearchType(SearchType.All_Except_Like);
-						mf.addPrimaryKey("PK0", Arrays.asList(AccumuloMetadataProcessor.ROWID), table); //$NON-NLS-1$
-					}
-					Column column = mf.addColumn(buildColumnName(cf, cq, row), TypeFacility.RUNTIME_NAMES.VARBINARY, table); 
-					column.setSearchType(SearchType.All_Except_Like);
-					column.setProperty(CF, cf.toString());
-					column.setProperty(CQ, cq.toString());
-					column.setProperty(VALUE_IN, mf.getModelProperties().getProperty(COLUMN_VALUE_PATTERN, DEFAULT_VALUE_PATTERN));
 				}
 				scanner.close();
 				table.setSupportsUpdate(true);

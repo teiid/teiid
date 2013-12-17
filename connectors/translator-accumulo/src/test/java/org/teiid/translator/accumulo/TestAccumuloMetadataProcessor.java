@@ -52,7 +52,7 @@ public class TestAccumuloMetadataProcessor {
 	
 	@Before
 	public void setup() throws Exception {
-		MockInstance instance = new MockInstance("teiid");
+		MockInstance instance = new MockInstance("teiid-test");
 		
 		connector = instance.getConnector("root", new PasswordToken(""));
 		try {
@@ -89,7 +89,7 @@ public class TestAccumuloMetadataProcessor {
 		Schema schema = mf.getSchema();
 		Map<String, Table> tables = schema.getTables();
 		assertNotNull(tables);
-		assertEquals(2, tables.size());
+		assertEquals("wrong table size="+tables, 2, tables.size());
 
 		Table customer = tables.get("Customer");
 		assertNotNull(customer);

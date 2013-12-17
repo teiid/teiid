@@ -21,7 +21,6 @@
  */
 package org.teiid.translator.accumulo;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -29,12 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.accumulo.core.client.BatchScanner;
 import org.apache.accumulo.core.client.Connector;
 import org.apache.accumulo.core.client.IteratorSetting;
 import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.TableNotFoundException;
+import org.apache.accumulo.core.data.ByteSequence;
 import org.apache.accumulo.core.data.Key;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
@@ -56,6 +57,7 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 	private Class<?>[] expectedColumnTypes;
 	private AccumuloExecutionFactory aef;
 	private AccumuloQueryVisitor visitor;
+	private Entry<Key, Value> prevEntry;
 	
 	public AccumuloQueryExecution(AccumuloExecutionFactory aef, Select command,
 			@SuppressWarnings("unused") ExecutionContext executionContext,
@@ -107,7 +109,7 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 					scanner.addScanIterator(it);
 				}
 			}
-			scanner.enableIsolation();
+			scanner.enableIsolation();			
 			return scanner.iterator();
 		}
 		
@@ -117,43 +119,60 @@ public class AccumuloQueryExecution implements ResultSetExecution {
 		scanner.setRanges(ranges);
 		return scanner.iterator();
 	}
+	
+	private SortedMap<Key, Value> readNextRow(){
+		ByteSequence prevRowId = null;
+		TreeMap<Key, Value> row = new TreeMap<Key, Value>();		
+		while(this.prevEntry != null || this.results != null && this.results.hasNext()) {
+			Entry<Key, Value> entry = null;
+			if (this.prevEntry != null) {
+				entry = this.prevEntry;
+				this.prevEntry = null;
+			}
+			else {
+				entry = this.results.next();
+			}
+			ByteSequence rowId = entry.getKey().getRowData();
+			if (prevRowId == null || prevRowId.equals(rowId)) {
+				prevRowId= rowId;
+				row.put(entry.getKey(), entry.getValue());
+			}
+			else {				
+				this.prevEntry = entry;
+				return row;
+			}
+		}
+		return row;
+	}
 
 	@Override
 	public List<?> next() throws TranslatorException, DataNotAvailableException {
-		if (this.results != null && this.results.hasNext()) {
-			try {
-				Entry<Key, Value> entry = this.results.next();
-				SortedMap<Key, Value> rowItems = RowFilterIterator.decodeRow(entry.getKey(), entry.getValue());
-				boolean rowIdAdded = false;
-				LinkedHashMap<String, byte[]> values = new LinkedHashMap<String, byte[]>();
-				
-				for (Key key:rowItems.keySet()) {
-					Text cf = key.getColumnFamily();
-					Text cq = key.getColumnQualifier();
-					Text rowid = key.getRow();
-					Value value = rowItems.get(key);
-					
-					Column match = findMatchingColumn(cf, cq);
-					if (!rowIdAdded) {
-						values.put(AccumuloMetadataProcessor.ROWID, rowid.getBytes());
-						rowIdAdded = true;
-					}
-					
-					if (match != null) {
-						String valueIn = match.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
-						// failed to use isolated scanner, but this if check will accomplish the same in getting the
-						// most top value
-						if (values.get(match.getName()) == null) {
-							values.put(match.getName(), buildValue(valueIn, cq, value));
-						}
-					}
+		SortedMap<Key, Value> rowItems = readNextRow();
+		boolean rowIdAdded = false;
+		LinkedHashMap<String, byte[]> values = new LinkedHashMap<String, byte[]>();
+		
+		for (Key key:rowItems.keySet()) {
+			Text cf = key.getColumnFamily();
+			Text cq = key.getColumnQualifier();
+			Text rowid = key.getRow();
+			Value value = rowItems.get(key);
+			
+			Column match = findMatchingColumn(cf, cq);
+			if (!rowIdAdded) {
+				values.put(AccumuloMetadataProcessor.ROWID, rowid.getBytes());
+				rowIdAdded = true;
+			}
+			
+			if (match != null) {
+				String valueIn = match.getProperty(AccumuloMetadataProcessor.VALUE_IN, false);
+				// failed to use isolated scanner, but this if check will accomplish the same in getting the
+				// most top value
+				if (values.get(match.getName()) == null) {
+					values.put(match.getName(), buildValue(valueIn, cq, value));
 				}
-				return nextRow(values);
-			} catch (IOException e) {
-				throw new TranslatorException(e);
 			}
 		}
-		return null;
+		return nextRow(values);
 	}	
 	
 	private Column findMatchingColumn(Text rowCF, Text rowCQ) {

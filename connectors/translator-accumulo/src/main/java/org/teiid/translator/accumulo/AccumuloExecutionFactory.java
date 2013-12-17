@@ -110,4 +110,9 @@ public class AccumuloExecutionFactory extends ExecutionFactory<ConnectionFactory
 	public boolean supportsIsNullCriteria() {
     	return false;
     }	
+    
+    @Override
+	public boolean supportsOrCriteria() {
+    	return true;
+    }
 }
