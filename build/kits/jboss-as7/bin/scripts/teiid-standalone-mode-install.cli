@@ -67,6 +67,7 @@ connect
 /subsystem=teiid/translator=sap-nw-gateway:add(module=org.jboss.teiid.translator.odata)
 /subsystem=teiid/translator=mongodb:add(module=org.jboss.teiid.translator.mongodb)
 /subsystem=teiid/translator=cassandra:add(module=org.jboss.teiid.translator.cassandra)
+/subsystem=teiid/translator=accumulo:add(module=org.jboss.teiid.translator.accumulo)
 
 
 /subsystem=datasources/jdbc-driver=teiid:add(driver-name=teiid, driver-module-name=org.jboss.teiid.client, driver-class-name=org.teiid.jdbc.TeiidDriver, driver-xa-datasource-class-name=org.teiid.jdbc.TeiidDataSource)
@@ -79,5 +80,6 @@ connect
 /subsystem=resource-adapters/resource-adapter=salesforce:add(module=org.jboss.teiid.resource-adapter.salesforce)
 /subsystem=resource-adapters/resource-adapter=webservice:add(module=org.jboss.teiid.resource-adapter.webservice)
 /subsystem=resource-adapters/resource-adapter=mongodb:add(module=org.jboss.teiid.resource-adapter.mongodb)
+/subsystem=resource-adapters/resource-adapter=accumulo:add(module=org.jboss.teiid.resource-adapter.accumulo)
 
 /:reload

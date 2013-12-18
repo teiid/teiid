@@ -276,6 +276,9 @@
 		 		<resource-adapter id="simpledb">
                     <module slot="main" id="org.jboss.teiid.resource-adapter.simpledb"/>
                 </resource-adapter>
+                <resource-adapter id="accumulo">
+                    <module slot="main" id="org.jboss.teiid.resource-adapter.accumulo"/>
+                </resource-adapter>
             </resource-adapters>        
         </subsystem>
         <subsystem xmlns="urn:jboss:domain:sar:1.0"/>
@@ -364,6 +367,7 @@
             <translator name="mongodb" module="org.jboss.teiid.translator.mongodb"/>
             <translator name="cassandra" module="org.jboss.teiid.translator.cassandra"/>
 	        <translator name="simpledb" module="org.jboss.teiid.translator.simpledb"/>
+            <translator name="accumulo" module="org.jboss.teiid.translator.accumulo"/>
         </subsystem>        
         <subsystem xmlns="urn:jboss:domain:threads:1.1">
             <bounded-queue-thread-pool name="teiid-async">
