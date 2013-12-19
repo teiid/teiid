@@ -21,6 +21,10 @@
  */
 package org.teiid.resource.spi;
 
+import java.security.Principal;
+import java.security.acl.Group;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Set;
 
 import javax.resource.spi.security.PasswordCredential;
@@ -75,6 +79,24 @@ public class ConnectionContext {
 		}
 		return defalt;
 	}
+	
+	public static String[] getRoles(Subject subject, String[] defalt) {
+		ArrayList<String> roles = new ArrayList<String>();
+		Set<Group> principals = subject.getPrincipals(Group.class);
+		if ((principals != null) && (principals.size() > 0)) {
+			for (Group group : principals) {
+				if (group.getName().equalsIgnoreCase("roles")) { //$NON-NLS-1$
+					Enumeration<? extends Principal> members = group.members();
+					while(members.hasMoreElements()) {
+						Principal member = members.nextElement();
+						roles.add(member.getName());
+					}
+				}
+			}
+			return roles.toArray(new String[roles.size()]);
+		}
+		return defalt;
+	}	
 
 	// can not associate with MCF, as AS framework only identifies the PasswordCredential as known credential
 	// and assigns the MCF. So, we just take the first credential.
